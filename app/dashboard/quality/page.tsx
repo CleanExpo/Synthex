@@ -10,7 +10,7 @@
  * @module app/dashboard/quality/page
  */
 
-import { useState, useCallback, useRef , Suspense } from 'react';
+import { useState, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { Shield, AlertCircle } from '@/components/icons';
@@ -98,7 +98,7 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'px-4 py-2 text-sm font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500',
+        'px-4 py-2 text-sm font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
         active
           ? 'bg-white/10 text-white'
           : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -139,10 +139,12 @@ function AuditTab() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error((data as { error?: string }).error ?? `Error ${res.status}`);
+        throw new Error(
+          (data as { error?: string }).error ?? `Error ${res.status}`
+        );
       }
 
-      const data = await res.json() as AuditResponse;
+      const data = (await res.json()) as AuditResponse;
       // Apply the custom threshold to the result
       const adjusted: AuditResponse = {
         ...data,
@@ -165,10 +167,18 @@ function AuditTab() {
       {/* Textarea */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label htmlFor="quality-content" className="text-sm font-medium text-slate-300">
+          <label
+            htmlFor="quality-content"
+            className="text-sm font-medium text-slate-300"
+          >
             Content to Audit
           </label>
-          <span className={cn('text-xs tabular-nums', words > 0 ? 'text-slate-400' : 'text-slate-600')}>
+          <span
+            className={cn(
+              'text-xs tabular-nums',
+              words > 0 ? 'text-slate-400' : 'text-slate-600'
+            )}
+          >
             {words.toLocaleString()} {words === 1 ? 'word' : 'words'}
           </span>
         </div>
@@ -176,20 +186,25 @@ function AuditTab() {
           id="quality-content"
           ref={textareaRef}
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={e => setText(e.target.value)}
           placeholder="Paste your content here to check for AI tell-phrases and run a humanness audit..."
           rows={8}
-          className="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-600 text-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-y"
+          className="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-600 text-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-y"
         />
       </div>
 
       {/* Threshold slider */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label htmlFor="threshold-slider" className="text-sm font-medium text-slate-300">
+          <label
+            htmlFor="threshold-slider"
+            className="text-sm font-medium text-slate-300"
+          >
             Pass Threshold
           </label>
-          <span className="text-sm font-semibold text-cyan-400 tabular-nums">{threshold}</span>
+          <span className="text-sm font-semibold text-orange-400 tabular-nums">
+            {threshold}
+          </span>
         </div>
         <input
           id="threshold-slider"
@@ -198,8 +213,8 @@ function AuditTab() {
           max={80}
           step={5}
           value={threshold}
-          onChange={(e) => setThreshold(Number(e.target.value))}
-          className="w-full accent-cyan-500"
+          onChange={e => setThreshold(Number(e.target.value))}
+          className="w-full accent-orange-500"
           aria-label="Pass threshold"
         />
         <div className="flex justify-between text-xs text-slate-600">
@@ -215,10 +230,10 @@ function AuditTab() {
         onClick={runAudit}
         disabled={loading || !text.trim()}
         className={cn(
-          'w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500',
+          'w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
           loading || !text.trim()
             ? 'bg-white/5 text-slate-500 cursor-not-allowed'
-            : 'bg-cyan-600 hover:bg-cyan-500 text-white cursor-pointer'
+            : 'bg-orange-600 hover:bg-orange-500 text-white cursor-pointer'
         )}
       >
         <Shield className="w-4 h-4" />
@@ -251,11 +266,16 @@ function AuditTab() {
                 </span>
                 <span className="text-sm text-slate-500">/ 100</span>
               </div>
-              {result.contentScore.dimensions.writingQuality.issues.length > 0 && (
+              {result.contentScore.dimensions.writingQuality.issues.length >
+                0 && (
                 <ul className="space-y-1">
-                  {result.contentScore.dimensions.writingQuality.issues.map((issue, i) => (
-                    <li key={i} className="text-xs text-slate-400">• {issue}</li>
-                  ))}
+                  {result.contentScore.dimensions.writingQuality.issues.map(
+                    (issue, i) => (
+                      <li key={i} className="text-xs text-slate-400">
+                        • {issue}
+                      </li>
+                    )
+                  )}
                 </ul>
               )}
             </div>
@@ -290,7 +310,9 @@ function HistoryTab() {
     return (
       <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-lg p-4">
         <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-        <span className="text-sm text-red-300">Failed to load audit history.</span>
+        <span className="text-sm text-red-300">
+          Failed to load audit history.
+        </span>
       </div>
     );
   }
@@ -301,9 +323,12 @@ function HistoryTab() {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
         <Shield className="w-10 h-10 text-slate-600" />
-        <p className="text-slate-400 text-sm font-medium">No saved audits yet</p>
+        <p className="text-slate-400 text-sm font-medium">
+          No saved audits yet
+        </p>
         <p className="text-slate-600 text-xs">
-          Run a quality audit and tick &ldquo;Save to history&rdquo; to see results here.
+          Run a quality audit and tick &ldquo;Save to history&rdquo; to see
+          results here.
         </p>
       </div>
     );
@@ -311,43 +336,55 @@ function HistoryTab() {
 
   return (
     <div className="space-y-2">
-      {audits.map((audit) => {
+      {audits.map(audit => {
         const grade = gradeFromScore(audit.humanessScore);
         const isOpen = expanded === audit.id;
         const date = new Date(audit.createdAt).toLocaleDateString('en-AU', {
-          day: '2-digit', month: 'short', year: 'numeric',
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
         });
 
         return (
-          <div key={audit.id} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+          <div
+            key={audit.id}
+            className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
+          >
             <button
               type="button"
               onClick={() => setExpanded(isOpen ? null : audit.id)}
-              className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-cyan-500"
+              className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-orange-500"
             >
               {/* Grade badge */}
-              <span className={cn(
-                'flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border',
-                historyGradeColour(audit.passRate)
-              )}>
+              <span
+                className={cn(
+                  'flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border',
+                  historyGradeColour(audit.passRate)
+                )}
+              >
                 {grade}
               </span>
 
               {/* Meta */}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">
-                  {audit.contentText.slice(0, 80)}{audit.contentText.length > 80 ? '…' : ''}
+                  {audit.contentText.slice(0, 80)}
+                  {audit.contentText.length > 80 ? '…' : ''}
                 </p>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  {date} · Score {Math.round(audit.humanessScore)} · {audit.slopMatchCount} slop match{audit.slopMatchCount !== 1 ? 'es' : ''}
+                  {date} · Score {Math.round(audit.humanessScore)} ·{' '}
+                  {audit.slopMatchCount} slop match
+                  {audit.slopMatchCount !== 1 ? 'es' : ''}
                 </p>
               </div>
 
               {/* Pass indicator */}
-              <span className={cn(
-                'flex-shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border',
-                historyGradeColour(audit.passRate)
-              )}>
+              <span
+                className={cn(
+                  'flex-shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border',
+                  historyGradeColour(audit.passRate)
+                )}
+              >
                 {audit.passRate ? 'Pass' : 'Fail'}
               </span>
             </button>
@@ -359,7 +396,9 @@ function HistoryTab() {
                   {audit.contentText}
                 </p>
                 <div className="flex gap-4 mt-3 text-xs text-slate-500">
-                  <span>Slop density: {audit.slopDensity.toFixed(2)}/100 words</span>
+                  <span>
+                    Slop density: {audit.slopDensity.toFixed(2)}/100 words
+                  </span>
                 </div>
               </div>
             )}
@@ -380,30 +419,43 @@ function QualityDashboardPageContent() {
   const activeTab = searchParams.get('tab') === 'history' ? 'history' : 'audit';
 
   const setTab = (tab: string) => {
-    router.push(tab === 'history' ? '/dashboard/quality?tab=history' : '/dashboard/quality');
+    router.push(
+      tab === 'history'
+        ? '/dashboard/quality?tab=history'
+        : '/dashboard/quality'
+    );
   };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Page header */}
       <div className="flex items-start gap-3">
-        <div className="p-2.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex-shrink-0">
-          <Shield className="w-6 h-6 text-cyan-400" />
+        <div className="p-2.5 rounded-xl bg-orange-500/20 border border-orange-500/30 flex-shrink-0">
+          <Shield className="w-6 h-6 text-orange-400" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-white">Content Quality Gate</h1>
+          <h1 className="text-2xl font-bold text-white">
+            Content Quality Gate
+          </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Detect AI tell-phrases and score content humanness before publishing.
+            Detect AI tell-phrases and score content humanness before
+            publishing.
           </p>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1 w-fit">
-        <TabButton active={activeTab === 'audit'} onClick={() => setTab('audit')}>
+        <TabButton
+          active={activeTab === 'audit'}
+          onClick={() => setTab('audit')}
+        >
           Quality Audit
         </TabButton>
-        <TabButton active={activeTab === 'history'} onClick={() => setTab('history')}>
+        <TabButton
+          active={activeTab === 'history'}
+          onClick={() => setTab('history')}
+        >
           Audit History
         </TabButton>
       </div>

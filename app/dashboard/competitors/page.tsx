@@ -226,7 +226,7 @@ export default function CompetitorsPage() {
           </button>
           <button
             onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-sm bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30 transition-colors text-sm"
+            className="flex items-center gap-2 px-4 py-2 rounded-sm bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30 transition-colors text-sm"
           >
             <Plus className="h-4 w-4" />
             Add Competitor
@@ -241,7 +241,7 @@ export default function CompetitorsPage() {
             label: 'Competitors Tracked',
             value: activeCompetitors.length,
             icon: Users,
-            color: 'text-cyan-400',
+            color: 'text-orange-400',
           },
           {
             label: 'Total Monitored',
@@ -294,7 +294,7 @@ export default function CompetitorsPage() {
             </p>
             <button
               onClick={() => setShowAddForm(true)}
-              className="px-4 py-2 rounded-sm bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30 transition-colors text-sm"
+              className="px-4 py-2 rounded-sm bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30 transition-colors text-sm"
             >
               Add First Competitor
             </button>
@@ -314,7 +314,7 @@ export default function CompetitorsPage() {
                         href={comp.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 mt-1"
+                        className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1 mt-1"
                       >
                         <ExternalLink className="h-3 w-3" />
                         {comp.website.replace(/^https?:\/\//, '')}
@@ -416,7 +416,7 @@ export default function CompetitorsPage() {
       {/* Add Competitor Modal */}
       {showAddForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="border-[0.5px] border-white/[0.06] bg-[#080e1a] rounded-sm p-6 w-full max-w-md mx-4 shadow-2xl">
+          <div className="border-[0.5px] border-white/[0.06] bg-[#0a0a0a] rounded-sm p-6 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-light text-white">
                 Add Competitor
@@ -439,7 +439,7 @@ export default function CompetitorsPage() {
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
                   placeholder="e.g. Acme Corp"
-                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-cyan-500/50"
+                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-orange-500/50"
                 />
               </div>
               <div>
@@ -451,7 +451,7 @@ export default function CompetitorsPage() {
                   value={newTwitter}
                   onChange={e => setNewTwitter(e.target.value)}
                   placeholder="@username"
-                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-cyan-500/50"
+                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-orange-500/50"
                 />
               </div>
               <div>
@@ -463,7 +463,7 @@ export default function CompetitorsPage() {
                   value={newInstagram}
                   onChange={e => setNewInstagram(e.target.value)}
                   placeholder="@username"
-                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-cyan-500/50"
+                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-orange-500/50"
                 />
               </div>
               <div>
@@ -475,7 +475,7 @@ export default function CompetitorsPage() {
                   value={newLinkedin}
                   onChange={e => setNewLinkedin(e.target.value)}
                   placeholder="company-slug"
-                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-cyan-500/50"
+                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-orange-500/50"
                 />
               </div>
               <div>
@@ -487,7 +487,7 @@ export default function CompetitorsPage() {
                   value={newWebsite}
                   onChange={e => setNewWebsite(e.target.value)}
                   placeholder="https://example.com"
-                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-cyan-500/50"
+                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-orange-500/50"
                 />
               </div>
             </div>
@@ -502,7 +502,7 @@ export default function CompetitorsPage() {
               <button
                 onClick={handleAddCompetitor}
                 disabled={isAdding}
-                className="px-4 py-2 rounded-sm bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30 text-sm disabled:opacity-50"
+                className="px-4 py-2 rounded-sm bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30 text-sm disabled:opacity-50"
               >
                 {isAdding ? 'Adding...' : 'Add Competitor'}
               </button>

@@ -116,22 +116,51 @@ const CATEGORY_LABELS: Record<CredentialCategory, string> = {
   other: 'Other',
 };
 
-const CATEGORIES = Object.entries(CATEGORY_LABELS) as [CredentialCategory, string][];
+const CATEGORIES = Object.entries(CATEGORY_LABELS) as [
+  CredentialCategory,
+  string,
+][];
 
 const COMMON_PASSWORDS = new Set([
-  'password', 'password1', '123456', '1234567', '12345678', '123456789',
-  '1234', '12345', 'qwerty', 'abc123', 'letmein', 'admin', 'welcome',
-  'monkey', 'dragon', 'master', 'login', 'pass', 'test', 'demo', 'temp',
-  '111111', '000000', 'iloveyou', 'sunshine', '1q2w3e', 'changeme',
+  'password',
+  'password1',
+  '123456',
+  '1234567',
+  '12345678',
+  '123456789',
+  '1234',
+  '12345',
+  'qwerty',
+  'abc123',
+  'letmein',
+  'admin',
+  'welcome',
+  'monkey',
+  'dragon',
+  'master',
+  'login',
+  'pass',
+  'test',
+  'demo',
+  'temp',
+  '111111',
+  '000000',
+  'iloveyou',
+  'sunshine',
+  '1q2w3e',
+  'changeme',
 ]);
 
-const TEST_SERVICE_PATTERN = /^(test|demo|temp|example|sample|dummy|xxx|yyy|zzz|aaa|placeholder|n\/a|na|none|unknown|untitled)\s*\d*$/i;
+const TEST_SERVICE_PATTERN =
+  /^(test|demo|temp|example|sample|dummy|xxx|yyy|zzz|aaa|placeholder|n\/a|na|none|unknown|untitled)\s*\d*$/i;
 
 // =============================================================================
 // Smart Cleanup Analyser
 // =============================================================================
 
-function analyseCredentials(entries: ImportedCredential[]): Map<string, AiFlag> {
+function analyseCredentials(
+  entries: ImportedCredential[]
+): Map<string, AiFlag> {
   const flagMap = new Map<string, AiFlag>();
 
   function addFlag(id: string, reason: string, action: 'remove' | 'review') {
@@ -166,7 +195,11 @@ function analyseCredentials(entries: ImportedCredential[]): Map<string, AiFlag> 
   for (const e of entries) {
     const count = passwordCount.get(e.password) ?? 0;
     if (count > 3) {
-      addFlag(e.id, `Same password used across ${count} accounts — likely placeholder or test password`, 'review');
+      addFlag(
+        e.id,
+        `Same password used across ${count} accounts — likely placeholder or test password`,
+        'review'
+      );
     }
   }
 
@@ -188,37 +221,65 @@ function analyseCredentials(entries: ImportedCredential[]): Map<string, AiFlag> 
   for (const e of entries) {
     if (!e.password.trim()) continue;
     if (e.password.trim().length < 4) {
-      addFlag(e.id, `Password is only ${e.password.trim().length} characters — likely a placeholder`, 'review');
+      addFlag(
+        e.id,
+        `Password is only ${e.password.trim().length} characters — likely a placeholder`,
+        'review'
+      );
     } else if (COMMON_PASSWORDS.has(e.password.toLowerCase().trim())) {
-      addFlag(e.id, `Password "${e.password}" is a commonly used weak/test password`, 'review');
+      addFlag(
+        e.id,
+        `Password "${e.password}" is a commonly used weak/test password`,
+        'review'
+      );
     }
   }
 
   // 6. Password equals username (obvious security issue or test data)
   for (const e of entries) {
-    if (e.username && e.password && e.password.toLowerCase().trim() === e.username.toLowerCase().trim()) {
-      addFlag(e.id, 'Password is identical to username — invalid or test credential', 'review');
+    if (
+      e.username &&
+      e.password &&
+      e.password.toLowerCase().trim() === e.username.toLowerCase().trim()
+    ) {
+      addFlag(
+        e.id,
+        'Password is identical to username — invalid or test credential',
+        'review'
+      );
     }
   }
 
   // 7. Test / placeholder service names
   for (const e of entries) {
     if (e.service.trim() && TEST_SERVICE_PATTERN.test(e.service.trim())) {
-      addFlag(e.id, `Service name "${e.service}" looks like test or placeholder data`, 'review');
+      addFlag(
+        e.id,
+        `Service name "${e.service}" looks like test or placeholder data`,
+        'review'
+      );
     }
   }
 
   // 8. Garbage service name (all special chars or numbers only)
   for (const e of entries) {
     if (e.service.trim() && /^[\d\s\W]+$/.test(e.service.trim())) {
-      addFlag(e.id, `Service name "${e.service}" appears to be garbled text`, 'review');
+      addFlag(
+        e.id,
+        `Service name "${e.service}" appears to be garbled text`,
+        'review'
+      );
     }
   }
 
   // 9. Low-confidence extraction with no offsetting info
   for (const e of entries) {
     if (e.confidence === 'low' && !e.username && !e.url) {
-      addFlag(e.id, 'Parser had low confidence and no username or URL to verify against', 'review');
+      addFlag(
+        e.id,
+        'Parser had low confidence and no username or URL to verify against',
+        'review'
+      );
     }
   }
 
@@ -230,18 +291,39 @@ function analyseCredentials(entries: ImportedCredential[]): Map<string, AiFlag> 
 // =============================================================================
 
 function fetchJson(url: string) {
-  return fetch(url, { credentials: 'include' }).then((r) => r.json());
+  return fetch(url, { credentials: 'include' }).then(r => r.json());
 }
 
-function ConfidenceBadge({ confidence }: { confidence: 'high' | 'medium' | 'low' }) {
-  if (confidence === 'high') return (
-    <Badge variant="outline" className="border-emerald-500 text-emerald-500 text-xs shrink-0">High</Badge>
-  );
-  if (confidence === 'medium') return (
-    <Badge variant="outline" className="border-blue-500 text-blue-500 text-xs shrink-0">Medium</Badge>
-  );
+function ConfidenceBadge({
+  confidence,
+}: {
+  confidence: 'high' | 'medium' | 'low';
+}) {
+  if (confidence === 'high')
+    return (
+      <Badge
+        variant="outline"
+        className="border-emerald-500 text-emerald-500 text-xs shrink-0"
+      >
+        High
+      </Badge>
+    );
+  if (confidence === 'medium')
+    return (
+      <Badge
+        variant="outline"
+        className="border-blue-500 text-blue-500 text-xs shrink-0"
+      >
+        Medium
+      </Badge>
+    );
   return (
-    <Badge variant="outline" className="border-amber-500 text-amber-500 text-xs shrink-0">Low ⚠</Badge>
+    <Badge
+      variant="outline"
+      className="border-amber-500 text-amber-500 text-xs shrink-0"
+    >
+      Low ⚠
+    </Badge>
   );
 }
 
@@ -270,7 +352,9 @@ export function VaultImportDialog({
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
-  const [selectedOrgIds, setSelectedOrgIds] = useState<Set<string>>(new Set([organizationId]));
+  const [selectedOrgIds, setSelectedOrgIds] = useState<Set<string>>(
+    new Set([organizationId])
+  );
   const [searchFilter, setSearchFilter] = useState('');
   // AI Smart Cleanup
   const [aiFlags, setAiFlags] = useState<Map<string, AiFlag>>(new Map());
@@ -320,7 +404,7 @@ export function VaultImportDialog({
   // ---------------------------------------------------------------------------
 
   function toggleOrg(orgId: string) {
-    setSelectedOrgIds((prev) => {
+    setSelectedOrgIds(prev => {
       const next = new Set(prev);
       if (next.has(orgId)) {
         if (next.size === 1) return prev; // must keep at least one
@@ -333,7 +417,7 @@ export function VaultImportDialog({
   }
 
   function selectAllOrgs() {
-    const allIds = businesses.map((b) => b.organizationId);
+    const allIds = businesses.map(b => b.organizationId);
     allIds.push(organizationId);
     setSelectedOrgIds(new Set(allIds));
   }
@@ -395,25 +479,27 @@ export function VaultImportDialog({
     }
   }
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragging(false);
-      const file = e.dataTransfer.files[0];
-      if (file) uploadFile(file);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) uploadFile(file);
+  }, []);
 
   // ---------------------------------------------------------------------------
   // Row editing
   // ---------------------------------------------------------------------------
 
-  function updateEntry(id: string, field: keyof ImportedCredential, value: string | null) {
-    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
+  function updateEntry(
+    id: string,
+    field: keyof ImportedCredential,
+    value: string | null
+  ) {
+    setEntries(prev =>
+      prev.map(e => (e.id === id ? { ...e, [field]: value } : e))
+    );
     // Clear AI flag for this entry when user edits it
-    setAiFlags((prev) => {
+    setAiFlags(prev => {
       const next = new Map(prev);
       next.delete(id);
       return next;
@@ -421,8 +507,8 @@ export function VaultImportDialog({
   }
 
   function deleteEntry(id: string) {
-    setEntries((prev) => prev.filter((e) => e.id !== id));
-    setAiFlags((prev) => {
+    setEntries(prev => prev.filter(e => e.id !== id));
+    setAiFlags(prev => {
       const next = new Map(prev);
       next.delete(id);
       return next;
@@ -434,22 +520,26 @@ export function VaultImportDialog({
   // ---------------------------------------------------------------------------
 
   function toggleCheck(id: string) {
-    setCheckedIds((prev) => {
+    setCheckedIds(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   }
 
   function toggleCheckAll() {
-    const visibleIds = filteredEntries.map((e) => e.id);
-    const allChecked = visibleIds.every((id) => checkedIds.has(id));
-    setCheckedIds((prev) => {
+    const visibleIds = filteredEntries.map(e => e.id);
+    const allChecked = visibleIds.every(id => checkedIds.has(id));
+    setCheckedIds(prev => {
       const next = new Set(prev);
       if (allChecked) {
-        visibleIds.forEach((id) => next.delete(id));
+        visibleIds.forEach(id => next.delete(id));
       } else {
-        visibleIds.forEach((id) => next.add(id));
+        visibleIds.forEach(id => next.add(id));
       }
       return next;
     });
@@ -458,53 +548,61 @@ export function VaultImportDialog({
   function deleteChecked() {
     const count = checkedIds.size;
     const toDelete = new Set(checkedIds);
-    setEntries((prev) => prev.filter((e) => !toDelete.has(e.id)));
+    setEntries(prev => prev.filter(e => !toDelete.has(e.id)));
     setCheckedIds(new Set());
-    setAiFlags((prev) => {
+    setAiFlags(prev => {
       const next = new Map(prev);
-      toDelete.forEach((id) => next.delete(id));
+      toDelete.forEach(id => next.delete(id));
       return next;
     });
     toast.success(`Removed ${count} entr${count !== 1 ? 'ies' : 'y'}`);
   }
 
   function skipLowConfidence() {
-    const lowIds = entries.filter((e) => e.confidence === 'low').map((e) => e.id);
+    const lowIds = entries.filter(e => e.confidence === 'low').map(e => e.id);
     const lowSet = new Set(lowIds);
-    setEntries((prev) => prev.filter((e) => e.confidence !== 'low'));
-    setCheckedIds((prev) => {
+    setEntries(prev => prev.filter(e => e.confidence !== 'low'));
+    setCheckedIds(prev => {
       const next = new Set(prev);
-      lowIds.forEach((id) => next.delete(id));
+      lowIds.forEach(id => next.delete(id));
       return next;
     });
-    setAiFlags((prev) => {
+    setAiFlags(prev => {
       const next = new Map(prev);
-      lowSet.forEach((id) => next.delete(id));
+      lowSet.forEach(id => next.delete(id));
       return next;
     });
-    toast.success(`Removed ${lowIds.length} low-confidence entr${lowIds.length !== 1 ? 'ies' : 'y'}`);
+    toast.success(
+      `Removed ${lowIds.length} low-confidence entr${lowIds.length !== 1 ? 'ies' : 'y'}`
+    );
   }
 
   function skipByCategory(category: string) {
-    const toRemove = entries.filter((e) => e.category === category).map((e) => e.id);
+    const toRemove = entries
+      .filter(e => e.category === category)
+      .map(e => e.id);
     const toRemoveSet = new Set(toRemove);
-    setEntries((prev) => prev.filter((e) => !toRemoveSet.has(e.id)));
-    setCheckedIds((prev) => {
+    setEntries(prev => prev.filter(e => !toRemoveSet.has(e.id)));
+    setCheckedIds(prev => {
       const next = new Set(prev);
-      toRemove.forEach((id) => next.delete(id));
+      toRemove.forEach(id => next.delete(id));
       return next;
     });
-    setAiFlags((prev) => {
+    setAiFlags(prev => {
       const next = new Map(prev);
-      toRemove.forEach((id) => next.delete(id));
+      toRemove.forEach(id => next.delete(id));
       return next;
     });
-    toast.success(`Removed ${toRemove.length} ${CATEGORY_LABELS[category as CredentialCategory] ?? category} entries`);
+    toast.success(
+      `Removed ${toRemove.length} ${CATEGORY_LABELS[category as CredentialCategory] ?? category} entries`
+    );
   }
 
   function addBlankRow() {
     const newEntry: ImportedCredential = {
-      id: globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2),
+      id:
+        globalThis.crypto?.randomUUID?.() ??
+        Math.random().toString(36).slice(2),
       service: '',
       url: null,
       username: null,
@@ -512,13 +610,17 @@ export function VaultImportDialog({
       category: 'other',
       confidence: 'medium',
     };
-    setEntries((prev) => [...prev, newEntry]);
+    setEntries(prev => [...prev, newEntry]);
   }
 
   function toggleReveal(id: string) {
-    setRevealedIds((prev) => {
+    setRevealedIds(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   }
@@ -536,13 +638,19 @@ export function VaultImportDialog({
       setShowAiPanel(true);
       setIsAnalysing(false);
 
-      const removable = Array.from(flags.values()).filter((f) => f.action === 'remove').length;
-      const reviewable = Array.from(flags.values()).filter((f) => f.action === 'review').length;
+      const removable = Array.from(flags.values()).filter(
+        f => f.action === 'remove'
+      ).length;
+      const reviewable = Array.from(flags.values()).filter(
+        f => f.action === 'review'
+      ).length;
 
       if (flags.size === 0) {
         toast.success('No issues found — all credentials look clean!');
       } else {
-        toast.info(`Smart Cleanup found ${removable} to remove, ${reviewable} to review`);
+        toast.info(
+          `Smart Cleanup found ${removable} to remove, ${reviewable} to review`
+        );
       }
     }, 150);
   }
@@ -550,19 +658,19 @@ export function VaultImportDialog({
   function applyRemoveFlagged() {
     const toRemove = new Set(
       Array.from(aiFlags.values())
-        .filter((f) => f.action === 'remove')
-        .map((f) => f.id)
+        .filter(f => f.action === 'remove')
+        .map(f => f.id)
     );
     const count = toRemove.size;
-    setEntries((prev) => prev.filter((e) => !toRemove.has(e.id)));
-    setAiFlags((prev) => {
+    setEntries(prev => prev.filter(e => !toRemove.has(e.id)));
+    setAiFlags(prev => {
       const next = new Map(prev);
-      toRemove.forEach((id) => next.delete(id));
+      toRemove.forEach(id => next.delete(id));
       return next;
     });
-    setCheckedIds((prev) => {
+    setCheckedIds(prev => {
       const next = new Set(prev);
-      toRemove.forEach((id) => next.delete(id));
+      toRemove.forEach(id => next.delete(id));
       return next;
     });
     toast.success(`Removed ${count} flagged entr${count !== 1 ? 'ies' : 'y'}`);
@@ -570,18 +678,20 @@ export function VaultImportDialog({
 
   function selectFlaggedForReview() {
     const reviewIds = Array.from(aiFlags.values())
-      .filter((f) => f.action === 'review')
-      .map((f) => f.id);
-    setCheckedIds((prev) => {
+      .filter(f => f.action === 'review')
+      .map(f => f.id);
+    setCheckedIds(prev => {
       const next = new Set(prev);
-      reviewIds.forEach((id) => next.add(id));
+      reviewIds.forEach(id => next.add(id));
       return next;
     });
-    toast.info(`${reviewIds.length} entries selected — review and delete as needed`);
+    toast.info(
+      `${reviewIds.length} entries selected — review and delete as needed`
+    );
   }
 
   function dismissAiFlag(id: string) {
-    setAiFlags((prev) => {
+    setAiFlags(prev => {
       const next = new Map(prev);
       next.delete(id);
       return next;
@@ -592,32 +702,47 @@ export function VaultImportDialog({
   // Filtered view
   // ---------------------------------------------------------------------------
 
-  const filteredEntries = useMemo(() =>
-    searchFilter.trim()
-      ? entries.filter(
-          (e) =>
-            e.service.toLowerCase().includes(searchFilter.toLowerCase()) ||
-            (e.username ?? '').toLowerCase().includes(searchFilter.toLowerCase()) ||
-            e.category.toLowerCase().includes(searchFilter.toLowerCase())
-        )
-      : entries,
+  const filteredEntries = useMemo(
+    () =>
+      searchFilter.trim()
+        ? entries.filter(
+            e =>
+              e.service.toLowerCase().includes(searchFilter.toLowerCase()) ||
+              (e.username ?? '')
+                .toLowerCase()
+                .includes(searchFilter.toLowerCase()) ||
+              e.category.toLowerCase().includes(searchFilter.toLowerCase())
+          )
+        : entries,
     [entries, searchFilter]
   );
 
-  const validCount = entries.filter((e) => e.service.trim() && e.password.trim()).length;
-  const lowConfidenceCount = entries.filter((e) => e.confidence === 'low').length;
-  const checkedVisibleCount = filteredEntries.filter((e) => checkedIds.has(e.id)).length;
-  const allVisibleChecked = filteredEntries.length > 0 && filteredEntries.every((e) => checkedIds.has(e.id));
+  const validCount = entries.filter(
+    e => e.service.trim() && e.password.trim()
+  ).length;
+  const lowConfidenceCount = entries.filter(e => e.confidence === 'low').length;
+  const checkedVisibleCount = filteredEntries.filter(e =>
+    checkedIds.has(e.id)
+  ).length;
+  const allVisibleChecked =
+    filteredEntries.length > 0 &&
+    filteredEntries.every(e => checkedIds.has(e.id));
 
-  const aiRemoveCount = Array.from(aiFlags.values()).filter((f) => f.action === 'remove').length;
-  const aiReviewCount = Array.from(aiFlags.values()).filter((f) => f.action === 'review').length;
+  const aiRemoveCount = Array.from(aiFlags.values()).filter(
+    f => f.action === 'remove'
+  ).length;
+  const aiReviewCount = Array.from(aiFlags.values()).filter(
+    f => f.action === 'review'
+  ).length;
 
   // ---------------------------------------------------------------------------
   // Import Confirmation
   // ---------------------------------------------------------------------------
 
   async function confirmImport() {
-    const validEntries = entries.filter((e) => e.service.trim() && e.password.trim());
+    const validEntries = entries.filter(
+      e => e.service.trim() && e.password.trim()
+    );
     if (validEntries.length === 0) {
       toast.error('No valid entries to import');
       return;
@@ -647,8 +772,13 @@ export function VaultImportDialog({
       onImported();
 
       if (result.created > 0) {
-        const orgText = (result.orgCount ?? 1) > 1 ? ` across ${result.orgCount} businesses` : '';
-        toast.success(`${result.created} credential${result.created !== 1 ? 's' : ''} imported${orgText}`);
+        const orgText =
+          (result.orgCount ?? 1) > 1
+            ? ` across ${result.orgCount} businesses`
+            : '';
+        toast.success(
+          `${result.created} credential${result.created !== 1 ? 's' : ''} imported${orgText}`
+        );
       }
     } catch {
       toast.error('Import failed. Please try again.');
@@ -669,45 +799,57 @@ export function VaultImportDialog({
           ${stage === 'review' ? 'max-w-6xl max-h-[92vh]' : 'max-w-xl'}
         `}
       >
-
         {/* ── Stage: Upload ─────────────────────────────────────────────── */}
         {stage === 'upload' && (
           <>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-white">
-                <FileText className="w-5 h-5 text-cyan-400" />
+                <FileText className="w-5 h-5 text-orange-400" />
                 Import Credentials from Document
               </DialogTitle>
               <DialogDescription className="text-zinc-400">
-                Upload your Word document. The system will extract ALL credentials,
-                categorise them, and let you review before saving anything.
+                Upload your Word document. The system will extract ALL
+                credentials, categorise them, and let you review before saving
+                anything.
               </DialogDescription>
             </DialogHeader>
 
             {/* Dropzone */}
             <div
-              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragOver={e => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
               onClick={() => !isParsing && fileRef.current?.click()}
               className={`
                 mt-2 border-2 border-dashed rounded-xl p-10 flex flex-col items-center gap-3
                 cursor-pointer transition-colors
-                ${isDragging ? 'border-cyan-400 bg-cyan-400/10' : 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10'}
+                ${isDragging ? 'border-orange-400 bg-orange-400/10' : 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10'}
               `}
             >
               {isParsing ? (
                 <>
-                  <Loader2 className="w-10 h-10 text-cyan-400 animate-spin" />
-                  <p className="text-zinc-300 text-sm font-medium">Reading and extracting credentials…</p>
-                  <p className="text-zinc-500 text-xs">This may take a few seconds for large documents</p>
+                  <Loader2 className="w-10 h-10 text-orange-400 animate-spin" />
+                  <p className="text-zinc-300 text-sm font-medium">
+                    Reading and extracting credentials…
+                  </p>
+                  <p className="text-zinc-500 text-xs">
+                    This may take a few seconds for large documents
+                  </p>
                 </>
               ) : (
                 <>
                   <Upload className="w-10 h-10 text-zinc-500" />
-                  <p className="text-white font-medium">Drop your .docx file here</p>
+                  <p className="text-white font-medium">
+                    Drop your .docx file here
+                  </p>
                   <p className="text-zinc-500 text-sm">or click to browse</p>
-                  <Badge variant="outline" className="border-white/20 text-zinc-400 text-xs mt-1">
+                  <Badge
+                    variant="outline"
+                    className="border-white/20 text-zinc-400 text-xs mt-1"
+                  >
                     .docx only — max 25MB
                   </Badge>
                 </>
@@ -719,7 +861,7 @@ export function VaultImportDialog({
               type="file"
               accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               className="hidden"
-              onChange={(e) => {
+              onChange={e => {
                 const file = e.target.files?.[0];
                 if (file) uploadFile(file);
                 e.target.value = '';
@@ -737,13 +879,13 @@ export function VaultImportDialog({
                   <button
                     type="button"
                     onClick={selectAllOrgs}
-                    className="text-cyan-400 text-xs hover:text-cyan-300"
+                    className="text-orange-400 text-xs hover:text-orange-300"
                   >
                     Select all
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {businesses.map((b) => {
+                  {businesses.map(b => {
                     const id = b.organizationId;
                     const selected = selectedOrgIds.has(id);
                     return (
@@ -753,21 +895,32 @@ export function VaultImportDialog({
                         onClick={() => toggleOrg(id)}
                         className={`
                           flex items-center gap-2 rounded-lg px-3 py-2 text-sm border transition-colors text-left
-                          ${selected
-                            ? 'border-cyan-500 bg-cyan-500/10 text-cyan-300'
-                            : 'border-white/10 bg-white/5 text-zinc-400 hover:border-white/30'}
+                          ${
+                            selected
+                              ? 'border-orange-500 bg-orange-500/10 text-orange-300'
+                              : 'border-white/10 bg-white/5 text-zinc-400 hover:border-white/30'
+                          }
                         `}
                       >
-                        <div className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0 ${selected ? 'bg-cyan-500 border-cyan-500' : 'border-white/30'}`}>
-                          {selected && <span className="text-white text-[9px] leading-none">✓</span>}
+                        <div
+                          className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0 ${selected ? 'bg-orange-500 border-orange-500' : 'border-white/30'}`}
+                        >
+                          {selected && (
+                            <span className="text-white text-[9px] leading-none">
+                              ✓
+                            </span>
+                          )}
                         </div>
-                        <span className="truncate">{b.displayName || b.organization?.name}</span>
+                        <span className="truncate">
+                          {b.displayName || b.organization?.name}
+                        </span>
                       </button>
                     );
                   })}
                 </div>
                 <p className="text-zinc-600 text-xs mt-2">
-                  {selectedOrgIds.size} of {businesses.length} businesses selected
+                  {selectedOrgIds.size} of {businesses.length} businesses
+                  selected
                 </p>
               </div>
             )}
@@ -776,13 +929,18 @@ export function VaultImportDialog({
             <div className="flex items-start gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3">
               <Shield className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
               <p className="text-emerald-300 text-xs leading-relaxed">
-                Document processed server-side only — never stored. All credentials encrypted
-                AES-256-GCM after your review. Passwords never appear in logs.
+                Document processed server-side only — never stored. All
+                credentials encrypted AES-256-GCM after your review. Passwords
+                never appear in logs.
               </p>
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => handleOpenChange(false)} className="border-white/20 text-zinc-300 hover:bg-white/10">
+              <Button
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+                className="border-white/20 text-zinc-300 hover:bg-white/10"
+              >
                 Cancel
               </Button>
             </DialogFooter>
@@ -795,9 +953,9 @@ export function VaultImportDialog({
             <DialogHeader>
               <div className="flex items-center justify-between">
                 <DialogTitle className="flex items-center gap-2 text-white">
-                  <CheckCircle className="w-5 h-5 text-cyan-400" />
+                  <CheckCircle className="w-5 h-5 text-orange-400" />
                   Review Credentials
-                  <Badge className="ml-1 bg-cyan-500/20 text-cyan-300 border-cyan-500/30">
+                  <Badge className="ml-1 bg-orange-500/20 text-orange-300 border-orange-500/30">
                     {entries.length} found
                   </Badge>
                   {lowConfidenceCount > 0 && (
@@ -812,11 +970,13 @@ export function VaultImportDialog({
                   )}
                 </DialogTitle>
                 <p className="text-zinc-500 text-xs shrink-0">
-                  → {selectedOrgIds.size} business{selectedOrgIds.size !== 1 ? 'es' : ''}
+                  → {selectedOrgIds.size} business
+                  {selectedOrgIds.size !== 1 ? 'es' : ''}
                 </p>
               </div>
               <DialogDescription className="text-zinc-400 text-xs">
-                Edit any field before importing. Use Smart Cleanup to auto-remove duplicates and test entries.
+                Edit any field before importing. Use Smart Cleanup to
+                auto-remove duplicates and test entries.
               </DialogDescription>
             </DialogHeader>
 
@@ -825,31 +985,38 @@ export function VaultImportDialog({
               <Input
                 placeholder="Filter by service, username, or category…"
                 value={searchFilter}
-                onChange={(e) => setSearchFilter(e.target.value)}
+                onChange={e => setSearchFilter(e.target.value)}
                 className="bg-white/5 border-white/10 text-white placeholder-zinc-600 text-xs h-8 flex-1 min-w-[180px]"
               />
               {searchFilter && (
-                <span className="text-zinc-500 text-xs shrink-0">{filteredEntries.length} shown</span>
+                <span className="text-zinc-500 text-xs shrink-0">
+                  {filteredEntries.length} shown
+                </span>
               )}
 
               {/* Smart Cleanup button */}
               <Button
-                type="button" variant="outline" size="sm"
+                type="button"
+                variant="outline"
+                size="sm"
                 onClick={runSmartCleanup}
                 disabled={isAnalysing}
                 className="border-purple-500/40 text-purple-300 hover:bg-purple-500/10 text-xs h-7 shrink-0 gap-1"
               >
-                {isAnalysing
-                  ? <Loader2 className="w-3 h-3 animate-spin" />
-                  : <Sparkles className="w-3 h-3" />
-                }
+                {isAnalysing ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3 h-3" />
+                )}
                 Smart Cleanup
               </Button>
 
               {/* Quick cleanup buttons */}
               {lowConfidenceCount > 0 && (
                 <Button
-                  type="button" variant="outline" size="sm"
+                  type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={skipLowConfidence}
                   className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10 text-xs h-7 shrink-0"
                 >
@@ -858,7 +1025,9 @@ export function VaultImportDialog({
               )}
               {checkedIds.size > 0 && (
                 <Button
-                  type="button" variant="outline" size="sm"
+                  type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={deleteChecked}
                   className="border-red-500/40 text-red-400 hover:bg-red-500/10 text-xs h-7 shrink-0"
                 >
@@ -875,9 +1044,13 @@ export function VaultImportDialog({
                 <div className="flex items-center justify-between px-3 py-2 border-b border-purple-500/20">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                    <span className="text-purple-300 text-xs font-medium">Smart Cleanup Analysis</span>
+                    <span className="text-purple-300 text-xs font-medium">
+                      Smart Cleanup Analysis
+                    </span>
                     {aiFlags.size === 0 && (
-                      <span className="text-emerald-400 text-xs">— All clean ✓</span>
+                      <span className="text-emerald-400 text-xs">
+                        — All clean ✓
+                      </span>
                     )}
                     {aiRemoveCount > 0 && (
                       <Badge className="bg-red-500/20 text-red-300 border-red-500/30 text-[10px]">
@@ -922,17 +1095,21 @@ export function VaultImportDialog({
                 {/* Flagged entries list */}
                 {aiFlags.size > 0 && (
                   <div className="max-h-44 overflow-y-auto divide-y divide-purple-500/10">
-                    {Array.from(aiFlags.values()).map((flag) => {
-                      const entry = entries.find((e) => e.id === flag.id);
+                    {Array.from(aiFlags.values()).map(flag => {
+                      const entry = entries.find(e => e.id === flag.id);
                       if (!entry) return null;
                       return (
                         <div
                           key={flag.id}
                           className={`flex items-start gap-2 px-3 py-1.5 text-xs ${
-                            flag.action === 'remove' ? 'bg-red-500/5' : 'bg-amber-500/5'
+                            flag.action === 'remove'
+                              ? 'bg-red-500/5'
+                              : 'bg-amber-500/5'
                           }`}
                         >
-                          <span className={`shrink-0 mt-0.5 font-bold ${flag.action === 'remove' ? 'text-red-400' : 'text-amber-400'}`}>
+                          <span
+                            className={`shrink-0 mt-0.5 font-bold ${flag.action === 'remove' ? 'text-red-400' : 'text-amber-400'}`}
+                          >
                             {flag.action === 'remove' ? '✕' : '⚠'}
                           </span>
                           <div className="flex-1 min-w-0">
@@ -940,7 +1117,9 @@ export function VaultImportDialog({
                               {entry.service || '(no name)'}
                             </span>
                             {entry.username && (
-                              <span className="text-zinc-500 ml-1">· {entry.username}</span>
+                              <span className="text-zinc-500 ml-1">
+                                · {entry.username}
+                              </span>
                             )}
                             <p className="text-zinc-500 mt-0.5 leading-tight">
                               {flag.reasons.join('; ')}
@@ -975,12 +1154,14 @@ export function VaultImportDialog({
                         type="checkbox"
                         checked={allVisibleChecked}
                         onChange={toggleCheckAll}
-                        className="rounded border-white/20 bg-white/5 accent-cyan-500 cursor-pointer"
+                        className="rounded border-white/20 bg-white/5 accent-orange-500 cursor-pointer"
                         title="Select all visible"
                       />
                     </th>
                     <th className="text-left px-3 py-2 w-[19%]">Service</th>
-                    <th className="text-left px-3 py-2 w-[21%]">Username / Email</th>
+                    <th className="text-left px-3 py-2 w-[21%]">
+                      Username / Email
+                    </th>
                     <th className="text-left px-3 py-2 w-[21%]">Password</th>
                     <th className="text-left px-3 py-2 w-[17%]">Category</th>
                     <th className="text-left px-3 py-2 w-[10%]">Confidence</th>
@@ -988,7 +1169,7 @@ export function VaultImportDialog({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {filteredEntries.map((entry) => {
+                  {filteredEntries.map(entry => {
                     const aiFlag = aiFlags.get(entry.id);
                     return (
                       <tr
@@ -997,12 +1178,12 @@ export function VaultImportDialog({
                           checkedIds.has(entry.id)
                             ? 'bg-red-500/5 border-l-2 border-l-red-500/40'
                             : aiFlag?.action === 'remove'
-                            ? 'bg-red-500/5 border-l-2 border-l-red-500/20'
-                            : aiFlag?.action === 'review'
-                            ? 'bg-amber-500/5 border-l-2 border-l-amber-500/20'
-                            : entry.confidence === 'low'
-                            ? 'bg-amber-500/5'
-                            : 'hover:bg-white/5'
+                              ? 'bg-red-500/5 border-l-2 border-l-red-500/20'
+                              : aiFlag?.action === 'review'
+                                ? 'bg-amber-500/5 border-l-2 border-l-amber-500/20'
+                                : entry.confidence === 'low'
+                                  ? 'bg-amber-500/5'
+                                  : 'hover:bg-white/5'
                         }`}
                         title={aiFlag ? aiFlag.reasons.join('; ') : undefined}
                       >
@@ -1012,14 +1193,16 @@ export function VaultImportDialog({
                             type="checkbox"
                             checked={checkedIds.has(entry.id)}
                             onChange={() => toggleCheck(entry.id)}
-                            className="rounded border-white/20 bg-white/5 accent-cyan-500 cursor-pointer"
+                            className="rounded border-white/20 bg-white/5 accent-orange-500 cursor-pointer"
                           />
                         </td>
                         {/* Service */}
                         <td className="px-3 py-1.5">
                           <Input
                             value={entry.service}
-                            onChange={(e) => updateEntry(entry.id, 'service', e.target.value)}
+                            onChange={e =>
+                              updateEntry(entry.id, 'service', e.target.value)
+                            }
                             placeholder="Service name"
                             className="bg-white/5 border-white/10 text-white placeholder-zinc-600 text-xs h-7"
                           />
@@ -1028,7 +1211,13 @@ export function VaultImportDialog({
                         <td className="px-3 py-1.5">
                           <Input
                             value={entry.username ?? ''}
-                            onChange={(e) => updateEntry(entry.id, 'username', e.target.value || null)}
+                            onChange={e =>
+                              updateEntry(
+                                entry.id,
+                                'username',
+                                e.target.value || null
+                              )
+                            }
                             placeholder="user@email.com"
                             autoComplete="off"
                             className="bg-white/5 border-white/10 text-white placeholder-zinc-600 text-xs h-7"
@@ -1039,8 +1228,16 @@ export function VaultImportDialog({
                           <div className="flex items-center gap-1">
                             <Input
                               value={entry.password}
-                              type={revealedIds.has(entry.id) ? 'text' : 'password'}
-                              onChange={(e) => updateEntry(entry.id, 'password', e.target.value)}
+                              type={
+                                revealedIds.has(entry.id) ? 'text' : 'password'
+                              }
+                              onChange={e =>
+                                updateEntry(
+                                  entry.id,
+                                  'password',
+                                  e.target.value
+                                )
+                              }
                               placeholder="password"
                               autoComplete="new-password"
                               className="bg-white/5 border-white/10 text-white placeholder-zinc-600 text-xs h-7 flex-1"
@@ -1050,9 +1247,11 @@ export function VaultImportDialog({
                               onClick={() => toggleReveal(entry.id)}
                               className="p-1 text-zinc-500 hover:text-white transition-colors"
                             >
-                              {revealedIds.has(entry.id)
-                                ? <EyeOff className="w-3 h-3" />
-                                : <Eye className="w-3 h-3" />}
+                              {revealedIds.has(entry.id) ? (
+                                <EyeOff className="w-3 h-3" />
+                              ) : (
+                                <Eye className="w-3 h-3" />
+                              )}
                             </button>
                           </div>
                         </td>
@@ -1060,14 +1259,20 @@ export function VaultImportDialog({
                         <td className="px-3 py-1.5">
                           <Select
                             value={entry.category}
-                            onValueChange={(val) => updateEntry(entry.id, 'category', val)}
+                            onValueChange={val =>
+                              updateEntry(entry.id, 'category', val)
+                            }
                           >
                             <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-7">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-[#1a1d27] border-white/10 text-white">
                               {CATEGORIES.map(([value, label]) => (
-                                <SelectItem key={value} value={value} className="text-xs hover:bg-white/10">
+                                <SelectItem
+                                  key={value}
+                                  value={value}
+                                  className="text-xs hover:bg-white/10"
+                                >
                                   {label}
                                 </SelectItem>
                               ))}
@@ -1099,7 +1304,8 @@ export function VaultImportDialog({
               <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-500/20 p-2.5">
                 <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
                 <p className="text-amber-300 text-xs">
-                  {lowConfidenceCount} row{lowConfidenceCount !== 1 ? 's' : ''} have low confidence — review before importing.
+                  {lowConfidenceCount} row{lowConfidenceCount !== 1 ? 's' : ''}{' '}
+                  have low confidence — review before importing.
                 </p>
               </div>
             )}
@@ -1124,13 +1330,18 @@ export function VaultImportDialog({
               <Button
                 onClick={confirmImport}
                 disabled={isImporting || validCount === 0}
-                className="bg-cyan-600 hover:bg-cyan-500 text-white gap-2 text-xs"
+                className="bg-orange-600 hover:bg-orange-500 text-white gap-2 text-xs"
               >
                 {isImporting ? (
-                  <><Loader2 className="w-3.5 h-3.5 animate-spin" />Importing…</>
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Importing…
+                  </>
                 ) : (
-                  <><Shield className="w-3.5 h-3.5" />
-                    Import {validCount} to {selectedOrgIds.size} business{selectedOrgIds.size !== 1 ? 'es' : ''}
+                  <>
+                    <Shield className="w-3.5 h-3.5" />
+                    Import {validCount} to {selectedOrgIds.size} business
+                    {selectedOrgIds.size !== 1 ? 'es' : ''}
                   </>
                 )}
               </Button>
@@ -1151,8 +1362,11 @@ export function VaultImportDialog({
             <div className="space-y-3 py-2">
               <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-4">
                 <p className="text-emerald-300 font-medium text-sm">
-                  {importResult.created} credential{importResult.created !== 1 ? 's' : ''} securely stored
-                  {(importResult.orgCount ?? 1) > 1 ? ` across ${importResult.orgCount} businesses` : ''}
+                  {importResult.created} credential
+                  {importResult.created !== 1 ? 's' : ''} securely stored
+                  {(importResult.orgCount ?? 1) > 1
+                    ? ` across ${importResult.orgCount} businesses`
+                    : ''}
                 </p>
                 <p className="text-emerald-400/70 text-xs mt-1">
                   Encrypted with AES-256-GCM · Org-scoped · Fully audited
@@ -1161,14 +1375,20 @@ export function VaultImportDialog({
 
               {importResult.skipped > 0 && (
                 <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-3">
-                  <p className="text-amber-300 text-sm font-medium">{importResult.skipped} skipped</p>
+                  <p className="text-amber-300 text-sm font-medium">
+                    {importResult.skipped} skipped
+                  </p>
                   {importResult.errors.length > 0 && (
                     <ul className="mt-1.5 space-y-1">
                       {importResult.errors.slice(0, 5).map((err, i) => (
-                        <li key={i} className="text-amber-400/70 text-xs">• {err}</li>
+                        <li key={i} className="text-amber-400/70 text-xs">
+                          • {err}
+                        </li>
                       ))}
                       {importResult.errors.length > 5 && (
-                        <li className="text-amber-400/70 text-xs">…and {importResult.errors.length - 5} more</li>
+                        <li className="text-amber-400/70 text-xs">
+                          …and {importResult.errors.length - 5} more
+                        </li>
                       )}
                     </ul>
                   )}
@@ -1176,12 +1396,16 @@ export function VaultImportDialog({
               )}
 
               <p className="text-zinc-500 text-xs">
-                💡 You can now safely delete the Word document — all credentials are in the Vault.
+                💡 You can now safely delete the Word document — all credentials
+                are in the Vault.
               </p>
             </div>
 
             <DialogFooter>
-              <Button onClick={() => handleOpenChange(false)} className="bg-cyan-600 hover:bg-cyan-500 text-white">
+              <Button
+                onClick={() => handleOpenChange(false)}
+                className="bg-orange-600 hover:bg-orange-500 text-white"
+              >
                 Done
               </Button>
             </DialogFooter>

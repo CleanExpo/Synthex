@@ -35,20 +35,24 @@ interface StatCardProps {
 
 function StatCard({ label, value, icon, colour, isLoading }: StatCardProps) {
   return (
-    <div className={cn(
-      'rounded-xl border bg-white/[0.02] p-4 flex items-center gap-3',
-      colour === 'cyan'   && 'border-cyan-500/20',
-      colour === 'green'  && 'border-green-500/20',
-      colour === 'gray'   && 'border-white/[0.06]',
-      colour === 'amber'  && 'border-amber-500/20',
-    )}>
-      <div className={cn(
-        'p-2 rounded-lg',
-        colour === 'cyan'  && 'bg-cyan-500/10 text-cyan-400',
-        colour === 'green' && 'bg-green-500/10 text-green-400',
-        colour === 'gray'  && 'bg-white/[0.04] text-gray-400',
-        colour === 'amber' && 'bg-amber-500/10 text-amber-400',
-      )}>
+    <div
+      className={cn(
+        'rounded-xl border bg-white/[0.02] p-4 flex items-center gap-3',
+        colour === 'orange' && 'border-orange-500/20',
+        colour === 'green' && 'border-green-500/20',
+        colour === 'gray' && 'border-white/[0.06]',
+        colour === 'amber' && 'border-amber-500/20'
+      )}
+    >
+      <div
+        className={cn(
+          'p-2 rounded-lg',
+          colour === 'orange' && 'bg-orange-500/10 text-orange-400',
+          colour === 'green' && 'bg-green-500/10 text-green-400',
+          colour === 'gray' && 'bg-white/[0.04] text-gray-400',
+          colour === 'amber' && 'bg-amber-500/10 text-amber-400'
+        )}
+      >
         {icon}
       </div>
       <div>
@@ -67,11 +71,14 @@ function StatCard({ label, value, icon, colour, isLoading }: StatCardProps) {
 // Component
 // ---------------------------------------------------------------------------
 
-export function PRAnalyticsSummary({ releases, isLoading }: PRAnalyticsSummaryProps) {
-  const total     = releases.length;
-  const published = releases.filter((r) => r.status === 'published').length;
-  const draft     = releases.filter((r) => r.status === 'draft').length;
-  const archived  = releases.filter((r) => r.status === 'archived').length;
+export function PRAnalyticsSummary({
+  releases,
+  isLoading,
+}: PRAnalyticsSummaryProps) {
+  const total = releases.length;
+  const published = releases.filter(r => r.status === 'published').length;
+  const draft = releases.filter(r => r.status === 'draft').length;
+  const archived = releases.filter(r => r.status === 'archived').length;
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
@@ -79,7 +86,7 @@ export function PRAnalyticsSummary({ releases, isLoading }: PRAnalyticsSummaryPr
         label="Total"
         value={total}
         icon={<FileText className="h-4 w-4" />}
-        colour="cyan"
+        colour="orange"
         isLoading={isLoading}
       />
       <StatCard

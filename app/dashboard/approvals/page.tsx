@@ -15,10 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  useApprovals,
-  type ApprovalRequest,
-} from '@/hooks/use-approvals';
+import { useApprovals, type ApprovalRequest } from '@/hooks/use-approvals';
 import {
   GitBranch,
   CheckCircle,
@@ -56,30 +53,44 @@ function formatRelativeTime(dateString: string | null): string {
 
 function getStatusColor(status: string): string {
   switch (status) {
-    case 'approved': return 'text-green-400 bg-green-500/20 border-green-500/30';
-    case 'rejected': return 'text-red-400 bg-red-500/20 border-red-500/30';
-    case 'pending': return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30';
-    case 'in_review': return 'text-cyan-400 bg-cyan-500/20 border-cyan-500/30';
-    case 'revision_requested': return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
-    default: return 'text-white/40 bg-white/[0.04] border-white/[0.06]';
+    case 'approved':
+      return 'text-green-400 bg-green-500/20 border-green-500/30';
+    case 'rejected':
+      return 'text-red-400 bg-red-500/20 border-red-500/30';
+    case 'pending':
+      return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30';
+    case 'in_review':
+      return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
+    case 'revision_requested':
+      return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
+    default:
+      return 'text-white/40 bg-white/[0.04] border-white/[0.06]';
   }
 }
 
 function getStatusLabel(status: string): string {
   switch (status) {
-    case 'revision_requested': return 'Revision Requested';
-    case 'in_review': return 'In Review';
-    default: return status.charAt(0).toUpperCase() + status.slice(1);
+    case 'revision_requested':
+      return 'Revision Requested';
+    case 'in_review':
+      return 'In Review';
+    default:
+      return status.charAt(0).toUpperCase() + status.slice(1);
   }
 }
 
 function getPriorityColor(priority: string): string {
   switch (priority) {
-    case 'urgent': return 'bg-red-500';
-    case 'high': return 'bg-orange-500';
-    case 'normal': return 'bg-yellow-500';
-    case 'low': return 'bg-green-500';
-    default: return 'bg-white/[0.15]';
+    case 'urgent':
+      return 'bg-red-500';
+    case 'high':
+      return 'bg-orange-500';
+    case 'normal':
+      return 'bg-yellow-500';
+    case 'low':
+      return 'bg-green-500';
+    default:
+      return 'bg-white/[0.15]';
   }
 }
 
@@ -94,12 +105,17 @@ interface RequestCardProps {
   isApproving: boolean;
 }
 
-function RequestCard({ request, onSelect, onQuickApprove, isApproving }: RequestCardProps) {
+function RequestCard({
+  request,
+  onSelect,
+  onQuickApprove,
+  isApproving,
+}: RequestCardProps) {
   const progress = ((request.currentStep + 1) / request.totalSteps) * 100;
 
   return (
     <Card
-      className="bg-white/5 border-cyan-500/10 cursor-pointer hover:bg-white/10 transition-colors"
+      className="bg-white/5 border-orange-500/10 cursor-pointer hover:bg-white/10 transition-colors"
       onClick={() => onSelect(request)}
     >
       <CardContent className="p-4">
@@ -112,7 +128,10 @@ function RequestCard({ request, onSelect, onQuickApprove, isApproving }: Request
               by {request.submitterName || request.submitterEmail || 'Unknown'}
             </p>
           </div>
-          <div className={`w-2 h-2 rounded-full ${getPriorityColor(request.priority)}`} title={`Priority: ${request.priority}`} />
+          <div
+            className={`w-2 h-2 rounded-full ${getPriorityColor(request.priority)}`}
+            title={`Priority: ${request.priority}`}
+          />
         </div>
 
         {request.description && (
@@ -125,7 +144,9 @@ function RequestCard({ request, onSelect, onQuickApprove, isApproving }: Request
         {request.totalSteps > 1 && (
           <div className="mb-3">
             <div className="flex justify-between text-xs mb-1">
-              <span className="text-white/40">Step {request.currentStep + 1} of {request.totalSteps}</span>
+              <span className="text-white/40">
+                Step {request.currentStep + 1} of {request.totalSteps}
+              </span>
               <span className="text-white">{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-2" />
@@ -134,7 +155,10 @@ function RequestCard({ request, onSelect, onQuickApprove, isApproving }: Request
 
         {/* Content type badge */}
         <div className="flex items-center gap-2 mb-3">
-          <Badge variant="outline" className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">
+          <Badge
+            variant="outline"
+            className="bg-orange-500/20 text-orange-300 border-orange-500/30 text-xs"
+          >
             {request.contentType}
           </Badge>
           {request.dueDate && (
@@ -155,7 +179,7 @@ function RequestCard({ request, onSelect, onQuickApprove, isApproving }: Request
             <Button
               size="sm"
               className="bg-green-500/20 hover:bg-green-500/30 text-green-400"
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 onQuickApprove(request.id);
               }}
@@ -207,7 +231,9 @@ function RequestDetailDialog({
 
   if (!request) return null;
 
-  const handleAction = async (action: 'approve' | 'reject' | 'revision' | 'resubmit' | 'comment') => {
+  const handleAction = async (
+    action: 'approve' | 'reject' | 'revision' | 'resubmit' | 'comment'
+  ) => {
     setIsSubmitting(true);
     try {
       let success = false;
@@ -247,18 +273,20 @@ function RequestDetailDialog({
   };
 
   const currentStep = request.steps[request.currentStep];
-  const showActions = request.status === 'pending' || request.status === 'in_review';
+  const showActions =
+    request.status === 'pending' || request.status === 'in_review';
   const canResubmit = request.status === 'revision_requested';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#080e1a] border-cyan-500/20 backdrop-blur-xl max-w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-[#0a0a0a] border-orange-500/20 backdrop-blur-xl max-w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div>
               <DialogTitle className="text-white">{request.title}</DialogTitle>
               <DialogDescription className="text-white/40">
-                Submitted by {request.submitterName || request.submitterEmail} • {formatRelativeTime(request.createdAt)}
+                Submitted by {request.submitterName || request.submitterEmail} •{' '}
+                {formatRelativeTime(request.createdAt)}
               </DialogDescription>
             </div>
             <Badge variant="outline" className={getStatusColor(request.status)}>
@@ -284,24 +312,32 @@ function RequestDetailDialog({
                 <div
                   key={step.id}
                   className={`flex items-center gap-3 p-3 rounded-sm ${
-                    step.status === 'approved' ? 'bg-green-500/10' :
-                    step.status === 'rejected' ? 'bg-red-500/10' :
-                    index === request.currentStep ? 'bg-cyan-500/10' :
-                    'bg-white/5'
+                    step.status === 'approved'
+                      ? 'bg-green-500/10'
+                      : step.status === 'rejected'
+                        ? 'bg-red-500/10'
+                        : index === request.currentStep
+                          ? 'bg-orange-500/10'
+                          : 'bg-white/5'
                   }`}
                 >
-                  <div className={`p-2 rounded-full ${
-                    step.status === 'approved' ? 'bg-green-500/20' :
-                    step.status === 'rejected' ? 'bg-red-500/20' :
-                    index === request.currentStep ? 'bg-cyan-500/20' :
-                    'bg-white/[0.04]'
-                  }`}>
+                  <div
+                    className={`p-2 rounded-full ${
+                      step.status === 'approved'
+                        ? 'bg-green-500/20'
+                        : step.status === 'rejected'
+                          ? 'bg-red-500/20'
+                          : index === request.currentStep
+                            ? 'bg-orange-500/20'
+                            : 'bg-white/[0.04]'
+                    }`}
+                  >
                     {step.status === 'approved' ? (
                       <CheckCircle className="h-4 w-4 text-green-400" />
                     ) : step.status === 'rejected' ? (
                       <XCircle className="h-4 w-4 text-red-400" />
                     ) : index === request.currentStep ? (
-                      <Clock className="h-4 w-4 text-cyan-400" />
+                      <Clock className="h-4 w-4 text-orange-400" />
                     ) : (
                       <Clock className="h-4 w-4 text-white/40" />
                     )}
@@ -328,8 +364,11 @@ function RequestDetailDialog({
             <div>
               <h4 className="font-medium text-white mb-3">Comments</h4>
               <div className="space-y-2">
-                {currentStep.comments.map((comment) => (
-                  <div key={comment.id} className="p-3 border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
+                {currentStep.comments.map(comment => (
+                  <div
+                    key={comment.id}
+                    className="p-3 border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm"
+                  >
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
@@ -337,7 +376,9 @@ function RequestDetailDialog({
                             {comment.userName.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm font-medium text-white">{comment.userName}</span>
+                        <span className="text-sm font-medium text-white">
+                          {comment.userName}
+                        </span>
                         <Badge variant="outline" className="text-xs">
                           {comment.type}
                         </Badge>
@@ -346,7 +387,9 @@ function RequestDetailDialog({
                         {formatRelativeTime(comment.createdAt)}
                       </span>
                     </div>
-                    <p className="text-sm text-white/60 mt-1">{comment.content}</p>
+                    <p className="text-sm text-white/60 mt-1">
+                      {comment.content}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -366,7 +409,7 @@ function RequestDetailDialog({
                     : 'Add feedback (optional for approval, required for rejection/revision)...'
                 }
                 value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
+                onChange={e => setFeedback(e.target.value)}
                 className="mb-3 bg-white/5 border-white/10"
               />
               <div className="flex flex-wrap gap-2">
@@ -374,7 +417,7 @@ function RequestDetailDialog({
                   <Button
                     onClick={() => handleAction('resubmit')}
                     disabled={isSubmitting}
-                    className="bg-cyan-500 hover:bg-cyan-600"
+                    className="bg-orange-500 hover:bg-orange-600"
                   >
                     {isSubmitting ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -437,14 +480,16 @@ function RequestDetailDialog({
 
 function EmptyState({ filter }: { filter: string }) {
   return (
-    <Card className="bg-white/5 border-cyan-500/10">
+    <Card className="bg-white/5 border-orange-500/10">
       <CardContent className="py-16">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cyan-500/10 mb-4">
-            <FileText className="w-8 h-8 text-cyan-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 mb-4">
+            <FileText className="w-8 h-8 text-orange-400" />
           </div>
           <h3 className="text-lg font-medium text-white mb-2">
-            {filter === 'all' ? 'No approval requests' : `No ${filter} requests`}
+            {filter === 'all'
+              ? 'No approval requests'
+              : `No ${filter} requests`}
           </h3>
           <p className="text-white/40 mb-6 max-w-sm mx-auto">
             {filter === 'all'
@@ -464,9 +509,20 @@ function EmptyState({ filter }: { filter: string }) {
 type FilterStatus = 'all' | 'pending' | 'approved' | 'rejected';
 
 export default function ApprovalsPage() {
-  const { requests, loading, error, refresh, approve, reject, requestRevision, resubmit, addComment } = useApprovals();
+  const {
+    requests,
+    loading,
+    error,
+    refresh,
+    approve,
+    reject,
+    requestRevision,
+    resubmit,
+    addComment,
+  } = useApprovals();
   const [filter, setFilter] = useState<FilterStatus>('all');
-  const [selectedRequest, setSelectedRequest] = useState<ApprovalRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] =
+    useState<ApprovalRequest | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [approvingIds, setApprovingIds] = useState<Set<string>>(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -478,11 +534,11 @@ export default function ApprovalsPage() {
   }, [requests, filter]);
 
   const handleQuickApprove = async (id: string) => {
-    setApprovingIds((prev) => new Set(prev).add(id));
+    setApprovingIds(prev => new Set(prev).add(id));
     try {
       await approve(id);
     } finally {
-      setApprovingIds((prev) => {
+      setApprovingIds(prev => {
         const next = new Set(prev);
         next.delete(id);
         return next;
@@ -509,12 +565,16 @@ export default function ApprovalsPage() {
       {/* Page Header */}
       <div className="flex items-start justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-sm bg-cyan-500/10 border-[0.5px] border-cyan-500/20">
-            <GitBranch className="h-6 w-6 text-cyan-400" />
+          <div className="p-2 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20">
+            <GitBranch className="h-6 w-6 text-orange-400" />
           </div>
           <div>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-1 block">Workflow</span>
-            <h1 className="text-3xl font-extralight tracking-tight text-white">Approvals</h1>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-1 block">
+              Workflow
+            </span>
+            <h1 className="text-3xl font-extralight tracking-tight text-white">
+              Approvals
+            </h1>
             <p className="text-white/40 text-sm">Content review workflows</p>
           </div>
         </div>
@@ -535,7 +595,7 @@ export default function ApprovalsPage() {
 
       {/* Filter Tabs */}
       <div className="flex gap-2 mb-6">
-        {(['all', 'pending', 'approved', 'rejected'] as const).map((f) => (
+        {(['all', 'pending', 'approved', 'rejected'] as const).map(f => (
           <Button
             key={f}
             size="sm"
@@ -568,14 +628,14 @@ export default function ApprovalsPage() {
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+          <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
         </div>
       )}
 
       {/* Requests Grid */}
       {!loading && filteredRequests.length > 0 && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredRequests.map((request) => (
+          {filteredRequests.map(request => (
             <RequestCard
               key={request.id}
               request={request}

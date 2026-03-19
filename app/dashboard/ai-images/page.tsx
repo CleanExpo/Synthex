@@ -14,13 +14,7 @@ import { ImageGallery } from '@/components/ai/image-gallery';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/hooks/useSubscription';
-import {
-  Image,
-  Crown,
-  Sparkles,
-  Trash2,
-  Download,
-} from '@/components/icons';
+import { Image, Crown, Sparkles, Trash2, Download } from '@/components/icons';
 import Link from 'next/link';
 import { notify } from '@/lib/notifications';
 
@@ -35,7 +29,7 @@ export default function AIImagesPage() {
   // Handle generated image
   const handleImageGenerated = useCallback((result: ImageResult) => {
     if (result.success) {
-      setGeneratedImages((prev) => [result, ...prev]);
+      setGeneratedImages(prev => [result, ...prev]);
       notify.success('Image generated successfully!');
     }
   }, []);
@@ -96,35 +90,45 @@ export default function AIImagesPage() {
     return (
       <div className="p-6 max-w-4xl mx-auto">
         <div className="flex items-start gap-3 mb-8">
-          <div className="p-2 rounded-sm bg-cyan-500/10 border-[0.5px] border-cyan-500/20">
-            <Image className="h-6 w-6 text-cyan-400" />
+          <div className="p-2 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20">
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
+            <Image className="h-6 w-6 text-orange-400" />
           </div>
           <div>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-1 block">AI Tools</span>
-            <h1 className="text-3xl font-extralight tracking-tight text-white">AI Image Generation</h1>
-            <p className="text-white/40 text-sm">Generate stunning visuals for your social content</p>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-1 block">
+              AI Tools
+            </span>
+            <h1 className="text-3xl font-extralight tracking-tight text-white">
+              AI Image Generation
+            </h1>
+            <p className="text-white/40 text-sm">
+              Generate stunning visuals for your social content
+            </p>
           </div>
         </div>
 
         <div className="border-[0.5px] border-amber-500/20 bg-amber-500/[0.04] rounded-sm py-12 px-6">
-            <div className="text-center max-w-md mx-auto">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-sm bg-amber-500/10 border-[0.5px] border-amber-500/20 mb-4">
-                <Crown className="w-8 h-8 text-amber-400" />
-              </div>
-              <h3 className="text-xl font-light text-white mb-2">
-                Upgrade to Professional
-              </h3>
-              <p className="text-white/40 mb-6">
-                AI Image Generation is available on Professional plan and above.
-                Create unlimited AI-powered images for your social media content.
-              </p>
-              <Button asChild className="bg-amber-500/20 border-[0.5px] border-amber-500/30 text-amber-400 hover:bg-amber-500/30">
-                <Link href="/dashboard/billing">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Upgrade Now
-                </Link>
-              </Button>
+          <div className="text-center max-w-md mx-auto">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-sm bg-amber-500/10 border-[0.5px] border-amber-500/20 mb-4">
+              <Crown className="w-8 h-8 text-amber-400" />
             </div>
+            <h3 className="text-xl font-light text-white mb-2">
+              Upgrade to Professional
+            </h3>
+            <p className="text-white/40 mb-6">
+              AI Image Generation is available on Professional plan and above.
+              Create unlimited AI-powered images for your social media content.
+            </p>
+            <Button
+              asChild
+              className="bg-amber-500/20 border-[0.5px] border-amber-500/30 text-amber-400 hover:bg-amber-500/30"
+            >
+              <Link href="/dashboard/billing">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Upgrade Now
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -135,12 +139,17 @@ export default function AIImagesPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-sm bg-cyan-500/10 border-[0.5px] border-cyan-500/20">
-            <Image className="h-5 w-5 text-cyan-400" />
+          <div className="p-2 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20">
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
+            <Image className="h-5 w-5 text-orange-400" />
           </div>
           <div>
-            <h1 className="text-xl font-light text-white">AI Image Generation</h1>
-            <p className="text-sm text-white/40">Generate visuals for your social content</p>
+            <h1 className="text-xl font-light text-white">
+              AI Image Generation
+            </h1>
+            <p className="text-sm text-white/40">
+              Generate visuals for your social content
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -155,7 +164,10 @@ export default function AIImagesPage() {
               Clear Gallery
             </Button>
           )}
-          <Badge variant="outline" className="bg-cyan-500/10 border-[0.5px] border-cyan-500/20 text-cyan-400">
+          <Badge
+            variant="outline"
+            className="bg-orange-500/10 border-[0.5px] border-orange-500/20 text-orange-400"
+          >
             Professional
           </Badge>
         </div>
@@ -169,7 +181,7 @@ export default function AIImagesPage() {
         </div>
 
         {/* Gallery panel */}
-        <div className="flex-1 overflow-y-auto p-6 bg-[#080e1a]">
+        <div className="flex-1 overflow-y-auto p-6 bg-[#0a0a0a]">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-light text-white">
               Generated Images

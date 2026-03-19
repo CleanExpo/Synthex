@@ -34,7 +34,13 @@ interface StatCardProps {
   color: string;
 }
 
-function StatCard({ icon: Icon, label, value, subValue, color }: StatCardProps) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  subValue,
+  color,
+}: StatCardProps) {
   return (
     <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
       <div className="flex items-center gap-3">
@@ -55,7 +61,10 @@ function LoadingSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
+        <div
+          key={i}
+          className="bg-gray-900/50 border border-white/10 rounded-xl p-4"
+        >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white/5 rounded-lg animate-pulse" />
             <div className="space-y-2">
@@ -84,16 +93,25 @@ export function PerformanceOverview({
       : 0;
 
   const engagementTrend =
-    summary.avgEngagement > 3 ? 'Above average' : summary.avgEngagement > 1 ? 'Average' : 'Below average';
+    summary.avgEngagement > 3
+      ? 'Above average'
+      : summary.avgEngagement > 1
+        ? 'Average'
+        : 'Below average';
 
   return (
-    <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4', className)}>
+    <div
+      className={cn(
+        'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4',
+        className
+      )}
+    >
       <StatCard
         icon={FileText}
         label="Posts Analyzed"
         value={formatNumber(summary.totalPosts)}
         subValue="In selected period"
-        color="cyan"
+        color="orange"
       />
       <StatCard
         icon={Activity}

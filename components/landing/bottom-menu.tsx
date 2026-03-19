@@ -21,9 +21,18 @@ interface BottomMenuProps {
 
 const defaultItems: NavItem[] = [
   { id: 'home', label: 'Home', icon: <Home className="w-5 h-5" /> },
-  { id: 'analytics', label: 'Analytics', icon: <BarChart2 className="w-5 h-5" /> },
+  {
+    id: 'analytics',
+    label: 'Analytics',
+    icon: <BarChart2 className="w-5 h-5" />,
+  },
   { id: 'campaigns', label: 'Campaigns', icon: <Zap className="w-5 h-5" /> },
-  { id: 'alerts', label: 'Alerts', icon: <Bell className="w-5 h-5" />, badge: 3 },
+  {
+    id: 'alerts',
+    label: 'Alerts',
+    icon: <Bell className="w-5 h-5" />,
+    badge: 3,
+  },
   { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
 ];
 
@@ -33,7 +42,9 @@ const BottomMenu = ({
   onSelect,
   className,
 }: BottomMenuProps) => {
-  const [active, setActive] = React.useState<string>(activeId || items[0]?.id || '');
+  const [active, setActive] = React.useState<string>(
+    activeId || items[0]?.id || ''
+  );
 
   const handleSelect = (id: string) => {
     setActive(id);
@@ -48,12 +59,12 @@ const BottomMenu = ({
         'fixed bottom-0 left-0 right-0 z-50',
         'flex items-center justify-around',
         'h-16 px-2',
-        'bg-[#080e1a]/90 backdrop-blur-md',
+        'bg-[#050505]/90 backdrop-blur-md',
         'border-t border-[0.5px] border-white/[0.06]',
         className
       )}
     >
-      {items.map((item) => {
+      {items.map(item => {
         const isActive = active === item.id;
         return (
           <button
@@ -66,10 +77,8 @@ const BottomMenu = ({
               'relative flex flex-col items-center justify-center gap-1',
               'h-12 w-14 rounded-sm',
               'transition-all duration-200',
-              'focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50',
-              isActive
-                ? 'text-cyan-400'
-                : 'text-white/40 hover:text-white/70'
+              'focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50',
+              isActive ? 'text-orange-400' : 'text-white/40 hover:text-white/70'
             )}
           >
             {/* Active background glow */}
@@ -77,7 +86,7 @@ const BottomMenu = ({
               <span
                 className={cn(
                   'absolute inset-0 rounded-sm',
-                  'bg-cyan-500/[0.08] border-[0.5px] border-cyan-500/20'
+                  'bg-orange-500/[0.08] border-[0.5px] border-orange-500/20'
                 )}
               />
             )}
@@ -92,7 +101,7 @@ const BottomMenu = ({
                     'flex items-center justify-center',
                     'min-w-[14px] h-[14px] px-0.5',
                     'rounded-full text-[9px] font-bold leading-none',
-                    'bg-cyan-500 text-[#080e1a]'
+                    'bg-orange-500 text-[#050505]'
                   )}
                 >
                   {item.badge > 99 ? '99+' : item.badge}
@@ -113,7 +122,7 @@ const BottomMenu = ({
 
             {/* Active dot indicator */}
             {isActive && (
-              <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-cyan-400" />
+              <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-orange-400" />
             )}
           </button>
         );

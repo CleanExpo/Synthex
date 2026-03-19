@@ -6,7 +6,13 @@
  * @description Main ROI metric display with stats row.
  */
 
-import { DollarSign, Clock, TrendingUp, TrendingDown, Calculator } from '@/components/icons';
+import {
+  DollarSign,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+  Calculator,
+} from '@/components/icons';
 import { cn } from '@/lib/utils';
 import type { ROIMetrics } from '@/lib/roi/roi-service';
 
@@ -32,11 +38,34 @@ function formatNumber(num: number, decimals: number = 1): string {
   });
 }
 
-function getROIColor(roi: number): { bg: string; text: string; border: string } {
-  if (roi < 0) return { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/30' };
-  if (roi < 50) return { bg: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/30' };
-  if (roi < 100) return { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/30' };
-  return { bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/30' };
+function getROIColor(roi: number): {
+  bg: string;
+  text: string;
+  border: string;
+} {
+  if (roi < 0)
+    return {
+      bg: 'bg-red-500/10',
+      text: 'text-red-400',
+      border: 'border-red-500/30',
+    };
+  if (roi < 50)
+    return {
+      bg: 'bg-yellow-500/10',
+      text: 'text-yellow-400',
+      border: 'border-yellow-500/30',
+    };
+  if (roi < 100)
+    return {
+      bg: 'bg-emerald-500/10',
+      text: 'text-emerald-400',
+      border: 'border-emerald-500/30',
+    };
+  return {
+    bg: 'bg-orange-500/10',
+    text: 'text-orange-400',
+    border: 'border-orange-500/30',
+  };
 }
 
 interface StatCardProps {
@@ -47,7 +76,13 @@ interface StatCardProps {
   color: string;
 }
 
-function StatCard({ icon: Icon, label, value, subValue, color }: StatCardProps) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  subValue,
+  color,
+}: StatCardProps) {
   return (
     <div className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
       <div className="flex items-start">
@@ -77,7 +112,10 @@ function LoadingSkeleton() {
       {/* Stats Grid Skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
+          <div
+            key={i}
+            className="bg-gray-900/50 border border-white/10 rounded-xl p-5"
+          >
             <div className="flex items-start">
               <div className="w-10 h-10 bg-white/5 rounded-lg animate-pulse" />
             </div>
@@ -92,7 +130,11 @@ function LoadingSkeleton() {
   );
 }
 
-export function ROIOverview({ metrics, isLoading, className }: ROIOverviewProps) {
+export function ROIOverview({
+  metrics,
+  isLoading,
+  className,
+}: ROIOverviewProps) {
   if (isLoading) {
     return <LoadingSkeleton />;
   }
@@ -113,7 +155,12 @@ export function ROIOverview({ metrics, isLoading, className }: ROIOverviewProps)
           roiColors.border
         )}
       >
-        <div className={cn('inline-flex items-center gap-2 px-4 py-2 rounded-full mb-2', roiColors.bg)}>
+        <div
+          className={cn(
+            'inline-flex items-center gap-2 px-4 py-2 rounded-full mb-2',
+            roiColors.bg
+          )}
+        >
           {isPositive ? (
             <TrendingUp className={cn('w-5 h-5', roiColors.text)} />
           ) : (
@@ -124,11 +171,13 @@ export function ROIOverview({ metrics, isLoading, className }: ROIOverviewProps)
           </span>
         </div>
         <p className={cn('text-5xl font-bold', roiColors.text)}>
-          {metrics.overallROI > 0 ? '+' : ''}{formatNumber(metrics.overallROI)}%
+          {metrics.overallROI > 0 ? '+' : ''}
+          {formatNumber(metrics.overallROI)}%
         </p>
         <p className="text-gray-400 mt-2">Overall Return on Investment</p>
         <p className="text-sm text-gray-500 mt-1">
-          {formatCurrency(metrics.roiPerHour, metrics.currency)} per hour invested
+          {formatCurrency(metrics.roiPerHour, metrics.currency)} per hour
+          invested
         </p>
       </div>
 
@@ -157,7 +206,7 @@ export function ROIOverview({ metrics, isLoading, className }: ROIOverviewProps)
           label="Net Profit"
           value={formatCurrency(metrics.netProfit, metrics.currency)}
           subValue={metrics.netProfit >= 0 ? 'Profit' : 'Loss'}
-          color={metrics.netProfit >= 0 ? 'cyan' : 'orange'}
+          color={metrics.netProfit >= 0 ? 'orange' : 'red'}
         />
       </div>
     </div>

@@ -67,7 +67,11 @@ function LoadingSkeleton() {
           {/* Insights skeleton */}
           <div className="space-y-2">
             {Array.from({ length: 2 }).map((_, i) => (
-              <div key={i} className="h-4 bg-white/5 rounded animate-pulse" style={{ width: `${80 - i * 15}%` }} />
+              <div
+                key={i}
+                className="h-4 bg-white/5 rounded animate-pulse"
+                style={{ width: `${80 - i * 15}%` }}
+              />
             ))}
           </div>
         </div>
@@ -89,9 +93,16 @@ export function BenchmarkOverview({
 
   if (!report || report.byPlatform.length === 0) {
     return (
-      <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl p-8 text-center', className)}>
+      <div
+        className={cn(
+          'bg-gray-900/50 border border-white/10 rounded-xl p-8 text-center',
+          className
+        )}
+      >
         <Target className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-        <h3 className="text-lg font-medium text-white mb-1">No Benchmark Data</h3>
+        <h3 className="text-lg font-medium text-white mb-1">
+          No Benchmark Data
+        </h3>
         <p className="text-gray-500 text-sm">
           Connect platforms and publish content to see benchmark comparisons.
         </p>
@@ -100,13 +111,20 @@ export function BenchmarkOverview({
   }
 
   // Find best performing platform
-  const bestPlatform = [...report.byPlatform].sort((a, b) => b.overallScore - a.overallScore)[0];
+  const bestPlatform = [...report.byPlatform].sort(
+    (a, b) => b.overallScore - a.overallScore
+  )[0];
 
   // Count metrics compared (4 metrics per platform)
   const metricsCompared = report.byPlatform.length * 4;
 
   return (
-    <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl p-6', className)}>
+    <div
+      className={cn(
+        'bg-gray-900/50 border border-white/10 rounded-xl p-6',
+        className
+      )}
+    >
       <div className="flex flex-col lg:flex-row items-center gap-8">
         {/* Main gauge */}
         <div className="flex-shrink-0">
@@ -126,7 +144,7 @@ export function BenchmarkOverview({
               icon={BarChart3}
               label="Platforms"
               value={platformsAnalyzed}
-              color="cyan"
+              color="orange"
             />
             <StatItem
               icon={Target}
@@ -156,8 +174,11 @@ export function BenchmarkOverview({
               </h4>
               <ul className="space-y-1">
                 {report.insights.slice(0, 3).map((insight, i) => (
-                  <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
-                    <span className="text-cyan-400 mt-0.5">•</span>
+                  <li
+                    key={i}
+                    className="text-sm text-gray-300 flex items-start gap-2"
+                  >
+                    <span className="text-orange-400 mt-0.5">•</span>
                     {insight}
                   </li>
                 ))}

@@ -448,7 +448,7 @@ export default function DashboardLayout({
   return (
     <ModeProvider>
       <WebSocketProvider autoConnect showConnectionStatus={false}>
-        <div className="min-h-screen bg-[#0a1628]">
+        <div className="min-h-screen bg-[#050505]">
           {/* Mobile Menu */}
           <MobileMenu />
 
@@ -456,7 +456,7 @@ export default function DashboardLayout({
           <aside
             className={cn(
               'hidden md:flex fixed left-0 top-0 z-40 h-screen flex-col transition-all duration-300',
-              'bg-[#080e1a] border-r border-[0.5px] border-white/[0.06]',
+              'bg-[#0a0a0a] border-r border-[0.5px] border-white/[0.06]',
               sidebarCollapsed ? 'w-14' : 'w-60'
             )}
           >
@@ -492,7 +492,7 @@ export default function DashboardLayout({
               {sidebarCollapsed && (
                 <button
                   onClick={() => setSidebarCollapsed(false)}
-                  className="absolute -right-3 top-5 flex items-center justify-center w-6 h-6 bg-[#080e1a] border border-[0.5px] border-white/[0.1] rounded-sm text-white/40 hover:text-white/70 transition-colors"
+                  className="absolute -right-3 top-5 flex items-center justify-center w-6 h-6 bg-[#0a0a0a] border border-[0.5px] border-white/[0.1] rounded-sm text-white/40 hover:text-white/70 transition-colors"
                   aria-label="Expand sidebar"
                 >
                   <ChevronRight className="h-3 w-3" />
@@ -576,7 +576,7 @@ export default function DashboardLayout({
             )}
           >
             {/* Top Header */}
-            <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-[#080e1a]/95 backdrop-blur-md border-b border-[0.5px] border-white/[0.06] px-4 md:px-6">
+            <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-[#0a0a0a]/95 backdrop-blur-md border-b border-[0.5px] border-white/[0.06] px-4 md:px-6">
               {/* Left: mobile toggle + search */}
               <div className="flex items-center gap-3">
                 <button
@@ -621,7 +621,7 @@ export default function DashboardLayout({
                             alt={user.name || 'User'}
                           />
                         )}
-                        <AvatarFallback className="rounded-sm bg-cyan-500/20 text-cyan-400 text-xs font-mono">
+                        <AvatarFallback className="rounded-sm bg-orange-500/20 text-orange-400 text-xs font-mono">
                           {user?.name?.[0]?.toUpperCase() ||
                             user?.email?.[0]?.toUpperCase() ||
                             'U'}
@@ -635,7 +635,7 @@ export default function DashboardLayout({
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
-                    className="w-52 bg-[#080e1a] border-[0.5px] border-white/[0.1] rounded-sm shadow-xl shadow-black/40"
+                    className="w-52 bg-[#0a0a0a] border-[0.5px] border-white/[0.1] rounded-sm shadow-xl shadow-black/40"
                     align="end"
                   >
                     <DropdownMenuLabel className="font-normal px-3 py-2">

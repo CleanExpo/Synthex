@@ -61,7 +61,14 @@ interface StatCardProps {
   trend?: number;
 }
 
-function StatCard({ icon: Icon, label, value, subValue, color, trend }: StatCardProps) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  subValue,
+  color,
+  trend,
+}: StatCardProps) {
   return (
     <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
       <div className="flex items-center gap-3">
@@ -71,7 +78,9 @@ function StatCard({ icon: Icon, label, value, subValue, color, trend }: StatCard
         <div className="flex-1">
           <p className="text-sm text-white/40">{label}</p>
           <div className="flex items-baseline gap-2">
-            <p className="text-2xl font-light font-mono tabular-nums text-white">{value}</p>
+            <p className="text-2xl font-light font-mono tabular-nums text-white">
+              {value}
+            </p>
             {trend !== undefined && (
               <span
                 className={cn(
@@ -96,7 +105,10 @@ function LoadingSkeleton() {
     <div className="space-y-6 animate-pulse">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+          <div
+            key={i}
+            className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4"
+          >
             <div className="h-3 w-16 bg-white/[0.05] rounded-sm mb-2" />
             <div className="h-6 w-24 bg-white/[0.05] rounded-sm" />
           </div>
@@ -104,7 +116,10 @@ function LoadingSkeleton() {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4 h-[280px]">
+          <div
+            key={i}
+            className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4 h-[280px]"
+          >
             <div className="w-32 h-4 bg-white/[0.05] rounded-sm mb-4" />
             <div className="h-[200px] bg-white/[0.03] rounded-sm" />
           </div>
@@ -134,15 +149,21 @@ function GrowthTooltip({ active, payload }: CustomTooltipProps) {
       <div className="space-y-1">
         <div className="flex justify-between gap-4">
           <span className="text-sm text-white">Total</span>
-          <span className="text-sm font-medium text-white">{formatNumber(data.followers)}</span>
+          <span className="text-sm font-medium text-white">
+            {formatNumber(data.followers)}
+          </span>
         </div>
         <div className="flex justify-between gap-4">
           <span className="text-sm text-emerald-400">Gained</span>
-          <span className="text-sm font-medium text-emerald-400">+{formatNumber(data.gained)}</span>
+          <span className="text-sm font-medium text-emerald-400">
+            +{formatNumber(data.gained)}
+          </span>
         </div>
         <div className="flex justify-between gap-4">
           <span className="text-sm text-red-400">Lost</span>
-          <span className="text-sm font-medium text-red-400">-{formatNumber(data.lost)}</span>
+          <span className="text-sm font-medium text-red-400">
+            -{formatNumber(data.lost)}
+          </span>
         </div>
       </div>
     </div>
@@ -153,7 +174,10 @@ export default function AudienceInsightsPage() {
   const [platform, setPlatform] = useState<string>('all');
   const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('30d');
 
-  const { data, isLoading, error, refetch } = useAudienceInsights({ platform, period });
+  const { data, isLoading, error, refetch } = useAudienceInsights({
+    platform,
+    period,
+  });
 
   const handleRefresh = useCallback(async () => {
     await refetch();
@@ -171,7 +195,7 @@ export default function AudienceInsightsPage() {
     );
 
   // Format growth trend for chart
-  const growthData = data?.growth?.trend?.map((point) => ({
+  const growthData = data?.growth?.trend?.map(point => ({
     ...point,
     date: point.date,
   }));
@@ -179,12 +203,17 @@ export default function AudienceInsightsPage() {
   if (error) {
     return (
       <div className="p-6 space-y-6">
-        <PageHeader title="Audience Insights" description="Understand your followers" />
+        <PageHeader
+          title="Audience Insights"
+          description="Understand your followers"
+        />
         <div className="border-[0.5px] border-red-500/20 bg-red-500/[0.05] rounded-sm p-6">
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-6 h-6 text-red-400" />
             <div>
-              <h3 className="text-base font-light text-white">Failed to load audience data</h3>
+              <h3 className="text-base font-light text-white">
+                Failed to load audience data
+              </h3>
               <p className="text-red-400">{error}</p>
             </div>
           </div>
@@ -219,7 +248,10 @@ export default function AudienceInsightsPage() {
               <SelectItem value="linkedin">LinkedIn</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={period} onValueChange={(v) => setPeriod(v as '7d' | '30d' | '90d')}>
+          <Select
+            value={period}
+            onValueChange={v => setPeriod(v as '7d' | '30d' | '90d')}
+          >
             <SelectTrigger className="w-[100px] bg-white/[0.02] border-white/[0.06]">
               <SelectValue placeholder="Period" />
             </SelectTrigger>
@@ -256,7 +288,7 @@ export default function AudienceInsightsPage() {
               label="Total Followers"
               value={formatNumber(data?.growth?.current || 0)}
               trend={data?.growth?.changePercent}
-              color="cyan"
+              color="orange"
             />
             <StatCard
               icon={TrendingUp}
@@ -276,16 +308,29 @@ export default function AudienceInsightsPage() {
               icon={MapPin}
               label="Top Location"
               value={topLocation?.location || 'N/A'}
-              subValue={topLocation ? `${topLocation.percentage}% of audience` : undefined}
+              subValue={
+                topLocation
+                  ? `${topLocation.percentage}% of audience`
+                  : undefined
+              }
               color="orange"
             />
           </div>
 
           {/* Demographics Section */}
           <div>
-            <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">Demographics</h3>
+            <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">
+              Demographics
+            </h3>
             <DemographicsCharts
-              demographics={data?.demographics || { ageRanges: [], genderSplit: [], topLocations: [], topLanguages: [] }}
+              demographics={
+                data?.demographics || {
+                  ageRanges: [],
+                  genderSplit: [],
+                  topLocations: [],
+                  topLanguages: [],
+                }
+              }
               totalAudience={data?.growth?.current}
               isLoading={isLoading}
             />
@@ -294,14 +339,18 @@ export default function AudienceInsightsPage() {
           {/* Behavior Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">Best Posting Times</h3>
+              <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">
+                Best Posting Times
+              </h3>
               <BestTimesHeatmap
                 data={data?.behavior?.bestPostingTimes || []}
                 isLoading={isLoading}
               />
             </div>
             <div>
-              <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">Active Hours</h3>
+              <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">
+                Active Hours
+              </h3>
               <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
                 <div className="h-[280px]">
                   {data?.behavior?.activeHours?.length ? (
@@ -311,9 +360,23 @@ export default function AudienceInsightsPage() {
                         margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                       >
                         <defs>
-                          <linearGradient id="activeHoursGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                          <linearGradient
+                            id="activeHoursGradient"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#ffb87b"
+                              stopOpacity={0.3}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="#ffb87b"
+                              stopOpacity={0}
+                            />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -322,22 +385,29 @@ export default function AudienceInsightsPage() {
                           stroke="#6b7280"
                           tick={{ fill: '#9ca3af', fontSize: 11 }}
                           tickLine={false}
-                          tickFormatter={(h) => (h % 4 === 0 ? `${h}:00` : '')}
+                          tickFormatter={h => (h % 4 === 0 ? `${h}:00` : '')}
                         />
                         <YAxis
                           stroke="#6b7280"
                           tick={{ fill: '#9ca3af', fontSize: 11 }}
                           tickLine={false}
-                          tickFormatter={(v) => `${v}%`}
+                          tickFormatter={v => `${v}%`}
                         />
                         <Tooltip
                           content={({ active, payload }) => {
                             if (!active || !payload?.length) return null;
-                            const d = payload[0].payload as { hour: number; activity: number };
+                            const d = payload[0].payload as {
+                              hour: number;
+                              activity: number;
+                            };
                             return (
-                              <div className="border-[0.5px] border-white/[0.06] bg-[#080e1a] rounded-sm p-2 shadow-xl">
-                                <p className="text-xs text-white/40">{d.hour}:00</p>
-                                <p className="text-sm font-medium text-white">{d.activity}% activity</p>
+                              <div className="border-[0.5px] border-white/[0.06] bg-[#0a0a0a] rounded-sm p-2 shadow-xl">
+                                <p className="text-xs text-white/40">
+                                  {d.hour}:00
+                                </p>
+                                <p className="text-sm font-medium text-white">
+                                  {d.activity}% activity
+                                </p>
                               </div>
                             );
                           }}
@@ -345,7 +415,7 @@ export default function AudienceInsightsPage() {
                         <Area
                           type="monotone"
                           dataKey="activity"
-                          stroke="#06b6d4"
+                          stroke="#ffb87b"
                           fill="url(#activeHoursGradient)"
                           strokeWidth={2}
                         />
@@ -363,7 +433,9 @@ export default function AudienceInsightsPage() {
 
           {/* Growth Section */}
           <div>
-            <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">Follower Growth</h3>
+            <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">
+              Follower Growth
+            </h3>
             <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
               <div className="h-[300px]">
                 {growthData?.length ? (
@@ -373,9 +445,23 @@ export default function AudienceInsightsPage() {
                       margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                     >
                       <defs>
-                        <linearGradient id="growthGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                        <linearGradient
+                          id="growthGradient"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#10b981"
+                            stopOpacity={0.3}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#10b981"
+                            stopOpacity={0}
+                          />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#374151" />

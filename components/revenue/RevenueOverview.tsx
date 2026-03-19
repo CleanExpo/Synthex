@@ -6,7 +6,13 @@
  * @description Stats row showing total revenue and key metrics.
  */
 
-import { DollarSign, TrendingUp, TrendingDown, Calendar, Hash } from '@/components/icons';
+import {
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
+  Calendar,
+  Hash,
+} from '@/components/icons';
 import { cn } from '@/lib/utils';
 import type { RevenueSummary } from '@/lib/revenue/revenue-service';
 
@@ -34,7 +40,14 @@ interface StatCardProps {
   color: string;
 }
 
-function StatCard({ icon: Icon, label, value, subValue, trend, color }: StatCardProps) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  subValue,
+  trend,
+  color,
+}: StatCardProps) {
   const hasTrend = trend !== undefined;
   const isPositive = trend !== undefined && trend >= 0;
 
@@ -48,7 +61,9 @@ function StatCard({ icon: Icon, label, value, subValue, trend, color }: StatCard
           <div
             className={cn(
               'flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded',
-              isPositive ? 'text-emerald-400 bg-emerald-500/10' : 'text-red-400 bg-red-500/10'
+              isPositive
+                ? 'text-emerald-400 bg-emerald-500/10'
+                : 'text-red-400 bg-red-500/10'
             )}
           >
             {isPositive ? (
@@ -73,7 +88,10 @@ function LoadingSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
+        <div
+          key={i}
+          className="bg-gray-900/50 border border-white/10 rounded-xl p-5"
+        >
           <div className="flex items-start justify-between">
             <div className="w-10 h-10 bg-white/5 rounded-lg animate-pulse" />
             <div className="w-16 h-6 bg-white/5 rounded animate-pulse" />
@@ -104,15 +122,22 @@ export function RevenueOverview({
   // Calculate this month's revenue
   const now = new Date();
   const currentMonth = now.toISOString().slice(0, 7);
-  const thisMonth = summary.byMonth.find((m) => m.month === currentMonth)?.amount || 0;
+  const thisMonth =
+    summary.byMonth.find(m => m.month === currentMonth)?.amount || 0;
 
   // Calculate last month's revenue
   const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastMonth = lastMonthDate.toISOString().slice(0, 7);
-  const lastMonthAmount = summary.byMonth.find((m) => m.month === lastMonth)?.amount || 0;
+  const lastMonthAmount =
+    summary.byMonth.find(m => m.month === lastMonth)?.amount || 0;
 
   return (
-    <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4', className)}>
+    <div
+      className={cn(
+        'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4',
+        className
+      )}
+    >
       <StatCard
         icon={DollarSign}
         label="Total Revenue"
@@ -125,7 +150,7 @@ export function RevenueOverview({
         label="This Month"
         value={formatCurrency(thisMonth, summary.currency)}
         subValue={`vs ${formatCurrency(lastMonthAmount)} last month`}
-        color="cyan"
+        color="orange"
       />
       <StatCard
         icon={Hash}
@@ -138,7 +163,10 @@ export function RevenueOverview({
         icon={TrendingUp}
         label="Top Source"
         value={getTopSource(summary.bySource)}
-        subValue={formatCurrency(getTopSourceAmount(summary.bySource), summary.currency)}
+        subValue={formatCurrency(
+          getTopSourceAmount(summary.bySource),
+          summary.currency
+        )}
         color="orange"
       />
     </div>

@@ -2,7 +2,11 @@
 
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { ReverenceSidebar, type KeyStat, type CitationFormat } from './ReverenceSidebar';
+import {
+  ReverenceSidebar,
+  type KeyStat,
+  type CitationFormat,
+} from './ReverenceSidebar';
 import { SASScore, SASScoreInline, type ScoreFactor } from './SASScore';
 
 /**
@@ -136,7 +140,10 @@ export function ResearchReportLayout({
     <article
       itemScope
       itemType="https://schema.org/Article"
-      className={cn('min-h-screen bg-gradient-to-b from-slate-950 to-slate-900', className)}
+      className={cn(
+        'min-h-screen bg-gradient-to-b from-slate-950 to-slate-900',
+        className
+      )}
     >
       {/* Header */}
       <header className="border-b border-white/10 bg-slate-950/50 backdrop-blur-xl">
@@ -175,18 +182,25 @@ export function ResearchReportLayout({
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-12">
           {/* Main Article */}
-          <main className="prose prose-invert prose-cyan max-w-none">
+          <main className="prose prose-invert prose-orange max-w-none">
             {/* Executive Summary */}
             <section className="mb-12 rounded-xl bg-white/5 border border-white/10 p-6">
-              <h2 className="mt-0 text-xl font-semibold text-cyan-400">Executive Summary</h2>
-              <p itemProp="description" className="text-gray-300 leading-relaxed">
+              <h2 className="mt-0 text-xl font-semibold text-orange-400">
+                Executive Summary
+              </h2>
+              <p
+                itemProp="description"
+                className="text-gray-300 leading-relaxed"
+              >
                 {executiveSummary}
               </p>
             </section>
 
             {/* Key Findings */}
             <section className="mb-12">
-              <h2 className="text-2xl font-semibold text-white mb-6">Key Findings</h2>
+              <h2 className="text-2xl font-semibold text-white mb-6">
+                Key Findings
+              </h2>
               <ol className="space-y-6 list-none pl-0">
                 {keyFindings.map((finding, index) => (
                   <li
@@ -194,17 +208,19 @@ export function ResearchReportLayout({
                     className="rounded-xl bg-white/5 border border-white/10 p-6"
                   >
                     <div className="flex items-start gap-4">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-sm font-bold text-cyan-400">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-500/20 text-sm font-bold text-orange-400">
                         {index + 1}
                       </span>
                       <div>
                         <h3 className="mt-0 text-lg font-semibold text-white">
                           {finding.title}
                         </h3>
-                        <p className="mt-1 text-2xl font-bold text-cyan-400">
+                        <p className="mt-1 text-2xl font-bold text-orange-400">
                           {finding.statistic}
                         </p>
-                        <p className="mt-2 text-gray-300">{finding.description}</p>
+                        <p className="mt-2 text-gray-300">
+                          {finding.description}
+                        </p>
                         <p className="mt-2 text-xs text-gray-500">
                           Source: {finding.source}
                         </p>
@@ -217,7 +233,9 @@ export function ResearchReportLayout({
 
             {/* Methodology */}
             <section className="mb-12">
-              <h2 className="text-2xl font-semibold text-white mb-4">Methodology</h2>
+              <h2 className="text-2xl font-semibold text-white mb-4">
+                Methodology
+              </h2>
               <div className="rounded-xl bg-white/5 border border-white/10 p-6 space-y-4">
                 <div>
                   <h4 className="text-sm font-medium uppercase tracking-wider text-gray-400 mb-2">
@@ -243,25 +261,28 @@ export function ResearchReportLayout({
                   </h4>
                   <p className="text-gray-300">{methodology.timePeriod}</p>
                 </div>
-                {methodology.limitations && methodology.limitations.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium uppercase tracking-wider text-gray-400 mb-2">
-                      Limitations
-                    </h4>
-                    <ul className="list-disc list-inside text-gray-300 space-y-1">
-                      {methodology.limitations.map((limitation, index) => (
-                        <li key={index}>{limitation}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                {methodology.limitations &&
+                  methodology.limitations.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium uppercase tracking-wider text-gray-400 mb-2">
+                        Limitations
+                      </h4>
+                      <ul className="list-disc list-inside text-gray-300 space-y-1">
+                        {methodology.limitations.map((limitation, index) => (
+                          <li key={index}>{limitation}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
               </div>
             </section>
 
             {/* Data Tables */}
             {dataTables.map((table, tableIndex) => (
               <section key={tableIndex} className="mb-12">
-                <h3 className="text-xl font-semibold text-white mb-4">{table.title}</h3>
+                <h3 className="text-xl font-semibold text-white mb-4">
+                  {table.title}
+                </h3>
                 <div className="overflow-x-auto rounded-xl border border-white/10">
                   <table className="w-full text-left">
                     <thead className="bg-white/5">
@@ -292,15 +313,19 @@ export function ResearchReportLayout({
                     </tbody>
                   </table>
                 </div>
-                <p className="mt-2 text-xs text-gray-500">Source: {table.source}</p>
+                <p className="mt-2 text-xs text-gray-500">
+                  Source: {table.source}
+                </p>
               </section>
             ))}
 
             {/* Expert Commentary */}
             {expertCommentary && (
               <section className="mb-12">
-                <h2 className="text-2xl font-semibold text-white mb-4">Expert Commentary</h2>
-                <blockquote className="rounded-xl bg-gradient-to-r from-cyan-500/10 to-cyan-600/10 border border-cyan-500/20 p-6">
+                <h2 className="text-2xl font-semibold text-white mb-4">
+                  Expert Commentary
+                </h2>
+                <blockquote className="rounded-xl bg-gradient-to-r from-orange-500/10 to-orange-600/10 border border-orange-500/20 p-6">
                   <p className="text-lg italic text-gray-200 mb-4">
                     &ldquo;{expertCommentary.quote}&rdquo;
                   </p>
@@ -308,9 +333,13 @@ export function ResearchReportLayout({
                     <cite className="not-italic font-medium text-white">
                       {expertCommentary.expertName}
                     </cite>
-                    <span className="block text-sm">{expertCommentary.credentials}</span>
+                    <span className="block text-sm">
+                      {expertCommentary.credentials}
+                    </span>
                     {expertCommentary.context && (
-                      <span className="block text-sm mt-2">{expertCommentary.context}</span>
+                      <span className="block text-sm mt-2">
+                        {expertCommentary.context}
+                      </span>
                     )}
                   </footer>
                 </blockquote>
@@ -319,7 +348,9 @@ export function ResearchReportLayout({
 
             {/* Recommendations */}
             <section className="mb-12">
-              <h2 className="text-2xl font-semibold text-white mb-6">Recommendations</h2>
+              <h2 className="text-2xl font-semibold text-white mb-6">
+                Recommendations
+              </h2>
               <ol className="space-y-4">
                 {recommendations.map((recommendation, index) => (
                   <li
@@ -340,15 +371,17 @@ export function ResearchReportLayout({
 
             {/* Sources */}
             <footer className="border-t border-white/10 pt-8">
-              <h2 className="text-2xl font-semibold text-white mb-4">Sources</h2>
+              <h2 className="text-2xl font-semibold text-white mb-4">
+                Sources
+              </h2>
               <ol className="space-y-3 text-sm">
-                {sources.map((source) => (
+                {sources.map(source => (
                   <li key={source.number} className="text-gray-400">
                     <span className="text-gray-500">[{source.number}]</span>{' '}
                     {source.url ? (
                       <a
                         href={source.url}
-                        className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                        className="text-orange-400 hover:text-orange-300 transition-colors"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -358,7 +391,10 @@ export function ResearchReportLayout({
                       source.citation
                     )}
                     {source.accessedDate && (
-                      <span className="text-gray-500"> (Accessed: {source.accessedDate})</span>
+                      <span className="text-gray-500">
+                        {' '}
+                        (Accessed: {source.accessedDate})
+                      </span>
                     )}
                   </li>
                 ))}

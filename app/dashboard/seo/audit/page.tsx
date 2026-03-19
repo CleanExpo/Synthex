@@ -70,7 +70,7 @@ async function exportAuditPDF(result: AuditResultType) {
 
   // --- Page 1: Summary ---
   doc.setFontSize(20);
-  doc.setTextColor(6, 182, 212); // cyan-500
+  doc.setTextColor(255, 143, 0); // orange-500 (#ff8f00)
   doc.text('SEO Audit Report', 14, 20);
 
   doc.setFontSize(11);
@@ -395,7 +395,7 @@ export default function SEOAuditPage() {
             SEO
           </span>
           <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white flex items-center gap-3">
-            <FileSearch className="w-7 h-7 text-cyan-400" />
+            <FileSearch className="w-7 h-7 text-orange-400" />
             Site Audit
           </h1>
           <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
@@ -427,7 +427,7 @@ export default function SEOAuditPage() {
               <Button
                 onClick={handleAudit}
                 disabled={isLoading}
-                className="bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30"
+                className="bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30"
               >
                 {isLoading ? (
                   <>
@@ -490,7 +490,7 @@ export default function SEOAuditPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-cyan-500/30 text-cyan-400"
+                  className="border-orange-500/30 text-orange-400"
                   onClick={handleExportPDF}
                   disabled={isExporting}
                 >
@@ -538,7 +538,7 @@ export default function SEOAuditPage() {
                 <div className="flex flex-wrap gap-3">
                   <Button
                     variant="outline"
-                    className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                    className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
                     onClick={handleExportPDF}
                     disabled={isExporting}
                   >
@@ -552,7 +552,7 @@ export default function SEOAuditPage() {
 
                   {contentIssues.length > 0 && (
                     <Button
-                      className="bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30"
+                      className="bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30"
                       onClick={() => setIsSheetOpen(true)}
                     >
                       <Sparkles className="w-4 h-4 mr-2" />
@@ -579,7 +579,7 @@ export default function SEOAuditPage() {
                 variant="outline"
                 onClick={() => handleAudit()}
                 disabled={isLoading}
-                className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Re-run Audit
@@ -658,7 +658,7 @@ export default function SEOAuditPage() {
                     </p>
                   </div>
                 </div>
-                <p className="text-xs text-cyan-300/80 leading-relaxed border-t border-white/[0.06] pt-2">
+                <p className="text-xs text-orange-300/80 leading-relaxed border-t border-white/[0.06] pt-2">
                   {issue.recommendation}
                 </p>
                 <div className="flex justify-end">
@@ -690,7 +690,7 @@ export default function SEOAuditPage() {
           {/* Sticky footer */}
           <div className="p-4 border-t border-white/[0.08] flex gap-3">
             <Button
-              className="flex-1 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25"
+              className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25"
               onClick={handleCreateContentCampaign}
               disabled={isCreatingCampaign}
             >
