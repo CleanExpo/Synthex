@@ -13,6 +13,7 @@ import {
 import Link from 'next/link';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 import {
   DashboardStats,
@@ -127,7 +128,7 @@ export default function DashboardPage() {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'An unexpected error occurred';
-      console.error('[Dashboard] Error fetching data:', err);
+      logger.error('[Dashboard] Error fetching data:', err);
       setError({
         message: errorMessage,
         code:
@@ -290,8 +291,8 @@ export default function DashboardPage() {
       fallbackTitle="Dashboard Error"
       fallbackDescription="Something went wrong rendering the dashboard. Please refresh."
       onError={(err, errorInfo) => {
-        console.error('[Dashboard ErrorBoundary]', err);
-        console.error(
+        logger.error('[Dashboard ErrorBoundary]', err);
+        logger.error(
           '[Dashboard ErrorBoundary] Stack:',
           errorInfo.componentStack
         );
