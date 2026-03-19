@@ -7,6 +7,7 @@ stepsCompleted:
     'step-02c-executive-summary',
     'step-03-success',
     'step-04-journeys',
+    'step-05-domain',
   ]
 inputDocuments:
   - '.planning/STATE.md'
@@ -231,3 +232,44 @@ The retention model is built into the onboarding: a first win must occur in sess
 | Report-to-signup conversion flow        | Marcus (J4)             |
 | Competitor snapshot                     | Sarah (J1), Marcus (J4) |
 | Mobile-first dashboard                  | Sarah (J1), Dave (J2)   |
+
+## Domain-Specific Requirements
+
+### Content Authenticity & Platform Fit
+
+AI-generated content must never read as "AI slop." The system's content output quality standard is: indistinguishable from content a skilled human marketer would produce for that specific business. Key constraints:
+
+- Long-form video (owner-recorded or stock) is the source asset; the system auto-adapts it into platform-optimised clips, captions, thumbnails, and posting formats per platform (TikTok vertical 9:16, Instagram Reels, YouTube Shorts, Facebook)
+- Each platform adaptation respects that platform's native style, pacing, and audience behaviour — not a one-size crop
+- Trend monitoring is a core system capability: the system must surface trending audio, formats, and topic angles relevant to the business's industry and apply them to content generation
+- Posting times are AI-optimised per platform and per business audience, not generic defaults
+
+### Compliance & Regulatory
+
+- All national laws applicable to the client's jurisdiction apply (Australia as primary market; multi-region capability deferred)
+- Data storage and handling is delegated to Supabase (third-party, SOC 2 compliant infrastructure)
+- No bespoke data residency requirements at MVP; Supabase region selection satisfies baseline compliance
+- Content posted via platform APIs must comply with each platform's Developer Policy and Community Standards — automated posting frequency limits must be respected
+
+### Technical Constraints — Credential Security
+
+Zero-knowledge model for critical credentials:
+
+- Client API keys, OAuth tokens, and payment details are **never accessible to Synthex staff** — encrypted at rest via AES-256-GCM Vault (existing `lib/vault/`), org-scoped, no plaintext exposure
+- Bank and credit card details handled exclusively by Stripe — Synthex never stores or touches payment card data (PCI DSS compliance via Stripe delegation)
+- Internal team members have no access path to client API credentials or payment instruments
+
+### Integration Requirements & Quota Awareness
+
+- Google Business Profile API and Search Console API have per-project and per-user quota limits — clients must be educated to monitor their own Google Cloud Console quota usage
+- Clients are responsible for maintaining valid OAuth authorisations; the system must detect token expiry and prompt re-authorisation clearly (not silently fail)
+- Platform API rate limits (Meta, TikTok, LinkedIn, Google) must be respected; the system queues and schedules API calls within documented limits
+
+### Risk Mitigations
+
+| Risk                                     | Mitigation                                                                                          |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| AI content perceived as inauthentic      | Human approval gate on all posts before publishing; AI adapts to brand voice from real owner inputs |
+| OAuth token expiry causes silent failure | Token expiry detection + immediate dashboard alert + re-auth prompt                                 |
+| Platform API quota exceeded              | Queue-based posting with rate-limit awareness; client notification if queue is blocked              |
+| Client cancels — data ownership          | Client data exportable on request; 30-day post-cancellation data retention then deletion            |
