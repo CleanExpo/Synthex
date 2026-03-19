@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import useSWR from 'swr';
 import { Bell } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { fetchWithCSRF } from '@/lib/csrf';
 import { cn } from '@/lib/utils';
 import { NotificationCentre } from '@/components/ui/NotificationCentre';
+import { logger } from '@/lib/logger';
 
 interface Notification {
   id: string;
@@ -20,61 +22,35 @@ interface Notification {
   };
 }
 
+const fetchJson = (url: string) =>
+  fetch(url, { credentials: 'include' }).then(r => r.json());
+
 export function NotificationBell() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [centreOpen, setCentreOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const prevUnreadRef = useRef(0);
 
-  const updateUnreadCount = useCallback((notifs: Notification[]) => {
-    const count = notifs.filter(n => !n.read).length;
-    setUnreadCount(count);
-  }, []);
+  // SWR handles fetching and polling — refreshes every 30 seconds
+  const { data, mutate } = useSWR('/api/notifications', fetchJson, {
+    refreshInterval: 30000,
+  });
 
-  const loadNotifications = useCallback(async () => {
-    try {
-      const response = await fetch('/api/notifications', {
-        credentials: 'include',
-      });
-      // Silently skip if not authenticated — no console noise
-      if (response.status === 401 || response.status === 403) return;
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data.notifications || []);
-        updateUnreadCount(data.notifications || []);
-      }
-    } catch {
-      // Network error — silently degrade
-    }
-  }, [updateUnreadCount]);
+  const notifications: Notification[] = data?.notifications ?? [];
+  const unreadCount = notifications.filter(n => !n.read).length;
 
-  const checkForNewNotifications = useCallback(async () => {
-    try {
-      const response = await fetch('/api/notifications?unreadOnly=true', {
-        credentials: 'include',
-      });
-      if (!response.ok) return; // Silently skip auth errors
-      const data = await response.json();
-      if (data.unreadCount > 0) {
-        setIsAnimating(true);
-        setTimeout(() => setIsAnimating(false), 1000);
-        await loadNotifications();
-      }
-    } catch {
-      // Network error — silently degrade
-    }
-  }, [loadNotifications]);
-
-  // Load initial notifications
+  // Animate the bell when unread count increases
   useEffect(() => {
-    loadNotifications();
+    if (unreadCount > prevUnreadRef.current) {
+      setIsAnimating(true);
+      setTimeout(() => setIsAnimating(false), 1000);
+    }
+    prevUnreadRef.current = unreadCount;
+  }, [unreadCount]);
 
-    // Set up polling for new notifications
-    const interval = setInterval(checkForNewNotifications, 30000);
-
-    // Click outside handler
+  // Click-outside handler to close the dropdown
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         dropdownRef.current &&
@@ -83,25 +59,16 @@ export function NotificationBell() {
         setIsOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [checkForNewNotifications, loadNotifications]);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const markAsRead = async (id: string) => {
     try {
       await fetchWithCSRF(`/api/notifications/${id}/read`, { method: 'PATCH' });
-      setNotifications(prev => {
-        const updated = prev.map(n => (n.id === id ? { ...n, read: true } : n));
-        updateUnreadCount(updated);
-        return updated;
-      });
+      mutate(); // revalidate SWR data
     } catch (error) {
-      console.error('Failed to mark as read:', error);
+      logger.error('Failed to mark as read:', error);
     }
   };
 
@@ -212,7 +179,7 @@ export function NotificationBell() {
               <Button
                 variant="ghost"
                 className="flex-1 text-xs text-gray-400 hover:text-white"
-                onClick={() => setNotifications([])}
+                onClick={() => mutate({ notifications: [] }, false)}
               >
                 Clear all
               </Button>
@@ -250,7 +217,7 @@ export function NotificationBell() {
         isOpen={centreOpen}
         onClose={() => {
           setCentreOpen(false);
-          loadNotifications(); // refresh badge count after panel closes
+          mutate(); // refresh badge count after panel closes
         }}
       />
     </div>
