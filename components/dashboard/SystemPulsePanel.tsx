@@ -204,7 +204,7 @@ export function SystemPulsePanel({ className }: { className?: string }) {
         </div>
         <div className="flex items-center gap-3">
           {lastRefreshed && (
-            <span className="text-[10px] font-mono text-white/20 hidden sm:block">
+            <span className="text-[10px] font-mono text-white/50 hidden sm:block">
               {lastRefreshed.toLocaleTimeString('en-AU', {
                 hour: '2-digit',
                 minute: '2-digit',

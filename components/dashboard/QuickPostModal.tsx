@@ -200,10 +200,10 @@ export function QuickPostModal({
               placeholder="What do you want to share?"
               rows={4}
               maxLength={280}
-              className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-white/30 resize-none"
+              className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-white/50 resize-none"
             />
             <p
-              className={`text-[10px] text-right ${remainingChars < 20 ? 'text-amber-400' : 'text-white/20'}`}
+              className={`text-[10px] text-right ${remainingChars < 20 ? 'text-amber-400' : 'text-white/50'}`}
             >
               {remainingChars} chars remaining
             </p>

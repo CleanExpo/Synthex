@@ -43,7 +43,10 @@ import {
   IssueCategory,
   IssueSummary,
 } from '@/components/seo/audit';
-import type { AuditResult as AuditResultType, AuditIssue } from '@/components/seo/audit/types';
+import type {
+  AuditResult as AuditResultType,
+  AuditIssue,
+} from '@/components/seo/audit/types';
 
 const SEVERITY_ORDER: Record<string, number> = {
   critical: 0,
@@ -73,7 +76,11 @@ async function exportAuditPDF(result: AuditResultType) {
   doc.setFontSize(11);
   doc.setTextColor(60, 60, 60);
   doc.text(`Domain: ${result.domain}`, 14, 32);
-  doc.text(`Audited: ${new Date(result.timestamp).toLocaleString('en-AU')}`, 14, 39);
+  doc.text(
+    `Audited: ${new Date(result.timestamp).toLocaleString('en-AU')}`,
+    14,
+    39
+  );
   doc.text(`Crawled pages: ${result.crawledPages}`, 14, 46);
 
   // Score
@@ -107,7 +114,9 @@ async function exportAuditPDF(result: AuditResultType) {
   // Core Web Vitals if available
   if (result.categories.coreWebVitals) {
     const cwv = result.categories.coreWebVitals;
-    const lastY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable?.finalY ?? 130;
+    const lastY =
+      (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable
+        ?.finalY ?? 130;
 
     doc.setFontSize(13);
     doc.setTextColor(40, 40, 40);
@@ -119,8 +128,16 @@ async function exportAuditPDF(result: AuditResultType) {
       body: [
         ['LCP (Largest Contentful Paint)', `${cwv.lcp.value}s`, cwv.lcp.rating],
         ['FID (First Input Delay)', `${cwv.fid.value}ms`, cwv.fid.rating],
-        ['CLS (Cumulative Layout Shift)', String(cwv.cls.value), cwv.cls.rating],
-        ['INP (Interaction to Next Paint)', `${cwv.inp.value}ms`, cwv.inp.rating],
+        [
+          'CLS (Cumulative Layout Shift)',
+          String(cwv.cls.value),
+          cwv.cls.rating,
+        ],
+        [
+          'INP (Interaction to Next Paint)',
+          `${cwv.inp.value}ms`,
+          cwv.inp.rating,
+        ],
       ],
       theme: 'grid',
       headStyles: { fillColor: [6, 182, 212], textColor: 255 },
@@ -246,7 +263,8 @@ export default function SEOAuditPage() {
     } catch (error) {
       toast({
         title: 'Audit Failed',
-        description: error instanceof Error ? error.message : 'Failed to perform audit',
+        description:
+          error instanceof Error ? error.message : 'Failed to perform audit',
         variant: 'destructive',
       });
     } finally {
@@ -255,7 +273,7 @@ export default function SEOAuditPage() {
   };
 
   const toggleIssue = (id: string) => {
-    setExpandedIssues((prev) => {
+    setExpandedIssues(prev => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
@@ -278,9 +296,9 @@ export default function SEOAuditPage() {
 
   const handleCopyFix = (issueTitle: string, recommendation: string) => {
     navigator.clipboard.writeText(recommendation).then(() => {
-      setCopiedIds((prev) => new Set(prev).add(issueTitle));
+      setCopiedIds(prev => new Set(prev).add(issueTitle));
       setTimeout(() => {
-        setCopiedIds((prev) => {
+        setCopiedIds(prev => {
           const next = new Set(prev);
           next.delete(issueTitle);
           return next;
@@ -293,9 +311,14 @@ export default function SEOAuditPage() {
     if (!auditResult) return;
     setIsCreatingCampaign(true);
     try {
-      const contentIssues = sortIssuesBySeverity(auditResult.categories.content.issues);
+      const contentIssues = sortIssuesBySeverity(
+        auditResult.categories.content.issues
+      );
       const recommendations = contentIssues
-        .map((issue) => `- **${issue.title}** (${issue.severity}): ${issue.recommendation}`)
+        .map(
+          issue =>
+            `- **${issue.title}** (${issue.severity}): ${issue.recommendation}`
+        )
         .join('\n');
 
       const today = new Date().toLocaleDateString('en-AU');
@@ -334,7 +357,8 @@ export default function SEOAuditPage() {
     } catch (error) {
       toast({
         title: 'Failed to create campaign',
-        description: error instanceof Error ? error.message : 'Something went wrong',
+        description:
+          error instanceof Error ? error.message : 'Something went wrong',
         variant: 'destructive',
       });
     } finally {
@@ -358,12 +382,18 @@ export default function SEOAuditPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/seo">
-          <Button variant="ghost" size="icon" className="text-white/40 hover:text-white">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white/40 hover:text-white"
+          >
             <ArrowLeft className="w-5 h-5" />
           </Button>
         </Link>
         <div>
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">SEO</span>
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+            SEO
+          </span>
           <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white flex items-center gap-3">
             <FileSearch className="w-7 h-7 text-cyan-400" />
             Site Audit
@@ -389,9 +419,9 @@ export default function SEOAuditPage() {
                   type="url"
                   placeholder="Enter website URL (e.g., https://example.com)"
                   value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  className="pl-10 bg-white/[0.03] border-[0.5px] border-white/[0.06] text-white placeholder:text-white/25"
-                  onKeyDown={(e) => e.key === 'Enter' && handleAudit()}
+                  onChange={e => setUrl(e.target.value)}
+                  className="pl-10 bg-white/[0.03] border-[0.5px] border-white/[0.06] text-white placeholder:text-white/50"
+                  onKeyDown={e => e.key === 'Enter' && handleAudit()}
                 />
               </div>
               <Button
@@ -424,8 +454,12 @@ export default function SEOAuditPage() {
               <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm lg:col-span-1">
                 <div className="p-6 flex flex-col items-center">
                   <ScoreGauge score={auditResult.score} />
-                  <h3 className="text-base font-light text-white mt-4">SEO Health Score</h3>
-                  <p className="text-white/40 text-sm mt-1">{auditResult.domain}</p>
+                  <h3 className="text-base font-light text-white mt-4">
+                    SEO Health Score
+                  </h3>
+                  <p className="text-white/40 text-sm mt-1">
+                    {auditResult.domain}
+                  </p>
                   <div className="flex items-center gap-2 mt-4 text-white/25 text-sm">
                     <Clock className="w-4 h-4" />
                     {new Date(auditResult.timestamp).toLocaleString()}
@@ -434,18 +468,25 @@ export default function SEOAuditPage() {
               </div>
 
               {/* Issue Summary */}
-              <IssueSummary issues={auditResult.issues} crawledPages={auditResult.crawledPages} />
+              <IssueSummary
+                issues={auditResult.issues}
+                crawledPages={auditResult.crawledPages}
+              />
             </div>
 
             {/* Core Web Vitals */}
             {auditResult.categories.coreWebVitals && (
-              <CoreWebVitalsCard vitals={auditResult.categories.coreWebVitals} />
+              <CoreWebVitalsCard
+                vitals={auditResult.categories.coreWebVitals}
+              />
             )}
 
             {/* Detailed Issues */}
             <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
               <div className="flex flex-row items-center justify-between p-6 pb-0">
-                <h3 className="text-sm uppercase tracking-[0.2em] text-white/40">Detailed Issues</h3>
+                <h3 className="text-sm uppercase tracking-[0.2em] text-white/40">
+                  Detailed Issues
+                </h3>
                 <Button
                   variant="outline"
                   size="sm"
@@ -544,7 +585,10 @@ export default function SEOAuditPage() {
                 Re-run Audit
               </Button>
               <Link href="/dashboard/seo">
-                <Button variant="ghost" className="text-white/40 hover:text-white">
+                <Button
+                  variant="ghost"
+                  className="text-white/40 hover:text-white"
+                >
                   Back to SEO Dashboard
                 </Button>
               </Link>
@@ -556,9 +600,13 @@ export default function SEOAuditPage() {
         {!auditResult && !isLoading && (
           <div className="text-center py-16">
             <FileSearch className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-white mb-2">Ready to Audit</h3>
+            <h3 className="text-xl font-medium text-white mb-2">
+              Ready to Audit
+            </h3>
             <p className="text-gray-400 max-w-md mx-auto">
-              Enter a website URL above to run a comprehensive SEO audit. We&apos;ll analyse technical issues, on-page elements, content quality, and Core Web Vitals.
+              Enter a website URL above to run a comprehensive SEO audit.
+              We&apos;ll analyse technical issues, on-page elements, content
+              quality, and Core Web Vitals.
             </p>
           </div>
         )}
@@ -578,14 +626,16 @@ export default function SEOAuditPage() {
                 Content Quick Wins · {auditResult?.domain}
               </SheetTitle>
               <SheetDescription className="text-white/60">
-                {contentIssues.length} issue{contentIssues.length !== 1 ? 's' : ''} found · sorted by priority
+                {contentIssues.length} issue
+                {contentIssues.length !== 1 ? 's' : ''} found · sorted by
+                priority
               </SheetDescription>
             </SheetHeader>
           </div>
 
           {/* Scrollable body */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            {contentIssues.map((issue) => (
+            {contentIssues.map(issue => (
               <div
                 key={issue.title}
                 className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4 space-y-2"
@@ -599,9 +649,13 @@ export default function SEOAuditPage() {
                       >
                         {issue.severity}
                       </Badge>
-                      <span className="text-sm font-medium text-white">{issue.title}</span>
+                      <span className="text-sm font-medium text-white">
+                        {issue.title}
+                      </span>
                     </div>
-                    <p className="text-xs text-white/60 leading-relaxed">{issue.description}</p>
+                    <p className="text-xs text-white/60 leading-relaxed">
+                      {issue.description}
+                    </p>
                   </div>
                 </div>
                 <p className="text-xs text-cyan-300/80 leading-relaxed border-t border-white/[0.06] pt-2">
@@ -612,7 +666,9 @@ export default function SEOAuditPage() {
                     size="sm"
                     variant="ghost"
                     className="text-white/50 hover:text-white hover:bg-white/10 h-7 text-xs"
-                    onClick={() => handleCopyFix(issue.title, issue.recommendation)}
+                    onClick={() =>
+                      handleCopyFix(issue.title, issue.recommendation)
+                    }
                   >
                     {copiedIds.has(issue.title) ? (
                       <>

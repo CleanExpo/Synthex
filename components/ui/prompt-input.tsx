@@ -155,7 +155,7 @@ export function PromptInput({
                 size="icon-sm"
                 aria-label="Attach file"
                 onClick={() => fileInputRef.current?.click()}
-                className="h-7 w-7 text-white/40 hover:text-white/70 hover:bg-white/[0.04] rounded-sm"
+                className="h-7 w-7 text-white/50 hover:text-white/70 hover:bg-white/[0.04] rounded-sm"
               >
                 <Paperclip className="h-4 w-4" />
               </Button>
@@ -165,7 +165,7 @@ export function PromptInput({
 
         {/* Right: send / stop */}
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] text-white/20 select-none hidden sm:block">
+          <span className="text-[10px] text-white/50 select-none hidden sm:block">
             Shift+Enter for new line
           </span>
 
