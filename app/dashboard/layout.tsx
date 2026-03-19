@@ -123,6 +123,18 @@ const sidebarGroups: Array<{
     ],
   },
   {
+    id: 'creative-suite',
+    icon: Sparkles,
+    label: 'CREATIVE SUITE',
+    items: [
+      {
+        icon: Sparkles,
+        label: 'Creative Suite',
+        href: '/dashboard/creative-suite',
+      },
+    ],
+  },
+  {
     id: 'content-ai',
     icon: Sparkles,
     label: 'CONTENT & AI',
@@ -322,6 +334,7 @@ const sidebarGroups: Array<{
 
 const STARTER_GROUP_IDS = new Set([
   'main',
+  'creative-suite',
   'content-ai',
   'planning',
   'analytics',
