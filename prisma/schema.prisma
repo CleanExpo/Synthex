@@ -540,6 +540,10 @@ model Organization {
   // GEO Research Reports (org-scoped)
   geoResearchReports GEOResearchReport[] @relation("OrganizationGEOReports")
 
+  // Auto-Research System
+  autoResearchRuns AutoResearchRun[]
+  trendInsights    TrendInsight[]
+
   // Stickiness — streak tracking
   streakCount     Int      @default(0)
   lastApprovedAt  DateTime?
@@ -4327,4 +4331,52 @@ model BrandDNA {
 
   @@index([organizationId])
   @@map("brand_dna")
+}
+
+// ==========================================
+// Auto-Research System
+// ==========================================
+
+/// Tracks each automated research run that scrapes social platforms and extracts insights.
+model AutoResearchRun {
+  id             String        @id @default(cuid())
+  runType        String        // "daily_trends" | "weekly_deep"
+  status         String        // "running" | "completed" | "failed"
+  platforms      String[]
+  insightsCount  Int           @default(0)
+  promptsUpdated Int           @default(0)
+  startedAt      DateTime      @default(now())
+  completedAt    DateTime?
+  error          String?
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  insights       TrendInsight[]
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([startedAt])
+  @@map("auto_research_runs")
+}
+
+/// Structured insight extracted from scraped social media data.
+model TrendInsight {
+  id             String          @id @default(cuid())
+  platform       String          // "instagram" | "tiktok" | "linkedin" | "twitter" | "facebook" | "google"
+  category       String          // "hook" | "visual_style" | "hashtag" | "topic" | "format" | "cta"
+  insight        String
+  confidence     Float           // 0.0–1.0
+  dataPoints     Int             // number of source posts analysed
+  validUntil     DateTime?
+  applied        Boolean         @default(false)
+  organizationId String?
+  runId          String
+  run            AutoResearchRun @relation(fields: [runId], references: [id])
+  organization   Organization?   @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime        @default(now())
+
+  @@index([organizationId])
+  @@index([platform, category])
+  @@index([runId])
+  @@index([confidence])
+  @@map("trend_insights")
 }
