@@ -242,7 +242,7 @@ export default function SignupPage() {
     if (passwordStrength === 0) return 'bg-gray-600';
     if (passwordStrength === 1) return 'bg-red-500';
     if (passwordStrength === 2) return 'bg-yellow-500';
-    if (passwordStrength === 3) return 'bg-cyan-500';
+    if (passwordStrength === 3) return 'bg-orange-500';
     return 'bg-green-500';
   };
 
@@ -263,37 +263,37 @@ export default function SignupPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-dark px-4 py-8 relative overflow-hidden">
         {/* Deep Navy Gradient Background */}
-        <div className="fixed inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f172a] to-[#0a1628]" />
+        <div className="fixed inset-0 bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]" />
 
         {/* Subtle Grid Pattern */}
         <div className="fixed inset-0 opacity-[0.02]" style={{
-          backgroundImage: `linear-gradient(rgba(6, 182, 212, 0.5) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(6, 182, 212, 0.5) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(rgba(255, 184, 123, 0.3) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(255, 184, 123, 0.3) 1px, transparent 1px)`,
           backgroundSize: '50px 50px'
         }} />
 
         {/* Glow Effects */}
-        <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[150px] pointer-events-none" />
-        <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
 
-        <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-cyan-500/5">
+        <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 shadow-2xl shadow-orange-500/5">
           <CardHeader className="space-y-1">
             <div className="flex items-center justify-center mb-4">
               <SynthexLogo className="w-12 h-12" />
             </div>
             <div className="flex items-center justify-center mb-2">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30 flex items-center justify-center">
-                <Mail className="w-8 h-8 text-cyan-400" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 flex items-center justify-center">
+                <Mail className="w-8 h-8 text-orange-400" />
               </div>
             </div>
-            <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300">
+            <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
               Check your email
             </CardTitle>
             <CardDescription className="text-center text-gray-400 space-y-2">
               <span className="block">
                 Your account has been created. We sent a verification email to:
               </span>
-              <span className="block text-cyan-300 font-medium">
+              <span className="block text-orange-300 font-medium">
                 {verificationEmail}
               </span>
               <span className="block text-xs text-gray-500 mt-2">
@@ -308,7 +308,7 @@ export default function SignupPage() {
                 wired yet). This prevents blocking the user flow. */}
             <Button
               onClick={() => router.push('/onboarding')}
-              className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-medium shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40"
             >
               Continue to onboarding
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -318,7 +318,7 @@ export default function SignupPage() {
               variant="outline"
               onClick={handleResendVerification}
               disabled={resendLoading || resendStatus === 'sent'}
-              className="w-full border-cyan-500/20 text-gray-300 hover:bg-cyan-500/10 hover:text-white"
+              className="w-full border-orange-500/20 text-gray-300 hover:bg-orange-500/10 hover:text-white"
             >
               {resendLoading ? (
                 <>
@@ -327,7 +327,7 @@ export default function SignupPage() {
                 </>
               ) : resendStatus === 'sent' ? (
                 <>
-                  <CheckCircle className="mr-2 h-4 w-4 text-cyan-400" />
+                  <CheckCircle className="mr-2 h-4 w-4 text-orange-400" />
                   Verification email sent
                 </>
               ) : (
@@ -352,7 +352,7 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={() => setVerificationEmail(null)}
-                className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                className="text-orange-400 hover:text-orange-300 transition-colors"
               >
                 Go back
               </button>
@@ -366,26 +366,26 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface-dark px-4 py-8 relative overflow-hidden">
       {/* Deep Navy Gradient Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f172a] to-[#0a1628]" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]" />
 
       {/* Subtle Grid Pattern */}
       <div className="fixed inset-0 opacity-[0.02]" style={{
-        backgroundImage: `linear-gradient(rgba(6, 182, 212, 0.5) 1px, transparent 1px),
-                          linear-gradient(90deg, rgba(6, 182, 212, 0.5) 1px, transparent 1px)`,
+        backgroundImage: `linear-gradient(rgba(255, 184, 123, 0.3) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(255, 184, 123, 0.3) 1px, transparent 1px)`,
         backgroundSize: '50px 50px'
       }} />
 
       {/* Glow Effects */}
-      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
 
       {/* Card Container */}
-      <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-cyan-500/5">
+      <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 shadow-2xl shadow-orange-500/5">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
             <SynthexLogo className="w-12 h-12" />
           </div>
-          <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300">
+          <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
             Create your account
           </CardTitle>
           <CardDescription className="text-center text-gray-400">
@@ -428,7 +428,7 @@ export default function SignupPage() {
                     placeholder="SX-XXXXXX"
                     value={formData.inviteCode}
                     onChange={(e) => setFormData({ ...formData, inviteCode: e.target.value.toUpperCase() })}
-                    className={`pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 uppercase tracking-wider font-mono ${fieldErrors.inviteCode ? 'border-red-500/60' : ''}`}
+                    className={`pl-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 uppercase tracking-wider font-mono ${fieldErrors.inviteCode ? 'border-red-500/60' : ''}`}
                     required
                     disabled={isSubmitDisabled}
                     maxLength={20}
@@ -440,7 +440,7 @@ export default function SignupPage() {
                 )}
                 <p className="text-xs text-gray-500">
                   Don&apos;t have an invite code?{' '}
-                  <Link href="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                  <Link href="/" className="text-orange-400 hover:text-orange-300 transition-colors">
                     Request access
                   </Link>
                 </p>
@@ -457,7 +457,7 @@ export default function SignupPage() {
                   placeholder="John Doe"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className={`pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 ${fieldErrors.name ? 'border-red-500/60' : ''}`}
+                  className={`pl-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.name ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isSubmitDisabled}
                 />
@@ -477,7 +477,7 @@ export default function SignupPage() {
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className={`pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 ${fieldErrors.email ? 'border-red-500/60' : ''}`}
+                  className={`pl-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.email ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isSubmitDisabled}
                 />
@@ -500,7 +500,7 @@ export default function SignupPage() {
                     setFormData({ ...formData, password: e.target.value });
                     calculatePasswordStrength(e.target.value);
                   }}
-                  className={`pl-10 pr-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 ${fieldErrors.password ? 'border-red-500/60' : ''}`}
+                  className={`pl-10 pr-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.password ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isSubmitDisabled}
                 />
@@ -526,7 +526,7 @@ export default function SignupPage() {
                     ))}
                   </div>
                   <p className="text-xs text-gray-400">
-                    Password strength: <span className={passwordStrength >= 3 ? 'text-cyan-400' : 'text-yellow-400'}>
+                    Password strength: <span className={passwordStrength >= 3 ? 'text-orange-400' : 'text-yellow-400'}>
                       {getPasswordStrengthText()}
                     </span>
                   </p>
@@ -547,12 +547,12 @@ export default function SignupPage() {
                   placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className={`pl-10 pr-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 ${fieldErrors.confirmPassword ? 'border-red-500/60' : ''}`}
+                  className={`pl-10 pr-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.confirmPassword ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isSubmitDisabled}
                 />
                 {formData.confirmPassword && formData.password === formData.confirmPassword ? (
-                  <CheckCircle className="absolute right-3 top-3 w-4 h-4 text-cyan-500" />
+                  <CheckCircle className="absolute right-3 top-3 w-4 h-4 text-orange-500" />
                 ) : (
                   <button
                     type="button"
@@ -571,14 +571,14 @@ export default function SignupPage() {
 
             <div className="space-y-2">
               <label className="flex items-center space-x-2 text-sm">
-                <input type="checkbox" className="rounded border-gray-600 bg-white/5 text-cyan-500 focus:ring-cyan-500/20" required />
+                <input type="checkbox" className="rounded border-gray-600 bg-white/5 text-orange-500 focus:ring-orange-500/20" required />
                 <span className="text-gray-400">
                   I agree to the{' '}
-                  <Link href="/terms" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                  <Link href="/terms" className="text-orange-400 hover:text-orange-300 transition-colors">
                     Terms of Service
                   </Link>{' '}
                   and{' '}
-                  <Link href="/privacy" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                  <Link href="/privacy" className="text-orange-400 hover:text-orange-300 transition-colors">
                     Privacy Policy
                   </Link>
                 </span>
@@ -587,7 +587,7 @@ export default function SignupPage() {
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-medium shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitDisabled}
             >
               {isLoading ? (
@@ -612,7 +612,7 @@ export default function SignupPage() {
             <>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-cyan-500/10" />
+                  <span className="w-full border-t border-orange-500/10" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-surface-base px-2 text-gray-500">Or continue with</span>
@@ -623,7 +623,7 @@ export default function SignupPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full bg-white/5 border-cyan-500/20 text-white hover:bg-cyan-500/10 hover:border-cyan-500/40 transition-all"
+                  className="w-full bg-white/5 border-orange-500/20 text-white hover:bg-orange-500/10 hover:border-orange-500/40 transition-all"
                   onClick={handleGoogleSignup}
                   disabled={isLoading}
                 >
@@ -637,7 +637,7 @@ export default function SignupPage() {
         <CardFooter>
           <p className="text-center text-sm text-gray-400 w-full">
             Already have an account?{' '}
-            <Link href="/login" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+            <Link href="/login" className="text-orange-400 hover:text-orange-300 transition-colors">
               Sign in
             </Link>
           </p>

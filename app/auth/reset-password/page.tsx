@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -13,11 +13,11 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
-  Sparkles,
   Eye,
   EyeOff,
   ArrowRight
 } from '@/components/icons';
+import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 import { toast } from 'sonner';
 
 function ResetPasswordForm() {
@@ -88,27 +88,36 @@ function ResetPasswordForm() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-950 via-cyan-950/20 to-gray-950 flex items-center justify-center p-4">
-        {/* Background effects */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 -left-32 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 -right-32 w-64 h-64 bg-green-500/20 rounded-full blur-3xl" />
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-[#050505] px-4 relative overflow-hidden">
+        {/* Background gradient */}
+        <div className="fixed inset-0 bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]" />
 
-        <Card variant="glass-success" className="max-w-md w-full relative z-10">
+        {/* Subtle grid */}
+        <div className="fixed inset-0 opacity-[0.02]" style={{
+          backgroundImage: `linear-gradient(rgba(255, 184, 123, 0.3) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(255, 184, 123, 0.3) 1px, transparent 1px)`,
+          backgroundSize: '50px 50px'
+        }} />
+
+        {/* Glow effects */}
+        <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
+
+        <Card className="relative z-10 max-w-md w-full bg-zinc-900/90 backdrop-blur-xl border border-orange-900/20 shadow-2xl shadow-orange-500/5">
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mb-4 shadow-lg shadow-emerald-500/25">
-                <CheckCircle className="w-8 h-8 text-emerald-400" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 mb-4">
+                <CheckCircle className="w-8 h-8 text-orange-400" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Password Reset!</h2>
-              <p className="text-white/60 mb-6">
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300 mb-2">
+                Password Reset!
+              </h2>
+              <p className="text-gray-400 mb-6">
                 Your password has been successfully reset. You can now sign in with your new password.
               </p>
               <Button
                 onClick={() => router.push('/login')}
-                variant="premium-primary"
-                className="w-full"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40"
               >
                 Go to Login
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -121,36 +130,45 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-cyan-950/20 to-gray-950 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#050505] px-4 relative overflow-hidden">
+      {/* Background gradient */}
+      <div className="fixed inset-0 bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]" />
 
-      {/* Background effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -left-32 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 -right-32 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl" />
-      </div>
+      {/* Subtle grid */}
+      <div className="fixed inset-0 opacity-[0.02]" style={{
+        backgroundImage: `linear-gradient(rgba(255, 184, 123, 0.3) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(255, 184, 123, 0.3) 1px, transparent 1px)`,
+        backgroundSize: '50px 50px'
+      }} />
+
+      {/* Glow effects */}
+      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10">
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 mb-4 shadow-lg shadow-cyan-500/25">
-            <Sparkles className="w-8 h-8 text-white" />
+          <div className="flex items-center justify-center mb-4">
+            <SynthexLogo className="w-12 h-12" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Reset Password</h1>
-          <p className="text-white/60">Enter your new password below</p>
+          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300 mb-2">
+            Reset Password
+          </h1>
+          <p className="text-gray-400">Enter your new password below</p>
         </div>
 
-        <Card variant="glass-primary">
+        <Card className="bg-zinc-900/90 backdrop-blur-xl border border-orange-900/20 shadow-2xl shadow-orange-500/5">
           <CardHeader>
             <CardTitle className="text-white">Create New Password</CardTitle>
-            <CardDescription className="text-white/60">
+            <CardDescription className="text-gray-400">
               Your new password must be at least 8 characters long
             </CardDescription>
           </CardHeader>
           <CardContent>
             {error && (
-              <Alert variant="glass-destructive" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+              <Alert className="mb-4 border-red-500/30 bg-red-500/10">
+                <AlertCircle className="h-4 w-4 text-red-400" />
+                <AlertDescription className="text-red-300">{error}</AlertDescription>
               </Alert>
             )}
 
@@ -158,7 +176,7 @@ function ResetPasswordForm() {
               <div className="mb-4 text-center">
                 <a
                   href="/forgot-password"
-                  className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors underline underline-offset-2"
+                  className="text-sm text-orange-400 hover:text-orange-300 font-medium transition-colors underline underline-offset-2"
                 >
                   Request a new reset link
                 </a>
@@ -167,60 +185,56 @@ function ResetPasswordForm() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label variant="glass" htmlFor="password">New Password</Label>
+                <Label htmlFor="password" className="text-gray-300">New Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    variant="glass"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="pl-10 pr-10"
+                    className="pl-10 pr-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
                   />
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
-                  <Button
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 text-white/40 hover:text-white hover:bg-transparent"
+                    className="absolute right-3 top-3 text-gray-500 hover:text-gray-300 transition-colors"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? (
                       <EyeOff className="w-4 h-4" />
                     ) : (
                       <Eye className="w-4 h-4" />
                     )}
-                  </Button>
+                  </button>
                 </div>
-                <p className="text-xs text-white/40">Must be at least 8 characters</p>
+                <p className="text-xs text-gray-500">Must be at least 8 characters</p>
               </div>
 
               <div className="space-y-2">
-                <Label variant="glass" htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword" className="text-gray-300">Confirm New Password</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
                     type="password"
-                    variant="glass"
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="pl-10"
+                    className="pl-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
                   />
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                 </div>
               </div>
 
               <Button
                 type="submit"
                 disabled={isLoading}
-                variant="premium-primary"
-                className="w-full"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>
@@ -245,8 +259,8 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-b from-gray-950 via-cyan-950/20 to-gray-950 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-white" />
+      <div className="min-h-screen flex items-center justify-center bg-[#050505]">
+        <Loader2 className="w-8 h-8 animate-spin text-orange-400" />
       </div>
     }>
       <ResetPasswordForm />

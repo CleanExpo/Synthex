@@ -234,26 +234,26 @@ function LoginContent() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface-dark px-4 relative overflow-hidden">
       {/* Deep Navy Gradient Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f172a] to-[#0a1628]" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]" />
 
       {/* Subtle Grid Pattern */}
       <div className="fixed inset-0 opacity-[0.02]" style={{
-        backgroundImage: `linear-gradient(rgba(6, 182, 212, 0.5) 1px, transparent 1px),
-                          linear-gradient(90deg, rgba(6, 182, 212, 0.5) 1px, transparent 1px)`,
+        backgroundImage: `linear-gradient(rgba(255, 184, 123, 0.3) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(255, 184, 123, 0.3) 1px, transparent 1px)`,
         backgroundSize: '50px 50px'
       }} />
 
       {/* Glow Effects */}
-      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
 
       {/* Card Container */}
-      <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-cyan-500/5">
+      <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 shadow-2xl shadow-orange-500/5">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
             <SynthexLogo className="w-12 h-12" />
           </div>
-          <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300">
+          <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
             Welcome back
           </CardTitle>
           <CardDescription className="text-center text-gray-400">
@@ -330,7 +330,7 @@ function LoginContent() {
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) => { setFormData({ ...formData, email: e.target.value }); setFormError(null); }}
-                  className="pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                  className="pl-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
                   aria-label="Email address"
                   aria-required="true"
                   aria-invalid={!!formError}
@@ -350,7 +350,7 @@ function LoginContent() {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => { setFormData({ ...formData, password: e.target.value }); setFormError(null); }}
-                  className="pl-10 pr-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                  className="pl-10 pr-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
                   aria-invalid={!!formError}
                   required
                   disabled={isSubmitDisabled}
@@ -371,17 +371,17 @@ function LoginContent() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded border-gray-600 bg-white/5 text-cyan-500 focus:ring-cyan-500/20"
+                  className="rounded border-gray-600 bg-white/5 text-orange-500 focus:ring-orange-500/20"
                 />
                 <span className="text-gray-400">Remember me</span>
               </label>
-              <Link href="/forgot-password" className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
+              <Link href="/forgot-password" className="text-sm text-orange-400 hover:text-orange-300 transition-colors">
                 Forgot password?
               </Link>
             </div>
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-medium shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitDisabled}
             >
               {isLoading ? (
@@ -405,14 +405,14 @@ function LoginContent() {
               attempts to log in with email/password. Replaces the misleading
               "Invalid email or password" toast with actionable guidance. */}
           {oauthHint && (
-            <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+            <div className="p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
               <div className="flex items-start gap-2">
-                <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm text-blue-200 font-medium">
+                  <p className="text-sm text-orange-200 font-medium">
                     This email is linked to a {getProviderDisplayName(oauthHint)} account
                   </p>
-                  <p className="text-xs text-blue-200/70 mt-1">
+                  <p className="text-xs text-orange-200/70 mt-1">
                     You signed up with {getProviderDisplayName(oauthHint)} instead of a password.
                     Use the button below to sign in.
                   </p>
@@ -422,7 +422,7 @@ function LoginContent() {
                       size="sm"
                       onClick={handleGoogleLogin}
                       disabled={oauthLoading}
-                      className="mt-2 bg-blue-500/20 border border-blue-500/30 text-blue-200 hover:bg-blue-500/30 hover:text-white text-xs"
+                      className="mt-2 bg-orange-500/20 border border-orange-500/30 text-orange-200 hover:bg-orange-500/30 hover:text-white text-xs"
                     >
                       {oauthLoading ? (
                         <>
@@ -438,7 +438,7 @@ function LoginContent() {
                     </Button>
                   )}
                   {oauthHint !== 'google' && (
-                    <p className="text-xs text-blue-300 mt-2">
+                    <p className="text-xs text-orange-300 mt-2">
                       Please use the {getProviderDisplayName(oauthHint)} sign-in option.
                     </p>
                   )}
@@ -449,7 +449,7 @@ function LoginContent() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-cyan-500/10" />
+              <span className="w-full border-t border-orange-500/10" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-surface-base px-2 text-gray-500">Or continue with</span>
@@ -460,7 +460,7 @@ function LoginContent() {
             <Button
               type="button"
               variant="outline"
-              className="w-full bg-white/5 border-cyan-500/20 text-white hover:bg-cyan-500/10 hover:border-cyan-500/40 transition-all"
+              className="w-full bg-white/5 border-orange-500/20 text-white hover:bg-orange-500/10 hover:border-orange-500/40 transition-all"
               onClick={handleGoogleLogin}
               disabled={isLoading || oauthLoading}
             >
@@ -481,7 +481,7 @@ function LoginContent() {
         <CardFooter>
           <p className="text-center text-sm text-gray-400 w-full">
             Don't have an account?{' '}
-            <Link href="/signup" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+            <Link href="/signup" className="text-orange-400 hover:text-orange-300 transition-colors">
               Sign up
             </Link>
           </p>

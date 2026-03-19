@@ -12,7 +12,7 @@ const changelogEntries = [
     type: 'major',
     changes: [
       'Complete UI overhaul with new Synthex branding',
-      'Deep navy theme with cyan accents',
+      'New amber/orange theme with dark industrial aesthetic',
       'Improved performance and faster load times',
       'New AI content generation engine',
       'Enhanced analytics dashboard'
@@ -62,22 +62,22 @@ const changelogEntries = [
 const getTypeIcon = (type: string) => {
   switch (type) {
     case 'major':
-      return <Sparkles className="w-5 h-5 text-cyan-400" />;
+      return <Sparkles className="w-5 h-5 text-orange-400" />;
     case 'feature':
-      return <Zap className="w-5 h-5 text-cyan-400" />;
+      return <Zap className="w-5 h-5 text-orange-400" />;
     case 'security':
       return <Shield className="w-5 h-5 text-amber-400" />;
     default:
-      return <TrendingUp className="w-5 h-5 text-cyan-400" />;
+      return <TrendingUp className="w-5 h-5 text-orange-400" />;
   }
 };
 
 const getTypeBadge = (type: string) => {
   switch (type) {
     case 'major':
-      return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
+      return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
     case 'feature':
-      return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
+      return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
     case 'security':
       return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
     default:
@@ -91,9 +91,9 @@ export default function ChangelogPage() {
       {/* Hero Section */}
       <section className="pt-12 pb-12 px-6">
         <div className="container mx-auto text-center">
-          <Clock className="w-16 h-16 text-cyan-400 mx-auto mb-6" />
+          <Clock className="w-16 h-16 text-orange-400 mx-auto mb-6" />
           <h1 className="text-5xl font-bold text-white mb-4">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-500">Changelog</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-500">Changelog</span>
           </h1>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
             Stay up to date with the latest features, improvements, and fixes to the Synthex platform.
@@ -106,15 +106,15 @@ export default function ChangelogPage() {
         <div className="container mx-auto max-w-4xl">
           <div className="relative">
             {/* Timeline line */}
-            <div className="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-cyan-500/50 via-cyan-500/20 to-transparent hidden md:block" />
+            <div className="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-orange-500/50 via-orange-500/20 to-transparent hidden md:block" />
 
             <div className="space-y-8">
               {changelogEntries.map((entry, index) => (
                 <div key={index} className="relative">
                   {/* Timeline dot */}
-                  <div className="absolute left-6 top-8 w-4 h-4 rounded-full bg-cyan-500 border-4 border-surface-dark hidden md:block" />
+                  <div className="absolute left-6 top-8 w-4 h-4 rounded-full bg-orange-500 border-4 border-surface-dark hidden md:block" />
 
-                  <Card className="bg-surface-base/80 border border-cyan-500/20 backdrop-blur-sm p-6 md:ml-16">
+                  <Card className="bg-surface-base/80 border border-orange-500/20 backdrop-blur-sm p-6 md:ml-16">
                     <div className="flex flex-wrap items-center gap-3 mb-4">
                       {getTypeIcon(entry.type)}
                       <span className="text-white font-bold text-lg">{entry.version}</span>
@@ -129,7 +129,7 @@ export default function ChangelogPage() {
                     <ul className="space-y-2">
                       {entry.changes.map((change, idx) => (
                         <li key={idx} className="text-gray-300 flex items-start gap-2">
-                          <span className="text-cyan-400 mt-1">•</span>
+                          <span className="text-orange-400 mt-1">•</span>
                           <span>{change}</span>
                         </li>
                       ))}
@@ -145,8 +145,8 @@ export default function ChangelogPage() {
       {/* Subscribe Section */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-cyan-500/30 p-12 text-center max-w-3xl mx-auto">
-            <Sparkles className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
+          <Card className="bg-gradient-to-br from-[#111111] to-[#1e293b] border border-orange-500/30 p-12 text-center max-w-3xl mx-auto">
+            <Sparkles className="w-12 h-12 text-orange-400 mx-auto mb-4" />
             <h2 className="text-3xl font-bold text-white mb-4">
               Stay Updated
             </h2>
@@ -157,9 +157,9 @@ export default function ChangelogPage() {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-3 bg-surface-dark border border-cyan-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                className="flex-1 px-4 py-3 bg-surface-dark border border-orange-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-400 transition-colors"
               />
-              <button className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/25 transition-all">
+              <button className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium rounded-lg shadow-lg shadow-orange-500/25 transition-all">
                 Subscribe
               </button>
             </div>

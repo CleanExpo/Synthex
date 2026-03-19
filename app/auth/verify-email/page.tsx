@@ -78,20 +78,41 @@ function VerifyEmailContent() {
 
   if (verified) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-[#050505] px-4 relative overflow-hidden">
+        {/* Background gradient */}
+        <div className="fixed inset-0 bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]" />
+
+        {/* Subtle grid */}
+        <div className="fixed inset-0 opacity-[0.02]" style={{
+          backgroundImage: `linear-gradient(rgba(255, 184, 123, 0.3) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(255, 184, 123, 0.3) 1px, transparent 1px)`,
+          backgroundSize: '50px 50px'
+        }} />
+
+        {/* Glow effects */}
+        <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
+
+        <Card className="relative z-10 w-full max-w-md bg-zinc-900/90 backdrop-blur-xl border border-orange-900/20 shadow-2xl shadow-orange-500/5">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <CheckCircle className="h-16 w-16 text-green-500" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 flex items-center justify-center">
+                <CheckCircle className="h-8 w-8 text-orange-400" />
+              </div>
             </div>
-            <CardTitle className="text-2xl">Email Verified!</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
+              Email Verified!
+            </CardTitle>
+            <CardDescription className="text-gray-400">
               Your email has been successfully verified
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center">
-            <p className="mb-4">You can now access all features of SYNTHEX.</p>
-            <Button onClick={() => router.push('/onboarding')} className="w-full">
+          <CardContent className="text-center space-y-4">
+            <p className="text-gray-300 text-sm">You can now access all features of SYNTHEX.</p>
+            <Button
+              onClick={() => router.push('/onboarding')}
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40"
+            >
               Continue Setup
             </Button>
           </CardContent>
@@ -101,22 +122,40 @@ function VerifyEmailContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-[#050505] px-4 relative overflow-hidden">
+      {/* Background gradient */}
+      <div className="fixed inset-0 bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]" />
+
+      {/* Subtle grid */}
+      <div className="fixed inset-0 opacity-[0.02]" style={{
+        backgroundImage: `linear-gradient(rgba(255, 184, 123, 0.3) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(255, 184, 123, 0.3) 1px, transparent 1px)`,
+        backgroundSize: '50px 50px'
+      }} />
+
+      {/* Glow effects */}
+      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
+
+      <Card className="relative z-10 w-full max-w-md bg-zinc-900/90 backdrop-blur-xl border border-orange-900/20 shadow-2xl shadow-orange-500/5">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Mail className="h-16 w-16 text-blue-500" />
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 flex items-center justify-center">
+              <Mail className="h-8 w-8 text-orange-400" />
+            </div>
           </div>
-          <CardTitle className="text-2xl">Verify Your Email</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
+            Verify Your Email
+          </CardTitle>
+          <CardDescription className="text-gray-400">
             Enter the verification code sent to your email
           </CardDescription>
         </CardHeader>
         <CardContent>
           {error && (
-            <Alert className="mb-4 border-red-500 bg-red-50">
-              <XCircle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
+            <Alert className="mb-4 border-red-500/30 bg-red-500/10">
+              <XCircle className="h-4 w-4 text-red-400" />
+              <AlertDescription className="text-red-300">
                 {error}
               </AlertDescription>
             </Alert>
@@ -129,7 +168,7 @@ function VerifyEmailContent() {
                 placeholder="Enter verification code"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className="text-center text-lg tracking-wider"
+                className="text-center text-lg tracking-wider bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
                 maxLength={64}
               />
               <p className="text-xs text-gray-500 mt-2">
@@ -140,7 +179,7 @@ function VerifyEmailContent() {
             <Button
               onClick={() => verifyEmail(code)}
               disabled={verifying || !code}
-              className="w-full"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40"
             >
               {verifying ? (
                 <>
@@ -176,7 +215,7 @@ function VerifyEmailContent() {
                     }
                   }}
                   disabled={resending}
-                  className="text-blue-500 hover:underline disabled:opacity-50 inline-flex items-center gap-1"
+                  className="text-orange-400 hover:text-orange-300 transition-colors disabled:opacity-50 inline-flex items-center gap-1"
                 >
                   {resending && <RefreshCw className="h-3 w-3 animate-spin" />}
                   {resending ? 'Sending...' : 'Resend code'}
@@ -188,7 +227,7 @@ function VerifyEmailContent() {
               <Button
                 variant="ghost"
                 onClick={() => router.push('/login')}
-                className="text-sm"
+                className="text-sm text-gray-400 hover:text-orange-400 transition-colors"
               >
                 Back to Login
               </Button>

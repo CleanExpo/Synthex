@@ -75,7 +75,7 @@ export default function DemoSettingsPage() {
   // Appearance settings
   const [appearance, setAppearance] = useState({
     theme: 'dark',
-    accentColor: 'cyan',
+    accentColor: 'orange',
     compactMode: false,
     animations: true
   });
@@ -140,7 +140,7 @@ export default function DemoSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-cyan-950/20 to-gray-950">
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-orange-950/20 to-gray-950">
       
       {/* Demo Mode Banner */}
       <div className="bg-amber-500/10 border border-amber-500/20 p-3">
@@ -181,7 +181,7 @@ export default function DemoSettingsPage() {
               <CardContent>
                 <div className="flex items-center gap-6">
                   <div className="relative">
-                    <Avatar className="w-24 h-24 border-2 border-cyan-500/20">
+                    <Avatar className="w-24 h-24 border-2 border-orange-500/20">
                       <AvatarImage src={avatarPreview} alt="Profile" />
                       <AvatarFallback>JD</AvatarFallback>
                     </Avatar>
@@ -621,7 +621,7 @@ export default function DemoSettingsPage() {
                 <div className="space-y-2">
                   <Label>Accent Color</Label>
                   <div className="flex gap-2">
-                    {['cyan', 'blue', 'green', 'red', 'orange'].map((color) => (
+                    {['orange', 'amber', 'green', 'red', 'blue'].map((color) => (
                       <button
                         key={color}
                         onClick={() => setAppearance({ ...appearance, accentColor: color })}
@@ -673,7 +673,7 @@ export default function DemoSettingsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
+                  <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="text-lg font-semibold text-white">Pro Plan</h3>

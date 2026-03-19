@@ -68,13 +68,13 @@ html.lenis body {
        BRAND COLORS (Design Token System)
        ========================================================================= */
     /* Primary (Cyan) */
-    --color-primary: 6 182 212;
-    --color-primary-light: 34 211 238;
-    --color-primary-dark: 8 145 178;
+    --color-primary: 255 184 123;
+    --color-primary-light: 255 220 194;
+    --color-primary-dark: 255 143 0;
 
     /* Accent Colors */
-    --color-violet: 6 182 212;
-    --color-fuchsia: 6 182 212;
+    --color-violet: 255 184 123;
+    --color-fuchsia: 255 184 123;
     --color-cyan: 6 182 212;
     --color-amber: 245 158 11;
     --color-emerald: 16 185 129;
@@ -116,11 +116,11 @@ html.lenis body {
        GLOW EFFECTS (Using design tokens)
        ========================================================================= */
     --glow-primary:
-      0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(6, 182, 212, 0.1);
+      0 0 20px rgba(255, 184, 123, 0.3), 0 0 40px rgba(255, 184, 123, 0.1);
     --glow-primary-lg:
-      0 0 30px rgba(6, 182, 212, 0.5), 0 0 60px rgba(6, 182, 212, 0.2);
+      0 0 30px rgba(255, 184, 123, 0.5), 0 0 60px rgba(255, 184, 123, 0.2);
     --glow-cyan:
-      0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(6, 182, 212, 0.1);
+      0 0 20px rgba(255, 184, 123, 0.3), 0 0 40px rgba(255, 184, 123, 0.1);
     --glow-amber:
       0 0 20px rgba(245, 158, 11, 0.3), 0 0 40px rgba(245, 158, 11, 0.1);
 
@@ -198,8 +198,8 @@ html.lenis body {
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 26 100% 73%;
+    --primary-foreground: 20 10% 8%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
@@ -210,7 +210,7 @@ html.lenis body {
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 26 100% 73%;
 
     /* Dark mode glass adjustments - INCREASED for visibility */
     --glass-bg-base: rgba(255, 255, 255, 0.06);
@@ -748,19 +748,19 @@ html.lenis body {
 .glass-btn-primary {
   background: linear-gradient(
     to right,
-    rgba(6, 182, 212, 0.2),
-    rgba(8, 145, 178, 0.2)
+    rgba(255, 184, 123, 0.2),
+    rgba(255, 143, 0, 0.2)
   );
-  border: 1px solid rgba(6, 182, 212, 0.3);
+  border: 1px solid rgba(255, 184, 123, 0.3);
 }
 
 .glass-btn-primary:hover {
   background: linear-gradient(
     to right,
-    rgba(6, 182, 212, 0.3),
-    rgba(8, 145, 178, 0.3)
+    rgba(255, 184, 123, 0.3),
+    rgba(255, 143, 0, 0.3)
   );
-  border-color: rgba(6, 182, 212, 0.5);
+  border-color: rgba(255, 184, 123, 0.5);
   box-shadow: var(--glow-primary);
 }
 
@@ -797,7 +797,7 @@ html.lenis body {
   height: 200%;
   background: radial-gradient(
     circle,
-    rgba(6, 182, 212, 0.1) 0%,
+    rgba(255, 184, 123, 0.1) 0%,
     transparent 70%
   );
   /* animation removed: 20s infinite gradient was GPU-expensive */
@@ -809,7 +809,7 @@ html.lenis body {
 
 /* Gradient Text - Using design tokens */
 .gradient-text {
-  background: linear-gradient(to right, #22d3ee, #06b6d4, #0891b2);
+  background: linear-gradient(to right, #ffdcc2, #ffb87b, #ff8f00);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -818,9 +818,9 @@ html.lenis body {
 .gradient-text-premium {
   background: linear-gradient(
     to right,
-    rgb(var(--color-cyan)),
-    rgb(6 182 212),
-    rgb(34 211 238)
+    rgb(var(--color-primary-light)),
+    rgb(var(--color-primary)),
+    rgb(var(--color-primary-dark))
   );
   -webkit-background-clip: text;
   background-clip: text;
@@ -842,7 +842,7 @@ html.lenis body {
 }
 
 .gradient-text-cyan {
-  background: linear-gradient(135deg, rgb(var(--color-cyan)) 0%, #0891b2 100%);
+  background: linear-gradient(135deg, rgb(var(--color-cyan)) 0%, #ff8f00 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -857,11 +857,11 @@ html.lenis body {
 
 /* Gradient Backgrounds */
 .gradient-primary {
-  background: linear-gradient(to right, #06b6d4, #0891b2);
+  background: linear-gradient(to right, #ffb87b, #ff8f00);
 }
 
 .gradient-primary:hover {
-  background: linear-gradient(to right, #22d3ee, #06b6d4);
+  background: linear-gradient(to right, #ffdcc2, #ffb87b);
 }
 
 /* =============================================================================
@@ -983,7 +983,11 @@ html.lenis body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, rgb(var(--color-primary)), #3b82f6);
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--color-primary)),
+    rgb(var(--color-primary-dark))
+  );
   border-radius: 5px;
 }
 
@@ -991,7 +995,7 @@ html.lenis body {
   background: linear-gradient(
     to bottom,
     rgb(var(--color-primary-dark)),
-    #2563eb
+    #c45700
   );
 }
 
@@ -1177,7 +1181,7 @@ html.lenis body {
   height: 400px;
   background: radial-gradient(
     circle,
-    rgb(var(--color-cyan)) 0%,
+    rgb(var(--color-primary)) 0%,
     transparent 70%
   );
   border-radius: 50%;
@@ -1195,7 +1199,7 @@ html.lenis body {
 }
 
 .blob:nth-child(3) {
-  background: radial-gradient(circle, #0891b2 0%, transparent 70%);
+  background: radial-gradient(circle, #ff8f00 0%, transparent 70%);
 }
 
 /* =============================================================================
@@ -1464,7 +1468,7 @@ textarea:focus-visible,
   height: 100%;
   background: radial-gradient(
     ellipse 80% 50% at 50% 0%,
-    rgba(6, 182, 212, 0.25),
+    rgba(255, 184, 123, 0.25),
     transparent 70%
   );
   pointer-events: none;
@@ -1479,7 +1483,7 @@ textarea:focus-visible,
   box-shadow:
     var(--glass-inset),
     var(--glass-shadow),
-    0 0 40px rgba(6, 182, 212, 0.1);
+    0 0 40px rgba(255, 184, 123, 0.1);
   transition: all var(--duration-slow) var(--ease-smooth);
 }
 
@@ -1489,8 +1493,8 @@ textarea:focus-visible,
   box-shadow:
     var(--glass-inset),
     var(--glass-shadow-lg),
-    0 0 60px rgba(6, 182, 212, 0.2),
-    0 0 100px rgba(6, 182, 212, 0.1);
+    0 0 60px rgba(255, 184, 123, 0.2),
+    0 0 100px rgba(255, 184, 123, 0.1);
 }
 
 /* Animated Gradient Background */
@@ -1567,8 +1571,8 @@ textarea:focus-visible,
   inset: -2px;
   background: linear-gradient(
     135deg,
-    rgba(6, 182, 212, 0.4),
-    rgba(8, 145, 178, 0.4)
+    rgba(255, 184, 123, 0.4),
+    rgba(255, 143, 0, 0.4)
   );
   border-radius: inherit;
   filter: blur(20px);
@@ -1621,13 +1625,13 @@ textarea:focus-visible,
   border-radius: 50%;
   background: radial-gradient(
     circle at 30% 30%,
-    rgba(6, 182, 212, 0.4),
-    rgba(8, 145, 178, 0.2) 50%,
+    rgba(255, 184, 123, 0.4),
+    rgba(255, 143, 0, 0.2) 50%,
     transparent 70%
   );
   box-shadow:
-    0 0 40px rgba(6, 182, 212, 0.3),
-    0 0 80px rgba(6, 182, 212, 0.2),
-    inset 0 0 30px rgba(6, 182, 212, 0.1);
+    0 0 40px rgba(255, 184, 123, 0.3),
+    0 0 80px rgba(255, 184, 123, 0.2),
+    inset 0 0 30px rgba(255, 184, 123, 0.1);
   animation: pulse-glow 3s ease-in-out infinite;
 }
