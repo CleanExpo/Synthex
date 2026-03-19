@@ -204,6 +204,7 @@ model User {
   apiKeyLastValidated     DateTime? @map("api_key_last_validated")
   timezone                String    @default("Australia/Brisbane")
   deletedAt               DateTime? @map("deleted_at") // Soft delete — QA-AUDIT-2026-03-14
+  referralCode            String?   @unique @map("referral_code") // Stored random code — SYN-424
 
   @@index([organizationId])
   @@index([onboardingComplete])

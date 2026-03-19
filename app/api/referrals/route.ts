@@ -81,8 +81,22 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Derive a stable, deterministic personal referral code from the user ID
-    const personalCode = userId.slice(0, 8).toUpperCase();
+    // Retrieve or lazily generate a stored random referral code for this user
+    const userRecord = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { referralCode: true },
+    });
+
+    let personalCode = userRecord?.referralCode ?? null;
+    if (!personalCode) {
+      // Generate a cryptographically random code and persist it
+      personalCode = generateReferralCode();
+      await prisma.user.update({
+        where: { id: userId },
+        data: { referralCode: personalCode },
+      });
+    }
+
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
     const referralLink = `${appUrl}/ref/${personalCode}`;
 
