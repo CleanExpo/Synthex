@@ -143,7 +143,13 @@
       "mcp__linear__list_issues",
       "mcp__linear__save_issue",
       "mcp__linear__save_comment",
-      "mcp__linear__get_issue"
+      "mcp__linear__get_issue",
+      "Bash(find /d/Synthex -name *.ts -path */worker* -o -name *worker*.ts)",
+      "Bash(grep -r \"startAllWorkers\\\\|createScheduledPostsWorker\\\\|createAnalyticsWorker\" /d/Synthex/app --include=*.ts --include=*.tsx)",
+      "Bash(find /d/Synthex/lib -type d -name *social* -o -name *integrat* -o -name *platform*)",
+      "Bash(grep -r \"startAllWorkers\\\\|import.*queue.*worker\" /d/Synthex --include=*.ts --include=*.tsx --exclude-dir=node_modules --exclude-dir=.next)",
+      "Bash(grep -r \"rate-limit\\\\|rate_limit\" /d/Synthex/app/api --include=*.ts)",
+      "Bash(done)"
     ],
     "deny": [
       "Bash(git push --force*)",
