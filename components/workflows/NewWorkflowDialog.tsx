@@ -19,7 +19,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useWorkflowTemplates } from '@/lib/workflow/hooks/use-workflow-executions';
-import type { WorkflowExecution, WorkflowTemplate } from '@/lib/workflow/hooks/use-workflow-executions';
+import type {
+  WorkflowExecution,
+  WorkflowTemplate,
+} from '@/lib/workflow/hooks/use-workflow-executions';
 import { ChevronRight, ChevronLeft } from '@/components/icons';
 
 // ---------------------------------------------------------------------------
@@ -50,7 +53,8 @@ export function NewWorkflowDialog({
   const { templates, isLoading: loadingTemplates } = useWorkflowTemplates();
 
   const [step, setStep] = useState<Step>(1);
-  const [selectedTemplate, setSelectedTemplate] = useState<WorkflowTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<WorkflowTemplate | null>(null);
   const [isAdHoc, setIsAdHoc] = useState(false);
   const [title, setTitle] = useState('');
   const [inputDataRaw, setInputDataRaw] = useState('');
@@ -74,6 +78,7 @@ export function NewWorkflowDialog({
     if (selectedTemplate && !title) {
       setTitle(selectedTemplate.name);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTemplate]);
 
   // -------------------------------------------------------------------------
@@ -127,7 +132,9 @@ export function NewWorkflowDialog({
 
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? `Failed to create workflow (${res.status})`);
+        throw new Error(
+          body.error ?? `Failed to create workflow (${res.status})`
+        );
       }
 
       const data = (await res.json()) as { execution: WorkflowExecution };
@@ -150,17 +157,27 @@ export function NewWorkflowDialog({
         <DialogHeader>
           <DialogTitle className="text-white">Start New Workflow</DialogTitle>
           <DialogDescription className="text-gray-400">
-            {step === 1 ? 'Choose a template or start ad-hoc.' : 'Name your workflow and provide input data.'}
+            {step === 1
+              ? 'Choose a template or start ad-hoc.'
+              : 'Name your workflow and provide input data.'}
           </DialogDescription>
         </DialogHeader>
 
         {/* Step indicator */}
         <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-          <span className={cn(step === 1 ? 'text-cyan-400 font-semibold' : 'text-gray-500')}>
+          <span
+            className={cn(
+              step === 1 ? 'text-orange-400 font-semibold' : 'text-gray-500'
+            )}
+          >
             1 Template
           </span>
           <ChevronRight className="h-3 w-3" />
-          <span className={cn(step === 2 ? 'text-cyan-400 font-semibold' : 'text-gray-500')}>
+          <span
+            className={cn(
+              step === 2 ? 'text-orange-400 font-semibold' : 'text-gray-500'
+            )}
+          >
             2 Details
           </span>
         </div>
@@ -180,23 +197,28 @@ export function NewWorkflowDialog({
             {/* Ad-hoc option */}
             <button
               type="button"
-              onClick={() => { setIsAdHoc(true); setSelectedTemplate(null); }}
+              onClick={() => {
+                setIsAdHoc(true);
+                setSelectedTemplate(null);
+              }}
               className={cn(
                 'w-full text-left rounded-lg border px-3 py-2.5 text-sm transition-all',
                 'bg-white/[0.02] hover:bg-white/[0.05]',
                 isAdHoc
-                  ? 'border-cyan-500/50 ring-1 ring-cyan-500/30'
+                  ? 'border-orange-500/50 ring-1 ring-orange-500/30'
                   : 'border-white/10 hover:border-white/20'
               )}
             >
               <p className="font-medium text-white">Ad-hoc (no template)</p>
-              <p className="text-[11px] text-gray-500 mt-0.5">Define steps manually or run a custom workflow.</p>
+              <p className="text-[11px] text-gray-500 mt-0.5">
+                Define steps manually or run a custom workflow.
+              </p>
             </button>
 
             {/* Templates */}
             {loadingTemplates ? (
               <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
+                {[1, 2, 3].map(i => (
                   <div
                     key={i}
                     className="h-14 rounded-lg bg-white/5 animate-pulse border border-white/10"
@@ -204,29 +226,36 @@ export function NewWorkflowDialog({
                 ))}
               </div>
             ) : (
-              templates.map((tpl) => (
+              templates.map(tpl => (
                 <button
                   key={tpl.id}
                   type="button"
-                  onClick={() => { setSelectedTemplate(tpl); setIsAdHoc(false); }}
+                  onClick={() => {
+                    setSelectedTemplate(tpl);
+                    setIsAdHoc(false);
+                  }}
                   className={cn(
                     'w-full text-left rounded-lg border px-3 py-2.5 text-sm transition-all',
                     'bg-white/[0.02] hover:bg-white/[0.05]',
                     selectedTemplate?.id === tpl.id
-                      ? 'border-cyan-500/50 ring-1 ring-cyan-500/30'
+                      ? 'border-orange-500/50 ring-1 ring-orange-500/30'
                       : 'border-white/10 hover:border-white/20'
                   )}
                 >
                   <p className="font-medium text-white truncate">{tpl.name}</p>
                   {tpl.description && (
-                    <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">{tpl.description}</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">
+                      {tpl.description}
+                    </p>
                   )}
                 </button>
               ))
             )}
 
             {!loadingTemplates && templates.length === 0 && (
-              <p className="text-xs text-gray-500 text-center py-2">No templates available.</p>
+              <p className="text-xs text-gray-500 text-center py-2">
+                No templates available.
+              </p>
             )}
           </div>
         )}
@@ -245,23 +274,24 @@ export function NewWorkflowDialog({
                 type="text"
                 autoFocus
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={e => setTitle(e.target.value)}
                 placeholder="E.g. Blog Post Campaign — March 2026"
-                className="w-full rounded-md bg-white/5 border border-white/10 text-sm text-white placeholder:text-gray-600 px-3 py-2 focus:outline-none focus:border-cyan-500/50"
+                className="w-full rounded-md bg-white/5 border border-white/10 text-sm text-white placeholder:text-gray-600 px-3 py-2 focus:outline-none focus:border-orange-500/50"
               />
             </div>
 
             {/* Input data */}
             <div>
               <label className="block text-xs font-medium text-gray-400 mb-1">
-                Input data <span className="text-gray-600">(optional JSON)</span>
+                Input data{' '}
+                <span className="text-gray-600">(optional JSON)</span>
               </label>
               <textarea
                 rows={4}
                 value={inputDataRaw}
-                onChange={(e) => setInputDataRaw(e.target.value)}
+                onChange={e => setInputDataRaw(e.target.value)}
                 placeholder='{ "topic": "AI marketing trends", "tone": "professional" }'
-                className="w-full rounded-md bg-white/5 border border-white/10 text-sm text-white placeholder:text-gray-600 px-3 py-2 resize-none font-mono text-xs focus:outline-none focus:border-cyan-500/50"
+                className="w-full rounded-md bg-white/5 border border-white/10 text-sm text-white placeholder:text-gray-600 px-3 py-2 resize-none font-mono text-xs focus:outline-none focus:border-orange-500/50"
               />
             </div>
           </div>
@@ -275,7 +305,10 @@ export function NewWorkflowDialog({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => { setStep(1); setError(null); }}
+              onClick={() => {
+                setStep(1);
+                setError(null);
+              }}
               disabled={submitting}
               className="text-gray-400 hover:text-white"
             >

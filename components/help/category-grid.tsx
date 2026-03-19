@@ -6,7 +6,13 @@
  */
 
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChevronRight } from '@/components/icons';
 import type { HelpCategory } from './types';
@@ -24,9 +30,11 @@ export function CategoryGrid({
 }: CategoryGridProps) {
   return (
     <div className="mb-8">
-      <h2 className="text-xl font-semibold text-white mb-4">Browse by Category</h2>
+      <h2 className="text-xl font-semibold text-white mb-4">
+        Browse by Category
+      </h2>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {categories.map((category) => {
+        {categories.map(category => {
           const Icon = category.icon;
           const isSelected = selectedCategory === category.id;
           return (
@@ -34,13 +42,15 @@ export function CategoryGrid({
               key={category.id}
               variant="glass"
               className={`hover:scale-105 transition-transform cursor-pointer ${
-                isSelected ? 'ring-2 ring-cyan-500' : ''
+                isSelected ? 'ring-2 ring-orange-500' : ''
               }`}
               onClick={() => onCategorySelect(isSelected ? null : category.id)}
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className={`p-2 rounded-lg bg-gray-800/50 ${category.color}`}>
+                  <div
+                    className={`p-2 rounded-lg bg-gray-800/50 ${category.color}`}
+                  >
                     <Icon className="w-5 h-5" />
                   </div>
                   <Badge variant="secondary" className="text-xs">

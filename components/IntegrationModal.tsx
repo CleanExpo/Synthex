@@ -14,17 +14,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  ExternalLink, 
-  Shield, 
-  CheckCircle, 
-  AlertTriangle, 
+import {
+  ExternalLink,
+  Shield,
+  CheckCircle,
+  AlertTriangle,
   Loader2,
   Key,
   Link2,
   Info,
   Copy,
-  Book
+  Book,
 } from '@/components/icons';
 import { toast } from 'sonner';
 
@@ -41,41 +41,126 @@ interface IntegrationModalProps {
 }
 
 // Platform-specific credential requirements
-const platformCredentials: Record<string, Array<{
-  key: string;
-  label: string;
-  type: string;
-  placeholder: string;
-  required: boolean;
-  help?: string;
-}>> = {
+const platformCredentials: Record<
+  string,
+  Array<{
+    key: string;
+    label: string;
+    type: string;
+    placeholder: string;
+    required: boolean;
+    help?: string;
+  }>
+> = {
   twitter: [
-    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Enter your Twitter API Key', required: true },
-    { key: 'apiSecret', label: 'API Secret', type: 'password', placeholder: 'Enter your Twitter API Secret', required: true },
-    { key: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'Enter your Access Token', required: true },
-    { key: 'accessTokenSecret', label: 'Access Token Secret', type: 'password', placeholder: 'Enter your Access Token Secret', required: true },
+    {
+      key: 'apiKey',
+      label: 'API Key',
+      type: 'password',
+      placeholder: 'Enter your Twitter API Key',
+      required: true,
+    },
+    {
+      key: 'apiSecret',
+      label: 'API Secret',
+      type: 'password',
+      placeholder: 'Enter your Twitter API Secret',
+      required: true,
+    },
+    {
+      key: 'accessToken',
+      label: 'Access Token',
+      type: 'password',
+      placeholder: 'Enter your Access Token',
+      required: true,
+    },
+    {
+      key: 'accessTokenSecret',
+      label: 'Access Token Secret',
+      type: 'password',
+      placeholder: 'Enter your Access Token Secret',
+      required: true,
+    },
   ],
   linkedin: [
-    { key: 'clientId', label: 'Client ID', type: 'password', placeholder: 'Enter your LinkedIn Client ID', required: true },
-    { key: 'clientSecret', label: 'Client Secret', type: 'password', placeholder: 'Enter your LinkedIn Client Secret', required: true },
-    { key: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'Enter your Access Token', required: true, help: 'Generate from LinkedIn Developer Portal' },
+    {
+      key: 'clientId',
+      label: 'Client ID',
+      type: 'password',
+      placeholder: 'Enter your LinkedIn Client ID',
+      required: true,
+    },
+    {
+      key: 'clientSecret',
+      label: 'Client Secret',
+      type: 'password',
+      placeholder: 'Enter your LinkedIn Client Secret',
+      required: true,
+    },
+    {
+      key: 'accessToken',
+      label: 'Access Token',
+      type: 'password',
+      placeholder: 'Enter your Access Token',
+      required: true,
+      help: 'Generate from LinkedIn Developer Portal',
+    },
   ],
   instagram: [
-    { key: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'Enter your Instagram Access Token', required: true },
-    { key: 'businessAccountId', label: 'Business Account ID', type: 'text', placeholder: 'Enter your Business Account ID', required: true },
+    {
+      key: 'accessToken',
+      label: 'Access Token',
+      type: 'password',
+      placeholder: 'Enter your Instagram Access Token',
+      required: true,
+    },
+    {
+      key: 'businessAccountId',
+      label: 'Business Account ID',
+      type: 'text',
+      placeholder: 'Enter your Business Account ID',
+      required: true,
+    },
   ],
   facebook: [
-    { key: 'pageAccessToken', label: 'Page Access Token', type: 'password', placeholder: 'Enter your Page Access Token', required: true },
-    { key: 'pageId', label: 'Page ID', type: 'text', placeholder: 'Enter your Facebook Page ID', required: true },
+    {
+      key: 'pageAccessToken',
+      label: 'Page Access Token',
+      type: 'password',
+      placeholder: 'Enter your Page Access Token',
+      required: true,
+    },
+    {
+      key: 'pageId',
+      label: 'Page ID',
+      type: 'text',
+      placeholder: 'Enter your Facebook Page ID',
+      required: true,
+    },
   ],
   tiktok: [
-    { key: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'Enter your TikTok Access Token', required: true },
-    { key: 'openId', label: 'Open ID', type: 'text', placeholder: 'Enter your TikTok Open ID', required: true },
+    {
+      key: 'accessToken',
+      label: 'Access Token',
+      type: 'password',
+      placeholder: 'Enter your TikTok Access Token',
+      required: true,
+    },
+    {
+      key: 'openId',
+      label: 'Open ID',
+      type: 'text',
+      placeholder: 'Enter your TikTok Open ID',
+      required: true,
+    },
   ],
 };
 
 // Instructions for getting API keys
-const platformInstructions: Record<string, Array<{ step: number; text: string }>> = {
+const platformInstructions: Record<
+  string,
+  Array<{ step: number; text: string }>
+> = {
   twitter: [
     { step: 1, text: 'Go to developer.twitter.com and sign in' },
     { step: 2, text: 'Create a new app or select existing one' },
@@ -115,11 +200,11 @@ const platformInstructions: Record<string, Array<{ step: number; text: string }>
   ],
 };
 
-export function IntegrationModal({ 
-  isOpen, 
-  onClose, 
-  integration, 
-  onConnect 
+export function IntegrationModal({
+  isOpen,
+  onClose,
+  integration,
+  onConnect,
 }: IntegrationModalProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [credentials, setCredentials] = useState<Record<string, string>>({});
@@ -146,7 +231,9 @@ export function IntegrationModal({
       toast.success(`${integration.name} connected successfully!`);
       handleClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to connect. Please check your credentials.');
+      setError(
+        err.message || 'Failed to connect. Please check your credentials.'
+      );
       setIsConnecting(false);
     }
   };
@@ -173,13 +260,16 @@ export function IntegrationModal({
       <DialogContent className="sm:max-w-2xl bg-white/[0.02] backdrop-blur-xl border border-white/[0.08]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg bg-gray-800/50 ${integration.color}`}>
+            <div
+              className={`p-2 rounded-lg bg-gray-800/50 ${integration.color}`}
+            >
               <Icon className="w-5 h-5" />
             </div>
             Connect {integration.name}
           </DialogTitle>
           <DialogDescription>
-            Enter your {integration.name} API credentials to connect your account
+            Enter your {integration.name} API credentials to connect your
+            account
           </DialogDescription>
         </DialogHeader>
 
@@ -193,26 +283,31 @@ export function IntegrationModal({
             <Alert className="border-blue-500/20 bg-blue-500/5">
               <Shield className="h-4 w-4 text-blue-500" />
               <AlertDescription className="text-gray-300">
-                Your credentials are encrypted and stored securely. We never share them with third parties.
+                Your credentials are encrypted and stored securely. We never
+                share them with third parties.
               </AlertDescription>
             </Alert>
 
             <div className="space-y-4">
-              {fields.map((field) => (
+              {fields.map(field => (
                 <div key={field.key} className="space-y-2">
                   <Label htmlFor={field.key}>
                     {field.label}
-                    {field.required && <span className="text-red-400 ml-1">*</span>}
+                    {field.required && (
+                      <span className="text-red-400 ml-1">*</span>
+                    )}
                   </Label>
                   <Input
                     id={field.key}
                     type={field.type}
                     placeholder={field.placeholder}
                     value={credentials[field.key] || ''}
-                    onChange={(e) => setCredentials(prev => ({
-                      ...prev,
-                      [field.key]: e.target.value
-                    }))}
+                    onChange={e =>
+                      setCredentials(prev => ({
+                        ...prev,
+                        [field.key]: e.target.value,
+                      }))
+                    }
                     className="bg-white/5 border-white/10"
                   />
                   {field.help && (
@@ -232,7 +327,8 @@ export function IntegrationModal({
             <Alert className="border-amber-500/20 bg-amber-500/5">
               <Info className="h-4 w-4 text-amber-500" />
               <AlertDescription className="text-gray-300">
-                Don't have API keys yet? Switch to the "How to Get Keys" tab for step-by-step instructions.
+                Don't have API keys yet? Switch to the "How to Get Keys" tab for
+                step-by-step instructions.
               </AlertDescription>
             </Alert>
           </TabsContent>
@@ -241,77 +337,82 @@ export function IntegrationModal({
             <Alert className="border-green-500/20 bg-green-500/5">
               <Book className="h-4 w-4 text-green-500" />
               <AlertDescription className="text-gray-300">
-                Follow these steps to get your {integration.name} API credentials
+                Follow these steps to get your {integration.name} API
+                credentials
               </AlertDescription>
             </Alert>
 
             <div className="space-y-3">
-              {instructions.map((instruction) => (
+              {instructions.map(instruction => (
                 <div key={instruction.step} className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                    <span className="text-xs font-semibold text-cyan-400">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-orange-500/20 flex items-center justify-center">
+                    <span className="text-xs font-semibold text-orange-400">
                       {instruction.step}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-300 pt-1">{instruction.text}</p>
+                  <p className="text-sm text-gray-300 pt-1">
+                    {instruction.text}
+                  </p>
                 </div>
               ))}
             </div>
 
             <div className="p-4 bg-white/5 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-white">Quick Links</h4>
+                <h4 className="text-sm font-semibold text-white">
+                  Quick Links
+                </h4>
               </div>
               {integration.id === 'twitter' && (
-                <a 
+                <a
                   href="https://developer.twitter.com/en/portal/dashboard"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300"
+                  className="flex items-center gap-2 text-sm text-orange-400 hover:text-orange-300"
                 >
                   Twitter Developer Portal
                   <ExternalLink className="w-3 h-3" />
                 </a>
               )}
               {integration.id === 'linkedin' && (
-                <a 
+                <a
                   href="https://www.linkedin.com/developers/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300"
+                  className="flex items-center gap-2 text-sm text-orange-400 hover:text-orange-300"
                 >
                   LinkedIn Developer Portal
                   <ExternalLink className="w-3 h-3" />
                 </a>
               )}
               {integration.id === 'facebook' && (
-                <a 
+                <a
                   href="https://developers.facebook.com/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300"
+                  className="flex items-center gap-2 text-sm text-orange-400 hover:text-orange-300"
                 >
                   Facebook Developer Portal
                   <ExternalLink className="w-3 h-3" />
                 </a>
               )}
               {integration.id === 'instagram' && (
-                <a 
+                <a
                   href="https://developers.facebook.com/docs/instagram-basic-display-api"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300"
+                  className="flex items-center gap-2 text-sm text-orange-400 hover:text-orange-300"
                 >
                   Instagram Basic Display API
                   <ExternalLink className="w-3 h-3" />
                 </a>
               )}
               {integration.id === 'tiktok' && (
-                <a 
+                <a
                   href="https://developers.tiktok.com/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300"
+                  className="flex items-center gap-2 text-sm text-orange-400 hover:text-orange-300"
                 >
                   TikTok Developer Portal
                   <ExternalLink className="w-3 h-3" />
@@ -325,7 +426,7 @@ export function IntegrationModal({
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleConnect}
             disabled={isConnecting || activeTab !== 'credentials'}
             className="gradient-primary text-white"

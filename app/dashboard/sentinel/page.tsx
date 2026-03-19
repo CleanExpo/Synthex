@@ -13,7 +13,7 @@
  * @module app/dashboard/sentinel/page
  */
 
-import { useState, useCallback , Suspense } from 'react';
+import { useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import useSWR, { mutate } from 'swr';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -32,7 +32,7 @@ const VALID_TABS: SentinelTab[] = ['health', 'alerts', 'algorithm'];
 // ─── SWR fetcher ──────────────────────────────────────────────────────────────
 
 const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => {
+  fetch(url, { credentials: 'include' }).then(r => {
     if (!r.ok) throw new Error('Fetch failed');
     return r.json();
   });
@@ -84,7 +84,11 @@ function SentinelPageContent() {
 
   // ── Data fetching ──────────────────────────────────────────────────────────
 
-  const { data: statusData, isLoading: statusLoading, mutate: mutateStatus } = useSWR(
+  const {
+    data: statusData,
+    isLoading: statusLoading,
+    mutate: mutateStatus,
+  } = useSWR(
     '/api/sentinel/status',
     fetchJson,
     { refreshInterval: 60000 } // Refresh every minute
@@ -95,10 +99,11 @@ function SentinelPageContent() {
       ? '/api/sentinel/alerts?acknowledged=false&limit=50'
       : `/api/sentinel/alerts?severity=${severityFilter}&acknowledged=false&limit=50`;
 
-  const { data: alertsData, isLoading: alertsLoading, mutate: mutateAlerts } = useSWR(
-    alertUrl,
-    fetchJson
-  );
+  const {
+    data: alertsData,
+    isLoading: alertsLoading,
+    mutate: mutateAlerts,
+  } = useSWR(alertUrl, fetchJson);
 
   const { data: updatesData, isLoading: updatesLoading } = useSWR(
     `/api/sentinel/updates?days=${dayRange}`,
@@ -149,27 +154,39 @@ function SentinelPageContent() {
   const status = statusData ?? {};
   const alerts = alertsData?.alerts ?? [];
   const updates = updatesData?.updates ?? [];
-  const history: Array<{ date: string; avgPosition: number; totalClicks: number; totalImpressions: number }> =
-    status.history ?? [];
+  const history: Array<{
+    date: string;
+    avgPosition: number;
+    totalClicks: number;
+    totalImpressions: number;
+  }> = status.history ?? [];
 
   const unreadCount = status.unacknowledgedAlerts ?? 0;
   const criticalCount = status.criticalAlerts ?? 0;
 
-  const clicksData = history.map((h) => ({ date: h.date, value: h.totalClicks }));
-  const positionData = history.map((h) => ({ date: h.date, value: h.avgPosition }));
+  const clicksData = history.map(h => ({ date: h.date, value: h.totalClicks }));
+  const positionData = history.map(h => ({
+    date: h.date,
+    value: h.avgPosition,
+  }));
 
-  const snapshotHistory = history.map((h) => ({ date: h.date, totalClicks: h.totalClicks }));
+  const snapshotHistory = history.map(h => ({
+    date: h.date,
+    totalClicks: h.totalClicks,
+  }));
 
   return (
     <div className="min-h-screen bg-[#0f1117] text-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {/* Page Header */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
-            <ShieldExclamation className="w-5 h-5 text-cyan-400" />
+          <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+            <ShieldExclamation className="w-5 h-5 text-orange-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">Algorithm Sentinel</h1>
+            <h1 className="text-2xl font-bold text-white">
+              Algorithm Sentinel
+            </h1>
             <p className="text-sm text-gray-400 mt-0.5">
               Autonomous site health monitoring and algorithm impact detection
             </p>
@@ -179,13 +196,17 @@ function SentinelPageContent() {
           {criticalCount > 0 && (
             <div className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-500/30 text-red-300 text-sm font-medium">
               <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-              {criticalCount} critical {criticalCount === 1 ? 'alert' : 'alerts'}
+              {criticalCount} critical{' '}
+              {criticalCount === 1 ? 'alert' : 'alerts'}
             </div>
           )}
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => changeTab(v as SentinelTab)}>
+        <Tabs
+          value={activeTab}
+          onValueChange={v => changeTab(v as SentinelTab)}
+        >
           <TabsList className="mb-6">
             <TabsTrigger value="health" className="flex items-center gap-1.5">
               <BarChart3 className="w-3.5 h-3.5" />
@@ -200,7 +221,10 @@ function SentinelPageContent() {
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="algorithm" className="flex items-center gap-1.5">
+            <TabsTrigger
+              value="algorithm"
+              className="flex items-center gap-1.5"
+            >
               <ShieldExclamation className="w-3.5 h-3.5" />
               Algorithm Updates
             </TabsTrigger>
@@ -221,7 +245,7 @@ function SentinelPageContent() {
                 <MetricTrendChart
                   data={clicksData}
                   label="Total Clicks (28-day)"
-                  colour="#22d3ee"
+                  colour="#ffdcc2"
                 />
                 <MetricTrendChart
                   data={positionData}
@@ -244,13 +268,13 @@ function SentinelPageContent() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               {/* Severity filter */}
               <div className="flex items-center gap-1.5">
-                {SEVERITY_OPTIONS.map((opt) => (
+                {SEVERITY_OPTIONS.map(opt => (
                   <button
                     key={opt.value}
                     onClick={() => setSeverityFilter(opt.value)}
                     className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
                       severityFilter === opt.value
-                        ? 'bg-cyan-500/30 text-cyan-300'
+                        ? 'bg-orange-500/30 text-orange-300'
                         : 'bg-white/5 text-gray-400 hover:bg-white/10'
                     }`}
                   >
@@ -280,13 +304,13 @@ function SentinelPageContent() {
           {/* ── Algorithm Tab ── */}
           <TabsContent value="algorithm" className="space-y-4">
             <div className="flex items-center gap-2">
-              {DAY_RANGE_OPTIONS.map((opt) => (
+              {DAY_RANGE_OPTIONS.map(opt => (
                 <button
                   key={opt.value}
                   onClick={() => setDayRange(opt.value)}
                   className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
                     dayRange === opt.value
-                      ? 'bg-cyan-500/30 text-cyan-300'
+                      ? 'bg-orange-500/30 text-orange-300'
                       : 'bg-white/5 text-gray-400 hover:bg-white/10'
                   }`}
                 >

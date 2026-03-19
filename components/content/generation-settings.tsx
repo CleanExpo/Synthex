@@ -5,7 +5,13 @@
  * Content generation configuration form with multi-platform support
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +23,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Wand2, Loader2, Hash, Smile, Layers, Check } from '@/components/icons';
-import { platformIcons, hookTypes, toneOptions, lengthOptions } from './content-config';
+import {
+  platformIcons,
+  hookTypes,
+  toneOptions,
+  lengthOptions,
+} from './content-config';
 
 interface GenerationSettingsProps {
   platform: string;
@@ -84,7 +95,7 @@ export function GenerationSettings({
     if (isSelected) {
       // Don't allow deselecting the last platform
       if (selectedPlatforms.length <= 1) return;
-      updated = selectedPlatforms.filter((p) => p !== key);
+      updated = selectedPlatforms.filter(p => p !== key);
       // If removing the primary platform, promote the next one
       if (platform === key) {
         onPlatformChange(updated[0]);
@@ -124,12 +135,14 @@ export function GenerationSettings({
               }
             }}
             className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-              multiPlatformEnabled ? 'bg-cyan-500' : 'bg-white/10'
+              multiPlatformEnabled ? 'bg-orange-500' : 'bg-white/10'
             }`}
           >
             <span
               className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                multiPlatformEnabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                multiPlatformEnabled
+                  ? 'translate-x-[18px]'
+                  : 'translate-x-[3px]'
               }`}
             />
           </button>
@@ -138,14 +151,17 @@ export function GenerationSettings({
         {/* Platform Selection */}
         <div>
           <Label className="text-gray-400">
-            {multiPlatformEnabled ? 'Platforms (primary generates first)' : 'Platform'}
+            {multiPlatformEnabled
+              ? 'Platforms (primary generates first)'
+              : 'Platform'}
           </Label>
           <div className="grid grid-cols-5 gap-2 mt-2">
             {Object.entries(platformIcons).map(([key, Icon]) => {
               const isSelected = multiPlatformEnabled
                 ? selectedPlatforms.includes(key)
                 : platform === key;
-              const isPrimary = multiPlatformEnabled && selectedPlatforms[0] === key;
+              const isPrimary =
+                multiPlatformEnabled && selectedPlatforms[0] === key;
 
               return (
                 <button
@@ -153,17 +169,17 @@ export function GenerationSettings({
                   onClick={() => handlePlatformToggle(key)}
                   className={`relative p-3 rounded-lg border transition-all ${
                     isSelected
-                      ? 'bg-cyan-500/20 border-cyan-500'
+                      ? 'bg-orange-500/20 border-orange-500'
                       : 'bg-white/5 border-white/10 hover:bg-white/10'
                   }`}
                 >
                   {multiPlatformEnabled && isSelected && (
                     <span className="absolute top-1 right-1">
-                      <Check className="h-3 w-3 text-cyan-400" />
+                      <Check className="h-3 w-3 text-orange-400" />
                     </span>
                   )}
                   {isPrimary && (
-                    <span className="absolute top-1 left-1 text-[8px] font-bold text-cyan-400 leading-none">
+                    <span className="absolute top-1 left-1 text-[8px] font-bold text-orange-400 leading-none">
                       1st
                     </span>
                   )}
@@ -175,19 +191,22 @@ export function GenerationSettings({
           </div>
           {multiPlatformEnabled && selectedPlatforms.length > 1 && (
             <p className="text-xs text-slate-500 mt-1.5">
-              {selectedPlatforms.length} platforms selected — content will be adapted for each
+              {selectedPlatforms.length} platforms selected — content will be
+              adapted for each
             </p>
           )}
         </div>
 
         {/* Topic Input */}
         <div>
-          <Label htmlFor="topic" className="text-gray-400">Topic</Label>
+          <Label htmlFor="topic" className="text-gray-400">
+            Topic
+          </Label>
           <Input
             id="topic"
             placeholder="What do you want to create content about?"
             value={topic}
-            onChange={(e) => onTopicChange(e.target.value)}
+            onChange={e => onTopicChange(e.target.value)}
             className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 mt-2"
           />
         </div>
@@ -200,11 +219,13 @@ export function GenerationSettings({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {hookTypes.map((hook) => (
+              {hookTypes.map(hook => (
                 <SelectItem key={hook.value} value={hook.value}>
                   <div>
                     <div className="font-medium">{hook.label}</div>
-                    <div className="text-xs text-gray-400">{hook.description}</div>
+                    <div className="text-xs text-gray-400">
+                      {hook.description}
+                    </div>
                   </div>
                 </SelectItem>
               ))}
@@ -220,7 +241,7 @@ export function GenerationSettings({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {toneOptions.map((option) => (
+              {toneOptions.map(option => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
@@ -243,7 +264,7 @@ export function GenerationSettings({
                   No active personas
                 </SelectItem>
               ) : (
-                personas.map((persona) => (
+                personas.map(persona => (
                   <SelectItem key={persona.id} value={persona.id}>
                     {persona.name}
                   </SelectItem>
@@ -257,13 +278,13 @@ export function GenerationSettings({
         <div>
           <Label className="text-gray-400">Content Length</Label>
           <div className="grid grid-cols-3 gap-2 mt-2">
-            {lengthOptions.map((length) => (
+            {lengthOptions.map(length => (
               <button
                 key={length}
                 onClick={() => onTargetLengthChange(length)}
                 className={`py-2 px-4 rounded-lg border capitalize transition-all ${
                   targetLength === length
-                    ? 'bg-cyan-500/20 border-cyan-500'
+                    ? 'bg-orange-500/20 border-orange-500'
                     : 'bg-white/5 border-white/10 hover:bg-white/10'
                 }`}
               >
@@ -279,8 +300,8 @@ export function GenerationSettings({
             <input
               type="checkbox"
               checked={includeHashtags}
-              onChange={(e) => onIncludeHashtagsChange(e.target.checked)}
-              className="rounded border-gray-600 text-cyan-500 focus:ring-cyan-500"
+              onChange={e => onIncludeHashtagsChange(e.target.checked)}
+              className="rounded border-gray-600 text-orange-500 focus:ring-orange-500"
             />
             <Hash className="h-4 w-4 text-gray-400" />
             <span className="text-sm text-white">Include Hashtags</span>
@@ -289,8 +310,8 @@ export function GenerationSettings({
             <input
               type="checkbox"
               checked={includeEmojis}
-              onChange={(e) => onIncludeEmojisChange(e.target.checked)}
-              className="rounded border-gray-600 text-cyan-500 focus:ring-cyan-500"
+              onChange={e => onIncludeEmojisChange(e.target.checked)}
+              className="rounded border-gray-600 text-orange-500 focus:ring-orange-500"
             />
             <Smile className="h-4 w-4 text-gray-400" />
             <span className="text-sm text-white">Include Emojis</span>

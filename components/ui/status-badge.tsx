@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const statusBadgeVariants = cva(
-  'inline-flex items-center gap-x-2.5 rounded-sm bg-[#0a1628] px-2.5 py-1.5 text-xs border-[0.5px]',
+  'inline-flex items-center gap-x-2.5 rounded-sm bg-[#050505] px-2.5 py-1.5 text-xs border-[0.5px]',
   {
     variants: {
       status: {
@@ -15,11 +15,12 @@ const statusBadgeVariants = cva(
     defaultVariants: {
       status: 'default',
     },
-  },
+  }
 );
 
 interface StatusBadgeProps
-  extends React.HTMLAttributes<HTMLSpanElement>,
+  extends
+    React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof statusBadgeVariants> {
   leftIcon?: React.ComponentType<{ className?: string }>;
   rightIcon?: React.ComponentType<{ className?: string }>;
@@ -45,7 +46,7 @@ export function StatusBadge({
               '-ml-0.5 size-4 shrink-0',
               status === 'success' && 'text-emerald-400',
               status === 'error' && 'text-red-400',
-              status === 'default' && 'text-white/60',
+              status === 'default' && 'text-white/60'
             )}
             aria-hidden={true}
           />

@@ -20,13 +20,15 @@ export function StatusOverview({ metrics }: StatusOverviewProps) {
       <Card variant="glass">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center">
-            <Server className="w-4 h-4 mr-2 text-cyan-400" />
+            <Server className="w-4 h-4 mr-2 text-orange-400" />
             System Status
           </CardTitle>
         </CardHeader>
         <CardContent>
           <StatusBadge status={metrics.system.status} />
-          <p className="text-xs text-gray-400 mt-2">Uptime: {metrics.system.uptime}</p>
+          <p className="text-xs text-gray-400 mt-2">
+            Uptime: {metrics.system.uptime}
+          </p>
         </CardContent>
       </Card>
 
@@ -53,7 +55,9 @@ export function StatusOverview({ metrics }: StatusOverviewProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold text-white">{metrics.api.latency}ms</p>
+          <p className="text-2xl font-bold text-white">
+            {metrics.api.latency}ms
+          </p>
           <p className="text-xs text-gray-400 mt-1">Average Latency</p>
         </CardContent>
       </Card>
@@ -66,7 +70,9 @@ export function StatusOverview({ metrics }: StatusOverviewProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold text-white">{metrics.security.threats}</p>
+          <p className="text-2xl font-bold text-white">
+            {metrics.security.threats}
+          </p>
           <p className="text-xs text-gray-400 mt-1">Active Threats</p>
         </CardContent>
       </Card>

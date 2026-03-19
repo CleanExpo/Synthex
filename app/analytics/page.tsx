@@ -2,18 +2,43 @@
 
 import dynamic from 'next/dynamic';
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SkeletonChart } from '@/components/ui/skeleton';
-import { 
-  TrendingUp, TrendingDown, Activity,
-  Heart, Share2, MessageCircle, MousePointer,
-  Clock, Award, Target, Zap, BarChart3,
-  Twitter, Linkedin, Instagram, Facebook, Video
+import {
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  Heart,
+  Share2,
+  MessageCircle,
+  MousePointer,
+  Clock,
+  Award,
+  Target,
+  Zap,
+  BarChart3,
+  Twitter,
+  Linkedin,
+  Instagram,
+  Facebook,
+  Video,
 } from '@/components/icons';
 import { toast } from 'sonner';
 
@@ -32,7 +57,7 @@ const PLATFORM_ICONS = {
   linkedin: Linkedin,
   instagram: Instagram,
   facebook: Facebook,
-  tiktok: Video
+  tiktok: Video,
 };
 
 const PLATFORM_COLORS = {
@@ -40,7 +65,7 @@ const PLATFORM_COLORS = {
   linkedin: '#0077B5',
   instagram: '#E4405F',
   facebook: '#1877F2',
-  tiktok: '#000000'
+  tiktok: '#000000',
 };
 
 /** Platform breakdown item */
@@ -104,7 +129,9 @@ interface DashboardData {
 
 export default function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
   const [selectedPlatform, setSelectedPlatform] = useState('all');
   const [dateRange, setDateRange] = useState('7d');
   const [refreshing, setRefreshing] = useState(false);
@@ -115,7 +142,7 @@ export default function AnalyticsDashboard() {
       const response = await fetch(
         `/api/analytics?type=dashboard&platform=${selectedPlatform}&range=${dateRange}`,
         {
-          credentials: 'include'
+          credentials: 'include',
         }
       );
 
@@ -151,24 +178,36 @@ export default function AnalyticsDashboard() {
       totalPosts: 247,
       totalEngagement: 15420,
       averageEngagementRate: 3.8,
-      contentGenerated: 89
+      contentGenerated: 89,
     },
     recentActivity: [
-      { id: '1', content: 'AI is transforming marketing...', platform: 'twitter', status: 'published', createdAt: new Date() },
-      { id: '2', content: 'Check out our latest insights...', platform: 'linkedin', status: 'published', createdAt: new Date() }
+      {
+        id: '1',
+        content: 'AI is transforming marketing...',
+        platform: 'twitter',
+        status: 'published',
+        createdAt: new Date(),
+      },
+      {
+        id: '2',
+        content: 'Check out our latest insights...',
+        platform: 'linkedin',
+        status: 'published',
+        createdAt: new Date(),
+      },
     ],
     platformBreakdown: [
       { platform: 'twitter', posts: 89 },
       { platform: 'linkedin', posts: 67 },
       { platform: 'instagram', posts: 45 },
       { platform: 'facebook', posts: 31 },
-      { platform: 'tiktok', posts: 15 }
+      { platform: 'tiktok', posts: 15 },
     ],
     trends: {
       postsThisWeek: 32,
       postsLastWeek: 28,
       growthRate: 14.3,
-      trending: 'up'
+      trending: 'up',
     },
     engagementData: [
       { date: 'Mon', likes: 145, shares: 89, comments: 34 },
@@ -177,13 +216,28 @@ export default function AnalyticsDashboard() {
       { date: 'Thu', likes: 203, shares: 98, comments: 52 },
       { date: 'Fri', likes: 234, shares: 112, comments: 58 },
       { date: 'Sat', likes: 198, shares: 95, comments: 43 },
-      { date: 'Sun', likes: 176, shares: 87, comments: 39 }
+      { date: 'Sun', likes: 176, shares: 87, comments: 39 },
     ],
     topContent: [
-      { content: '🚀 AI is revolutionizing...', engagement: 1234, platform: 'twitter', viralScore: 8.5 },
-      { content: 'Three lessons from implementing...', engagement: 987, platform: 'linkedin', viralScore: 7.8 },
-      { content: '✨ Transform your marketing...', engagement: 856, platform: 'instagram', viralScore: 7.2 }
-    ]
+      {
+        content: '🚀 AI is revolutionizing...',
+        engagement: 1234,
+        platform: 'twitter',
+        viralScore: 8.5,
+      },
+      {
+        content: 'Three lessons from implementing...',
+        engagement: 987,
+        platform: 'linkedin',
+        viralScore: 7.8,
+      },
+      {
+        content: '✨ Transform your marketing...',
+        engagement: 856,
+        platform: 'instagram',
+        viralScore: 7.2,
+      },
+    ],
   });
 
   if (loading) {
@@ -197,7 +251,8 @@ export default function AnalyticsDashboard() {
     );
   }
 
-  const { overview, trends, platformBreakdown, engagementData, topContent } = dashboardData || {};
+  const { overview, trends, platformBreakdown, engagementData, topContent } =
+    dashboardData || {};
 
   return (
     <div className="min-h-screen p-8 bg-gradient-to-br from-gray-900 to-gray-800">
@@ -205,8 +260,12 @@ export default function AnalyticsDashboard() {
         {/* Header */}
         <div className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Analytics Dashboard</h1>
-            <p className="text-gray-400">Track your social media performance and engagement</p>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              Analytics Dashboard
+            </h1>
+            <p className="text-gray-400">
+              Track your social media performance and engagement
+            </p>
           </div>
           <div className="flex gap-3">
             <Select value={dateRange} onValueChange={setDateRange}>
@@ -230,19 +289,25 @@ export default function AnalyticsDashboard() {
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Posts
+                </CardTitle>
                 <Activity className="h-4 w-4 text-gray-500" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{overview?.totalPosts ?? 0}</div>
+              <div className="text-2xl font-bold">
+                {overview?.totalPosts ?? 0}
+              </div>
               <div className="flex items-center mt-2">
                 {trends?.trending === 'up' ? (
                   <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
                 ) : (
                   <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
                 )}
-                <span className={`text-sm ${trends?.trending === 'up' ? 'text-green-500' : 'text-red-500'}`}>
+                <span
+                  className={`text-sm ${trends?.trending === 'up' ? 'text-green-500' : 'text-red-500'}`}
+                >
                   {trends?.growthRate ?? 0}%
                 </span>
                 <span className="text-sm text-gray-500 ml-1">vs last week</span>
@@ -253,12 +318,16 @@ export default function AnalyticsDashboard() {
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium">Total Engagement</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Engagement
+                </CardTitle>
                 <Heart className="h-4 w-4 text-gray-500" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{overview?.totalEngagement?.toLocaleString() ?? 0}</div>
+              <div className="text-2xl font-bold">
+                {overview?.totalEngagement?.toLocaleString() ?? 0}
+              </div>
               <p className="text-sm text-gray-500 mt-2">
                 Likes, shares & comments
               </p>
@@ -268,28 +337,37 @@ export default function AnalyticsDashboard() {
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium">Engagement Rate</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Engagement Rate
+                </CardTitle>
                 <Target className="h-4 w-4 text-gray-500" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{overview?.averageEngagementRate ?? 0}%</div>
-              <Progress value={(overview?.averageEngagementRate ?? 0) * 10} className="mt-2" />
+              <div className="text-2xl font-bold">
+                {overview?.averageEngagementRate ?? 0}%
+              </div>
+              <Progress
+                value={(overview?.averageEngagementRate ?? 0) * 10}
+                className="mt-2"
+              />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium">AI Content</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  AI Content
+                </CardTitle>
                 <Zap className="h-4 w-4 text-gray-500" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{overview?.contentGenerated ?? 0}</div>
-              <p className="text-sm text-gray-500 mt-2">
-                Generated this month
-              </p>
+              <div className="text-2xl font-bold">
+                {overview?.contentGenerated ?? 0}
+              </div>
+              <p className="text-sm text-gray-500 mt-2">Generated this month</p>
             </CardContent>
           </Card>
         </div>
@@ -308,7 +386,9 @@ export default function AnalyticsDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Engagement Trends</CardTitle>
-                <CardDescription>Daily engagement metrics over time</CardDescription>
+                <CardDescription>
+                  Daily engagement metrics over time
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <EngagementTrendsChart data={engagementData || []} />
@@ -345,7 +425,7 @@ export default function AnalyticsDashboard() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <MousePointer className="h-4 w-4 text-cyan-500" />
+                        <MousePointer className="h-4 w-4 text-orange-500" />
                         <span>Clicks</span>
                       </div>
                       <span className="font-bold">12,456</span>
@@ -392,7 +472,9 @@ export default function AnalyticsDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Platform Distribution</CardTitle>
-                <CardDescription>Posts across different social media platforms</CardDescription>
+                <CardDescription>
+                  Posts across different social media platforms
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <PlatformDistributionChart data={platformBreakdown || []} />
@@ -400,10 +482,16 @@ export default function AnalyticsDashboard() {
             </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {platformBreakdown?.map((platform) => {
-                const Icon = PLATFORM_ICONS[platform.platform as keyof typeof PLATFORM_ICONS] || Activity;
-                const color = PLATFORM_COLORS[platform.platform as keyof typeof PLATFORM_COLORS] || '#666';
-                
+              {platformBreakdown?.map(platform => {
+                const Icon =
+                  PLATFORM_ICONS[
+                    platform.platform as keyof typeof PLATFORM_ICONS
+                  ] || Activity;
+                const color =
+                  PLATFORM_COLORS[
+                    platform.platform as keyof typeof PLATFORM_COLORS
+                  ] || '#666';
+
                 return (
                   <Card key={platform.platform}>
                     <CardHeader className="pb-3">
@@ -414,16 +502,28 @@ export default function AnalyticsDashboard() {
                             {platform.platform}
                           </CardTitle>
                         </div>
-                        <Badge variant="secondary">{platform.posts} posts</Badge>
+                        <Badge variant="secondary">
+                          {platform.posts} posts
+                        </Badge>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <Progress 
-                        value={overview?.totalPosts ? (platform.posts / overview.totalPosts) * 100 : 0}
+                      <Progress
+                        value={
+                          overview?.totalPosts
+                            ? (platform.posts / overview.totalPosts) * 100
+                            : 0
+                        }
                         className="h-2"
                       />
                       <p className="text-xs text-gray-500 mt-2">
-                        {overview?.totalPosts ? ((platform.posts / overview.totalPosts) * 100).toFixed(1) : 0}% of total
+                        {overview?.totalPosts
+                          ? (
+                              (platform.posts / overview.totalPosts) *
+                              100
+                            ).toFixed(1)
+                          : 0}
+                        % of total
                       </p>
                     </CardContent>
                   </Card>
@@ -437,31 +537,44 @@ export default function AnalyticsDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Top Performing Content</CardTitle>
-                <CardDescription>Your best posts based on engagement</CardDescription>
+                <CardDescription>
+                  Your best posts based on engagement
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {topContent?.map((content, index) => {
-                    const Icon = PLATFORM_ICONS[content.platform as keyof typeof PLATFORM_ICONS] || Activity;
-                    
+                    const Icon =
+                      PLATFORM_ICONS[
+                        content.platform as keyof typeof PLATFORM_ICONS
+                      ] || Activity;
+
                     return (
                       <div key={index} className="p-4 bg-gray-800 rounded-lg">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <div className="flex items-center justify-center w-8 h-8 bg-gray-700 rounded-full">
-                              <span className="text-sm font-bold">#{index + 1}</span>
+                              <span className="text-sm font-bold">
+                                #{index + 1}
+                              </span>
                             </div>
                             <Icon className="h-4 w-4" />
-                            <Badge variant="secondary" className="capitalize">{content.platform}</Badge>
+                            <Badge variant="secondary" className="capitalize">
+                              {content.platform}
+                            </Badge>
                           </div>
                           <div className="flex items-center gap-2">
                             <Award className="h-4 w-4 text-yellow-500" />
-                            <span className="text-sm">Viral Score: {content.viralScore}/10</span>
+                            <span className="text-sm">
+                              Viral Score: {content.viralScore}/10
+                            </span>
                           </div>
                         </div>
                         <p className="text-sm mb-2">{content.content}</p>
                         <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>{content.engagement.toLocaleString()} engagements</span>
+                          <span>
+                            {content.engagement.toLocaleString()} engagements
+                          </span>
                         </div>
                       </div>
                     );
@@ -482,17 +595,20 @@ export default function AnalyticsDashboard() {
                   <div className="space-y-3">
                     <div className="p-3 bg-green-900/20 border border-green-500/20 rounded">
                       <p className="text-sm">
-                        <strong>Growth Trend:</strong> Your engagement has increased by {trends?.growthRate ?? 0}% this week
+                        <strong>Growth Trend:</strong> Your engagement has
+                        increased by {trends?.growthRate ?? 0}% this week
                       </p>
                     </div>
                     <div className="p-3 bg-blue-900/20 border border-blue-500/20 rounded">
                       <p className="text-sm">
-                        <strong>Best Platform:</strong> Twitter is generating the highest engagement
+                        <strong>Best Platform:</strong> Twitter is generating
+                        the highest engagement
                       </p>
                     </div>
-                    <div className="p-3 bg-cyan-900/20 border border-cyan-500/20 rounded">
+                    <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded">
                       <p className="text-sm">
-                        <strong>Optimal Time:</strong> Posts at 9 AM get 45% more engagement
+                        <strong>Optimal Time:</strong> Posts at 9 AM get 45%
+                        more engagement
                       </p>
                     </div>
                   </div>
@@ -507,19 +623,27 @@ export default function AnalyticsDashboard() {
                   <div className="space-y-3">
                     <div className="flex items-start gap-2">
                       <span className="text-green-500">✓</span>
-                      <p className="text-sm">Post more content on Twitter for maximum reach</p>
+                      <p className="text-sm">
+                        Post more content on Twitter for maximum reach
+                      </p>
                     </div>
                     <div className="flex items-start gap-2">
                       <span className="text-green-500">✓</span>
-                      <p className="text-sm">Schedule posts for 9 AM and 6 PM</p>
+                      <p className="text-sm">
+                        Schedule posts for 9 AM and 6 PM
+                      </p>
                     </div>
                     <div className="flex items-start gap-2">
                       <span className="text-green-500">✓</span>
-                      <p className="text-sm">Use more visual content on Instagram</p>
+                      <p className="text-sm">
+                        Use more visual content on Instagram
+                      </p>
                     </div>
                     <div className="flex items-start gap-2">
                       <span className="text-green-500">✓</span>
-                      <p className="text-sm">Increase posting frequency on LinkedIn</p>
+                      <p className="text-sm">
+                        Increase posting frequency on LinkedIn
+                      </p>
                     </div>
                   </div>
                 </CardContent>

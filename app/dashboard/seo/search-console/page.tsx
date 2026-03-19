@@ -30,7 +30,10 @@ import {
 
 type DateRange = '7d' | '28d' | '3mo' | '6mo';
 
-function getDateRange(range: DateRange): { startDate: string; endDate: string } {
+function getDateRange(range: DateRange): {
+  startDate: string;
+  endDate: string;
+} {
   const end = new Date();
   const start = new Date();
 
@@ -70,19 +73,27 @@ function SearchPerformanceSection({
   analytics: ReturnType<typeof useSearchConsole>['searchAnalytics'];
   loading: boolean;
   error: string | null;
-  onFetch: (siteUrl: string, options: { startDate: string; endDate: string; dimensions: string[]; rowLimit: number }) => void;
+  onFetch: (
+    siteUrl: string,
+    options: {
+      startDate: string;
+      endDate: string;
+      dimensions: string[];
+      rowLimit: number;
+    }
+  ) => void;
 }) {
   const [siteUrl, setSiteUrl] = useState(
-    typeof window !== 'undefined'
-      ? (process.env.NEXT_PUBLIC_APP_URL || '')
-      : ''
+    typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_APP_URL || '' : ''
   );
   const [dateRange, setDateRange] = useState<DateRange>('28d');
   const [dimension, setDimension] = useState<Dimension>('query');
 
   const handleFetch = () => {
     if (!siteUrl.trim()) return;
-    const normalizedUrl = siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`;
+    const normalizedUrl = siteUrl.startsWith('http')
+      ? siteUrl
+      : `https://${siteUrl}`;
     const { startDate, endDate } = getDateRange(dateRange);
     onFetch(normalizedUrl, {
       startDate,
@@ -95,7 +106,9 @@ function SearchPerformanceSection({
   const handleDateRangeChange = (range: DateRange) => {
     setDateRange(range);
     if (siteUrl.trim()) {
-      const normalizedUrl = siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`;
+      const normalizedUrl = siteUrl.startsWith('http')
+        ? siteUrl
+        : `https://${siteUrl}`;
       const { startDate, endDate } = getDateRange(range);
       onFetch(normalizedUrl, {
         startDate,
@@ -109,7 +122,9 @@ function SearchPerformanceSection({
   const handleDimensionChange = (dim: Dimension) => {
     setDimension(dim);
     if (siteUrl.trim()) {
-      const normalizedUrl = siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`;
+      const normalizedUrl = siteUrl.startsWith('http')
+        ? siteUrl
+        : `https://${siteUrl}`;
       const { startDate, endDate } = getDateRange(dateRange);
       onFetch(normalizedUrl, {
         startDate,
@@ -134,16 +149,20 @@ function SearchPerformanceSection({
         <Input
           type="text"
           value={siteUrl}
-          onChange={(e) => setSiteUrl(e.target.value)}
+          onChange={e => setSiteUrl(e.target.value)}
           placeholder="Enter site URL (e.g., https://example.com)"
           className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
         />
         <Button
           onClick={handleFetch}
           disabled={loading || !siteUrl.trim()}
-          className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white"
+          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Search className="w-4 h-4 mr-2" />
+          )}
           {loading ? 'Loading...' : 'Fetch Data'}
         </Button>
       </div>
@@ -151,7 +170,7 @@ function SearchPerformanceSection({
       {/* Date Range Selector */}
       <div className="flex items-center gap-2">
         <span className="text-sm text-gray-400 mr-2">Period:</span>
-        {(['7d', '28d', '3mo', '6mo'] as DateRange[]).map((range) => (
+        {(['7d', '28d', '3mo', '6mo'] as DateRange[]).map(range => (
           <Button
             key={range}
             variant="outline"
@@ -159,11 +178,17 @@ function SearchPerformanceSection({
             onClick={() => handleDateRangeChange(range)}
             className={`text-xs ${
               dateRange === range
-                ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-400'
+                ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
                 : 'border-white/10 text-gray-400 hover:bg-white/5'
             }`}
           >
-            {range === '7d' ? 'Last 7 days' : range === '28d' ? 'Last 28 days' : range === '3mo' ? 'Last 3 months' : 'Last 6 months'}
+            {range === '7d'
+              ? 'Last 7 days'
+              : range === '28d'
+                ? 'Last 28 days'
+                : range === '3mo'
+                  ? 'Last 3 months'
+                  : 'Last 6 months'}
           </Button>
         ))}
       </div>
@@ -178,27 +203,41 @@ function SearchPerformanceSection({
         <div className="space-y-4">
           {/* Summary Metrics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <MetricCard label="Total Clicks" value={analytics.totals.clicks.toLocaleString()} />
-            <MetricCard label="Total Impressions" value={analytics.totals.impressions.toLocaleString()} />
-            <MetricCard label="Average CTR" value={`${(analytics.totals.ctr * 100).toFixed(2)}%`} />
-            <MetricCard label="Average Position" value={analytics.totals.position.toFixed(1)} />
+            <MetricCard
+              label="Total Clicks"
+              value={analytics.totals.clicks.toLocaleString()}
+            />
+            <MetricCard
+              label="Total Impressions"
+              value={analytics.totals.impressions.toLocaleString()}
+            />
+            <MetricCard
+              label="Average CTR"
+              value={`${(analytics.totals.ctr * 100).toFixed(2)}%`}
+            />
+            <MetricCard
+              label="Average Position"
+              value={analytics.totals.position.toFixed(1)}
+            />
           </div>
 
           {/* Dimension Toggle */}
           <div className="flex items-center gap-2 border-b border-white/10 pb-2">
-            {(['query', 'page', 'country', 'device'] as Dimension[]).map((dim) => (
-              <button
-                key={dim}
-                onClick={() => handleDimensionChange(dim)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                  dimension === dim
-                    ? 'bg-cyan-500/20 text-cyan-400'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {dimensionLabels[dim]}
-              </button>
-            ))}
+            {(['query', 'page', 'country', 'device'] as Dimension[]).map(
+              dim => (
+                <button
+                  key={dim}
+                  onClick={() => handleDimensionChange(dim)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                    dimension === dim
+                      ? 'bg-orange-500/20 text-orange-400'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {dimensionLabels[dim]}
+                </button>
+              )
+            )}
           </div>
 
           {/* Data Table */}
@@ -209,19 +248,30 @@ function SearchPerformanceSection({
                   <th className="text-left py-3 px-2 text-gray-400 font-medium">
                     {dimensionLabels[dimension].slice(0, -1)}
                   </th>
-                  <th className="text-right py-3 px-2 text-gray-400 font-medium">Clicks</th>
-                  <th className="text-right py-3 px-2 text-gray-400 font-medium">Impressions</th>
-                  <th className="text-right py-3 px-2 text-gray-400 font-medium">CTR</th>
-                  <th className="text-right py-3 px-2 text-gray-400 font-medium">Position</th>
+                  <th className="text-right py-3 px-2 text-gray-400 font-medium">
+                    Clicks
+                  </th>
+                  <th className="text-right py-3 px-2 text-gray-400 font-medium">
+                    Impressions
+                  </th>
+                  <th className="text-right py-3 px-2 text-gray-400 font-medium">
+                    CTR
+                  </th>
+                  <th className="text-right py-3 px-2 text-gray-400 font-medium">
+                    Position
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {analytics.rows.map((row: SearchAnalyticsRow, i: number) => (
-                  <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <tr
+                    key={i}
+                    className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                  >
                     <td className="py-2.5 px-2 text-white font-mono text-xs truncate max-w-[300px]">
                       {row.keys.join(', ')}
                     </td>
-                    <td className="py-2.5 px-2 text-right text-cyan-400 font-medium">
+                    <td className="py-2.5 px-2 text-right text-orange-400 font-medium">
                       {row.clicks.toLocaleString()}
                     </td>
                     <td className="py-2.5 px-2 text-right text-gray-300">
@@ -248,9 +298,12 @@ function SearchPerformanceSection({
       ) : !loading && !error ? (
         <div className="text-center py-12">
           <Globe className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">Connect Google Search Console</h3>
+          <h3 className="text-lg font-medium text-white mb-2">
+            Connect Google Search Console
+          </h3>
           <p className="text-gray-400 mb-2">
-            Enter your site URL and click Fetch Data to see search performance data.
+            Enter your site URL and click Fetch Data to see search performance
+            data.
           </p>
           <p className="text-xs text-gray-500">
             Requires Google Search Console API credentials to be configured.
@@ -286,23 +339,29 @@ function IndexingStatusSection({
   error: string | null;
 }) {
   const [siteUrl, setSiteUrl] = useState(
-    typeof window !== 'undefined'
-      ? (process.env.NEXT_PUBLIC_APP_URL || '')
-      : ''
+    typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_APP_URL || '' : ''
   );
   const [inspectionUrl, setInspectionUrl] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!siteUrl.trim() || !inspectionUrl.trim()) return;
-    const normalizedSite = siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`;
-    const normalizedUrl = inspectionUrl.startsWith('http') ? inspectionUrl : `https://${inspectionUrl}`;
+    const normalizedSite = siteUrl.startsWith('http')
+      ? siteUrl
+      : `https://${siteUrl}`;
+    const normalizedUrl = inspectionUrl.startsWith('http')
+      ? inspectionUrl
+      : `https://${inspectionUrl}`;
     onCheck(normalizedSite, normalizedUrl);
   };
 
   function getStatusBadge(state: string) {
     const lowerState = state.toLowerCase();
-    if (lowerState.includes('submitted_and_indexed') || lowerState === 'pass' || lowerState.includes('indexed')) {
+    if (
+      lowerState.includes('submitted_and_indexed') ||
+      lowerState === 'pass' ||
+      lowerState.includes('indexed')
+    ) {
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 text-green-400 rounded-full text-sm font-medium border border-green-500/20">
           <CheckCircle className="w-4 h-4" />
@@ -310,7 +369,11 @@ function IndexingStatusSection({
         </span>
       );
     }
-    if (lowerState.includes('crawled') || lowerState.includes('discovered') || lowerState === 'neutral') {
+    if (
+      lowerState.includes('crawled') ||
+      lowerState.includes('discovered') ||
+      lowerState === 'neutral'
+    ) {
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-500/10 text-yellow-400 rounded-full text-sm font-medium border border-yellow-500/20">
           <AlertTriangle className="w-4 h-4" />
@@ -333,7 +396,7 @@ function IndexingStatusSection({
           <Input
             type="text"
             value={siteUrl}
-            onChange={(e) => setSiteUrl(e.target.value)}
+            onChange={e => setSiteUrl(e.target.value)}
             placeholder="Site URL (e.g., https://example.com)"
             className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
           />
@@ -342,16 +405,20 @@ function IndexingStatusSection({
           <Input
             type="text"
             value={inspectionUrl}
-            onChange={(e) => setInspectionUrl(e.target.value)}
+            onChange={e => setInspectionUrl(e.target.value)}
             placeholder="Page URL to inspect (e.g., https://example.com/page)"
             className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
           />
           <Button
             type="submit"
             disabled={loading || !siteUrl.trim() || !inspectionUrl.trim()}
-            className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white"
+            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Search className="w-4 h-4 mr-2" />
+            )}
             {loading ? 'Checking...' : 'Check Status'}
           </Button>
         </div>
@@ -378,11 +445,17 @@ function IndexingStatusSection({
           {/* Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-white/5 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">Crawl State</h4>
-              <p className="text-white font-medium">{result.crawlState.replace(/_/g, ' ')}</p>
+              <h4 className="text-sm font-medium text-gray-400 mb-2">
+                Crawl State
+              </h4>
+              <p className="text-white font-medium">
+                {result.crawlState.replace(/_/g, ' ')}
+              </p>
             </div>
             <div className="p-4 bg-white/5 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">Last Crawl Time</h4>
+              <h4 className="text-sm font-medium text-gray-400 mb-2">
+                Last Crawl Time
+              </h4>
               <p className="text-white font-medium">
                 {result.lastCrawlTime
                   ? new Date(result.lastCrawlTime).toLocaleString()
@@ -390,12 +463,20 @@ function IndexingStatusSection({
               </p>
             </div>
             <div className="p-4 bg-white/5 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">Robots.txt State</h4>
-              <p className="text-white font-medium">{result.robotsTxtState.replace(/_/g, ' ')}</p>
+              <h4 className="text-sm font-medium text-gray-400 mb-2">
+                Robots.txt State
+              </h4>
+              <p className="text-white font-medium">
+                {result.robotsTxtState.replace(/_/g, ' ')}
+              </p>
             </div>
             <div className="p-4 bg-white/5 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">Page Fetch State</h4>
-              <p className="text-white font-medium">{result.pageFetchState.replace(/_/g, ' ')}</p>
+              <h4 className="text-sm font-medium text-gray-400 mb-2">
+                Page Fetch State
+              </h4>
+              <p className="text-white font-medium">
+                {result.pageFetchState.replace(/_/g, ' ')}
+              </p>
             </div>
           </div>
         </div>
@@ -420,14 +501,14 @@ function SitemapHealthSection({
   onFetch: (siteUrl: string) => void;
 }) {
   const [siteUrl, setSiteUrl] = useState(
-    typeof window !== 'undefined'
-      ? (process.env.NEXT_PUBLIC_APP_URL || '')
-      : ''
+    typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_APP_URL || '' : ''
   );
 
   const handleFetch = () => {
     if (!siteUrl.trim()) return;
-    const normalizedUrl = siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`;
+    const normalizedUrl = siteUrl.startsWith('http')
+      ? siteUrl
+      : `https://${siteUrl}`;
     onFetch(normalizedUrl);
   };
 
@@ -447,16 +528,20 @@ function SitemapHealthSection({
         <Input
           type="text"
           value={siteUrl}
-          onChange={(e) => setSiteUrl(e.target.value)}
+          onChange={e => setSiteUrl(e.target.value)}
           placeholder="Enter site URL (e.g., https://example.com)"
           className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
         />
         <Button
           onClick={handleFetch}
           disabled={loading || !siteUrl.trim()}
-          className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white"
+          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <RefreshCw className="w-4 h-4 mr-2" />
+          )}
           {loading ? 'Loading...' : 'Load Sitemaps'}
         </Button>
       </div>
@@ -472,23 +557,36 @@ function SitemapHealthSection({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="text-left py-3 px-2 text-gray-400 font-medium">Status</th>
-                <th className="text-left py-3 px-2 text-gray-400 font-medium">Sitemap Path</th>
-                <th className="text-left py-3 px-2 text-gray-400 font-medium">Last Submitted</th>
-                <th className="text-right py-3 px-2 text-gray-400 font-medium">Warnings</th>
-                <th className="text-right py-3 px-2 text-gray-400 font-medium">Errors</th>
+                <th className="text-left py-3 px-2 text-gray-400 font-medium">
+                  Status
+                </th>
+                <th className="text-left py-3 px-2 text-gray-400 font-medium">
+                  Sitemap Path
+                </th>
+                <th className="text-left py-3 px-2 text-gray-400 font-medium">
+                  Last Submitted
+                </th>
+                <th className="text-right py-3 px-2 text-gray-400 font-medium">
+                  Warnings
+                </th>
+                <th className="text-right py-3 px-2 text-gray-400 font-medium">
+                  Errors
+                </th>
               </tr>
             </thead>
             <tbody>
               {sitemaps.map((sitemap: SitemapInfo, i: number) => (
-                <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                <tr
+                  key={i}
+                  className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                >
                   <td className="py-2.5 px-2">
                     {getSitemapStatusIcon(sitemap)}
                   </td>
                   <td className="py-2.5 px-2 text-white font-mono text-xs truncate max-w-[300px]">
                     {sitemap.path}
                     {sitemap.isSitemapsIndex && (
-                      <span className="ml-2 px-1.5 py-0.5 bg-cyan-500/10 text-cyan-400 rounded text-[10px] font-medium">
+                      <span className="ml-2 px-1.5 py-0.5 bg-orange-500/10 text-orange-400 rounded text-[10px] font-medium">
                         INDEX
                       </span>
                     )}
@@ -504,12 +602,22 @@ function SitemapHealthSection({
                       : 'N/A'}
                   </td>
                   <td className="py-2.5 px-2 text-right">
-                    <span className={sitemap.warnings > 0 ? 'text-yellow-400' : 'text-gray-500'}>
+                    <span
+                      className={
+                        sitemap.warnings > 0
+                          ? 'text-yellow-400'
+                          : 'text-gray-500'
+                      }
+                    >
                       {sitemap.warnings}
                     </span>
                   </td>
                   <td className="py-2.5 px-2 text-right">
-                    <span className={sitemap.errors > 0 ? 'text-red-400' : 'text-gray-500'}>
+                    <span
+                      className={
+                        sitemap.errors > 0 ? 'text-red-400' : 'text-gray-500'
+                      }
+                    >
                       {sitemap.errors}
                     </span>
                   </td>
@@ -557,13 +665,13 @@ export default function SearchConsolePage() {
         <div>
           <Link
             href="/dashboard/seo"
-            className="text-sm text-gray-400 hover:text-cyan-400 flex items-center gap-1 mb-2 transition-colors"
+            className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to SEO Tools
           </Link>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <BarChart3 className="w-8 h-8 text-cyan-400" />
+            <BarChart3 className="w-8 h-8 text-orange-400" />
             Search Console
           </h1>
           <p className="text-gray-400 mt-2">
@@ -578,15 +686,16 @@ export default function SearchConsolePage() {
         description="Access Google Search Console data including search analytics, URL indexing inspection, and sitemap health monitoring."
       >
         {/* Search Performance */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-cyan-400" />
+                <BarChart3 className="w-5 h-5 text-orange-400" />
                 Search Performance
               </h2>
               <p className="text-sm text-gray-400 mt-1">
-                Top queries, pages, countries, and devices from Google Search Console
+                Top queries, pages, countries, and devices from Google Search
+                Console
               </p>
             </div>
             <SearchPerformanceSection
@@ -599,15 +708,16 @@ export default function SearchConsolePage() {
         </Card>
 
         {/* Indexing Status */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Search className="w-5 h-5 text-cyan-400" />
+                <Search className="w-5 h-5 text-orange-400" />
                 Indexing Status
               </h2>
               <p className="text-sm text-gray-400 mt-1">
-                Check if specific URLs are indexed by Google and view crawl details
+                Check if specific URLs are indexed by Google and view crawl
+                details
               </p>
             </div>
             <IndexingStatusSection
@@ -620,11 +730,11 @@ export default function SearchConsolePage() {
         </Card>
 
         {/* Sitemap Health */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Globe className="w-5 h-5 text-cyan-400" />
+                <Globe className="w-5 h-5 text-orange-400" />
                 Sitemap Health
               </h2>
               <p className="text-sm text-gray-400 mt-1">

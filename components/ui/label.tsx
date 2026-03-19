@@ -14,8 +14,8 @@ const labelVariants = cva(
         // Premium Glassmorphism variants
         glass: 'text-white/90',
         'glass-muted': 'text-white/60',
-        'glass-primary': 'text-cyan-200',
-        'glass-secondary': 'text-cyan-200',
+        'glass-primary': 'text-orange-200',
+        'glass-secondary': 'text-orange-200',
         'glass-success': 'text-emerald-200',
         'glass-warning': 'text-amber-200',
         'glass-destructive': 'text-red-200',
@@ -39,18 +39,20 @@ const labelVariants = cva(
 );
 
 export interface LabelProps
-  extends React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>,
+  extends
+    React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>,
     VariantProps<typeof labelVariants> {}
 
-const Label = React.forwardRef<React.ElementRef<typeof LabelPrimitive.Root>, LabelProps>(
-  ({ className, variant, size, required, ...props }, ref) => (
-    <LabelPrimitive.Root
-      ref={ref}
-      className={cn(labelVariants({ variant, size, required, className }))}
-      {...props}
-    />
-  )
-);
+const Label = React.forwardRef<
+  React.ElementRef<typeof LabelPrimitive.Root>,
+  LabelProps
+>(({ className, variant, size, required, ...props }, ref) => (
+  <LabelPrimitive.Root
+    ref={ref}
+    className={cn(labelVariants({ variant, size, required, className }))}
+    {...props}
+  />
+));
 Label.displayName = LabelPrimitive.Root.displayName;
 
 export { Label, labelVariants };

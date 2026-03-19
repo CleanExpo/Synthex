@@ -11,7 +11,11 @@ import {
 } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { FORECAST_METRICS } from '@/lib/forecasting/metrics';
-import type { ForecastPrediction, ForecastAccuracy, ForecastMetric } from '@/lib/forecasting/types';
+import type {
+  ForecastPrediction,
+  ForecastAccuracy,
+  ForecastMetric,
+} from '@/lib/forecasting/types';
 
 interface ForecastChartProps {
   predictions: ForecastPrediction[];
@@ -36,7 +40,7 @@ export function ForecastChart({
   horizonDays,
   accuracy,
 }: ForecastChartProps) {
-  const chartData = predictions.map((p) => ({
+  const chartData = predictions.map(p => ({
     date: format(parseISO(p.ds), 'dd/MM'),
     yhat: parseFloat(p.yhat.toFixed(2)),
     yhat_upper: parseFloat(p.yhat_upper.toFixed(2)),
@@ -57,8 +61,14 @@ export function ForecastChart({
       </div>
 
       <ResponsiveContainer width="100%" height={320}>
-        <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+        <AreaChart
+          data={chartData}
+          margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+        >
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="rgba(255,255,255,0.05)"
+          />
           <XAxis
             dataKey="date"
             tick={{ fill: '#6b7280', fontSize: 11 }}
@@ -96,7 +106,7 @@ export function ForecastChart({
           {/* Lower fill — occludes area below lower bound */}
           <Area
             dataKey="yhat_lower"
-            fill="#0f172a"
+            fill="#111111"
             fillOpacity={1}
             stroke="none"
             isAnimationActive={false}
@@ -108,7 +118,12 @@ export function ForecastChart({
             strokeWidth={2}
             fill="none"
             dot={false}
-            activeDot={{ r: 4, fill: '#10b981', stroke: 'rgba(16,185,129,0.4)', strokeWidth: 4 }}
+            activeDot={{
+              r: 4,
+              fill: '#10b981',
+              stroke: 'rgba(16,185,129,0.4)',
+              strokeWidth: 4,
+            }}
             isAnimationActive={false}
           />
         </AreaChart>
@@ -117,9 +132,7 @@ export function ForecastChart({
       {/* Accuracy row */}
       {accuracy && (
         <div className="flex items-center gap-4 pt-1 border-t border-white/5">
-          <div className="text-xs text-gray-500">
-            Model accuracy:
-          </div>
+          <div className="text-xs text-gray-500">Model accuracy:</div>
           <div className="flex items-center gap-3 text-xs">
             <span>
               MAPE{' '}

@@ -12,7 +12,13 @@
 
 import { useState, useCallback } from 'react';
 import useSWR from 'swr';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -107,7 +113,7 @@ const OUTCOME_COLOURS: Record<string, string> = {
 // =============================================================================
 
 function fetchJson(url: string) {
-  return fetch(url, { credentials: 'include' }).then((r) => r.json());
+  return fetch(url, { credentials: 'include' }).then(r => r.json());
 }
 
 // =============================================================================
@@ -121,7 +127,9 @@ export function AuditLogViewer() {
   const [outcome, setOutcome] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(
+    null
+  );
 
   const limit = 25;
 
@@ -146,7 +154,10 @@ export function AuditLogViewer() {
 
   const swrKey = buildUrl();
 
-  const { data, isLoading, mutate } = useSWR<AuditLogApiResponse>(swrKey, fetchJson);
+  const { data, isLoading, mutate } = useSWR<AuditLogApiResponse>(
+    swrKey,
+    fetchJson
+  );
 
   const logs = data?.data ?? [];
   const pagination = data?.pagination;
@@ -191,12 +202,15 @@ export function AuditLogViewer() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <div className="space-y-1">
             <Label className="text-xs text-gray-400">Category</Label>
-            <Select value={category} onValueChange={handleFilterChange(setCategory)}>
+            <Select
+              value={category}
+              onValueChange={handleFilterChange(setCategory)}
+            >
               <SelectTrigger className="bg-white/5 border-white/10 text-white text-sm h-8">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map((c) => (
+                {CATEGORIES.map(c => (
                   <SelectItem key={c.value} value={c.value}>
                     {c.label}
                   </SelectItem>
@@ -207,12 +221,15 @@ export function AuditLogViewer() {
 
           <div className="space-y-1">
             <Label className="text-xs text-gray-400">Severity</Label>
-            <Select value={severity} onValueChange={handleFilterChange(setSeverity)}>
+            <Select
+              value={severity}
+              onValueChange={handleFilterChange(setSeverity)}
+            >
               <SelectTrigger className="bg-white/5 border-white/10 text-white text-sm h-8">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {SEVERITIES.map((s) => (
+                {SEVERITIES.map(s => (
                   <SelectItem key={s.value} value={s.value}>
                     {s.label}
                   </SelectItem>
@@ -223,12 +240,15 @@ export function AuditLogViewer() {
 
           <div className="space-y-1">
             <Label className="text-xs text-gray-400">Outcome</Label>
-            <Select value={outcome} onValueChange={handleFilterChange(setOutcome)}>
+            <Select
+              value={outcome}
+              onValueChange={handleFilterChange(setOutcome)}
+            >
               <SelectTrigger className="bg-white/5 border-white/10 text-white text-sm h-8">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {OUTCOMES.map((o) => (
+                {OUTCOMES.map(o => (
                   <SelectItem key={o.value} value={o.value}>
                     {o.label}
                   </SelectItem>
@@ -242,7 +262,10 @@ export function AuditLogViewer() {
             <Input
               type="date"
               value={startDate}
-              onChange={(e) => { setPage(1); setStartDate(e.target.value); }}
+              onChange={e => {
+                setPage(1);
+                setStartDate(e.target.value);
+              }}
               className="bg-white/5 border-white/10 text-white text-sm h-8"
             />
           </div>
@@ -252,7 +275,10 @@ export function AuditLogViewer() {
             <Input
               type="date"
               value={endDate}
-              onChange={(e) => { setPage(1); setEndDate(e.target.value); }}
+              onChange={e => {
+                setPage(1);
+                setEndDate(e.target.value);
+              }}
               className="bg-white/5 border-white/10 text-white text-sm h-8"
             />
           </div>
@@ -265,12 +291,42 @@ export function AuditLogViewer() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/10">
-                <th scope="col" className="text-left py-2 px-3 text-gray-400 font-medium">Timestamp</th>
-                <th scope="col" className="text-left py-2 px-3 text-gray-400 font-medium">User</th>
-                <th scope="col" className="text-left py-2 px-3 text-gray-400 font-medium">Action</th>
-                <th scope="col" className="text-left py-2 px-3 text-gray-400 font-medium">Resource</th>
-                <th scope="col" className="text-left py-2 px-3 text-gray-400 font-medium">Severity</th>
-                <th scope="col" className="text-left py-2 px-3 text-gray-400 font-medium">Outcome</th>
+                <th
+                  scope="col"
+                  className="text-left py-2 px-3 text-gray-400 font-medium"
+                >
+                  Timestamp
+                </th>
+                <th
+                  scope="col"
+                  className="text-left py-2 px-3 text-gray-400 font-medium"
+                >
+                  User
+                </th>
+                <th
+                  scope="col"
+                  className="text-left py-2 px-3 text-gray-400 font-medium"
+                >
+                  Action
+                </th>
+                <th
+                  scope="col"
+                  className="text-left py-2 px-3 text-gray-400 font-medium"
+                >
+                  Resource
+                </th>
+                <th
+                  scope="col"
+                  className="text-left py-2 px-3 text-gray-400 font-medium"
+                >
+                  Severity
+                </th>
+                <th
+                  scope="col"
+                  className="text-left py-2 px-3 text-gray-400 font-medium"
+                >
+                  Outcome
+                </th>
                 <th scope="col" className="w-8" aria-label="Row actions" />
               </tr>
             </thead>
@@ -288,15 +344,15 @@ export function AuditLogViewer() {
                   </td>
                 </tr>
               ) : (
-                logs.map((entry) => (
+                logs.map(entry => (
                   <tr
                     key={entry.id}
                     role="button"
                     tabIndex={0}
                     aria-label={`View audit log: ${entry.action} — ${entry.user?.email ?? entry.userId.slice(0, 8)}`}
-                    className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-cyan-500"
+                    className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-orange-500"
                     onClick={() => setSelectedEntry(entry)}
-                    onKeyDown={(e) => {
+                    onKeyDown={e => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         setSelectedEntry(entry);
@@ -358,13 +414,14 @@ export function AuditLogViewer() {
         {pagination && pagination.totalPages > 1 && (
           <div className="flex items-center justify-between pt-2">
             <p className="text-xs text-gray-400">
-              Page {pagination.page} of {pagination.totalPages} — {pagination.total} entries
+              Page {pagination.page} of {pagination.totalPages} —{' '}
+              {pagination.total} entries
             </p>
             <div className="flex items-center gap-2">
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page <= 1 || isLoading}
                 className="text-gray-400 hover:text-white"
               >
@@ -374,7 +431,7 @@ export function AuditLogViewer() {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => setPage((p) => p + 1)}
+                onClick={() => setPage(p => p + 1)}
                 disabled={!pagination.hasMore || isLoading}
                 className="text-gray-400 hover:text-white"
               >

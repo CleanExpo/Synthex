@@ -30,9 +30,21 @@ interface AlgorithmUpdateTimelineProps {
 }
 
 const IMPACT_CONFIG = {
-  high: { dot: 'bg-red-500', badge: 'bg-red-500/20 text-red-300', label: 'High Impact' },
-  medium: { dot: 'bg-amber-500', badge: 'bg-amber-500/20 text-amber-300', label: 'Medium Impact' },
-  low: { dot: 'bg-gray-500', badge: 'bg-gray-500/20 text-gray-300', label: 'Low Impact' },
+  high: {
+    dot: 'bg-red-500',
+    badge: 'bg-red-500/20 text-red-300',
+    label: 'High Impact',
+  },
+  medium: {
+    dot: 'bg-amber-500',
+    badge: 'bg-amber-500/20 text-amber-300',
+    label: 'Medium Impact',
+  },
+  low: {
+    dot: 'bg-gray-500',
+    badge: 'bg-gray-500/20 text-gray-300',
+    label: 'Low Impact',
+  },
 } as const;
 
 const UPDATE_TYPE_LABELS: Record<string, string> = {
@@ -55,7 +67,11 @@ function isActiveRollout(update: AlgorithmUpdate): boolean {
 
 function formatDateShort(dateStr: string): string {
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('en-AU', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 /**
@@ -71,16 +87,18 @@ function detectCorrelation(
   const end = update.rolloutEnd ? new Date(update.rolloutEnd) : new Date();
 
   // Find snapshots before and during the update window
-  const before = snapshots.filter((s) => new Date(s.date) < start);
-  const during = snapshots.filter((s) => {
+  const before = snapshots.filter(s => new Date(s.date) < start);
+  const during = snapshots.filter(s => {
     const d = new Date(s.date);
     return d >= start && d <= end;
   });
 
   if (before.length === 0 || during.length === 0) return null;
 
-  const avgBefore = before.reduce((s, p) => s + p.totalClicks, 0) / before.length;
-  const avgDuring = during.reduce((s, p) => s + p.totalClicks, 0) / during.length;
+  const avgBefore =
+    before.reduce((s, p) => s + p.totalClicks, 0) / before.length;
+  const avgDuring =
+    during.reduce((s, p) => s + p.totalClicks, 0) / during.length;
 
   if (avgBefore === 0) return null;
   const changePct = ((avgDuring - avgBefore) / avgBefore) * 100;
@@ -97,7 +115,7 @@ export function AlgorithmUpdateTimeline({
   if (loading) {
     return (
       <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
+        {[1, 2, 3].map(i => (
           <div key={i} className="flex gap-4">
             <div className="w-3 h-3 mt-1.5 rounded-full bg-white/10 flex-shrink-0" />
             <div className="flex-1 h-20 rounded-lg bg-white/5 animate-pulse" />
@@ -121,9 +139,10 @@ export function AlgorithmUpdateTimeline({
       <div className="absolute left-[5px] top-3 bottom-3 w-px bg-white/10" />
 
       <div className="space-y-6">
-        {updates.map((update) => {
+        {updates.map(update => {
           const config =
-            IMPACT_CONFIG[update.impactLevel as keyof typeof IMPACT_CONFIG] ?? IMPACT_CONFIG.low;
+            IMPACT_CONFIG[update.impactLevel as keyof typeof IMPACT_CONFIG] ??
+            IMPACT_CONFIG.low;
           const active = isActiveRollout(update);
           const typeLabel = UPDATE_TYPE_LABELS[update.updateType] ?? 'Update';
           const correlation = detectCorrelation(update, snapshots);
@@ -132,9 +151,13 @@ export function AlgorithmUpdateTimeline({
             <div key={update.id} className="flex gap-4">
               {/* Timeline dot */}
               <div className="relative flex-shrink-0 mt-1.5">
-                <div className={`w-3 h-3 rounded-full border-2 border-[#0f1117] ${config.dot}`} />
+                <div
+                  className={`w-3 h-3 rounded-full border-2 border-[#0f1117] ${config.dot}`}
+                />
                 {active && (
-                  <div className={`absolute inset-0 rounded-full ${config.dot} animate-ping opacity-40`} />
+                  <div
+                    className={`absolute inset-0 rounded-full ${config.dot} animate-ping opacity-40`}
+                  />
                 )}
               </div>
 
@@ -150,11 +173,15 @@ export function AlgorithmUpdateTimeline({
 
                 {/* Name + badges */}
                 <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                  <span className="font-medium text-white text-sm">{update.name}</span>
+                  <span className="font-medium text-white text-sm">
+                    {update.name}
+                  </span>
                   <span className="text-xs px-2 py-0.5 rounded bg-white/10 text-gray-300">
                     {typeLabel}
                   </span>
-                  <span className={`text-xs px-2 py-0.5 rounded ${config.badge}`}>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded ${config.badge}`}
+                  >
                     {config.label}
                   </span>
                   {active && (
@@ -166,14 +193,17 @@ export function AlgorithmUpdateTimeline({
                 </div>
 
                 {/* Description */}
-                <p className="text-xs text-gray-400 leading-relaxed">{update.description}</p>
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  {update.description}
+                </p>
 
                 {/* Correlation chip */}
                 {correlation !== null && (
                   <div className="mt-2 inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
                     <span>⚠</span>
                     <span>
-                      Traffic dropped {Math.abs(correlation).toFixed(0)}% during this update
+                      Traffic dropped {Math.abs(correlation).toFixed(0)}% during
+                      this update
                     </span>
                   </div>
                 )}
@@ -184,7 +214,7 @@ export function AlgorithmUpdateTimeline({
                     href={update.sourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-2 block text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                    className="mt-2 block text-xs text-orange-400 hover:text-orange-300 transition-colors"
                   >
                     Google Search Central →
                   </a>

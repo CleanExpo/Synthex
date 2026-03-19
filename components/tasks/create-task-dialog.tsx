@@ -37,7 +37,11 @@ interface CreateTaskDialogProps {
   onSubmit: (task: Partial<Task>) => void;
 }
 
-export function CreateTaskDialog({ open, onOpenChange, onSubmit }: CreateTaskDialogProps) {
+export function CreateTaskDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+}: CreateTaskDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<TaskType>('content');
@@ -62,8 +66,13 @@ export function CreateTaskDialog({ open, onOpenChange, onSubmit }: CreateTaskDia
         type,
         priority,
         dueDate: dueDate || new Date().toISOString().split('T')[0],
-        assignees: assignees.map((id) => teamMembers.find((m) => m.id === id)!).filter(Boolean),
-        tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
+        assignees: assignees
+          .map(id => teamMembers.find(m => m.id === id)!)
+          .filter(Boolean),
+        tags: tags
+          .split(',')
+          .map(t => t.trim())
+          .filter(Boolean),
       });
 
       // Reset form
@@ -91,22 +100,26 @@ export function CreateTaskDialog({ open, onOpenChange, onSubmit }: CreateTaskDia
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="title" className="text-slate-300">Title</Label>
+            <Label htmlFor="title" className="text-slate-300">
+              Title
+            </Label>
             <Input
               id="title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={e => setTitle(e.target.value)}
               placeholder="Enter task title"
               className="bg-white/5 border-white/10 mt-1"
             />
           </div>
 
           <div>
-            <Label htmlFor="description" className="text-slate-300">Description</Label>
+            <Label htmlFor="description" className="text-slate-300">
+              Description
+            </Label>
             <Textarea
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={e => setDescription(e.target.value)}
               placeholder="Describe the task..."
               className="bg-white/5 border-white/10 mt-1 min-h-[100px]"
             />
@@ -115,7 +128,7 @@ export function CreateTaskDialog({ open, onOpenChange, onSubmit }: CreateTaskDia
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-slate-300">Type</Label>
-              <Select value={type} onValueChange={(v) => setType(v as TaskType)}>
+              <Select value={type} onValueChange={v => setType(v as TaskType)}>
                 <SelectTrigger className="bg-white/5 border-white/10 mt-1">
                   <SelectValue />
                 </SelectTrigger>
@@ -134,7 +147,10 @@ export function CreateTaskDialog({ open, onOpenChange, onSubmit }: CreateTaskDia
 
             <div>
               <Label className="text-slate-300">Priority</Label>
-              <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}>
+              <Select
+                value={priority}
+                onValueChange={v => setPriority(v as TaskPriority)}
+              >
                 <SelectTrigger className="bg-white/5 border-white/10 mt-1">
                   <SelectValue />
                 </SelectTrigger>
@@ -153,12 +169,14 @@ export function CreateTaskDialog({ open, onOpenChange, onSubmit }: CreateTaskDia
           </div>
 
           <div>
-            <Label htmlFor="dueDate" className="text-slate-300">Due Date</Label>
+            <Label htmlFor="dueDate" className="text-slate-300">
+              Due Date
+            </Label>
             <Input
               id="dueDate"
               type="date"
               value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
+              onChange={e => setDueDate(e.target.value)}
               className="bg-white/5 border-white/10 mt-1"
             />
           </div>
@@ -166,26 +184,28 @@ export function CreateTaskDialog({ open, onOpenChange, onSubmit }: CreateTaskDia
           <div>
             <Label className="text-slate-300">Assignees</Label>
             <div className="flex flex-wrap gap-2 mt-2">
-              {teamMembers.map((member) => (
+              {teamMembers.map(member => (
                 <button
                   key={member.id}
                   type="button"
                   onClick={() => {
                     if (assignees.includes(member.id)) {
-                      setAssignees(assignees.filter((id) => id !== member.id));
+                      setAssignees(assignees.filter(id => id !== member.id));
                     } else {
                       setAssignees([...assignees, member.id]);
                     }
                   }}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${
                     assignees.includes(member.id)
-                      ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
+                      ? 'bg-orange-500/20 border-orange-500/50 text-orange-300'
                       : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
                   }`}
                 >
                   <Avatar className="w-5 h-5">
                     <AvatarImage src={member.avatar} />
-                    <AvatarFallback className="text-xs">{member.name[0]}</AvatarFallback>
+                    <AvatarFallback className="text-xs">
+                      {member.name[0]}
+                    </AvatarFallback>
                   </Avatar>
                   <span className="text-sm">{member.name}</span>
                 </button>
@@ -194,21 +214,31 @@ export function CreateTaskDialog({ open, onOpenChange, onSubmit }: CreateTaskDia
           </div>
 
           <div>
-            <Label htmlFor="tags" className="text-slate-300">Tags</Label>
+            <Label htmlFor="tags" className="text-slate-300">
+              Tags
+            </Label>
             <Input
               id="tags"
               value={tags}
-              onChange={(e) => setTags(e.target.value)}
+              onChange={e => setTags(e.target.value)}
               placeholder="Enter tags separated by commas"
               className="bg-white/5 border-white/10 mt-1"
             />
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="gradient-primary">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="gradient-primary"
+            >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

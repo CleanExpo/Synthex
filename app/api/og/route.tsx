@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         alignItems: 'center',
         justifyContent: 'center',
         background:
-          'linear-gradient(135deg, #0a1628 0%, #0f172a 50%, #0a1628 100%)',
+          'linear-gradient(135deg, #050505 0%, #111111 50%, #050505 100%)',
         fontFamily: '"Inter", sans-serif',
         position: 'relative',
         overflow: 'hidden',
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
               width: '48px',
               height: '48px',
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+              background: 'linear-gradient(135deg, #ffb87b 0%, #ff8f00 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
               fontSize: '32px',
               fontWeight: 800,
               letterSpacing: '0.12em',
-              background: 'linear-gradient(90deg, #06b6d4 0%, #22d3ee 100%)',
+              background: 'linear-gradient(90deg, #ffb87b 0%, #ffdcc2 100%)',
               backgroundClip: 'text',
               color: 'transparent',
             }}
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
             width: '80px',
             height: '2px',
             background:
-              'linear-gradient(90deg, transparent, #06b6d4, transparent)',
+              'linear-gradient(90deg, transparent, #ffb87b, transparent)',
             borderRadius: '1px',
           }}
         />
@@ -177,13 +177,13 @@ export async function GET(request: NextRequest) {
               width: '8px',
               height: '8px',
               borderRadius: '50%',
-              background: '#06b6d4',
+              background: '#ffb87b',
             }}
           />
           <span
             style={{
               fontSize: '16px',
-              color: '#06b6d4',
+              color: '#ffb87b',
               fontWeight: 500,
               letterSpacing: '0.04em',
             }}

@@ -3,7 +3,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import {
-  TrendingUp, Users, Eye, Heart, MessageSquare, Zap, ArrowUp, ArrowDown
+  TrendingUp,
+  Users,
+  Eye,
+  Heart,
+  MessageSquare,
+  Zap,
+  ArrowUp,
+  ArrowDown,
 } from '@/components/icons';
 import { formatNumber } from './constants';
 import type { AnalyticsData } from './types';
@@ -33,8 +40,10 @@ export function OverviewMetrics({ overview }: OverviewMetricsProps) {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
-            <p className="text-2xl font-bold">{formatNumber(overview.totalReach)}</p>
-            <Eye className="w-5 h-5 text-cyan-500" />
+            <p className="text-2xl font-bold">
+              {formatNumber(overview.totalReach)}
+            </p>
+            <Eye className="w-5 h-5 text-orange-500" />
           </div>
           <div className="flex items-center gap-1 mt-2">
             {getChangeIcon(12.5)}
@@ -49,7 +58,9 @@ export function OverviewMetrics({ overview }: OverviewMetricsProps) {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
-            <p className="text-2xl font-bold">{formatNumber(overview.totalEngagement)}</p>
+            <p className="text-2xl font-bold">
+              {formatNumber(overview.totalEngagement)}
+            </p>
             <Heart className="w-5 h-5 text-pink-500" />
           </div>
           <div className="flex items-center gap-1 mt-2">
@@ -65,7 +76,9 @@ export function OverviewMetrics({ overview }: OverviewMetricsProps) {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
-            <p className="text-2xl font-bold">{formatNumber(overview.totalFollowers)}</p>
+            <p className="text-2xl font-bold">
+              {formatNumber(overview.totalFollowers)}
+            </p>
             <Users className="w-5 h-5 text-blue-500" />
           </div>
           <div className="flex items-center gap-1 mt-2">
@@ -88,14 +101,18 @@ export function OverviewMetrics({ overview }: OverviewMetricsProps) {
           </div>
           <div className="flex items-center gap-1 mt-2">
             {getChangeIcon(23)}
-            <span className={`text-sm ${getChangeColor(23)}`}>23 this week</span>
+            <span className={`text-sm ${getChangeColor(23)}`}>
+              23 this week
+            </span>
           </div>
         </CardContent>
       </Card>
 
       <Card variant="glass">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-gray-400">Engagement Rate</CardTitle>
+          <CardTitle className="text-sm text-gray-400">
+            Engagement Rate
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">

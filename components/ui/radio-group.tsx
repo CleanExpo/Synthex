@@ -30,16 +30,16 @@ const radioGroupItemVariants = cva(
         'glass-solid':
           'border border-white/[0.15] bg-slate-800/80 backdrop-blur-md data-[state=checked]:bg-slate-600 data-[state=checked]:border-white/[0.25]',
         'glass-primary':
-          'border border-cyan-500/30 bg-cyan-500/10 backdrop-blur-md data-[state=checked]:bg-cyan-500/30 data-[state=checked]:border-cyan-500/50',
+          'border border-orange-500/30 bg-orange-500/10 backdrop-blur-md data-[state=checked]:bg-orange-500/30 data-[state=checked]:border-orange-500/50',
         'glass-secondary':
-          'border border-cyan-500/30 bg-cyan-500/10 backdrop-blur-md data-[state=checked]:bg-cyan-500/30 data-[state=checked]:border-cyan-500/50',
+          'border border-orange-500/30 bg-orange-500/10 backdrop-blur-md data-[state=checked]:bg-orange-500/30 data-[state=checked]:border-orange-500/50',
         'glass-success':
           'border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-md data-[state=checked]:bg-emerald-500/30 data-[state=checked]:border-emerald-500/50',
         // Gradient variants
         'gradient-primary':
-          'border border-cyan-500/30 bg-white/[0.03] backdrop-blur-md data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-cyan-500/50 data-[state=checked]:to-cyan-500/50 data-[state=checked]:border-transparent',
+          'border border-orange-500/30 bg-white/[0.03] backdrop-blur-md data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-orange-500/50 data-[state=checked]:to-orange-500/50 data-[state=checked]:border-transparent',
         'gradient-secondary':
-          'border border-cyan-500/30 bg-white/[0.03] backdrop-blur-md data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-cyan-500/50 data-[state=checked]:to-blue-500/50 data-[state=checked]:border-transparent',
+          'border border-orange-500/30 bg-white/[0.03] backdrop-blur-md data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-orange-500/50 data-[state=checked]:to-blue-500/50 data-[state=checked]:border-transparent',
       },
       size: {
         default: 'h-4 w-4',
@@ -60,8 +60,8 @@ const radioGroupIndicatorVariants = cva('flex items-center justify-center', {
       default: 'text-current',
       glass: 'text-white',
       'glass-solid': 'text-white',
-      'glass-primary': 'text-cyan-300',
-      'glass-secondary': 'text-cyan-300',
+      'glass-primary': 'text-orange-300',
+      'glass-secondary': 'text-orange-300',
       'glass-success': 'text-emerald-300',
       'gradient-primary': 'text-white',
       'gradient-secondary': 'text-white',
@@ -85,7 +85,11 @@ const RadioGroupVariantContext = React.createContext<{
 }>({});
 
 export interface RadioGroupProps
-  extends Omit<React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>, 'orientation'>,
+  extends
+    Omit<
+      React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>,
+      'orientation'
+    >,
     VariantProps<typeof radioGroupVariants> {
   variant?: VariantProps<typeof radioGroupItemVariants>['variant'];
   size?: VariantProps<typeof radioGroupItemVariants>['size'];
@@ -106,7 +110,8 @@ const RadioGroup = React.forwardRef<
 RadioGroup.displayName = RadioGroupPrimitive.Root.displayName;
 
 export interface RadioGroupItemProps
-  extends React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>,
+  extends
+    React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>,
     VariantProps<typeof radioGroupItemVariants> {}
 
 const RadioGroupItem = React.forwardRef<
@@ -121,13 +126,20 @@ const RadioGroupItem = React.forwardRef<
     <RadioGroupPrimitive.Item
       ref={ref}
       className={cn(
-        radioGroupItemVariants({ variant: resolvedVariant, size: resolvedSize, className })
+        radioGroupItemVariants({
+          variant: resolvedVariant,
+          size: resolvedSize,
+          className,
+        })
       )}
       {...props}
     >
       <RadioGroupPrimitive.Indicator
         className={cn(
-          radioGroupIndicatorVariants({ variant: resolvedVariant, size: resolvedSize })
+          radioGroupIndicatorVariants({
+            variant: resolvedVariant,
+            size: resolvedSize,
+          })
         )}
       >
         <Circle className="fill-current" />

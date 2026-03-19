@@ -19,12 +19,15 @@ const Toaster = ({ ...props }: ToasterProps) => {
             'group toast bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg group-[.toaster]:text-white group-[.toaster]:shadow-lg',
           description: 'group-[.toast]:text-gray-400',
           actionButton:
-            'group-[.toast]:bg-cyan-500 group-[.toast]:text-white',
+            'group-[.toast]:bg-orange-500 group-[.toast]:text-white',
           cancelButton:
             'group-[.toast]:bg-white/10 group-[.toast]:text-gray-400',
-          error: 'group-[.toaster]:bg-red-500/10 group-[.toaster]:border-red-500/20',
-          success: 'group-[.toaster]:bg-green-500/10 group-[.toaster]:border-green-500/20',
-          warning: 'group-[.toaster]:bg-yellow-500/10 group-[.toaster]:border-yellow-500/20',
+          error:
+            'group-[.toaster]:bg-red-500/10 group-[.toaster]:border-red-500/20',
+          success:
+            'group-[.toaster]:bg-green-500/10 group-[.toaster]:border-green-500/20',
+          warning:
+            'group-[.toaster]:bg-yellow-500/10 group-[.toaster]:border-yellow-500/20',
           info: 'group-[.toaster]:bg-blue-500/10 group-[.toaster]:border-blue-500/20',
         },
       }}

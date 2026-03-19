@@ -1,13 +1,13 @@
-'use client'
+'use client';
 
 /**
  * BrandVoicePageClient — Phase 64
  * Client component for /dashboard/brand-voice
  */
 
-import { PageHeader } from '@/components/dashboard/page-header'
-import { ReviewQueuePanel } from './ReviewQueuePanel'
-import { Shield } from '@/components/icons'
+import { PageHeader } from '@/components/dashboard/page-header';
+import { ReviewQueuePanel } from './ReviewQueuePanel';
+import { Shield } from '@/components/icons';
 
 export function BrandVoicePageClient() {
   return (
@@ -26,13 +26,17 @@ export function BrandVoicePageClient() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Review queue */}
         <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-white/70 uppercase tracking-wide">Pending Review</h2>
+          <h2 className="text-sm font-semibold text-white/70 uppercase tracking-wide">
+            Pending Review
+          </h2>
           <ReviewQueuePanel />
         </div>
 
         {/* Info panel */}
         <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-white/70 uppercase tracking-wide">How It Works</h2>
+          <h2 className="text-sm font-semibold text-white/70 uppercase tracking-wide">
+            How It Works
+          </h2>
           <div className="rounded-xl border border-white/10 bg-white/5 p-5 space-y-4">
             <div className="space-y-3 text-sm text-white/60">
               <div className="flex gap-3">
@@ -40,17 +44,25 @@ export function BrandVoicePageClient() {
                   <span className="text-xs font-bold text-emerald-400">1</span>
                 </div>
                 <div>
-                  <p className="font-medium text-white/80">AI generates content</p>
-                  <p className="text-xs mt-0.5">Workflow AI steps produce drafts using your configured templates.</p>
+                  <p className="font-medium text-white/80">
+                    AI generates content
+                  </p>
+                  <p className="text-xs mt-0.5">
+                    Workflow AI steps produce drafts using your configured
+                    templates.
+                  </p>
                 </div>
               </div>
               <div className="flex gap-3">
-                <div className="h-6 w-6 rounded-full bg-cyan-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-cyan-400">2</span>
+                <div className="h-6 w-6 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-orange-400">2</span>
                 </div>
                 <div>
                   <p className="font-medium text-white/80">Quality scoring</p>
-                  <p className="text-xs mt-0.5">Each draft is scored across 4 dimensions: brand alignment, clarity, engagement, and appropriateness.</p>
+                  <p className="text-xs mt-0.5">
+                    Each draft is scored across 4 dimensions: brand alignment,
+                    clarity, engagement, and appropriateness.
+                  </p>
                 </div>
               </div>
               <div className="flex gap-3">
@@ -59,7 +71,10 @@ export function BrandVoicePageClient() {
                 </div>
                 <div>
                   <p className="font-medium text-white/80">Confidence gate</p>
-                  <p className="text-xs mt-0.5">Scores ≥ 85% are auto-approved. Lower scores are routed here for your review.</p>
+                  <p className="text-xs mt-0.5">
+                    Scores ≥ 85% are auto-approved. Lower scores are routed here
+                    for your review.
+                  </p>
                 </div>
               </div>
               <div className="flex gap-3">
@@ -68,7 +83,10 @@ export function BrandVoicePageClient() {
                 </div>
                 <div>
                   <p className="font-medium text-white/80">Human decision</p>
-                  <p className="text-xs mt-0.5">Approve to continue the workflow. Reject with a reason to stop and surface for revision.</p>
+                  <p className="text-xs mt-0.5">
+                    Approve to continue the workflow. Reject with a reason to
+                    stop and surface for revision.
+                  </p>
                 </div>
               </div>
             </div>
@@ -76,5 +94,5 @@ export function BrandVoicePageClient() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -8,7 +8,12 @@
  */
 
 import Link from 'next/link';
-import { CheckCircle, AlertCircle, AlertTriangle, Info } from '@/components/icons';
+import {
+  CheckCircle,
+  AlertCircle,
+  AlertTriangle,
+  Info,
+} from '@/components/icons';
 import type { OpportunityItem } from '@/lib/citation/aggregator';
 
 interface OpportunityPipelineProps {
@@ -47,8 +52,11 @@ export function OpportunityPipeline({
   if (loading) {
     return (
       <div className="space-y-3">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-white/[0.02]">
+        {[1, 2, 3].map(i => (
+          <div
+            key={i}
+            className="flex items-start gap-3 p-3 rounded-lg bg-white/[0.02]"
+          >
             <div className="h-5 w-16 rounded-full bg-white/5 animate-pulse flex-shrink-0" />
             <div className="flex-1 space-y-1.5">
               <div className="h-3 bg-white/5 animate-pulse rounded w-3/4" />
@@ -65,14 +73,16 @@ export function OpportunityPipeline({
       <div className="flex flex-col items-center justify-center py-8 text-center">
         <CheckCircle className="w-8 h-8 text-emerald-500 mb-2" />
         <p className="text-sm font-medium text-emerald-400">All clear</p>
-        <p className="text-xs text-gray-500 mt-1">No action items across all modules</p>
+        <p className="text-xs text-gray-500 mt-1">
+          No action items across all modules
+        </p>
       </div>
     );
   }
 
   return (
     <div className="space-y-2">
-      {items.map((item) => {
+      {items.map(item => {
         const sev = SEVERITY[item.severity] ?? SEVERITY.info;
         const SeverityIcon = sev.icon;
 
@@ -91,7 +101,9 @@ export function OpportunityPipeline({
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{item.title}</p>
+              <p className="text-sm font-medium text-white truncate">
+                {item.title}
+              </p>
               <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">
                 {item.description}
               </p>
@@ -100,7 +112,7 @@ export function OpportunityPipeline({
             {/* Go link */}
             <Link
               href={item.href}
-              className="flex-shrink-0 text-xs text-cyan-400 hover:text-cyan-300 font-medium transition-colors whitespace-nowrap"
+              className="flex-shrink-0 text-xs text-orange-400 hover:text-orange-300 font-medium transition-colors whitespace-nowrap"
               aria-label={`Go to ${item.title}`}
             >
               Go →

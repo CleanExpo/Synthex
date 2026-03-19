@@ -11,7 +11,8 @@ interface AIPMWidgetProps {
 }
 
 export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
-  const { greeting, dashboardSuggestions, loadDashboardSuggestions } = useAIPM();
+  const { greeting, dashboardSuggestions, loadDashboardSuggestions } =
+    useAIPM();
 
   useEffect(() => {
     loadDashboardSuggestions();
@@ -22,18 +23,20 @@ export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500/20 to-purple-500/20">
-            <Sparkles className="h-4 w-4 text-cyan-400" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500/20 to-purple-500/20">
+            <Sparkles className="h-4 w-4 text-orange-400" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white">AI Project Manager</h3>
+            <h3 className="text-sm font-semibold text-white">
+              AI Project Manager
+            </h3>
             <p className="text-[10px] text-gray-500">Personalized insights</p>
           </div>
         </div>
         <Button
           variant="ghost"
           size="sm"
-          className="text-xs text-cyan-400 hover:text-cyan-300"
+          className="text-xs text-orange-400 hover:text-orange-300"
           onClick={onOpenChat}
         >
           Chat
@@ -43,9 +46,7 @@ export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
 
       {/* Greeting */}
       {greeting && (
-        <p className="mt-3 text-sm text-gray-300 leading-relaxed">
-          {greeting}
-        </p>
+        <p className="mt-3 text-sm text-gray-300 leading-relaxed">{greeting}</p>
       )}
 
       {/* Suggestions */}
@@ -61,18 +62,27 @@ export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
                   onOpenChat();
                 }
               }}
-              className="flex w-full items-start gap-3 rounded-lg border border-white/5 bg-white/[0.02] p-3 text-left transition-colors hover:border-cyan-500/20 hover:bg-cyan-500/5"
+              className="flex w-full items-start gap-3 rounded-lg border border-white/5 bg-white/[0.02] p-3 text-left transition-colors hover:border-orange-500/20 hover:bg-orange-500/5"
             >
-              <Zap className={cn(
-                'mt-0.5 h-4 w-4 shrink-0',
-                suggestion.type === 'content' ? 'text-purple-400' :
-                suggestion.type === 'growth' ? 'text-green-400' :
-                suggestion.type === 'optimization' ? 'text-yellow-400' :
-                'text-cyan-400'
-              )} />
+              <Zap
+                className={cn(
+                  'mt-0.5 h-4 w-4 shrink-0',
+                  suggestion.type === 'content'
+                    ? 'text-purple-400'
+                    : suggestion.type === 'growth'
+                      ? 'text-green-400'
+                      : suggestion.type === 'optimization'
+                        ? 'text-yellow-400'
+                        : 'text-orange-400'
+                )}
+              />
               <div className="min-w-0">
-                <p className="text-xs font-medium text-white">{suggestion.title}</p>
-                <p className="mt-0.5 text-[11px] text-gray-500 line-clamp-2">{suggestion.description}</p>
+                <p className="text-xs font-medium text-white">
+                  {suggestion.title}
+                </p>
+                <p className="mt-0.5 text-[11px] text-gray-500 line-clamp-2">
+                  {suggestion.description}
+                </p>
               </div>
             </button>
           ))}
@@ -88,7 +98,7 @@ export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="mt-2 text-xs text-cyan-400 hover:text-cyan-300"
+            className="mt-2 text-xs text-orange-400 hover:text-orange-300"
             onClick={onOpenChat}
           >
             Start a conversation

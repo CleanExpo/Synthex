@@ -8,13 +8,7 @@
  */
 
 import Link from 'next/link';
-import {
-  Shield,
-  Sparkles,
-  Beaker,
-  Link2,
-  Brain,
-} from '@/components/icons';
+import { Shield, Sparkles, Beaker, Link2, Brain } from '@/components/icons';
 import type { AgentActivity, AgentType } from '@/lib/citation/aggregator';
 
 interface AgentActivityFeedProps {
@@ -29,12 +23,36 @@ interface AgentMeta {
 }
 
 const AGENT_META: Record<AgentType, AgentMeta> = {
-  sentinel: { Icon: Shield, colour: 'text-cyan-400 bg-cyan-500/10', label: 'Sentinel' },
-  healing: { Icon: Sparkles, colour: 'text-emerald-400 bg-emerald-500/10', label: 'Self-Healing' },
-  quality: { Icon: Sparkles, colour: 'text-amber-400 bg-amber-500/10', label: 'Quality Gate' },
-  prompt: { Icon: Brain, colour: 'text-purple-400 bg-purple-500/10', label: 'Prompt Intel' },
-  backlink: { Icon: Link2, colour: 'text-blue-400 bg-blue-500/10', label: 'Backlink' },
-  experiment: { Icon: Beaker, colour: 'text-pink-400 bg-pink-500/10', label: 'Experiment' },
+  sentinel: {
+    Icon: Shield,
+    colour: 'text-orange-400 bg-orange-500/10',
+    label: 'Sentinel',
+  },
+  healing: {
+    Icon: Sparkles,
+    colour: 'text-emerald-400 bg-emerald-500/10',
+    label: 'Self-Healing',
+  },
+  quality: {
+    Icon: Sparkles,
+    colour: 'text-amber-400 bg-amber-500/10',
+    label: 'Quality Gate',
+  },
+  prompt: {
+    Icon: Brain,
+    colour: 'text-purple-400 bg-purple-500/10',
+    label: 'Prompt Intel',
+  },
+  backlink: {
+    Icon: Link2,
+    colour: 'text-blue-400 bg-blue-500/10',
+    label: 'Backlink',
+  },
+  experiment: {
+    Icon: Beaker,
+    colour: 'text-pink-400 bg-pink-500/10',
+    label: 'Experiment',
+  },
 };
 
 function timeAgo(date: Date): string {
@@ -55,7 +73,7 @@ export function AgentActivityFeed({
   if (loading) {
     return (
       <div className="space-y-3">
-        {[1, 2, 3].map((i) => (
+        {[1, 2, 3].map(i => (
           <div key={i} className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-lg bg-white/5 animate-pulse flex-shrink-0" />
             <div className="flex-1 space-y-1.5">
@@ -82,7 +100,7 @@ export function AgentActivityFeed({
 
   return (
     <div className="space-y-2">
-      {activities.map((activity) => {
+      {activities.map(activity => {
         const meta = AGENT_META[activity.agent] ?? AGENT_META.sentinel;
         const { Icon, colour, label } = meta;
         const [iconColour, iconBg] = colour.split(' ');

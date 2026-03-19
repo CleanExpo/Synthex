@@ -37,7 +37,7 @@ function formatValue(value: number, label: string): string {
 export function MetricTrendChart({
   data,
   label,
-  colour = '#22d3ee',
+  colour = '#ffdcc2',
   height = 160,
   invertY = false,
 }: MetricTrendChartProps) {
@@ -57,7 +57,7 @@ export function MetricTrendChart({
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
 
-  const values = data.map((d) => d.value);
+  const values = data.map(d => d.value);
   const minVal = Math.min(...values);
   const maxVal = Math.max(...values);
   const range = maxVal - minVal || 1;
@@ -72,7 +72,9 @@ export function MetricTrendChart({
   };
 
   // Build SVG path points
-  const points = data.map((d, i) => `${toX(i).toFixed(2)},${toY(d.value).toFixed(2)}`);
+  const points = data.map(
+    (d, i) => `${toX(i).toFixed(2)},${toY(d.value).toFixed(2)}`
+  );
   const linePath = `M ${points.join(' L ')}`;
   const areaPath = `${linePath} L ${toX(data.length - 1).toFixed(2)},${(padding.top + chartH).toFixed(2)} L ${padding.left.toFixed(2)},${(padding.top + chartH).toFixed(2)} Z`;
 
@@ -80,7 +82,12 @@ export function MetricTrendChart({
   const tickIndices =
     data.length <= 4
       ? data.map((_, i) => i)
-      : [0, Math.floor(data.length / 3), Math.floor((2 * data.length) / 3), data.length - 1];
+      : [
+          0,
+          Math.floor(data.length / 3),
+          Math.floor((2 * data.length) / 3),
+          data.length - 1,
+        ];
 
   const gradId = `grad-${label.replace(/\s+/g, '')}`;
 
@@ -101,7 +108,7 @@ export function MetricTrendChart({
         </defs>
 
         {/* Grid lines (3 horizontal) */}
-        {[0.25, 0.5, 0.75].map((frac) => {
+        {[0.25, 0.5, 0.75].map(frac => {
           const y = padding.top + frac * chartH;
           return (
             <line
@@ -120,7 +127,13 @@ export function MetricTrendChart({
         <path d={areaPath} fill={`url(#${gradId})`} />
 
         {/* Line */}
-        <path d={linePath} fill="none" stroke={colour} strokeWidth="1.5" strokeLinejoin="round" />
+        <path
+          d={linePath}
+          fill="none"
+          stroke={colour}
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
 
         {/* Data points */}
         {data.map((d, i) => (
@@ -128,7 +141,7 @@ export function MetricTrendChart({
         ))}
 
         {/* X-axis labels */}
-        {tickIndices.map((i) => (
+        {tickIndices.map(i => (
           <text
             key={i}
             x={toX(i)}

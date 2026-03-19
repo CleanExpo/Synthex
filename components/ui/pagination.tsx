@@ -3,11 +3,7 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
-import {
-  ChevronLeft,
-  ChevronRight,
-  MoreHorizontal,
-} from '@/components/icons';
+import { ChevronLeft, ChevronRight, MoreHorizontal } from '@/components/icons';
 // Note: ChevronsLeft and ChevronsRight use ChevronLeft/ChevronRight with double chevrons
 const ChevronsLeft = ChevronLeft;
 const ChevronsRight = ChevronRight;
@@ -70,12 +66,17 @@ function usePagination({
     );
 
     const shouldShowLeftDots = leftSiblingIndex > boundaryCount + 2;
-    const shouldShowRightDots = rightSiblingIndex < totalPages - boundaryCount - 1;
+    const shouldShowRightDots =
+      rightSiblingIndex < totalPages - boundaryCount - 1;
 
     if (!shouldShowLeftDots && shouldShowRightDots) {
       const leftItemCount = 3 + 2 * siblingCount + boundaryCount;
       const leftRange = range(1, leftItemCount);
-      return [...leftRange, 'ellipsis' as const, ...range(totalPages - boundaryCount + 1, totalPages)];
+      return [
+        ...leftRange,
+        'ellipsis' as const,
+        ...range(totalPages - boundaryCount + 1, totalPages),
+      ];
     }
 
     if (shouldShowLeftDots && !shouldShowRightDots) {
@@ -176,10 +177,10 @@ export function Pagination({
   };
 
   const activeClasses = {
-    default: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30',
-    outline: 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400',
-    ghost: 'bg-cyan-500/20 text-cyan-400',
-    glass: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+    default: 'bg-orange-500/20 text-orange-400 border border-orange-500/30',
+    outline: 'border-orange-500/50 bg-orange-500/10 text-orange-400',
+    ghost: 'bg-orange-500/20 text-orange-400',
+    glass: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
   };
 
   const buttonClass = cn(
@@ -236,7 +237,12 @@ export function Pagination({
           if (pageNumber === 'ellipsis') {
             return (
               <PaginationItem key={`ellipsis-${index}`}>
-                <span className={cn('flex items-center justify-center', sizeClasses[size])}>
+                <span
+                  className={cn(
+                    'flex items-center justify-center',
+                    sizeClasses[size]
+                  )}
+                >
                   <MoreHorizontal className="h-4 w-4 text-slate-500" />
                 </span>
               </PaginationItem>
@@ -344,10 +350,6 @@ export function SimplePagination({
 }
 
 // Export primitives
-export {
-  PaginationContainer,
-  PaginationContent,
-  PaginationItem,
-};
+export { PaginationContainer, PaginationContent, PaginationItem };
 
 export default Pagination;

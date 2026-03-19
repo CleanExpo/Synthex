@@ -9,20 +9,29 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
-export function LoadingSpinner({ size = 'md', text, className }: LoadingSpinnerProps) {
+export function LoadingSpinner({
+  size = 'md',
+  text,
+  className,
+}: LoadingSpinnerProps) {
   const sizeClasses = {
     sm: 'w-4 h-4',
     md: 'w-8 h-8',
     lg: 'w-12 h-12',
-    xl: 'w-16 h-16'
+    xl: 'w-16 h-16',
   };
 
   return (
-    <div className={cn('flex flex-col items-center justify-center space-y-3', className)}>
-      <Loader2 className={cn(sizeClasses[size], 'animate-spin text-cyan-400')} />
-      {text && (
-        <p className="text-sm text-gray-400 animate-pulse">{text}</p>
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center space-y-3',
+        className
       )}
+    >
+      <Loader2
+        className={cn(sizeClasses[size], 'animate-spin text-orange-400')}
+      />
+      {text && <p className="text-sm text-gray-400 animate-pulse">{text}</p>}
     </div>
   );
 }
@@ -33,14 +42,16 @@ interface PageLoadingProps {
 
 export function PageLoading({ message = 'Loading...' }: PageLoadingProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-cyan-900/20 to-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-orange-900/20 to-gray-900">
       <div className="text-center space-y-4">
         <div className="relative">
-          <Sparkles className="w-16 h-16 text-cyan-400 animate-pulse mx-auto" />
+          <Sparkles className="w-16 h-16 text-orange-400 animate-pulse mx-auto" />
           <Loader2 className="w-8 h-8 animate-spin text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
         </div>
         <h2 className="text-2xl font-semibold text-white">{message}</h2>
-        <p className="text-gray-400">Please wait while we prepare your content</p>
+        <p className="text-gray-400">
+          Please wait while we prepare your content
+        </p>
       </div>
     </div>
   );
@@ -53,7 +64,12 @@ interface SkeletonProps {
   showTitle?: boolean;
 }
 
-export function Skeleton({ className, lines = 3, showAvatar = false, showTitle = true }: SkeletonProps) {
+export function Skeleton({
+  className,
+  lines = 3,
+  showAvatar = false,
+  showTitle = true,
+}: SkeletonProps) {
   return (
     <div className={cn('animate-pulse space-y-3', className)}>
       {showAvatar && (
@@ -65,16 +81,18 @@ export function Skeleton({ className, lines = 3, showAvatar = false, showTitle =
           </div>
         </div>
       )}
-      
-      {showTitle && (
-        <div className="h-6 bg-gray-700 rounded w-2/3 mb-4" />
-      )}
-      
+
+      {showTitle && <div className="h-6 bg-gray-700 rounded w-2/3 mb-4" />}
+
       <div className="space-y-2">
         {Array.from({ length: lines }).map((_, i) => (
-          <div key={i} className="h-4 bg-gray-700 rounded" style={{
-            width: `${100 - (i * 10)}%`
-          }} />
+          <div
+            key={i}
+            className="h-4 bg-gray-700 rounded"
+            style={{
+              width: `${100 - i * 10}%`,
+            }}
+          />
         ))}
       </div>
     </div>
@@ -90,7 +108,10 @@ export function CardSkeleton({ count = 1, className }: CardSkeletonProps) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className={cn('liquid-glass p-6 animate-pulse', className)}>
+        <div
+          key={i}
+          className={cn('liquid-glass p-6 animate-pulse', className)}
+        >
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="h-6 bg-gray-700 rounded w-1/3" />
@@ -118,29 +139,41 @@ interface TableSkeletonProps {
   className?: string;
 }
 
-export function TableSkeleton({ rows = 5, columns = 4, className }: TableSkeletonProps) {
+export function TableSkeleton({
+  rows = 5,
+  columns = 4,
+  className,
+}: TableSkeletonProps) {
   return (
     <div className={cn('w-full', className)}>
       <div className="liquid-glass rounded-lg overflow-hidden">
         {/* Header */}
         <div className="border-b border-white/10 p-4">
-          <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
+          <div
+            className="grid gap-4"
+            style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
+          >
             {Array.from({ length: columns }).map((_, i) => (
               <div key={i} className="h-4 bg-gray-700 rounded animate-pulse" />
             ))}
           </div>
         </div>
-        
+
         {/* Rows */}
         <div className="divide-y divide-white/5">
           {Array.from({ length: rows }).map((_, rowIndex) => (
             <div key={rowIndex} className="p-4">
-              <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
+              <div
+                className="grid gap-4"
+                style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
+              >
                 {Array.from({ length: columns }).map((_, colIndex) => (
-                  <div 
-                    key={colIndex} 
+                  <div
+                    key={colIndex}
                     className="h-4 bg-gray-700 rounded animate-pulse"
-                    style={{ animationDelay: `${(rowIndex + colIndex) * 100}ms` }}
+                    style={{
+                      animationDelay: `${(rowIndex + colIndex) * 100}ms`,
+                    }}
                   />
                 ))}
               </div>
@@ -160,12 +193,12 @@ export function DashboardSkeleton() {
         <div className="h-8 bg-gray-700 rounded w-1/4 mb-2" />
         <div className="h-4 bg-gray-700 rounded w-1/3" />
       </div>
-      
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <CardSkeleton count={4} />
       </div>
-      
+
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="liquid-glass p-6 animate-pulse">
@@ -177,7 +210,7 @@ export function DashboardSkeleton() {
           <div className="h-64 bg-gray-700/50 rounded" />
         </div>
       </div>
-      
+
       {/* Table */}
       <TableSkeleton />
     </div>

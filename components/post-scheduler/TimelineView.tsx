@@ -1,7 +1,13 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { format, eachDayOfInterval, startOfWeek, endOfWeek, isToday } from 'date-fns';
+import {
+  format,
+  eachDayOfInterval,
+  startOfWeek,
+  endOfWeek,
+  isToday,
+} from 'date-fns';
 import { platformColors, timeSlots } from './constants';
 import type { ScheduledPost } from './types';
 
@@ -11,7 +17,11 @@ interface TimelineViewProps {
   onEditPost: (post: ScheduledPost) => void;
 }
 
-export function TimelineView({ selectedDate, getPostsForDate, onEditPost }: TimelineViewProps) {
+export function TimelineView({
+  selectedDate,
+  getPostsForDate,
+  onEditPost,
+}: TimelineViewProps) {
   const weekStart = startOfWeek(selectedDate);
   const weekEnd = endOfWeek(selectedDate);
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
@@ -22,18 +32,23 @@ export function TimelineView({ selectedDate, getPostsForDate, onEditPost }: Time
         const posts = getPostsForDate(day);
 
         return (
-          <div key={day.toISOString()} className="border-l-2 border-cyan-500/30 pl-4">
+          <div
+            key={day.toISOString()}
+            className="border-l-2 border-orange-500/30 pl-4"
+          >
             <h3 className="font-medium text-lg mb-3">
               {format(day, 'EEEE, MMM d')}
               {isToday(day) && (
-                <Badge className="ml-2" variant="default">Today</Badge>
+                <Badge className="ml-2" variant="default">
+                  Today
+                </Badge>
               )}
             </h3>
             <div className="grid grid-cols-24 gap-1 h-20 bg-white/5 rounded-lg p-2">
               {timeSlots.map(time => {
                 const hour = parseInt(time.split(':')[0]);
-                const postsAtTime = posts.filter(post =>
-                  post.scheduledTime.getHours() === hour
+                const postsAtTime = posts.filter(
+                  post => post.scheduledTime.getHours() === hour
                 );
 
                 return (

@@ -12,7 +12,13 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -56,7 +62,9 @@ interface PlatformCredential {
 interface PlatformConfig {
   id: string;
   name: string;
-  Icon: ComponentType<SVGProps<SVGSVGElement> & { size?: number; className?: string }>;
+  Icon: ComponentType<
+    SVGProps<SVGSVGElement> & { size?: number; className?: string }
+  >;
   color: string;
   bgColor: string;
   devPortalUrl: string;
@@ -236,7 +244,11 @@ export function PlatformCredentialsManager() {
   // -----------------------------------------------------------------------
 
   const handleSave = useCallback(async () => {
-    if (!editingPlatform || !clientIdInput.trim() || !clientSecretInput.trim()) {
+    if (
+      !editingPlatform ||
+      !clientIdInput.trim() ||
+      !clientSecretInput.trim()
+    ) {
       toast.error('Please enter both Client ID and Client Secret');
       return;
     }
@@ -257,7 +269,9 @@ export function PlatformCredentialsManager() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        const platformName = PLATFORMS.find(p => p.id === editingPlatform)?.name || editingPlatform;
+        const platformName =
+          PLATFORMS.find(p => p.id === editingPlatform)?.name ||
+          editingPlatform;
         toast.success(`${platformName} credentials saved!`);
         closeForm();
         await loadCredentials();
@@ -269,6 +283,7 @@ export function PlatformCredentialsManager() {
     } finally {
       setIsSubmitting(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingPlatform, clientIdInput, clientSecretInput, loadCredentials]);
 
   const handleDelete = useCallback(async (platform: string) => {
@@ -282,7 +297,8 @@ export function PlatformCredentialsManager() {
       });
 
       if (res.ok) {
-        const platformName = PLATFORMS.find(p => p.id === platform)?.name || platform;
+        const platformName =
+          PLATFORMS.find(p => p.id === platform)?.name || platform;
         toast.success(`${platformName} credentials removed`);
         setCredentials(prev => prev.filter(c => c.platform !== platform));
       } else {
@@ -315,11 +331,14 @@ export function PlatformCredentialsManager() {
   const copyCallbackUrl = useCallback((platform: string) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const url = `${origin}/api/auth/callback/${platform}`;
-    navigator.clipboard.writeText(url).then(() => {
-      toast.success('Callback URL copied to clipboard');
-    }).catch(() => {
-      toast.error('Failed to copy URL');
-    });
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        toast.success('Callback URL copied to clipboard');
+      })
+      .catch(() => {
+        toast.error('Failed to copy URL');
+      });
   }, []);
 
   // -----------------------------------------------------------------------
@@ -355,12 +374,13 @@ export function PlatformCredentialsManager() {
       <CardHeader>
         <div>
           <CardTitle className="flex items-center gap-2">
-            <Globe className="w-5 h-5 text-cyan-400" />
+            <Globe className="w-5 h-5 text-orange-400" />
             Platform OAuth Credentials
           </CardTitle>
           <CardDescription>
-            Configure OAuth Client ID and Client Secret for each social platform.
-            These credentials enable user OAuth sign-in flows for connecting accounts.
+            Configure OAuth Client ID and Client Secret for each social
+            platform. These credentials enable user OAuth sign-in flows for
+            connecting accounts.
             <strong className="text-amber-400 ml-1">Owner only.</strong>
           </CardDescription>
         </div>
@@ -380,7 +400,10 @@ export function PlatformCredentialsManager() {
               const IconComponent = platform.Icon;
 
               return (
-                <div key={platform.id} className="rounded-lg bg-white/5 border border-white/10 overflow-hidden">
+                <div
+                  key={platform.id}
+                  className="rounded-lg bg-white/5 border border-white/10 overflow-hidden"
+                >
                   {/* Platform row */}
                   <div
                     className={`flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-white/[0.03] ${
@@ -395,17 +418,25 @@ export function PlatformCredentialsManager() {
                     }}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg ${platform.bgColor} flex items-center justify-center`}>
-                        <IconComponent className={`w-5 h-5 ${platform.color}`} />
+                      <div
+                        className={`w-10 h-10 rounded-lg ${platform.bgColor} flex items-center justify-center`}
+                      >
+                        <IconComponent
+                          className={`w-5 h-5 ${platform.color}`}
+                        />
                       </div>
                       <div>
-                        <p className="font-medium text-white">{platform.name}</p>
+                        <p className="font-medium text-white">
+                          {platform.name}
+                        </p>
                         {isConfigured && credential ? (
                           <p className="text-sm text-slate-400 font-mono">
                             {credential.maskedClientId}
                           </p>
                         ) : (
-                          <p className="text-sm text-slate-500">Not configured</p>
+                          <p className="text-sm text-slate-500">
+                            Not configured
+                          </p>
                         )}
                       </div>
                     </div>
@@ -420,7 +451,7 @@ export function PlatformCredentialsManager() {
                             variant="ghost"
                             size="icon"
                             disabled={deletingPlatform === platform.id}
-                            onClick={(e) => {
+                            onClick={e => {
                               e.stopPropagation();
                               handleDelete(platform.id);
                             }}
@@ -448,8 +479,8 @@ export function PlatformCredentialsManager() {
                           href={platform.devPortalUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:text-cyan-400 transition-colors underline underline-offset-2"
-                          onClick={(e) => e.stopPropagation()}
+                          className="hover:text-orange-400 transition-colors underline underline-offset-2"
+                          onClick={e => e.stopPropagation()}
                         >
                           {platform.devPortalLabel}
                         </a>
@@ -469,11 +500,11 @@ export function PlatformCredentialsManager() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={(e) => {
+                            onClick={e => {
                               e.stopPropagation();
                               copyCallbackUrl(platform.id);
                             }}
-                            className="text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 flex-shrink-0"
+                            className="text-slate-400 hover:text-orange-400 hover:bg-orange-500/10 flex-shrink-0"
                             aria-label="Copy callback URL"
                           >
                             <Copy className="w-4 h-4" />
@@ -492,19 +523,21 @@ export function PlatformCredentialsManager() {
                             value={clientIdInput}
                             onChange={e => setClientIdInput(e.target.value)}
                             placeholder="Enter Client ID"
-                            className="w-full px-3 py-2 pr-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-0 font-mono text-sm"
+                            className="w-full px-3 py-2 pr-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0 font-mono text-sm"
                             autoComplete="off"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={e => e.stopPropagation()}
                             aria-label="Client ID"
                           />
                           <button
                             type="button"
-                            onClick={(e) => {
+                            onClick={e => {
                               e.stopPropagation();
                               setShowClientId(!showClientId);
                             }}
                             className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
-                            aria-label={showClientId ? 'Hide Client ID' : 'Show Client ID'}
+                            aria-label={
+                              showClientId ? 'Hide Client ID' : 'Show Client ID'
+                            }
                           >
                             {showClientId ? (
                               <EyeOff className="w-4 h-4" />
@@ -526,19 +559,23 @@ export function PlatformCredentialsManager() {
                             value={clientSecretInput}
                             onChange={e => setClientSecretInput(e.target.value)}
                             placeholder="Enter Client Secret"
-                            className="w-full px-3 py-2 pr-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-0 font-mono text-sm"
+                            className="w-full px-3 py-2 pr-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0 font-mono text-sm"
                             autoComplete="off"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={e => e.stopPropagation()}
                             aria-label="Client Secret"
                           />
                           <button
                             type="button"
-                            onClick={(e) => {
+                            onClick={e => {
                               e.stopPropagation();
                               setShowClientSecret(!showClientSecret);
                             }}
                             className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
-                            aria-label={showClientSecret ? 'Hide Client Secret' : 'Show Client Secret'}
+                            aria-label={
+                              showClientSecret
+                                ? 'Hide Client Secret'
+                                : 'Show Client Secret'
+                            }
                           >
                             {showClientSecret ? (
                               <EyeOff className="w-4 h-4" />
@@ -554,7 +591,7 @@ export function PlatformCredentialsManager() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             closeForm();
                           }}
@@ -564,13 +601,21 @@ export function PlatformCredentialsManager() {
                         <Button
                           size="sm"
                           className="gradient-primary"
-                          disabled={!clientIdInput.trim() || !clientSecretInput.trim() || isSubmitting}
-                          onClick={(e) => {
+                          disabled={
+                            !clientIdInput.trim() ||
+                            !clientSecretInput.trim() ||
+                            isSubmitting
+                          }
+                          onClick={e => {
                             e.stopPropagation();
                             handleSave();
                           }}
                         >
-                          {isSubmitting ? 'Saving...' : isConfigured ? 'Update Credentials' : 'Save Credentials'}
+                          {isSubmitting
+                            ? 'Saving...'
+                            : isConfigured
+                              ? 'Update Credentials'
+                              : 'Save Credentials'}
                         </Button>
                       </div>
                     </div>
@@ -581,7 +626,8 @@ export function PlatformCredentialsManager() {
 
             {/* Summary footer */}
             <div className="pt-2 text-xs text-slate-500 text-center">
-              {configuredPlatforms.size} of {PLATFORMS.length} platforms configured
+              {configuredPlatforms.size} of {PLATFORMS.length} platforms
+              configured
             </div>
           </>
         )}

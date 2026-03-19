@@ -42,9 +42,9 @@ const dialogContentVariants = cva(
         'glass-gradient':
           'bg-gradient-to-br from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_8px_32px_rgba(0,0,0,0.3)]',
         'glass-primary':
-          'bg-gradient-to-br from-cyan-500/10 to-cyan-500/10 backdrop-blur-xl border border-cyan-500/20 shadow-[0_0_0_1px_rgba(6,182,212,0.05)_inset,0_8px_32px_rgba(6,182,212,0.15)]',
+          'bg-gradient-to-br from-orange-500/10 to-orange-500/10 backdrop-blur-xl border border-orange-500/20 shadow-[0_0_0_1px_rgba(6,182,212,0.05)_inset,0_8px_32px_rgba(6,182,212,0.15)]',
         'glass-secondary':
-          'bg-gradient-to-br from-cyan-500/10 to-blue-500/10 backdrop-blur-xl border border-cyan-500/20 shadow-[0_0_0_1px_rgba(6,182,212,0.05)_inset,0_8px_32px_rgba(6,182,212,0.15)]',
+          'bg-gradient-to-br from-orange-500/10 to-blue-500/10 backdrop-blur-xl border border-orange-500/20 shadow-[0_0_0_1px_rgba(6,182,212,0.05)_inset,0_8px_32px_rgba(6,182,212,0.15)]',
       },
     },
     defaultVariants: {
@@ -54,7 +54,8 @@ const dialogContentVariants = cva(
 );
 
 export interface DialogOverlayProps
-  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>,
+  extends
+    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>,
     VariantProps<typeof dialogOverlayVariants> {}
 
 const DialogOverlay = React.forwardRef<
@@ -70,7 +71,8 @@ const DialogOverlay = React.forwardRef<
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 export interface DialogContentProps
-  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>,
+  extends
+    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>,
     VariantProps<typeof dialogContentVariants> {
   overlayVariant?: VariantProps<typeof dialogOverlayVariants>['variant'];
   showCloseButton?: boolean;
@@ -79,24 +81,40 @@ export interface DialogContentProps
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, variant, overlayVariant, showCloseButton = true, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay variant={overlayVariant ?? (variant === 'default' ? 'default' : 'glass')} />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(dialogContentVariants({ variant, className }))}
-      {...props}
-    >
-      {children}
-      {showCloseButton && (
-        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-white/10 p-1 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-          <X className="h-4 w-4 text-white/70" />
-          <span className="sr-only">Close</span>
-        </DialogPrimitive.Close>
-      )}
-    </DialogPrimitive.Content>
-  </DialogPortal>
-));
+>(
+  (
+    {
+      className,
+      children,
+      variant,
+      overlayVariant,
+      showCloseButton = true,
+      ...props
+    },
+    ref
+  ) => (
+    <DialogPortal>
+      <DialogOverlay
+        variant={
+          overlayVariant ?? (variant === 'default' ? 'default' : 'glass')
+        }
+      />
+      <DialogPrimitive.Content
+        ref={ref}
+        className={cn(dialogContentVariants({ variant, className }))}
+        {...props}
+      >
+        {children}
+        {showCloseButton && (
+          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-white/10 p-1 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+            <X className="h-4 w-4 text-white/70" />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        )}
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  )
+);
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 const DialogHeader = ({
@@ -148,7 +166,10 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn('text-sm text-muted-foreground dark:text-white/60', className)}
+    className={cn(
+      'text-sm text-muted-foreground dark:text-white/60',
+      className
+    )}
     {...props}
   />
 ));

@@ -20,19 +20,13 @@ interface BenchmarkRecommendationsProps {
 function InsightItem({ text }: { text: string }) {
   return (
     <li className="flex items-start gap-3 text-sm">
-      <Info className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
+      <Info className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
       <span className="text-gray-300">{text}</span>
     </li>
   );
 }
 
-function RecommendationItem({
-  text,
-  index,
-}: {
-  text: string;
-  index: number;
-}) {
+function RecommendationItem({ text, index }: { text: string; index: number }) {
   // Determine impact level based on recommendation type
   const isHighImpact =
     text.toLowerCase().includes('engagement') ||
@@ -70,14 +64,17 @@ function LoadingSkeleton() {
       {/* Insights skeleton */}
       <div className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 bg-cyan-500/10 rounded-lg animate-pulse" />
+          <div className="w-8 h-8 bg-orange-500/10 rounded-lg animate-pulse" />
           <div className="w-24 h-5 bg-white/5 rounded animate-pulse" />
         </div>
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="flex items-start gap-3">
               <div className="w-4 h-4 bg-white/5 rounded animate-pulse mt-0.5" />
-              <div className="flex-1 h-4 bg-white/5 rounded animate-pulse" style={{ width: `${90 - i * 10}%` }} />
+              <div
+                className="flex-1 h-4 bg-white/5 rounded animate-pulse"
+                style={{ width: `${90 - i * 10}%` }}
+              />
             </div>
           ))}
         </div>
@@ -121,9 +118,16 @@ export function BenchmarkRecommendations({
 
   if (!hasData) {
     return (
-      <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl p-8 text-center', className)}>
+      <div
+        className={cn(
+          'bg-gray-900/50 border border-white/10 rounded-xl p-8 text-center',
+          className
+        )}
+      >
         <Lightbulb className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-        <h3 className="text-lg font-medium text-white mb-1">No Recommendations Yet</h3>
+        <h3 className="text-lg font-medium text-white mb-1">
+          No Recommendations Yet
+        </h3>
         <p className="text-gray-500 text-sm">
           Publish more content to receive personalized recommendations.
         </p>
@@ -136,8 +140,8 @@ export function BenchmarkRecommendations({
       {/* Key Insights */}
       <div className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 bg-cyan-500/10 rounded-lg">
-            <Lightbulb className="w-4 h-4 text-cyan-400" />
+          <div className="p-2 bg-orange-500/10 rounded-lg">
+            <Lightbulb className="w-4 h-4 text-orange-400" />
           </div>
           <h3 className="font-medium text-white">Key Insights</h3>
         </div>
@@ -171,7 +175,8 @@ export function BenchmarkRecommendations({
         ) : (
           <div className="p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/10">
             <p className="text-sm text-emerald-400">
-              Great job! Your metrics are performing well. Keep up the good work!
+              Great job! Your metrics are performing well. Keep up the good
+              work!
             </p>
           </div>
         )}

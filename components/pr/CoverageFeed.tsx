@@ -12,7 +12,13 @@
 
 import { useState } from 'react';
 import useSWR from 'swr';
-import { Globe, Loader2, AlertCircle, Plus, ArrowRight } from '@/components/icons';
+import {
+  Globe,
+  Loader2,
+  AlertCircle,
+  Plus,
+  ArrowRight,
+} from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -60,9 +66,18 @@ async function fetchJson<T>(url: string): Promise<T> {
 // ---------------------------------------------------------------------------
 
 const SENTIMENT_STYLES: Record<string, { label: string; className: string }> = {
-  positive: { label: 'Positive', className: 'bg-green-500/20 text-green-300 border-green-500/30' },
-  neutral:  { label: 'Neutral',  className: 'bg-gray-500/20 text-gray-400 border-gray-500/30' },
-  negative: { label: 'Negative', className: 'bg-red-500/20 text-red-300 border-red-500/30' },
+  positive: {
+    label: 'Positive',
+    className: 'bg-green-500/20 text-green-300 border-green-500/30',
+  },
+  neutral: {
+    label: 'Neutral',
+    className: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+  },
+  negative: {
+    label: 'Negative',
+    className: 'bg-red-500/20 text-red-300 border-red-500/30',
+  },
 };
 
 function formatDate(dateStr: string | null | undefined): string {
@@ -106,7 +121,12 @@ export function CoverageFeed() {
       setPollResult(result);
       await mutate();
     } catch {
-      setPollResult({ polled: 0, linked: 0, created: 0, message: 'Polling failed. Please try again.' });
+      setPollResult({
+        polled: 0,
+        linked: 0,
+        created: 0,
+        message: 'Polling failed. Please try again.',
+      });
     } finally {
       setPolling(false);
     }
@@ -134,29 +154,40 @@ export function CoverageFeed() {
     <div>
       {/* Poll controls */}
       <div className="flex items-center gap-3 mb-6 p-4 bg-white/5 border border-white/10 rounded-xl">
-        <Globe className="h-5 w-5 text-cyan-400 flex-shrink-0" />
+        <Globe className="h-5 w-5 text-orange-400 flex-shrink-0" />
         <div className="flex-1">
-          <p className="text-sm font-medium text-white mb-2">Poll for New Coverage</p>
+          <p className="text-sm font-medium text-white mb-2">
+            Poll for New Coverage
+          </p>
           <div className="flex gap-2">
             <input
               type="text"
               value={brandName}
-              onChange={(e) => setBrandName(e.target.value)}
+              onChange={e => setBrandName(e.target.value)}
               placeholder="Your brand name (e.g. Acme Corp)"
-              className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-              onKeyDown={(e) => e.key === 'Enter' && handlePoll()}
+              className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+              onKeyDown={e => e.key === 'Enter' && handlePoll()}
             />
             <button
               onClick={handlePoll}
               disabled={polling || !brandName.trim()}
-              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
             >
-              {polling ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+              {polling ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ArrowRight className="h-4 w-4" />
+              )}
               {polling ? 'Polling...' : 'Poll'}
             </button>
           </div>
           {pollResult && (
-            <p className={cn('text-xs mt-2', pollResult.message ? 'text-red-400' : 'text-green-400')}>
+            <p
+              className={cn(
+                'text-xs mt-2',
+                pollResult.message ? 'text-red-400' : 'text-green-400'
+              )}
+            >
               {pollResult.message
                 ? pollResult.message
                 : `Polled ${pollResult.polled} mentions · ${pollResult.created} new · ${pollResult.linked} linked to pitches`}
@@ -172,8 +203,9 @@ export function CoverageFeed() {
         </div>
       ) : (
         <div className="space-y-3">
-          {coverage.map((item) => {
-            const sentiment = SENTIMENT_STYLES[item.sentiment] ?? SENTIMENT_STYLES.neutral;
+          {coverage.map(item => {
+            const sentiment =
+              SENTIMENT_STYLES[item.sentiment] ?? SENTIMENT_STYLES.neutral;
             return (
               <div
                 key={item.id}
@@ -185,16 +217,20 @@ export function CoverageFeed() {
                       href={item.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm font-medium text-white hover:text-cyan-300 transition-colors line-clamp-2"
+                      className="text-sm font-medium text-white hover:text-orange-300 transition-colors line-clamp-2"
                     >
                       {item.title}
                     </a>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
-                      <span className="text-xs text-gray-400 font-medium">{item.outlet}</span>
+                      <span className="text-xs text-gray-400 font-medium">
+                        {item.outlet}
+                      </span>
                       {item.journalist && (
                         <>
                           <span className="text-gray-600">·</span>
-                          <span className="text-xs text-cyan-300">{item.journalist.name}</span>
+                          <span className="text-xs text-orange-300">
+                            {item.journalist.name}
+                          </span>
                         </>
                       )}
                       {item.pitch && (
@@ -206,15 +242,24 @@ export function CoverageFeed() {
                         </>
                       )}
                       <span className="text-gray-600">·</span>
-                      <span className="text-xs text-gray-500">{formatDate(item.publishedAt ?? item.createdAt)}</span>
+                      <span className="text-xs text-gray-500">
+                        {formatDate(item.publishedAt ?? item.createdAt)}
+                      </span>
                     </div>
                   </div>
-                  <span className={cn('text-xs px-2 py-1 rounded-full border flex-shrink-0', sentiment.className)}>
+                  <span
+                    className={cn(
+                      'text-xs px-2 py-1 rounded-full border flex-shrink-0',
+                      sentiment.className
+                    )}
+                  >
                     {sentiment.label}
                   </span>
                 </div>
                 {item.description && (
-                  <p className="text-xs text-gray-500 mt-2 line-clamp-2">{item.description}</p>
+                  <p className="text-xs text-gray-500 mt-2 line-clamp-2">
+                    {item.description}
+                  </p>
                 )}
               </div>
             );

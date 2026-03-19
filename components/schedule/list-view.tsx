@@ -7,7 +7,13 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Plus, Send, Trash2, AlertTriangle } from '@/components/icons';
+import {
+  Calendar,
+  Plus,
+  Send,
+  Trash2,
+  AlertTriangle,
+} from '@/components/icons';
 import { getPlatformIconComponent } from './schedule-config';
 import { PLATFORM_COLORS } from '@/components/calendar';
 import type { ScheduledPost } from './types';
@@ -34,13 +40,18 @@ export function ListView({
       <Card variant="glass">
         <CardContent className="py-12 text-center">
           <Calendar className="h-12 w-12 text-slate-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">No posts found</h3>
+          <h3 className="text-lg font-medium text-white mb-2">
+            No posts found
+          </h3>
           <p className="text-slate-400 mb-4">
             {hasFilters
               ? 'Try adjusting your filters'
               : 'Create your first scheduled post to get started'}
           </p>
-          <Button onClick={onCreatePost} className="gradient-primary text-white">
+          <Button
+            onClick={onCreatePost}
+            className="gradient-primary text-white"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Create Post
           </Button>
@@ -50,7 +61,8 @@ export function ListView({
   }
 
   const sortedPosts = [...posts].sort(
-    (a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime()
+    (a, b) =>
+      new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime()
   );
 
   return (
@@ -75,11 +87,16 @@ interface PostListItemProps {
   onDelete: () => void;
 }
 
-function PostListItem({ post, onClick, onPublishNow, onDelete }: PostListItemProps) {
+function PostListItem({
+  post,
+  onClick,
+  onPublishNow,
+  onDelete,
+}: PostListItemProps) {
   return (
     <Card
       variant="glass"
-      className="cursor-pointer hover:border-cyan-500/50 transition-colors"
+      className="cursor-pointer hover:border-orange-500/50 transition-colors"
       onClick={onClick}
     >
       <CardContent className="pt-6">
@@ -103,19 +120,23 @@ function PostListItem({ post, onClick, onPublishNow, onDelete }: PostListItemPro
               </div>
               <div>
                 <p className="text-sm font-medium text-white">
-                  {post.platforms.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(', ')}
+                  {post.platforms
+                    .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+                    .join(', ')}
                 </p>
                 <p className="text-xs text-slate-400">
                   {new Date(post.scheduledFor).toLocaleString()}
                 </p>
               </div>
-              <span className={`px-2 py-1 text-xs rounded-full ${
-                post.status === 'published'
-                  ? 'bg-green-500/20 text-green-300'
-                  : post.status === 'scheduled'
-                  ? 'bg-cyan-500/20 text-cyan-300'
-                  : 'bg-slate-500/20 text-slate-300'
-              }`}>
+              <span
+                className={`px-2 py-1 text-xs rounded-full ${
+                  post.status === 'published'
+                    ? 'bg-green-500/20 text-green-300'
+                    : post.status === 'scheduled'
+                      ? 'bg-orange-500/20 text-orange-300'
+                      : 'bg-slate-500/20 text-slate-300'
+                }`}
+              >
                 {post.status}
               </span>
               {post.conflict && (
@@ -138,7 +159,7 @@ function PostListItem({ post, onClick, onPublishNow, onDelete }: PostListItemPro
                   </span>
                 </>
               ) : post.engagement?.estimated ? (
-                <span className="text-cyan-400">
+                <span className="text-orange-400">
                   Est. {post.engagement.estimated}% engagement
                 </span>
               ) : null}

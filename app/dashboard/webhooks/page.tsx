@@ -1,7 +1,13 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -146,7 +152,13 @@ interface WebhookCardProps {
   isDeleting: boolean;
 }
 
-function WebhookCard({ webhook, onToggle, onDelete, isUpdating, isDeleting }: WebhookCardProps) {
+function WebhookCard({
+  webhook,
+  onToggle,
+  onDelete,
+  isUpdating,
+  isDeleting,
+}: WebhookCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleDelete = async () => {
@@ -159,36 +171,44 @@ function WebhookCard({ webhook, onToggle, onDelete, isUpdating, isDeleting }: We
   };
 
   return (
-    <Card className="bg-white/5 border-cyan-500/10">
+    <Card className="bg-white/5 border-orange-500/10">
       <CardContent className="p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             {/* URL */}
             <div className="flex items-center gap-2 mb-2">
               <ExternalLink className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              <span className="text-white font-medium truncate" title={webhook.url}>
+              <span
+                className="text-white font-medium truncate"
+                title={webhook.url}
+              >
                 {truncateUrl(webhook.url)}
               </span>
             </div>
 
             {/* Description */}
             {webhook.description && (
-              <p className="text-sm text-gray-400 mb-3">{webhook.description}</p>
+              <p className="text-sm text-gray-400 mb-3">
+                {webhook.description}
+              </p>
             )}
 
             {/* Event badges */}
             <div className="flex flex-wrap gap-1.5 mb-3">
-              {webhook.events.slice(0, 5).map((event) => (
+              {webhook.events.slice(0, 5).map(event => (
                 <Badge
                   key={event}
                   variant="outline"
-                  className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs"
+                  className="bg-orange-500/20 text-orange-300 border-orange-500/30 text-xs"
                 >
                   {event}
                 </Badge>
               ))}
               {webhook.events.length > 5 && (
-                <Badge variant="outline" className="bg-gray-500/20 text-gray-400 border-gray-500/30 text-xs">
+                <Badge
+                  variant="outline"
+                  className="bg-gray-500/20 text-gray-400 border-gray-500/30 text-xs"
+                >
                   +{webhook.events.length - 5} more
                 </Badge>
               )}
@@ -212,10 +232,12 @@ function WebhookCard({ webhook, onToggle, onDelete, isUpdating, isDeleting }: We
           {/* Actions */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400">{webhook.active ? 'Active' : 'Inactive'}</span>
+              <span className="text-xs text-gray-400">
+                {webhook.active ? 'Active' : 'Inactive'}
+              </span>
               <Switch
                 checked={webhook.active}
-                onCheckedChange={(checked) => onToggle(webhook.id, checked)}
+                onCheckedChange={checked => onToggle(webhook.id, checked)}
                 disabled={isUpdating}
               />
             </div>
@@ -224,7 +246,11 @@ function WebhookCard({ webhook, onToggle, onDelete, isUpdating, isDeleting }: We
               size="sm"
               onClick={handleDelete}
               disabled={isDeleting}
-              className={confirmDelete ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' : 'text-gray-400 hover:text-white'}
+              className={
+                confirmDelete
+                  ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10'
+                  : 'text-gray-400 hover:text-white'
+              }
             >
               {isDeleting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -247,11 +273,18 @@ function WebhookCard({ webhook, onToggle, onDelete, isUpdating, isDeleting }: We
 interface CreateWebhookDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: CreateWebhookData) => Promise<WebhookEndpointWithSecret | null>;
+  onSubmit: (
+    data: CreateWebhookData
+  ) => Promise<WebhookEndpointWithSecret | null>;
   availableEvents: string[];
 }
 
-function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: CreateWebhookDialogProps) {
+function CreateWebhookDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  availableEvents,
+}: CreateWebhookDialogProps) {
   const [url, setUrl] = useState('');
   const [description, setDescription] = useState('');
   const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
@@ -263,10 +296,10 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
 
   // Filter categories to only include available events
   const filteredCategories = useMemo(() => {
-    return EVENT_CATEGORIES.map((cat) => ({
+    return EVENT_CATEGORIES.map(cat => ({
       ...cat,
-      events: cat.events.filter((e) => availableEvents.includes(e)),
-    })).filter((cat) => cat.events.length > 0);
+      events: cat.events.filter(e => availableEvents.includes(e)),
+    })).filter(cat => cat.events.length > 0);
   }, [availableEvents]);
 
   const resetForm = () => {
@@ -287,7 +320,7 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
   };
 
   const toggleEvent = (event: string) => {
-    setSelectedEvents((prev) => {
+    setSelectedEvents(prev => {
       const next = new Set(prev);
       if (next.has(event)) {
         next.delete(event);
@@ -299,17 +332,17 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
   };
 
   const selectAllInCategory = (events: string[]) => {
-    setSelectedEvents((prev) => {
+    setSelectedEvents(prev => {
       const next = new Set(prev);
-      events.forEach((e) => next.add(e));
+      events.forEach(e => next.add(e));
       return next;
     });
   };
 
   const deselectAllInCategory = (events: string[]) => {
-    setSelectedEvents((prev) => {
+    setSelectedEvents(prev => {
       const next = new Set(prev);
-      events.forEach((e) => next.delete(e));
+      events.forEach(e => next.delete(e));
       return next;
     });
   };
@@ -351,7 +384,9 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
         setError('Failed to create webhook. Please try again.');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      setError(
+        err instanceof Error ? err.message : 'An unexpected error occurred'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -374,7 +409,7 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
   if (createdSecret) {
     return (
       <Dialog open={open} onOpenChange={handleDone}>
-        <DialogContent className="bg-surface-base/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-md">
+        <DialogContent className="bg-surface-base/95 border-orange-500/20 backdrop-blur-xl sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-white flex items-center gap-2">
               <Check className="w-5 h-5 text-green-400" />
@@ -390,9 +425,12 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
               <div className="flex items-start gap-2">
                 <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-amber-200 font-medium text-sm">Save this secret</p>
+                  <p className="text-amber-200 font-medium text-sm">
+                    Save this secret
+                  </p>
                   <p className="text-amber-300/70 text-xs mt-1">
-                    This secret will not be shown again. Copy it now and store it securely.
+                    This secret will not be shown again. Copy it now and store
+                    it securely.
                   </p>
                 </div>
               </div>
@@ -424,7 +462,10 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
           </div>
 
           <DialogFooter>
-            <Button onClick={handleDone} className="gradient-primary text-white">
+            <Button
+              onClick={handleDone}
+              className="gradient-primary text-white"
+            >
               Done
             </Button>
           </DialogFooter>
@@ -435,7 +476,7 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-surface-base/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-surface-base/95 border-orange-500/20 backdrop-blur-xl sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-white">Create Webhook</DialogTitle>
           <DialogDescription className="text-gray-400">
@@ -454,7 +495,7 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
               type="url"
               placeholder="https://your-server.com/webhooks"
               value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              onChange={e => setUrl(e.target.value)}
               className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
             />
           </div>
@@ -468,7 +509,7 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
               id="description"
               placeholder="e.g., Production webhook for CRM sync"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={e => setDescription(e.target.value)}
               className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
             />
           </div>
@@ -476,14 +517,17 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
           {/* Secret Field */}
           <div className="space-y-2">
             <Label htmlFor="secret" className="text-gray-300">
-              Secret <span className="text-gray-500">(optional - auto-generated if empty)</span>
+              Secret{' '}
+              <span className="text-gray-500">
+                (optional - auto-generated if empty)
+              </span>
             </Label>
             <Input
               id="secret"
               type="password"
               placeholder="Leave empty to auto-generate"
               value={secret}
-              onChange={(e) => setSecret(e.target.value)}
+              onChange={e => setSecret(e.target.value)}
               className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
             />
           </div>
@@ -494,21 +538,30 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
               Events <span className="text-red-400">*</span>
             </Label>
             <div className="space-y-4 max-h-64 overflow-y-auto pr-2">
-              {filteredCategories.map((category) => {
-                const allSelected = category.events.every((e) => selectedEvents.has(e));
-                const someSelected = category.events.some((e) => selectedEvents.has(e));
+              {filteredCategories.map(category => {
+                const allSelected = category.events.every(e =>
+                  selectedEvents.has(e)
+                );
+                const someSelected = category.events.some(e =>
+                  selectedEvents.has(e)
+                );
 
                 return (
-                  <div key={category.name} className="bg-white/5 rounded-lg p-4">
+                  <div
+                    key={category.name}
+                    className="bg-white/5 rounded-lg p-4"
+                  >
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-medium text-white">{category.name}</span>
+                      <span className="text-sm font-medium text-white">
+                        {category.name}
+                      </span>
                       <div className="flex gap-2">
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
                           onClick={() => selectAllInCategory(category.events)}
-                          className="text-xs text-cyan-400 hover:text-cyan-300 h-auto py-1 px-2"
+                          className="text-xs text-orange-400 hover:text-orange-300 h-auto py-1 px-2"
                           disabled={allSelected}
                         >
                           Select All
@@ -526,7 +579,7 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      {category.events.map((event) => (
+                      {category.events.map(event => (
                         <label
                           key={event}
                           className="flex items-center gap-2 cursor-pointer text-sm text-gray-300 hover:text-white"
@@ -544,7 +597,8 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
               })}
             </div>
             <div className="text-xs text-gray-500">
-              {selectedEvents.size} event{selectedEvents.size !== 1 ? 's' : ''} selected
+              {selectedEvents.size} event{selectedEvents.size !== 1 ? 's' : ''}{' '}
+              selected
             </div>
           </div>
 
@@ -557,10 +611,19 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
           )}
 
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={handleClose} disabled={isSubmitting}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleClose}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button type="submit" className="gradient-primary text-white" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              className="gradient-primary text-white"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -583,17 +646,23 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
 
 function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
   return (
-    <Card className="bg-white/5 border-cyan-500/10">
+    <Card className="bg-white/5 border-orange-500/10">
       <CardContent className="py-16">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cyan-500/10 mb-4">
-            <Link2 className="w-8 h-8 text-cyan-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 mb-4">
+            <Link2 className="w-8 h-8 text-orange-400" />
           </div>
-          <h3 className="text-lg font-medium text-white mb-2">No webhooks configured</h3>
+          <h3 className="text-lg font-medium text-white mb-2">
+            No webhooks configured
+          </h3>
           <p className="text-gray-400 mb-6 max-w-sm mx-auto">
-            Create a webhook to receive real-time notifications when events happen in your account.
+            Create a webhook to receive real-time notifications when events
+            happen in your account.
           </p>
-          <Button onClick={onCreateClick} className="gradient-primary text-white">
+          <Button
+            onClick={onCreateClick}
+            className="gradient-primary text-white"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Create Webhook
           </Button>
@@ -608,18 +677,27 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
 // ============================================================================
 
 export default function WebhooksPage() {
-  const { webhooks, availableEvents, loading, error, create, update, remove, refresh } = useWebhooks();
+  const {
+    webhooks,
+    availableEvents,
+    loading,
+    error,
+    create,
+    update,
+    remove,
+    refresh,
+  } = useWebhooks();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleToggle = async (id: string, active: boolean) => {
-    setUpdatingIds((prev) => new Set(prev).add(id));
+    setUpdatingIds(prev => new Set(prev).add(id));
     try {
       await update(id, { active });
     } finally {
-      setUpdatingIds((prev) => {
+      setUpdatingIds(prev => {
         const next = new Set(prev);
         next.delete(id);
         return next;
@@ -628,11 +706,11 @@ export default function WebhooksPage() {
   };
 
   const handleDelete = async (id: string) => {
-    setDeletingIds((prev) => new Set(prev).add(id));
+    setDeletingIds(prev => new Set(prev).add(id));
     try {
       await remove(id);
     } finally {
-      setDeletingIds((prev) => {
+      setDeletingIds(prev => {
         const next = new Set(prev);
         next.delete(id);
         return next;
@@ -677,7 +755,10 @@ export default function WebhooksPage() {
               <RefreshCw className="w-4 h-4" />
             )}
           </Button>
-          <Button onClick={() => setCreateDialogOpen(true)} className="gradient-primary text-white">
+          <Button
+            onClick={() => setCreateDialogOpen(true)}
+            className="gradient-primary text-white"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Create Webhook
           </Button>
@@ -699,14 +780,14 @@ export default function WebhooksPage() {
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+          <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
         </div>
       )}
 
       {/* Webhooks List */}
       {!loading && webhooks.length > 0 && (
         <div className="space-y-4">
-          {webhooks.map((webhook) => (
+          {webhooks.map(webhook => (
             <WebhookCard
               key={webhook.id}
               webhook={webhook}

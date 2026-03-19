@@ -14,13 +14,24 @@ import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { fetchWithCSRF } from '@/lib/csrf';
-import { QueueTable, QueueBulkActions, QueueFilters, QueueStats, ScheduleHealth } from '@/components/queue';
+import {
+  QueueTable,
+  QueueBulkActions,
+  QueueFilters,
+  QueueStats,
+  ScheduleHealth,
+} from '@/components/queue';
 import type { QueuePost } from '@/components/queue';
 import { DashboardSkeleton } from '@/components/skeletons/DashboardSkeleton';
 import { APIErrorCard } from '@/components/error-states/api-error';
 import { EmptyState } from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ChevronLeft, ChevronRight, Layers } from '@/components/icons';
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Layers,
+} from '@/components/icons';
 import { BulkScheduleWizard } from '@/components/scheduling';
 
 // =============================================================================
@@ -28,7 +39,7 @@ import { BulkScheduleWizard } from '@/components/scheduling';
 // =============================================================================
 
 const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => {
+  fetch(url, { credentials: 'include' }).then(r => {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return r.json();
   });
@@ -72,7 +83,15 @@ export default function QueuePage() {
     if (endDate) params.set('endDate', new Date(endDate).toISOString());
 
     return params.toString();
-  }, [page, sortBy, sortOrder, filterPlatform, filterStatus, startDate, endDate]);
+  }, [
+    page,
+    sortBy,
+    sortOrder,
+    filterPlatform,
+    filterStatus,
+    startDate,
+    endDate,
+  ]);
 
   // ---------------------------------------------------------------------------
   // SWR
@@ -85,13 +104,18 @@ export default function QueuePage() {
 
   const posts: QueuePost[] = useMemo(() => data?.data ?? [], [data]);
   const pagination = data?.pagination ?? { page: 1, totalPages: 1, total: 0 };
-  const stats = data?.stats ?? { scheduled: 0, published: 0, draft: 0, failed: 0 };
+  const stats = data?.stats ?? {
+    scheduled: 0,
+    published: 0,
+    draft: 0,
+    failed: 0,
+  };
 
   // Client-side search filter (API doesn't support search param so we filter locally)
   const filteredPosts = useMemo(() => {
     if (!searchQuery) return posts;
     const q = searchQuery.toLowerCase();
-    return posts.filter((p) => p.content.toLowerCase().includes(q));
+    return posts.filter(p => p.content.toLowerCase().includes(q));
   }, [posts, searchQuery]);
 
   // ---------------------------------------------------------------------------
@@ -101,7 +125,10 @@ export default function QueuePage() {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     return posts.filter(
-      (p) => p.status === 'published' && p.publishedAt && new Date(p.publishedAt) >= todayStart
+      p =>
+        p.status === 'published' &&
+        p.publishedAt &&
+        new Date(p.publishedAt) >= todayStart
     ).length;
   }, [posts]);
 
@@ -109,8 +136,17 @@ export default function QueuePage() {
   const nextScheduledAt = useMemo(() => {
     const now = Date.now();
     const upcoming = posts
-      .filter((p) => p.status === 'scheduled' && p.scheduledAt && new Date(p.scheduledAt).getTime() > now)
-      .sort((a, b) => new Date(a.scheduledAt!).getTime() - new Date(b.scheduledAt!).getTime());
+      .filter(
+        p =>
+          p.status === 'scheduled' &&
+          p.scheduledAt &&
+          new Date(p.scheduledAt).getTime() > now
+      )
+      .sort(
+        (a, b) =>
+          new Date(a.scheduledAt!).getTime() -
+          new Date(b.scheduledAt!).getTime()
+      );
     return upcoming[0]?.scheduledAt ?? null;
   }, [posts]);
 
@@ -118,12 +154,14 @@ export default function QueuePage() {
   // Selection helpers
   // ---------------------------------------------------------------------------
   const selectedPosts = useMemo(
-    () => posts.filter((p) => selectedIds.has(p.id)),
+    () => posts.filter(p => selectedIds.has(p.id)),
     [posts, selectedIds]
   );
-  const hasFailedSelected = selectedPosts.some((p) => p.status === 'failed');
-  const hasDraftSelected = selectedPosts.some((p) => p.status === 'draft');
-  const hasScheduledSelected = selectedPosts.some((p) => p.status === 'scheduled');
+  const hasFailedSelected = selectedPosts.some(p => p.status === 'failed');
+  const hasDraftSelected = selectedPosts.some(p => p.status === 'draft');
+  const hasScheduledSelected = selectedPosts.some(
+    p => p.status === 'scheduled'
+  );
 
   // ---------------------------------------------------------------------------
   // Bulk action handler
@@ -252,15 +290,19 @@ export default function QueuePage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">Schedule</span>
-            <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">Post Queue</h1>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+              Schedule
+            </span>
+            <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">
+              Post Queue
+            </h1>
             <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
               Manage, filter, and bulk-action your scheduled posts
             </p>
           </div>
         </div>
         <Button
-          className="bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30"
+          className="bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30"
           onClick={() => setBulkWizardOpen(true)}
         >
           <Layers className="h-4 w-4 mr-2" />
@@ -294,10 +336,22 @@ export default function QueuePage() {
         startDate={startDate}
         endDate={endDate}
         searchQuery={searchQuery}
-        onPlatformChange={(v) => { setFilterPlatform(v); setPage(1); }}
-        onStatusChange={(v) => { setFilterStatus(v); setPage(1); }}
-        onStartDateChange={(v) => { setStartDate(v); setPage(1); }}
-        onEndDateChange={(v) => { setEndDate(v); setPage(1); }}
+        onPlatformChange={v => {
+          setFilterPlatform(v);
+          setPage(1);
+        }}
+        onStatusChange={v => {
+          setFilterStatus(v);
+          setPage(1);
+        }}
+        onStartDateChange={v => {
+          setStartDate(v);
+          setPage(1);
+        }}
+        onEndDateChange={v => {
+          setEndDate(v);
+          setPage(1);
+        }}
         onSearchChange={setSearchQuery}
         onClearFilters={handleClearFilters}
       />
@@ -329,7 +383,8 @@ export default function QueuePage() {
       {pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-white/25">
-            Page {pagination.page} of {pagination.totalPages} ({pagination.total} posts)
+            Page {pagination.page} of {pagination.totalPages} (
+            {pagination.total} posts)
           </p>
           <div className="flex gap-2">
             <Button
@@ -337,7 +392,7 @@ export default function QueuePage() {
               variant="outline"
               className="bg-white/[0.03] border-[0.5px] border-white/[0.06] text-white hover:bg-white/[0.06]"
               disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => setPage(p => Math.max(1, p - 1))}
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
               Previous
@@ -347,7 +402,7 @@ export default function QueuePage() {
               variant="outline"
               className="bg-white/[0.03] border-[0.5px] border-white/[0.06] text-white hover:bg-white/[0.06]"
               disabled={page >= pagination.totalPages}
-              onClick={() => setPage((p) => p + 1)}
+              onClick={() => setPage(p => p + 1)}
             >
               Next
               <ChevronRight className="h-4 w-4 ml-1" />

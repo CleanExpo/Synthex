@@ -2,7 +2,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Building, BarChart3, TrendingUp, DollarSign } from '@/components/icons';
+import {
+  Building,
+  BarChart3,
+  TrendingUp,
+  DollarSign,
+} from '@/components/icons';
 
 interface OwnedBusiness {
   id: string;
@@ -35,7 +40,9 @@ interface BusinessOverviewCardsProps {
   overview: CrossBusinessAggregation;
 }
 
-export function BusinessOverviewCards({ overview }: BusinessOverviewCardsProps) {
+export function BusinessOverviewCards({
+  overview,
+}: BusinessOverviewCardsProps) {
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
@@ -69,27 +76,29 @@ export function BusinessOverviewCards({ overview }: BusinessOverviewCardsProps) 
       {/* Summary Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Businesses */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-              <Building className="h-4 w-4 text-cyan-400" />
+              <Building className="h-4 w-4 text-orange-400" />
               Total Businesses
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-white">
               {overview.activeBusinesses}
-              <span className="text-lg text-gray-500">/{overview.totalBusinesses}</span>
+              <span className="text-lg text-gray-500">
+                /{overview.totalBusinesses}
+              </span>
             </div>
             <p className="text-xs text-gray-500 mt-1">Active businesses</p>
           </CardContent>
         </Card>
 
         {/* Total Campaigns */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-cyan-400" />
+              <BarChart3 className="h-4 w-4 text-orange-400" />
               Total Campaigns
             </CardTitle>
           </CardHeader>
@@ -102,10 +111,10 @@ export function BusinessOverviewCards({ overview }: BusinessOverviewCardsProps) 
         </Card>
 
         {/* Total Engagement */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-cyan-400" />
+              <TrendingUp className="h-4 w-4 text-orange-400" />
               Total Engagement
             </CardTitle>
           </CardHeader>
@@ -118,10 +127,10 @@ export function BusinessOverviewCards({ overview }: BusinessOverviewCardsProps) 
         </Card>
 
         {/* Monthly Spend */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-cyan-400" />
+              <DollarSign className="h-4 w-4 text-orange-400" />
               Monthly Spend
             </CardTitle>
           </CardHeader>
@@ -138,10 +147,10 @@ export function BusinessOverviewCards({ overview }: BusinessOverviewCardsProps) 
       <div className="space-y-3">
         <h3 className="text-lg font-semibold text-white">Business Breakdown</h3>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {overview.perBusiness.map((business) => (
+          {overview.perBusiness.map(business => (
             <Card
               key={business.organizationId}
-              className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 hover:border-cyan-500/20 transition-all"
+              className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 hover:border-orange-500/20 transition-all"
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
@@ -149,12 +158,18 @@ export function BusinessOverviewCards({ overview }: BusinessOverviewCardsProps) 
                     <CardTitle className="text-base font-semibold text-white truncate">
                       {business.organizationName}
                     </CardTitle>
-                    <p className="text-sm text-gray-500 mt-1">@{business.organizationSlug}</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      @{business.organizationSlug}
+                    </p>
                   </div>
                   <div className="flex flex-col gap-2 items-end">
                     <Badge
                       variant="outline"
-                      className={business.isActive ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-gray-500/20 text-gray-400 border-gray-500/30'}
+                      className={
+                        business.isActive
+                          ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                          : 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+                      }
                     >
                       {business.isActive ? 'Active' : 'Inactive'}
                     </Badge>
@@ -183,7 +198,7 @@ export function BusinessOverviewCards({ overview }: BusinessOverviewCardsProps) 
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Monthly</p>
-                    <p className="text-lg font-semibold text-cyan-400 mt-1">
+                    <p className="text-lg font-semibold text-orange-400 mt-1">
                       {formatCurrency(business.monthlyRate)}
                     </p>
                   </div>

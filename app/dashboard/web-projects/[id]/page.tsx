@@ -76,7 +76,8 @@ gsap.from('.card', {
   {
     id: 'pinned-quote',
     title: 'Pinned Quote Section',
-    description: 'Quote pins in the viewport while the next section scrolls over it.',
+    description:
+      'Quote pins in the viewport while the next section scrolls over it.',
     code: `// Pinned quote section
 gsap.registerPlugin(ScrollTrigger);
 
@@ -102,7 +103,8 @@ gsap.from('.quote-text', {
   {
     id: 'horizontal-gallery',
     title: 'Horizontal Scroll Gallery',
-    description: 'A gallery panel that scrolls horizontally while the page scrolls vertically.',
+    description:
+      'A gallery panel that scrolls horizontally while the page scrolls vertically.',
     code: `// Horizontal scroll gallery
 gsap.registerPlugin(ScrollTrigger);
 
@@ -150,7 +152,9 @@ export default function WebProjectDetailPage({
   useEffect(() => {
     async function fetchProject() {
       try {
-        const res = await fetch(`/api/web-projects/${id}`, { credentials: 'include' });
+        const res = await fetch(`/api/web-projects/${id}`, {
+          credentials: 'include',
+        });
         if (!res.ok) throw new Error('Not found');
         const data = await res.json();
         setProject(data.project);
@@ -204,15 +208,27 @@ export default function WebProjectDetailPage({
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: 'overview', label: 'Overview', icon: <Globe className="w-4 h-4" /> },
-    { id: 'design-tokens', label: 'Design Tokens', icon: <Palette className="w-4 h-4" /> },
-    { id: 'animation-templates', label: 'Animation Templates', icon: <Layers className="w-4 h-4" /> },
-    { id: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
+    {
+      id: 'design-tokens',
+      label: 'Design Tokens',
+      icon: <Palette className="w-4 h-4" />,
+    },
+    {
+      id: 'animation-templates',
+      label: 'Animation Templates',
+      icon: <Layers className="w-4 h-4" />,
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: <Settings className="w-4 h-4" />,
+    },
   ];
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
     );
   }
@@ -226,20 +242,26 @@ export default function WebProjectDetailPage({
       {/* Back + Header */}
       <div className="flex items-start gap-4">
         <Link href="/dashboard/web-projects">
-          <Button variant="ghost" size="icon" className="mt-0.5 text-gray-400 hover:text-white">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="mt-0.5 text-gray-400 hover:text-white"
+          >
             <ArrowLeft className="w-5 h-5" />
           </Button>
         </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold text-white truncate">{project.name}</h1>
+            <h1 className="text-2xl font-bold text-white truncate">
+              {project.name}
+            </h1>
             <span
               className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border capitalize ${
                 status === 'active'
                   ? 'bg-green-500/10 text-green-400 border-green-500/20'
                   : status === 'archived'
-                  ? 'bg-gray-500/10 text-gray-400 border-gray-500/20'
-                  : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                    ? 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                    : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
               }`}
             >
               {status}
@@ -253,7 +275,7 @@ export default function WebProjectDetailPage({
               href={project.websiteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 text-sm mt-1"
+              className="inline-flex items-center gap-1.5 text-orange-400 hover:text-orange-300 text-sm mt-1"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               {project.websiteUrl}
@@ -264,13 +286,13 @@ export default function WebProjectDetailPage({
 
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-white/[0.08] overflow-x-auto">
-        {tabs.map((tab) => (
+        {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
               activeTab === tab.id
-                ? 'text-cyan-400 border-cyan-400'
+                ? 'text-orange-400 border-orange-400'
                 : 'text-gray-400 border-transparent hover:text-gray-200'
             }`}
           >
@@ -288,13 +310,17 @@ export default function WebProjectDetailPage({
               { label: 'Pages', value: project.pages ?? 0 },
               { label: 'Colours', value: (project.colors ?? []).length },
               { label: 'Status', value: status },
-            ].map((stat) => (
+            ].map(stat => (
               <div
                 key={stat.label}
                 className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4"
               >
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">{stat.label}</p>
-                <p className="text-xl font-bold text-white capitalize">{stat.value}</p>
+                <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
+                  {stat.label}
+                </p>
+                <p className="text-xl font-bold text-white capitalize">
+                  {stat.value}
+                </p>
               </div>
             ))}
           </div>
@@ -306,7 +332,7 @@ export default function WebProjectDetailPage({
                 <Label>Name</Label>
                 <Input
                   value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   className="bg-white/5 border-white/10"
                 />
               </div>
@@ -314,8 +340,11 @@ export default function WebProjectDetailPage({
                 <Label>Status</Label>
                 <select
                   value={form.status}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, status: e.target.value as typeof form.status }))
+                  onChange={e =>
+                    setForm(f => ({
+                      ...f,
+                      status: e.target.value as typeof form.status,
+                    }))
                   }
                   className="w-full rounded-md bg-white/5 border border-white/10 text-white px-3 py-2 text-sm"
                 >
@@ -328,7 +357,9 @@ export default function WebProjectDetailPage({
                 <Label>Description</Label>
                 <Textarea
                   value={form.description}
-                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  onChange={e =>
+                    setForm(f => ({ ...f, description: e.target.value }))
+                  }
                   className="bg-white/5 border-white/10 resize-none"
                   rows={2}
                 />
@@ -339,7 +370,9 @@ export default function WebProjectDetailPage({
                   type="url"
                   placeholder="https://example.com"
                   value={form.websiteUrl}
-                  onChange={(e) => setForm((f) => ({ ...f, websiteUrl: e.target.value }))}
+                  onChange={e =>
+                    setForm(f => ({ ...f, websiteUrl: e.target.value }))
+                  }
                   className="bg-white/5 border-white/10"
                 />
               </div>
@@ -348,7 +381,9 @@ export default function WebProjectDetailPage({
                 <Input
                   placeholder="example.com"
                   value={form.domain}
-                  onChange={(e) => setForm((f) => ({ ...f, domain: e.target.value }))}
+                  onChange={e =>
+                    setForm(f => ({ ...f, domain: e.target.value }))
+                  }
                   className="bg-white/5 border-white/10"
                 />
               </div>
@@ -357,9 +392,13 @@ export default function WebProjectDetailPage({
               <Button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-cyan-600 hover:bg-cyan-500 text-white gap-2"
+                className="bg-orange-600 hover:bg-orange-500 text-white gap-2"
               >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {saving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
                 Save Changes
               </Button>
             </div>
@@ -372,8 +411,9 @@ export default function WebProjectDetailPage({
           <Palette className="w-12 h-12 text-gray-700 mx-auto mb-3" />
           <h3 className="font-medium text-gray-300 mb-1">Design Tokens</h3>
           <p className="text-sm text-gray-500">
-            Store your colour palette, typography scale, and spacing tokens here.
-            Coming soon — paste your CSS variables or Tailwind config to get started.
+            Store your colour palette, typography scale, and spacing tokens
+            here. Coming soon — paste your CSS variables or Tailwind config to
+            get started.
           </p>
         </div>
       )}
@@ -381,15 +421,15 @@ export default function WebProjectDetailPage({
       {activeTab === 'animation-templates' && (
         <div className="space-y-4">
           <p className="text-sm text-gray-400">
-            Copy these GSAP presets directly into your project. Each template uses GSAP 3 with
-            ScrollTrigger — install with{' '}
-            <code className="bg-white/10 px-1.5 py-0.5 rounded text-cyan-300 text-xs">
+            Copy these GSAP presets directly into your project. Each template
+            uses GSAP 3 with ScrollTrigger — install with{' '}
+            <code className="bg-white/10 px-1.5 py-0.5 rounded text-orange-300 text-xs">
               npm install gsap
             </code>
             .
           </p>
 
-          {ANIMATION_TEMPLATES.map((template) => (
+          {ANIMATION_TEMPLATES.map(template => (
             <div
               key={template.id}
               className="bg-white/[0.03] border border-white/[0.08] rounded-xl overflow-hidden"
@@ -397,7 +437,9 @@ export default function WebProjectDetailPage({
               <div className="flex items-start justify-between p-4 border-b border-white/[0.06]">
                 <div>
                   <h3 className="font-semibold text-white">{template.title}</h3>
-                  <p className="text-sm text-gray-400 mt-0.5">{template.description}</p>
+                  <p className="text-sm text-gray-400 mt-0.5">
+                    {template.description}
+                  </p>
                 </div>
                 <Button
                   variant="ghost"
@@ -435,7 +477,7 @@ export default function WebProjectDetailPage({
                 <Label>Project Name</Label>
                 <Input
                   value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   className="bg-white/5 border-white/10"
                 />
               </div>
@@ -444,9 +486,13 @@ export default function WebProjectDetailPage({
               <Button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-cyan-600 hover:bg-cyan-500 text-white gap-2"
+                className="bg-orange-600 hover:bg-orange-500 text-white gap-2"
               >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {saving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
                 Save
               </Button>
             </div>
@@ -461,7 +507,12 @@ export default function WebProjectDetailPage({
               variant="outline"
               className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
               onClick={async () => {
-                if (!confirm('Delete this project permanently? This cannot be undone.')) return;
+                if (
+                  !confirm(
+                    'Delete this project permanently? This cannot be undone.'
+                  )
+                )
+                  return;
                 await fetch(`/api/web-projects/${id}`, {
                   method: 'DELETE',
                   credentials: 'include',

@@ -7,7 +7,7 @@
  * and post detail modal. Uses useCalendar hook for data management.
  */
 
-import { useState, useCallback, useEffect , Suspense } from 'react';
+import { useState, useCallback, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { useCalendar, SchedulePostOptions } from '@/hooks/useCalendar';
@@ -15,9 +15,27 @@ import { useUser } from '@/hooks/use-user';
 import { TimeSlotPicker } from '@/components/scheduling';
 
 // Dynamic imports for heavy calendar components
-const WeekView = dynamic(() => import('@/components/calendar/WeekView').then(m => ({ default: m.WeekView })), { ssr: false });
-const MonthView = dynamic(() => import('@/components/calendar/MonthView').then(m => ({ default: m.MonthView })), { ssr: false });
-const PostDetailModal = dynamic(() => import('@/components/calendar/PostDetailModal').then(m => ({ default: m.PostDetailModal })), { ssr: false });
+const WeekView = dynamic(
+  () =>
+    import('@/components/calendar/WeekView').then(m => ({
+      default: m.WeekView,
+    })),
+  { ssr: false }
+);
+const MonthView = dynamic(
+  () =>
+    import('@/components/calendar/MonthView').then(m => ({
+      default: m.MonthView,
+    })),
+  { ssr: false }
+);
+const PostDetailModal = dynamic(
+  () =>
+    import('@/components/calendar/PostDetailModal').then(m => ({
+      default: m.PostDetailModal,
+    })),
+  { ssr: false }
+);
 import { PageHeader } from '@/components/dashboard/page-header';
 import { DashboardEmptyState } from '@/components/dashboard/empty-state';
 import { Button } from '@/components/ui/button';
@@ -129,7 +147,9 @@ function CalendarPageContent() {
 
     const fetchTeamMembers = async () => {
       try {
-        const response = await fetch(`/api/team?organizationId=${organizationId}`);
+        const response = await fetch(
+          `/api/team?organizationId=${organizationId}`
+        );
         if (response.ok) {
           const data = await response.json();
           if (data.members) {
@@ -195,17 +215,21 @@ function CalendarPageContent() {
 
   // Handle platform toggle in form
   const handlePlatformToggle = (platformId: string) => {
-    setScheduleForm((prev) => ({
+    setScheduleForm(prev => ({
       ...prev,
       platforms: prev.platforms.includes(platformId)
-        ? prev.platforms.filter((p) => p !== platformId)
+        ? prev.platforms.filter(p => p !== platformId)
         : [...prev.platforms, platformId],
     }));
   };
 
   // Handle schedule submit
   const handleScheduleSubmit = async () => {
-    if (!scheduleDate || !scheduleForm.content || scheduleForm.platforms.length === 0) {
+    if (
+      !scheduleDate ||
+      !scheduleForm.content ||
+      scheduleForm.platforms.length === 0
+    ) {
       return;
     }
 
@@ -239,7 +263,7 @@ function CalendarPageContent() {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-cyan-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
           <p className="text-gray-400">Loading calendar...</p>
         </div>
       </div>
@@ -252,7 +276,9 @@ function CalendarPageContent() {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 max-w-md text-center">
           <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">Failed to Load Calendar</h3>
+          <h3 className="text-lg font-semibold text-white mb-2">
+            Failed to Load Calendar
+          </h3>
           <p className="text-gray-400 mb-4">{error}</p>
           <Button onClick={clearError} variant="outline">
             Try Again
@@ -276,7 +302,7 @@ function CalendarPageContent() {
                 onClick={() => setViewMode('week')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   viewMode === 'week'
-                    ? 'bg-cyan-500/20 text-cyan-400'
+                    ? 'bg-orange-500/20 text-orange-400'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -287,7 +313,7 @@ function CalendarPageContent() {
                 onClick={() => setViewMode('month')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   viewMode === 'month'
-                    ? 'bg-cyan-500/20 text-cyan-400'
+                    ? 'bg-orange-500/20 text-orange-400'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -304,7 +330,7 @@ function CalendarPageContent() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Members</SelectItem>
-                {teamMembers.map((member) => (
+                {teamMembers.map(member => (
                   <SelectItem key={member.id} value={member.id}>
                     {member.name || member.email}
                   </SelectItem>
@@ -313,7 +339,11 @@ function CalendarPageContent() {
             </Select>
 
             {/* Today Button */}
-            <Button variant="outline" onClick={goToToday} className="bg-gray-900/50 border-white/10">
+            <Button
+              variant="outline"
+              onClick={goToToday}
+              className="bg-gray-900/50 border-white/10"
+            >
               Today
             </Button>
 
@@ -323,7 +353,7 @@ function CalendarPageContent() {
                 setScheduleDate(new Date(Date.now() + 60 * 60 * 1000));
                 setIsScheduleModalOpen(true);
               }}
-              className="bg-cyan-500 hover:bg-cyan-600 text-white"
+              className="bg-orange-500 hover:bg-orange-600 text-white"
             >
               <Plus className="h-4 w-4 mr-2" />
               Schedule Post
@@ -340,7 +370,9 @@ function CalendarPageContent() {
               <Calendar className="h-5 w-5 text-blue-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{stats.totalPosts}</p>
+              <p className="text-2xl font-bold text-white">
+                {stats.totalPosts}
+              </p>
               <p className="text-sm text-gray-400">Total Posts</p>
             </div>
           </div>
@@ -348,11 +380,13 @@ function CalendarPageContent() {
 
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-cyan-500/10 rounded-lg">
-              <Clock className="h-5 w-5 text-cyan-400" />
+            <div className="p-2 bg-orange-500/10 rounded-lg">
+              <Clock className="h-5 w-5 text-orange-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{stats.scheduledPosts}</p>
+              <p className="text-2xl font-bold text-white">
+                {stats.scheduledPosts}
+              </p>
               <p className="text-sm text-gray-400">Scheduled</p>
             </div>
           </div>
@@ -364,7 +398,9 @@ function CalendarPageContent() {
               <CheckCircle className="h-5 w-5 text-green-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{stats.publishedPosts}</p>
+              <p className="text-2xl font-bold text-white">
+                {stats.publishedPosts}
+              </p>
               <p className="text-sm text-gray-400">Published</p>
             </div>
           </div>
@@ -376,7 +412,9 @@ function CalendarPageContent() {
               <ListTodo className="h-5 w-5 text-yellow-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{stats.pendingApprovals || 0}</p>
+              <p className="text-2xl font-bold text-white">
+                {stats.pendingApprovals || 0}
+              </p>
               <p className="text-sm text-gray-400">Pending Approvals</p>
             </div>
           </div>
@@ -388,7 +426,9 @@ function CalendarPageContent() {
               <AlertTriangle className="h-5 w-5 text-orange-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{stats.conflictCount}</p>
+              <p className="text-2xl font-bold text-white">
+                {stats.conflictCount}
+              </p>
               <p className="text-sm text-gray-400">Conflicts</p>
             </div>
           </div>
@@ -459,8 +499,11 @@ function CalendarPageContent() {
                 id="content"
                 placeholder="Write your post content..."
                 value={scheduleForm.content}
-                onChange={(e) =>
-                  setScheduleForm((prev) => ({ ...prev, content: e.target.value }))
+                onChange={e =>
+                  setScheduleForm(prev => ({
+                    ...prev,
+                    content: e.target.value,
+                  }))
                 }
                 className="min-h-[120px] bg-gray-800/50 border-white/10 text-white placeholder:text-gray-500"
               />
@@ -471,7 +514,11 @@ function CalendarPageContent() {
               value={scheduleDate}
               onChange={setScheduleDate}
               platform={scheduleForm.platforms[0] || 'twitter'}
-              platforms={scheduleForm.platforms.length > 0 ? scheduleForm.platforms : undefined}
+              platforms={
+                scheduleForm.platforms.length > 0
+                  ? scheduleForm.platforms
+                  : undefined
+              }
               minDate={new Date()}
               compact
             />
@@ -480,7 +527,7 @@ function CalendarPageContent() {
             <div className="space-y-2">
               <Label className="text-gray-300">Platforms</Label>
               <div className="grid grid-cols-3 gap-2">
-                {PLATFORMS.map((platform) => (
+                {PLATFORMS.map(platform => (
                   <label
                     key={platform.id}
                     className="flex items-center gap-2 p-2 rounded-lg bg-gray-800/50 border border-white/10 cursor-pointer hover:bg-gray-800/70 transition-colors"
@@ -489,7 +536,9 @@ function CalendarPageContent() {
                       checked={scheduleForm.platforms.includes(platform.id)}
                       onCheckedChange={() => handlePlatformToggle(platform.id)}
                     />
-                    <span className="text-sm text-gray-300">{platform.label}</span>
+                    <span className="text-sm text-gray-300">
+                      {platform.label}
+                    </span>
                   </label>
                 ))}
               </div>
@@ -511,7 +560,7 @@ function CalendarPageContent() {
                   !scheduleForm.content ||
                   scheduleForm.platforms.length === 0
                 }
-                className="bg-cyan-500 hover:bg-cyan-600 text-white"
+                className="bg-orange-500 hover:bg-orange-600 text-white"
               >
                 {isSubmitting ? (
                   <>

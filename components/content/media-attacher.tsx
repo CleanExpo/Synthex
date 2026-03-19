@@ -9,7 +9,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Image, Upload, X, Loader2 } from '@/components/icons';
+import { Image as ImageIcon, Upload, X, Loader2 } from '@/components/icons';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -69,7 +69,7 @@ export function MediaAttacher({
         ? URL.createObjectURL(file)
         : '';
 
-      setUploadingFiles((prev) => [...prev, { id, name: file.name, preview }]);
+      setUploadingFiles(prev => [...prev, { id, name: file.name, preview }]);
 
       try {
         const formData = new FormData();
@@ -84,7 +84,8 @@ export function MediaAttacher({
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           throw new Error(
-            (body as { error?: string }).error || `Upload failed (${res.status})`
+            (body as { error?: string }).error ||
+              `Upload failed (${res.status})`
           );
         }
 
@@ -95,13 +96,11 @@ export function MediaAttacher({
         // Add the new URL
         onMediaChange([...mediaUrls, data.url]);
       } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : 'Upload failed'
-        );
+        toast.error(err instanceof Error ? err.message : 'Upload failed');
       } finally {
         // Revoke object URL to avoid memory leaks
         if (preview) URL.revokeObjectURL(preview);
-        setUploadingFiles((prev) => prev.filter((f) => f.id !== id));
+        setUploadingFiles(prev => prev.filter(f => f.id !== id));
       }
     },
     [mediaUrls, onMediaChange]
@@ -171,7 +170,7 @@ export function MediaAttacher({
       {/* File count */}
       <div className="flex items-center justify-between">
         <span className="text-xs text-slate-400 flex items-center gap-1.5">
-          <Image className="h-3.5 w-3.5" />
+          <ImageIcon className="h-3.5 w-3.5" />
           Media
         </span>
         <span className="text-xs text-slate-500">
@@ -188,7 +187,7 @@ export function MediaAttacher({
               key={url}
               className="relative group aspect-square rounded-lg overflow-hidden border border-white/10 bg-white/5"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {}
               <img
                 src={url}
                 alt={`Attachment ${index + 1}`}
@@ -206,23 +205,23 @@ export function MediaAttacher({
           ))}
 
           {/* Uploading placeholders */}
-          {uploadingFiles.map((f) => (
+          {uploadingFiles.map(f => (
             <div
               key={f.id}
               className="relative aspect-square rounded-lg overflow-hidden border border-white/10 bg-white/5 flex items-center justify-center"
             >
               {f.preview ? (
                 <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {}
                   <img
                     src={f.preview}
                     alt="Uploading"
                     className="h-full w-full object-cover opacity-40"
                   />
-                  <Loader2 className="absolute h-5 w-5 text-cyan-400 animate-spin" />
+                  <Loader2 className="absolute h-5 w-5 text-orange-400 animate-spin" />
                 </>
               ) : (
-                <Loader2 className="h-5 w-5 text-cyan-400 animate-spin" />
+                <Loader2 className="h-5 w-5 text-orange-400 animate-spin" />
               )}
             </div>
           ))}
@@ -235,7 +234,7 @@ export function MediaAttacher({
           role="button"
           tabIndex={disabled ? -1 : 0}
           onClick={handleClick}
-          onKeyDown={(e) => {
+          onKeyDown={e => {
             if (e.key === 'Enter' || e.key === ' ') handleClick();
           }}
           onDragOver={handleDragOver}
@@ -246,7 +245,7 @@ export function MediaAttacher({
             py-5 cursor-pointer transition-all
             ${
               isDragOver
-                ? 'border-cyan-400 bg-cyan-500/10'
+                ? 'border-orange-400 bg-orange-500/10'
                 : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]'
             }
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}

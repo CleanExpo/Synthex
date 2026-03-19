@@ -9,8 +9,17 @@
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { X, Globe, Loader2 } from '@/components/icons';
-import type { AffiliateNetwork, CreateNetworkInput, UpdateNetworkInput } from '@/hooks/useAffiliateLinks';
-import { NETWORK_SLUGS, NETWORK_LABELS, NETWORK_COLORS, type NetworkSlug } from '@/hooks/useAffiliateLinks';
+import type {
+  AffiliateNetwork,
+  CreateNetworkInput,
+  UpdateNetworkInput,
+} from '@/hooks/useAffiliateLinks';
+import {
+  NETWORK_SLUGS,
+  NETWORK_LABELS,
+  NETWORK_COLORS,
+  type NetworkSlug,
+} from '@/hooks/useAffiliateLinks';
 
 interface NetworkFormProps {
   isOpen: boolean;
@@ -105,11 +114,11 @@ export function NetworkForm({
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={e => setName(e.target.value)}
               placeholder="e.g., My Amazon Account"
               required
               aria-label="Display name"
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
             />
           </div>
 
@@ -120,7 +129,7 @@ export function NetworkForm({
                 Network *
               </label>
               <div className="grid grid-cols-3 gap-2">
-                {NETWORK_SLUGS.map((s) => {
+                {NETWORK_SLUGS.map(s => {
                   const color = NETWORK_COLORS[s];
                   return (
                     <button
@@ -130,12 +139,14 @@ export function NetworkForm({
                       className={cn(
                         'flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-all',
                         slug === s
-                          ? 'border-cyan-500/50 bg-cyan-500/10'
+                          ? 'border-orange-500/50 bg-orange-500/10'
                           : 'border-white/10 bg-white/5 hover:bg-white/10'
                       )}
                     >
                       <Globe className="h-5 w-5" style={{ color }} />
-                      <span className="text-xs text-white/70">{NETWORK_LABELS[s]}</span>
+                      <span className="text-xs text-white/70">
+                        {NETWORK_LABELS[s]}
+                      </span>
                     </button>
                   );
                 })}
@@ -151,10 +162,10 @@ export function NetworkForm({
             <input
               type="text"
               value={trackingId}
-              onChange={(e) => setTrackingId(e.target.value)}
+              onChange={e => setTrackingId(e.target.value)}
               placeholder="Your affiliate ID"
               aria-label="Tracking/Affiliate ID"
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
             />
           </div>
 
@@ -166,10 +177,10 @@ export function NetworkForm({
             <input
               type="password"
               value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              onChange={e => setApiKey(e.target.value)}
               placeholder="For automated reporting"
               aria-label="API key"
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
             />
           </div>
 
@@ -184,10 +195,10 @@ export function NetworkForm({
               min="0"
               max="100"
               value={commissionRate}
-              onChange={(e) => setCommissionRate(e.target.value)}
+              onChange={e => setCommissionRate(e.target.value)}
               placeholder="e.g., 5.00"
               aria-label="Default commission rate (%)"
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
             />
           </div>
 
@@ -199,7 +210,7 @@ export function NetworkForm({
               onClick={() => setIsActive(!isActive)}
               className={cn(
                 'relative w-11 h-6 rounded-full transition-colors',
-                isActive ? 'bg-cyan-600' : 'bg-white/20'
+                isActive ? 'bg-orange-600' : 'bg-white/20'
               )}
             >
               <span
@@ -223,7 +234,7 @@ export function NetworkForm({
             <button
               type="submit"
               disabled={isLoading || !name}
-              className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:bg-cyan-600/50 text-white rounded-lg font-medium transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:bg-orange-600/50 text-white rounded-lg font-medium transition-colors"
             >
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               {isEditing ? 'Save Changes' : 'Add Network'}

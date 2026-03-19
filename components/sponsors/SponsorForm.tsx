@@ -9,7 +9,12 @@
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { X, Loader2 } from '@/components/icons';
-import type { Sponsor, SponsorStatus, CreateSponsorInput, UpdateSponsorInput } from '@/hooks/useSponsorCRM';
+import type {
+  Sponsor,
+  SponsorStatus,
+  CreateSponsorInput,
+  UpdateSponsorInput,
+} from '@/hooks/useSponsorCRM';
 import { SPONSOR_STATUSES, STATUS_LABELS } from '@/hooks/useSponsorCRM';
 
 interface SponsorFormProps {
@@ -114,10 +119,10 @@ export function SponsorForm({
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={e => setFormData({ ...formData, name: e.target.value })}
               placeholder="Contact name"
               required
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
             />
           </div>
 
@@ -129,9 +134,11 @@ export function SponsorForm({
             <input
               type="text"
               value={formData.company}
-              onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+              onChange={e =>
+                setFormData({ ...formData, company: e.target.value })
+              }
               placeholder="Brand or company name"
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
             />
           </div>
 
@@ -143,9 +150,11 @@ export function SponsorForm({
             <input
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={e =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               placeholder="contact@brand.com"
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
             />
           </div>
 
@@ -157,9 +166,11 @@ export function SponsorForm({
             <input
               type="tel"
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              onChange={e =>
+                setFormData({ ...formData, phone: e.target.value })
+              }
               placeholder="+1 (555) 000-0000"
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
             />
           </div>
 
@@ -171,9 +182,11 @@ export function SponsorForm({
             <input
               type="url"
               value={formData.website}
-              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+              onChange={e =>
+                setFormData({ ...formData, website: e.target.value })
+              }
               placeholder="https://brand.com"
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
             />
           </div>
 
@@ -184,10 +197,15 @@ export function SponsorForm({
             </label>
             <select
               value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value as SponsorStatus })}
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+              onChange={e =>
+                setFormData({
+                  ...formData,
+                  status: e.target.value as SponsorStatus,
+                })
+              }
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
             >
-              {SPONSOR_STATUSES.map((status) => (
+              {SPONSOR_STATUSES.map(status => (
                 <option key={status} value={status} className="bg-surface-base">
                   {STATUS_LABELS[status]}
                 </option>
@@ -202,10 +220,12 @@ export function SponsorForm({
             </label>
             <textarea
               value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              onChange={e =>
+                setFormData({ ...formData, notes: e.target.value })
+              }
               placeholder="Any additional notes..."
               rows={3}
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent resize-none"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent resize-none"
             />
           </div>
 
@@ -224,7 +244,7 @@ export function SponsorForm({
               disabled={isLoading || !formData.name.trim()}
               className={cn(
                 'flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-colors',
-                'bg-cyan-600 hover:bg-cyan-500 text-white',
+                'bg-orange-600 hover:bg-orange-500 text-white',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
             >

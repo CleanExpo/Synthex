@@ -45,7 +45,7 @@ export function TaskTypeBadge({ type }: { type: TaskType }) {
 
 export function AssigneeAvatars({
   assignees,
-  max = 3
+  max = 3,
 }: {
   assignees: TaskAssignee[];
   max?: number;
@@ -55,11 +55,14 @@ export function AssigneeAvatars({
 
   return (
     <div className="flex -space-x-2">
-      {visible.map((assignee) => (
+      {visible.map(assignee => (
         <Avatar key={assignee.id} className="w-7 h-7 border-2 border-slate-900">
           <AvatarImage src={assignee.avatar} alt={assignee.name} />
-          <AvatarFallback className="text-xs bg-cyan-500/20 text-cyan-300">
-            {assignee.name.split(' ').map((n) => n[0]).join('')}
+          <AvatarFallback className="text-xs bg-orange-500/20 text-orange-300">
+            {assignee.name
+              .split(' ')
+              .map(n => n[0])
+              .join('')}
           </AvatarFallback>
         </Avatar>
       ))}

@@ -66,13 +66,16 @@ function getPlatformLabel(platform: string): string {
   return PLATFORM_LABELS[platform.toLowerCase()] ?? platform;
 }
 
-const STATUS_CONFIG: Record<string, {
-  label: string;
-  colour: string;
-  bgColour: string;
-  borderColour: string;
-  Icon: typeof Check;
-}> = {
+const STATUS_CONFIG: Record<
+  string,
+  {
+    label: string;
+    colour: string;
+    bgColour: string;
+    borderColour: string;
+    Icon: typeof Check;
+  }
+> = {
   scheduled: {
     label: 'Scheduled',
     colour: 'text-blue-400',
@@ -122,12 +125,10 @@ export function PostStatusTracker({
   onRefresh,
   onDismiss,
 }: PostStatusTrackerProps) {
-  const {
-    data,
-    isLoading,
-    mutate,
-  } = useSWR<PostsResponse>(
-    batchId ? `/api/scheduler/posts?batchId=${encodeURIComponent(batchId)}` : null,
+  const { data, isLoading, mutate } = useSWR<PostsResponse>(
+    batchId
+      ? `/api/scheduler/posts?batchId=${encodeURIComponent(batchId)}`
+      : null,
     fetchJson,
     {
       refreshInterval: 30000, // Poll every 30 seconds
@@ -136,9 +137,10 @@ export function PostStatusTracker({
   );
 
   const posts = data?.data ?? [];
-  const publishedCount = posts.filter((p) => p.status === 'published').length;
+  const publishedCount = posts.filter(p => p.status === 'published').length;
   const totalCount = posts.length;
-  const progressPercent = totalCount > 0 ? Math.round((publishedCount / totalCount) * 100) : 0;
+  const progressPercent =
+    totalCount > 0 ? Math.round((publishedCount / totalCount) * 100) : 0;
 
   const handleRefresh = () => {
     mutate();
@@ -167,7 +169,7 @@ export function PostStatusTracker({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm flex items-center gap-2">
-            <Clock className="h-4 w-4 text-cyan-400" />
+            <Clock className="h-4 w-4 text-orange-400" />
             Post Status
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -196,12 +198,14 @@ export function PostStatusTracker({
         {totalCount > 1 && (
           <div className="mt-2 space-y-1">
             <div className="flex items-center justify-between text-[10px] text-slate-400">
-              <span>{publishedCount}/{totalCount} platforms published</span>
+              <span>
+                {publishedCount}/{totalCount} platforms published
+              </span>
               <span>{progressPercent}%</span>
             </div>
             <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-orange-500 to-emerald-500 transition-all duration-500"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -210,10 +214,12 @@ export function PostStatusTracker({
       </CardHeader>
 
       <CardContent className="space-y-2 pt-0">
-        {posts.map((post) => {
+        {posts.map(post => {
           const config = getStatusConfig(post.status);
           const StatusIcon = config.Icon;
-          const platformPostUrl = (post.metadata as Record<string, unknown> | null)?.platformPostUrl as string | undefined;
+          const platformPostUrl = (
+            post.metadata as Record<string, unknown> | null
+          )?.platformPostUrl as string | undefined;
 
           return (
             <div
@@ -221,7 +227,9 @@ export function PostStatusTracker({
               className={`flex items-center justify-between rounded-lg border px-3 py-2 ${config.bgColour} ${config.borderColour}`}
             >
               <div className="flex items-center gap-2.5">
-                <StatusIcon className={`h-3.5 w-3.5 flex-shrink-0 ${config.colour}`} />
+                <StatusIcon
+                  className={`h-3.5 w-3.5 flex-shrink-0 ${config.colour}`}
+                />
                 <span className="text-xs font-medium text-white">
                   {getPlatformLabel(post.platform)}
                 </span>
@@ -239,7 +247,9 @@ export function PostStatusTracker({
                   </span>
                 )}
 
-                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${config.bgColour} ${config.colour}`}>
+                <span
+                  className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${config.bgColour} ${config.colour}`}
+                >
                   {config.label}
                 </span>
 
@@ -248,7 +258,7 @@ export function PostStatusTracker({
                     href={platformPostUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                    className="text-orange-400 hover:text-orange-300 transition-colors"
                   >
                     <ExternalLink className="h-3 w-3" />
                   </a>

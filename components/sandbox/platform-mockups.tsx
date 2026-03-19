@@ -25,11 +25,17 @@ interface PlatformMockupProps {
   mediaType: MediaType;
 }
 
-function TwitterMockup({ content, mediaType }: { content: string; mediaType: MediaType }) {
+function TwitterMockup({
+  content,
+  mediaType,
+}: {
+  content: string;
+  mediaType: MediaType;
+}) {
   return (
     <div className="bg-black rounded-lg p-4">
       <div className="flex items-start space-x-3">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500"></div>
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-teal-500"></div>
         <div className="flex-1">
           <div className="flex items-center space-x-1">
             <span className="font-bold text-white">Your Name</span>
@@ -41,8 +47,12 @@ function TwitterMockup({ content, mediaType }: { content: string; mediaType: Med
           </div>
           {mediaType !== 'none' && (
             <div className="mt-3 bg-gray-800 rounded-lg h-48 flex items-center justify-center">
-              {mediaType === 'image' && <ImageIcon className="h-12 w-12 text-gray-600" />}
-              {mediaType === 'video' && <Video className="h-12 w-12 text-gray-600" />}
+              {mediaType === 'image' && (
+                <ImageIcon className="h-12 w-12 text-gray-600" />
+              )}
+              {mediaType === 'video' && (
+                <Video className="h-12 w-12 text-gray-600" />
+              )}
             </div>
           )}
           <div className="mt-3 flex items-center space-x-6 text-gray-500">
@@ -74,24 +84,36 @@ function TwitterMockup({ content, mediaType }: { content: string; mediaType: Med
   );
 }
 
-function InstagramMockup({ content, mediaType }: { content: string; mediaType: MediaType }) {
+function InstagramMockup({
+  content,
+  mediaType,
+}: {
+  content: string;
+  mediaType: MediaType;
+}) {
   return (
     <div className="bg-white rounded-lg overflow-hidden">
       <div className="flex items-center justify-between p-3 border-b">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500"></div>
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-teal-500"></div>
           <span className="font-semibold text-sm">username</span>
         </div>
         <MoreHorizontal className="h-5 w-5 text-gray-700" />
       </div>
       {mediaType !== 'none' ? (
         <div className="bg-gray-200 h-96 flex items-center justify-center">
-          {mediaType === 'image' && <ImageIcon className="h-16 w-16 text-gray-400" />}
-          {mediaType === 'video' && <Video className="h-16 w-16 text-gray-400" />}
+          {mediaType === 'image' && (
+            <ImageIcon className="h-16 w-16 text-gray-400" />
+          )}
+          {mediaType === 'video' && (
+            <Video className="h-16 w-16 text-gray-400" />
+          )}
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-cyan-500 to-teal-500 h-96 flex items-center justify-center">
-          <p className="text-white text-center px-4">{content || 'Your content preview'}</p>
+        <div className="bg-gradient-to-br from-orange-500 to-teal-500 h-96 flex items-center justify-center">
+          <p className="text-white text-center px-4">
+            {content || 'Your content preview'}
+          </p>
         </div>
       )}
       <div className="p-3">
@@ -105,14 +127,21 @@ function InstagramMockup({ content, mediaType }: { content: string; mediaType: M
         </div>
         <p className="font-semibold text-sm mb-1">0 likes</p>
         <p className="text-sm">
-          <span className="font-semibold">username</span> {content || 'Caption here...'}
+          <span className="font-semibold">username</span>{' '}
+          {content || 'Caption here...'}
         </p>
       </div>
     </div>
   );
 }
 
-function LinkedInMockup({ content, mediaType }: { content: string; mediaType: MediaType }) {
+function LinkedInMockup({
+  content,
+  mediaType,
+}: {
+  content: string;
+  mediaType: MediaType;
+}) {
   return (
     <div className="bg-white rounded-lg border p-4">
       <div className="flex items-start space-x-3">
@@ -128,8 +157,12 @@ function LinkedInMockup({ content, mediaType }: { content: string; mediaType: Me
           </div>
           {mediaType !== 'none' && (
             <div className="mt-3 bg-gray-100 rounded-lg h-48 flex items-center justify-center border">
-              {mediaType === 'image' && <ImageIcon className="h-12 w-12 text-gray-400" />}
-              {mediaType === 'video' && <Video className="h-12 w-12 text-gray-400" />}
+              {mediaType === 'image' && (
+                <ImageIcon className="h-12 w-12 text-gray-400" />
+              )}
+              {mediaType === 'video' && (
+                <Video className="h-12 w-12 text-gray-400" />
+              )}
             </div>
           )}
           <div className="mt-3 pt-3 border-t flex items-center justify-between text-gray-600">
@@ -154,7 +187,13 @@ function LinkedInMockup({ content, mediaType }: { content: string; mediaType: Me
   );
 }
 
-function DefaultMockup({ platform, content }: { platform: string; content: string }) {
+function DefaultMockup({
+  platform,
+  content,
+}: {
+  platform: string;
+  content: string;
+}) {
   const config = platformConfigs[platform];
   return (
     <div className={`${config.mockupBg} rounded-lg p-6`}>
@@ -165,7 +204,11 @@ function DefaultMockup({ platform, content }: { platform: string; content: strin
   );
 }
 
-export function PlatformMockup({ platform, content, mediaType }: PlatformMockupProps) {
+export function PlatformMockup({
+  platform,
+  content,
+  mediaType,
+}: PlatformMockupProps) {
   switch (platform) {
     case 'twitter':
       return <TwitterMockup content={content} mediaType={mediaType} />;

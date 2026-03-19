@@ -7,9 +7,13 @@
  * Shows tracked keywords sidebar and scrollable mentions feed.
  */
 
-import { useState, useCallback, useEffect , Suspense } from 'react';
+import { useState, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useSocialListening, TrackedKeyword, SocialMention } from '@/hooks/useSocialListening';
+import {
+  useSocialListening,
+  TrackedKeyword,
+  SocialMention,
+} from '@/hooks/useSocialListening';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { DashboardEmptyState } from '@/components/dashboard/empty-state';
 import { Button } from '@/components/ui/button';
@@ -83,7 +87,9 @@ function SentimentBadge({ sentiment }: { sentiment: string | null }) {
   const Icon = config.icon;
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${config.color}`}>
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${config.color}`}
+    >
       <Icon className="h-3 w-3" />
       {sentiment}
     </span>
@@ -91,11 +97,18 @@ function SentimentBadge({ sentiment }: { sentiment: string | null }) {
 }
 
 // Sentiment color bar for visual indicator
-function SentimentColorBar({ sentiment, score }: { sentiment: string | null; score: number | null }) {
+function SentimentColorBar({
+  sentiment,
+  score,
+}: {
+  sentiment: string | null;
+  score: number | null;
+}) {
   if (!sentiment) return null;
 
   const colors = {
-    positive: 'bg-gradient-to-r from-green-500/20 via-green-500/40 to-green-500/20',
+    positive:
+      'bg-gradient-to-r from-green-500/20 via-green-500/40 to-green-500/20',
     negative: 'bg-gradient-to-r from-red-500/20 via-red-500/40 to-red-500/20',
     neutral: 'bg-gradient-to-r from-gray-500/20 via-gray-500/30 to-gray-500/20',
   };
@@ -125,7 +138,8 @@ function MentionCard({
   onFlag: () => void;
   onArchive: () => void;
 }) {
-  const isNew = new Date(mention.postedAt).getTime() > Date.now() - 60 * 60 * 1000;
+  const isNew =
+    new Date(mention.postedAt).getTime() > Date.now() - 60 * 60 * 1000;
 
   return (
     <div
@@ -136,7 +150,10 @@ function MentionCard({
       }`}
     >
       {/* Sentiment color bar on left edge */}
-      <SentimentColorBar sentiment={mention.sentiment} score={mention.sentimentScore} />
+      <SentimentColorBar
+        sentiment={mention.sentiment}
+        score={mention.sentimentScore}
+      />
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
@@ -159,12 +176,17 @@ function MentionCard({
                 {mention.authorName || mention.authorHandle}
               </span>
               {mention.isInfluencer && (
-                <Badge variant="outline" className="text-yellow-400 border-yellow-400/30 text-xs">
+                <Badge
+                  variant="outline"
+                  className="text-yellow-400 border-yellow-400/30 text-xs"
+                >
                   Influencer
                 </Badge>
               )}
               {isNew && !mention.isRead && (
-                <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">New</Badge>
+                <Badge className="bg-orange-500/20 text-orange-400 text-xs">
+                  New
+                </Badge>
               )}
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-400">
@@ -174,7 +196,9 @@ function MentionCard({
               {mention.authorFollowers && (
                 <>
                   <span>·</span>
-                  <span>{mention.authorFollowers.toLocaleString()} followers</span>
+                  <span>
+                    {mention.authorFollowers.toLocaleString()} followers
+                  </span>
                 </>
               )}
             </div>
@@ -187,12 +211,14 @@ function MentionCard({
       </div>
 
       {/* Content */}
-      <p className="text-gray-300 text-sm mb-3 whitespace-pre-wrap">{mention.content}</p>
+      <p className="text-gray-300 text-sm mb-3 whitespace-pre-wrap">
+        {mention.content}
+      </p>
 
       {/* Keyword tag */}
       {mention.keyword && (
         <div className="mb-3">
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-cyan-500/10 text-cyan-400 text-xs">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-orange-500/10 text-orange-400 text-xs">
             <Hash className="h-3 w-3" />
             {mention.keyword.keyword}
           </span>
@@ -205,7 +231,11 @@ function MentionCard({
           <span>{mention.likes} likes</span>
           <span>{mention.comments} comments</span>
           <span>{mention.shares} shares</span>
-          <span>{formatDistanceToNow(new Date(mention.postedAt), { addSuffix: true })}</span>
+          <span>
+            {formatDistanceToNow(new Date(mention.postedAt), {
+              addSuffix: true,
+            })}
+          </span>
         </div>
 
         <div className="flex items-center gap-1">
@@ -255,15 +285,21 @@ function ListeningPageContent() {
   const searchParams = useSearchParams();
 
   // Filters
-  const [selectedKeywordId, setSelectedKeywordId] = useState<string | null>(null);
+  const [selectedKeywordId, setSelectedKeywordId] = useState<string | null>(
+    null
+  );
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
   const [selectedSentiment, setSelectedSentiment] = useState<string>('all');
 
   // Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newKeyword, setNewKeyword] = useState('');
-  const [newKeywordType, setNewKeywordType] = useState<'keyword' | 'hashtag' | 'mention' | 'brand'>('keyword');
-  const [newKeywordPlatforms, setNewKeywordPlatforms] = useState<string[]>(['twitter']);
+  const [newKeywordType, setNewKeywordType] = useState<
+    'keyword' | 'hashtag' | 'mention' | 'brand'
+  >('keyword');
+  const [newKeywordPlatforms, setNewKeywordPlatforms] = useState<string[]>([
+    'twitter',
+  ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize hook with filters
@@ -303,7 +339,11 @@ function ListeningPageContent() {
     if (!newKeyword.trim() || newKeywordPlatforms.length === 0) return;
 
     setIsSubmitting(true);
-    const result = await addKeyword(newKeyword.trim(), newKeywordType, newKeywordPlatforms);
+    const result = await addKeyword(
+      newKeyword.trim(),
+      newKeywordType,
+      newKeywordPlatforms
+    );
     setIsSubmitting(false);
 
     if (result) {
@@ -328,7 +368,7 @@ function ListeningPageContent() {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-cyan-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
           <p className="text-gray-400">Loading social listening...</p>
         </div>
       </div>
@@ -341,7 +381,9 @@ function ListeningPageContent() {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 max-w-md text-center">
           <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">Failed to Load</h3>
+          <h3 className="text-lg font-semibold text-white mb-2">
+            Failed to Load
+          </h3>
           <p className="text-gray-400 mb-4">{error}</p>
           <Button onClick={clearError} variant="outline">
             Try Again
@@ -362,7 +404,8 @@ function ListeningPageContent() {
             {/* Last refreshed */}
             {lastRefreshedAt && (
               <span className="text-sm text-gray-400">
-                Updated {formatDistanceToNow(lastRefreshedAt, { addSuffix: true })}
+                Updated{' '}
+                {formatDistanceToNow(lastRefreshedAt, { addSuffix: true })}
               </span>
             )}
 
@@ -373,14 +416,16 @@ function ListeningPageContent() {
               disabled={isLoading}
               className="bg-gray-900/50 border-white/10"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`}
+              />
               Refresh
             </Button>
 
             {/* Add keyword CTA */}
             <Button
               onClick={() => setIsAddModalOpen(true)}
-              className="bg-cyan-500 hover:bg-cyan-600 text-white"
+              className="bg-orange-500 hover:bg-orange-600 text-white"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Keyword
@@ -401,11 +446,17 @@ function ListeningPageContent() {
         </div>
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-2">
-            <span className="text-green-400">{stats.sentimentBreakdown.positive}</span>
+            <span className="text-green-400">
+              {stats.sentimentBreakdown.positive}
+            </span>
             <span className="text-gray-500">/</span>
-            <span className="text-gray-400">{stats.sentimentBreakdown.neutral}</span>
+            <span className="text-gray-400">
+              {stats.sentimentBreakdown.neutral}
+            </span>
             <span className="text-gray-500">/</span>
-            <span className="text-red-400">{stats.sentimentBreakdown.negative}</span>
+            <span className="text-red-400">
+              {stats.sentimentBreakdown.negative}
+            </span>
           </div>
           <p className="text-sm text-gray-400">Sentiment (P/N/Neg)</p>
         </div>
@@ -431,14 +482,16 @@ function ListeningPageContent() {
           {/* Keywords sidebar */}
           <div className="w-64 flex-shrink-0">
             <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4 h-full">
-              <h3 className="text-sm font-medium text-gray-400 mb-3">Tracked Keywords</h3>
+              <h3 className="text-sm font-medium text-gray-400 mb-3">
+                Tracked Keywords
+              </h3>
               <div className="space-y-2">
                 {/* All keywords option */}
                 <button
                   onClick={() => setSelectedKeywordId(null)}
                   className={`w-full flex items-center justify-between p-2 rounded-lg transition-colors ${
                     !selectedKeywordId
-                      ? 'bg-cyan-500/20 text-cyan-400'
+                      ? 'bg-orange-500/20 text-orange-400'
                       : 'text-gray-300 hover:bg-white/5'
                   }`}
                 >
@@ -454,7 +507,7 @@ function ListeningPageContent() {
                     key={keyword.id}
                     className={`flex items-center justify-between p-2 rounded-lg transition-colors group ${
                       selectedKeywordId === keyword.id
-                        ? 'bg-cyan-500/20 text-cyan-400'
+                        ? 'bg-orange-500/20 text-orange-400'
                         : 'text-gray-300 hover:bg-white/5'
                     }`}
                   >
@@ -462,15 +515,23 @@ function ListeningPageContent() {
                       onClick={() => setSelectedKeywordId(keyword.id)}
                       className="flex-1 flex items-center gap-2 text-left"
                     >
-                      {keyword.type === 'hashtag' && <Hash className="h-3 w-3" />}
-                      {keyword.type === 'mention' && <AtSign className="h-3 w-3" />}
-                      {keyword.type === 'keyword' && <Search className="h-3 w-3" />}
+                      {keyword.type === 'hashtag' && (
+                        <Hash className="h-3 w-3" />
+                      )}
+                      {keyword.type === 'mention' && (
+                        <AtSign className="h-3 w-3" />
+                      )}
+                      {keyword.type === 'keyword' && (
+                        <Search className="h-3 w-3" />
+                      )}
                       {keyword.type === 'brand' && <Bell className="h-3 w-3" />}
-                      <span className="text-sm truncate">{keyword.keyword}</span>
+                      <span className="text-sm truncate">
+                        {keyword.keyword}
+                      </span>
                     </button>
                     <div className="flex items-center gap-1">
                       {keyword.unreadCount > 0 && (
-                        <Badge className="bg-cyan-500 text-white text-xs h-5 min-w-[20px] flex items-center justify-center">
+                        <Badge className="bg-orange-500 text-white text-xs h-5 min-w-[20px] flex items-center justify-center">
                           {keyword.unreadCount}
                         </Badge>
                       )}
@@ -491,19 +552,27 @@ function ListeningPageContent() {
           <div className="flex-1 flex flex-col min-h-0">
             {/* Filters */}
             <div className="flex items-center gap-3 mb-4">
-              <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
+              <Select
+                value={selectedPlatform}
+                onValueChange={setSelectedPlatform}
+              >
                 <SelectTrigger className="w-40 bg-gray-900/50 border-white/10">
                   <SelectValue placeholder="Platform" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Platforms</SelectItem>
                   {PLATFORMS.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
-              <Select value={selectedSentiment} onValueChange={setSelectedSentiment}>
+              <Select
+                value={selectedSentiment}
+                onValueChange={setSelectedSentiment}
+              >
                 <SelectTrigger className="w-40 bg-gray-900/50 border-white/10">
                   <SelectValue placeholder="Sentiment" />
                 </SelectTrigger>
@@ -522,7 +591,9 @@ function ListeningPageContent() {
                 <div className="text-center py-12 text-gray-400">
                   <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No mentions found</p>
-                  <p className="text-sm mt-1">Try adjusting your filters or check back later</p>
+                  <p className="text-sm mt-1">
+                    Try adjusting your filters or check back later
+                  </p>
                 </div>
               ) : (
                 mentions.map(mention => (
@@ -571,7 +642,9 @@ function ListeningPageContent() {
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
         <DialogContent className="bg-gray-900 border-white/10 max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-white">Add Tracked Keyword</DialogTitle>
+            <DialogTitle className="text-white">
+              Add Tracked Keyword
+            </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 mt-4">
@@ -596,10 +669,12 @@ function ListeningPageContent() {
                 {KEYWORD_TYPES.map(type => (
                   <button
                     key={type.id}
-                    onClick={() => setNewKeywordType(type.id as typeof newKeywordType)}
+                    onClick={() =>
+                      setNewKeywordType(type.id as typeof newKeywordType)
+                    }
                     className={`flex items-center gap-2 p-3 rounded-lg border transition-colors ${
                       newKeywordType === type.id
-                        ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+                        ? 'bg-orange-500/20 border-orange-500/50 text-orange-400'
                         : 'bg-gray-800/50 border-white/10 text-gray-300 hover:bg-gray-800/70'
                     }`}
                   >
@@ -624,7 +699,9 @@ function ListeningPageContent() {
                       onCheckedChange={() => handlePlatformToggle(platform.id)}
                     />
                     <platform.icon className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-300">{platform.label}</span>
+                    <span className="text-sm text-gray-300">
+                      {platform.label}
+                    </span>
                   </label>
                 ))}
               </div>
@@ -641,8 +718,12 @@ function ListeningPageContent() {
               </Button>
               <Button
                 onClick={handleAddKeyword}
-                disabled={isSubmitting || !newKeyword.trim() || newKeywordPlatforms.length === 0}
-                className="bg-cyan-500 hover:bg-cyan-600 text-white"
+                disabled={
+                  isSubmitting ||
+                  !newKeyword.trim() ||
+                  newKeywordPlatforms.length === 0
+                }
+                className="bg-orange-500 hover:bg-orange-600 text-white"
               >
                 {isSubmitting ? (
                   <>

@@ -2,7 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SEOFeatureGate } from '@/components/seo';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -46,14 +52,14 @@ function SEOToolCard({
   const { toast } = useToast();
 
   const cardContent = (
-    <div className="group border-[0.5px] border-white/[0.06] hover:border-cyan-500/30 bg-white/[0.01] rounded-sm transition-all duration-300 h-full">
+    <div className="group border-[0.5px] border-white/[0.06] hover:border-orange-500/30 bg-white/[0.01] rounded-sm transition-all duration-300 h-full">
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
-          <div className="p-3 rounded-sm bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-colors">
-            <Icon className="w-6 h-6 text-cyan-400" />
+          <div className="p-3 rounded-sm bg-orange-500/10 group-hover:bg-orange-500/20 transition-colors">
+            <Icon className="w-6 h-6 text-orange-400" />
           </div>
           {status === 'beta' && (
-            <span className="px-2 py-1 text-xs bg-cyan-500/10 text-cyan-400 rounded-sm border-[0.5px] border-cyan-500/20">
+            <span className="px-2 py-1 text-xs bg-orange-500/10 text-orange-400 rounded-sm border-[0.5px] border-orange-500/20">
               Beta
             </span>
           )}
@@ -68,14 +74,12 @@ function SEOToolCard({
             </span>
           )}
         </div>
-        <h3 className="text-base font-light text-white mb-2 group-hover:text-cyan-400 transition-colors">
+        <h3 className="text-base font-light text-white mb-2 group-hover:text-orange-400 transition-colors">
           {title}
         </h3>
-        <p className="text-white/40 text-sm leading-relaxed">
-          {description}
-        </p>
+        <p className="text-white/40 text-sm leading-relaxed">{description}</p>
         {!comingSoon && (
-          <div className="mt-4 flex items-center text-cyan-400 text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="mt-4 flex items-center text-orange-400 text-sm opacity-0 group-hover:opacity-100 transition-opacity">
             Open Tool
             <ArrowRight className="w-4 h-4 ml-1" />
           </div>
@@ -89,8 +93,19 @@ function SEOToolCard({
       <div
         role="button"
         tabIndex={0}
-        onClick={() => toast({ title: 'Coming Soon', description: `${title} is currently in development` })}
-        onKeyDown={(e) => e.key === 'Enter' && toast({ title: 'Coming Soon', description: `${title} is currently in development` })}
+        onClick={() =>
+          toast({
+            title: 'Coming Soon',
+            description: `${title} is currently in development`,
+          })
+        }
+        onKeyDown={e =>
+          e.key === 'Enter' &&
+          toast({
+            title: 'Coming Soon',
+            description: `${title} is currently in development`,
+          })
+        }
         className="cursor-pointer"
       >
         {cardContent}
@@ -98,11 +113,7 @@ function SEOToolCard({
     );
   }
 
-  return (
-    <Link href={href}>
-      {cardContent}
-    </Link>
-  );
+  return <Link href={href}>{cardContent}</Link>;
 }
 
 // Quick Stats Card Component
@@ -123,17 +134,29 @@ function QuickStatCard({
     <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="p-2 rounded-sm bg-cyan-500/10">
-            <Icon className="w-5 h-5 text-cyan-400" />
+          <div className="p-2 rounded-sm bg-orange-500/10">
+            <Icon className="w-5 h-5 text-orange-400" />
           </div>
-          <span className={`text-sm font-medium flex items-center gap-1 ${
-            trend === 'up' ? 'text-emerald-400' : trend === 'down' ? 'text-red-400' : 'text-white/40'
-          }`}>
-            {trend === 'up' ? <TrendingUp className="w-4 h-4" /> : trend === 'down' ? <TrendingUp className="w-4 h-4 rotate-180" /> : null}
+          <span
+            className={`text-sm font-medium flex items-center gap-1 ${
+              trend === 'up'
+                ? 'text-emerald-400'
+                : trend === 'down'
+                  ? 'text-red-400'
+                  : 'text-white/40'
+            }`}
+          >
+            {trend === 'up' ? (
+              <TrendingUp className="w-4 h-4" />
+            ) : trend === 'down' ? (
+              <TrendingUp className="w-4 h-4 rotate-180" />
+            ) : null}
             {change}
           </span>
         </div>
-        <p className="text-2xl font-mono tabular-nums font-light text-white mb-1">{value}</p>
+        <p className="text-2xl font-mono tabular-nums font-light text-white mb-1">
+          {value}
+        </p>
         <p className="text-white/40 text-sm">{title}</p>
       </div>
     </div>
@@ -148,9 +171,11 @@ export default function SEODashboardPage() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">Optimisation</span>
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+            Optimisation
+          </span>
           <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white flex items-center gap-3">
-            <Search className="w-7 h-7 text-cyan-400" />
+            <Search className="w-7 h-7 text-orange-400" />
             SEO Tools
           </h1>
           <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
@@ -158,12 +183,15 @@ export default function SEODashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
+          <Button
+            variant="outline"
+            className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+          >
             <BarChart3 className="w-4 h-4 mr-2" />
             View Reports
           </Button>
           <Link href="/dashboard/seo/audit">
-            <Button className="bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30">
+            <Button className="bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30">
               <Zap className="w-4 h-4 mr-2" />
               New Audit
             </Button>
@@ -212,7 +240,7 @@ export default function SEODashboardPage() {
         {/* SEO Tools Grid */}
         <div>
           <h2 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-cyan-400" />
+            <Sparkles className="w-5 h-5 text-orange-400" />
             Available Tools
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -310,36 +338,59 @@ export default function SEODashboardPage() {
         {/* Recent Activity */}
         <div>
           <h2 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4 flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-cyan-400" />
+            <BarChart3 className="w-5 h-5 text-orange-400" />
             Recent Audits
           </h2>
           <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
             <div className="p-6">
               <div className="space-y-4">
                 {[
-                  { url: 'synthex.social', score: 92, issues: 3, date: 'Today' },
-                  { url: 'synthex.social/pricing', score: 87, issues: 5, date: 'Yesterday' },
-                  { url: 'synthex.social/features', score: 78, issues: 12, date: '2 days ago' },
+                  {
+                    url: 'synthex.social',
+                    score: 92,
+                    issues: 3,
+                    date: 'Today',
+                  },
+                  {
+                    url: 'synthex.social/pricing',
+                    score: 87,
+                    issues: 5,
+                    date: 'Yesterday',
+                  },
+                  {
+                    url: 'synthex.social/features',
+                    score: 78,
+                    issues: 12,
+                    date: '2 days ago',
+                  },
                 ].map((audit, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between p-4 bg-white/[0.02] rounded-sm hover:bg-white/[0.04] transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-sm flex items-center justify-center font-mono tabular-nums font-light text-lg ${
-                        audit.score >= 90 ? 'bg-emerald-500/10 text-emerald-400' :
-                        audit.score >= 70 ? 'bg-amber-500/10 text-amber-400' :
-                        'bg-red-500/10 text-red-400'
-                      }`}>
+                      <div
+                        className={`w-12 h-12 rounded-sm flex items-center justify-center font-mono tabular-nums font-light text-lg ${
+                          audit.score >= 90
+                            ? 'bg-emerald-500/10 text-emerald-400'
+                            : audit.score >= 70
+                              ? 'bg-amber-500/10 text-amber-400'
+                              : 'bg-red-500/10 text-red-400'
+                        }`}
+                      >
                         {audit.score}
                       </div>
                       <div>
                         <p className="font-light text-white">{audit.url}</p>
-                        <p className="text-sm text-white/40">{audit.issues} issues found</p>
+                        <p className="text-sm text-white/40">
+                          {audit.issues} issues found
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-sm text-white/25">{audit.date}</span>
+                      <span className="text-sm text-white/25">
+                        {audit.date}
+                      </span>
                       <ArrowRight className="w-4 h-4 text-white/25" />
                     </div>
                   </div>
@@ -350,10 +401,14 @@ export default function SEODashboardPage() {
               {false && (
                 <div className="text-center py-12">
                   <Search className="w-12 h-12 text-white/25 mx-auto mb-4" />
-                  <h3 className="text-base font-light text-white mb-2">No audits yet</h3>
-                  <p className="text-white/40 mb-6">Run your first SEO audit to see results here</p>
+                  <h3 className="text-base font-light text-white mb-2">
+                    No audits yet
+                  </h3>
+                  <p className="text-white/40 mb-6">
+                    Run your first SEO audit to see results here
+                  </p>
                   <Link href="/dashboard/seo/audit">
-                    <Button className="bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30">
+                    <Button className="bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30">
                       Start First Audit
                     </Button>
                   </Link>

@@ -20,15 +20,41 @@ interface EEATScoreCardProps {
 }
 
 const dimensions = [
-  { key: 'experience', label: 'Experience', icon: Eye, weight: '20%', color: 'text-cyan-400' },
-  { key: 'expertise', label: 'Expertise', icon: Award, weight: '25%', color: 'text-purple-400' },
-  { key: 'authoritativeness', label: 'Authority', icon: Star, weight: '25%', color: 'text-amber-400' },
-  { key: 'trustworthiness', label: 'Trust', icon: Shield, weight: '30%', color: 'text-emerald-400' },
+  {
+    key: 'experience',
+    label: 'Experience',
+    icon: Eye,
+    weight: '20%',
+    color: 'text-orange-400',
+  },
+  {
+    key: 'expertise',
+    label: 'Expertise',
+    icon: Award,
+    weight: '25%',
+    color: 'text-purple-400',
+  },
+  {
+    key: 'authoritativeness',
+    label: 'Authority',
+    icon: Star,
+    weight: '25%',
+    color: 'text-amber-400',
+  },
+  {
+    key: 'trustworthiness',
+    label: 'Trust',
+    icon: Shield,
+    weight: '30%',
+    color: 'text-emerald-400',
+  },
 ] as const;
 
 const tierConfig: Record<string, { color: string }> = {
-  exceptional: { color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
-  strong: { color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' },
+  exceptional: {
+    color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  },
+  strong: { color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
   moderate: { color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
   weak: { color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
   very_low: { color: 'bg-red-500/20 text-red-400 border-red-500/30' },
@@ -43,7 +69,9 @@ export function EEATScoreCard({ score, tier, loading }: EEATScoreCardProps) {
             <div className="h-8 bg-white/10 rounded w-1/3" />
             <div className="h-24 bg-white/10 rounded" />
             <div className="space-y-2">
-              {[1,2,3,4].map(i => <div key={i} className="h-4 bg-white/10 rounded" />)}
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-4 bg-white/10 rounded" />
+              ))}
             </div>
           </div>
         </CardContent>
@@ -63,7 +91,9 @@ export function EEATScoreCard({ score, tier, loading }: EEATScoreCardProps) {
             <Shield className="h-5 w-5 text-emerald-400" />
             E-E-A-T Score
           </CardTitle>
-          {tier && <Badge className={tierStyle.color}>{tier.replace('_', ' ')}</Badge>}
+          {tier && (
+            <Badge className={tierStyle.color}>{tier.replace('_', ' ')}</Badge>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -81,7 +111,9 @@ export function EEATScoreCard({ score, tier, loading }: EEATScoreCardProps) {
                   <span>{label}</span>
                   <span className="text-gray-500 text-xs">({weight})</span>
                 </div>
-                <span className="text-white font-medium">{score[key as keyof EEATScore]}</span>
+                <span className="text-white font-medium">
+                  {score[key as keyof EEATScore]}
+                </span>
               </div>
               <Progress value={score[key as keyof EEATScore]} className="h-2" />
             </div>

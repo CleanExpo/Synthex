@@ -30,13 +30,22 @@ import { IntelligencePanel } from './IntelligencePanel';
 import useSWR from 'swr';
 import { cn } from '@/lib/utils';
 
-const ALLOWED_PLANS = ['pro', 'growth', 'scale', 'professional', 'business', 'custom'];
+const ALLOWED_PLANS = [
+  'pro',
+  'growth',
+  'scale',
+  'professional',
+  'business',
+  'custom',
+];
 
 // ---------------------------------------------------------------------------
 // Fetcher for single execution detail (with steps)
 // ---------------------------------------------------------------------------
 
-async function fetchExecution(url: string): Promise<{ execution: WorkflowExecutionWithSteps }> {
+async function fetchExecution(
+  url: string
+): Promise<{ execution: WorkflowExecutionWithSteps }> {
   const res = await fetch(url, { credentials: 'include' });
   if (!res.ok) throw new Error(`Failed to fetch execution (${res.status})`);
   return res.json();
@@ -49,7 +58,7 @@ async function fetchExecution(url: string): Promise<{ execution: WorkflowExecuti
 function ExecutionSkeleton() {
   return (
     <div className="space-y-2">
-      {[1, 2, 3].map((i) => (
+      {[1, 2, 3].map(i => (
         <div
           key={i}
           className="h-24 rounded-xl border border-white/10 bg-white/5 animate-pulse"
@@ -102,14 +111,16 @@ export function WorkflowsPageClient() {
 
   // Filter by status if query param is present
   const filteredExecutions = filterStatus
-    ? executions.filter((e) => e.status === filterStatus)
+    ? executions.filter(e => e.status === filterStatus)
     : executions;
 
   // Selected execution id
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Performance tab: selected template id
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
+    null
+  );
 
   // Load templates for intelligence panel
   const { data: templatesData } = useSWR<{ templates: Template[] }>(
@@ -204,10 +215,16 @@ export function WorkflowsPageClient() {
       {/* Tabs: Executions | Performance */}
       <Tabs defaultValue="executions">
         <TabsList className="bg-white/5 border border-white/10">
-          <TabsTrigger value="executions" className="text-xs data-[state=active]:bg-white/10">
+          <TabsTrigger
+            value="executions"
+            className="text-xs data-[state=active]:bg-white/10"
+          >
             Executions
           </TabsTrigger>
-          <TabsTrigger value="performance" className="text-xs data-[state=active]:bg-white/10 flex items-center gap-1">
+          <TabsTrigger
+            value="performance"
+            className="text-xs data-[state=active]:bg-white/10 flex items-center gap-1"
+          >
             <Brain className="h-3 w-3" />
             Performance
           </TabsTrigger>
@@ -231,14 +248,17 @@ export function WorkflowsPageClient() {
             <div
               className={cn(
                 'grid gap-4',
-                selectedExecution ? 'grid-cols-1 lg:grid-cols-[1fr_2fr]' : 'grid-cols-1'
+                selectedExecution
+                  ? 'grid-cols-1 lg:grid-cols-[1fr_2fr]'
+                  : 'grid-cols-1'
               )}
             >
               {/* Left: execution list */}
               <div className="space-y-2">
                 {filterStatus && (
                   <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5">
-                    Showing: <strong>{filterStatus.replace('_', ' ')}</strong> executions
+                    Showing: <strong>{filterStatus.replace('_', ' ')}</strong>{' '}
+                    executions
                   </p>
                 )}
                 <ExecutionList
@@ -268,20 +288,26 @@ export function WorkflowsPageClient() {
               <div className="flex flex-col items-center py-12 space-y-3">
                 <Brain className="h-8 w-8 text-white/20" />
                 <p className="text-sm text-white/50">No templates available</p>
-                <p className="text-xs text-white/30">Create workflow templates to track performance.</p>
+                <p className="text-xs text-white/30">
+                  Create workflow templates to track performance.
+                </p>
               </div>
             ) : (
               <>
                 {/* Template selector */}
                 <div className="flex flex-wrap gap-2">
-                  {templates.map((t) => (
+                  {templates.map(t => (
                     <button
                       key={t.id}
-                      onClick={() => setSelectedTemplateId(t.id === selectedTemplateId ? null : t.id)}
+                      onClick={() =>
+                        setSelectedTemplateId(
+                          t.id === selectedTemplateId ? null : t.id
+                        )
+                      }
                       className={cn(
                         'text-xs px-3 py-1.5 rounded-full border transition-colours',
                         t.id === selectedTemplateId
-                          ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                          ? 'bg-orange-500/20 text-orange-300 border-orange-500/30'
                           : 'bg-white/5 text-white/50 border-white/10 hover:border-white/20'
                       )}
                     >
@@ -293,7 +319,9 @@ export function WorkflowsPageClient() {
                 {selectedTemplateId ? (
                   <IntelligencePanel templateId={selectedTemplateId} />
                 ) : (
-                  <p className="text-xs text-white/30 py-4">Select a template to view performance analysis.</p>
+                  <p className="text-xs text-white/30 py-4">
+                    Select a template to view performance analysis.
+                  </p>
                 )}
               </>
             )}

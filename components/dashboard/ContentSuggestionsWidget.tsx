@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 /**
  * ContentSuggestionsWidget — Sprint 3
@@ -6,77 +6,93 @@
  * Renders nothing if no recommendations are available.
  */
 
-import useSWR from 'swr'
-import { Sparkles, Loader2, Copy } from '@/components/icons'
-import { toast } from 'sonner'
+import useSWR from 'swr';
+import { Sparkles, Loader2, Copy } from '@/components/icons';
+import { toast } from 'sonner';
 
 interface Recommendation {
-  id: string
-  title?: string
-  description?: string
-  type?: string
-  platform?: string
-  content?: string
-  reasoning?: string
-  priority?: number
+  id: string;
+  title?: string;
+  description?: string;
+  type?: string;
+  platform?: string;
+  content?: string;
+  reasoning?: string;
+  priority?: number;
 }
 
 interface RecommendationsResponse {
-  recommendations: Recommendation[]
-  total: number
+  recommendations: Recommendation[];
+  total: number;
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url, { credentials: 'include' })
-  if (!res.ok) throw new Error('Failed to fetch')
-  return res.json()
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch');
+  return res.json();
 }
 
-export function ContentSuggestionsWidget({ className }: { className?: string }) {
+export function ContentSuggestionsWidget({
+  className,
+}: {
+  className?: string;
+}) {
   const { data, isLoading } = useSWR<RecommendationsResponse>(
     '/api/recommendations?limit=3',
     fetchJson,
     { revalidateOnFocus: false, dedupingInterval: 60000 }
-  )
+  );
 
-  const recommendations = data?.recommendations ?? []
+  const recommendations = data?.recommendations ?? [];
 
   if (!isLoading && recommendations.length === 0) {
     return (
-      <div className={`border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-5 space-y-4 ${className ?? ''}`}>
+      <div
+        className={`border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-5 space-y-4 ${className ?? ''}`}
+      >
         <div className="flex items-center gap-2">
-          <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
-          <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">Content Suggestions</span>
+          <Sparkles className="h-3.5 w-3.5 text-orange-400" />
+          <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
+            Content Suggestions
+          </span>
         </div>
         <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-3 space-y-2">
           <p className="text-xs text-white/70 leading-relaxed">
-            AI-powered content suggestions will appear here once you&apos;ve connected a social platform.
+            AI-powered content suggestions will appear here once you&apos;ve
+            connected a social platform.
           </p>
           <a
             href="/dashboard/settings/connections"
-            className="inline-block mt-1 text-[10px] uppercase tracking-[0.15em] px-2.5 py-1 rounded-sm border-[0.5px] border-cyan-500/30 bg-cyan-500/[0.08] text-cyan-400 hover:bg-cyan-500/[0.12] transition-colors"
+            className="inline-block mt-1 text-[10px] uppercase tracking-[0.15em] px-2.5 py-1 rounded-sm border-[0.5px] border-orange-500/30 bg-orange-500/[0.08] text-orange-400 hover:bg-orange-500/[0.12] transition-colors"
           >
             Connect Platform
           </a>
         </div>
       </div>
-    )
+    );
   }
 
   function handleCopy(text: string) {
-    navigator.clipboard.writeText(text).then(() => {
-      toast.success('Copied to clipboard')
-    }).catch(() => {
-      toast.error('Failed to copy')
-    })
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        toast.success('Copied to clipboard');
+      })
+      .catch(() => {
+        toast.error('Failed to copy');
+      });
   }
 
   return (
-    <div className={`border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-5 space-y-4 ${className ?? ''}`}>
+    <div
+      className={`border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-5 space-y-4 ${className ?? ''}`}
+    >
       {/* Header */}
       <div className="flex items-center gap-2">
-        <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
-        <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">Content Suggestions</span>
+        <Sparkles className="h-3.5 w-3.5 text-orange-400" />
+        <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
+          Content Suggestions
+        </span>
       </div>
 
       {isLoading ? (
@@ -85,7 +101,7 @@ export function ContentSuggestionsWidget({ className }: { className?: string }) 
         </div>
       ) : (
         <div className="space-y-2">
-          {recommendations.map((rec) => (
+          {recommendations.map(rec => (
             <div
               key={rec.id}
               className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-3 space-y-1.5 group hover:bg-white/[0.03] transition-colors"
@@ -93,20 +109,27 @@ export function ContentSuggestionsWidget({ className }: { className?: string }) 
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   {rec.platform && (
-                    <span className="inline-block text-[9px] uppercase tracking-[0.15em] px-1.5 py-0.5 rounded-sm bg-cyan-500/[0.08] text-cyan-400 border-[0.5px] border-cyan-500/20 mb-1.5">
+                    <span className="inline-block text-[9px] uppercase tracking-[0.15em] px-1.5 py-0.5 rounded-sm bg-orange-500/[0.08] text-orange-400 border-[0.5px] border-orange-500/20 mb-1.5">
                       {rec.platform}
                     </span>
                   )}
                   <p className="text-xs text-white/70 leading-relaxed">
-                    {rec.title ?? rec.description ?? rec.content ?? 'Content idea'}
+                    {rec.title ??
+                      rec.description ??
+                      rec.content ??
+                      'Content idea'}
                   </p>
                   {rec.reasoning && (
-                    <p className="text-[10px] text-white/30 mt-1 line-clamp-1">{rec.reasoning}</p>
+                    <p className="text-[10px] text-white/30 mt-1 line-clamp-1">
+                      {rec.reasoning}
+                    </p>
                   )}
                 </div>
                 {(rec.content ?? rec.description) && (
                   <button
-                    onClick={() => handleCopy(rec.content ?? rec.description ?? '')}
+                    onClick={() =>
+                      handleCopy(rec.content ?? rec.description ?? '')
+                    }
                     className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-sm hover:bg-white/[0.06] text-white/30 hover:text-white/60"
                     aria-label="Copy suggestion to clipboard"
                   >
@@ -119,5 +142,5 @@ export function ContentSuggestionsWidget({ className }: { className?: string }) 
         </div>
       )}
     </div>
-  )
+  );
 }

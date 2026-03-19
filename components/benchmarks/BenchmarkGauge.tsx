@@ -19,9 +19,17 @@ interface BenchmarkGaugeProps {
 
 const RATING_COLORS = {
   below: { stroke: '#ef4444', text: 'text-red-400', bg: 'bg-red-500/10' },
-  average: { stroke: '#eab308', text: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+  average: {
+    stroke: '#eab308',
+    text: 'text-yellow-400',
+    bg: 'bg-yellow-500/10',
+  },
   good: { stroke: '#22c55e', text: 'text-green-400', bg: 'bg-green-500/10' },
-  excellent: { stroke: '#06b6d4', text: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+  excellent: {
+    stroke: '#ffb87b',
+    text: 'text-orange-400',
+    bg: 'bg-orange-500/10',
+  },
 };
 
 const RATING_LABELS = {
@@ -32,9 +40,27 @@ const RATING_LABELS = {
 };
 
 const SIZE_CONFIG = {
-  sm: { width: 100, height: 60, strokeWidth: 8, fontSize: 'text-lg', labelSize: 'text-xs' },
-  md: { width: 140, height: 80, strokeWidth: 10, fontSize: 'text-2xl', labelSize: 'text-sm' },
-  lg: { width: 200, height: 110, strokeWidth: 12, fontSize: 'text-4xl', labelSize: 'text-base' },
+  sm: {
+    width: 100,
+    height: 60,
+    strokeWidth: 8,
+    fontSize: 'text-lg',
+    labelSize: 'text-xs',
+  },
+  md: {
+    width: 140,
+    height: 80,
+    strokeWidth: 10,
+    fontSize: 'text-2xl',
+    labelSize: 'text-sm',
+  },
+  lg: {
+    width: 200,
+    height: 110,
+    strokeWidth: 12,
+    fontSize: 'text-4xl',
+    labelSize: 'text-base',
+  },
 };
 
 export function BenchmarkGauge({
@@ -59,7 +85,10 @@ export function BenchmarkGauge({
 
   return (
     <div className={cn('flex flex-col items-center', className)}>
-      <div className="relative" style={{ width: config.width, height: config.height }}>
+      <div
+        className="relative"
+        style={{ width: config.width, height: config.height }}
+      >
         <svg
           width={config.width}
           height={config.height}
@@ -104,16 +133,18 @@ export function BenchmarkGauge({
 
       {/* Label */}
       {label && (
-        <p className={cn('text-gray-400 mt-2', config.labelSize)}>
-          {label}
-        </p>
+        <p className={cn('text-gray-400 mt-2', config.labelSize)}>{label}</p>
       )}
     </div>
   );
 }
 
 // Loading skeleton
-export function BenchmarkGaugeSkeleton({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
+export function BenchmarkGaugeSkeleton({
+  size = 'md',
+}: {
+  size?: 'sm' | 'md' | 'lg';
+}) {
   const config = SIZE_CONFIG[size];
 
   return (

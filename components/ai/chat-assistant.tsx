@@ -11,7 +11,12 @@ import { useEffect, useRef } from 'react';
 import { useAIChatConversation } from '@/hooks/use-ai-chat';
 import { ChatMessage } from './chat-message';
 import { ChatInput } from './chat-input';
-import { Loader2, AlertTriangle, MessageSquare, RefreshCw } from '@/components/icons';
+import {
+  Loader2,
+  AlertTriangle,
+  MessageSquare,
+  RefreshCw,
+} from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -20,7 +25,10 @@ interface ChatAssistantProps {
   onTitleUpdated?: () => void;
 }
 
-export function ChatAssistant({ conversationId, onTitleUpdated }: ChatAssistantProps) {
+export function ChatAssistant({
+  conversationId,
+  onTitleUpdated,
+}: ChatAssistantProps) {
   const {
     conversation,
     messages,
@@ -45,8 +53,14 @@ export function ChatAssistant({ conversationId, onTitleUpdated }: ChatAssistantP
   if (isLoading && messages.length === 0) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-gray-400" role="status">
-          <Loader2 className="h-8 w-8 animate-spin text-cyan-400" aria-hidden="true" />
+        <div
+          className="flex flex-col items-center gap-3 text-gray-400"
+          role="status"
+        >
+          <Loader2
+            className="h-8 w-8 animate-spin text-orange-400"
+            aria-hidden="true"
+          />
           <span>Loading conversation...</span>
         </div>
       </div>
@@ -62,7 +76,9 @@ export function ChatAssistant({ conversationId, onTitleUpdated }: ChatAssistantP
             <AlertTriangle className="h-6 w-6 text-red-400" />
           </div>
           <div>
-            <h3 className="text-lg font-medium text-white mb-1">Unable to load chat</h3>
+            <h3 className="text-lg font-medium text-white mb-1">
+              Unable to load chat
+            </h3>
             <p className="text-sm text-gray-400">{error}</p>
           </div>
           <Button
@@ -85,23 +101,21 @@ export function ChatAssistant({ conversationId, onTitleUpdated }: ChatAssistantP
   return (
     <div className="h-full flex flex-col">
       {/* Messages area */}
-      <div
-        ref={containerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4"
-      >
+      <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Empty state */}
         {messages.length === 0 && !isStreaming && (
           <div className="h-full flex items-center justify-center">
             <div className="flex flex-col items-center gap-4 text-center max-w-md">
-              <div className="p-4 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-                <MessageSquare className="h-8 w-8 text-cyan-400" />
+              <div className="p-4 rounded-full bg-orange-500/10 border border-orange-500/20">
+                <MessageSquare className="h-8 w-8 text-orange-400" />
               </div>
               <div>
                 <h3 className="text-lg font-medium text-white mb-2">
                   Start a conversation
                 </h3>
                 <p className="text-sm text-gray-400">
-                  Ask about content strategy, get ideas for posts, or optimize your social media presence.
+                  Ask about content strategy, get ideas for posts, or optimize
+                  your social media presence.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 justify-center mt-2">
@@ -109,7 +123,7 @@ export function ChatAssistant({ conversationId, onTitleUpdated }: ChatAssistantP
                   'Help me brainstorm content ideas',
                   'Optimize my post for engagement',
                   'Content strategy for Instagram',
-                ].map((suggestion) => (
+                ].map(suggestion => (
                   <button
                     key={suggestion}
                     onClick={() => handleSend(suggestion)}
@@ -131,7 +145,7 @@ export function ChatAssistant({ conversationId, onTitleUpdated }: ChatAssistantP
         )}
 
         {/* Message list */}
-        {messages.map((message) => (
+        {messages.map(message => (
           <ChatMessage key={message.id} message={message} />
         ))}
 
@@ -152,7 +166,10 @@ export function ChatAssistant({ conversationId, onTitleUpdated }: ChatAssistantP
         {isStreaming && !streamingContent && (
           <div className="flex justify-start">
             <div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3">
-              <div className="flex items-center gap-2 text-gray-400" role="status">
+              <div
+                className="flex items-center gap-2 text-gray-400"
+                role="status"
+              >
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 <span className="text-sm">Thinking...</span>
               </div>

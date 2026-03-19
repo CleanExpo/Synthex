@@ -50,23 +50,38 @@ import {
 // Helpers
 // ============================================================================
 
-function getFrequencyBadge(frequency: string): { label: string; className: string } {
+function getFrequencyBadge(frequency: string): {
+  label: string;
+  className: string;
+} {
   switch (frequency) {
     case 'daily':
-      return { label: 'Daily', className: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' };
+      return {
+        label: 'Daily',
+        className: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+      };
     case 'weekly':
-      return { label: 'Weekly', className: 'bg-purple-500/20 text-purple-400 border-purple-500/30' };
+      return {
+        label: 'Weekly',
+        className: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+      };
     case 'monthly':
-      return { label: 'Monthly', className: 'bg-amber-500/20 text-amber-400 border-amber-500/30' };
+      return {
+        label: 'Monthly',
+        className: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+      };
     default:
-      return { label: frequency, className: 'bg-gray-500/20 text-gray-400 border-gray-500/30' };
+      return {
+        label: frequency,
+        className: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+      };
   }
 }
 
 function getScoreColor(score: number | null): string {
   if (score === null) return 'text-gray-400';
   if (score >= 80) return 'text-emerald-400';
-  if (score >= 60) return 'text-cyan-400';
+  if (score >= 60) return 'text-orange-400';
   if (score >= 40) return 'text-amber-400';
   return 'text-red-400';
 }
@@ -74,7 +89,7 @@ function getScoreColor(score: number | null): string {
 function getScoreBg(score: number | null): string {
   if (score === null) return 'bg-gray-500/10';
   if (score >= 80) return 'bg-emerald-500/10';
-  if (score >= 60) return 'bg-cyan-500/10';
+  if (score >= 60) return 'bg-orange-500/10';
   if (score >= 40) return 'bg-amber-500/10';
   return 'bg-red-500/10';
 }
@@ -136,7 +151,7 @@ function ScheduledSitesTab({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
       </div>
     );
   }
@@ -156,46 +171,68 @@ function ScheduledSitesTab({
     <div className="space-y-6">
       {/* Add Site Form */}
       {showForm ? (
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/20">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/20">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">Add New Site</h3>
-              <Button variant="ghost" size="sm" onClick={() => setShowForm(false)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowForm(false)}
+              >
                 <X className="w-4 h-4" />
               </Button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Site URL</label>
+                  <label className="block text-sm text-gray-400 mb-1">
+                    Site URL
+                  </label>
                   <Input
                     type="url"
                     placeholder="https://example.com"
                     value={formData.url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
-                    className="bg-white/5 border-cyan-500/20"
+                    onChange={e =>
+                      setFormData(prev => ({ ...prev, url: e.target.value }))
+                    }
+                    className="bg-white/5 border-orange-500/20"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Site Name</label>
+                  <label className="block text-sm text-gray-400 mb-1">
+                    Site Name
+                  </label>
                   <Input
                     type="text"
                     placeholder="Main Site"
                     value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="bg-white/5 border-cyan-500/20"
+                    onChange={e =>
+                      setFormData(prev => ({ ...prev, name: e.target.value }))
+                    }
+                    className="bg-white/5 border-orange-500/20"
                     required
                   />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Frequency</label>
+                  <label className="block text-sm text-gray-400 mb-1">
+                    Frequency
+                  </label>
                   <select
                     value={formData.frequency}
-                    onChange={(e) => setFormData(prev => ({ ...prev, frequency: e.target.value as 'daily' | 'weekly' | 'monthly' }))}
-                    className="w-full px-3 py-2 bg-white/5 border border-cyan-500/20 rounded-md text-white"
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        frequency: e.target.value as
+                          | 'daily'
+                          | 'weekly'
+                          | 'monthly',
+                      }))
+                    }
+                    className="w-full px-3 py-2 bg-white/5 border border-orange-500/20 rounded-md text-white"
                   >
                     <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
@@ -211,21 +248,34 @@ function ScheduledSitesTab({
                     min="5"
                     max="30"
                     value={formData.alertThreshold}
-                    onChange={(e) => setFormData(prev => ({ ...prev, alertThreshold: parseInt(e.target.value) }))}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        alertThreshold: parseInt(e.target.value),
+                      }))
+                    }
                     className="w-full"
                   />
                 </div>
               </div>
               <div className="flex justify-end gap-3">
-                <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowForm(false)}
+                >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={creating}
-                  className="bg-gradient-to-r from-cyan-500 to-cyan-600"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600"
                 >
-                  {creating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                  {creating ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <Plus className="w-4 h-4 mr-2" />
+                  )}
                   Add Site
                 </Button>
               </div>
@@ -233,7 +283,10 @@ function ScheduledSitesTab({
           </CardContent>
         </Card>
       ) : (
-        <Button onClick={() => setShowForm(true)} className="bg-gradient-to-r from-cyan-500 to-cyan-600">
+        <Button
+          onClick={() => setShowForm(true)}
+          className="bg-gradient-to-r from-orange-500 to-orange-600"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Site
         </Button>
@@ -241,12 +294,19 @@ function ScheduledSitesTab({
 
       {/* Targets List */}
       {targets.length === 0 ? (
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-12 text-center">
             <Calendar className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">No scheduled audits yet</h3>
-            <p className="text-gray-400 mb-6">Add a site to start monitoring its SEO health automatically.</p>
-            <Button onClick={() => setShowForm(true)} className="bg-gradient-to-r from-cyan-500 to-cyan-600">
+            <h3 className="text-lg font-medium text-white mb-2">
+              No scheduled audits yet
+            </h3>
+            <p className="text-gray-400 mb-6">
+              Add a site to start monitoring its SEO health automatically.
+            </p>
+            <Button
+              onClick={() => setShowForm(true)}
+              className="bg-gradient-to-r from-orange-500 to-orange-600"
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Your First Site
             </Button>
@@ -254,23 +314,34 @@ function ScheduledSitesTab({
         </Card>
       ) : (
         <div className="space-y-4">
-          {targets.map((target) => {
+          {targets.map(target => {
             const freqBadge = getFrequencyBadge(target.frequency);
             return (
-              <Card key={target.id} className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all">
+              <Card
+                key={target.id}
+                className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 hover:border-orange-500/30 transition-all"
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       {/* Score Badge */}
-                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center font-bold text-xl ${getScoreBg(target.lastScore)} ${getScoreColor(target.lastScore)}`}>
-                        {target.lastScore !== null ? Math.round(target.lastScore) : '—'}
+                      <div
+                        className={`w-14 h-14 rounded-xl flex items-center justify-center font-bold text-xl ${getScoreBg(target.lastScore)} ${getScoreColor(target.lastScore)}`}
+                      >
+                        {target.lastScore !== null
+                          ? Math.round(target.lastScore)
+                          : '—'}
                       </div>
                       {/* Info */}
                       <div>
-                        <h3 className="text-lg font-semibold text-white">{target.name}</h3>
+                        <h3 className="text-lg font-semibold text-white">
+                          {target.name}
+                        </h3>
                         <p className="text-sm text-gray-400">{target.url}</p>
                         <div className="flex items-center gap-3 mt-2">
-                          <span className={`px-2 py-0.5 text-xs font-medium rounded border ${freqBadge.className}`}>
+                          <span
+                            className={`px-2 py-0.5 text-xs font-medium rounded border ${freqBadge.className}`}
+                          >
                             {freqBadge.label}
                           </span>
                           <span className="text-xs text-gray-500 flex items-center gap-1">
@@ -287,16 +358,22 @@ function ScheduledSitesTab({
                     <div className="flex items-center gap-3">
                       <Switch
                         checked={target.enabled}
-                        onCheckedChange={(checked) => onToggle(target.id, checked)}
+                        onCheckedChange={checked =>
+                          onToggle(target.id, checked)
+                        }
                       />
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => onRunNow(target.url)}
                         disabled={auditRunning}
-                        className="border-cyan-500/30 text-cyan-400"
+                        className="border-orange-500/30 text-orange-400"
                       >
-                        {auditRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                        {auditRunning ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Play className="w-4 h-4" />
+                        )}
                       </Button>
                       <Button
                         variant="outline"
@@ -344,7 +421,7 @@ function AuditHistoryTab({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
       </div>
     );
   }
@@ -356,48 +433,69 @@ function AuditHistoryTab({
         <label className="text-sm text-gray-400">Filter by site:</label>
         <select
           value={selectedUrl}
-          onChange={(e) => onUrlChange(e.target.value)}
-          className="px-3 py-2 bg-white/5 border border-cyan-500/20 rounded-md text-white"
+          onChange={e => onUrlChange(e.target.value)}
+          className="px-3 py-2 bg-white/5 border border-orange-500/20 rounded-md text-white"
         >
           <option value="">All Sites</option>
-          {urls.map((url) => (
-            <option key={url} value={url}>{new URL(url).hostname}</option>
+          {urls.map(url => (
+            <option key={url} value={url}>
+              {new URL(url).hostname}
+            </option>
           ))}
         </select>
       </div>
 
       {/* Trends Chart */}
       {selectedUrl && trends.length > 0 && (
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-cyan-400" />
+              <Activity className="w-5 h-5 text-orange-400" />
               Score Trends (Last 30 Days)
             </h3>
             <div className="h-64">
               {trendsLoading ? (
                 <div className="flex items-center justify-center h-full">
-                  <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
+                  <Loader2 className="w-6 h-6 text-orange-400 animate-spin" />
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trends}>
                     <defs>
-                      <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                      <linearGradient
+                        id="colorScore"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#ffb87b"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#ffb87b"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                     <XAxis
                       dataKey="date"
                       stroke="#94a3b8"
-                      tickFormatter={(v) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      tickFormatter={v =>
+                        new Date(v).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                        })
+                      }
                     />
                     <YAxis domain={[0, 100]} stroke="#94a3b8" />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#0f172a',
+                        backgroundColor: '#111111',
                         border: '1px solid rgba(6, 182, 212, 0.2)',
                         borderRadius: '8px',
                       }}
@@ -405,7 +503,7 @@ function AuditHistoryTab({
                     <Area
                       type="monotone"
                       dataKey="score"
-                      stroke="#06b6d4"
+                      stroke="#ffb87b"
                       strokeWidth={2}
                       fillOpacity={1}
                       fill="url(#colorScore)"
@@ -419,52 +517,83 @@ function AuditHistoryTab({
       )}
 
       {/* History Table */}
-      <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Audit History</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">
+            Audit History
+          </h3>
           {history.length === 0 ? (
             <div className="text-center py-8 text-gray-400">
               No audits found. Run your first audit to see history here.
             </div>
           ) : (
             <div className="space-y-2">
-              {history.map((audit) => {
+              {history.map(audit => {
                 const isExpanded = expandedId === audit.id;
                 const issues = audit.recommendations || [];
                 return (
-                  <div key={audit.id} className="bg-white/5 rounded-lg overflow-hidden">
+                  <div
+                    key={audit.id}
+                    className="bg-white/5 rounded-lg overflow-hidden"
+                  >
                     <div
                       className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5"
-                      onClick={() => setExpandedId(isExpanded ? null : audit.id)}
+                      onClick={() =>
+                        setExpandedId(isExpanded ? null : audit.id)
+                      }
                     >
                       <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold ${getScoreBg(audit.overallScore)} ${getScoreColor(audit.overallScore)}`}>
+                        <div
+                          className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold ${getScoreBg(audit.overallScore)} ${getScoreColor(audit.overallScore)}`}
+                        >
                           {Math.round(audit.overallScore)}
                         </div>
                         <div>
-                          <p className="font-medium text-white">{new URL(audit.url).hostname}</p>
-                          <p className="text-sm text-gray-400">{issues.length} issues</p>
+                          <p className="font-medium text-white">
+                            {new URL(audit.url).hostname}
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            {issues.length} issues
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="text-sm text-gray-500">
-                          {new Date(audit.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          {new Date(audit.createdAt).toLocaleDateString(
+                            'en-US',
+                            { month: 'short', day: 'numeric', year: 'numeric' }
+                          )}
                         </span>
-                        {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                        {isExpanded ? (
+                          <ChevronUp className="w-4 h-4 text-gray-400" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                        )}
                       </div>
                     </div>
                     {isExpanded && issues.length > 0 && (
                       <div className="px-4 pb-4 border-t border-white/5">
-                        <p className="text-sm text-gray-400 py-3">Top Issues:</p>
+                        <p className="text-sm text-gray-400 py-3">
+                          Top Issues:
+                        </p>
                         <div className="space-y-2">
                           {issues.slice(0, 5).map((issue, i) => (
-                            <div key={i} className="flex items-start gap-2 text-sm">
-                              <span className={`px-1.5 py-0.5 text-xs rounded ${
-                                issue.severity === 'critical' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'
-                              }`}>
+                            <div
+                              key={i}
+                              className="flex items-start gap-2 text-sm"
+                            >
+                              <span
+                                className={`px-1.5 py-0.5 text-xs rounded ${
+                                  issue.severity === 'critical'
+                                    ? 'bg-red-500/20 text-red-400'
+                                    : 'bg-amber-500/20 text-amber-400'
+                                }`}
+                              >
                                 {issue.severity}
                               </span>
-                              <span className="text-gray-300">{issue.title}</span>
+                              <span className="text-gray-300">
+                                {issue.title}
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -495,18 +624,22 @@ function AlertsTab({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
       </div>
     );
   }
 
   if (regressions.length === 0) {
     return (
-      <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
         <CardContent className="p-12 text-center">
           <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">No regressions detected</h3>
-          <p className="text-gray-400">Your sites are performing well! Keep up the good work.</p>
+          <h3 className="text-lg font-medium text-white mb-2">
+            No regressions detected
+          </h3>
+          <p className="text-gray-400">
+            Your sites are performing well! Keep up the good work.
+          </p>
         </CardContent>
       </Card>
     );
@@ -514,43 +647,63 @@ function AlertsTab({
 
   return (
     <div className="space-y-4">
-      {regressions.map((regression) => (
+      {regressions.map(regression => (
         <Card
           key={regression.id}
           className={`bg-surface-base/80 backdrop-blur-xl border ${
-            regression.severity === 'critical' ? 'border-red-500/30' : 'border-amber-500/30'
+            regression.severity === 'critical'
+              ? 'border-red-500/30'
+              : 'border-amber-500/30'
           }`}
         >
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-4">
                 {/* Severity Icon */}
-                <div className={`p-3 rounded-xl ${
-                  regression.severity === 'critical' ? 'bg-red-500/20' : 'bg-amber-500/20'
-                }`}>
-                  <TrendingDown className={`w-6 h-6 ${
-                    regression.severity === 'critical' ? 'text-red-400' : 'text-amber-400'
-                  }`} />
+                <div
+                  className={`p-3 rounded-xl ${
+                    regression.severity === 'critical'
+                      ? 'bg-red-500/20'
+                      : 'bg-amber-500/20'
+                  }`}
+                >
+                  <TrendingDown
+                    className={`w-6 h-6 ${
+                      regression.severity === 'critical'
+                        ? 'text-red-400'
+                        : 'text-amber-400'
+                    }`}
+                  />
                 </div>
                 {/* Info */}
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-lg font-semibold text-white">{regression.siteName}</h3>
-                    <span className={`px-2 py-0.5 text-xs font-medium rounded ${
-                      regression.severity === 'critical'
-                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                        : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                    }`}>
-                      {regression.severity === 'critical' ? 'Critical' : 'Warning'}
+                    <h3 className="text-lg font-semibold text-white">
+                      {regression.siteName}
+                    </h3>
+                    <span
+                      className={`px-2 py-0.5 text-xs font-medium rounded ${
+                        regression.severity === 'critical'
+                          ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                          : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                      }`}
+                    >
+                      {regression.severity === 'critical'
+                        ? 'Critical'
+                        : 'Warning'}
                     </span>
                   </div>
                   <p className="text-sm text-gray-400 mb-3">{regression.url}</p>
                   {/* Score Drop */}
                   <div className="flex items-center gap-4 mb-4">
                     <div className="text-2xl font-bold">
-                      <span className="text-emerald-400">{regression.oldScore}</span>
+                      <span className="text-emerald-400">
+                        {regression.oldScore}
+                      </span>
                       <span className="text-gray-500 mx-2">→</span>
-                      <span className="text-red-400">{regression.newScore}</span>
+                      <span className="text-red-400">
+                        {regression.newScore}
+                      </span>
                     </div>
                     <span className="text-red-400 font-medium">
                       ↓ {regression.dropPercent}% drop
@@ -562,10 +715,17 @@ function AlertsTab({
                       <p className="text-sm text-gray-400 mb-2">Top Issues:</p>
                       <div className="space-y-1">
                         {regression.topIssues.map((issue, i) => (
-                          <div key={i} className="flex items-center gap-2 text-sm">
-                            <AlertTriangle className={`w-3 h-3 ${
-                              issue.severity === 'critical' ? 'text-red-400' : 'text-amber-400'
-                            }`} />
+                          <div
+                            key={i}
+                            className="flex items-center gap-2 text-sm"
+                          >
+                            <AlertTriangle
+                              className={`w-3 h-3 ${
+                                issue.severity === 'critical'
+                                  ? 'text-red-400'
+                                  : 'text-amber-400'
+                              }`}
+                            />
                             <span className="text-gray-300">{issue.title}</span>
                           </div>
                         ))}
@@ -591,7 +751,9 @@ function AlertsTab({
 // ============================================================================
 
 export default function ScheduledAuditsPage() {
-  const [activeTab, setActiveTab] = useState<'sites' | 'history' | 'alerts'>('sites');
+  const [activeTab, setActiveTab] = useState<'sites' | 'history' | 'alerts'>(
+    'sites'
+  );
   const [selectedUrl, setSelectedUrl] = useState('');
 
   const {
@@ -626,7 +788,12 @@ export default function ScheduledAuditsPage() {
   const tabs = [
     { id: 'sites' as const, label: 'Scheduled Sites', icon: Calendar },
     { id: 'history' as const, label: 'Audit History', icon: Activity },
-    { id: 'alerts' as const, label: 'Alerts & Regressions', icon: AlertTriangle, count: regressions.length },
+    {
+      id: 'alerts' as const,
+      label: 'Alerts & Regressions',
+      icon: AlertTriangle,
+      count: regressions.length,
+    },
   ];
 
   return (
@@ -635,7 +802,11 @@ export default function ScheduledAuditsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/dashboard/seo">
-            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-400 hover:text-white"
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to SEO Tools
             </Button>
@@ -645,11 +816,12 @@ export default function ScheduledAuditsPage() {
 
       <div>
         <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-          <Calendar className="w-8 h-8 text-cyan-400" />
+          <Calendar className="w-8 h-8 text-orange-400" />
           Scheduled Audits
         </h1>
         <p className="text-gray-400 mt-2">
-          Automate recurring SEO audits with regression detection and email alerts
+          Automate recurring SEO audits with regression detection and email
+          alerts
         </p>
       </div>
 
@@ -659,15 +831,15 @@ export default function ScheduledAuditsPage() {
         description="Set up automated SEO audits that run on schedule and alert you when scores drop."
       >
         {/* Tabs */}
-        <div className="flex items-center gap-2 border-b border-cyan-500/10 pb-4">
-          {tabs.map((tab) => (
+        <div className="flex items-center gap-2 border-b border-orange-500/10 pb-4">
+          {tabs.map(tab => (
             <Button
               key={tab.id}
               variant="ghost"
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 flex items-center gap-2 ${
                 activeTab === tab.id
-                  ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                  ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -708,10 +880,7 @@ export default function ScheduledAuditsPage() {
           />
         )}
         {activeTab === 'alerts' && (
-          <AlertsTab
-            regressions={regressions}
-            loading={historyLoading}
-          />
+          <AlertsTab regressions={regressions} loading={historyLoading} />
         )}
       </SEOFeatureGate>
     </div>

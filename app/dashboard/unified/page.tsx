@@ -66,7 +66,13 @@ interface StatCardProps {
   color: string;
 }
 
-function StatCard({ icon: Icon, label, value, subValue, color }: StatCardProps) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  subValue,
+  color,
+}: StatCardProps) {
   return (
     <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
       <div className="flex items-center gap-3">
@@ -93,19 +99,25 @@ export default function UnifiedDashboardPage() {
     await refetch();
   }, [refetch]);
 
-  const handleConnect = useCallback((platformId: string) => {
-    router.push(`/dashboard/integrations?connect=${platformId}`);
-  }, [router]);
+  const handleConnect = useCallback(
+    (platformId: string) => {
+      router.push(`/dashboard/integrations?connect=${platformId}`);
+    },
+    [router]
+  );
 
-  const handleViewDetails = useCallback((platformId: string) => {
-    router.push(`/dashboard/analytics?platform=${platformId}`);
-  }, [router]);
+  const handleViewDetails = useCallback(
+    (platformId: string) => {
+      router.push(`/dashboard/analytics?platform=${platformId}`);
+    },
+    [router]
+  );
 
   // Loading state
   if (isLoading && !data) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
     );
   }
@@ -116,7 +128,9 @@ export default function UnifiedDashboardPage() {
       <div className="flex-1 p-6">
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-center">
           <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-white mb-2">Failed to load metrics</h3>
+          <h3 className="text-lg font-semibold text-white mb-2">
+            Failed to load metrics
+          </h3>
           <p className="text-gray-400 mb-4">{error}</p>
           <Button onClick={handleRefresh} variant="outline">
             <RefreshCw className="w-4 h-4 mr-2" />
@@ -127,7 +141,7 @@ export default function UnifiedDashboardPage() {
     );
   }
 
-  const connectedCount = data?.platforms.filter((p) => p.connected).length ?? 0;
+  const connectedCount = data?.platforms.filter(p => p.connected).length ?? 0;
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -137,7 +151,10 @@ export default function UnifiedDashboardPage() {
         description={`${connectedCount} platform${connectedCount !== 1 ? 's' : ''} connected`}
         actions={
           <div className="flex items-center gap-3">
-            <Select value={period} onValueChange={(v) => setPeriod(v as typeof period)}>
+            <Select
+              value={period}
+              onValueChange={v => setPeriod(v as typeof period)}
+            >
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
@@ -153,7 +170,9 @@ export default function UnifiedDashboardPage() {
               onClick={handleRefresh}
               disabled={isLoading}
             >
-              <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin')} />
+              <RefreshCw
+                className={cn('w-4 h-4', isLoading && 'animate-spin')}
+              />
             </Button>
           </div>
         }
@@ -163,8 +182,8 @@ export default function UnifiedDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-cyan-500/10">
-              <Users className="w-5 h-5 text-cyan-400" />
+            <div className="p-2 rounded-lg bg-orange-500/10">
+              <Users className="w-5 h-5 text-orange-400" />
             </div>
             <div>
               <p className="text-sm text-gray-400">Total Followers</p>
@@ -216,58 +235,66 @@ export default function UnifiedDashboardPage() {
       </div>
 
       {/* Insights Row */}
-      {data?.insights && (data.insights.topPlatform || data.insights.fastestGrowing) && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {data.insights.topPlatform && (
-            <div className="bg-gradient-to-r from-cyan-500/10 to-transparent border border-cyan-500/20 rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-cyan-500/20">
-                  <Target className="w-5 h-5 text-cyan-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400">Top Platform</p>
-                  <p className="text-lg font-semibold text-white">
-                    {PLATFORM_NAMES[data.insights.topPlatform] ?? data.insights.topPlatform}
-                  </p>
-                  <p className="text-xs text-gray-500">Highest engagement</p>
-                </div>
-              </div>
-            </div>
-          )}
-          {data.insights.fastestGrowing && (
-            <div className="bg-gradient-to-r from-green-500/10 to-transparent border border-green-500/20 rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-green-500/20">
-                  <TrendingUp className="w-5 h-5 text-green-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400">Fastest Growing</p>
-                  <p className="text-lg font-semibold text-white">
-                    {PLATFORM_NAMES[data.insights.fastestGrowing] ?? data.insights.fastestGrowing}
-                  </p>
-                  <p className="text-xs text-gray-500">Best growth rate</p>
+      {data?.insights &&
+        (data.insights.topPlatform || data.insights.fastestGrowing) && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {data.insights.topPlatform && (
+              <div className="bg-gradient-to-r from-orange-500/10 to-transparent border border-orange-500/20 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-orange-500/20">
+                    <Target className="w-5 h-5 text-orange-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Top Platform</p>
+                    <p className="text-lg font-semibold text-white">
+                      {PLATFORM_NAMES[data.insights.topPlatform] ??
+                        data.insights.topPlatform}
+                    </p>
+                    <p className="text-xs text-gray-500">Highest engagement</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-          {data.insights.bestEngagementRate && (
-            <div className="bg-gradient-to-r from-purple-500/10 to-transparent border border-purple-500/20 rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-purple-500/20">
-                  <Zap className="w-5 h-5 text-purple-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400">Best Engagement Rate</p>
-                  <p className="text-lg font-semibold text-white">
-                    {PLATFORM_NAMES[data.insights.bestEngagementRate] ?? data.insights.bestEngagementRate}
-                  </p>
-                  <p className="text-xs text-gray-500">Most engaged audience</p>
+            )}
+            {data.insights.fastestGrowing && (
+              <div className="bg-gradient-to-r from-green-500/10 to-transparent border border-green-500/20 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-green-500/20">
+                    <TrendingUp className="w-5 h-5 text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Fastest Growing</p>
+                    <p className="text-lg font-semibold text-white">
+                      {PLATFORM_NAMES[data.insights.fastestGrowing] ??
+                        data.insights.fastestGrowing}
+                    </p>
+                    <p className="text-xs text-gray-500">Best growth rate</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+            {data.insights.bestEngagementRate && (
+              <div className="bg-gradient-to-r from-purple-500/10 to-transparent border border-purple-500/20 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-purple-500/20">
+                    <Zap className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">
+                      Best Engagement Rate
+                    </p>
+                    <p className="text-lg font-semibold text-white">
+                      {PLATFORM_NAMES[data.insights.bestEngagementRate] ??
+                        data.insights.bestEngagementRate}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Most engaged audience
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
       {/* Platform Grid */}
       <section>

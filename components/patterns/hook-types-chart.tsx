@@ -5,15 +5,15 @@
  * Pie chart showing viral hook type distribution
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sparkles } from '@/components/icons';
 import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Sparkles } from '@/components/icons';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { hookTypes } from './patterns-config';
 
 export function HookTypesChart() {
@@ -22,7 +22,7 @@ export function HookTypesChart() {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Viral Hook Types</span>
-          <Sparkles className="h-4 w-4 text-cyan-500" />
+          <Sparkles className="h-4 w-4 text-orange-500" />
         </CardTitle>
         <CardDescription className="text-gray-400">
           Most effective content hooks

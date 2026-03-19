@@ -5,7 +5,13 @@
  * Displays recent team activity
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Activity, Clock } from '@/components/icons';
 import type { ActivityLog } from './types';
 
@@ -14,7 +20,10 @@ interface ActivityLogCardProps {
   maxItems?: number;
 }
 
-export function ActivityLogCard({ activities, maxItems = 10 }: ActivityLogCardProps) {
+export function ActivityLogCard({
+  activities,
+  maxItems = 10,
+}: ActivityLogCardProps) {
   return (
     <Card variant="glass">
       <CardHeader>
@@ -27,10 +36,10 @@ export function ActivityLogCard({ activities, maxItems = 10 }: ActivityLogCardPr
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {activities.slice(0, maxItems).map((activity) => (
+        {activities.slice(0, maxItems).map(activity => (
           <div key={activity.id} className="flex space-x-3">
             <div className="flex-shrink-0">
-              <div className="h-2 w-2 rounded-full bg-cyan-400 mt-2" />
+              <div className="h-2 w-2 rounded-full bg-orange-400 mt-2" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-white">
@@ -38,11 +47,15 @@ export function ActivityLogCard({ activities, maxItems = 10 }: ActivityLogCardPr
                 <span className="text-slate-400"> {activity.action}</span>
               </p>
               {activity.details && (
-                <p className="text-xs text-slate-500 mt-1">{activity.details}</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {activity.details}
+                </p>
               )}
               <div className="flex items-center mt-2">
                 <Clock className="h-3 w-3 text-slate-500 mr-1" />
-                <span className="text-xs text-slate-500">{activity.timestamp}</span>
+                <span className="text-xs text-slate-500">
+                  {activity.timestamp}
+                </span>
               </div>
             </div>
           </div>

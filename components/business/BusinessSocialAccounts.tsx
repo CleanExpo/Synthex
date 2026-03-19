@@ -21,13 +21,16 @@ import { integrationsAPI } from '@/lib/api/settings';
 import { toast } from 'sonner';
 
 // Platform metadata for display
-const PLATFORM_META: Record<string, {
-  name: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  bgColor: string;
-  borderColor: string;
-}> = {
+const PLATFORM_META: Record<
+  string,
+  {
+    name: string;
+    icon: React.ComponentType<{ className?: string }>;
+    color: string;
+    bgColor: string;
+    borderColor: string;
+  }
+> = {
   twitter: {
     name: 'Twitter / X',
     icon: Twitter,
@@ -151,7 +154,9 @@ export function BusinessSocialAccounts({
 
       await integrationsAPI.disconnectPlatform(platform);
       await loadConnections();
-      toast.success(`Disconnected ${PLATFORM_META[platform]?.name || platform} from ${organizationName}`);
+      toast.success(
+        `Disconnected ${PLATFORM_META[platform]?.name || platform} from ${organizationName}`
+      );
     } catch (error) {
       toast.error('Failed to disconnect platform');
     } finally {
@@ -180,7 +185,7 @@ export function BusinessSocialAccounts({
             Connected ({connectedPlatforms.length})
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {connectedPlatforms.map((conn) => {
+            {connectedPlatforms.map(conn => {
               const meta = PLATFORM_META[conn.platform] || {
                 name: conn.platform,
                 icon: Link2,
@@ -210,7 +215,10 @@ export function BusinessSocialAccounts({
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {conn.isExpired || conn.needsRefresh ? (
-                      <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
+                      <Badge
+                        variant="outline"
+                        className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs"
+                      >
                         <AlertCircle className="h-3 w-3 mr-1" />
                         Refresh
                       </Badge>
@@ -249,7 +257,7 @@ export function BusinessSocialAccounts({
             Available ({disconnectedPlatforms.length})
           </p>
           <div className="flex flex-wrap gap-2">
-            {disconnectedPlatforms.map((conn) => {
+            {disconnectedPlatforms.map(conn => {
               const meta = PLATFORM_META[conn.platform];
               if (!meta) return null;
               const Icon = meta.icon;
@@ -271,7 +279,7 @@ export function BusinessSocialAccounts({
       )}
 
       {/* Quick connect CTA */}
-      <div className="pt-2 border-t border-cyan-500/10">
+      <div className="pt-2 border-t border-orange-500/10">
         <Button
           variant="outline"
           size="sm"

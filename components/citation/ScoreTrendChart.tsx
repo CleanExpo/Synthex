@@ -22,7 +22,7 @@ const INNER_W = W - PADDING.left - PADDING.right;
 const INNER_H = H - PADDING.top - PADDING.bottom;
 
 const LINES = [
-  { key: 'geoScore' as const, colour: '#06b6d4', label: 'GEO' },
+  { key: 'geoScore' as const, colour: '#ffb87b', label: 'GEO' },
   { key: 'qualityScore' as const, colour: '#10b981', label: 'Quality' },
 ];
 
@@ -64,7 +64,7 @@ function buildSegments(
 }
 
 function pointsToString(pts: Array<{ x: number; y: number }>): string {
-  return pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  return pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
 }
 
 function formatDate(dateStr: string): string {
@@ -72,7 +72,10 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
 }
 
-export function ScoreTrendChart({ data, loading = false }: ScoreTrendChartProps) {
+export function ScoreTrendChart({
+  data,
+  loading = false,
+}: ScoreTrendChartProps) {
   if (loading) {
     return (
       <div className="w-full h-[200px] rounded-xl bg-white/[0.02] animate-pulse" />
@@ -120,7 +123,7 @@ export function ScoreTrendChart({ data, loading = false }: ScoreTrendChartProps)
         aria-label="Score trend chart over 30 days"
       >
         {/* Y-axis guide lines */}
-        {yGuides.map((v) => {
+        {yGuides.map(v => {
           const y = scaleY(v);
           return (
             <g key={v}>
@@ -182,7 +185,7 @@ export function ScoreTrendChart({ data, loading = false }: ScoreTrendChartProps)
               cx={scaleX(i, data.length)}
               cy={scaleY(point.geoScore)}
               r="2.5"
-              fill="#06b6d4"
+              fill="#ffb87b"
               opacity={0.8}
             />
           );

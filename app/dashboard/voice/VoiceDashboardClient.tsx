@@ -9,7 +9,12 @@ import { VoiceFingerprintCard } from '@/components/voice/VoiceFingerprintCard';
 import { SlopScanResults } from '@/components/voice/SlopScanResults';
 import { ContentCapsulePreview } from '@/components/voice/ContentCapsulePreview';
 import { Mic, FileText, Search, Copy, Check } from '@/components/icons';
-import type { FingerprintResult, SlopScanResult, ContentCapsuleResult, WritingContextResult } from '@/lib/voice/types';
+import type {
+  FingerprintResult,
+  SlopScanResult,
+  ContentCapsuleResult,
+  WritingContextResult,
+} from '@/lib/voice/types';
 
 // ---------------------------------------------------------------------------
 // API response shapes
@@ -35,7 +40,11 @@ interface SlopScanApiResponse extends SlopScanResult {}
 
 type TabId = 'fingerprint' | 'capsule' | 'slop';
 
-const TABS: Array<{ id: TabId; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+const TABS: Array<{
+  id: TabId;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
   { id: 'fingerprint', label: 'Fingerprint', icon: Mic },
   { id: 'capsule', label: 'Content Capsule', icon: FileText },
   { id: 'slop', label: 'Slop Scan', icon: Search },
@@ -109,47 +118,59 @@ export function VoiceDashboardClient() {
 
   // Fingerprint tab state
   const [fingerprintText, setFingerprintText] = useState('');
-  const [analyzeResult, setAnalyzeResult] = useState<AnalyzeApiResponse | null>(null);
+  const [analyzeResult, setAnalyzeResult] = useState<AnalyzeApiResponse | null>(
+    null
+  );
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   // Capsule tab state
   const [capsuleText, setCapsuleText] = useState('');
-  const [capsuleResult, setCapsuleResult] = useState<CapsuleApiResponse | null>(null);
+  const [capsuleResult, setCapsuleResult] = useState<CapsuleApiResponse | null>(
+    null
+  );
   const [capsuleError, setCapsuleError] = useState<string | null>(null);
 
   // Slop Scan tab state
   const [slopText, setSlopText] = useState('');
-  const [slopResult, setSlopResult] = useState<SlopScanApiResponse | null>(null);
+  const [slopResult, setSlopResult] = useState<SlopScanApiResponse | null>(
+    null
+  );
   const [slopError, setSlopError] = useState<string | null>(null);
 
   // Mutations
-  const analyzeMutation = useMutation<AnalyzeApiResponse, string>(postVoiceAnalyze, {
-    onSuccess: (data) => {
-      setAnalyzeResult(data);
-      setAnalyzeError(null);
-    },
-    onError: (err) => {
-      setAnalyzeError(err.message);
-    },
-  });
+  const analyzeMutation = useMutation<AnalyzeApiResponse, string>(
+    postVoiceAnalyze,
+    {
+      onSuccess: data => {
+        setAnalyzeResult(data);
+        setAnalyzeError(null);
+      },
+      onError: err => {
+        setAnalyzeError(err.message);
+      },
+    }
+  );
 
-  const capsuleMutation = useMutation<CapsuleApiResponse, string>(postVoiceCapsule, {
-    onSuccess: (data) => {
-      setCapsuleResult(data);
-      setCapsuleError(null);
-    },
-    onError: (err) => {
-      setCapsuleError(err.message);
-    },
-  });
+  const capsuleMutation = useMutation<CapsuleApiResponse, string>(
+    postVoiceCapsule,
+    {
+      onSuccess: data => {
+        setCapsuleResult(data);
+        setCapsuleError(null);
+      },
+      onError: err => {
+        setCapsuleError(err.message);
+      },
+    }
+  );
 
   const slopMutation = useMutation<SlopScanApiResponse, string>(postSlopScan, {
-    onSuccess: (data) => {
+    onSuccess: data => {
       setSlopResult(data);
       setSlopError(null);
     },
-    onError: (err) => {
+    onError: err => {
       setSlopError(err.message);
     },
   });
@@ -182,9 +203,25 @@ export function VoiceDashboardClient() {
 
   // Shared spinner
   const Spinner = () => (
-    <svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    <svg
+      className="h-4 w-4 animate-spin"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+      />
     </svg>
   );
 
@@ -204,7 +241,7 @@ export function VoiceDashboardClient() {
             className={[
               'flex-1 flex items-centre justify-centre gap-2 text-sm py-2 rounded-lg transition-colors font-medium',
               activeTab === id
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/20'
+                ? 'bg-orange-500/20 text-orange-300 border border-orange-500/20'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-white/5',
             ].join(' ')}
           >
@@ -224,15 +261,21 @@ export function VoiceDashboardClient() {
             </label>
             <textarea
               value={fingerprintText}
-              onChange={(e) => setFingerprintText(e.target.value)}
+              onChange={e => setFingerprintText(e.target.value)}
               placeholder="Paste at least 200 words of your writing here to generate your voice fingerprint…"
-              className="w-full h-64 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
+              className="w-full h-64 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50 resize-none"
             />
             {/* Word counter */}
             <div className="flex items-centre justify-between text-xs">
-              <span className={isReadyToAnalyse ? 'text-emerald-400' : 'text-amber-400'}>
+              <span
+                className={
+                  isReadyToAnalyse ? 'text-emerald-400' : 'text-amber-400'
+                }
+              >
                 {fingerprintWordCount} words{' '}
-                {isReadyToAnalyse ? '— ready to analyse' : '— minimum 200 required'}
+                {isReadyToAnalyse
+                  ? '— ready to analyse'
+                  : '— minimum 200 required'}
               </span>
             </div>
 
@@ -245,7 +288,7 @@ export function VoiceDashboardClient() {
             <button
               onClick={() => analyzeMutation.mutate(fingerprintText)}
               disabled={!isReadyToAnalyse || analyzeMutation.isLoading}
-              className="w-full flex items-centre justify-centre gap-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full flex items-centre justify-centre gap-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/30 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {analyzeMutation.isLoading ? (
                 <>
@@ -265,13 +308,17 @@ export function VoiceDashboardClient() {
           <div className="space-y-4">
             {analyzeResult?.fingerprint.valid ? (
               <>
-                <VoiceFingerprintCard fingerprint={analyzeResult.fingerprint.fingerprint} />
+                <VoiceFingerprintCard
+                  fingerprint={analyzeResult.fingerprint.fingerprint}
+                />
 
                 {/* Writing Context copy block */}
                 {analyzeResult.writingContext && (
                   <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
                     <div className="flex items-centre justify-between">
-                      <h4 className="text-sm font-semibold text-white">Writing Context</h4>
+                      <h4 className="text-sm font-semibold text-white">
+                        Writing Context
+                      </h4>
                       <button
                         onClick={handleCopyContext}
                         className="flex items-centre gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors"
@@ -292,28 +339,47 @@ export function VoiceDashboardClient() {
                     <dl className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                       <div>
                         <dt className="text-slate-500">Audience</dt>
-                        <dd className="text-slate-200 capitalize">{analyzeResult.writingContext.audience}</dd>
+                        <dd className="text-slate-200 capitalize">
+                          {analyzeResult.writingContext.audience}
+                        </dd>
                       </div>
                       <div>
                         <dt className="text-slate-500">Goal</dt>
-                        <dd className="text-slate-200 capitalize">{analyzeResult.writingContext.goal}</dd>
+                        <dd className="text-slate-200 capitalize">
+                          {analyzeResult.writingContext.goal}
+                        </dd>
                       </div>
                       <div>
                         <dt className="text-slate-500">Tone</dt>
-                        <dd className="text-slate-200">{analyzeResult.writingContext.toneSignals.join(', ')}</dd>
+                        <dd className="text-slate-200">
+                          {analyzeResult.writingContext.toneSignals.join(', ')}
+                        </dd>
                       </div>
                       <div>
                         <dt className="text-slate-500">Formality</dt>
-                        <dd className="text-slate-200">{Math.round(analyzeResult.writingContext.formalityScore * 100)}%</dd>
+                        <dd className="text-slate-200">
+                          {Math.round(
+                            analyzeResult.writingContext.formalityScore * 100
+                          )}
+                          %
+                        </dd>
                       </div>
                     </dl>
                     {analyzeResult.clarityScore !== undefined && (
                       <div className="border-t border-white/5 pt-2 flex items-centre gap-2">
-                        <span className="text-xs text-slate-500">Voice Clarity Score</span>
-                        <span className={[
-                          'text-sm font-bold',
-                          analyzeResult.clarityScore >= 70 ? 'text-emerald-400' : analyzeResult.clarityScore >= 40 ? 'text-amber-400' : 'text-red-400',
-                        ].join(' ')}>
+                        <span className="text-xs text-slate-500">
+                          Voice Clarity Score
+                        </span>
+                        <span
+                          className={[
+                            'text-sm font-bold',
+                            analyzeResult.clarityScore >= 70
+                              ? 'text-emerald-400'
+                              : analyzeResult.clarityScore >= 40
+                                ? 'text-amber-400'
+                                : 'text-red-400',
+                          ].join(' ')}
+                        >
                           {analyzeResult.clarityScore}
                         </span>
                       </div>
@@ -323,7 +389,9 @@ export function VoiceDashboardClient() {
               </>
             ) : analyzeResult?.fingerprint.valid === false ? (
               <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-                <p className="text-sm text-red-400">{analyzeResult.fingerprint.error}</p>
+                <p className="text-sm text-red-400">
+                  {analyzeResult.fingerprint.error}
+                </p>
               </div>
             ) : (
               <DashboardEmptyState
@@ -346,9 +414,9 @@ export function VoiceDashboardClient() {
             </label>
             <textarea
               value={capsuleText}
-              onChange={(e) => setCapsuleText(e.target.value)}
+              onChange={e => setCapsuleText(e.target.value)}
               placeholder="Paste your article or blog post here. Use ## headings for best results…"
-              className="w-full h-64 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
+              className="w-full h-64 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50 resize-none"
             />
             <div className="text-xs text-slate-500">
               {countWords(capsuleText).toLocaleString()} words
@@ -362,8 +430,10 @@ export function VoiceDashboardClient() {
 
             <button
               onClick={() => capsuleMutation.mutate(capsuleText)}
-              disabled={capsuleText.trim().length < 10 || capsuleMutation.isLoading}
-              className="w-full flex items-centre justify-centre gap-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={
+                capsuleText.trim().length < 10 || capsuleMutation.isLoading
+              }
+              className="w-full flex items-centre justify-centre gap-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/30 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {capsuleMutation.isLoading ? (
                 <>
@@ -382,7 +452,10 @@ export function VoiceDashboardClient() {
           {/* Right: results */}
           <div>
             {capsuleResult ? (
-              <ContentCapsulePreview result={capsuleResult} originalText={capsuleText} />
+              <ContentCapsulePreview
+                result={capsuleResult}
+                originalText={capsuleText}
+              />
             ) : (
               <DashboardEmptyState
                 icon={FileText}
@@ -403,9 +476,9 @@ export function VoiceDashboardClient() {
             </label>
             <textarea
               value={slopText}
-              onChange={(e) => setSlopText(e.target.value)}
+              onChange={e => setSlopText(e.target.value)}
               placeholder="Paste your content here to scan for AI tell-phrases…"
-              className="w-full h-48 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
+              className="w-full h-48 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50 resize-none"
             />
             <div className="text-xs text-slate-500">
               {countWords(slopText).toLocaleString()} words
@@ -420,7 +493,7 @@ export function VoiceDashboardClient() {
             <button
               onClick={() => slopMutation.mutate(slopText)}
               disabled={slopText.trim().length < 10 || slopMutation.isLoading}
-              className="flex items-centre gap-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-centre gap-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/30 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {slopMutation.isLoading ? (
                 <>

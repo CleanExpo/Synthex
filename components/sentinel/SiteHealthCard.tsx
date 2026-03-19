@@ -40,9 +40,16 @@ interface SiteHealthCardProps {
 
 function HealthGauge({ score }: { score: number }) {
   const getColour = (s: number) => {
-    if (s >= 80) return { ring: 'text-emerald-400', bg: 'bg-emerald-400/20', label: 'Excellent' };
-    if (s >= 60) return { ring: 'text-green-400', bg: 'bg-green-400/20', label: 'Good' };
-    if (s >= 40) return { ring: 'text-amber-400', bg: 'bg-amber-400/20', label: 'Fair' };
+    if (s >= 80)
+      return {
+        ring: 'text-emerald-400',
+        bg: 'bg-emerald-400/20',
+        label: 'Excellent',
+      };
+    if (s >= 60)
+      return { ring: 'text-green-400', bg: 'bg-green-400/20', label: 'Good' };
+    if (s >= 40)
+      return { ring: 'text-amber-400', bg: 'bg-amber-400/20', label: 'Fair' };
     return { ring: 'text-red-400', bg: 'bg-red-400/20', label: 'Poor' };
   };
   const { ring, label } = getColour(score);
@@ -57,7 +64,10 @@ function HealthGauge({ score }: { score: number }) {
 
 type CWVStatus = 'pass' | 'needs-improvement' | 'fail' | 'unknown';
 
-function cwvStatus(metric: 'lcp' | 'inp' | 'cls', value: number | null): CWVStatus {
+function cwvStatus(
+  metric: 'lcp' | 'inp' | 'cls',
+  value: number | null
+): CWVStatus {
   if (value === null) return 'unknown';
   if (metric === 'lcp') {
     return value <= 2.5 ? 'pass' : value <= 4.0 ? 'needs-improvement' : 'fail';
@@ -76,7 +86,11 @@ function CWVDot({ status }: { status: CWVStatus }) {
     fail: 'bg-red-400',
     unknown: 'bg-gray-600',
   };
-  return <span className={`inline-block w-2.5 h-2.5 rounded-full ${colours[status]}`} />;
+  return (
+    <span
+      className={`inline-block w-2.5 h-2.5 rounded-full ${colours[status]}`}
+    />
+  );
 }
 
 function CWVRow({ cwv }: { cwv: CoreWebVitals }) {
@@ -116,7 +130,9 @@ function MetricPill({
 }) {
   return (
     <div className="flex flex-col items-center px-4 py-2 rounded-lg bg-white/5">
-      <span className={`text-lg font-bold tabular-nums ${highlight ? 'text-red-400' : 'text-white'}`}>
+      <span
+        className={`text-lg font-bold tabular-nums ${highlight ? 'text-red-400' : 'text-white'}`}
+      >
         {value}
       </span>
       <span className="text-xs text-gray-400 mt-0.5">{label}</span>
@@ -158,7 +174,7 @@ export function SiteHealthCard({
       <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center">
         <p className="text-gray-400 text-sm">
           No site URL configured. Add your website URL in{' '}
-          <a href="/dashboard/settings" className="text-cyan-400 underline">
+          <a href="/dashboard/settings" className="text-orange-400 underline">
             profile settings
           </a>{' '}
           to enable site health monitoring.
@@ -178,9 +194,11 @@ export function SiteHealthCard({
         <button
           onClick={handleCheckNow}
           disabled={checking}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-orange-500/20 text-orange-300 hover:bg-orange-500/30 transition-colors disabled:opacity-50"
         >
-          <ArrowPathIcon className={`w-3.5 h-3.5 ${checking ? 'animate-spin' : ''}`} />
+          <ArrowPathIcon
+            className={`w-3.5 h-3.5 ${checking ? 'animate-spin' : ''}`}
+          />
           {checking ? 'Checking...' : 'Check Now'}
         </button>
       </div>
@@ -194,7 +212,9 @@ export function SiteHealthCard({
           ) : (
             <div className="text-gray-500 text-sm">No data yet</div>
           )}
-          <div className="text-xs text-gray-500 mt-2 text-center">Health Score</div>
+          <div className="text-xs text-gray-500 mt-2 text-center">
+            Health Score
+          </div>
         </div>
 
         {/* Metric pills */}
@@ -203,7 +223,11 @@ export function SiteHealthCard({
             <div className="flex flex-wrap gap-2 mb-4">
               <MetricPill
                 label="Avg Position"
-                value={snapshot.avgPosition > 0 ? snapshot.avgPosition.toFixed(1) : '—'}
+                value={
+                  snapshot.avgPosition > 0
+                    ? snapshot.avgPosition.toFixed(1)
+                    : '—'
+                }
               />
               <MetricPill
                 label="Clicks (28d)"

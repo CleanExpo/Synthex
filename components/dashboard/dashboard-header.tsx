@@ -27,15 +27,15 @@ export function DashboardHeader({ isNewUser }: DashboardHeaderProps) {
           <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
             {isNewUser
               ? "Let's get your first content published and platforms connected."
-              : "Your marketing, running autonomously."}
+              : 'Your marketing, running autonomously.'}
           </p>
         </div>
 
         <button
           onClick={() => router.push('/dashboard/content')}
           className={cn(
-            'flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400',
-            'text-[#0a1628] text-xs font-semibold tracking-wide rounded-sm',
+            'flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-400',
+            'text-[#050505] text-xs font-semibold tracking-wide rounded-sm',
             'transition-colors duration-200 flex-shrink-0'
           )}
         >

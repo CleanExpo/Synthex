@@ -1,9 +1,21 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, TrendingUp, Copy, Check, MessageSquare } from '@/components/icons';
+import {
+  Calendar,
+  TrendingUp,
+  Copy,
+  Check,
+  MessageSquare,
+} from '@/components/icons';
 import { platformIcons, platformColors } from './constants';
 import type { GeneratedContent } from './types';
 
@@ -26,15 +38,17 @@ export function ContentHistory({
     <Card variant="glass">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-cyan-500" />
+          <Calendar className="w-5 h-5 text-orange-500" />
           Recent Generations
         </CardTitle>
         <CardDescription>Your content generation history</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {contentHistory.map((item) => {
-            const Icon = platformIcons[item.platform as keyof typeof platformIcons] || MessageSquare;
+          {contentHistory.map(item => {
+            const Icon =
+              platformIcons[item.platform as keyof typeof platformIcons] ||
+              MessageSquare;
             return (
               <div
                 key={item.id}
@@ -42,7 +56,9 @@ export function ContentHistory({
                 onClick={() => onSelectContent(item)}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${platformColors[item.platform as keyof typeof platformColors]}`}>
+                  <div
+                    className={`p-2 rounded-lg ${platformColors[item.platform as keyof typeof platformColors]}`}
+                  >
                     <Icon className="w-4 h-4 text-white" />
                   </div>
                   <div>
@@ -63,7 +79,7 @@ export function ContentHistory({
                     size="icon"
                     variant="ghost"
                     aria-label="Copy trending content"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       onCopy(item.content, item.id);
                     }}

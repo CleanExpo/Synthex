@@ -8,12 +8,7 @@
  */
 
 import { useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -69,7 +64,7 @@ interface ExperimentCardProps {
 const TYPE_COLOURS: Record<string, string> = {
   'title-tag': 'bg-blue-500/20 text-blue-300',
   'meta-description': 'bg-purple-500/20 text-purple-300',
-  h1: 'bg-cyan-500/20 text-cyan-300',
+  h1: 'bg-orange-500/20 text-orange-300',
   schema: 'bg-green-500/20 text-green-300',
   'content-structure': 'bg-amber-500/20 text-amber-300',
   'internal-links': 'bg-rose-500/20 text-rose-300',
@@ -107,10 +102,14 @@ const METRIC_LABELS: Record<string, string> = {
 export function ExperimentCard({ experiment, onRefresh }: ExperimentCardProps) {
   const [loading, setLoading] = useState(false);
 
-  const typeLabel = TYPE_LABELS[experiment.experimentType] ?? experiment.experimentType;
-  const typeColour = TYPE_COLOURS[experiment.experimentType] ?? 'bg-gray-500/20 text-gray-300';
-  const statusColour = STATUS_COLOURS[experiment.status] ?? STATUS_COLOURS.draft;
-  const metricLabel = METRIC_LABELS[experiment.metricToTrack] ?? experiment.metricToTrack;
+  const typeLabel =
+    TYPE_LABELS[experiment.experimentType] ?? experiment.experimentType;
+  const typeColour =
+    TYPE_COLOURS[experiment.experimentType] ?? 'bg-gray-500/20 text-gray-300';
+  const statusColour =
+    STATUS_COLOURS[experiment.status] ?? STATUS_COLOURS.draft;
+  const metricLabel =
+    METRIC_LABELS[experiment.metricToTrack] ?? experiment.metricToTrack;
 
   const improvement = experiment.improvement;
   const hasScores =
@@ -150,7 +149,8 @@ export function ExperimentCard({ experiment, onRefresh }: ExperimentCardProps) {
             <div className="flex flex-wrap gap-2 mb-2">
               <Badge className={cn('text-xs', typeColour)}>{typeLabel}</Badge>
               <Badge className={cn('text-xs', statusColour)}>
-                {experiment.status.charAt(0).toUpperCase() + experiment.status.slice(1)}
+                {experiment.status.charAt(0).toUpperCase() +
+                  experiment.status.slice(1)}
               </Badge>
             </div>
             <CardTitle className="text-base text-white leading-snug">
@@ -203,8 +203,8 @@ export function ExperimentCard({ experiment, onRefresh }: ExperimentCardProps) {
               {experiment.originalValue}
             </p>
           </div>
-          <div className="p-3 bg-cyan-500/5 border border-cyan-500/20 rounded-lg">
-            <p className="text-xs font-medium text-cyan-400 mb-1">Variant</p>
+          <div className="p-3 bg-orange-500/5 border border-orange-500/20 rounded-lg">
+            <p className="text-xs font-medium text-orange-400 mb-1">Variant</p>
             <p className="text-sm text-white break-words line-clamp-3">
               {experiment.variantValue}
             </p>
@@ -263,7 +263,9 @@ export function ExperimentCard({ experiment, onRefresh }: ExperimentCardProps) {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => callAction('record', { variant: 'variant', metricValue: 0 })}
+                onClick={() =>
+                  callAction('record', { variant: 'variant', metricValue: 0 })
+                }
                 disabled={loading}
               >
                 <Beaker className="w-3 h-3 mr-1" />

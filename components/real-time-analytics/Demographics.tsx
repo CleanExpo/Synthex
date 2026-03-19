@@ -1,10 +1,24 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import {
-  BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
 } from 'recharts';
 import { Globe } from '@/components/icons';
 import { COLORS, formatNumber } from './constants';
@@ -19,22 +33,29 @@ export function Demographics({ demographics }: DemographicsProps) {
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Audience Demographics</CardTitle>
-        <CardDescription>Understanding your audience composition</CardDescription>
+        <CardDescription>
+          Understanding your audience composition
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Age Distribution */}
           <div>
-            <h4 className="text-sm font-medium text-gray-400 mb-3">Age Groups</h4>
+            <h4 className="text-sm font-medium text-gray-400 mb-3">
+              Age Groups
+            </h4>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={demographics.age}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                 <XAxis dataKey="range" stroke="#888" />
                 <YAxis stroke="#888" />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                  contentStyle={{
+                    backgroundColor: '#1a1a1a',
+                    border: '1px solid #333',
+                  }}
                 />
-                <Bar dataKey="percentage" fill="#06b6d4" />
+                <Bar dataKey="percentage" fill="#ffb87b" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -55,11 +76,17 @@ export function Demographics({ demographics }: DemographicsProps) {
                   dataKey="percentage"
                 >
                   {demographics.gender.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                  contentStyle={{
+                    backgroundColor: '#1a1a1a',
+                    border: '1px solid #333',
+                  }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -80,18 +107,27 @@ export function Demographics({ demographics }: DemographicsProps) {
 
           {/* Top Locations */}
           <div>
-            <h4 className="text-sm font-medium text-gray-400 mb-3">Top Locations</h4>
+            <h4 className="text-sm font-medium text-gray-400 mb-3">
+              Top Locations
+            </h4>
             <div className="space-y-2">
-              {demographics.location.map((location) => (
-                <div key={location.country} className="flex items-center justify-between">
+              {demographics.location.map(location => (
+                <div
+                  key={location.country}
+                  className="flex items-center justify-between"
+                >
                   <div className="flex items-center gap-2">
                     <Globe className="w-4 h-4 text-gray-400" />
                     <span className="text-sm">{location.country}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{formatNumber(location.users)}</span>
+                    <span className="text-sm font-medium">
+                      {formatNumber(location.users)}
+                    </span>
                     <Progress
-                      value={(location.users / demographics.location[0].users) * 100}
+                      value={
+                        (location.users / demographics.location[0].users) * 100
+                      }
                       className="w-20"
                     />
                   </div>

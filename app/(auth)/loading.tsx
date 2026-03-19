@@ -30,7 +30,7 @@ export default function AuthLoading() {
           </div>
 
           {/* Submit button */}
-          <div className="h-11 w-full bg-cyan-500/10 rounded-lg" />
+          <div className="h-11 w-full bg-orange-500/10 rounded-lg" />
 
           {/* Divider */}
           <div className="flex items-center gap-3">

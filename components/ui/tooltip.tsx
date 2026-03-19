@@ -21,9 +21,9 @@ const tooltipContentVariants = cva(
         'glass-solid':
           'bg-slate-900/95 backdrop-blur-xl border border-white/[0.1] text-white shadow-[0_8px_32px_rgba(0,0,0,0.4)]',
         'glass-primary':
-          'bg-cyan-500/20 backdrop-blur-xl border border-cyan-500/30 text-white shadow-[0_8px_32px_rgba(6,182,212,0.2)]',
+          'bg-orange-500/20 backdrop-blur-xl border border-orange-500/30 text-white shadow-[0_8px_32px_rgba(6,182,212,0.2)]',
         'glass-secondary':
-          'bg-cyan-500/20 backdrop-blur-xl border border-cyan-500/30 text-white shadow-[0_8px_32px_rgba(6,182,212,0.2)]',
+          'bg-orange-500/20 backdrop-blur-xl border border-orange-500/30 text-white shadow-[0_8px_32px_rgba(6,182,212,0.2)]',
         'glass-success':
           'bg-emerald-500/20 backdrop-blur-xl border border-emerald-500/30 text-emerald-100 shadow-[0_8px_32px_rgba(16,185,129,0.2)]',
         'glass-warning':
@@ -39,7 +39,8 @@ const tooltipContentVariants = cva(
 );
 
 export interface TooltipContentProps
-  extends React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>,
+  extends
+    React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>,
     VariantProps<typeof tooltipContentVariants> {}
 
 const TooltipContent = React.forwardRef<
@@ -55,4 +56,10 @@ const TooltipContent = React.forwardRef<
 ));
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, tooltipContentVariants };
+export {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+  tooltipContentVariants,
+};

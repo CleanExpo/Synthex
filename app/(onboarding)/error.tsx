@@ -27,7 +27,8 @@ export default function OnboardingGroupError({
             Onboarding Error
           </h2>
           <p className="text-sm text-gray-400 mb-6">
-            Something went wrong during onboarding. Your progress has been saved.
+            Something went wrong during onboarding. Your progress has been
+            saved.
           </p>
 
           {error.message && (
@@ -44,7 +45,7 @@ export default function OnboardingGroupError({
           <div className="flex gap-3">
             <Button
               onClick={reset}
-              className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white"
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Try Again

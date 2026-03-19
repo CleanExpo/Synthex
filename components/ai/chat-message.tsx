@@ -29,22 +29,22 @@ function formatRelativeTime(dateString: string): string {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) {
+export function ChatMessage({
+  message,
+  isStreaming = false,
+}: ChatMessageProps) {
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
 
   return (
     <div
-      className={cn(
-        'flex w-full',
-        isUser ? 'justify-end' : 'justify-start'
-      )}
+      className={cn('flex w-full', isUser ? 'justify-end' : 'justify-start')}
     >
       <div
         className={cn(
           'max-w-[80%] rounded-2xl px-4 py-3 border',
           isUser
-            ? 'bg-cyan-500/20 border-cyan-500/30 text-white'
+            ? 'bg-orange-500/20 border-orange-500/30 text-white'
             : 'bg-white/5 border-white/10 text-gray-100'
         )}
       >
@@ -60,7 +60,7 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
         {/* Streaming indicator */}
         {isStreaming && isAssistant && (
           <span className="inline-flex items-center ml-1">
-            <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+            <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
           </span>
         )}
 
@@ -68,7 +68,7 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
         <div
           className={cn(
             'text-xs mt-2',
-            isUser ? 'text-cyan-300/50' : 'text-gray-500'
+            isUser ? 'text-orange-300/50' : 'text-gray-500'
           )}
         >
           {formatRelativeTime(message.createdAt)}

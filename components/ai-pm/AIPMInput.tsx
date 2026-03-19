@@ -11,12 +11,25 @@ interface AIPMInputProps {
 }
 
 const quickActions = [
-  { label: 'Weekly Summary', prompt: 'Give me a summary of my performance this week' },
-  { label: 'Content Ideas', prompt: 'Suggest content ideas based on my best-performing posts' },
-  { label: 'Performance Review', prompt: 'How is my content performing? What should I improve?' },
+  {
+    label: 'Weekly Summary',
+    prompt: 'Give me a summary of my performance this week',
+  },
+  {
+    label: 'Content Ideas',
+    prompt: 'Suggest content ideas based on my best-performing posts',
+  },
+  {
+    label: 'Performance Review',
+    prompt: 'How is my content performing? What should I improve?',
+  },
 ];
 
-export default function AIPMInput({ onSend, isSending, disabled }: AIPMInputProps) {
+export default function AIPMInput({
+  onSend,
+  isSending,
+  disabled,
+}: AIPMInputProps) {
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -47,7 +60,7 @@ export default function AIPMInput({ onSend, isSending, disabled }: AIPMInputProp
     <div className="border-t border-white/5 p-4">
       {/* Quick action chips */}
       <div className="mb-3 flex flex-wrap gap-2">
-        {quickActions.map((action) => (
+        {quickActions.map(action => (
           <button
             key={action.label}
             onClick={() => {
@@ -56,7 +69,7 @@ export default function AIPMInput({ onSend, isSending, disabled }: AIPMInputProp
               }
             }}
             disabled={isSending || disabled}
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-400 transition-colors hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-300 disabled:opacity-50"
+            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-400 transition-colors hover:border-orange-500/30 hover:bg-orange-500/10 hover:text-orange-300 disabled:opacity-50"
           >
             {action.label}
           </button>
@@ -69,12 +82,12 @@ export default function AIPMInput({ onSend, isSending, disabled }: AIPMInputProp
           <textarea
             ref={textareaRef}
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={e => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask your AI PM anything..."
             disabled={isSending || disabled}
             rows={1}
-            className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white placeholder:text-gray-500 focus:border-cyan-500/30 focus:outline-none focus:ring-1 focus:ring-cyan-500/20 disabled:opacity-50"
+            className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white placeholder:text-gray-500 focus:border-orange-500/30 focus:outline-none focus:ring-1 focus:ring-orange-500/20 disabled:opacity-50"
             maxLength={5000}
           />
           {value.length > 4000 && (
@@ -89,7 +102,7 @@ export default function AIPMInput({ onSend, isSending, disabled }: AIPMInputProp
           disabled={!value.trim() || isSending || disabled}
           size="icon"
           aria-label="Send message"
-          className="h-10 w-10 shrink-0 rounded-xl bg-cyan-500 text-white hover:bg-cyan-400 disabled:opacity-50"
+          className="h-10 w-10 shrink-0 rounded-xl bg-orange-500 text-white hover:bg-orange-400 disabled:opacity-50"
         >
           {isSending ? (
             <Loader2 className="h-4 w-4 animate-spin" />

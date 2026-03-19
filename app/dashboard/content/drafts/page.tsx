@@ -71,12 +71,17 @@ const PLATFORM_COLORS: Record<string, { dot: string; label: string }> = {
 };
 
 function getPlatformMeta(platform: string) {
-  return PLATFORM_COLORS[platform.toLowerCase()] ?? { dot: 'bg-violet-400', label: platform };
+  return (
+    PLATFORM_COLORS[platform.toLowerCase()] ?? {
+      dot: 'bg-violet-400',
+      label: platform,
+    }
+  );
 }
 
 const STATUS_BADGES: Record<string, string> = {
   draft: 'bg-amber-500/15 text-amber-300 border-amber-500/20',
-  scheduled: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/20',
+  scheduled: 'bg-orange-500/15 text-orange-300 border-orange-500/20',
   published: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20',
 };
 
@@ -144,8 +149,8 @@ function EmptyState({ filtered }: { filtered: boolean }) {
 
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="rounded-full bg-cyan-500/10 p-5 mb-4">
-        <FileText className="h-8 w-8 text-cyan-400" />
+      <div className="rounded-full bg-orange-500/10 p-5 mb-4">
+        <FileText className="h-8 w-8 text-orange-400" />
       </div>
       <h3 className="text-lg font-semibold text-white mb-2">
         {filtered ? 'No matching drafts' : 'No drafts yet'}
@@ -181,7 +186,14 @@ interface DraftCardProps {
   isDeleting: boolean;
 }
 
-function DraftCard({ draft, onCopy, onDelete, onUpdate, onSchedule, isDeleting }: DraftCardProps) {
+function DraftCard({
+  draft,
+  onCopy,
+  onDelete,
+  onUpdate,
+  onSchedule,
+  isDeleting,
+}: DraftCardProps) {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(draft.content);
@@ -190,7 +202,10 @@ function DraftCard({ draft, onCopy, onDelete, onUpdate, onSchedule, isDeleting }
 
   const platform = getPlatformMeta(draft.platform);
   const badgeClass = STATUS_BADGES[draft.status] ?? STATUS_BADGES.draft;
-  const preview = draft.content.length > 180 ? draft.content.slice(0, 180) + '...' : draft.content;
+  const preview =
+    draft.content.length > 180
+      ? draft.content.slice(0, 180) + '...'
+      : draft.content;
 
   const handleCopy = useCallback(() => {
     onCopy(draft.content);
@@ -238,10 +253,16 @@ function DraftCard({ draft, onCopy, onDelete, onUpdate, onSchedule, isDeleting }
       {/* Header row: platform dot + label, status badge */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <span className={`flex-shrink-0 h-2.5 w-2.5 rounded-full ${platform.dot}`} />
-          <span className="text-xs font-medium text-slate-400 truncate">{platform.label}</span>
+          <span
+            className={`flex-shrink-0 h-2.5 w-2.5 rounded-full ${platform.dot}`}
+          />
+          <span className="text-xs font-medium text-slate-400 truncate">
+            {platform.label}
+          </span>
         </div>
-        <span className={`flex-shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border ${badgeClass}`}>
+        <span
+          className={`flex-shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border ${badgeClass}`}
+        >
           {draft.status}
         </span>
       </div>
@@ -258,17 +279,17 @@ function DraftCard({ draft, onCopy, onDelete, onUpdate, onSchedule, isDeleting }
             variant="glass"
             resize="vertical"
             value={editContent}
-            onChange={(e) => setEditContent(e.target.value)}
+            onChange={e => setEditContent(e.target.value)}
             rows={5}
             className="text-xs"
             placeholder="Draft content..."
           />
           <select
             value={editPlatform}
-            onChange={(e) => setEditPlatform(e.target.value)}
-            className="w-full text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+            onChange={e => setEditPlatform(e.target.value)}
+            className="w-full text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
           >
-            {ALL_PLATFORMS.map((p) => (
+            {ALL_PLATFORMS.map(p => (
               <option key={p} value={p}>
                 {getPlatformMeta(p).label}
               </option>
@@ -310,8 +331,11 @@ function DraftCard({ draft, onCopy, onDelete, onUpdate, onSchedule, isDeleting }
           {/* Tags row */}
           {draft.hashtags.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {draft.hashtags.slice(0, 4).map((tag) => (
-                <span key={tag} className="text-[10px] text-cyan-400/70 bg-cyan-500/10 px-1.5 py-0.5 rounded">
+              {draft.hashtags.slice(0, 4).map(tag => (
+                <span
+                  key={tag}
+                  className="text-[10px] text-orange-400/70 bg-orange-500/10 px-1.5 py-0.5 rounded"
+                >
                   #{tag.replace(/^#/, '')}
                 </span>
               ))}
@@ -339,7 +363,7 @@ function DraftCard({ draft, onCopy, onDelete, onUpdate, onSchedule, isDeleting }
               variant="ghost"
               onClick={() => setIsEditing(true)}
               title="Edit draft"
-              className="h-7 w-7 p-0 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10"
+              className="h-7 w-7 p-0 text-slate-400 hover:text-orange-400 hover:bg-orange-500/10"
             >
               <Edit className="h-3.5 w-3.5" />
             </Button>
@@ -350,7 +374,7 @@ function DraftCard({ draft, onCopy, onDelete, onUpdate, onSchedule, isDeleting }
                 variant="ghost"
                 onClick={() => onSchedule(draft)}
                 title="Schedule draft"
-                className="h-7 w-7 p-0 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10"
+                className="h-7 w-7 p-0 text-slate-400 hover:text-orange-400 hover:bg-orange-500/10"
               >
                 <Calendar className="h-3.5 w-3.5" />
               </Button>
@@ -416,7 +440,12 @@ interface FilterBarProps {
   onStatusChange: (v: string) => void;
 }
 
-function FilterBar({ platform, status, onPlatformChange, onStatusChange }: FilterBarProps) {
+function FilterBar({
+  platform,
+  status,
+  onPlatformChange,
+  onStatusChange,
+}: FilterBarProps) {
   return (
     <div className="flex flex-wrap gap-3 items-center">
       <div className="flex items-center gap-1.5 text-xs text-slate-400">
@@ -427,11 +456,11 @@ function FilterBar({ platform, status, onPlatformChange, onStatusChange }: Filte
       {/* Platform selector */}
       <select
         value={platform}
-        onChange={(e) => onPlatformChange(e.target.value)}
-        className="text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+        onChange={e => onPlatformChange(e.target.value)}
+        className="text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
       >
         <option value="">All platforms</option>
-        {ALL_PLATFORMS.map((p) => (
+        {ALL_PLATFORMS.map(p => (
           <option key={p} value={p}>
             {getPlatformMeta(p).label}
           </option>
@@ -441,11 +470,11 @@ function FilterBar({ platform, status, onPlatformChange, onStatusChange }: Filte
       {/* Status selector */}
       <select
         value={status}
-        onChange={(e) => onStatusChange(e.target.value)}
-        className="text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+        onChange={e => onStatusChange(e.target.value)}
+        className="text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
       >
         <option value="">All statuses</option>
-        {ALL_STATUSES.map((s) => (
+        {ALL_STATUSES.map(s => (
           <option key={s} value={s}>
             {s.charAt(0).toUpperCase() + s.slice(1)}
           </option>
@@ -470,7 +499,9 @@ export default function DraftsLibraryPage() {
 
   // Publish confirmation modal state
   const [publishModalOpen, setPublishModalOpen] = useState(false);
-  const [schedulingDraft, setSchedulingDraft] = useState<ContentDraft | null>(null);
+  const [schedulingDraft, setSchedulingDraft] = useState<ContentDraft | null>(
+    null
+  );
 
   // ---------------------------------------------------------------------------
   // Fetch
@@ -514,43 +545,49 @@ export default function DraftsLibraryPage() {
     toast.success('Copied to clipboard!');
   }, []);
 
-  const handleDelete = useCallback(
-    async (id: string) => {
-      setDeletingId(id);
-      try {
-        const response = await fetchWithCSRF(`/api/content-drafts/${id}`, {
-          method: 'DELETE',
-        });
+  const handleDelete = useCallback(async (id: string) => {
+    setDeletingId(id);
+    try {
+      const response = await fetchWithCSRF(`/api/content-drafts/${id}`, {
+        method: 'DELETE',
+      });
 
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
-          throw new Error((data as { error?: string }).error || 'Failed to delete');
-        }
-
-        // Optimistic removal from local state
-        setDrafts((prev) => prev.filter((d) => d.id !== id));
-        setTotal((prev) => Math.max(0, prev - 1));
-        toast.success('Draft deleted');
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Failed to delete draft');
-      } finally {
-        setDeletingId(null);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(
+          (data as { error?: string }).error || 'Failed to delete'
+        );
       }
-    },
-    []
-  );
+
+      // Optimistic removal from local state
+      setDrafts(prev => prev.filter(d => d.id !== id));
+      setTotal(prev => Math.max(0, prev - 1));
+      toast.success('Draft deleted');
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to delete draft'
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  }, []);
 
   // ---------------------------------------------------------------------------
   // Update (optimistic local state)
   // ---------------------------------------------------------------------------
 
-  const handleUpdate = useCallback((id: string, data: Partial<ContentDraft>) => {
-    setDrafts((prev) =>
-      prev.map((d) =>
-        d.id === id ? { ...d, ...data, updatedAt: new Date().toISOString() } : d
-      )
-    );
-  }, []);
+  const handleUpdate = useCallback(
+    (id: string, data: Partial<ContentDraft>) => {
+      setDrafts(prev =>
+        prev.map(d =>
+          d.id === id
+            ? { ...d, ...data, updatedAt: new Date().toISOString() }
+            : d
+        )
+      );
+    },
+    []
+  );
 
   // ---------------------------------------------------------------------------
   // Schedule from draft
@@ -561,50 +598,57 @@ export default function DraftsLibraryPage() {
     setPublishModalOpen(true);
   }, []);
 
-  const handlePublishConfirm = useCallback(async (options: PublishOptions) => {
-    if (!schedulingDraft) return;
+  const handlePublishConfirm = useCallback(
+    async (options: PublishOptions) => {
+      if (!schedulingDraft) return;
 
-    // 1. Create scheduled post
-    const scheduleRes = await fetchWithCSRF('/api/scheduler/posts', {
-      method: 'POST',
-      body: JSON.stringify({
-        content: schedulingDraft.content,
-        platform: options.platform,
-        scheduledAt: options.scheduledAt,
-        metadata: {
-          hashtags: schedulingDraft.hashtags || [],
-          ...(schedulingDraft.metadata as Record<string, unknown> || {}),
+      // 1. Create scheduled post
+      const scheduleRes = await fetchWithCSRF('/api/scheduler/posts', {
+        method: 'POST',
+        body: JSON.stringify({
+          content: schedulingDraft.content,
+          platform: options.platform,
+          scheduledAt: options.scheduledAt,
+          metadata: {
+            hashtags: schedulingDraft.hashtags || [],
+            ...((schedulingDraft.metadata as Record<string, unknown>) || {}),
+          },
+        }),
+      });
+
+      if (!scheduleRes.ok) {
+        const errorData = await scheduleRes.json().catch(() => ({}));
+        throw new Error(
+          (errorData as { message?: string }).message || 'Failed to schedule'
+        );
+      }
+
+      const scheduleData = await scheduleRes.json();
+      const postId = scheduleData.data?.id || scheduleData.post?.id;
+
+      // 2. Update draft status + link to scheduled post
+      const patchBody: Record<string, unknown> = { status: 'scheduled' };
+      if (postId) patchBody.scheduledPostId = postId;
+
+      await fetchWithCSRF(`/api/content-drafts/${schedulingDraft.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(patchBody),
+      });
+
+      // 3. Update local state
+      handleUpdate(schedulingDraft.id, { status: 'scheduled' });
+
+      toast.success('Draft scheduled!', {
+        action: {
+          label: 'View Schedule',
+          onClick: () => {
+            window.location.href = '/dashboard/schedule';
+          },
         },
-      }),
-    });
-
-    if (!scheduleRes.ok) {
-      const errorData = await scheduleRes.json().catch(() => ({}));
-      throw new Error((errorData as { message?: string }).message || 'Failed to schedule');
-    }
-
-    const scheduleData = await scheduleRes.json();
-    const postId = scheduleData.data?.id || scheduleData.post?.id;
-
-    // 2. Update draft status + link to scheduled post
-    const patchBody: Record<string, unknown> = { status: 'scheduled' };
-    if (postId) patchBody.scheduledPostId = postId;
-
-    await fetchWithCSRF(`/api/content-drafts/${schedulingDraft.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(patchBody),
-    });
-
-    // 3. Update local state
-    handleUpdate(schedulingDraft.id, { status: 'scheduled' });
-
-    toast.success('Draft scheduled!', {
-      action: {
-        label: 'View Schedule',
-        onClick: () => { window.location.href = '/dashboard/schedule'; },
-      },
-    });
-  }, [schedulingDraft, handleUpdate]);
+      });
+    },
+    [schedulingDraft, handleUpdate]
+  );
 
   // ---------------------------------------------------------------------------
   // Render
@@ -659,7 +703,7 @@ export default function DraftsLibraryPage() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {drafts.map((draft) => (
+          {drafts.map(draft => (
             <DraftCard
               key={draft.id}
               draft={draft}

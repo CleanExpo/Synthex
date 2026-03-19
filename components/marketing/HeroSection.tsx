@@ -73,7 +73,7 @@ export function HeroSection({
     return (
       <>
         {parts[0]}
-        <span className="bg-gradient-to-r from-cyan-400 via-cyan-400 to-cyan-400 bg-clip-text text-transparent animate-gradient-x">
+        <span className="bg-gradient-to-r from-orange-400 via-orange-400 to-orange-400 bg-clip-text text-transparent animate-gradient-x">
           {highlightedText}
         </span>
         {parts[1]}
@@ -89,28 +89,32 @@ export function HeroSection({
         className
       )}
     >
-      <div className={cn(
-        isSplit ? 'grid lg:grid-cols-2 gap-12 lg:gap-16 items-center' : ''
-      )}>
+      <div
+        className={cn(
+          isSplit ? 'grid lg:grid-cols-2 gap-12 lg:gap-16 items-center' : ''
+        )}
+      >
         {/* Content */}
-        <div className={cn(
-          isCentered && 'max-w-4xl mx-auto',
-          isMinimal && 'max-w-3xl'
-        )}>
+        <div
+          className={cn(
+            isCentered && 'max-w-4xl mx-auto',
+            isMinimal && 'max-w-3xl'
+          )}
+        >
           {/* Badge */}
           {badge && (
             <div className="mb-6">
               {badge.href ? (
                 <a
                   href={badge.href}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/15 transition-colors group"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-300 hover:bg-orange-500/15 transition-colors group"
                 >
                   {badge.icon || <Sparkles className="w-4 h-4" />}
                   <span className="text-sm font-medium">{badge.text}</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </a>
               ) : (
-                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300">
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-300">
                   {badge.icon || <Sparkles className="w-4 h-4" />}
                   <span className="text-sm font-medium">{badge.text}</span>
                 </span>
@@ -119,34 +123,42 @@ export function HeroSection({
           )}
 
           {/* Headline */}
-          <h1 className={cn(
-            'font-bold text-white leading-tight mb-6',
-            isCentered ? 'text-4xl md:text-5xl lg:text-6xl xl:text-7xl' : 'text-3xl md:text-4xl lg:text-5xl',
-            isMinimal && 'text-3xl md:text-4xl'
-          )}>
+          <h1
+            className={cn(
+              'font-bold text-white leading-tight mb-6',
+              isCentered
+                ? 'text-4xl md:text-5xl lg:text-6xl xl:text-7xl'
+                : 'text-3xl md:text-4xl lg:text-5xl',
+              isMinimal && 'text-3xl md:text-4xl'
+            )}
+          >
             {processHeadline()}
           </h1>
 
           {/* Subheadline */}
           {subheadline && (
-            <p className={cn(
-              'text-slate-300 leading-relaxed mb-8',
-              isCentered ? 'text-lg md:text-xl max-w-2xl mx-auto' : 'text-lg'
-            )}>
+            <p
+              className={cn(
+                'text-slate-300 leading-relaxed mb-8',
+                isCentered ? 'text-lg md:text-xl max-w-2xl mx-auto' : 'text-lg'
+              )}
+            >
               {subheadline}
             </p>
           )}
 
           {/* CTAs */}
-          <div className={cn(
-            'flex flex-wrap gap-4 mb-10',
-            isCentered && 'justify-center'
-          )}>
+          <div
+            className={cn(
+              'flex flex-wrap gap-4 mb-10',
+              isCentered && 'justify-center'
+            )}
+          >
             {primaryCTA.href ? (
               <a href={primaryCTA.href}>
                 <Button
                   size="lg"
-                  className="font-semibold px-8 bg-gradient-to-r from-cyan-500 to-cyan-500 hover:from-cyan-400 hover:to-cyan-400 text-white shadow-[0_0_30px_rgba(6,182,212,0.4)] hover:shadow-[0_0_40px_rgba(6,182,212,0.5)] transition-all duration-300"
+                  className="font-semibold px-8 bg-gradient-to-r from-orange-500 to-orange-500 hover:from-orange-400 hover:to-orange-400 text-white shadow-[0_0_30px_rgba(6,182,212,0.4)] hover:shadow-[0_0_40px_rgba(6,182,212,0.5)] transition-all duration-300"
                 >
                   {primaryCTA.text}
                   <ArrowRight className="w-5 h-5 ml-2" />
@@ -156,15 +168,15 @@ export function HeroSection({
               <Button
                 size="lg"
                 onClick={primaryCTA.onClick}
-                className="font-semibold px-8 bg-gradient-to-r from-cyan-500 to-cyan-500 hover:from-cyan-400 hover:to-cyan-400 text-white shadow-[0_0_30px_rgba(6,182,212,0.4)] hover:shadow-[0_0_40px_rgba(6,182,212,0.5)] transition-all duration-300"
+                className="font-semibold px-8 bg-gradient-to-r from-orange-500 to-orange-500 hover:from-orange-400 hover:to-orange-400 text-white shadow-[0_0_30px_rgba(6,182,212,0.4)] hover:shadow-[0_0_40px_rgba(6,182,212,0.5)] transition-all duration-300"
               >
                 {primaryCTA.text}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             )}
 
-            {secondaryCTA && (
-              secondaryCTA.href ? (
+            {secondaryCTA &&
+              (secondaryCTA.href ? (
                 <a href={secondaryCTA.href}>
                   <Button
                     size="lg"
@@ -185,16 +197,17 @@ export function HeroSection({
                   {secondaryCTA.icon || <Play className="w-5 h-5 mr-2" />}
                   {secondaryCTA.text}
                 </Button>
-              )
-            )}
+              ))}
           </div>
 
           {/* Social Proof */}
           {socialProof && (
-            <div className={cn(
-              'flex items-center gap-4',
-              isCentered && 'justify-center'
-            )}>
+            <div
+              className={cn(
+                'flex items-center gap-4',
+                isCentered && 'justify-center'
+              )}
+            >
               {socialProof.avatars && socialProof.avatars.length > 0 && (
                 <div className="flex -space-x-3">
                   {socialProof.avatars.slice(0, 5).map((avatar, index) => (
@@ -230,19 +243,23 @@ export function HeroSection({
 
           {/* Stats */}
           {stats && stats.length > 0 && (
-            <div className={cn(
-              'grid gap-8 pt-10 mt-10 border-t border-white/10',
-              stats.length === 2 && 'grid-cols-2',
-              stats.length === 3 && 'grid-cols-3',
-              stats.length >= 4 && 'grid-cols-2 md:grid-cols-4',
-              isCentered && 'max-w-2xl mx-auto'
-            )}>
+            <div
+              className={cn(
+                'grid gap-8 pt-10 mt-10 border-t border-white/10',
+                stats.length === 2 && 'grid-cols-2',
+                stats.length === 3 && 'grid-cols-3',
+                stats.length >= 4 && 'grid-cols-2 md:grid-cols-4',
+                isCentered && 'max-w-2xl mx-auto'
+              )}
+            >
               {stats.map((stat, index) => (
                 <div key={index} className={isCentered ? 'text-center' : ''}>
                   <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
                     {stat.value}
                   </div>
-                  <div className="text-sm text-slate-400 mt-1">{stat.label}</div>
+                  <div className="text-sm text-slate-400 mt-1">
+                    {stat.label}
+                  </div>
                 </div>
               ))}
             </div>
@@ -250,19 +267,11 @@ export function HeroSection({
         </div>
 
         {/* Media (for split variant) */}
-        {isSplit && media && (
-          <div className="relative">
-            {media}
-          </div>
-        )}
+        {isSplit && media && <div className="relative">{media}</div>}
       </div>
 
       {/* Media (for centered variant - below content) */}
-      {isCentered && media && (
-        <div className="mt-16 relative">
-          {media}
-        </div>
-      )}
+      {isCentered && media && <div className="mt-16 relative">{media}</div>}
     </section>
   );
 }

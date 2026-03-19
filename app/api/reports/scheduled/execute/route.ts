@@ -85,7 +85,9 @@ interface ScheduledReportRecord {
 /** Extended prisma client for scheduled reports */
 interface PrismaWithScheduledReports {
   scheduledReport?: {
-    findMany: (args: Record<string, unknown>) => Promise<ScheduledReportRecord[]>;
+    findMany: (
+      args: Record<string, unknown>
+    ) => Promise<ScheduledReportRecord[]>;
     update: (args: Record<string, unknown>) => Promise<ScheduledReportRecord>;
     count: (args?: Record<string, unknown>) => Promise<number>;
   };
@@ -207,20 +209,21 @@ async function generateReportData(
 
     // Count events by type mapping to metrics
     const eventMetricMap: Record<string, string> = {
-      'page_view': 'impressions',
-      'engagement': 'engagements',
-      'click': 'clicks',
-      'share': 'shares',
-      'like': 'likes',
-      'comment': 'comments',
-      'follow': 'followers',
-      'conversion': 'conversions',
+      page_view: 'impressions',
+      engagement: 'engagements',
+      click: 'clicks',
+      share: 'shares',
+      like: 'likes',
+      comment: 'comments',
+      follow: 'followers',
+      conversion: 'conversions',
     };
 
     const metricKey = eventMetricMap[event.type] || event.type;
     if (metrics.includes(metricKey)) {
       aggregated[metricKey] = (aggregated[metricKey] || 0) + 1;
-      byPlatform[platform][metricKey] = (byPlatform[platform][metricKey] || 0) + 1;
+      byPlatform[platform][metricKey] =
+        (byPlatform[platform][metricKey] || 0) + 1;
     }
   }
 
@@ -236,12 +239,12 @@ async function generateReportData(
     }
     const dayData = dayMap.get(day)!;
     const eventMetricMap: Record<string, string> = {
-      'page_view': 'impressions',
-      'engagement': 'engagements',
-      'click': 'clicks',
-      'share': 'shares',
-      'like': 'likes',
-      'comment': 'comments',
+      page_view: 'impressions',
+      engagement: 'engagements',
+      click: 'clicks',
+      share: 'shares',
+      like: 'likes',
+      comment: 'comments',
     };
     const metricKey = eventMetricMap[event.type] || event.type;
     if (metrics.includes(metricKey)) {
@@ -290,12 +293,17 @@ async function sendReportEmail(
             to: recipient,
             subject: `${reportName} - ${new Date().toLocaleDateString()}`,
             html: generateEmailHtml(reportName, reportData),
-            attachments: format !== 'json' ? undefined : [
-              {
-                filename: `${reportName.replace(/\s+/g, '_')}.json`,
-                content: Buffer.from(JSON.stringify(reportData, null, 2)).toString('base64'),
-              },
-            ],
+            attachments:
+              format !== 'json'
+                ? undefined
+                : [
+                    {
+                      filename: `${reportName.replace(/\s+/g, '_')}.json`,
+                      content: Buffer.from(
+                        JSON.stringify(reportData, null, 2)
+                      ).toString('base64'),
+                    },
+                  ],
           });
           sentCount++;
         } catch (err) {
@@ -344,12 +352,14 @@ async function sendReportEmail(
 function generateEmailHtml(reportName: string, data: ReportData): string {
   const summary = data.summary || {};
   const metricsHtml = Object.entries(summary)
-    .map(([key, value]) => `
+    .map(
+      ([key, value]) => `
       <tr>
         <td style="padding: 12px; border-bottom: 1px solid #333;">${key.replace(/_/g, ' ').toUpperCase()}</td>
         <td style="padding: 12px; border-bottom: 1px solid #333; text-align: right; font-weight: bold;">${Number(value).toLocaleString()}</td>
       </tr>
-    `)
+    `
+    )
     .join('');
 
   return `
@@ -373,10 +383,10 @@ function generateEmailHtml(reportName: string, data: ReportData): string {
           </table>
         </div>
 
-        <div style="background: linear-gradient(135deg, #00d4ff20, #06b6d420); border-radius: 12px; padding: 24px; text-align: center;">
+        <div style="background: linear-gradient(135deg, #00d4ff20, #ffb87b20); border-radius: 12px; padding: 24px; text-align: center;">
           <p style="margin: 0 0 15px; color: #ccc;">View detailed analytics in your dashboard</p>
           <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social'}/dashboard/reports"
-             style="display: inline-block; background: linear-gradient(135deg, #00d4ff, #06b6d4); color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold;">
+             style="display: inline-block; background: linear-gradient(135deg, #00d4ff, #ffb87b); color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold;">
             Open Dashboard
           </a>
         </div>
@@ -463,26 +473,28 @@ function calculateNextRun(
 export async function POST(request: NextRequest) {
   // Verify authentication
   if (!verifyCronAuth(request)) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const results: ExecutionResult[] = [];
   const now = new Date();
   const startTime = Date.now();
-  logger.info('cron:reports-scheduled-execute:start', { timestamp: now.toISOString() });
+  logger.info('cron:reports-scheduled-execute:start', {
+    timestamp: now.toISOString(),
+  });
 
   try {
     // Find all due scheduled reports
-    const dueReports = await (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.findMany({
-      where: {
-        isActive: true,
-        nextRunAt: { lte: now },
-      },
-      take: 50, // Process in batches
-    }) || [];
+    const dueReports =
+      (await (
+        prisma as unknown as PrismaWithScheduledReports
+      ).scheduledReport?.findMany({
+        where: {
+          isActive: true,
+          nextRunAt: { lte: now },
+        },
+        take: 50, // Process in batches
+      })) || [];
 
     for (const scheduled of dueReports) {
       const result: ExecutionResult = {
@@ -540,7 +552,9 @@ export async function POST(request: NextRequest) {
 
           // Log deliveries
           for (const recipient of scheduled.recipients) {
-            await (prisma as unknown as PrismaWithScheduledReports).reportDelivery?.create({
+            await (
+              prisma as unknown as PrismaWithScheduledReports
+            ).reportDelivery?.create({
               data: {
                 reportId: report.id,
                 scheduledReportId: scheduled.id,
@@ -562,7 +576,9 @@ export async function POST(request: NextRequest) {
             report.id
           );
 
-          await (prisma as unknown as PrismaWithScheduledReports).reportDelivery?.create({
+          await (
+            prisma as unknown as PrismaWithScheduledReports
+          ).reportDelivery?.create({
             data: {
               reportId: report.id,
               scheduledReportId: scheduled.id,
@@ -583,7 +599,9 @@ export async function POST(request: NextRequest) {
           now
         );
 
-        await (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.update({
+        await (
+          prisma as unknown as PrismaWithScheduledReports
+        ).scheduledReport?.update({
           where: { id: scheduled.id },
           data: {
             lastRunAt: now,
@@ -597,10 +615,15 @@ export async function POST(request: NextRequest) {
         result.status = 'success';
         result.deliveries = deliveryCount;
       } catch (err) {
-        logger.error(`Failed to execute scheduled report ${scheduled.id}:`, err);
+        logger.error(
+          `Failed to execute scheduled report ${scheduled.id}:`,
+          err
+        );
 
         // Update failure count
-        await (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.update({
+        await (
+          prisma as unknown as PrismaWithScheduledReports
+        ).scheduledReport?.update({
           where: { id: scheduled.id },
           data: {
             lastRunAt: now,
@@ -619,7 +642,11 @@ export async function POST(request: NextRequest) {
     }
 
     const durationMs = Date.now() - startTime;
-    logger.info('cron:reports-scheduled-execute:end', { timestamp: new Date().toISOString(), durationMs, executed: results.length });
+    logger.info('cron:reports-scheduled-execute:end', {
+      timestamp: new Date().toISOString(),
+      durationMs,
+      executed: results.length,
+    });
 
     return NextResponse.json({
       executed: results.length,
@@ -643,10 +670,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   // Verify authentication
   if (!verifyCronAuth(request)) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
@@ -654,8 +678,12 @@ export async function GET(request: NextRequest) {
 
     // Get counts
     const [total, active, due, recentlyRun, failed] = await Promise.all([
-      (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.count() || 0,
-      (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.count({ where: { isActive: true } }) || 0,
+      (
+        prisma as unknown as PrismaWithScheduledReports
+      ).scheduledReport?.count() || 0,
+      (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.count({
+        where: { isActive: true },
+      }) || 0,
       (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.count({
         where: { isActive: true, nextRunAt: { lte: now } },
       }) || 0,
@@ -682,10 +710,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Status check error:', error);
-    return NextResponse.json(
-      { error: 'Status check failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Status check failed' }, { status: 500 });
   }
 }
 

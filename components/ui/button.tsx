@@ -8,7 +8,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-cyan-500 text-[#0a1628] hover:bg-cyan-400',
+        default: 'bg-orange-500 text-[#050505] hover:bg-orange-400',
         destructive:
           'bg-red-500/20 border-[0.5px] border-red-500/30 text-red-300 hover:bg-red-500/30',
         outline:
@@ -16,20 +16,20 @@ const buttonVariants = cva(
         secondary:
           'border-[0.5px] border-white/[0.06] bg-white/[0.02] text-white/60 hover:bg-white/[0.04] hover:text-white/80',
         ghost: 'text-white/60 hover:text-white/80 hover:bg-white/[0.04]',
-        link: 'text-cyan-400 underline-offset-4 hover:underline',
+        link: 'text-orange-400 underline-offset-4 hover:underline',
         // Scientific Luxury glass variants
         glass:
           'border-[0.5px] border-white/[0.08] bg-white/[0.02] text-white/60 hover:bg-white/[0.05] hover:text-white/80',
         'glass-primary':
-          'border-[0.5px] border-cyan-500/20 bg-cyan-500/[0.08] text-cyan-300 hover:bg-cyan-500/[0.15] hover:border-cyan-500/30',
+          'border-[0.5px] border-orange-500/20 bg-orange-500/[0.08] text-orange-300 hover:bg-orange-500/[0.15] hover:border-orange-500/30',
         'glass-secondary':
-          'border-[0.5px] border-cyan-500/20 bg-cyan-500/[0.06] text-cyan-300 hover:bg-cyan-500/[0.12]',
+          'border-[0.5px] border-orange-500/20 bg-orange-500/[0.06] text-orange-300 hover:bg-orange-500/[0.12]',
         'glass-destructive':
           'border-[0.5px] border-red-500/20 bg-red-500/[0.08] text-red-300 hover:bg-red-500/[0.15]',
         'glass-success':
           'border-[0.5px] border-emerald-500/20 bg-emerald-500/[0.08] text-emerald-300 hover:bg-emerald-500/[0.15]',
-        'premium-primary': 'bg-cyan-500 text-[#0a1628] hover:bg-cyan-400',
-        'premium-secondary': 'bg-cyan-500 text-[#0a1628] hover:bg-cyan-400',
+        'premium-primary': 'bg-orange-500 text-[#050505] hover:bg-orange-400',
+        'premium-secondary': 'bg-orange-500 text-[#050505] hover:bg-orange-400',
       },
       size: {
         default: 'h-9 px-4 py-2',

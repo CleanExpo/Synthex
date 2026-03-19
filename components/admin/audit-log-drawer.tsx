@@ -91,7 +91,9 @@ function MetadataItem({
 
   return (
     <div className="space-y-1">
-      <span className="text-xs text-gray-500 uppercase tracking-wider">{label}</span>
+      <span className="text-xs text-gray-500 uppercase tracking-wider">
+        {label}
+      </span>
       <div className="flex items-center gap-1">
         <span
           className={`text-sm text-white break-all ${mono ? 'font-mono' : ''}`}
@@ -134,7 +136,7 @@ function DetailRow({ label, value }: { label: string; value: unknown }) {
     return (
       <div className="flex justify-between items-center p-2 bg-white/5 rounded">
         <span className="text-xs text-gray-400">{formatLabel(label)}</span>
-        <span className="text-sm text-cyan-400 font-mono">{value}</span>
+        <span className="text-sm text-orange-400 font-mono">{value}</span>
       </div>
     );
   }
@@ -155,7 +157,9 @@ function DetailRow({ label, value }: { label: string; value: unknown }) {
   return (
     <div className="flex justify-between items-center p-2 bg-white/5 rounded">
       <span className="text-xs text-gray-400">{formatLabel(label)}</span>
-      <span className="text-sm text-white font-mono">{String(value ?? 'N/A')}</span>
+      <span className="text-sm text-white font-mono">
+        {String(value ?? 'N/A')}
+      </span>
     </div>
   );
 }
@@ -165,7 +169,7 @@ function formatLabel(key: string): string {
   return key
     .replace(/([A-Z])/g, ' $1')
     .replace(/_/g, ' ')
-    .replace(/^\w/, (c) => c.toUpperCase())
+    .replace(/^\w/, c => c.toUpperCase())
     .trim();
 }
 
@@ -184,7 +188,7 @@ export function AuditLogDrawer({ entry, open, onClose }: AuditLogDrawerProps) {
   const details = entry.details as Record<string, unknown> | null;
 
   return (
-    <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
+    <Sheet open={open} onOpenChange={o => !o && onClose()}>
       <SheetContent
         variant="glass-solid"
         side="right"
@@ -198,7 +202,9 @@ export function AuditLogDrawer({ entry, open, onClose }: AuditLogDrawerProps) {
           <SheetDescription>
             {entry.resource}
             {entry.resourceId && (
-              <span className="font-mono ml-1">#{entry.resourceId.slice(0, 8)}</span>
+              <span className="font-mono ml-1">
+                #{entry.resourceId.slice(0, 8)}
+              </span>
             )}
           </SheetDescription>
         </SheetHeader>
@@ -215,7 +221,9 @@ export function AuditLogDrawer({ entry, open, onClose }: AuditLogDrawerProps) {
           >
             {entry.outcome}
           </Badge>
-          <Badge className="text-xs bg-white/10 text-gray-300">{entry.category}</Badge>
+          <Badge className="text-xs bg-white/10 text-gray-300">
+            {entry.category}
+          </Badge>
         </div>
 
         {/* -------------------------------------------------------------- */}
@@ -262,12 +270,16 @@ export function AuditLogDrawer({ entry, open, onClose }: AuditLogDrawerProps) {
         {/* -------------------------------------------------------------- */}
         {(entry.ipAddress || entry.userAgent) && (
           <div className="mt-6">
-            <h4 className="text-sm font-medium text-gray-300 mb-3">Request Info</h4>
+            <h4 className="text-sm font-medium text-gray-300 mb-3">
+              Request Info
+            </h4>
             <div className="space-y-2 text-xs">
               {entry.ipAddress && (
                 <div className="flex justify-between items-center p-2 bg-white/5 rounded">
                   <span className="text-gray-400">IP Address</span>
-                  <span className="text-white font-mono">{entry.ipAddress}</span>
+                  <span className="text-white font-mono">
+                    {entry.ipAddress}
+                  </span>
                 </div>
               )}
               {entry.userAgent && (

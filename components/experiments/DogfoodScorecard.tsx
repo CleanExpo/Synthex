@@ -61,8 +61,8 @@ const STATUS_CONFIG: Record<
   },
   good: {
     label: 'Good',
-    colour: 'bg-cyan-500/20 text-cyan-400',
-    barColour: 'bg-cyan-500',
+    colour: 'bg-orange-500/20 text-orange-400',
+    barColour: 'bg-orange-500',
   },
   'needs-work': {
     label: 'Needs Work',
@@ -106,15 +106,22 @@ function ModuleCard({ module }: { module: DogfoodModuleScore }) {
         <div className="space-y-1">
           <div className="flex items-center justify-between text-xs">
             <span className="text-gray-400">
-              Score: <span className="text-white font-mono">{module.score}/100</span>
+              Score:{' '}
+              <span className="text-white font-mono">{module.score}/100</span>
             </span>
             <span className="text-gray-500">
-              Benchmark: <span className="text-gray-400 font-mono">{module.benchmark}</span>
+              Benchmark:{' '}
+              <span className="text-gray-400 font-mono">
+                {module.benchmark}
+              </span>
             </span>
           </div>
           <div className="relative h-2 rounded-full bg-white/10 overflow-hidden">
             <div
-              className={cn('absolute left-0 top-0 h-full rounded-full transition-all', config.barColour)}
+              className={cn(
+                'absolute left-0 top-0 h-full rounded-full transition-all',
+                config.barColour
+              )}
               style={{ width: `${module.score}%` }}
             />
             {/* Benchmark marker */}
@@ -131,16 +138,21 @@ function ModuleCard({ module }: { module: DogfoodModuleScore }) {
           <div>
             <button
               onClick={() => setShowRecs(!showRecs)}
-              className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+              className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1"
             >
               {showRecs ? 'Hide' : 'Show'} recommendations
-              <span className="text-gray-500">({module.recommendations.length})</span>
+              <span className="text-gray-500">
+                ({module.recommendations.length})
+              </span>
             </button>
             {showRecs && (
               <ul className="mt-2 space-y-1">
                 {module.recommendations.map((rec, i) => (
-                  <li key={i} className="text-xs text-gray-400 flex items-start gap-2">
-                    <span className="text-cyan-500 shrink-0 mt-0.5">•</span>
+                  <li
+                    key={i}
+                    className="text-xs text-gray-400 flex items-start gap-2"
+                  >
+                    <span className="text-orange-500 shrink-0 mt-0.5">•</span>
                     {rec}
                   </li>
                 ))}
@@ -185,14 +197,12 @@ export function DogfoodScorecard() {
     return (
       <Card variant="glass">
         <CardContent className="py-16 text-center space-y-4">
-          <Globe className="w-16 h-16 mx-auto text-cyan-500/50" />
+          <Globe className="w-16 h-16 mx-auto text-orange-500/50" />
           <div>
-            <h3 className="text-lg font-semibold text-white">
-              Dog-food Check
-            </h3>
+            <h3 className="text-lg font-semibold text-white">Dog-food Check</h3>
             <p className="text-sm text-gray-400 mt-1 max-w-sm mx-auto">
               Run all Synthex analysers against{' '}
-              <span className="text-cyan-400">synthex.social</span> to see how
+              <span className="text-orange-400">synthex.social</span> to see how
               well Synthex&apos;s own content scores on GEO, E-E-A-T, and more.
             </p>
           </div>
@@ -217,8 +227,8 @@ export function DogfoodScorecard() {
     report.overallScore >= 80
       ? 'excellent'
       : report.overallScore >= 70
-      ? 'good'
-      : 'needs-work';
+        ? 'good'
+        : 'needs-work';
   const overallConfig = STATUS_CONFIG[overallStatus];
 
   return (
@@ -229,7 +239,7 @@ export function DogfoodScorecard() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Globe className="w-5 h-5 text-cyan-400" />
+                <Globe className="w-5 h-5 text-orange-400" />
                 synthex.social — Dog-food Report
               </CardTitle>
               <p className="text-xs text-gray-400 mt-1">
@@ -242,7 +252,9 @@ export function DogfoodScorecard() {
               onClick={runCheck}
               disabled={loading}
             >
-              <RefreshCw className={cn('w-3 h-3 mr-1', loading && 'animate-spin')} />
+              <RefreshCw
+                className={cn('w-3 h-3 mr-1', loading && 'animate-spin')}
+              />
               Refresh
             </Button>
           </div>
@@ -251,7 +263,9 @@ export function DogfoodScorecard() {
           {/* Big score */}
           <div className="flex items-center gap-6">
             <div className="text-center">
-              <p className="text-5xl font-bold text-white">{report.overallScore}</p>
+              <p className="text-5xl font-bold text-white">
+                {report.overallScore}
+              </p>
               <p className="text-xs text-gray-400 mt-1">Overall Score</p>
             </div>
             <div className="flex-1">
@@ -269,7 +283,7 @@ export function DogfoodScorecard() {
           {report.topRecommendations.length > 0 && (
             <div className="pt-3 border-t border-white/10">
               <p className="text-xs font-medium text-gray-300 mb-2 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3 text-cyan-400" />
+                <TrendingUp className="w-3 h-3 text-orange-400" />
                 Top Priority Improvements
               </p>
               <div className="space-y-2">
@@ -291,7 +305,7 @@ export function DogfoodScorecard() {
 
       {/* Module Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {report.modules.map((module) => (
+        {report.modules.map(module => (
           <ModuleCard key={module.module} module={module} />
         ))}
       </div>

@@ -44,7 +44,7 @@ export default function ReviewError({
           <div className="flex gap-3">
             <Button
               onClick={reset}
-              className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white"
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Try Again

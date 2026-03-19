@@ -1,8 +1,14 @@
 ﻿'use client';
 
-import { useState, useEffect, useCallback , Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Shield,
@@ -52,7 +58,7 @@ const providerConfig = {
   demo: {
     name: 'Demo Mode',
     icon: Key,
-    color: 'text-cyan-400',
+    color: 'text-orange-400',
     description: 'Demo authentication',
   },
 };
@@ -63,13 +69,17 @@ function AccountsSettingsPageContent() {
   const [accounts, setAccounts] = useState<LinkedAccount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [linkingProvider, setLinkingProvider] = useState<string | null>(null);
-  const [unlinkingProvider, setUnlinkingProvider] = useState<string | null>(null);
+  const [unlinkingProvider, setUnlinkingProvider] = useState<string | null>(
+    null
+  );
 
   // Handle success messages from URL
   useEffect(() => {
     const linked = searchParams.get('linked');
     if (linked) {
-      toast.success(`Successfully linked ${providerConfig[linked as keyof typeof providerConfig]?.name || linked}!`);
+      toast.success(
+        `Successfully linked ${providerConfig[linked as keyof typeof providerConfig]?.name || linked}!`
+      );
       // Clear URL params
       router.replace('/dashboard/settings/accounts');
     }
@@ -126,7 +136,9 @@ function AccountsSettingsPageContent() {
       }
     } catch (error: unknown) {
       console.error('Link error:', error);
-      toast.error(error instanceof Error ? error.message : `Failed to link ${provider}`);
+      toast.error(
+        error instanceof Error ? error.message : `Failed to link ${provider}`
+      );
       setLinkingProvider(null);
     }
   };
@@ -134,13 +146,17 @@ function AccountsSettingsPageContent() {
   // Unlink a provider
   const handleUnlink = async (provider: string) => {
     // Confirm before unlinking
-    const account = accounts.find((a) => a.provider === provider);
+    const account = accounts.find(a => a.provider === provider);
     if (!account?.canUnlink) {
       toast.error(account?.unlinkReason || 'Cannot unlink this account');
       return;
     }
 
-    if (!confirm(`Are you sure you want to unlink ${providerConfig[provider as keyof typeof providerConfig]?.name}? You will no longer be able to sign in with it.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to unlink ${providerConfig[provider as keyof typeof providerConfig]?.name}? You will no longer be able to sign in with it.`
+      )
+    ) {
       return;
     }
 
@@ -158,20 +174,24 @@ function AccountsSettingsPageContent() {
         throw new Error(data.error || 'Failed to unlink account');
       }
 
-      toast.success(`${providerConfig[provider as keyof typeof providerConfig]?.name} unlinked successfully`);
+      toast.success(
+        `${providerConfig[provider as keyof typeof providerConfig]?.name} unlinked successfully`
+      );
       await loadAccounts();
     } catch (error: unknown) {
       console.error('Unlink error:', error);
-      toast.error(error instanceof Error ? error.message : `Failed to unlink ${provider}`);
+      toast.error(
+        error instanceof Error ? error.message : `Failed to unlink ${provider}`
+      );
     } finally {
       setUnlinkingProvider(null);
     }
   };
 
   // Get available providers to link
-  const linkedProviders = accounts.map((a) => a.provider);
+  const linkedProviders = accounts.map(a => a.provider);
   const availableProviders = (['google', 'github'] as const).filter(
-    (p) => !linkedProviders.includes(p)
+    p => !linkedProviders.includes(p)
   );
 
   return (
@@ -179,7 +199,11 @@ function AccountsSettingsPageContent() {
       {/* Header */}
       <div className="flex items-center space-x-4">
         <Link href="/dashboard/settings">
-          <Button variant="ghost" size="sm" className="text-white/40 hover:text-white">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-white/40 hover:text-white"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Settings
           </Button>
@@ -187,8 +211,12 @@ function AccountsSettingsPageContent() {
       </div>
 
       <div>
-        <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">Settings</span>
-        <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">Linked Accounts</h1>
+        <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+          Settings
+        </span>
+        <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">
+          Linked Accounts
+        </h1>
         <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
           Manage how you sign in to your account
         </p>
@@ -198,7 +226,7 @@ function AccountsSettingsPageContent() {
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Shield className="h-5 w-5 mr-2 text-cyan-400" />
+            <Shield className="h-5 w-5 mr-2 text-orange-400" />
             Your Authentication Methods
           </CardTitle>
           <CardDescription className="text-white/40">
@@ -208,15 +236,16 @@ function AccountsSettingsPageContent() {
         <CardContent className="space-y-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+              <Loader2 className="h-6 w-6 animate-spin text-orange-400" />
               <span className="ml-2 text-white/40">Loading accounts...</span>
             </div>
           ) : accounts.length === 0 ? (
             <div className="text-center py-8 text-white/40">
-              No linked accounts found. This is unusual - please contact support.
+              No linked accounts found. This is unusual - please contact
+              support.
             </div>
           ) : (
-            accounts.map((account) => {
+            accounts.map(account => {
               const config = providerConfig[account.provider];
               const Icon = config?.icon || Mail;
 
@@ -226,14 +255,16 @@ function AccountsSettingsPageContent() {
                   className="flex items-center justify-between p-4 bg-white/[0.02] rounded-sm border-[0.5px] border-white/[0.06]"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className={`p-2 rounded-sm bg-white/[0.05] ${config?.color || 'text-white/40'}`}>
+                    <div
+                      className={`p-2 rounded-sm bg-white/[0.05] ${config?.color || 'text-white/40'}`}
+                    >
                       <Icon className="h-5 w-5" />
                     </div>
                     <div>
                       <p className="text-white font-medium flex items-center">
                         {config?.name || account.provider}
                         {account.isPrimary && (
-                          <span className="ml-2 text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-sm">
+                          <span className="ml-2 text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-sm">
                             Primary
                           </span>
                         )}
@@ -242,7 +273,8 @@ function AccountsSettingsPageContent() {
                         {account.providerAccountId}
                       </p>
                       <p className="text-xs text-white/25">
-                        Linked {new Date(account.createdAt).toLocaleDateString()}
+                        Linked{' '}
+                        {new Date(account.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -290,7 +322,7 @@ function AccountsSettingsPageContent() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Link2 className="h-5 w-5 mr-2 text-cyan-400" />
+              <Link2 className="h-5 w-5 mr-2 text-orange-400" />
               Link Additional Accounts
             </CardTitle>
             <CardDescription className="text-white/40">
@@ -298,7 +330,7 @@ function AccountsSettingsPageContent() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {availableProviders.map((provider) => {
+            {availableProviders.map(provider => {
               const config = providerConfig[provider];
               const Icon = config.icon;
 
@@ -308,12 +340,16 @@ function AccountsSettingsPageContent() {
                   className="flex items-center justify-between p-4 bg-white/[0.02] rounded-sm border-[0.5px] border-white/[0.06]"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className={`p-2 rounded-sm bg-white/[0.05] ${config.color}`}>
+                    <div
+                      className={`p-2 rounded-sm bg-white/[0.05] ${config.color}`}
+                    >
                       <Icon className="h-5 w-5" />
                     </div>
                     <div>
                       <p className="text-white font-medium">{config.name}</p>
-                      <p className="text-sm text-white/40">{config.description}</p>
+                      <p className="text-sm text-white/40">
+                        {config.description}
+                      </p>
                     </div>
                   </div>
                   <Button
@@ -348,11 +384,13 @@ function AccountsSettingsPageContent() {
             <div>
               <p className="text-amber-300 font-medium">Security Notice</p>
               <p className="text-sm text-white/40 mt-1">
-                Make sure to keep at least one authentication method active at all times.
-                If you unlink all methods, you may lose access to your account.
+                Make sure to keep at least one authentication method active at
+                all times. If you unlink all methods, you may lose access to
+                your account.
               </p>
               <p className="text-sm text-white/40 mt-2">
-                We recommend linking multiple authentication methods for backup access.
+                We recommend linking multiple authentication methods for backup
+                access.
               </p>
             </div>
           </div>

@@ -34,7 +34,15 @@ interface TooltipState {
 // ============================================================================
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const DAY_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAY_FULL = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
 const HOUR_LABEL_INDICES = [0, 3, 6, 9, 12, 15, 18, 21];
 
 // ============================================================================
@@ -50,10 +58,10 @@ function formatHour(hour: number): string {
 function getScoreColor(score: number | undefined): string {
   if (score === undefined || score === 0) return 'bg-slate-800/30';
   if (score <= 20) return 'bg-slate-800/50';
-  if (score <= 40) return 'bg-cyan-900/40';
-  if (score <= 60) return 'bg-cyan-700/50';
-  if (score <= 80) return 'bg-cyan-500/60';
-  return 'bg-cyan-400/80';
+  if (score <= 40) return 'bg-orange-900/40';
+  if (score <= 60) return 'bg-orange-700/50';
+  if (score <= 80) return 'bg-orange-500/60';
+  return 'bg-orange-400/80';
 }
 
 function buildScoreMap(slots: OptimalTimeSlot[]): Map<string, OptimalTimeSlot> {
@@ -106,7 +114,9 @@ function HeatmapEmpty() {
       </CardHeader>
       <CardContent>
         <div className="h-[200px] flex items-center justify-center">
-          <p className="text-sm text-slate-500">No optimal time data available for this platform</p>
+          <p className="text-sm text-slate-500">
+            No optimal time data available for this platform
+          </p>
         </div>
       </CardContent>
     </Card>
@@ -150,7 +160,9 @@ export function BestTimeHeatmap({ slots, isLoading }: BestTimeHeatmapProps) {
     <Card variant="glass">
       <CardHeader>
         <CardTitle className="text-white">Best Posting Times</CardTitle>
-        <p className="text-xs text-slate-400 mt-0.5">Engagement score by day and hour</p>
+        <p className="text-xs text-slate-400 mt-0.5">
+          Engagement score by day and hour
+        </p>
       </CardHeader>
       <CardContent>
         {/* Heatmap grid */}
@@ -165,7 +177,9 @@ export function BestTimeHeatmap({ slots, isLoading }: BestTimeHeatmapProps) {
               {Array.from({ length: 24 }).map((_, hour) => (
                 <div key={hour} className="flex justify-center">
                   {HOUR_LABEL_INDICES.includes(hour) ? (
-                    <span className="text-[9px] text-slate-500">{formatHour(hour)}</span>
+                    <span className="text-[9px] text-slate-500">
+                      {formatHour(hour)}
+                    </span>
                   ) : null}
                 </div>
               ))}
@@ -180,7 +194,9 @@ export function BestTimeHeatmap({ slots, isLoading }: BestTimeHeatmapProps) {
               >
                 {/* Day label */}
                 <div className="w-8 flex items-center">
-                  <span className="text-[10px] text-slate-500 font-medium">{dayLabel}</span>
+                  <span className="text-[10px] text-slate-500 font-medium">
+                    {dayLabel}
+                  </span>
                 </div>
 
                 {/* Hour cells */}
@@ -191,8 +207,10 @@ export function BestTimeHeatmap({ slots, isLoading }: BestTimeHeatmapProps) {
                   return (
                     <div
                       key={hour}
-                      className={`h-5 mx-px rounded-sm cursor-pointer transition-all duration-150 hover:ring-1 hover:ring-cyan-400/60 hover:brightness-125 ${colorClass}`}
-                      onMouseEnter={(e) => handleCellMouseEnter(e, day, hour, slot)}
+                      className={`h-5 mx-px rounded-sm cursor-pointer transition-all duration-150 hover:ring-1 hover:ring-orange-400/60 hover:brightness-125 ${colorClass}`}
+                      onMouseEnter={e =>
+                        handleCellMouseEnter(e, day, hour, slot)
+                      }
                       onMouseLeave={handleCellMouseLeave}
                     />
                   );
@@ -207,10 +225,10 @@ export function BestTimeHeatmap({ slots, isLoading }: BestTimeHeatmapProps) {
           <span className="text-[10px] text-slate-500">Low activity</span>
           <div className="flex items-center gap-0.5">
             <div className="w-4 h-2.5 rounded-sm bg-slate-800/50" />
-            <div className="w-4 h-2.5 rounded-sm bg-cyan-900/40" />
-            <div className="w-4 h-2.5 rounded-sm bg-cyan-700/50" />
-            <div className="w-4 h-2.5 rounded-sm bg-cyan-500/60" />
-            <div className="w-4 h-2.5 rounded-sm bg-cyan-400/80" />
+            <div className="w-4 h-2.5 rounded-sm bg-orange-900/40" />
+            <div className="w-4 h-2.5 rounded-sm bg-orange-700/50" />
+            <div className="w-4 h-2.5 rounded-sm bg-orange-500/60" />
+            <div className="w-4 h-2.5 rounded-sm bg-orange-400/80" />
           </div>
           <span className="text-[10px] text-slate-500">High activity</span>
         </div>
@@ -225,7 +243,7 @@ export function BestTimeHeatmap({ slots, isLoading }: BestTimeHeatmapProps) {
               <p className="text-slate-300 font-medium">
                 {DAY_FULL[tooltip.day]}, {formatHour(tooltip.hour)}
               </p>
-              <p className="text-cyan-400">
+              <p className="text-orange-400">
                 Score: <span className="text-white">{tooltip.score}</span>
               </p>
               <p className="text-slate-400">

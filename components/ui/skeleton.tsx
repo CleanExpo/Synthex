@@ -9,16 +9,16 @@ const skeletonVariants = cva('animate-pulse rounded-md', {
       // Premium Glassmorphism variants
       glass: 'bg-white/10 backdrop-blur-sm',
       'glass-solid': 'bg-slate-700/50 backdrop-blur-sm',
-      'glass-primary': 'bg-cyan-500/20 backdrop-blur-sm',
-      'glass-secondary': 'bg-cyan-500/20 backdrop-blur-sm',
+      'glass-primary': 'bg-orange-500/20 backdrop-blur-sm',
+      'glass-secondary': 'bg-orange-500/20 backdrop-blur-sm',
       'glass-success': 'bg-emerald-500/20 backdrop-blur-sm',
       // Shimmer variants with gradient animation
       shimmer:
         'bg-gradient-to-r from-white/5 via-white/15 to-white/5 bg-[length:200%_100%] animate-shimmer',
       'shimmer-primary':
-        'bg-gradient-to-r from-cyan-500/10 via-cyan-500/25 to-cyan-500/10 bg-[length:200%_100%] animate-shimmer',
+        'bg-gradient-to-r from-orange-500/10 via-orange-500/25 to-orange-500/10 bg-[length:200%_100%] animate-shimmer',
       'shimmer-secondary':
-        'bg-gradient-to-r from-cyan-500/10 via-cyan-500/25 to-cyan-500/10 bg-[length:200%_100%] animate-shimmer',
+        'bg-gradient-to-r from-orange-500/10 via-orange-500/25 to-orange-500/10 bg-[length:200%_100%] animate-shimmer',
     },
   },
   defaultVariants: {
@@ -27,7 +27,8 @@ const skeletonVariants = cva('animate-pulse rounded-md', {
 });
 
 export interface SkeletonProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof skeletonVariants> {}
 
 function Skeleton({ className, variant, ...props }: SkeletonProps) {
@@ -42,7 +43,11 @@ function Skeleton({ className, variant, ...props }: SkeletonProps) {
   );
 }
 
-function SkeletonCard({ variant = 'glass' }: { variant?: SkeletonProps['variant'] }) {
+function SkeletonCard({
+  variant = 'glass',
+}: {
+  variant?: SkeletonProps['variant'];
+}) {
   return (
     <div
       className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6 space-y-4"
@@ -53,7 +58,11 @@ function SkeletonCard({ variant = 'glass' }: { variant?: SkeletonProps['variant'
       <span className="sr-only">Loading card content...</span>
       <div className="flex items-center justify-between">
         <Skeleton variant={variant} className="h-4 w-24" aria-hidden="true" />
-        <Skeleton variant={variant} className="h-8 w-8 rounded-full" aria-hidden="true" />
+        <Skeleton
+          variant={variant}
+          className="h-8 w-8 rounded-full"
+          aria-hidden="true"
+        />
       </div>
       <Skeleton variant={variant} className="h-8 w-32" aria-hidden="true" />
       <Skeleton variant={variant} className="h-3 w-full" aria-hidden="true" />
@@ -65,7 +74,11 @@ function SkeletonCard({ variant = 'glass' }: { variant?: SkeletonProps['variant'
   );
 }
 
-function SkeletonChart({ variant = 'glass' }: { variant?: SkeletonProps['variant'] }) {
+function SkeletonChart({
+  variant = 'glass',
+}: {
+  variant?: SkeletonProps['variant'];
+}) {
   return (
     <div
       className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6"
@@ -93,7 +106,11 @@ function SkeletonChart({ variant = 'glass' }: { variant?: SkeletonProps['variant
   );
 }
 
-function SkeletonTable({ variant = 'glass' }: { variant?: SkeletonProps['variant'] }) {
+function SkeletonTable({
+  variant = 'glass',
+}: {
+  variant?: SkeletonProps['variant'];
+}) {
   return (
     <div
       className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6"
@@ -102,16 +119,36 @@ function SkeletonTable({ variant = 'glass' }: { variant?: SkeletonProps['variant
       aria-label="Loading table"
     >
       <span className="sr-only">Loading table data...</span>
-      <Skeleton variant={variant} className="h-5 w-32 mb-4" aria-hidden="true" />
+      <Skeleton
+        variant={variant}
+        className="h-5 w-32 mb-4"
+        aria-hidden="true"
+      />
       <div className="space-y-3">
         {[...Array(5)].map((_, i) => (
           <div key={i} className="flex items-center gap-4">
-            <Skeleton variant={variant} className="h-10 w-10 rounded-full" aria-hidden="true" />
+            <Skeleton
+              variant={variant}
+              className="h-10 w-10 rounded-full"
+              aria-hidden="true"
+            />
             <div className="flex-1 space-y-2">
-              <Skeleton variant={variant} className="h-3 w-24" aria-hidden="true" />
-              <Skeleton variant={variant} className="h-2 w-full" aria-hidden="true" />
+              <Skeleton
+                variant={variant}
+                className="h-3 w-24"
+                aria-hidden="true"
+              />
+              <Skeleton
+                variant={variant}
+                className="h-2 w-full"
+                aria-hidden="true"
+              />
             </div>
-            <Skeleton variant={variant} className="h-4 w-16" aria-hidden="true" />
+            <Skeleton
+              variant={variant}
+              className="h-4 w-16"
+              aria-hidden="true"
+            />
           </div>
         ))}
       </div>
@@ -154,7 +191,12 @@ function SkeletonAvatar({
     xl: 'h-16 w-16',
   };
 
-  return <Skeleton variant={variant} className={cn('rounded-full', sizeClasses[size])} />;
+  return (
+    <Skeleton
+      variant={variant}
+      className={cn('rounded-full', sizeClasses[size])}
+    />
+  );
 }
 
 export {

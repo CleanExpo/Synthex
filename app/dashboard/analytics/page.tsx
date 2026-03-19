@@ -20,12 +20,39 @@ import {
 } from '@/components/analytics';
 
 // Dynamic imports for heavy chart components (Recharts ~80KB)
-const EngagementChart = dynamic(() => import('@/components/analytics').then(m => ({ default: m.EngagementChart })), { ssr: false });
-const PlatformChart = dynamic(() => import('@/components/analytics').then(m => ({ default: m.PlatformChart })), { ssr: false });
-const PerformanceChart = dynamic(() => import('@/components/analytics').then(m => ({ default: m.PerformanceChart })), { ssr: false });
-const GrowthChart = dynamic(() => import('@/components/analytics').then(m => ({ default: m.GrowthChart })), { ssr: false });
-const TopPosts = dynamic(() => import('@/components/analytics').then(m => ({ default: m.TopPosts })), { ssr: false });
-const MetricsTable = dynamic(() => import('@/components/analytics').then(m => ({ default: m.MetricsTable })), { ssr: false });
+const EngagementChart = dynamic(
+  () =>
+    import('@/components/analytics').then(m => ({
+      default: m.EngagementChart,
+    })),
+  { ssr: false }
+);
+const PlatformChart = dynamic(
+  () =>
+    import('@/components/analytics').then(m => ({ default: m.PlatformChart })),
+  { ssr: false }
+);
+const PerformanceChart = dynamic(
+  () =>
+    import('@/components/analytics').then(m => ({
+      default: m.PerformanceChart,
+    })),
+  { ssr: false }
+);
+const GrowthChart = dynamic(
+  () =>
+    import('@/components/analytics').then(m => ({ default: m.GrowthChart })),
+  { ssr: false }
+);
+const TopPosts = dynamic(
+  () => import('@/components/analytics').then(m => ({ default: m.TopPosts })),
+  { ssr: false }
+);
+const MetricsTable = dynamic(
+  () =>
+    import('@/components/analytics').then(m => ({ default: m.MetricsTable })),
+  { ssr: false }
+);
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('30d');
@@ -35,14 +62,21 @@ export default function AnalyticsPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   // Derive startDate/endDate ISO strings when custom range is active
-  const startDate = timeRange === 'custom' && dateRange?.from
-    ? dateRange.from.toISOString()
-    : undefined;
-  const endDate = timeRange === 'custom' && dateRange?.to
-    ? dateRange.to.toISOString()
-    : undefined;
+  const startDate =
+    timeRange === 'custom' && dateRange?.from
+      ? dateRange.from.toISOString()
+      : undefined;
+  const endDate =
+    timeRange === 'custom' && dateRange?.to
+      ? dateRange.to.toISOString()
+      : undefined;
 
-  const { data: responseData, isLoading, error, refetch } = usePerformanceAnalytics({
+  const {
+    data: responseData,
+    isLoading,
+    error,
+    refetch,
+  } = usePerformanceAnalytics({
     period: timeRange,
     platform,
     granularity: 'day',
@@ -65,24 +99,30 @@ export default function AnalyticsPage() {
   }, []);
 
   // Build displayData from performance API overview
-  const displayData: DisplayData = useMemo(() => ({
-    reach: performanceData?.overview?.totalReach ?? 0,
-    engagement: performanceData?.overview?.totalEngagement ?? 0,
-    engagementRate: performanceData?.overview?.averageEngagementRate ?? 0,
-    followerGrowth: 0,
-    growth: performanceData?.growth,
-  }), [performanceData]);
+  const displayData: DisplayData = useMemo(
+    () => ({
+      reach: performanceData?.overview?.totalReach ?? 0,
+      engagement: performanceData?.overview?.totalEngagement ?? 0,
+      engagementRate: performanceData?.overview?.averageEngagementRate ?? 0,
+      followerGrowth: 0,
+      growth: performanceData?.growth,
+    }),
+    [performanceData]
+  );
 
   // Transform platform data for pie chart (from performance API platforms array)
   const chartPlatformDistribution = useMemo(() => {
     if (!performanceData?.platforms || performanceData.platforms.length === 0) {
       return [];
     }
-    const total = performanceData.platforms.reduce((sum, p) => sum + p.posts, 0);
-    return performanceData.platforms.map((p) => ({
+    const total = performanceData.platforms.reduce(
+      (sum, p) => sum + p.posts,
+      0
+    );
+    return performanceData.platforms.map(p => ({
       name: p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
       value: total > 0 ? Math.round((p.posts / total) * 100) : 0,
-      color: platformColors[p.platform] ?? '#06b6d4',
+      color: platformColors[p.platform] ?? '#ffb87b',
     }));
   }, [performanceData?.platforms]);
 
@@ -109,7 +149,7 @@ export default function AnalyticsPage() {
     if (!performanceData?.platforms || performanceData.platforms.length === 0) {
       return [];
     }
-    return performanceData.platforms.map((p) => ({
+    return performanceData.platforms.map(p => ({
       type: p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
       engagement: p.engagement,
       reach: p.engagementRate, // engagementRate maps to reach axis (0-100 scale)
@@ -122,7 +162,7 @@ export default function AnalyticsPage() {
     if (!performanceData?.platforms || performanceData.platforms.length === 0) {
       return undefined;
     }
-    return performanceData.platforms.map((p) => ({
+    return performanceData.platforms.map(p => ({
       platform: p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
       followers: 0, // Not available from performance API
       posts: p.posts,
@@ -138,7 +178,7 @@ export default function AnalyticsPage() {
     if (!performanceData?.platforms || performanceData.platforms.length === 0) {
       return undefined;
     }
-    return performanceData.platforms.map((p) => ({
+    return performanceData.platforms.map(p => ({
       platform: p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
       likes: Math.round(p.engagement * 0.6),
       comments: Math.round(p.engagement * 0.25),
@@ -152,7 +192,7 @@ export default function AnalyticsPage() {
     if (!performanceData?.platforms || performanceData.platforms.length === 0) {
       return undefined;
     }
-    return performanceData.platforms.map((p) => ({
+    return performanceData.platforms.map(p => ({
       platform: p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
       topPosts: p.posts,
       avgEngagementRate: p.engagementRate,
@@ -178,22 +218,25 @@ export default function AnalyticsPage() {
     a.click();
   }, [performanceData, timeRange]);
 
-  const handleViewPostDetails = useCallback((postIndex: number) => {
-    const topContent = performanceData?.topContent;
-    if (!topContent) return;
-    // postIndex is 1-based (from transformTopContent's index + 1)
-    const rawPost = topContent[postIndex - 1];
-    if (!rawPost) return;
-    setSelectedPost({
-      id: rawPost.id,
-      content: rawPost.content,
-      platform: rawPost.platform,
-      engagement: rawPost.engagement,
-      engagementRate: rawPost.engagementRate,
-      publishedAt: rawPost.publishedAt,
-    });
-    setIsDetailOpen(true);
-  }, [performanceData?.topContent]);
+  const handleViewPostDetails = useCallback(
+    (postIndex: number) => {
+      const topContent = performanceData?.topContent;
+      if (!topContent) return;
+      // postIndex is 1-based (from transformTopContent's index + 1)
+      const rawPost = topContent[postIndex - 1];
+      if (!rawPost) return;
+      setSelectedPost({
+        id: rawPost.id,
+        content: rawPost.content,
+        platform: rawPost.platform,
+        engagement: rawPost.engagement,
+        engagementRate: rawPost.engagementRate,
+        publishedAt: rawPost.publishedAt,
+      });
+      setIsDetailOpen(true);
+    },
+    [performanceData?.topContent]
+  );
 
   const handleViewAllPosts = useCallback(() => {
     window.location.href = '/dashboard/content';

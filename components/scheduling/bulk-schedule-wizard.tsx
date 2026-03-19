@@ -42,7 +42,10 @@ import {
 import { toast } from 'sonner';
 import { fetchWithCSRF } from '@/lib/csrf';
 import { autoFillSchedule } from '@/lib/scheduling/auto-fill';
-import { parseScheduleCSV, downloadCSVTemplate } from '@/lib/scheduling/csv-parser';
+import {
+  parseScheduleCSV,
+  downloadCSVTemplate,
+} from '@/lib/scheduling/csv-parser';
 import { useOptimalTimes } from '@/hooks/use-optimal-times';
 import { useScheduleConflicts } from '@/hooks/use-schedule-conflicts';
 import type {
@@ -129,7 +132,7 @@ const STEP_LABELS: Record<WizardStep, string> = {
 // =============================================================================
 
 const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => {
+  fetch(url, { credentials: 'include' }).then(r => {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return r.json();
   });
@@ -159,12 +162,12 @@ function toInputDate(date: Date): string {
 }
 
 function platformLabel(value: string): string {
-  return SUPPORTED_PLATFORMS.find((p) => p.value === value)?.label ?? value;
+  return SUPPORTED_PLATFORMS.find(p => p.value === value)?.label ?? value;
 }
 
 function scoreColour(score: number): string {
   if (score >= 80) return 'text-green-400';
-  if (score >= 60) return 'text-cyan-400';
+  if (score >= 60) return 'text-orange-400';
   if (score >= 40) return 'text-yellow-400';
   return 'text-red-400';
 }
@@ -204,10 +207,18 @@ export function BulkScheduleWizard({
     return [];
   });
 
-  const [activeTab, setActiveTab] = useState<'paste' | 'csv' | 'drafts'>('paste');
-  const [csvErrors, setCsvErrors] = useState<Array<{ row: number; message: string }>>([]);
-  const [csvWarnings, setCsvWarnings] = useState<Array<{ row: number; message: string }>>([]);
-  const [selectedDraftIds, setSelectedDraftIds] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<'paste' | 'csv' | 'drafts'>(
+    'paste'
+  );
+  const [csvErrors, setCsvErrors] = useState<
+    Array<{ row: number; message: string }>
+  >([]);
+  const [csvWarnings, setCsvWarnings] = useState<
+    Array<{ row: number; message: string }>
+  >([]);
+  const [selectedDraftIds, setSelectedDraftIds] = useState<Set<string>>(
+    new Set()
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ---------------------------------------------------------------------------
@@ -239,7 +250,7 @@ export function BulkScheduleWizard({
   // Hooks for ML data
   // ---------------------------------------------------------------------------
   const uniquePlatforms = useMemo(
-    () => [...new Set(items.map((i) => i.platform))],
+    () => [...new Set(items.map(i => i.platform))],
     [items]
   );
 
@@ -248,7 +259,10 @@ export function BulkScheduleWizard({
     enabled: step >= 2 && open,
   });
 
-  const scheduleStart = useMemo(() => new Date(startDate + 'T00:00:00'), [startDate]);
+  const scheduleStart = useMemo(
+    () => new Date(startDate + 'T00:00:00'),
+    [startDate]
+  );
   const scheduleEnd = useMemo(() => new Date(endDate + 'T23:59:59'), [endDate]);
 
   const { existingPosts, isLoading: conflictsLoading } = useScheduleConflicts({
@@ -261,7 +275,9 @@ export function BulkScheduleWizard({
   // Drafts SWR
   // ---------------------------------------------------------------------------
   const { data: draftsData, isLoading: draftsLoading } = useSWR(
-    activeTab === 'drafts' && open ? '/api/content-drafts?status=draft&limit=50' : null,
+    activeTab === 'drafts' && open
+      ? '/api/content-drafts?status=draft&limit=50'
+      : null,
     fetchJson,
     { revalidateOnFocus: false }
   );
@@ -282,7 +298,7 @@ export function BulkScheduleWizard({
   // ---------------------------------------------------------------------------
 
   const addEmptyItem = useCallback(() => {
-    setItems((prev) => [
+    setItems(prev => [
       ...prev,
       {
         id: genId(),
@@ -297,64 +313,69 @@ export function BulkScheduleWizard({
 
   const updateItem = useCallback(
     (id: string, updates: Partial<WizardContentItem>) => {
-      setItems((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
+      setItems(prev =>
+        prev.map(item => (item.id === id ? { ...item, ...updates } : item))
       );
     },
     []
   );
 
   const removeItem = useCallback((id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    setItems(prev => prev.filter(item => item.id !== id));
   }, []);
 
-  const handleCSVUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleCSVUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      if (!text) return;
+      const reader = new FileReader();
+      reader.onload = event => {
+        const text = event.target?.result as string;
+        if (!text) return;
 
-      const result = parseScheduleCSV(text);
-      setCsvErrors(result.errors);
-      setCsvWarnings(result.warnings);
+        const result = parseScheduleCSV(text);
+        setCsvErrors(result.errors);
+        setCsvWarnings(result.warnings);
 
-      if (result.items.length > 0) {
-        const newItems: WizardContentItem[] = result.items.map((row) => ({
-          id: genId(),
-          content: row.content,
-          platform: row.platform,
-          hashtags: row.hashtags ?? [],
-          mediaUrls: [],
-          source: 'csv' as const,
-        }));
+        if (result.items.length > 0) {
+          const newItems: WizardContentItem[] = result.items.map(row => ({
+            id: genId(),
+            content: row.content,
+            platform: row.platform,
+            hashtags: row.hashtags ?? [],
+            mediaUrls: [],
+            source: 'csv' as const,
+          }));
 
-        setItems((prev) => [...prev, ...newItems]);
-        toast.success(`Imported ${newItems.length} items from CSV`);
+          setItems(prev => [...prev, ...newItems]);
+          toast.success(`Imported ${newItems.length} items from CSV`);
+        }
+
+        if (result.errors.length > 0) {
+          toast.error(
+            `${result.errors.length} rows had errors and were skipped`
+          );
+        }
+      };
+      reader.readAsText(file);
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
-
-      if (result.errors.length > 0) {
-        toast.error(`${result.errors.length} rows had errors and were skipped`);
-      }
-    };
-    reader.readAsText(file);
-
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, []);
+    },
+    []
+  );
 
   const handleAddDrafts = useCallback(() => {
-    const selected = drafts.filter((d) => selectedDraftIds.has(d.id));
+    const selected = drafts.filter(d => selectedDraftIds.has(d.id));
     if (selected.length === 0) {
       toast.error('Select at least one draft');
       return;
     }
 
-    const newItems: WizardContentItem[] = selected.map((d) => ({
+    const newItems: WizardContentItem[] = selected.map(d => ({
       id: genId(),
       content: d.content,
       platform: d.platform,
@@ -364,13 +385,13 @@ export function BulkScheduleWizard({
       draftId: d.id,
     }));
 
-    setItems((prev) => [...prev, ...newItems]);
+    setItems(prev => [...prev, ...newItems]);
     setSelectedDraftIds(new Set());
     toast.success(`Added ${selected.length} drafts`);
   }, [drafts, selectedDraftIds]);
 
   const toggleDraft = useCallback((draftId: string) => {
-    setSelectedDraftIds((prev) => {
+    setSelectedDraftIds(prev => {
       const next = new Set(prev);
       if (next.has(draftId)) {
         next.delete(draftId);
@@ -386,21 +407,21 @@ export function BulkScheduleWizard({
   // ---------------------------------------------------------------------------
 
   const runAutoFill = useCallback(() => {
-    const contentItems: ContentItem[] = items.map((i) => ({
+    const contentItems: ContentItem[] = items.map(i => ({
       content: i.content,
       platform: i.platform,
       hashtags: i.hashtags,
       mediaUrls: i.mediaUrls,
     }));
 
-    const mappedOptimalSlots: OptimalSlot[] = optimalSlots.map((s) => ({
+    const mappedOptimalSlots: OptimalSlot[] = optimalSlots.map(s => ({
       day: s.day,
       hour: s.hour,
       score: s.score,
       platform: s.platform,
     }));
 
-    const mappedExisting = existingPosts.map((p) => ({
+    const mappedExisting = existingPosts.map(p => ({
       platform: p.platform,
       scheduledAt: p.scheduledAt,
     }));
@@ -410,13 +431,18 @@ export function BulkScheduleWizard({
         ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
         : 'UTC';
 
-    const result = autoFillSchedule(contentItems, mappedOptimalSlots, mappedExisting, {
-      startDate: scheduleStart,
-      endDate: scheduleEnd,
-      minIntervalHours: minInterval,
-      timezone,
-      maxPostsPerDay: maxPerDay,
-    });
+    const result = autoFillSchedule(
+      contentItems,
+      mappedOptimalSlots,
+      mappedExisting,
+      {
+        startDate: scheduleStart,
+        endDate: scheduleEnd,
+        minIntervalHours: minInterval,
+        timezone,
+        maxPostsPerDay: maxPerDay,
+      }
+    );
 
     setScheduleResult(result);
 
@@ -425,7 +451,15 @@ export function BulkScheduleWizard({
         `Only ${result.length} of ${items.length} items could be scheduled in the selected range. Try expanding the date range or reducing the minimum interval.`
       );
     }
-  }, [items, optimalSlots, existingPosts, scheduleStart, scheduleEnd, minInterval, maxPerDay]);
+  }, [
+    items,
+    optimalSlots,
+    existingPosts,
+    scheduleStart,
+    scheduleEnd,
+    minInterval,
+    maxPerDay,
+  ]);
 
   // ---------------------------------------------------------------------------
   // Step 4: Schedule all
@@ -479,9 +513,7 @@ export function BulkScheduleWizard({
     if (errorCount === 0) {
       toast.success(`Successfully scheduled ${successCount} posts!`);
     } else {
-      toast.warning(
-        `Scheduled ${successCount} posts. ${errorCount} failed.`
-      );
+      toast.warning(`Scheduled ${successCount} posts. ${errorCount} failed.`);
     }
 
     onComplete?.();
@@ -494,7 +526,9 @@ export function BulkScheduleWizard({
   const canProceed = useMemo(() => {
     switch (step) {
       case 1:
-        return items.length > 0 && items.every((i) => i.content.trim().length > 0);
+        return (
+          items.length > 0 && items.every(i => i.content.trim().length > 0)
+        );
       case 2:
         return startDate && endDate && new Date(startDate) <= new Date(endDate);
       case 3:
@@ -515,13 +549,13 @@ export function BulkScheduleWizard({
       return;
     }
     if (step < 4) {
-      setStep((s) => (s + 1) as WizardStep);
+      setStep(s => (s + 1) as WizardStep);
     }
   }, [step, runAutoFill]);
 
   const goBack = useCallback(() => {
     if (step > 1) {
-      setStep((s) => (s - 1) as WizardStep);
+      setStep(s => (s - 1) as WizardStep);
     }
   }, [step]);
 
@@ -543,7 +577,7 @@ export function BulkScheduleWizard({
   // Render helpers
   // ---------------------------------------------------------------------------
 
-  const validItemCount = items.filter((i) => i.content.trim().length > 0).length;
+  const validItemCount = items.filter(i => i.content.trim().length > 0).length;
 
   // ---------------------------------------------------------------------------
   // Render
@@ -564,12 +598,12 @@ export function BulkScheduleWizard({
 
         {/* Step indicator */}
         <div className="flex items-center gap-2 mb-4">
-          {([1, 2, 3, 4] as WizardStep[]).map((s) => (
+          {([1, 2, 3, 4] as WizardStep[]).map(s => (
             <div key={s} className="flex items-center gap-2 flex-1">
               <div
                 className={`
                   flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium
-                  ${step === s ? 'bg-cyan-500 text-white' : ''}
+                  ${step === s ? 'bg-orange-500 text-white' : ''}
                   ${step > s ? 'bg-green-500/20 text-green-400 border border-green-500/30' : ''}
                   ${step < s ? 'bg-white/5 text-white/40 border border-white/10' : ''}
                 `}
@@ -613,7 +647,7 @@ export function BulkScheduleWizard({
                   onClick={() => setActiveTab(key)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
                     activeTab === key
-                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                      ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
                       : 'text-white/60 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -627,8 +661,8 @@ export function BulkScheduleWizard({
             {activeTab === 'paste' && (
               <div className="space-y-3">
                 {items
-                  .filter((i) => i.source === 'paste')
-                  .map((item) => (
+                  .filter(i => i.source === 'paste')
+                  .map(item => (
                     <div
                       key={item.id}
                       className="flex gap-3 bg-white/5 rounded-lg p-3 border border-white/10"
@@ -636,21 +670,21 @@ export function BulkScheduleWizard({
                       <div className="flex-1 space-y-2">
                         <textarea
                           value={item.content}
-                          onChange={(e) =>
+                          onChange={e =>
                             updateItem(item.id, { content: e.target.value })
                           }
                           placeholder="Enter your post content..."
-                          className="w-full bg-transparent border border-white/10 rounded-lg p-2 text-sm text-white placeholder-white/30 resize-none focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
+                          className="w-full bg-transparent border border-white/10 rounded-lg p-2 text-sm text-white placeholder-white/30 resize-none focus:ring-1 focus:ring-orange-500/30 focus:outline-none"
                           rows={3}
                         />
                         <select
                           value={item.platform}
-                          onChange={(e) =>
+                          onChange={e =>
                             updateItem(item.id, { platform: e.target.value })
                           }
-                          className="bg-gray-950 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
+                          className="bg-gray-950 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:ring-1 focus:ring-orange-500/30 focus:outline-none"
                         >
-                          {SUPPORTED_PLATFORMS.map((p) => (
+                          {SUPPORTED_PLATFORMS.map(p => (
                             <option key={p.value} value={p.value}>
                               {p.label}
                             </option>
@@ -684,8 +718,8 @@ export function BulkScheduleWizard({
                 <div className="border-2 border-dashed border-white/10 rounded-lg p-6 text-center">
                   <Upload className="h-8 w-8 text-white/30 mx-auto mb-2" />
                   <p className="text-sm text-white/60 mb-2">
-                    Upload a CSV file with columns: content, platform, scheduledAt
-                    (optional), hashtags (optional)
+                    Upload a CSV file with columns: content, platform,
+                    scheduledAt (optional), hashtags (optional)
                   </p>
                   <div className="flex gap-2 justify-center">
                     <Button
@@ -758,7 +792,7 @@ export function BulkScheduleWizard({
               <div className="space-y-3">
                 {draftsLoading ? (
                   <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-5 w-5 animate-spin text-cyan-400" />
+                    <Loader2 className="h-5 w-5 animate-spin text-orange-400" />
                     <span className="ml-2 text-sm text-white/60">
                       Loading drafts...
                     </span>
@@ -774,25 +808,27 @@ export function BulkScheduleWizard({
                 ) : (
                   <>
                     <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {drafts.map((draft) => {
+                      {drafts.map(draft => {
                         const alreadyAdded = items.some(
-                          (i) => i.draftId === draft.id
+                          i => i.draftId === draft.id
                         );
                         return (
                           <label
                             key={draft.id}
                             className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                               selectedDraftIds.has(draft.id)
-                                ? 'bg-cyan-500/10 border-cyan-500/30'
+                                ? 'bg-orange-500/10 border-orange-500/30'
                                 : 'bg-white/5 border-white/10 hover:bg-white/10'
                             } ${alreadyAdded ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             <input
                               type="checkbox"
                               checked={selectedDraftIds.has(draft.id)}
-                              onChange={() => !alreadyAdded && toggleDraft(draft.id)}
+                              onChange={() =>
+                                !alreadyAdded && toggleDraft(draft.id)
+                              }
                               disabled={alreadyAdded}
-                              className="mt-1 rounded border-white/20 bg-white/5 text-cyan-500 focus:ring-cyan-500/30"
+                              className="mt-1 rounded border-white/20 bg-white/5 text-orange-500 focus:ring-orange-500/30"
                             />
                             <div className="flex-1 min-w-0">
                               {draft.title && (
@@ -803,7 +839,7 @@ export function BulkScheduleWizard({
                               <p className="text-xs text-white/60 line-clamp-2">
                                 {draft.content}
                               </p>
-                              <span className="text-[10px] text-cyan-400 mt-1 inline-block">
+                              <span className="text-[10px] text-orange-400 mt-1 inline-block">
                                 {platformLabel(draft.platform)}
                               </span>
                               {alreadyAdded && (
@@ -836,16 +872,16 @@ export function BulkScheduleWizard({
             {items.length > 0 && (
               <div className="border-t border-white/10 pt-3">
                 <p className="text-sm text-white/80 mb-2">
-                  <span className="font-medium text-cyan-400">
+                  <span className="font-medium text-orange-400">
                     {validItemCount}
                   </span>{' '}
                   item{validItemCount !== 1 ? 's' : ''} ready
                 </p>
-                {items.filter((i) => i.source !== 'paste').length > 0 && (
+                {items.filter(i => i.source !== 'paste').length > 0 && (
                   <div className="space-y-1 max-h-32 overflow-y-auto">
                     {items
-                      .filter((i) => i.source !== 'paste')
-                      .map((item) => (
+                      .filter(i => i.source !== 'paste')
+                      .map(item => (
                         <div
                           key={item.id}
                           className="flex items-center gap-2 text-xs bg-white/5 rounded px-2 py-1"
@@ -854,7 +890,7 @@ export function BulkScheduleWizard({
                             {item.content.slice(0, 60)}
                             {item.content.length > 60 ? '...' : ''}
                           </span>
-                          <span className="text-cyan-400 text-[10px]">
+                          <span className="text-orange-400 text-[10px]">
                             {platformLabel(item.platform)}
                           </span>
                           <button
@@ -884,20 +920,20 @@ export function BulkScheduleWizard({
               </label>
               <select
                 value={defaultPlatform}
-                onChange={(e) => {
+                onChange={e => {
                   setDefaultPlatform(e.target.value);
                   // Update items that don't have a platform
-                  setItems((prev) =>
-                    prev.map((item) =>
+                  setItems(prev =>
+                    prev.map(item =>
                       !item.platform
                         ? { ...item, platform: e.target.value }
                         : item
                     )
                   );
                 }}
-                className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
+                className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-orange-500/30 focus:outline-none"
               >
-                {SUPPORTED_PLATFORMS.map((p) => (
+                {SUPPORTED_PLATFORMS.map(p => (
                   <option key={p.value} value={p.value}>
                     {p.label}
                   </option>
@@ -915,8 +951,8 @@ export function BulkScheduleWizard({
                 <input
                   type="date"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
+                  onChange={e => setStartDate(e.target.value)}
+                  className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-orange-500/30 focus:outline-none"
                 />
               </div>
               <div>
@@ -927,8 +963,8 @@ export function BulkScheduleWizard({
                 <input
                   type="date"
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
+                  onChange={e => setEndDate(e.target.value)}
+                  className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-orange-500/30 focus:outline-none"
                 />
               </div>
             </div>
@@ -942,10 +978,10 @@ export function BulkScheduleWizard({
                 </label>
                 <select
                   value={minInterval}
-                  onChange={(e) => setMinInterval(Number(e.target.value))}
-                  className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
+                  onChange={e => setMinInterval(Number(e.target.value))}
+                  className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-orange-500/30 focus:outline-none"
                 >
-                  {INTERVAL_OPTIONS.map((o) => (
+                  {INTERVAL_OPTIONS.map(o => (
                     <option key={o.value} value={o.value}>
                       {o.label}
                     </option>
@@ -958,10 +994,10 @@ export function BulkScheduleWizard({
                 </label>
                 <select
                   value={maxPerDay}
-                  onChange={(e) => setMaxPerDay(Number(e.target.value))}
-                  className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
+                  onChange={e => setMaxPerDay(Number(e.target.value))}
+                  className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-orange-500/30 focus:outline-none"
                 >
-                  {MAX_PER_DAY_OPTIONS.map((o) => (
+                  {MAX_PER_DAY_OPTIONS.map(o => (
                     <option key={o.value} value={o.value}>
                       {o.label}
                     </option>
@@ -974,14 +1010,14 @@ export function BulkScheduleWizard({
             <div className="bg-white/5 rounded-lg p-3 border border-white/10">
               <p className="text-xs text-white/60 mb-2">Content Summary</p>
               <div className="flex flex-wrap gap-2">
-                {uniquePlatforms.map((platform) => {
+                {uniquePlatforms.map(platform => {
                   const count = items.filter(
-                    (i) => i.platform === platform
+                    i => i.platform === platform
                   ).length;
                   return (
                     <span
                       key={platform}
-                      className="text-xs bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded-full border border-cyan-500/20"
+                      className="text-xs bg-orange-500/10 text-orange-400 px-2 py-1 rounded-full border border-orange-500/20"
                     >
                       {platformLabel(platform)} ({count})
                     </span>
@@ -989,8 +1025,7 @@ export function BulkScheduleWizard({
                 })}
               </div>
               <p className="text-xs text-white/40 mt-2">
-                {items.length} items across{' '}
-                {uniquePlatforms.length} platform
+                {items.length} items across {uniquePlatforms.length} platform
                 {uniquePlatforms.length !== 1 ? 's' : ''}
               </p>
             </div>
@@ -1026,7 +1061,7 @@ export function BulkScheduleWizard({
 
             {scheduleResult.length === 0 ? (
               <div className="text-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-cyan-400 mx-auto mb-2" />
+                <Loader2 className="h-6 w-6 animate-spin text-orange-400 mx-auto mb-2" />
                 <p className="text-sm text-white/40">
                   Generating optimal schedule...
                 </p>
@@ -1047,7 +1082,7 @@ export function BulkScheduleWizard({
                         {slot.contentItem.content}
                       </p>
                       <div className="flex items-center gap-2 mt-1.5">
-                        <span className="text-[10px] bg-cyan-500/10 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-500/20">
+                        <span className="text-[10px] bg-orange-500/10 text-orange-400 px-1.5 py-0.5 rounded border border-orange-500/20">
                           {platformLabel(slot.contentItem.platform)}
                         </span>
                         <span className="text-[10px] text-white/40 flex items-center gap-1">
@@ -1120,14 +1155,14 @@ export function BulkScheduleWizard({
             {isScheduling && (
               <div className="space-y-3">
                 <div className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin text-cyan-400" />
+                  <Loader2 className="h-5 w-5 animate-spin text-orange-400" />
                   <p className="text-sm text-white">
                     Creating {scheduleProgress}/{scheduleResult.length}...
                   </p>
                 </div>
                 <div className="w-full bg-white/10 rounded-full h-2">
                   <div
-                    className="bg-cyan-500 h-2 rounded-full transition-all duration-300"
+                    className="bg-orange-500 h-2 rounded-full transition-all duration-300"
                     style={{
                       width: `${(scheduleProgress / scheduleResult.length) * 100}%`,
                     }}

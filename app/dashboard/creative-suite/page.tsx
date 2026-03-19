@@ -86,7 +86,7 @@ function CISCardGrid() {
           >
             {/* Icon */}
             <div className="flex items-center justify-start">
-              <Icon className="w-6 h-6 text-cyan-400" />
+              <Icon className="w-6 h-6 text-orange-400" />
             </div>
 
             {/* Title + Description */}
@@ -103,7 +103,7 @@ function CISCardGrid() {
             <Link
               href={card.href}
               aria-label={`Open ${card.title}`}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-400 hover:text-cyan-300 transition-colors mt-auto"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-orange-400 hover:text-orange-300 transition-colors mt-auto"
             >
               Open →
             </Link>

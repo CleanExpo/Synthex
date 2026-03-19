@@ -35,7 +35,11 @@ export interface TestimonialCardProps {
   variant?: 'default' | 'featured' | 'compact';
 }
 
-export function TestimonialCard({ testimonial, className, variant = 'default' }: TestimonialCardProps) {
+export function TestimonialCard({
+  testimonial,
+  className,
+  variant = 'default',
+}: TestimonialCardProps) {
   const isFeatured = variant === 'featured' || testimonial.featured;
   const isCompact = variant === 'compact';
 
@@ -43,19 +47,19 @@ export function TestimonialCard({ testimonial, className, variant = 'default' }:
     <Card
       className={cn(
         'relative overflow-hidden transition-all duration-300',
-        isFeatured
-          ? 'glass-primary'
-          : 'glass hover:bg-white/[0.08]',
+        isFeatured ? 'glass-primary' : 'glass hover:bg-white/[0.08]',
         isCompact ? 'p-4' : '',
         className
       )}
     >
       {/* Quote icon */}
-      <div className={cn(
-        'absolute opacity-10',
-        isFeatured ? 'text-cyan-400' : 'text-white',
-        isCompact ? 'top-2 right-2' : 'top-4 right-4'
-      )}>
+      <div
+        className={cn(
+          'absolute opacity-10',
+          isFeatured ? 'text-orange-400' : 'text-white',
+          isCompact ? 'top-2 right-2' : 'top-4 right-4'
+        )}
+      >
         <Quote className={isCompact ? 'w-8 h-8' : 'w-12 h-12'} />
       </div>
 
@@ -78,11 +82,13 @@ export function TestimonialCard({ testimonial, className, variant = 'default' }:
         )}
 
         {/* Quote */}
-        <blockquote className={cn(
-          'text-slate-300 leading-relaxed mb-4',
-          isCompact ? 'text-sm' : 'text-base',
-          isFeatured ? 'text-slate-200' : ''
-        )}>
+        <blockquote
+          className={cn(
+            'text-slate-300 leading-relaxed mb-4',
+            isCompact ? 'text-sm' : 'text-base',
+            isFeatured ? 'text-slate-200' : ''
+          )}
+        >
           "{testimonial.quote}"
         </blockquote>
 
@@ -107,13 +113,18 @@ export function TestimonialCard({ testimonial, className, variant = 'default' }:
               className="w-10 h-10 rounded-full object-cover ring-2 ring-white/10"
             />
           ) : (
-            <div className={cn(
-              'w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm',
-              isFeatured
-                ? 'bg-gradient-to-br from-cyan-500 to-cyan-500 text-white'
-                : 'bg-white/10 text-white'
-            )}>
-              {testimonial.author.name.split(' ').map(n => n[0]).join('')}
+            <div
+              className={cn(
+                'w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm',
+                isFeatured
+                  ? 'bg-gradient-to-br from-orange-500 to-orange-500 text-white'
+                  : 'bg-white/10 text-white'
+              )}
+            >
+              {testimonial.author.name
+                .split(' ')
+                .map(n => n[0])
+                .join('')}
             </div>
           )}
           <div className="flex-1 min-w-0">
@@ -123,7 +134,13 @@ export function TestimonialCard({ testimonial, className, variant = 'default' }:
             <div className="text-sm text-slate-400 truncate">
               {testimonial.author.title}
               {testimonial.author.company && (
-                <> at <span className="text-slate-300">{testimonial.author.company}</span></>
+                <>
+                  {' '}
+                  at{' '}
+                  <span className="text-slate-300">
+                    {testimonial.author.company}
+                  </span>
+                </>
               )}
             </div>
           </div>
@@ -147,7 +164,11 @@ export interface TestimonialGridProps {
   className?: string;
 }
 
-export function TestimonialGrid({ testimonials, columns = 3, className }: TestimonialGridProps) {
+export function TestimonialGrid({
+  testimonials,
+  columns = 3,
+  className,
+}: TestimonialGridProps) {
   return (
     <div
       className={cn(

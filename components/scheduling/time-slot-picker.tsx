@@ -11,9 +11,18 @@
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { useOptimalTimes, type OptimalTimeSlot } from '@/hooks/use-optimal-times';
+import {
+  useOptimalTimes,
+  type OptimalTimeSlot,
+} from '@/hooks/use-optimal-times';
 import { useScheduleConflicts } from '@/hooks/use-schedule-conflicts';
-import { Sparkles, AlertCircle, Clock, ChevronLeft, ChevronRight } from '@/components/icons';
+import {
+  Sparkles,
+  AlertCircle,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+} from '@/components/icons';
 
 // =============================================================================
 // Types
@@ -65,7 +74,15 @@ function isSameDay(a: Date, b: Date): boolean {
 }
 
 function getDayName(date: Date): string {
-  const names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const names = [
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ];
   return names[date.getDay()];
 }
 
@@ -90,7 +107,7 @@ function DayStrip({ days, selectedDay, onSelect }: DayStripProps) {
 
   return (
     <div className="flex gap-1.5 overflow-x-auto pb-1">
-      {days.map((day) => {
+      {days.map(day => {
         const isSelected = isSameDay(day, selectedDay);
         const isToday = isSameDay(day, today);
 
@@ -101,7 +118,7 @@ function DayStrip({ days, selectedDay, onSelect }: DayStripProps) {
             onClick={() => onSelect(day)}
             className={`flex flex-col items-center min-w-[3.5rem] px-2 py-2 rounded-lg text-xs font-medium transition-all ${
               isSelected
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 ring-1 ring-cyan-500/20'
+                ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30 ring-1 ring-orange-500/20'
                 : isToday
                   ? 'bg-white/5 text-white border border-white/10'
                   : 'bg-white/[0.02] text-slate-400 border border-white/[0.06] hover:bg-white/5 hover:text-slate-300'
@@ -114,7 +131,7 @@ function DayStrip({ days, selectedDay, onSelect }: DayStripProps) {
               {day.getDate()}
             </span>
             {isToday && (
-              <span className="text-[8px] text-cyan-400 mt-0.5">Today</span>
+              <span className="text-[8px] text-orange-400 mt-0.5">Today</span>
             )}
           </button>
         );
@@ -193,7 +210,7 @@ function HourGrid({
               isDisabled
                 ? 'opacity-30 cursor-not-allowed bg-gray-900/50 border-white/[0.04] text-slate-600'
                 : isSelected
-                  ? 'ring-2 ring-cyan-500 bg-cyan-500/15 border-cyan-500/40 text-cyan-300'
+                  ? 'ring-2 ring-orange-500 bg-orange-500/15 border-orange-500/40 text-orange-300'
                   : `${scoreBg} text-slate-300 hover:bg-white/10 hover:border-white/20 cursor-pointer`
             }`}
             title={
@@ -210,7 +227,9 @@ function HourGrid({
 
             {/* Score indicator dot */}
             {score >= 80 && !isSelected && (
-              <span className={`absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-green-400`} />
+              <span
+                className={`absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-green-400`}
+              />
             )}
 
             {/* Conflict marker */}
@@ -232,14 +251,14 @@ interface MinuteSelectorProps {
 function MinuteSelector({ selectedMinute, onSelect }: MinuteSelectorProps) {
   return (
     <div className="flex gap-2">
-      {MINUTES.map((minute) => (
+      {MINUTES.map(minute => (
         <button
           key={minute}
           type="button"
           onClick={() => onSelect(minute)}
           className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all border ${
             selectedMinute === minute
-              ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
+              ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
               : 'bg-white/[0.03] text-slate-400 border-white/[0.06] hover:bg-white/5 hover:text-slate-300'
           }`}
         >
@@ -264,7 +283,10 @@ export function TimeSlotPicker({
   showConflicts = true,
   compact = false,
 }: TimeSlotPickerProps) {
-  const allPlatforms = platforms ?? [platform];
+  const allPlatforms = useMemo(
+    () => platforms ?? [platform],
+    [platforms, platform]
+  );
 
   // Build 7-day range starting from today
   const today = useMemo(() => {
@@ -312,17 +334,23 @@ export function TimeSlotPicker({
   }, [days]);
 
   // Hooks
-  const { slots: optimalSlots, isLoading: optimalLoading, bestNextSlot } =
-    useOptimalTimes({
-      platforms: allPlatforms,
-      enabled: showOptimalSlots,
-    });
+  const {
+    slots: optimalSlots,
+    isLoading: optimalLoading,
+    bestNextSlot,
+  } = useOptimalTimes({
+    platforms: allPlatforms,
+    enabled: showOptimalSlots,
+  });
 
-  const { existingPosts, checkConflict, isLoading: conflictsLoading } =
-    useScheduleConflicts({
-      ...conflictRange,
-      enabled: showConflicts,
-    });
+  const {
+    existingPosts,
+    checkConflict,
+    isLoading: conflictsLoading,
+  } = useScheduleConflicts({
+    ...conflictRange,
+    enabled: showConflicts,
+  });
 
   // Build conflict map for the selected day (hour -> tooltip)
   const conflictHours = useMemo(() => {
@@ -334,9 +362,15 @@ export function TimeSlotPicker({
     for (const post of existingPosts) {
       // Check all platforms being scheduled
       for (const p of allPlatforms) {
-        if (post.platform === p.toLowerCase() && isSameDay(post.scheduledAt, selectedDay)) {
+        if (
+          post.platform === p.toLowerCase() &&
+          isSameDay(post.scheduledAt, selectedDay)
+        ) {
           const hour = post.scheduledAt.getHours();
-          map.set(hour, `${post.platform} post at ${formatTime(post.scheduledAt)}: "${post.content}"`);
+          map.set(
+            hour,
+            `${post.platform} post at ${formatTime(post.scheduledAt)}: "${post.content}"`
+          );
         }
       }
     }
@@ -443,9 +477,7 @@ export function TimeSlotPicker({
       {/* Header with Suggest Best Time button */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          {!compact && (
-            <Clock className="h-4 w-4 text-cyan-400" />
-          )}
+          {!compact && <Clock className="h-4 w-4 text-orange-400" />}
           <span className="text-xs font-medium text-slate-300">
             {selectionText || 'Select a time'}
           </span>
@@ -455,7 +487,7 @@ export function TimeSlotPicker({
           type="button"
           onClick={handleSuggestBestTime}
           disabled={optimalLoading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 transition-colors disabled:opacity-50"
         >
           <Sparkles className="h-3 w-3" />
           Suggest Best Time
@@ -466,7 +498,7 @@ export function TimeSlotPicker({
       <div className="flex items-center gap-1">
         <button
           type="button"
-          onClick={() => setWeekOffset((w) => Math.max(0, w - 1))}
+          onClick={() => setWeekOffset(w => Math.max(0, w - 1))}
           disabled={weekOffset === 0}
           className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
@@ -481,7 +513,7 @@ export function TimeSlotPicker({
         </div>
         <button
           type="button"
-          onClick={() => setWeekOffset((w) => w + 1)}
+          onClick={() => setWeekOffset(w => w + 1)}
           className="p-1 rounded text-slate-400 hover:text-white transition-colors"
         >
           <ChevronRight className="h-4 w-4" />
@@ -513,25 +545,28 @@ export function TimeSlotPicker({
       )}
 
       {/* Conflict warning for current selection */}
-      {showConflicts && value && selectedHour !== null && (() => {
-        const conflict = checkConflict(platform, value);
-        if (!conflict) return null;
-        return (
-          <div className="flex items-start gap-2 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2">
-            <AlertCircle className="h-3.5 w-3.5 text-red-400 flex-shrink-0 mt-0.5" />
-            <div className="text-xs text-red-300">
-              <span className="font-medium">Scheduling conflict:</span>{' '}
-              A {conflict.platform} post is already scheduled at{' '}
-              {formatTime(conflict.scheduledAt)}.
-              {conflict.content && (
-                <span className="text-red-400/70 ml-1">
-                  &ldquo;{conflict.content}&rdquo;
-                </span>
-              )}
+      {showConflicts &&
+        value &&
+        selectedHour !== null &&
+        (() => {
+          const conflict = checkConflict(platform, value);
+          if (!conflict) return null;
+          return (
+            <div className="flex items-start gap-2 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2">
+              <AlertCircle className="h-3.5 w-3.5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="text-xs text-red-300">
+                <span className="font-medium">Scheduling conflict:</span> A{' '}
+                {conflict.platform} post is already scheduled at{' '}
+                {formatTime(conflict.scheduledAt)}.
+                {conflict.content && (
+                  <span className="text-red-400/70 ml-1">
+                    &ldquo;{conflict.content}&rdquo;
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
       {/* Legend */}
       {!compact && showOptimalSlots && (

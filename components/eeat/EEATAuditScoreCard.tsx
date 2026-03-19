@@ -19,23 +19,35 @@ import type { EEATAuditResult, EEATDimension } from '@/lib/eeat/audit-types';
 
 function gradeColour(grade: string): string {
   switch (grade) {
-    case 'A': return 'text-emerald-400';
-    case 'B': return 'text-cyan-400';
-    case 'C': return 'text-amber-400';
-    case 'D': return 'text-orange-400';
-    case 'F': return 'text-red-400';
-    default:  return 'text-gray-400';
+    case 'A':
+      return 'text-emerald-400';
+    case 'B':
+      return 'text-orange-400';
+    case 'C':
+      return 'text-amber-400';
+    case 'D':
+      return 'text-orange-400';
+    case 'F':
+      return 'text-red-400';
+    default:
+      return 'text-gray-400';
   }
 }
 
 function gradeBg(grade: string): string {
   switch (grade) {
-    case 'A': return 'bg-emerald-500/20 border-emerald-500/30';
-    case 'B': return 'bg-cyan-500/20 border-cyan-500/30';
-    case 'C': return 'bg-amber-500/20 border-amber-500/30';
-    case 'D': return 'bg-orange-500/20 border-orange-500/30';
-    case 'F': return 'bg-red-500/20 border-red-500/30';
-    default:  return 'bg-gray-500/20 border-gray-500/30';
+    case 'A':
+      return 'bg-emerald-500/20 border-emerald-500/30';
+    case 'B':
+      return 'bg-orange-500/20 border-orange-500/30';
+    case 'C':
+      return 'bg-amber-500/20 border-amber-500/30';
+    case 'D':
+      return 'bg-orange-500/20 border-orange-500/30';
+    case 'F':
+      return 'bg-red-500/20 border-red-500/30';
+    default:
+      return 'bg-gray-500/20 border-gray-500/30';
   }
 }
 
@@ -100,14 +112,19 @@ function PillarCard({
         </div>
         <span className="text-lg font-bold text-white tabular-nums">
           {dimension.score}
-          <span className="text-xs text-slate-500 font-normal">/{dimension.maxScore}</span>
+          <span className="text-xs text-slate-500 font-normal">
+            /{dimension.maxScore}
+          </span>
         </span>
       </div>
 
       {/* Progress bar */}
       <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
         <div
-          className={cn('h-full rounded-full transition-all duration-500', barColour)}
+          className={cn(
+            'h-full rounded-full transition-all duration-500',
+            barColour
+          )}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -115,10 +132,14 @@ function PillarCard({
       {/* Detected signals */}
       {detected.length > 0 && (
         <div className="space-y-1">
-          {detected.map((signal) => (
+          {detected.map(signal => (
             <div key={signal.name} className="flex items-start gap-1.5">
-              <span className="text-emerald-400 mt-0.5 flex-shrink-0 text-xs">✓</span>
-              <span className="text-xs text-emerald-300 leading-tight">{signal.name}</span>
+              <span className="text-emerald-400 mt-0.5 flex-shrink-0 text-xs">
+                ✓
+              </span>
+              <span className="text-xs text-emerald-300 leading-tight">
+                {signal.name}
+              </span>
             </div>
           ))}
         </div>
@@ -129,8 +150,12 @@ function PillarCard({
         <div className="space-y-1 border-t border-white/10 pt-2">
           {dimension.missing.map((item, i) => (
             <div key={i} className="flex items-start gap-1.5">
-              <span className="text-amber-400 mt-0.5 flex-shrink-0 text-xs">•</span>
-              <span className="text-xs text-amber-200/70 leading-tight">{item}</span>
+              <span className="text-amber-400 mt-0.5 flex-shrink-0 text-xs">
+                •
+              </span>
+              <span className="text-xs text-amber-200/70 leading-tight">
+                {item}
+              </span>
             </div>
           ))}
         </div>
@@ -146,21 +171,38 @@ interface EEATAuditScoreCardProps {
   className?: string;
 }
 
-export function EEATAuditScoreCard({ result, className }: EEATAuditScoreCardProps) {
+export function EEATAuditScoreCard({
+  result,
+  className,
+}: EEATAuditScoreCardProps) {
   const { overallScore, grade, wordCount, auditedAt } = result;
   const auditDate = new Date(auditedAt).toLocaleDateString('en-AU', {
-    day: '2-digit', month: 'short', year: 'numeric',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
   });
 
   return (
-    <div className={cn('bg-white/5 border border-white/10 rounded-xl p-5 space-y-5', className)}>
+    <div
+      className={cn(
+        'bg-white/5 border border-white/10 rounded-xl p-5 space-y-5',
+        className
+      )}
+    >
       {/* Overall score header */}
       <div className="flex flex-col sm:flex-row items-center gap-4">
-        <div className={cn(
-          'flex flex-col items-center justify-center w-28 h-28 rounded-full border-2 flex-shrink-0',
-          gradeBg(grade),
-        )}>
-          <span className={cn('text-4xl font-bold tabular-nums', gradeColour(grade))}>
+        <div
+          className={cn(
+            'flex flex-col items-center justify-center w-28 h-28 rounded-full border-2 flex-shrink-0',
+            gradeBg(grade)
+          )}
+        >
+          <span
+            className={cn(
+              'text-4xl font-bold tabular-nums',
+              gradeColour(grade)
+            )}
+          >
             {overallScore}
           </span>
           <span className={cn('text-xl font-semibold', gradeColour(grade))}>
@@ -173,7 +215,9 @@ export function EEATAuditScoreCard({ result, className }: EEATAuditScoreCardProp
             {wordCount.toLocaleString()} words analysed · {auditDate}
           </p>
           <div className="flex flex-wrap gap-1 mt-1">
-            {(['experience', 'expertise', 'authority', 'trust'] as PillarKey[]).map((key) => {
+            {(
+              ['experience', 'expertise', 'authority', 'trust'] as PillarKey[]
+            ).map(key => {
               const dim = result[key];
               return (
                 <span

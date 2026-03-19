@@ -50,7 +50,7 @@ export function CTASection({
       className={cn(
         'relative overflow-hidden rounded-3xl',
         isGradient
-          ? 'bg-gradient-to-r from-cyan-600 via-cyan-600 to-cyan-600'
+          ? 'bg-gradient-to-r from-orange-600 via-orange-600 to-orange-600'
           : 'glass-primary',
         isCentered ? 'text-center' : '',
         className
@@ -62,52 +62,61 @@ export function CTASection({
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
 
         {/* Glow effects */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/30 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/30 rounded-full blur-3xl" />
 
         {/* Gradient overlay for non-gradient variant */}
         {!isGradient && (
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-cyan-500/10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-transparent to-orange-500/10" />
         )}
       </div>
 
-      <div className={cn(
-        'relative z-10',
-        isSplit ? 'flex flex-col lg:flex-row items-center justify-between gap-8 p-8 md:p-12' : 'p-8 md:p-16',
-        isCentered && 'max-w-3xl mx-auto'
-      )}>
+      <div
+        className={cn(
+          'relative z-10',
+          isSplit
+            ? 'flex flex-col lg:flex-row items-center justify-between gap-8 p-8 md:p-12'
+            : 'p-8 md:p-16',
+          isCentered && 'max-w-3xl mx-auto'
+        )}
+      >
         {/* Content */}
-        <div className={cn(
-          isSplit && 'lg:flex-1',
-          isCentered && 'mb-8'
-        )}>
+        <div className={cn(isSplit && 'lg:flex-1', isCentered && 'mb-8')}>
           {/* Badge */}
           {badge && (
-            <div className={cn(
-              'inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6',
-              isGradient
-                ? 'bg-white/20 text-white'
-                : 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/30'
-            )}>
+            <div
+              className={cn(
+                'inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6',
+                isGradient
+                  ? 'bg-white/20 text-white'
+                  : 'bg-orange-500/20 text-orange-200 border border-orange-500/30'
+              )}
+            >
               <Sparkles className="w-4 h-4" />
               <span className="text-sm font-medium">{badge}</span>
             </div>
           )}
 
           {/* Title */}
-          <h2 className={cn(
-            'font-bold text-white mb-4',
-            isCentered || isSplit ? 'text-3xl md:text-4xl lg:text-5xl' : 'text-2xl md:text-3xl'
-          )}>
+          <h2
+            className={cn(
+              'font-bold text-white mb-4',
+              isCentered || isSplit
+                ? 'text-3xl md:text-4xl lg:text-5xl'
+                : 'text-2xl md:text-3xl'
+            )}
+          >
             {title}
           </h2>
 
           {/* Description */}
           {description && (
-            <p className={cn(
-              'text-white/80 leading-relaxed',
-              isCentered ? 'text-lg' : ''
-            )}>
+            <p
+              className={cn(
+                'text-white/80 leading-relaxed',
+                isCentered ? 'text-lg' : ''
+              )}
+            >
               {description}
             </p>
           )}
@@ -117,11 +126,13 @@ export function CTASection({
         </div>
 
         {/* CTAs */}
-        <div className={cn(
-          'flex gap-4',
-          isCentered ? 'justify-center' : '',
-          isSplit ? 'flex-shrink-0' : 'mt-8'
-        )}>
+        <div
+          className={cn(
+            'flex gap-4',
+            isCentered ? 'justify-center' : '',
+            isSplit ? 'flex-shrink-0' : 'mt-8'
+          )}
+        >
           {primaryCTA.href ? (
             <a href={primaryCTA.href}>
               <Button
@@ -129,8 +140,8 @@ export function CTASection({
                 className={cn(
                   'font-semibold px-8 transition-all duration-300',
                   isGradient
-                    ? 'bg-white text-cyan-600 hover:bg-white/90 shadow-lg hover:shadow-xl'
-                    : 'bg-white text-cyan-600 hover:bg-white/90 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                    ? 'bg-white text-orange-600 hover:bg-white/90 shadow-lg hover:shadow-xl'
+                    : 'bg-white text-orange-600 hover:bg-white/90 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
                 )}
               >
                 {primaryCTA.text}
@@ -144,8 +155,8 @@ export function CTASection({
               className={cn(
                 'font-semibold px-8 transition-all duration-300',
                 isGradient
-                  ? 'bg-white text-cyan-600 hover:bg-white/90 shadow-lg hover:shadow-xl'
-                  : 'bg-white text-cyan-600 hover:bg-white/90 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                  ? 'bg-white text-orange-600 hover:bg-white/90 shadow-lg hover:shadow-xl'
+                  : 'bg-white text-orange-600 hover:bg-white/90 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
               )}
             >
               {primaryCTA.text}
@@ -153,8 +164,8 @@ export function CTASection({
             </Button>
           )}
 
-          {secondaryCTA && (
-            secondaryCTA.href ? (
+          {secondaryCTA &&
+            (secondaryCTA.href ? (
               <a href={secondaryCTA.href}>
                 <Button
                   size="lg"
@@ -173,8 +184,7 @@ export function CTASection({
               >
                 {secondaryCTA.text}
               </Button>
-            )
-          )}
+            ))}
         </div>
       </div>
     </section>
@@ -193,19 +203,27 @@ export interface MiniCTAProps {
   className?: string;
 }
 
-export function MiniCTA({ text, linkText, href, onClick, className }: MiniCTAProps) {
+export function MiniCTA({
+  text,
+  linkText,
+  href,
+  onClick,
+  className,
+}: MiniCTAProps) {
   const LinkContent = (
-    <span className="inline-flex items-center gap-1 text-cyan-400 hover:text-cyan-300 font-medium transition-colors group">
+    <span className="inline-flex items-center gap-1 text-orange-400 hover:text-orange-300 font-medium transition-colors group">
       {linkText}
       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
     </span>
   );
 
   return (
-    <div className={cn(
-      'flex items-center justify-center gap-2 text-sm text-slate-400',
-      className
-    )}>
+    <div
+      className={cn(
+        'flex items-center justify-center gap-2 text-sm text-slate-400',
+        className
+      )}
+    >
       {text}
       {href ? (
         <a href={href}>{LinkContent}</a>

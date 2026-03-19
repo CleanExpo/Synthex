@@ -11,10 +11,29 @@ interface AuthorityScoreCardProps {
 }
 
 function getTier(score: number) {
-  if (score >= 80) return { label: 'Excellent', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' };
-  if (score >= 60) return { label: 'Good', color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20' };
-  if (score >= 40) return { label: 'Fair', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' };
-  return { label: 'Needs Work', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' };
+  if (score >= 80)
+    return {
+      label: 'Excellent',
+      color: 'text-emerald-400',
+      bg: 'bg-emerald-500/10 border-emerald-500/20',
+    };
+  if (score >= 60)
+    return {
+      label: 'Good',
+      color: 'text-orange-400',
+      bg: 'bg-orange-500/10 border-orange-500/20',
+    };
+  if (score >= 40)
+    return {
+      label: 'Fair',
+      color: 'text-amber-400',
+      bg: 'bg-amber-500/10 border-amber-500/20',
+    };
+  return {
+    label: 'Needs Work',
+    color: 'text-red-400',
+    bg: 'bg-red-500/10 border-red-500/20',
+  };
 }
 
 const SOURCE_COLORS: Record<string, string> = {
@@ -24,19 +43,31 @@ const SOURCE_COLORS: Record<string, string> = {
   web: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
 };
 
-export function AuthorityScoreCard({ score, claimsFound, claimsVerified, claimsFailed, sourceBreakdown }: AuthorityScoreCardProps) {
+export function AuthorityScoreCard({
+  score,
+  claimsFound,
+  claimsVerified,
+  claimsFailed,
+  sourceBreakdown,
+}: AuthorityScoreCardProps) {
   const tier = getTier(score);
 
   return (
     <Card className="bg-white/5 border-violet-500/10 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-white text-sm font-medium">Authority Score</CardTitle>
+        <CardTitle className="text-white text-sm font-medium">
+          Authority Score
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex items-baseline gap-3 mb-4">
-          <span className={`text-5xl font-bold ${tier.color}`}>{Math.round(score)}</span>
+          <span className={`text-5xl font-bold ${tier.color}`}>
+            {Math.round(score)}
+          </span>
           <span className="text-slate-400 text-lg">/100</span>
-          <span className={`ml-auto px-2 py-1 rounded border text-xs font-medium ${tier.bg} ${tier.color}`}>
+          <span
+            className={`ml-auto px-2 py-1 rounded border text-xs font-medium ${tier.bg} ${tier.color}`}
+          >
             {tier.label}
           </span>
         </div>
@@ -47,7 +78,9 @@ export function AuthorityScoreCard({ score, claimsFound, claimsVerified, claimsF
             <p className="text-xs text-slate-400">Found</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-semibold text-emerald-400">{claimsVerified}</p>
+            <p className="text-lg font-semibold text-emerald-400">
+              {claimsVerified}
+            </p>
             <p className="text-xs text-slate-400">Verified</p>
           </div>
           <div className="text-center">
@@ -56,13 +89,19 @@ export function AuthorityScoreCard({ score, claimsFound, claimsVerified, claimsF
           </div>
         </div>
 
-        {Object.entries(sourceBreakdown).filter(([, count]) => count > 0).length > 0 && (
+        {Object.entries(sourceBreakdown).filter(([, count]) => count > 0)
+          .length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {Object.entries(sourceBreakdown).filter(([, count]) => count > 0).map(([type, count]) => (
-              <span key={type} className={`px-2 py-0.5 rounded border text-xs font-medium ${SOURCE_COLORS[type] ?? SOURCE_COLORS.web}`}>
-                {type}: {count}
-              </span>
-            ))}
+            {Object.entries(sourceBreakdown)
+              .filter(([, count]) => count > 0)
+              .map(([type, count]) => (
+                <span
+                  key={type}
+                  className={`px-2 py-0.5 rounded border text-xs font-medium ${SOURCE_COLORS[type] ?? SOURCE_COLORS.web}`}
+                >
+                  {type}: {count}
+                </span>
+              ))}
           </div>
         )}
       </CardContent>

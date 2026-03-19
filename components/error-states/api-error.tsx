@@ -11,7 +11,14 @@
 'use client';
 
 import React, { Component, ReactNode } from 'react';
-import { AlertCircle, RefreshCw, WifiOff, Server, Lock, Clock } from '@/components/icons';
+import {
+  AlertCircle,
+  RefreshCw,
+  WifiOff,
+  Server,
+  Lock,
+  Clock,
+} from '@/components/icons';
 // Alias for ServerCrash
 const ServerCrash = Server;
 
@@ -40,7 +47,8 @@ const ERROR_CONFIGS: Record<ErrorType, ErrorConfig> = {
   network: {
     icon: WifiOff,
     title: 'Connection Error',
-    description: 'Unable to connect to the server. Please check your internet connection.',
+    description:
+      'Unable to connect to the server. Please check your internet connection.',
     color: 'text-orange-600 dark:text-orange-400',
     bgColor: 'bg-orange-50 dark:bg-orange-900/20',
   },
@@ -76,8 +84,8 @@ const ERROR_CONFIGS: Record<ErrorType, ErrorConfig> = {
     icon: AlertCircle,
     title: 'Validation Error',
     description: 'The data provided is invalid. Please check and try again.',
-    color: 'text-cyan-600 dark:text-cyan-400',
-    bgColor: 'bg-cyan-50 dark:bg-cyan-900/20',
+    color: 'text-orange-600 dark:text-orange-400',
+    bgColor: 'bg-orange-50 dark:bg-orange-900/20',
   },
   unknown: {
     icon: AlertCircle,
@@ -96,19 +104,31 @@ export function getErrorType(error: Error | string | unknown): ErrorType {
   const message = error instanceof Error ? error.message : String(error);
   const lowercaseMessage = message.toLowerCase();
 
-  if (lowercaseMessage.includes('network') || lowercaseMessage.includes('fetch')) {
+  if (
+    lowercaseMessage.includes('network') ||
+    lowercaseMessage.includes('fetch')
+  ) {
     return 'network';
   }
-  if (lowercaseMessage.includes('401') || lowercaseMessage.includes('unauthorized')) {
+  if (
+    lowercaseMessage.includes('401') ||
+    lowercaseMessage.includes('unauthorized')
+  ) {
     return 'auth';
   }
-  if (lowercaseMessage.includes('404') || lowercaseMessage.includes('not found')) {
+  if (
+    lowercaseMessage.includes('404') ||
+    lowercaseMessage.includes('not found')
+  ) {
     return 'not-found';
   }
   if (lowercaseMessage.includes('timeout')) {
     return 'timeout';
   }
-  if (lowercaseMessage.includes('validation') || lowercaseMessage.includes('invalid')) {
+  if (
+    lowercaseMessage.includes('validation') ||
+    lowercaseMessage.includes('invalid')
+  ) {
     return 'validation';
   }
   if (lowercaseMessage.includes('500') || lowercaseMessage.includes('server')) {
@@ -218,7 +238,11 @@ interface InlineErrorProps {
   className?: string;
 }
 
-export function InlineError({ error, onRetry, className = '' }: InlineErrorProps) {
+export function InlineError({
+  error,
+  onRetry,
+  className = '',
+}: InlineErrorProps) {
   const message = error instanceof Error ? error.message : String(error);
 
   return (
@@ -255,7 +279,10 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -371,11 +398,13 @@ export function DataStateWrapper<T>({
   loadingComponent,
   errorComponent,
   emptyComponent,
-  isEmpty = (d) => Array.isArray(d) && d.length === 0,
+  isEmpty = d => Array.isArray(d) && d.length === 0,
   children,
 }: DataStateWrapperProps<T>) {
   if (isLoading && !data) {
-    return <>{loadingComponent || <div className="animate-pulse">Loading...</div>}</>;
+    return (
+      <>{loadingComponent || <div className="animate-pulse">Loading...</div>}</>
+    );
   }
 
   if (error && !data) {

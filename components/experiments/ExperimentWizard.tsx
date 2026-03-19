@@ -83,7 +83,7 @@ const EXPERIMENT_TYPES: Array<{
     label: 'H1 Heading',
     description: 'Test H1 variants for GEO citability and entity prominence',
     icon: Globe,
-    colour: 'border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10',
+    colour: 'border-orange-500/40 text-orange-400 hover:bg-orange-500/10',
   },
   {
     value: 'schema',
@@ -95,7 +95,8 @@ const EXPERIMENT_TYPES: Array<{
   {
     value: 'content-structure',
     label: 'Content Structure',
-    description: 'Test content formatting, passage structure, author attribution',
+    description:
+      'Test content formatting, passage structure, author attribution',
     icon: Layers,
     colour: 'border-amber-500/40 text-amber-400 hover:bg-amber-500/10',
   },
@@ -120,24 +121,29 @@ const METRICS: Array<{ value: MetricToTrack; label: string }> = [
 // Component
 // ============================================================================
 
-export function ExperimentWizard({ onCreated, onClose }: ExperimentWizardProps) {
+export function ExperimentWizard({
+  onCreated,
+  onClose,
+}: ExperimentWizardProps) {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
 
   // Form state
-  const [experimentType, setExperimentType] = useState<ExperimentType | null>(null);
+  const [experimentType, setExperimentType] = useState<ExperimentType | null>(
+    null
+  );
   const [name, setName] = useState('');
   const [targetUrl, setTargetUrl] = useState('');
   const [hypothesis, setHypothesis] = useState('');
-  const [metricToTrack, setMetricToTrack] = useState<MetricToTrack>('geo-score');
+  const [metricToTrack, setMetricToTrack] =
+    useState<MetricToTrack>('geo-score');
   const [originalValue, setOriginalValue] = useState('');
   const [variantValue, setVariantValue] = useState('');
 
   const canProceedStep1 = experimentType !== null;
   const canProceedStep2 =
     name.length >= 3 && targetUrl.length > 5 && hypothesis.length >= 10;
-  const canSubmit =
-    originalValue.length >= 1 && variantValue.length >= 1;
+  const canSubmit = originalValue.length >= 1 && variantValue.length >= 1;
 
   async function handleSubmit() {
     if (!experimentType) return;
@@ -166,7 +172,9 @@ export function ExperimentWizard({ onCreated, onClose }: ExperimentWizardProps) 
       toast.success('Experiment created — ready to start when you are.');
       onCreated?.();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to create experiment');
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to create experiment'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -176,7 +184,7 @@ export function ExperimentWizard({ onCreated, onClose }: ExperimentWizardProps) 
     <div className="space-y-6">
       {/* Progress indicator */}
       <div className="flex items-center gap-2">
-        {[1, 2, 3].map((s) => (
+        {[1, 2, 3].map(s => (
           <div key={s} className="flex items-center gap-2">
             <div
               className={cn(
@@ -184,8 +192,8 @@ export function ExperimentWizard({ onCreated, onClose }: ExperimentWizardProps) 
                 step > s
                   ? 'bg-green-500 text-white'
                   : step === s
-                  ? 'bg-cyan-500 text-white'
-                  : 'bg-white/10 text-gray-400'
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-white/10 text-gray-400'
               )}
             >
               {step > s ? <CheckCircle className="w-4 h-4" /> : s}
@@ -219,7 +227,7 @@ export function ExperimentWizard({ onCreated, onClose }: ExperimentWizardProps) 
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {EXPERIMENT_TYPES.map((type) => (
+            {EXPERIMENT_TYPES.map(type => (
               <button
                 key={type.value}
                 onClick={() => setExperimentType(type.value)}
@@ -234,7 +242,9 @@ export function ExperimentWizard({ onCreated, onClose }: ExperimentWizardProps) 
                 <type.icon className="w-5 h-5 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-white">{type.label}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{type.description}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {type.description}
+                  </p>
                 </div>
               </button>
             ))}
@@ -246,7 +256,9 @@ export function ExperimentWizard({ onCreated, onClose }: ExperimentWizardProps) 
       {step === 2 && (
         <div className="space-y-4">
           <div>
-            <h3 className="text-sm font-medium text-white mb-1">Experiment details</h3>
+            <h3 className="text-sm font-medium text-white mb-1">
+              Experiment details
+            </h3>
             <p className="text-xs text-gray-400">
               Describe what you are testing and why.
             </p>
@@ -260,7 +272,7 @@ export function ExperimentWizard({ onCreated, onClose }: ExperimentWizardProps) 
               <Input
                 id="exp-name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={e => setName(e.target.value)}
                 placeholder="e.g. Add entity name to homepage H1"
                 className="mt-1 bg-white/5 border-white/10 text-white"
               />
@@ -273,7 +285,7 @@ export function ExperimentWizard({ onCreated, onClose }: ExperimentWizardProps) 
               <Input
                 id="exp-url"
                 value={targetUrl}
-                onChange={(e) => setTargetUrl(e.target.value)}
+                onChange={e => setTargetUrl(e.target.value)}
                 placeholder="https://example.com/page"
                 className="mt-1 bg-white/5 border-white/10 text-white"
               />
@@ -286,7 +298,7 @@ export function ExperimentWizard({ onCreated, onClose }: ExperimentWizardProps) 
               <Textarea
                 id="exp-hypothesis"
                 value={hypothesis}
-                onChange={(e) => setHypothesis(e.target.value)}
+                onChange={e => setHypothesis(e.target.value)}
                 placeholder="If I change [X] to [Y], then [metric] will improve because [reason]..."
                 rows={3}
                 className="mt-1 bg-white/5 border-white/10 text-white resize-none"
@@ -296,14 +308,14 @@ export function ExperimentWizard({ onCreated, onClose }: ExperimentWizardProps) 
             <div>
               <Label className="text-xs text-gray-400">Metric to track</Label>
               <div className="flex flex-wrap gap-2 mt-2">
-                {METRICS.map((m) => (
+                {METRICS.map(m => (
                   <button
                     key={m.value}
                     onClick={() => setMetricToTrack(m.value)}
                     className={cn(
                       'px-3 py-1.5 rounded-md text-xs font-medium transition-colors border',
                       metricToTrack === m.value
-                        ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
+                        ? 'bg-orange-500/20 border-orange-500/50 text-orange-300'
                         : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
                     )}
                   >
@@ -327,8 +339,9 @@ export function ExperimentWizard({ onCreated, onClose }: ExperimentWizardProps) 
               Enter the current value and the variant you want to test.
             </p>
             {experimentType && (
-              <Badge className="mt-2 text-xs bg-cyan-500/20 text-cyan-300">
-                Testing: {EXPERIMENT_TYPES.find((t) => t.value === experimentType)?.label}
+              <Badge className="mt-2 text-xs bg-orange-500/20 text-orange-300">
+                Testing:{' '}
+                {EXPERIMENT_TYPES.find(t => t.value === experimentType)?.label}
               </Badge>
             )}
           </div>
@@ -341,7 +354,7 @@ export function ExperimentWizard({ onCreated, onClose }: ExperimentWizardProps) 
               <Textarea
                 id="exp-original"
                 value={originalValue}
-                onChange={(e) => setOriginalValue(e.target.value)}
+                onChange={e => setOriginalValue(e.target.value)}
                 placeholder="The current value of this element..."
                 rows={3}
                 className="mt-1 bg-white/5 border-white/10 text-white resize-none"
@@ -355,10 +368,10 @@ export function ExperimentWizard({ onCreated, onClose }: ExperimentWizardProps) 
               <Textarea
                 id="exp-variant"
                 value={variantValue}
-                onChange={(e) => setVariantValue(e.target.value)}
+                onChange={e => setVariantValue(e.target.value)}
                 placeholder="The new value you want to try..."
                 rows={3}
-                className="mt-1 bg-cyan-500/5 border-cyan-500/20 text-white resize-none"
+                className="mt-1 bg-orange-500/5 border-orange-500/20 text-white resize-none"
               />
             </div>
           </div>

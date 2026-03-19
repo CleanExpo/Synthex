@@ -134,11 +134,16 @@ export function PublishConfirmModal({
   platformAdaptations,
   onMultiConfirm,
 }: PublishConfirmModalProps) {
-  const [scheduledDate, setScheduledDate] = useState<Date | null>(getDefaultScheduleDate);
+  const [scheduledDate, setScheduledDate] = useState<Date | null>(
+    getDefaultScheduleDate
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [scheduleResults, setScheduleResults] = useState<PlatformScheduleResult[] | null>(null);
+  const [scheduleResults, setScheduleResults] = useState<
+    PlatformScheduleResult[] | null
+  >(null);
 
-  const isMultiPlatform = selectedPlatforms && selectedPlatforms.length > 1 && onMultiConfirm;
+  const isMultiPlatform =
+    selectedPlatforms && selectedPlatforms.length > 1 && onMultiConfirm;
   const platforms = isMultiPlatform ? selectedPlatforms : [platform];
 
   // Reset state when modal opens
@@ -159,7 +164,8 @@ export function PublishConfirmModal({
 
   // Map connections by platform
   const connectionsByPlatform = useMemo(() => {
-    if (!connectionsData?.connections) return {} as Record<string, ConnectionStatus | undefined>;
+    if (!connectionsData?.connections)
+      return {} as Record<string, ConnectionStatus | undefined>;
     const map: Record<string, ConnectionStatus | undefined> = {};
     for (const c of connectionsData.connections) {
       if (c.connected) {
@@ -171,7 +177,8 @@ export function PublishConfirmModal({
 
   // Single-platform backward compat
   const hasConnection = !!connectionsByPlatform[platform.toLowerCase()];
-  const connectionLabel = connectionsByPlatform[platform.toLowerCase()]?.username;
+  const connectionLabel =
+    connectionsByPlatform[platform.toLowerCase()]?.username;
 
   // Content preview
   const preview =
@@ -210,7 +217,7 @@ export function PublishConfirmModal({
       });
       setScheduleResults(results);
 
-      const successCount = results.filter((r) => r.success).length;
+      const successCount = results.filter(r => r.success).length;
       if (successCount === results.length) {
         // All succeeded — close after brief delay to show results
         setTimeout(() => onOpenChange(false), 1500);
@@ -224,11 +231,16 @@ export function PublishConfirmModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent variant="glass-solid" className={isMultiPlatform ? 'max-w-2xl' : 'max-w-xl'}>
+      <DialogContent
+        variant="glass-solid"
+        className={isMultiPlatform ? 'max-w-2xl' : 'max-w-xl'}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-cyan-400" />
-            {isMultiPlatform ? `Schedule to ${platforms.length} Platforms` : 'Schedule Post'}
+            <Calendar className="h-5 w-5 text-orange-400" />
+            {isMultiPlatform
+              ? `Schedule to ${platforms.length} Platforms`
+              : 'Schedule Post'}
           </DialogTitle>
           <DialogDescription>
             {isMultiPlatform
@@ -242,22 +254,24 @@ export function PublishConfirmModal({
           <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
             <p className="text-xs text-slate-400 leading-relaxed">{preview}</p>
             <div className="flex items-center gap-2 flex-wrap">
-              {platforms.map((p) => (
+              {platforms.map(p => (
                 <span
                   key={p}
-                  className="text-[10px] font-medium text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20"
+                  className="text-[10px] font-medium text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full border border-orange-500/20"
                 >
                   {getPlatformLabel(p)}
                 </span>
               ))}
               {mediaUrls && mediaUrls.length > 0 && (
                 <span className="text-[10px] text-slate-400">
-                  {mediaUrls.length} {mediaUrls.length === 1 ? 'image' : 'images'}
+                  {mediaUrls.length}{' '}
+                  {mediaUrls.length === 1 ? 'image' : 'images'}
                 </span>
               )}
               {hashtags && hashtags.length > 0 && (
                 <span className="text-[10px] text-slate-400">
-                  {hashtags.length} {hashtags.length === 1 ? 'hashtag' : 'hashtags'}
+                  {hashtags.length}{' '}
+                  {hashtags.length === 1 ? 'hashtag' : 'hashtags'}
                 </span>
               )}
             </div>
@@ -286,9 +300,9 @@ export function PublishConfirmModal({
             ) : isMultiPlatform ? (
               /* Multi-platform: per-platform connection status */
               <div className="space-y-2">
-                {platforms.map((p) => {
+                {platforms.map(p => {
                   const conn = connectionsByPlatform[p.toLowerCase()];
-                  const result = scheduleResults?.find((r) => r.platform === p);
+                  const result = scheduleResults?.find(r => r.platform === p);
                   const adaptedPreview = platformAdaptations?.[p];
 
                   return (
@@ -309,8 +323,12 @@ export function PublishConfirmModal({
                           <span
                             className={`h-2 w-2 rounded-full ${
                               result
-                                ? result.success ? 'bg-emerald-400' : 'bg-red-400'
-                                : conn ? 'bg-emerald-400' : 'bg-amber-400'
+                                ? result.success
+                                  ? 'bg-emerald-400'
+                                  : 'bg-red-400'
+                                : conn
+                                  ? 'bg-emerald-400'
+                                  : 'bg-amber-400'
                             }`}
                           />
                           <span className="text-xs font-medium text-white">
@@ -319,9 +337,13 @@ export function PublishConfirmModal({
                         </div>
                         <span className="text-[10px] text-slate-400">
                           {result
-                            ? result.success ? 'Scheduled' : result.error || 'Failed'
+                            ? result.success
+                              ? 'Scheduled'
+                              : result.error || 'Failed'
                             : conn
-                              ? conn.username ? `@${conn.username}` : 'Connected'
+                              ? conn.username
+                                ? `@${conn.username}`
+                                : 'Connected'
                               : 'Not connected'}
                         </span>
                       </div>
@@ -333,7 +355,7 @@ export function PublishConfirmModal({
                       {!conn && !result && (
                         <Link
                           href="/dashboard/platforms"
-                          className="inline-flex items-center gap-1 text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors mt-1"
+                          className="inline-flex items-center gap-1 text-[10px] text-orange-400 hover:text-orange-300 transition-colors mt-1"
                         >
                           Connect account
                           <ExternalLink className="h-2.5 w-2.5" />
@@ -361,7 +383,7 @@ export function PublishConfirmModal({
                 </div>
                 <Link
                   href="/dashboard/platforms"
-                  className="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                  className="inline-flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 transition-colors"
                 >
                   Connect account
                   <ExternalLink className="h-3 w-3" />
@@ -374,13 +396,14 @@ export function PublishConfirmModal({
           {scheduleResults && (
             <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3">
               <div className="flex items-center gap-2">
-                {scheduleResults.every((r) => r.success) ? (
+                {scheduleResults.every(r => r.success) ? (
                   <Check className="h-4 w-4 text-emerald-400" />
                 ) : (
                   <AlertTriangle className="h-4 w-4 text-amber-400" />
                 )}
                 <span className="text-xs text-white font-medium">
-                  {scheduleResults.filter((r) => r.success).length}/{scheduleResults.length} platforms scheduled
+                  {scheduleResults.filter(r => r.success).length}/
+                  {scheduleResults.length} platforms scheduled
                 </span>
               </div>
             </div>
@@ -398,7 +421,9 @@ export function PublishConfirmModal({
           </Button>
           {!scheduleResults && (
             <Button
-              onClick={isMultiPlatform ? handleMultiConfirm : handleSingleConfirm}
+              onClick={
+                isMultiPlatform ? handleMultiConfirm : handleSingleConfirm
+              }
               disabled={isSubmitting || !scheduledDate}
               className="gradient-primary text-white gap-2"
             >

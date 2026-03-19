@@ -35,8 +35,10 @@ interface QualityGateBadgeProps {
 
 function badgeColour(passes: boolean, grade: string): string {
   if (passes) {
-    if (grade === 'A') return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-    if (grade === 'B') return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
+    if (grade === 'A')
+      return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+    if (grade === 'B')
+      return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
     return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
   }
   return 'bg-red-500/20 text-red-400 border-red-500/30';
@@ -78,7 +80,7 @@ export function QualityGateBadge({
     <div className={cn('relative inline-block', className)}>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen(v => !v)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         className={cn(
           'inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border cursor-pointer hover:opacity-80 transition-opacity',
@@ -108,12 +110,14 @@ export function QualityGateBadge({
           )}
 
           {issues.length === 0 && (
-            <p className="text-xs text-emerald-400">No blocking issues detected.</p>
+            <p className="text-xs text-emerald-400">
+              No blocking issues detected.
+            </p>
           )}
 
           <Link
             href="/dashboard/quality"
-            className="block text-xs text-cyan-400 hover:text-cyan-300 pt-1 border-t border-white/10"
+            className="block text-xs text-orange-400 hover:text-orange-300 pt-1 border-t border-white/10"
             onClick={() => setOpen(false)}
           >
             Run Full Audit →

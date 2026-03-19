@@ -38,7 +38,10 @@ import {
   type CreateRoleData,
   type UpdateRoleData,
 } from '@/hooks/use-roles';
-import { PERMISSIONS, type ResourceType } from '@/lib/auth/rbac/permission-types';
+import {
+  PERMISSIONS,
+  type ResourceType,
+} from '@/lib/auth/rbac/permission-types';
 import {
   Shield,
   Crown,
@@ -88,7 +91,7 @@ function getRoleIcon(roleName: string, isSystem: boolean) {
   if (name.includes('viewer') || name.includes('read')) {
     return <Eye className="h-5 w-5 text-gray-400" />;
   }
-  return <Shield className="h-5 w-5 text-cyan-400" />;
+  return <Shield className="h-5 w-5 text-orange-400" />;
 }
 
 function getRoleColor(roleName: string): string {
@@ -102,7 +105,7 @@ function getRoleColor(roleName: string): string {
   if (name.includes('viewer') || name.includes('read')) {
     return 'text-gray-400';
   }
-  return 'text-cyan-400';
+  return 'text-orange-400';
 }
 
 function formatPermissionLabel(permission: string): string {
@@ -222,7 +225,10 @@ interface RoleDialogProps {
   onOpenChange: (open: boolean) => void;
   role: Role | null;
   availablePermissions: string[];
-  onSave: (data: CreateRoleData | UpdateRoleData, roleId?: string) => Promise<void>;
+  onSave: (
+    data: CreateRoleData | UpdateRoleData,
+    roleId?: string
+  ) => Promise<void>;
   isSubmitting: boolean;
 }
 
@@ -237,7 +243,9 @@ function RoleDialog({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isDefault, setIsDefault] = useState(false);
-  const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set());
+  const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(
+    new Set()
+  );
 
   // Reset form when dialog opens/closes or role changes
   const dialogKey = role?.id || 'new';
@@ -293,7 +301,10 @@ function RoleDialog({
     });
   };
 
-  const toggleResourcePermissions = (resource: string, permissions: string[]) => {
+  const toggleResourcePermissions = (
+    resource: string,
+    permissions: string[]
+  ) => {
     setSelectedPermissions(prev => {
       const next = new Set(prev);
       const allSelected = permissions.every(p => next.has(p));
@@ -321,7 +332,7 @@ function RoleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-surface-base/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-2xl max-h-[90vh]">
+      <DialogContent className="bg-surface-base/95 border-orange-500/20 backdrop-blur-xl sm:max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="text-white">
             {role ? 'Edit Role' : 'Create New Role'}
@@ -370,7 +381,10 @@ function RoleDialog({
               checked={isDefault}
               onCheckedChange={checked => setIsDefault(checked === true)}
             />
-            <Label htmlFor="role-default" className="text-gray-300 cursor-pointer">
+            <Label
+              htmlFor="role-default"
+              className="text-gray-300 cursor-pointer"
+            >
               Set as default role for new members
             </Label>
           </div>
@@ -380,56 +394,68 @@ function RoleDialog({
             <Label className="text-white">Permissions</Label>
             <ScrollArea className="h-[280px] rounded-lg border border-white/10 bg-white/[0.02]">
               <div className="p-4 space-y-4">
-                {Object.entries(permissionsByResource).map(([resource, permissions]) => {
-                  const allSelected = permissions.every(p => selectedPermissions.has(p));
-                  const someSelected = permissions.some(p => selectedPermissions.has(p));
+                {Object.entries(permissionsByResource).map(
+                  ([resource, permissions]) => {
+                    const allSelected = permissions.every(p =>
+                      selectedPermissions.has(p)
+                    );
+                    const someSelected = permissions.some(p =>
+                      selectedPermissions.has(p)
+                    );
 
-                  return (
-                    <div key={resource} className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id={`resource-${resource}`}
-                          checked={allSelected}
-                          onCheckedChange={() =>
-                            toggleResourcePermissions(resource, permissions)
-                          }
-                                      className={someSelected && !allSelected ? 'opacity-60' : ''}
-                        />
-                        <Label
-                          htmlFor={`resource-${resource}`}
-                          className="text-white font-medium cursor-pointer"
-                        >
-                          {formatResourceLabel(resource)}
-                        </Label>
-                        <Badge
-                          variant="outline"
-                          className="text-xs bg-white/5 border-white/10 text-gray-400"
-                        >
-                          {permissions.filter(p => selectedPermissions.has(p)).length}/
-                          {permissions.length}
-                        </Badge>
+                    return (
+                      <div key={resource} className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id={`resource-${resource}`}
+                            checked={allSelected}
+                            onCheckedChange={() =>
+                              toggleResourcePermissions(resource, permissions)
+                            }
+                            className={
+                              someSelected && !allSelected ? 'opacity-60' : ''
+                            }
+                          />
+                          <Label
+                            htmlFor={`resource-${resource}`}
+                            className="text-white font-medium cursor-pointer"
+                          >
+                            {formatResourceLabel(resource)}
+                          </Label>
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-white/5 border-white/10 text-gray-400"
+                          >
+                            {
+                              permissions.filter(p =>
+                                selectedPermissions.has(p)
+                              ).length
+                            }
+                            /{permissions.length}
+                          </Badge>
+                        </div>
+                        <div className="ml-6 flex flex-wrap gap-2">
+                          {permissions.map(permission => {
+                            const action = permission.split(':')[1];
+                            return (
+                              <button
+                                key={permission}
+                                onClick={() => togglePermission(permission)}
+                                className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
+                                  selectedPermissions.has(permission)
+                                    ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                                    : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+                                }`}
+                              >
+                                {formatActionLabel(action)}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                      <div className="ml-6 flex flex-wrap gap-2">
-                        {permissions.map(permission => {
-                          const action = permission.split(':')[1];
-                          return (
-                            <button
-                              key={permission}
-                              onClick={() => togglePermission(permission)}
-                              className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
-                                selectedPermissions.has(permission)
-                                  ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                                  : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
-                              }`}
-                            >
-                              {formatActionLabel(action)}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  }
+                )}
               </div>
             </ScrollArea>
             <p className="text-xs text-gray-500">
@@ -450,7 +476,7 @@ function RoleDialog({
           <Button
             onClick={handleSave}
             disabled={!isValid || isSubmitting}
-            className="bg-cyan-500 hover:bg-cyan-600"
+            className="bg-orange-500 hover:bg-orange-600"
           >
             {isSubmitting ? (
               <>
@@ -486,7 +512,12 @@ interface UserSearchDialogProps {
   onAssign: (userId: string) => Promise<void>;
 }
 
-function UserSearchDialog({ open, onOpenChange, role, onAssign }: UserSearchDialogProps) {
+function UserSearchDialog({
+  open,
+  onOpenChange,
+  role,
+  onAssign,
+}: UserSearchDialogProps) {
   const [query, setQuery] = useState('');
   const [members, setMembers] = useState<OrgMember[]>([]);
   const [loading, setLoading] = useState(false);
@@ -496,7 +527,9 @@ function UserSearchDialog({ open, onOpenChange, role, onAssign }: UserSearchDial
   const fetchMembers = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/teams/members?limit=100', { credentials: 'include' });
+      const res = await fetch('/api/teams/members?limit=100', {
+        credentials: 'include',
+      });
       if (res.ok) {
         const data = await res.json();
         setMembers(Array.isArray(data.data) ? data.data : []);
@@ -538,10 +571,10 @@ function UserSearchDialog({ open, onOpenChange, role, onAssign }: UserSearchDial
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="bg-surface-base/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-md">
+      <DialogContent className="bg-surface-base/95 border-orange-500/20 backdrop-blur-xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2">
-            <UserPlus className="h-5 w-5 text-cyan-400" />
+            <UserPlus className="h-5 w-5 text-orange-400" />
             Add user to &quot;{role.name}&quot;
           </DialogTitle>
           <DialogDescription className="text-gray-400">
@@ -564,11 +597,13 @@ function UserSearchDialog({ open, onOpenChange, role, onAssign }: UserSearchDial
           <ScrollArea className="h-[260px]">
             {loading ? (
               <div className="flex items-center justify-center py-10">
-                <Loader2 className="h-5 w-5 text-cyan-400 animate-spin" />
+                <Loader2 className="h-5 w-5 text-orange-400 animate-spin" />
               </div>
             ) : filtered.length === 0 ? (
               <div className="text-center py-10 text-gray-400 text-sm">
-                {query ? 'No members match your search.' : 'No team members found.'}
+                {query
+                  ? 'No members match your search.'
+                  : 'No team members found.'}
               </div>
             ) : (
               <div className="space-y-1 pr-4">
@@ -581,18 +616,22 @@ function UserSearchDialog({ open, onOpenChange, role, onAssign }: UserSearchDial
                   >
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
-                        {member.avatar && <AvatarImage src={member.avatar} alt={member.name} />}
-                        <AvatarFallback className="bg-cyan-500/20 text-cyan-400 text-sm">
+                        {member.avatar && (
+                          <AvatarImage src={member.avatar} alt={member.name} />
+                        )}
+                        <AvatarFallback className="bg-orange-500/20 text-orange-400 text-sm">
                           {member.name.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="text-sm font-medium text-white">{member.name}</p>
+                        <p className="text-sm font-medium text-white">
+                          {member.name}
+                        </p>
                         <p className="text-xs text-gray-400">{member.email}</p>
                       </div>
                     </div>
                     {assigning === member.id ? (
-                      <Loader2 className="h-4 w-4 text-cyan-400 animate-spin flex-shrink-0" />
+                      <Loader2 className="h-4 w-4 text-orange-400 animate-spin flex-shrink-0" />
                     ) : (
                       <UserPlus className="h-4 w-4 text-gray-600 flex-shrink-0" />
                     )}
@@ -649,21 +688,22 @@ function RoleUsersDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-surface-base/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-lg max-h-[80vh]">
+      <DialogContent className="bg-surface-base/95 border-orange-500/20 backdrop-blur-xl sm:max-w-lg max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2">
             {getRoleIcon(role.name, role.isSystem)}
             {role.name} Users
           </DialogTitle>
           <DialogDescription className="text-gray-400">
-            {role.userCount} user{role.userCount !== 1 ? 's' : ''} with this role
+            {role.userCount} user{role.userCount !== 1 ? 's' : ''} with this
+            role
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-4">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 text-cyan-400 animate-spin" />
+              <Loader2 className="h-6 w-6 text-orange-400 animate-spin" />
             </div>
           ) : users.length === 0 ? (
             <div className="text-center py-8">
@@ -680,13 +720,17 @@ function RoleUsersDialog({
                   >
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9">
-                        {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
-                        <AvatarFallback className="bg-cyan-500/20 text-cyan-400 text-sm">
+                        {user.avatar && (
+                          <AvatarImage src={user.avatar} alt={user.name} />
+                        )}
+                        <AvatarFallback className="bg-orange-500/20 text-orange-400 text-sm">
                           {user.name.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="text-sm font-medium text-white">{user.name}</p>
+                        <p className="text-sm font-medium text-white">
+                          {user.name}
+                        </p>
                         <p className="text-xs text-gray-400">{user.email}</p>
                       </div>
                     </div>
@@ -726,7 +770,7 @@ function RoleUsersDialog({
         <DialogFooter>
           <Button
             onClick={onAddUser}
-            className="bg-cyan-500 hover:bg-cyan-600"
+            className="bg-orange-500 hover:bg-orange-600"
           >
             <UserPlus className="h-4 w-4 mr-2" />
             Add User
@@ -749,7 +793,13 @@ interface DeleteDialogProps {
   isDeleting: boolean;
 }
 
-function DeleteDialog({ open, onOpenChange, role, onConfirm, isDeleting }: DeleteDialogProps) {
+function DeleteDialog({
+  open,
+  onOpenChange,
+  role,
+  onConfirm,
+  isDeleting,
+}: DeleteDialogProps) {
   if (!role) return null;
 
   return (
@@ -761,16 +811,16 @@ function DeleteDialog({ open, onOpenChange, role, onConfirm, isDeleting }: Delet
             Delete Role
           </DialogTitle>
           <DialogDescription className="text-gray-400">
-            Are you sure you want to delete the role &quot;{role.name}&quot;? This action cannot
-            be undone.
+            Are you sure you want to delete the role &quot;{role.name}&quot;?
+            This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
 
         {role.userCount > 0 && (
           <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-sm text-amber-300">
             <strong>Warning:</strong> {role.userCount} user
-            {role.userCount !== 1 ? 's have' : ' has'} this role. They will lose access
-            to permissions granted by this role.
+            {role.userCount !== 1 ? 's have' : ' has'} this role. They will lose
+            access to permissions granted by this role.
           </div>
         )}
 
@@ -814,15 +864,20 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
     <Card variant="glass">
       <CardContent className="py-16">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cyan-500/10 mb-4">
-            <Shield className="w-8 h-8 text-cyan-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 mb-4">
+            <Shield className="w-8 h-8 text-orange-400" />
           </div>
-          <h3 className="text-lg font-medium text-white mb-2">No custom roles yet</h3>
+          <h3 className="text-lg font-medium text-white mb-2">
+            No custom roles yet
+          </h3>
           <p className="text-gray-400 mb-6 max-w-sm mx-auto">
-            Use the predefined system roles or create your own custom roles with specific
-            permissions.
+            Use the predefined system roles or create your own custom roles with
+            specific permissions.
           </p>
-          <Button onClick={onCreate} className="bg-cyan-500 hover:bg-cyan-600">
+          <Button
+            onClick={onCreate}
+            className="bg-orange-500 hover:bg-orange-600"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Create Custom Role
           </Button>
@@ -858,7 +913,9 @@ export default function RolesPage() {
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [usersDialogOpen, setUsersDialogOpen] = useState(false);
-  const [selectedRoleForUsers, setSelectedRoleForUsers] = useState<Role | null>(null);
+  const [selectedRoleForUsers, setSelectedRoleForUsers] = useState<Role | null>(
+    null
+  );
   const [roleUsers, setRoleUsers] = useState<RoleUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -975,8 +1032,8 @@ export default function RolesPage() {
       {/* Page Header */}
       <div className="flex items-start justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
-            <Shield className="h-6 w-6 text-cyan-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+            <Shield className="h-6 w-6 text-orange-400" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-white">Role Management</h1>
@@ -997,7 +1054,10 @@ export default function RolesPage() {
               <RefreshCw className="w-4 h-4" />
             )}
           </Button>
-          <Button onClick={handleCreateRole} className="bg-cyan-500 hover:bg-cyan-600">
+          <Button
+            onClick={handleCreateRole}
+            className="bg-orange-500 hover:bg-orange-600"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Create Role
           </Button>
@@ -1031,7 +1091,7 @@ export default function RolesPage() {
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+          <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
         </div>
       )}
 
@@ -1063,7 +1123,7 @@ export default function RolesPage() {
           {customRoles.length > 0 && (
             <div className="mb-8">
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Shield className="h-5 w-5 text-cyan-400" />
+                <Shield className="h-5 w-5 text-orange-400" />
                 Custom Roles
               </h2>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -1091,7 +1151,9 @@ export default function RolesPage() {
               <CardContent className="py-12">
                 <div className="text-center">
                   <Search className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                  <h3 className="text-lg font-medium text-white mb-2">No roles found</h3>
+                  <h3 className="text-lg font-medium text-white mb-2">
+                    No roles found
+                  </h3>
                   <p className="text-gray-400">
                     No roles match your search &quot;{searchQuery}&quot;
                   </p>

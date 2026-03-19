@@ -14,7 +14,7 @@
  * @module app/dashboard/pr/page
  */
 
-import { useEffect, useState , Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -34,7 +34,12 @@ import { PRAnalyticsSummary } from '@/components/pr/PRAnalyticsSummary';
 
 type PRTab = 'journalists' | 'pitches' | 'coverage' | 'press-releases';
 
-const VALID_TABS: PRTab[] = ['journalists', 'pitches', 'coverage', 'press-releases'];
+const VALID_TABS: PRTab[] = [
+  'journalists',
+  'pitches',
+  'coverage',
+  'press-releases',
+];
 
 function isValidTab(value: string | null): value is PRTab {
   return VALID_TABS.includes(value as PRTab);
@@ -67,14 +72,19 @@ function PRManagerPageContent() {
   const tabParam = searchParams.get('tab');
   const initialTab: PRTab = isValidTab(tabParam) ? tabParam : 'journalists';
   const [activeTab, setActiveTab] = useState<PRTab>(initialTab);
-  const [selectedRelease, setSelectedRelease] = useState<SelectedRelease | null>(null);
+  const [selectedRelease, setSelectedRelease] =
+    useState<SelectedRelease | null>(null);
 
   // Releases list for PRAnalyticsSummary — SWR dedupes with PressReleaseEditor's fetch
-  const { data: releasesData, isLoading: releasesLoading, mutate: mutateReleases } = useSWR<{
+  const {
+    data: releasesData,
+    isLoading: releasesLoading,
+    mutate: mutateReleases,
+  } = useSWR<{
     releases: Array<{ id: string; status: string }>;
   }>(
     activeTab === 'press-releases' ? '/api/pr/press-releases' : null,
-    fetchJson,
+    fetchJson
   );
 
   const releases = releasesData?.releases ?? [];
@@ -101,13 +111,14 @@ function PRManagerPageContent() {
     <div className="max-w-screen-xl mx-auto">
       {/* Page header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
-          <Newspaper className="h-6 w-6 text-cyan-400" />
+        <div className="p-2 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+          <Newspaper className="h-6 w-6 text-orange-400" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">PR Manager</h1>
           <p className="text-sm text-gray-400">
-            Journalist CRM · Pitch tracking · Coverage monitoring · Press releases
+            Journalist CRM · Pitch tracking · Coverage monitoring · Press
+            releases
           </p>
         </div>
       </div>
@@ -116,9 +127,16 @@ function PRManagerPageContent() {
       <PROverviewStats />
 
       {/* Tabbed content */}
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="space-y-4"
+      >
         <TabsList variant="glass" className="w-full sm:w-auto">
-          <TabsTrigger value="journalists" className="flex items-center gap-1.5">
+          <TabsTrigger
+            value="journalists"
+            className="flex items-center gap-1.5"
+          >
             <Users className="h-4 w-4" />
             Journalists
           </TabsTrigger>
@@ -130,7 +148,10 @@ function PRManagerPageContent() {
             <Globe className="h-4 w-4" />
             Coverage
           </TabsTrigger>
-          <TabsTrigger value="press-releases" className="flex items-center gap-1.5">
+          <TabsTrigger
+            value="press-releases"
+            className="flex items-center gap-1.5"
+          >
             <FileText className="h-4 w-4" />
             Press Releases
           </TabsTrigger>
@@ -161,11 +182,14 @@ function PRManagerPageContent() {
         <TabsContent value="press-releases">
           <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
             {/* Analytics summary */}
-            <PRAnalyticsSummary releases={releases} isLoading={releasesLoading} />
+            <PRAnalyticsSummary
+              releases={releases}
+              isLoading={releasesLoading}
+            />
 
             {/* AI generator form */}
             <PRGeneratorForm
-              onSaved={(release) => {
+              onSaved={release => {
                 setSelectedRelease(release);
                 void mutateReleases();
               }}
@@ -173,7 +197,7 @@ function PRManagerPageContent() {
 
             {/* Press release list + editor */}
             <PressReleaseEditor
-              onSelectRelease={(release) => setSelectedRelease(release)}
+              onSelectRelease={release => setSelectedRelease(release)}
             />
 
             {/* Distribution panel — shown when a release is selected */}

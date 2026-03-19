@@ -66,7 +66,9 @@ export function ImagePreviewCard({
 
     try {
       // Convert base64 to blob
-      const response = await fetch(`data:image/png;base64,${image.imageBase64}`);
+      const response = await fetch(
+        `data:image/png;base64,${image.imageBase64}`
+      );
       const blob = await response.blob();
 
       // Copy to clipboard
@@ -112,7 +114,9 @@ export function ImagePreviewCard({
           <div className="p-2 rounded-full bg-red-500/20 border border-red-500/30">
             <AlertTriangle className="h-5 w-5 text-red-400" />
           </div>
-          <p className="text-sm text-red-300">{image.error || 'Failed to generate'}</p>
+          <p className="text-sm text-red-300">
+            {image.error || 'Failed to generate'}
+          </p>
         </div>
       </div>
     );
@@ -124,7 +128,7 @@ export function ImagePreviewCard({
         'relative rounded-xl overflow-hidden group',
         'bg-white/5 border border-white/10',
         'transition-all duration-300',
-        isHovered && 'border-cyan-500/30 shadow-lg shadow-cyan-500/10',
+        isHovered && 'border-orange-500/30 shadow-lg shadow-orange-500/10',
         className
       )}
       onMouseEnter={() => setIsHovered(true)}
@@ -225,7 +229,11 @@ export function ImagePreviewCard({
 // SKELETON
 // ============================================================================
 
-export function ImagePreviewCardSkeleton({ className }: { className?: string }) {
+export function ImagePreviewCardSkeleton({
+  className,
+}: {
+  className?: string;
+}) {
   return (
     <div
       className={cn(

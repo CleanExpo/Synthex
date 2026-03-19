@@ -26,7 +26,7 @@ export function OverallScore({ score }: OverallScoreProps) {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center">
-            <BarChart3 className="w-5 h-5 mr-2 text-cyan-400" />
+            <BarChart3 className="w-5 h-5 mr-2 text-orange-400" />
             Overall Score
           </span>
           <span className={`text-4xl font-bold ${getScoreColor(score)}`}>

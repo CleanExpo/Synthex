@@ -50,9 +50,9 @@ function MessageDisplay() {
           </Link>
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-cyan-500/[0.08] border-[0.5px] border-cyan-500/20 rounded-sm hover:bg-cyan-500/[0.15] transition-all duration-200"
+            className="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-orange-500/[0.08] border-[0.5px] border-orange-500/20 rounded-sm hover:bg-orange-500/[0.15] transition-all duration-200"
           >
-            <Home className="w-4 h-4 text-cyan-400" />
+            <Home className="w-4 h-4 text-orange-400" />
             Dashboard
           </Link>
         </div>
@@ -63,28 +63,28 @@ function MessageDisplay() {
           <div className="flex flex-wrap gap-2 justify-center">
             <Link
               href="/dashboard/content"
-              className="text-cyan-400 hover:text-cyan-300 text-xs transition-colors"
+              className="text-orange-400 hover:text-orange-300 text-xs transition-colors"
             >
               Content
             </Link>
             <span className="text-white/20">•</span>
             <Link
               href="/dashboard/analytics"
-              className="text-cyan-400 hover:text-cyan-300 text-xs transition-colors"
+              className="text-orange-400 hover:text-orange-300 text-xs transition-colors"
             >
               Analytics
             </Link>
             <span className="text-white/20">•</span>
             <Link
               href="/dashboard/schedule"
-              className="text-cyan-400 hover:text-cyan-300 text-xs transition-colors"
+              className="text-orange-400 hover:text-orange-300 text-xs transition-colors"
             >
               Schedule
             </Link>
             <span className="text-white/20">•</span>
             <Link
               href="/dashboard/settings"
-              className="text-cyan-400 hover:text-cyan-300 text-xs transition-colors"
+              className="text-orange-400 hover:text-orange-300 text-xs transition-colors"
             >
               Settings
             </Link>

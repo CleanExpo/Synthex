@@ -144,13 +144,15 @@ function ExecutionCard({
         'w-full text-left rounded-xl border px-4 py-3 transition-all duration-150',
         'bg-white/[0.03] hover:bg-white/[0.06]',
         selected
-          ? 'border-cyan-500/50 ring-1 ring-cyan-500/30 bg-cyan-500/5'
+          ? 'border-orange-500/50 ring-1 ring-orange-500/30 bg-orange-500/5'
           : 'border-white/10 hover:border-white/20'
       )}
     >
       {/* Title + status row */}
       <div className="flex items-start justify-between gap-2 mb-2">
-        <p className="text-sm font-medium text-white line-clamp-1 flex-1">{execution.title}</p>
+        <p className="text-sm font-medium text-white line-clamp-1 flex-1">
+          {execution.title}
+        </p>
         <StatusBadge status={execution.status} />
       </div>
 
@@ -158,12 +160,14 @@ function ExecutionCard({
       {execution.totalSteps > 0 && (
         <div className="mb-2">
           <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
-            <span>Step {execution.currentStepIndex}/{execution.totalSteps}</span>
+            <span>
+              Step {execution.currentStepIndex}/{execution.totalSteps}
+            </span>
             <span>{progress}%</span>
           </div>
           <div className="h-1 w-full rounded-full bg-white/10 overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-orange-500 to-blue-500 transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -172,9 +176,13 @@ function ExecutionCard({
 
       {/* Meta row */}
       <div className="flex items-center gap-2 text-[11px] text-gray-500">
-        <span className="capitalize">{triggerLabel(execution.triggerType)}</span>
+        <span className="capitalize">
+          {triggerLabel(execution.triggerType)}
+        </span>
         <span>·</span>
-        <span>{formatRelative(execution.startedAt ?? execution.createdAt)}</span>
+        <span>
+          {formatRelative(execution.startedAt ?? execution.createdAt)}
+        </span>
       </div>
     </button>
   );
@@ -211,7 +219,7 @@ export function ExecutionList({
 
   return (
     <div className={cn('space-y-2', className)}>
-      {executions.map((exec) => (
+      {executions.map(exec => (
         <ExecutionCard
           key={exec.id}
           execution={exec}

@@ -20,10 +20,14 @@ function compositeColour(score: number): string {
 }
 
 export default function GEOOptimiserPage() {
-  const [tacticResult, setTacticResult] = useState<TacticScoreResult | null>(null);
+  const [tacticResult, setTacticResult] = useState<TacticScoreResult | null>(
+    null
+  );
   const [isScoring, setIsScoring] = useState(false);
   const [editorContent, setEditorContent] = useState('');
-  const [improvingTactic, setImprovingTactic] = useState<GEOTactic | null>(null);
+  const [improvingTactic, setImprovingTactic] = useState<GEOTactic | null>(
+    null
+  );
   const [rewriteModal, setRewriteModal] = useState<RewriteModalState>({
     open: false,
     tactic: null,
@@ -52,7 +56,9 @@ export default function GEOOptimiserPage() {
     setImprovingTactic(null);
   }, []);
 
-  const compositeScore = tacticResult ? Math.round(tacticResult.compositeGEOScore) : null;
+  const compositeScore = tacticResult
+    ? Math.round(tacticResult.compositeGEOScore)
+    : null;
 
   return (
     <main className="h-full p-6 overflow-hidden">
@@ -66,7 +72,9 @@ export default function GEOOptimiserPage() {
         </div>
         {compositeScore !== null && (
           <div className="text-centre flex-shrink-0">
-            <div className={`text-3xl font-bold ${compositeColour(compositeScore)}`}>
+            <div
+              className={`text-3xl font-bold ${compositeColour(compositeScore)}`}
+            >
               {compositeScore}
             </div>
             <div className="text-xs text-slate-400 mt-0.5">Composite Score</div>
@@ -91,14 +99,32 @@ export default function GEOOptimiserPage() {
             <div className="text-slate-500 text-sm text-centre py-12 px-4">
               {isScoring ? (
                 <span className="flex flex-col items-centre gap-2">
-                  <svg className="h-5 w-5 animate-spin text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  <svg
+                    className="h-5 w-5 animate-spin text-orange-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
                   </svg>
                   Analysing content...
                 </span>
               ) : (
-                <span>Start typing in the editor to see your tactic scores</span>
+                <span>
+                  Start typing in the editor to see your tactic scores
+                </span>
               )}
             </div>
           )}

@@ -2,12 +2,24 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   TrendingUp,
   TrendingDown,
   Activity,
@@ -30,7 +42,7 @@ import {
   Sparkles,
   ChevronRight,
   Info,
-  AlertCircle
+  AlertCircle,
 } from '@/components/icons';
 import {
   LineChart,
@@ -48,7 +60,7 @@ import {
   Legend,
   ResponsiveContainer,
   ReferenceLine,
-  ReferenceArea
+  ReferenceArea,
 } from 'recharts';
 import { notify } from '@/lib/notifications';
 
@@ -119,16 +131,23 @@ export function PredictiveAnalytics() {
   const [selectedTimeframe, setSelectedTimeframe] = useState('7d');
   const [loading, setLoading] = useState(false);
   const [accuracyScore, setAccuracyScore] = useState(0);
-  
+
   const loadPredictions = useCallback(async () => {
     setLoading(true);
 
     try {
       // Fetch real data from multiple endpoints in parallel
       const [insightsRes, predictionsRes, trendsRes] = await Promise.all([
-        fetch(`/api/analytics/insights?period=${selectedTimeframe}`, { credentials: 'include' }),
-        fetch('/api/analytics/predict-engagement?withActuals=true&limit=20', { credentials: 'include' }),
-        fetch(`/api/predict/trends?action=trending&platform=instagram&limit=10`, { credentials: 'include' })
+        fetch(`/api/analytics/insights?period=${selectedTimeframe}`, {
+          credentials: 'include',
+        }),
+        fetch('/api/analytics/predict-engagement?withActuals=true&limit=20', {
+          credentials: 'include',
+        }),
+        fetch(
+          `/api/predict/trends?action=trending&platform=instagram&limit=10`,
+          { credentials: 'include' }
+        ),
       ]);
 
       // Process insights for anomalies and time series
@@ -138,16 +157,23 @@ export function PredictiveAnalytics() {
 
         // Transform trends to time series data
         if (insights?.trends && Array.isArray(insights.trends)) {
-          const tsData: TimeSeriesData[] = insights.trends.map((trend: { date: string; posts: number; engagements: number }, index: number) => {
-            const predicted = trend.posts > 0 ? trend.engagements / trend.posts : 0;
-            return {
-              date: trend.date,
-              actual: index < insights.trends.length - 7 ? trend.engagements : 0,
-              predicted: predicted * 1.1, // Slight prediction variance
-              upperBound: predicted * 1.25,
-              lowerBound: predicted * 0.85
-            };
-          });
+          const tsData: TimeSeriesData[] = insights.trends.map(
+            (
+              trend: { date: string; posts: number; engagements: number },
+              index: number
+            ) => {
+              const predicted =
+                trend.posts > 0 ? trend.engagements / trend.posts : 0;
+              return {
+                date: trend.date,
+                actual:
+                  index < insights.trends.length - 7 ? trend.engagements : 0,
+                predicted: predicted * 1.1, // Slight prediction variance
+                upperBound: predicted * 1.25,
+                lowerBound: predicted * 0.85,
+              };
+            }
+          );
           setTimeSeriesData(tsData);
         }
 
@@ -166,7 +192,7 @@ export function PredictiveAnalytics() {
               value: overview.engagementRate,
               expectedValue: 3.5,
               description: 'Unusual spike in engagement detected',
-              action: 'Investigate viral content and replicate success factors'
+              action: 'Investigate viral content and replicate success factors',
             });
           }
           if (overview.failedPosts > overview.publishedPosts * 0.1) {
@@ -179,7 +205,7 @@ export function PredictiveAnalytics() {
               value: overview.failedPosts,
               expectedValue: 0,
               description: 'Higher than expected post failures',
-              action: 'Check platform connections and content validation'
+              action: 'Check platform connections and content validation',
             });
           }
         }
@@ -199,46 +225,89 @@ export function PredictiveAnalytics() {
 
         // Transform predictions to component format
         if (predData.predictions && Array.isArray(predData.predictions)) {
-          const transformedPredictions: Prediction[] = predData.predictions.slice(0, 4).map((pred: {
-            id: string;
-            platform: string;
-            predictedLikes: number;
-            predictedComments: number;
-            predictedShares: number;
-            predictedEngRate: number;
-            actualLikes?: number;
-            actualEngRate?: number;
-            confidenceLevel: number;
-          }, index: number) => {
-            const categories: ('engagement' | 'growth' | 'revenue' | 'risk')[] = ['engagement', 'growth', 'revenue', 'risk'];
-            const metrics = ['Engagement Rate', 'Follower Growth', 'Conversion Rate', 'Content Reach'];
-            const currentValue = pred.actualLikes || pred.predictedLikes * 0.9;
-            const predictedValue = pred.predictedLikes;
-            const change = currentValue > 0 ? ((predictedValue - currentValue) / currentValue) * 100 : 0;
+          const transformedPredictions: Prediction[] = predData.predictions
+            .slice(0, 4)
+            .map(
+              (
+                pred: {
+                  id: string;
+                  platform: string;
+                  predictedLikes: number;
+                  predictedComments: number;
+                  predictedShares: number;
+                  predictedEngRate: number;
+                  actualLikes?: number;
+                  actualEngRate?: number;
+                  confidenceLevel: number;
+                },
+                index: number
+              ) => {
+                const categories: (
+                  | 'engagement'
+                  | 'growth'
+                  | 'revenue'
+                  | 'risk'
+                )[] = ['engagement', 'growth', 'revenue', 'risk'];
+                const metrics = [
+                  'Engagement Rate',
+                  'Follower Growth',
+                  'Conversion Rate',
+                  'Content Reach',
+                ];
+                const currentValue =
+                  pred.actualLikes || pred.predictedLikes * 0.9;
+                const predictedValue = pred.predictedLikes;
+                const change =
+                  currentValue > 0
+                    ? ((predictedValue - currentValue) / currentValue) * 100
+                    : 0;
 
-            return {
-              id: pred.id || `pred-${index}`,
-              metric: metrics[index % 4],
-              category: categories[index % 4],
-              currentValue: Math.round(currentValue),
-              predictedValue: Math.round(predictedValue),
-              change: Math.round(change * 10) / 10,
-              confidence: Math.round(pred.confidenceLevel * 100),
-              timeframe: selectedTimeframe === '7d' ? 'Next 7 days' : selectedTimeframe === '14d' ? 'Next 14 days' : 'Next 30 days',
-              factors: [
-                { name: 'Platform algorithm', impact: 25, description: `Optimized for ${pred.platform}` },
-                { name: 'Content quality', impact: 20, description: 'Based on historical performance' },
-                { name: 'Timing', impact: 15, description: 'Posting time optimization' }
-              ],
-              recommendations: [
-                'Post during peak engagement hours',
-                'Use trending hashtags for this platform',
-                'Include visual media for better reach'
-              ],
-              risk: change < -10 ? 'high' : change < 0 ? 'medium' : 'low',
-              impact: Math.abs(change) > 20 ? 'high' : Math.abs(change) > 10 ? 'medium' : 'low'
-            };
-          });
+                return {
+                  id: pred.id || `pred-${index}`,
+                  metric: metrics[index % 4],
+                  category: categories[index % 4],
+                  currentValue: Math.round(currentValue),
+                  predictedValue: Math.round(predictedValue),
+                  change: Math.round(change * 10) / 10,
+                  confidence: Math.round(pred.confidenceLevel * 100),
+                  timeframe:
+                    selectedTimeframe === '7d'
+                      ? 'Next 7 days'
+                      : selectedTimeframe === '14d'
+                        ? 'Next 14 days'
+                        : 'Next 30 days',
+                  factors: [
+                    {
+                      name: 'Platform algorithm',
+                      impact: 25,
+                      description: `Optimized for ${pred.platform}`,
+                    },
+                    {
+                      name: 'Content quality',
+                      impact: 20,
+                      description: 'Based on historical performance',
+                    },
+                    {
+                      name: 'Timing',
+                      impact: 15,
+                      description: 'Posting time optimization',
+                    },
+                  ],
+                  recommendations: [
+                    'Post during peak engagement hours',
+                    'Use trending hashtags for this platform',
+                    'Include visual media for better reach',
+                  ],
+                  risk: change < -10 ? 'high' : change < 0 ? 'medium' : 'low',
+                  impact:
+                    Math.abs(change) > 20
+                      ? 'high'
+                      : Math.abs(change) > 10
+                        ? 'medium'
+                        : 'low',
+                };
+              }
+            );
           setPredictions(transformedPredictions);
         }
       }
@@ -256,10 +325,28 @@ export function PredictiveAnalytics() {
             probability: 25,
             impact: 'Very Positive',
             metrics: [
-              { metric: 'Engagement', current: 3.5, best: 5.2, likely: 4.2, worst: 3.8 },
-              { metric: 'Growth', current: 1250, best: 2100, likely: 1580, worst: 1400 },
-              { metric: 'Revenue', current: 10000, best: 15000, likely: 12000, worst: 10500 }
-            ]
+              {
+                metric: 'Engagement',
+                current: 3.5,
+                best: 5.2,
+                likely: 4.2,
+                worst: 3.8,
+              },
+              {
+                metric: 'Growth',
+                current: 1250,
+                best: 2100,
+                likely: 1580,
+                worst: 1400,
+              },
+              {
+                metric: 'Revenue',
+                current: 10000,
+                best: 15000,
+                likely: 12000,
+                worst: 10500,
+              },
+            ],
           },
           {
             id: 'scenario-likely',
@@ -268,10 +355,28 @@ export function PredictiveAnalytics() {
             probability: 60,
             impact: 'Positive',
             metrics: [
-              { metric: 'Engagement', current: 3.5, best: 4.5, likely: 4.0, worst: 3.6 },
-              { metric: 'Growth', current: 1250, best: 1700, likely: 1450, worst: 1300 },
-              { metric: 'Revenue', current: 10000, best: 12500, likely: 11000, worst: 10200 }
-            ]
+              {
+                metric: 'Engagement',
+                current: 3.5,
+                best: 4.5,
+                likely: 4.0,
+                worst: 3.6,
+              },
+              {
+                metric: 'Growth',
+                current: 1250,
+                best: 1700,
+                likely: 1450,
+                worst: 1300,
+              },
+              {
+                metric: 'Revenue',
+                current: 10000,
+                best: 12500,
+                likely: 11000,
+                worst: 10200,
+              },
+            ],
           },
           {
             id: 'scenario-worst',
@@ -280,15 +385,32 @@ export function PredictiveAnalytics() {
             probability: 15,
             impact: 'Negative',
             metrics: [
-              { metric: 'Engagement', current: 3.5, best: 3.6, likely: 3.2, worst: 2.8 },
-              { metric: 'Growth', current: 1250, best: 1300, likely: 1150, worst: 1000 },
-              { metric: 'Revenue', current: 10000, best: 10200, likely: 9500, worst: 8500 }
-            ]
-          }
+              {
+                metric: 'Engagement',
+                current: 3.5,
+                best: 3.6,
+                likely: 3.2,
+                worst: 2.8,
+              },
+              {
+                metric: 'Growth',
+                current: 1250,
+                best: 1300,
+                likely: 1150,
+                worst: 1000,
+              },
+              {
+                metric: 'Revenue',
+                current: 10000,
+                best: 10200,
+                likely: 9500,
+                worst: 8500,
+              },
+            ],
+          },
         ];
         setScenarios(baseScenarios);
       }
-
     } catch (error) {
       console.error('Error loading predictions:', error);
       notify.error('Failed to load predictions');
@@ -306,48 +428,59 @@ export function PredictiveAnalytics() {
   useEffect(() => {
     loadPredictions();
   }, [loadPredictions, selectedMetric, selectedTimeframe]);
-  
+
   const getChangeColor = (change: number) => {
     if (change > 0) return 'text-green-400';
     if (change < 0) return 'text-red-400';
     return 'text-gray-400';
   };
-  
+
   const getRiskColor = (risk: string) => {
     switch (risk) {
-      case 'high': return 'bg-red-500';
-      case 'medium': return 'bg-yellow-500';
-      default: return 'bg-green-500';
+      case 'high':
+        return 'bg-red-500';
+      case 'medium':
+        return 'bg-yellow-500';
+      default:
+        return 'bg-green-500';
     }
   };
-  
+
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'high': return 'text-red-400';
-      case 'medium': return 'text-yellow-400';
-      default: return 'text-green-400';
+      case 'high':
+        return 'text-red-400';
+      case 'medium':
+        return 'text-yellow-400';
+      default:
+        return 'text-green-400';
     }
   };
-  
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
-            <BarChart3 className="h-6 w-6 text-cyan-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+            <BarChart3 className="h-6 w-6 text-orange-400" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">Predictive Analytics</h2>
+            <h2 className="text-2xl font-bold text-white">
+              Predictive Analytics
+            </h2>
             <p className="text-gray-400">AI-powered forecasting and insights</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Badge className="bg-green-500/20 text-green-400">
             {accuracyScore.toFixed(1)}% Accuracy
           </Badge>
-          <Select value={selectedTimeframe} onValueChange={setSelectedTimeframe}>
+          <Select
+            value={selectedTimeframe}
+            onValueChange={setSelectedTimeframe}
+          >
             <SelectTrigger className="w-32 bg-white/5 border-white/10">
               <SelectValue />
             </SelectTrigger>
@@ -360,7 +493,7 @@ export function PredictiveAnalytics() {
           </Select>
         </div>
       </div>
-      
+
       {/* Key Predictions */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {predictions.map(prediction => (
@@ -379,21 +512,25 @@ export function PredictiveAnalytics() {
                       {prediction.metric.includes('Rate') && '%'}
                     </p>
                   </div>
-                  <div className={`w-2 h-2 rounded-full ${getRiskColor(prediction.risk)}`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${getRiskColor(prediction.risk)}`}
+                  />
                 </div>
-                
+
                 <div className="flex items-center gap-2 mb-3">
                   {prediction.change > 0 ? (
                     <ArrowUpRight className="h-4 w-4 text-green-400" />
                   ) : (
                     <ArrowDownRight className="h-4 w-4 text-red-400" />
                   )}
-                  <span className={`text-sm font-medium ${getChangeColor(prediction.change)}`}>
+                  <span
+                    className={`text-sm font-medium ${getChangeColor(prediction.change)}`}
+                  >
                     {Math.abs(prediction.change).toFixed(1)}%
                   </span>
                   <span className="text-xs text-gray-400">vs current</span>
                 </div>
-                
+
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-400">Confidence</span>
@@ -401,44 +538,52 @@ export function PredictiveAnalytics() {
                   </div>
                   <Progress value={prediction.confidence} className="h-1.5" />
                 </div>
-                
-                <p className="text-xs text-gray-400 mt-2">{prediction.timeframe}</p>
+
+                <p className="text-xs text-gray-400 mt-2">
+                  {prediction.timeframe}
+                </p>
               </CardContent>
             </Card>
           </motion.div>
         ))}
       </div>
-      
+
       {/* Time Series Forecast */}
       <Card variant="glass">
         <CardHeader>
           <CardTitle>Forecast Visualization</CardTitle>
-          <CardDescription>Historical data and future predictions</CardDescription>
+          <CardDescription>
+            Historical data and future predictions
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={timeSeriesData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-              <XAxis 
-                dataKey="date" 
+              <XAxis
+                dataKey="date"
                 stroke="#666"
-                tickFormatter={(date) => new Date(date).toLocaleDateString()}
+                tickFormatter={date => new Date(date).toLocaleDateString()}
               />
               <YAxis stroke="#666" />
               <Tooltip
                 contentStyle={{
                   backgroundColor: 'rgba(0,0,0,0.8)',
                   border: '1px solid rgba(6, 182, 212, 0.3)',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
                 }}
               />
               <Legend />
-              <ReferenceLine x={timeSeriesData[20]?.date} stroke="#666" strokeDasharray="3 3" />
+              <ReferenceLine
+                x={timeSeriesData[20]?.date}
+                stroke="#666"
+                strokeDasharray="3 3"
+              />
               <Area
                 type="monotone"
                 dataKey="upperBound"
                 stroke="transparent"
-                fill="#06b6d4"
+                fill="#ffb87b"
                 fillOpacity={0.1}
                 name="Upper Bound"
               />
@@ -446,7 +591,7 @@ export function PredictiveAnalytics() {
                 type="monotone"
                 dataKey="lowerBound"
                 stroke="transparent"
-                fill="#06b6d4"
+                fill="#ffb87b"
                 fillOpacity={0.1}
                 name="Lower Bound"
               />
@@ -461,7 +606,7 @@ export function PredictiveAnalytics() {
               <Line
                 type="monotone"
                 dataKey="predicted"
-                stroke="#06b6d4"
+                stroke="#ffb87b"
                 strokeWidth={2}
                 strokeDasharray="5 5"
                 dot={false}
@@ -471,7 +616,7 @@ export function PredictiveAnalytics() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
-      
+
       {/* Scenario Analysis */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card variant="glass">
@@ -485,21 +630,30 @@ export function PredictiveAnalytics() {
                 <div key={scenario.id} className="p-4 bg-white/5 rounded-lg">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h4 className="font-medium text-white">{scenario.name}</h4>
-                      <p className="text-xs text-gray-400">{scenario.description}</p>
+                      <h4 className="font-medium text-white">
+                        {scenario.name}
+                      </h4>
+                      <p className="text-xs text-gray-400">
+                        {scenario.description}
+                      </p>
                     </div>
                     <Badge variant="secondary">
                       {scenario.probability}% likely
                     </Badge>
                   </div>
-                  
+
                   <div className="space-y-2">
                     {scenario.metrics.map(metric => (
-                      <div key={metric.metric} className="flex items-center justify-between text-sm">
+                      <div
+                        key={metric.metric}
+                        className="flex items-center justify-between text-sm"
+                      >
                         <span className="text-gray-400">{metric.metric}</span>
                         <div className="flex gap-3">
                           <span className="text-red-400">{metric.worst}</span>
-                          <span className="text-yellow-400 font-medium">{metric.likely}</span>
+                          <span className="text-yellow-400 font-medium">
+                            {metric.likely}
+                          </span>
                           <span className="text-green-400">{metric.best}</span>
                         </div>
                       </div>
@@ -510,12 +664,14 @@ export function PredictiveAnalytics() {
             </div>
           </CardContent>
         </Card>
-        
+
         {/* Anomaly Detection */}
         <Card variant="glass">
           <CardHeader>
             <CardTitle>Anomaly Detection</CardTitle>
-            <CardDescription>Unusual patterns requiring attention</CardDescription>
+            <CardDescription>
+              Unusual patterns requiring attention
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -523,38 +679,54 @@ export function PredictiveAnalytics() {
                 <div key={anomaly.id} className="p-3 bg-white/5 rounded-lg">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      {anomaly.type === 'spike' && <TrendingUp className="h-4 w-4 text-green-400" />}
-                      {anomaly.type === 'drop' && <TrendingDown className="h-4 w-4 text-red-400" />}
-                      {anomaly.type === 'pattern' && <Activity className="h-4 w-4 text-yellow-400" />}
-                      {anomaly.type === 'outlier' && <AlertCircle className="h-4 w-4 text-cyan-400" />}
-                      <span className="font-medium text-white text-sm">{anomaly.metric}</span>
+                      {anomaly.type === 'spike' && (
+                        <TrendingUp className="h-4 w-4 text-green-400" />
+                      )}
+                      {anomaly.type === 'drop' && (
+                        <TrendingDown className="h-4 w-4 text-red-400" />
+                      )}
+                      {anomaly.type === 'pattern' && (
+                        <Activity className="h-4 w-4 text-yellow-400" />
+                      )}
+                      {anomaly.type === 'outlier' && (
+                        <AlertCircle className="h-4 w-4 text-orange-400" />
+                      )}
+                      <span className="font-medium text-white text-sm">
+                        {anomaly.metric}
+                      </span>
                     </div>
-                    <Badge 
+                    <Badge
                       variant="secondary"
                       className={getSeverityColor(anomaly.severity)}
                     >
                       {anomaly.severity}
                     </Badge>
                   </div>
-                  
-                  <p className="text-xs text-gray-400 mb-2">{anomaly.description}</p>
-                  
+
+                  <p className="text-xs text-gray-400 mb-2">
+                    {anomaly.description}
+                  </p>
+
                   <div className="flex items-center justify-between">
                     <div className="flex gap-4 text-xs">
                       <span className="text-gray-400">
-                        Value: <span className="text-white">{anomaly.value}</span>
+                        Value:{' '}
+                        <span className="text-white">{anomaly.value}</span>
                       </span>
                       <span className="text-gray-400">
-                        Expected: <span className="text-white">{anomaly.expectedValue}</span>
+                        Expected:{' '}
+                        <span className="text-white">
+                          {anomaly.expectedValue}
+                        </span>
                       </span>
                     </div>
                     <span className="text-xs text-gray-400">
                       {new Date(anomaly.timestamp).toLocaleTimeString()}
                     </span>
                   </div>
-                  
-                  <div className="mt-2 p-2 bg-cyan-500/10 rounded flex items-start gap-2">
-                    <Info className="h-3 w-3 text-cyan-400 mt-0.5" />
+
+                  <div className="mt-2 p-2 bg-orange-500/10 rounded flex items-start gap-2">
+                    <Info className="h-3 w-3 text-orange-400 mt-0.5" />
                     <p className="text-xs text-gray-300">{anomaly.action}</p>
                   </div>
                 </div>
@@ -563,12 +735,12 @@ export function PredictiveAnalytics() {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* AI Insights */}
       <Card variant="glass">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-cyan-400" />
+            <Sparkles className="h-5 w-5 text-orange-400" />
             <CardTitle>AI-Powered Insights</CardTitle>
           </div>
         </CardHeader>
@@ -576,31 +748,42 @@ export function PredictiveAnalytics() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {predictions.slice(0, 3).map(prediction => (
               <div key={prediction.id} className="p-4 bg-white/5 rounded-lg">
-                <h4 className="font-medium text-white mb-3">{prediction.metric}</h4>
-                
+                <h4 className="font-medium text-white mb-3">
+                  {prediction.metric}
+                </h4>
+
                 <div className="space-y-3">
                   <div>
                     <p className="text-xs text-gray-400 mb-2">Key Factors</p>
                     {prediction.factors.map(factor => (
-                      <div key={factor.name} className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-gray-300">{factor.name}</span>
+                      <div
+                        key={factor.name}
+                        className="flex items-center justify-between mb-1"
+                      >
+                        <span className="text-xs text-gray-300">
+                          {factor.name}
+                        </span>
                         <div className="flex items-center gap-1">
                           {factor.impact > 0 ? (
                             <ArrowUpRight className="h-3 w-3 text-green-400" />
                           ) : (
                             <ArrowDownRight className="h-3 w-3 text-red-400" />
                           )}
-                          <span className="text-xs text-white">{Math.abs(factor.impact)}%</span>
+                          <span className="text-xs text-white">
+                            {Math.abs(factor.impact)}%
+                          </span>
                         </div>
                       </div>
                     ))}
                   </div>
-                  
+
                   <div>
-                    <p className="text-xs text-gray-400 mb-2">Recommendations</p>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Recommendations
+                    </p>
                     {prediction.recommendations.map((rec, i) => (
                       <div key={i} className="flex items-start gap-1 mb-1">
-                        <ChevronRight className="h-3 w-3 text-cyan-400 mt-0.5" />
+                        <ChevronRight className="h-3 w-3 text-orange-400 mt-0.5" />
                         <span className="text-xs text-gray-300">{rec}</span>
                       </div>
                     ))}

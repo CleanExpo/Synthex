@@ -25,8 +25,8 @@ interface AgeDistributionChartProps {
 
 // Age gradient colors (young cyan → older purple)
 const AGE_COLORS: Record<string, string> = {
-  '13-17': '#06b6d4', // cyan-500
-  '18-24': '#22d3ee', // cyan-400
+  '13-17': '#ffb87b', // cyan-500
+  '18-24': '#ffdcc2', // cyan-400
   '25-34': '#8b5cf6', // violet-500
   '35-44': '#a78bfa', // violet-400
   '45-54': '#c084fc', // purple-400
@@ -61,7 +61,9 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
         </div>
         <div className="flex justify-between gap-4">
           <span className="text-gray-400 text-sm">Count</span>
-          <span className="text-white font-medium">{formatNumber(data.count)}</span>
+          <span className="text-white font-medium">
+            {formatNumber(data.count)}
+          </span>
         </div>
       </div>
     </div>
@@ -91,8 +93,15 @@ export function AgeDistributionChart({
 }: AgeDistributionChartProps) {
   if (isLoading) {
     return (
-      <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
-        <h4 className="text-sm font-medium text-gray-400 mb-4">Age Distribution</h4>
+      <div
+        className={cn(
+          'bg-gray-900/30 border border-white/10 rounded-xl p-4',
+          className
+        )}
+      >
+        <h4 className="text-sm font-medium text-gray-400 mb-4">
+          Age Distribution
+        </h4>
         <LoadingSkeleton />
       </div>
     );
@@ -100,16 +109,32 @@ export function AgeDistributionChart({
 
   if (!data?.length) {
     return (
-      <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
-        <h4 className="text-sm font-medium text-gray-400 mb-4">Age Distribution</h4>
-        <p className="text-gray-500 text-sm text-center py-8">No age data available</p>
+      <div
+        className={cn(
+          'bg-gray-900/30 border border-white/10 rounded-xl p-4',
+          className
+        )}
+      >
+        <h4 className="text-sm font-medium text-gray-400 mb-4">
+          Age Distribution
+        </h4>
+        <p className="text-gray-500 text-sm text-center py-8">
+          No age data available
+        </p>
       </div>
     );
   }
 
   return (
-    <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
-      <h4 className="text-sm font-medium text-gray-400 mb-4">Age Distribution</h4>
+    <div
+      className={cn(
+        'bg-gray-900/30 border border-white/10 rounded-xl p-4',
+        className
+      )}
+    >
+      <h4 className="text-sm font-medium text-gray-400 mb-4">
+        Age Distribution
+      </h4>
       <div className="h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
@@ -123,7 +148,7 @@ export function AgeDistributionChart({
               tick={{ fill: '#9ca3af', fontSize: 11 }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(v) => `${v}%`}
+              tickFormatter={v => `${v}%`}
             />
             <YAxis
               type="category"
@@ -133,10 +158,16 @@ export function AgeDistributionChart({
               axisLine={false}
               width={45}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+            />
             <Bar dataKey="percentage" radius={[0, 4, 4, 0]} maxBarSize={24}>
-              {data.map((entry) => (
-                <Cell key={entry.range} fill={AGE_COLORS[entry.range] || '#6366f1'} />
+              {data.map(entry => (
+                <Cell
+                  key={entry.range}
+                  fill={AGE_COLORS[entry.range] || '#6366f1'}
+                />
               ))}
             </Bar>
           </BarChart>

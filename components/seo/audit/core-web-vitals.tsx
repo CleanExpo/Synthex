@@ -13,14 +13,30 @@ interface CoreWebVitalsCardProps {
   vitals: CoreWebVitals;
 }
 
-function getRatingStyles(rating: string): { bg: string; border: string; text: string } {
+function getRatingStyles(rating: string): {
+  bg: string;
+  border: string;
+  text: string;
+} {
   switch (rating) {
     case 'good':
-      return { bg: 'bg-green-500/10', border: 'border-green-500/30', text: 'text-green-400' };
+      return {
+        bg: 'bg-green-500/10',
+        border: 'border-green-500/30',
+        text: 'text-green-400',
+      };
     case 'needs-improvement':
-      return { bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', text: 'text-yellow-400' };
+      return {
+        bg: 'bg-yellow-500/10',
+        border: 'border-yellow-500/30',
+        text: 'text-yellow-400',
+      };
     default:
-      return { bg: 'bg-red-500/10', border: 'border-red-500/30', text: 'text-red-400' };
+      return {
+        bg: 'bg-red-500/10',
+        border: 'border-red-500/30',
+        text: 'text-red-400',
+      };
   }
 }
 
@@ -32,10 +48,10 @@ function formatVitalValue(key: string, value: number): string {
 
 export function CoreWebVitalsCard({ vitals }: CoreWebVitalsCardProps) {
   return (
-    <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-cyan-400" />
+          <TrendingUp className="w-5 h-5 text-orange-400" />
           Core Web Vitals
         </CardTitle>
       </CardHeader>
@@ -48,11 +64,15 @@ export function CoreWebVitalsCard({ vitals }: CoreWebVitalsCardProps) {
                 key={key}
                 className={`p-4 rounded-lg border ${styles.bg} ${styles.border}`}
               >
-                <p className="text-gray-400 text-sm uppercase">{key.toUpperCase()}</p>
+                <p className="text-gray-400 text-sm uppercase">
+                  {key.toUpperCase()}
+                </p>
                 <p className={`text-2xl font-bold ${styles.text}`}>
                   {formatVitalValue(key, vital.value)}
                 </p>
-                <p className="text-xs text-gray-500 capitalize">{vital.rating.replace('-', ' ')}</p>
+                <p className="text-xs text-gray-500 capitalize">
+                  {vital.rating.replace('-', ' ')}
+                </p>
               </div>
             );
           })}

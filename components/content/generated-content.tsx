@@ -5,11 +5,24 @@
  * Display and manage generated content
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Sparkles, Edit, RefreshCw, Copy, Save, Clock } from '@/components/icons';
+import {
+  Sparkles,
+  Edit,
+  RefreshCw,
+  Copy,
+  Save,
+  Clock,
+} from '@/components/icons';
 import type { GeneratedContentData } from './types';
 
 interface GeneratedContentProps {
@@ -82,7 +95,10 @@ export function GeneratedContent({
         {content ? (
           <div className="space-y-4">
             {/* Variations Tabs */}
-            <Tabs value={String(selectedVariation)} onValueChange={(v) => onVariationChange(Number(v))}>
+            <Tabs
+              value={String(selectedVariation)}
+              onValueChange={v => onVariationChange(Number(v))}
+            >
               <TabsList className="grid grid-cols-4 bg-white/5">
                 <TabsTrigger value="0">Primary</TabsTrigger>
                 <TabsTrigger value="1">Variation 1</TabsTrigger>
@@ -93,7 +109,7 @@ export function GeneratedContent({
                 {editMode ? (
                   <Textarea
                     value={editedContent}
-                    onChange={(e) => onEditedContentChange(e.target.value)}
+                    onChange={e => onEditedContentChange(e.target.value)}
                     className="min-h-[200px] bg-white/5 border-white/10 text-white"
                   />
                 ) : (
@@ -111,11 +127,15 @@ export function GeneratedContent({
               <div className="p-4 bg-white/5 rounded-lg space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-400">Platform</span>
-                  <span className="text-white capitalize">{content.metadata.platform}</span>
+                  <span className="text-white capitalize">
+                    {content.metadata.platform}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-400">Hook Type</span>
-                  <span className="text-white capitalize">{content.metadata.hookType}</span>
+                  <span className="text-white capitalize">
+                    {content.metadata.hookType}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-400">Character Count</span>
@@ -123,17 +143,24 @@ export function GeneratedContent({
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-400">Est. Engagement</span>
-                  <span className="text-white">{content.metadata.estimatedEngagement}%</span>
+                  <span className="text-white">
+                    {content.metadata.estimatedEngagement}%
+                  </span>
                 </div>
                 {content.metadata.hashtags.length > 0 && (
                   <div className="pt-2 border-t border-white/10">
                     <p className="text-xs text-gray-400 mb-1">Hashtags</p>
                     <div className="flex flex-wrap gap-1">
-                      {content.metadata.hashtags.map((tag: string, i: number) => (
-                        <span key={i} className="text-xs bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded">
-                          {tag}
-                        </span>
-                      ))}
+                      {content.metadata.hashtags.map(
+                        (tag: string, i: number) => (
+                          <span
+                            key={i}
+                            className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded"
+                          >
+                            {tag}
+                          </span>
+                        )
+                      )}
                     </div>
                   </div>
                 )}
@@ -170,7 +197,9 @@ export function GeneratedContent({
         ) : (
           <div className="text-center py-12">
             <Sparkles className="h-16 w-16 mx-auto mb-4 text-gray-500" />
-            <h3 className="text-xl font-semibold text-white mb-2">No Content Yet</h3>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              No Content Yet
+            </h3>
             <p className="text-gray-400">
               Configure your settings and click generate to create content
             </p>

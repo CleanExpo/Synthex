@@ -47,7 +47,9 @@ export function QueueBulkActions({
 }: QueueBulkActionsProps) {
   const [showReschedule, setShowReschedule] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
-  const [rescheduleMode, setRescheduleMode] = useState<'exact' | 'offset'>('exact');
+  const [rescheduleMode, setRescheduleMode] = useState<'exact' | 'offset'>(
+    'exact'
+  );
   const [pickerDate, setPickerDate] = useState<Date | null>(null);
   const [offsetHours, setOffsetHours] = useState(0);
 
@@ -73,10 +75,13 @@ export function QueueBulkActions({
     <>
       {/* Reschedule popover */}
       {showReschedule && (
-        <div className="fixed inset-0 z-40" onClick={() => setShowReschedule(false)}>
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowReschedule(false)}
+        >
           <div
             className="fixed bottom-20 left-1/2 -translate-x-1/2 w-full max-w-xl p-4 rounded-xl bg-gray-900 border border-white/10 shadow-2xl z-50"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <h3 className="text-sm font-semibold text-white mb-3">
               Reschedule {selectedCount} post{selectedCount > 1 ? 's' : ''}
@@ -88,7 +93,7 @@ export function QueueBulkActions({
                 type="button"
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   rescheduleMode === 'exact'
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                    ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
                     : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
                 }`}
                 onClick={() => setRescheduleMode('exact')}
@@ -99,7 +104,7 @@ export function QueueBulkActions({
                 type="button"
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   rescheduleMode === 'offset'
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                    ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
                     : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
                 }`}
                 onClick={() => setRescheduleMode('offset')}
@@ -124,8 +129,8 @@ export function QueueBulkActions({
                 <input
                   type="number"
                   value={offsetHours}
-                  onChange={(e) => setOffsetHours(Number(e.target.value))}
-                  className="w-24 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                  onChange={e => setOffsetHours(Number(e.target.value))}
+                  className="w-24 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
                   step={1}
                 />
                 <span className="text-sm text-gray-400">
@@ -148,9 +153,7 @@ export function QueueBulkActions({
                 onClick={handleRescheduleSubmit}
                 className="gradient-primary text-white"
                 disabled={
-                  rescheduleMode === 'exact'
-                    ? !pickerDate
-                    : offsetHours === 0
+                  rescheduleMode === 'exact' ? !pickerDate : offsetHours === 0
                 }
               >
                 Apply to All
@@ -162,16 +165,20 @@ export function QueueBulkActions({
 
       {/* Delete confirmation */}
       {showDelete && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50" onClick={() => setShowDelete(false)}>
+        <div
+          className="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
+          onClick={() => setShowDelete(false)}
+        >
           <div
             className="w-full max-w-sm p-5 rounded-xl bg-gray-900 border border-white/10 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-white mb-2">
               Delete {selectedCount} post{selectedCount > 1 ? 's' : ''}?
             </h3>
             <p className="text-sm text-gray-400 mb-4">
-              This action cannot be undone. All selected posts will be permanently removed.
+              This action cannot be undone. All selected posts will be
+              permanently removed.
             </p>
             <div className="flex gap-2 justify-end">
               <Button
@@ -244,7 +251,7 @@ export function QueueBulkActions({
               <Button
                 size="sm"
                 variant="outline"
-                className="bg-white/5 border-white/10 text-cyan-400 hover:bg-white/10"
+                className="bg-white/5 border-white/10 text-orange-400 hover:bg-white/10"
                 onClick={onRetryFailed}
               >
                 <RefreshCw className="mr-1.5 h-3.5 w-3.5" />

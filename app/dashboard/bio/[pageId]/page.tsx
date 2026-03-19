@@ -99,7 +99,10 @@ export default function BioPageEditor({ params }: PageProps) {
   // Dialog states
   const [showAddLinkDialog, setShowAddLinkDialog] = useState(false);
   const [showSocialDialog, setShowSocialDialog] = useState(false);
-  const [editingSocial, setEditingSocial] = useState<{ platform: string; url: string } | null>(null);
+  const [editingSocial, setEditingSocial] = useState<{
+    platform: string;
+    url: string;
+  } | null>(null);
 
   // Link form state
   const [newLinkTitle, setNewLinkTitle] = useState('');
@@ -134,7 +137,7 @@ export default function BioPageEditor({ params }: PageProps) {
 
   // Update local state
   const updateLocalPage = useCallback((updates: Partial<LinkBioPage>) => {
-    setLocalPage((prev) => (prev ? { ...prev, ...updates } : updates));
+    setLocalPage(prev => (prev ? { ...prev, ...updates } : updates));
     setHasChanges(true);
   }, []);
 
@@ -172,7 +175,7 @@ export default function BioPageEditor({ params }: PageProps) {
     });
 
     if (link) {
-      setLocalLinks((prev) => [...prev, link]);
+      setLocalLinks(prev => [...prev, link]);
       setShowAddLinkDialog(false);
       setNewLinkTitle('');
       setNewLinkUrl('');
@@ -183,8 +186,8 @@ export default function BioPageEditor({ params }: PageProps) {
   // Update link locally
   const handleUpdateLink = useCallback(
     async (linkId: string, updates: Partial<LinkBioLink>) => {
-      setLocalLinks((prev) =>
-        prev.map((l) => (l.id === linkId ? { ...l, ...updates } : l))
+      setLocalLinks(prev =>
+        prev.map(l => (l.id === linkId ? { ...l, ...updates } : l))
       );
       if (currentPage) {
         await updateLink(currentPage.id, linkId, updates);
@@ -196,7 +199,7 @@ export default function BioPageEditor({ params }: PageProps) {
   // Delete link
   const handleDeleteLink = useCallback(
     async (linkId: string) => {
-      setLocalLinks((prev) => prev.filter((l) => l.id !== linkId));
+      setLocalLinks(prev => prev.filter(l => l.id !== linkId));
       if (currentPage) {
         await deleteLink(currentPage.id, linkId);
       }
@@ -207,20 +210,22 @@ export default function BioPageEditor({ params }: PageProps) {
   // Update social links
   const handleUpdateSocial = useCallback(
     (platform: string, url: string) => {
-      const currentSocials = (localPage?.socialLinks as Array<{ platform: string; url: string }>) || [];
-      const existing = currentSocials.find((s) => s.platform === platform);
+      const currentSocials =
+        (localPage?.socialLinks as Array<{ platform: string; url: string }>) ||
+        [];
+      const existing = currentSocials.find(s => s.platform === platform);
 
       let newSocials: Array<{ platform: string; url: string }>;
       if (url) {
         if (existing) {
-          newSocials = currentSocials.map((s) =>
+          newSocials = currentSocials.map(s =>
             s.platform === platform ? { ...s, url } : s
           );
         } else {
           newSocials = [...currentSocials, { platform, url }];
         }
       } else {
-        newSocials = currentSocials.filter((s) => s.platform !== platform);
+        newSocials = currentSocials.filter(s => s.platform !== platform);
       }
 
       updateLocalPage({ socialLinks: newSocials });
@@ -233,7 +238,7 @@ export default function BioPageEditor({ params }: PageProps) {
   // Apply theme
   const handleApplyTheme = useCallback(
     (themeId: string) => {
-      const theme = BIO_THEMES.find((t) => t.id === themeId);
+      const theme = BIO_THEMES.find(t => t.id === themeId);
       if (theme) {
         updateLocalPage({
           theme: theme.id,
@@ -260,7 +265,7 @@ export default function BioPageEditor({ params }: PageProps) {
   if (isLoading && !currentPage) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
     );
   }
@@ -279,7 +284,8 @@ export default function BioPageEditor({ params }: PageProps) {
     );
   }
 
-  const socialLinks = (localPage?.socialLinks as Array<{ platform: string; url: string }>) || [];
+  const socialLinks =
+    (localPage?.socialLinks as Array<{ platform: string; url: string }>) || [];
 
   return (
     <div className="flex-1 flex flex-col h-full">
@@ -318,7 +324,11 @@ export default function BioPageEditor({ params }: PageProps) {
               onClick={handleCopyUrl}
               className="gap-2"
             >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copied ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
               {copied ? 'Copied!' : 'Copy URL'}
             </Button>
             <Button
@@ -367,7 +377,9 @@ export default function BioPageEditor({ params }: PageProps) {
                 <Input
                   placeholder="https://..."
                   value={localPage?.avatarUrl || ''}
-                  onChange={(e) => updateLocalPage({ avatarUrl: e.target.value || null })}
+                  onChange={e =>
+                    updateLocalPage({ avatarUrl: e.target.value || null })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -375,7 +387,9 @@ export default function BioPageEditor({ params }: PageProps) {
                 <Input
                   placeholder="https://..."
                   value={localPage?.coverUrl || ''}
-                  onChange={(e) => updateLocalPage({ coverUrl: e.target.value || null })}
+                  onChange={e =>
+                    updateLocalPage({ coverUrl: e.target.value || null })
+                  }
                 />
               </div>
             </div>
@@ -383,7 +397,7 @@ export default function BioPageEditor({ params }: PageProps) {
               <Label>Title</Label>
               <Input
                 value={localPage?.title || ''}
-                onChange={(e) => updateLocalPage({ title: e.target.value })}
+                onChange={e => updateLocalPage({ title: e.target.value })}
               />
             </div>
             <div className="space-y-2">
@@ -391,7 +405,7 @@ export default function BioPageEditor({ params }: PageProps) {
               <Textarea
                 placeholder="Tell visitors about yourself..."
                 value={localPage?.bio || ''}
-                onChange={(e) => updateLocalPage({ bio: e.target.value || null })}
+                onChange={e => updateLocalPage({ bio: e.target.value || null })}
                 rows={3}
               />
             </div>
@@ -419,7 +433,7 @@ export default function BioPageEditor({ params }: PageProps) {
               <div className="space-y-2">
                 {localLinks
                   .sort((a, b) => a.order - b.order)
-                  .map((link) => (
+                  .map(link => (
                     <div
                       key={link.id}
                       className={cn(
@@ -432,7 +446,7 @@ export default function BioPageEditor({ params }: PageProps) {
                       <div className="flex-1 grid grid-cols-2 gap-2">
                         <Input
                           value={link.title}
-                          onChange={(e) =>
+                          onChange={e =>
                             handleUpdateLink(link.id, { title: e.target.value })
                           }
                           placeholder="Title"
@@ -440,7 +454,7 @@ export default function BioPageEditor({ params }: PageProps) {
                         />
                         <Input
                           value={link.url}
-                          onChange={(e) =>
+                          onChange={e =>
                             handleUpdateLink(link.id, { url: e.target.value })
                           }
                           placeholder="URL"
@@ -452,7 +466,9 @@ export default function BioPageEditor({ params }: PageProps) {
                         variant="ghost"
                         size="icon"
                         onClick={() =>
-                          handleUpdateLink(link.id, { isVisible: !link.isVisible })
+                          handleUpdateLink(link.id, {
+                            isVisible: !link.isVisible,
+                          })
                         }
                         title={link.isVisible ? 'Hide' : 'Show'}
                       >
@@ -471,10 +487,10 @@ export default function BioPageEditor({ params }: PageProps) {
                             isHighlighted: !link.isHighlighted,
                           })
                         }
-                        title={link.isHighlighted ? 'Remove highlight' : 'Highlight'}
-                        className={cn(
-                          link.isHighlighted && 'text-yellow-400'
-                        )}
+                        title={
+                          link.isHighlighted ? 'Remove highlight' : 'Highlight'
+                        }
+                        className={cn(link.isHighlighted && 'text-yellow-400')}
                       >
                         <Star className="w-4 h-4" />
                       </Button>
@@ -497,10 +513,10 @@ export default function BioPageEditor({ params }: PageProps) {
           <section className="space-y-4">
             <h2 className="text-lg font-semibold text-white">Social Links</h2>
             <div className="flex flex-wrap gap-2">
-              {SOCIAL_PLATFORMS.map((platform) => {
+              {SOCIAL_PLATFORMS.map(platform => {
                 const Icon = platform.icon;
                 const existing = socialLinks.find(
-                  (s) => s.platform.toLowerCase() === platform.id
+                  s => s.platform.toLowerCase() === platform.id
                 );
 
                 return (
@@ -517,7 +533,8 @@ export default function BioPageEditor({ params }: PageProps) {
                     }}
                     className={cn(
                       'w-10 h-10',
-                      existing && 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+                      existing &&
+                        'bg-orange-500/20 border-orange-500/50 text-orange-400'
                     )}
                     title={platform.label}
                   >
@@ -533,13 +550,18 @@ export default function BioPageEditor({ params }: PageProps) {
             <h2 className="text-lg font-semibold text-white">Theme</h2>
             <ThemePicker
               currentTheme={localPage?.theme || 'default'}
-              primaryColor={localPage?.primaryColor || '#06b6d4'}
-              backgroundColor={localPage?.backgroundColor || '#0f172a'}
+              primaryColor={localPage?.primaryColor || '#ffb87b'}
+              backgroundColor={localPage?.backgroundColor || '#111111'}
               textColor={localPage?.textColor || '#ffffff'}
-              buttonStyle={(localPage?.buttonStyle as 'rounded' | 'pill' | 'square') || 'rounded'}
+              buttonStyle={
+                (localPage?.buttonStyle as 'rounded' | 'pill' | 'square') ||
+                'rounded'
+              }
               onThemeSelect={handleApplyTheme}
-              onColorChange={(colors) => updateLocalPage(colors)}
-              onButtonStyleChange={(style) => updateLocalPage({ buttonStyle: style })}
+              onColorChange={colors => updateLocalPage(colors)}
+              onButtonStyleChange={style =>
+                updateLocalPage({ buttonStyle: style })
+              }
             />
           </section>
 
@@ -555,7 +577,7 @@ export default function BioPageEditor({ params }: PageProps) {
               </div>
               <Switch
                 checked={localPage?.showBranding ?? true}
-                onCheckedChange={(checked) =>
+                onCheckedChange={checked =>
                   updateLocalPage({ showBranding: checked })
                 }
               />
@@ -572,14 +594,14 @@ export default function BioPageEditor({ params }: PageProps) {
               avatarUrl: localPage?.avatarUrl || null,
               coverUrl: localPage?.coverUrl || null,
               theme: localPage?.theme || 'default',
-              primaryColor: localPage?.primaryColor || '#06b6d4',
-              backgroundColor: localPage?.backgroundColor || '#0f172a',
+              primaryColor: localPage?.primaryColor || '#ffb87b',
+              backgroundColor: localPage?.backgroundColor || '#111111',
               textColor: localPage?.textColor || '#ffffff',
               buttonStyle: localPage?.buttonStyle || 'rounded',
               socialLinks: socialLinks,
               showBranding: localPage?.showBranding ?? true,
             }}
-            links={localLinks.filter((l) => l.isVisible)}
+            links={localLinks.filter(l => l.isVisible)}
           />
         </div>
       </div>
@@ -596,7 +618,7 @@ export default function BioPageEditor({ params }: PageProps) {
               <Input
                 placeholder="My Website"
                 value={newLinkTitle}
-                onChange={(e) => setNewLinkTitle(e.target.value)}
+                onChange={e => setNewLinkTitle(e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -604,7 +626,7 @@ export default function BioPageEditor({ params }: PageProps) {
               <Input
                 placeholder="https://..."
                 value={newLinkUrl}
-                onChange={(e) => setNewLinkUrl(e.target.value)}
+                onChange={e => setNewLinkUrl(e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -612,7 +634,7 @@ export default function BioPageEditor({ params }: PageProps) {
               <Input
                 placeholder="e.g. 🔗"
                 value={newLinkIcon}
-                onChange={(e) => setNewLinkIcon(e.target.value)}
+                onChange={e => setNewLinkIcon(e.target.value)}
                 maxLength={4}
               />
             </div>
@@ -637,7 +659,7 @@ export default function BioPageEditor({ params }: PageProps) {
           <DialogHeader>
             <DialogTitle>
               {editingSocial
-                ? `Edit ${SOCIAL_PLATFORMS.find((p) => p.id === editingSocial.platform)?.label}`
+                ? `Edit ${SOCIAL_PLATFORMS.find(p => p.id === editingSocial.platform)?.label}`
                 : 'Edit Social Link'}
             </DialogTitle>
           </DialogHeader>
@@ -651,8 +673,8 @@ export default function BioPageEditor({ params }: PageProps) {
                     : 'https://...'
                 }
                 value={editingSocial?.url || ''}
-                onChange={(e) =>
-                  setEditingSocial((prev) =>
+                onChange={e =>
+                  setEditingSocial(prev =>
                     prev ? { ...prev, url: e.target.value } : null
                   )
                 }

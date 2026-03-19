@@ -7,7 +7,14 @@
  */
 
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, Heart, MessageCircle, Share2, Eye } from '@/components/icons';
+import {
+  TrendingUp,
+  TrendingDown,
+  Heart,
+  MessageCircle,
+  Share2,
+  Eye,
+} from '@/components/icons';
 import { cn } from '@/lib/utils';
 import type { PostPerformance } from '@/lib/ai/content-performance-analyzer';
 
@@ -59,7 +66,9 @@ function PostCard({ post, type }: PostCardProps) {
     <div
       className={cn(
         'bg-gray-900/30 border rounded-lg p-3 cursor-pointer transition-all hover:bg-gray-900/50',
-        type === 'top' ? 'border-emerald-500/20 hover:border-emerald-500/40' : 'border-orange-500/20 hover:border-orange-500/40'
+        type === 'top'
+          ? 'border-emerald-500/20 hover:border-emerald-500/40'
+          : 'border-orange-500/20 hover:border-orange-500/40'
       )}
       onClick={() => setExpanded(!expanded)}
     >
@@ -70,9 +79,13 @@ function PostCard({ post, type }: PostCardProps) {
             className="w-2 h-2 rounded-full"
             style={{ backgroundColor: platformColor }}
           />
-          <span className="text-xs text-gray-400 capitalize">{post.platform}</span>
+          <span className="text-xs text-gray-400 capitalize">
+            {post.platform}
+          </span>
         </div>
-        <span className="text-xs text-gray-500">{formatDate(post.publishedAt)}</span>
+        <span className="text-xs text-gray-500">
+          {formatDate(post.publishedAt)}
+        </span>
       </div>
 
       {/* Content */}
@@ -98,7 +111,12 @@ function PostCard({ post, type }: PostCardProps) {
           <Eye className="w-3 h-3" />
           <span>{formatNumber(post.metrics.impressions)}</span>
         </div>
-        <div className={cn('ml-auto font-medium', type === 'top' ? 'text-emerald-400' : 'text-orange-400')}>
+        <div
+          className={cn(
+            'ml-auto font-medium',
+            type === 'top' ? 'text-emerald-400' : 'text-orange-400'
+          )}
+        >
           {post.metrics.engagementRate.toFixed(1)}%
         </div>
       </div>
@@ -106,8 +124,8 @@ function PostCard({ post, type }: PostCardProps) {
       {/* Hashtags (expanded) */}
       {expanded && post.hashtags.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-white/5">
-          {post.hashtags.map((tag) => (
-            <span key={tag} className="text-xs text-cyan-400">
+          {post.hashtags.map(tag => (
+            <span key={tag} className="text-xs text-orange-400">
               #{tag}
             </span>
           ))}
@@ -121,7 +139,10 @@ function LoadingSkeleton() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {Array.from({ length: 2 }).map((_, colIdx) => (
-        <div key={colIdx} className="bg-gray-900/30 border border-white/10 rounded-xl p-4">
+        <div
+          key={colIdx}
+          className="bg-gray-900/30 border border-white/10 rounded-xl p-4"
+        >
           <div className="w-32 h-5 bg-white/5 rounded animate-pulse mb-4" />
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -156,7 +177,12 @@ export function TopPostsGrid({
 
   if (!hasData) {
     return (
-      <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-8', className)}>
+      <div
+        className={cn(
+          'bg-gray-900/30 border border-white/10 rounded-xl p-8',
+          className
+        )}
+      >
         <p className="text-gray-500 text-center">No post data available</p>
       </div>
     );
@@ -169,15 +195,21 @@ export function TopPostsGrid({
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-4 h-4 text-emerald-400" />
           <h4 className="text-sm font-medium text-white">Top Performers</h4>
-          <span className="text-xs text-gray-500">({topPerforming.length})</span>
+          <span className="text-xs text-gray-500">
+            ({topPerforming.length})
+          </span>
         </div>
         <div className="space-y-2 max-h-[400px] overflow-y-auto">
           {topPerforming.length > 0 ? (
-            topPerforming.slice(0, 5).map((post) => (
-              <PostCard key={post.postId} post={post} type="top" />
-            ))
+            topPerforming
+              .slice(0, 5)
+              .map(post => (
+                <PostCard key={post.postId} post={post} type="top" />
+              ))
           ) : (
-            <p className="text-gray-500 text-sm text-center py-4">No top performers found</p>
+            <p className="text-gray-500 text-sm text-center py-4">
+              No top performers found
+            </p>
           )}
         </div>
       </div>
@@ -187,15 +219,21 @@ export function TopPostsGrid({
         <div className="flex items-center gap-2 mb-4">
           <TrendingDown className="w-4 h-4 text-orange-400" />
           <h4 className="text-sm font-medium text-white">Needs Improvement</h4>
-          <span className="text-xs text-gray-500">({lowPerforming.length})</span>
+          <span className="text-xs text-gray-500">
+            ({lowPerforming.length})
+          </span>
         </div>
         <div className="space-y-2 max-h-[400px] overflow-y-auto">
           {lowPerforming.length > 0 ? (
-            lowPerforming.slice(0, 5).map((post) => (
-              <PostCard key={post.postId} post={post} type="low" />
-            ))
+            lowPerforming
+              .slice(0, 5)
+              .map(post => (
+                <PostCard key={post.postId} post={post} type="low" />
+              ))
           ) : (
-            <p className="text-gray-500 text-sm text-center py-4">No underperforming posts</p>
+            <p className="text-gray-500 text-sm text-center py-4">
+              No underperforming posts
+            </p>
           )}
         </div>
       </div>

@@ -44,14 +44,21 @@ interface CustomTooltipProps {
   valueSuffix?: string;
 }
 
-function CustomTooltip({ active, payload, label, valueLabel = 'Engagement', valueSuffix = '%' }: CustomTooltipProps) {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+  valueLabel = 'Engagement',
+  valueSuffix = '%',
+}: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
 
   return (
     <div className="bg-gray-900 border border-white/10 rounded-lg p-2 shadow-xl">
       <p className="text-xs text-gray-400">{label}</p>
       <p className="text-sm font-medium text-white">
-        {valueLabel}: {payload[0].value}{valueSuffix}
+        {valueLabel}: {payload[0].value}
+        {valueSuffix}
       </p>
     </div>
   );
@@ -67,7 +74,12 @@ function ChartCard({
   className?: string;
 }) {
   return (
-    <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
+    <div
+      className={cn(
+        'bg-gray-900/30 border border-white/10 rounded-xl p-4',
+        className
+      )}
+    >
       <h4 className="text-sm font-medium text-gray-400 mb-3">{title}</h4>
       {children}
     </div>
@@ -78,7 +90,10 @@ function LoadingSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="bg-gray-900/30 border border-white/10 rounded-xl p-4">
+        <div
+          key={i}
+          className="bg-gray-900/30 border border-white/10 rounded-xl p-4"
+        >
           <div className="w-24 h-4 bg-white/5 rounded animate-pulse mb-3" />
           <div className="h-[150px] bg-white/5 rounded animate-pulse" />
         </div>
@@ -103,25 +118,34 @@ export function PatternCharts({
 
   if (!hasDays && !hasHours && !hasHashtags && !hasLength) {
     return (
-      <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-8', className)}>
-        <p className="text-gray-500 text-center">Not enough data to show patterns</p>
+      <div
+        className={cn(
+          'bg-gray-900/30 border border-white/10 rounded-xl p-8',
+          className
+        )}
+      >
+        <p className="text-gray-500 text-center">
+          Not enough data to show patterns
+        </p>
       </div>
     );
   }
 
   // Prepare data
-  const daysData = patterns.bestDays.slice(0, 7).map((d) => ({
+  const daysData = patterns.bestDays.slice(0, 7).map(d => ({
     name: d.day.slice(0, 3),
     value: d.avgEngagement,
   }));
 
-  const hoursData = patterns.bestHours.map((h) => ({
-    hour: h.hour,
-    name: formatHour(h.hour),
-    value: h.avgEngagement,
-  })).sort((a, b) => a.hour - b.hour);
+  const hoursData = patterns.bestHours
+    .map(h => ({
+      hour: h.hour,
+      name: formatHour(h.hour),
+      value: h.avgEngagement,
+    }))
+    .sort((a, b) => a.hour - b.hour);
 
-  const hashtagsData = patterns.topHashtags.slice(0, 5).map((h) => ({
+  const hashtagsData = patterns.topHashtags.slice(0, 5).map(h => ({
     name: `#${h.tag}`,
     value: h.avgEngagement,
     count: h.count,
@@ -134,7 +158,11 @@ export function PatternCharts({
         {hasDays ? (
           <div className="h-[150px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={daysData} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
+              <BarChart
+                data={daysData}
+                layout="vertical"
+                margin={{ top: 0, right: 20, left: 0, bottom: 0 }}
+              >
                 <XAxis type="number" hide />
                 <YAxis
                   type="category"
@@ -145,7 +173,12 @@ export function PatternCharts({
                   width={35}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" fill="#06b6d4" radius={[0, 4, 4, 0]} maxBarSize={16} />
+                <Bar
+                  dataKey="value"
+                  fill="#ffb87b"
+                  radius={[0, 4, 4, 0]}
+                  maxBarSize={16}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -159,7 +192,10 @@ export function PatternCharts({
         {hasHours ? (
           <div className="h-[150px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={hoursData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+              <LineChart
+                data={hoursData}
+                margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
+              >
                 <XAxis
                   dataKey="name"
                   tick={{ fill: '#9ca3af', fontSize: 10 }}
@@ -190,7 +226,11 @@ export function PatternCharts({
         {hasHashtags ? (
           <div className="h-[150px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={hashtagsData} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
+              <BarChart
+                data={hashtagsData}
+                layout="vertical"
+                margin={{ top: 0, right: 20, left: 0, bottom: 0 }}
+              >
                 <XAxis type="number" hide />
                 <YAxis
                   type="category"
@@ -210,17 +250,26 @@ export function PatternCharts({
                         <p className="text-sm font-medium text-white">
                           {payload[0].value}% avg
                         </p>
-                        <p className="text-xs text-gray-500">{data.count} uses</p>
+                        <p className="text-xs text-gray-500">
+                          {data.count} uses
+                        </p>
                       </div>
                     );
                   }}
                 />
-                <Bar dataKey="value" fill="#8b5cf6" radius={[0, 4, 4, 0]} maxBarSize={14} />
+                <Bar
+                  dataKey="value"
+                  fill="#8b5cf6"
+                  radius={[0, 4, 4, 0]}
+                  maxBarSize={14}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
         ) : (
-          <p className="text-gray-500 text-sm text-center py-8">No hashtag data</p>
+          <p className="text-gray-500 text-sm text-center py-8">
+            No hashtag data
+          </p>
         )}
       </ChartCard>
 
@@ -240,7 +289,7 @@ export function PatternCharts({
             <div className="mt-4 w-full px-4">
               <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full"
+                  className="h-full bg-gradient-to-r from-orange-500 to-emerald-500 rounded-full"
                   style={{
                     width: `${Math.min(100, (patterns.bestLength.max / 500) * 100)}%`,
                     marginLeft: `${Math.min(40, (patterns.bestLength.min / 500) * 100)}%`,
@@ -254,7 +303,9 @@ export function PatternCharts({
             </div>
           </div>
         ) : (
-          <p className="text-gray-500 text-sm text-center py-8">No length data</p>
+          <p className="text-gray-500 text-sm text-center py-8">
+            No length data
+          </p>
         )}
       </ChartCard>
     </div>

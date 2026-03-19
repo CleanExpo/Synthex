@@ -40,19 +40,24 @@ interface JournalistFormProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export function JournalistForm({ onClose, onSaved, initialData, journalistId }: JournalistFormProps) {
+export function JournalistForm({
+  onClose,
+  onSaved,
+  initialData,
+  journalistId,
+}: JournalistFormProps) {
   const [form, setForm] = useState<JournalistFormData>({
-    name:          initialData?.name ?? '',
-    outlet:        initialData?.outlet ?? '',
-    outletDomain:  initialData?.outletDomain ?? '',
-    email:         initialData?.email ?? '',
-    title:         initialData?.title ?? '',
-    location:      initialData?.location ?? '',
-    beats:         initialData?.beats ?? '',
+    name: initialData?.name ?? '',
+    outlet: initialData?.outlet ?? '',
+    outletDomain: initialData?.outletDomain ?? '',
+    email: initialData?.email ?? '',
+    title: initialData?.title ?? '',
+    location: initialData?.location ?? '',
+    beats: initialData?.beats ?? '',
     twitterHandle: initialData?.twitterHandle ?? '',
-    linkedinUrl:   initialData?.linkedinUrl ?? '',
-    notes:         initialData?.notes ?? '',
-    tier:          initialData?.tier ?? 'cold',
+    linkedinUrl: initialData?.linkedinUrl ?? '',
+    notes: initialData?.notes ?? '',
+    tier: initialData?.tier ?? 'cold',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,18 +70,18 @@ export function JournalistForm({ onClose, onSaved, initialData, journalistId }: 
     try {
       const beatsArray = form.beats
         .split(',')
-        .map((b) => b.trim())
+        .map(b => b.trim())
         .filter(Boolean);
 
       const payload = {
         ...form,
         beats: beatsArray,
-        email:         form.email         || undefined,
-        title:         form.title         || undefined,
-        location:      form.location      || undefined,
+        email: form.email || undefined,
+        title: form.title || undefined,
+        location: form.location || undefined,
         twitterHandle: form.twitterHandle || undefined,
-        linkedinUrl:   form.linkedinUrl   || undefined,
-        notes:         form.notes         || undefined,
+        linkedinUrl: form.linkedinUrl || undefined,
+        notes: form.notes || undefined,
       };
 
       const url = journalistId
@@ -95,7 +100,9 @@ export function JournalistForm({ onClose, onSaved, initialData, journalistId }: 
 
       onSaved();
     } catch {
-      setError('Failed to save journalist. Please check your inputs and try again.');
+      setError(
+        'Failed to save journalist. Please check your inputs and try again.'
+      );
     } finally {
       setSaving(false);
     }
@@ -108,13 +115,15 @@ export function JournalistForm({ onClose, onSaved, initialData, journalistId }: 
     placeholder?: string
   ) => (
     <div>
-      <label className="block text-sm font-medium text-gray-300 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-gray-300 mb-1">
+        {label}
+      </label>
       <input
         type={type}
         value={form[key]}
-        onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+        onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
         placeholder={placeholder}
-        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
       />
     </div>
   );
@@ -127,7 +136,10 @@ export function JournalistForm({ onClose, onSaved, initialData, journalistId }: 
           <h2 className="text-lg font-semibold text-white">
             {journalistId ? 'Edit Journalist' : 'New Journalist Contact'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -137,26 +149,48 @@ export function JournalistForm({ onClose, onSaved, initialData, journalistId }: 
           {field('name', 'Full Name *', 'text', 'Jane Smith')}
           <div className="grid grid-cols-2 gap-4">
             {field('outlet', 'Outlet *', 'text', 'The Australian')}
-            {field('outletDomain', 'Outlet Domain *', 'text', 'theaustralian.com.au')}
+            {field(
+              'outletDomain',
+              'Outlet Domain *',
+              'text',
+              'theaustralian.com.au'
+            )}
           </div>
           {field('email', 'Email', 'email', 'jane@theaustralian.com.au')}
           <div className="grid grid-cols-2 gap-4">
             {field('title', 'Title / Role', 'text', 'Senior Tech Reporter')}
             {field('location', 'Location', 'text', 'Sydney, NSW')}
           </div>
-          {field('beats', 'Beats (comma-separated)', 'text', 'technology, startups, AI')}
+          {field(
+            'beats',
+            'Beats (comma-separated)',
+            'text',
+            'technology, startups, AI'
+          )}
           <div className="grid grid-cols-2 gap-4">
             {field('twitterHandle', 'Twitter / X Handle', 'text', '@janesmith')}
-            {field('linkedinUrl', 'LinkedIn URL', 'url', 'https://linkedin.com/in/janesmith')}
+            {field(
+              'linkedinUrl',
+              'LinkedIn URL',
+              'url',
+              'https://linkedin.com/in/janesmith'
+            )}
           </div>
 
           {/* Tier select */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Relationship Tier</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Relationship Tier
+            </label>
             <select
               value={form.tier}
-              onChange={(e) => setForm((f) => ({ ...f, tier: e.target.value as JournalistFormData['tier'] }))}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+              onChange={e =>
+                setForm(f => ({
+                  ...f,
+                  tier: e.target.value as JournalistFormData['tier'],
+                }))
+              }
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50"
             >
               <option value="cold">Cold — No prior contact</option>
               <option value="warm">Warm — Some prior contact</option>
@@ -167,19 +201,19 @@ export function JournalistForm({ onClose, onSaved, initialData, journalistId }: 
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Notes</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Notes
+            </label>
             <textarea
               value={form.notes}
-              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               placeholder="Previous interactions, preferences, do's and don'ts..."
               rows={3}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 resize-none"
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-red-400">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-400">{error}</p>}
 
           {/* Actions */}
           <div className="flex gap-3 pt-2">
@@ -192,8 +226,10 @@ export function JournalistForm({ onClose, onSaved, initialData, journalistId }: 
             </button>
             <button
               type="submit"
-              disabled={saving || !form.name || !form.outlet || !form.outletDomain}
-              className="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+              disabled={
+                saving || !form.name || !form.outlet || !form.outletDomain
+              }
+              className="flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               {journalistId ? 'Save Changes' : 'Create Contact'}

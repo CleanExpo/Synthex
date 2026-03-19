@@ -114,12 +114,12 @@ export default function AboutPage() {
       {/* Hero Section */}
       <section className="py-20 md:py-28 px-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-cyan-400 text-sm font-semibold uppercase tracking-wider mb-4">
+          <p className="text-orange-400 text-sm font-semibold uppercase tracking-wider mb-4">
             About Synthex
           </p>
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 heading-serif">
             Built for Creators.{' '}
-            <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
               Powered by AI.
             </span>
           </h1>
@@ -133,7 +133,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
             {stats.map((stat, index) => (
               <GlowCard key={index} className="p-6 text-center">
-                <div className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent mb-2">
+                <div className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent mb-2">
                   {stat.value}
                 </div>
                 <div className="text-gray-400 text-sm">{stat.label}</div>
@@ -146,15 +146,15 @@ export default function AboutPage() {
       {/* Our Story */}
       <section className="py-20 md:py-28 px-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-[#0d1f35]/80 border border-cyan-500/10 backdrop-blur-sm rounded-2xl p-12">
+          <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-2xl p-12">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <p className="text-cyan-400 text-sm font-semibold uppercase tracking-wider mb-4">
+                <p className="text-orange-400 text-sm font-semibold uppercase tracking-wider mb-4">
                   Our Story
                 </p>
                 <h2 className="text-4xl font-bold text-white mb-6 heading-serif">
                   Where It All{' '}
-                  <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
                     Started
                   </span>
                 </h2>
@@ -188,7 +188,7 @@ export default function AboutPage() {
                     href="https://unite-group.com.au"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                    className="text-orange-400 hover:text-orange-300 transition-colors"
                   >
                     Unite-Group
                   </a>{' '}
@@ -196,16 +196,16 @@ export default function AboutPage() {
                   businesses.
                 </p>
                 <Link href="/signup">
-                  <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25">
+                  <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25">
                     Start for Free
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </Link>
               </div>
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-cyan-400/10 rounded-2xl" />
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-orange-400/10 rounded-2xl" />
                 <div className="relative p-8">
-                  <Brain className="w-full h-64 text-cyan-400/30" />
+                  <Brain className="w-full h-64 text-orange-400/30" />
                 </div>
               </div>
             </div>
@@ -217,19 +217,19 @@ export default function AboutPage() {
       <section className="py-20 md:py-28 px-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <p className="text-cyan-400 text-sm font-semibold uppercase tracking-wider mb-4">
+            <p className="text-orange-400 text-sm font-semibold uppercase tracking-wider mb-4">
               Why We Exist
             </p>
             <h2 className="text-4xl font-bold text-white heading-serif">
               Mission &amp;{' '}
-              <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
                 Vision
               </span>
             </h2>
           </div>
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-[#0d1f35]/80 border border-cyan-500/10 backdrop-blur-sm rounded-xl p-8">
-              <Target className="w-12 h-12 text-cyan-400 mb-4" />
+            <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-8">
+              <Target className="w-12 h-12 text-orange-400 mb-4" />
               <h3 className="text-2xl font-bold text-white mb-4">
                 Our Mission
               </h3>
@@ -239,8 +239,8 @@ export default function AboutPage() {
                 it feel effortless.
               </p>
             </div>
-            <div className="bg-[#0d1f35]/80 border border-cyan-500/10 backdrop-blur-sm rounded-xl p-8">
-              <Rocket className="w-12 h-12 text-cyan-400 mb-4" />
+            <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-8">
+              <Rocket className="w-12 h-12 text-orange-400 mb-4" />
               <h3 className="text-2xl font-bold text-white mb-4">Our Vision</h3>
               <p className="text-gray-300">
                 A world where the quality of your content is limited only by
@@ -255,12 +255,12 @@ export default function AboutPage() {
       <section className="py-20 md:py-28 px-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <p className="text-cyan-400 text-sm font-semibold uppercase tracking-wider mb-4">
+            <p className="text-orange-400 text-sm font-semibold uppercase tracking-wider mb-4">
               What We Stand For
             </p>
             <h2 className="text-4xl font-bold text-white heading-serif">
               Our{' '}
-              <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
                 Values
               </span>
             </h2>
@@ -269,9 +269,9 @@ export default function AboutPage() {
             {values.map((value, index) => (
               <div
                 key={index}
-                className="bg-[#0d1f35]/80 border border-cyan-500/10 backdrop-blur-sm rounded-xl p-6 text-center hover:scale-105 hover:border-cyan-500/30 transition-all duration-300"
+                className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-6 text-center hover:scale-105 hover:border-orange-500/30 transition-all duration-300"
               >
-                <value.icon className="w-10 h-10 text-cyan-400 mx-auto mb-4" />
+                <value.icon className="w-10 h-10 text-orange-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-3">
                   {value.title}
                 </h3>
@@ -286,12 +286,12 @@ export default function AboutPage() {
       <section className="py-20 md:py-28 px-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <p className="text-cyan-400 text-sm font-semibold uppercase tracking-wider mb-4">
+            <p className="text-orange-400 text-sm font-semibold uppercase tracking-wider mb-4">
               The People Behind It
             </p>
             <h2 className="text-4xl font-bold text-white mb-4 heading-serif">
               Meet the{' '}
-              <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
                 Team
               </span>
             </h2>
@@ -303,21 +303,21 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {teamMembers.map((member, index) => (
               <GlowCard key={index} className="p-6 flex flex-col">
-                <div className="w-20 h-20 bg-gradient-to-br from-cyan-500/20 to-cyan-400/10 border border-cyan-500/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <span className="text-cyan-400 font-bold text-lg tracking-wide">
+                <div className="w-20 h-20 bg-gradient-to-br from-orange-500/20 to-orange-400/10 border border-orange-500/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <span className="text-orange-400 font-bold text-lg tracking-wide">
                     {member.initials}
                   </span>
                 </div>
                 <h3 className="text-xl font-semibold text-white text-center mb-1">
                   {member.name}
                 </h3>
-                <p className="text-cyan-400 text-center text-sm mb-4">
+                <p className="text-orange-400 text-center text-sm mb-4">
                   {member.role}
                 </p>
                 <p className="text-gray-400 text-sm text-center mb-5 flex-grow">
                   {member.bio}
                 </p>
-                <blockquote className="text-gray-300 text-sm text-center italic border-t border-cyan-500/10 pt-4">
+                <blockquote className="text-gray-300 text-sm text-center italic border-t border-orange-500/10 pt-4">
                   &ldquo;{member.quote}&rdquo;
                 </blockquote>
               </GlowCard>
@@ -330,12 +330,12 @@ export default function AboutPage() {
       <section className="py-20 md:py-28 px-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <p className="text-cyan-400 text-sm font-semibold uppercase tracking-wider mb-4">
+            <p className="text-orange-400 text-sm font-semibold uppercase tracking-wider mb-4">
               How We Got Here
             </p>
             <h2 className="text-4xl font-bold text-white heading-serif">
               Our{' '}
-              <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
                 Journey
               </span>
             </h2>
@@ -344,14 +344,14 @@ export default function AboutPage() {
             {milestones.map((milestone, index) => (
               <div key={index} className="flex gap-4 mb-8">
                 <div className="flex-shrink-0">
-                  <div className="w-4 h-4 bg-cyan-500 rounded-full mt-1 shadow-lg shadow-cyan-500/50" />
+                  <div className="w-4 h-4 bg-orange-500 rounded-full mt-1 shadow-lg shadow-orange-500/50" />
                   {index < milestones.length - 1 && (
-                    <div className="w-0.5 h-20 bg-gradient-to-b from-cyan-500 to-cyan-500/30 ml-1.5 mt-1" />
+                    <div className="w-0.5 h-20 bg-gradient-to-b from-orange-500 to-orange-500/30 ml-1.5 mt-1" />
                   )}
                 </div>
                 <div className="flex-grow">
-                  <div className="bg-[#0d1f35]/80 border border-cyan-500/10 backdrop-blur-sm p-4 rounded-lg hover:border-cyan-500/30 transition-colors">
-                    <div className="text-cyan-400 font-semibold mb-1">
+                  <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm p-4 rounded-lg hover:border-orange-500/30 transition-colors">
+                    <div className="text-orange-400 font-semibold mb-1">
                       {milestone.period}
                     </div>
                     <div className="text-gray-300">{milestone.event}</div>
@@ -366,16 +366,16 @@ export default function AboutPage() {
       {/* CTA Section */}
       <section className="py-20 md:py-28 px-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-r from-[#0d1f35] to-[#0a1628] border border-cyan-500/20 backdrop-blur-sm rounded-2xl p-12 text-center relative overflow-hidden">
+          <div className="bg-gradient-to-r from-[#0d1f35] to-[#050505] border border-orange-500/20 backdrop-blur-sm rounded-2xl p-12 text-center relative overflow-hidden">
             {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-cyan-400/10 to-cyan-500/5 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-orange-400/10 to-orange-500/5 pointer-events-none" />
             <div className="relative z-10">
-              <p className="text-cyan-400 text-sm font-semibold uppercase tracking-wider mb-4">
+              <p className="text-orange-400 text-sm font-semibold uppercase tracking-wider mb-4">
                 We&apos;re Hiring
               </p>
               <h2 className="text-4xl font-bold text-white mb-4 heading-serif">
                 Want to{' '}
-                <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
                   Join the Team?
                 </span>
               </h2>
@@ -386,7 +386,7 @@ export default function AboutPage() {
               </p>
               <div className="flex justify-center gap-4 flex-wrap">
                 <Link href="/contact?subject=careers">
-                  <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white px-8 py-3 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all">
+                  <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-8 py-3 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all">
                     View Open Roles
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
@@ -394,7 +394,7 @@ export default function AboutPage() {
                 <Link href="/signup">
                   <Button
                     variant="outline"
-                    className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400 px-8 py-3 transition-all"
+                    className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400 px-8 py-3 transition-all"
                   >
                     Or start a free trial
                   </Button>

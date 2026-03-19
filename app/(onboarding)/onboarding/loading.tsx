@@ -10,7 +10,7 @@ export default function OnboardingLoading() {
           <div className="h-4 w-20 bg-white/5 rounded" />
         </div>
         <div className="h-2 w-full bg-white/5 rounded-full">
-          <div className="h-2 w-1/4 bg-cyan-500/20 rounded-full" />
+          <div className="h-2 w-1/4 bg-orange-500/20 rounded-full" />
         </div>
         <div className="flex justify-between mt-3">
           {[...Array(4)].map((_, i) => (
@@ -48,7 +48,7 @@ export default function OnboardingLoading() {
         {/* Action buttons */}
         <div className="flex justify-between pt-4">
           <div className="h-10 w-24 bg-white/5 rounded-lg" />
-          <div className="h-10 w-32 bg-cyan-500/10 rounded-lg" />
+          <div className="h-10 w-32 bg-orange-500/10 rounded-lg" />
         </div>
       </div>
     </div>

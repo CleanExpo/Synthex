@@ -41,7 +41,7 @@ export function ScheduleFilters({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {platformOptions.map((option) => (
+            {platformOptions.map(option => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>
@@ -53,7 +53,7 @@ export function ScheduleFilters({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {statusOptions.map((option) => (
+            {statusOptions.map(option => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>
@@ -72,11 +72,12 @@ interface ViewModeToggleProps {
 }
 
 function ViewModeToggle({ viewMode, onChange }: ViewModeToggleProps) {
-  const modes: { mode: ViewMode; icon: typeof CalendarDays; label: string }[] = [
-    { mode: 'week', icon: CalendarDays, label: 'Week' },
-    { mode: 'month', icon: Calendar, label: 'Month' },
-    { mode: 'list', icon: List, label: 'List' },
-  ];
+  const modes: { mode: ViewMode; icon: typeof CalendarDays; label: string }[] =
+    [
+      { mode: 'week', icon: CalendarDays, label: 'Week' },
+      { mode: 'month', icon: Calendar, label: 'Month' },
+      { mode: 'list', icon: List, label: 'List' },
+    ];
 
   return (
     <div className="flex space-x-1 bg-white/5 rounded-lg p-1">
@@ -86,7 +87,7 @@ function ViewModeToggle({ viewMode, onChange }: ViewModeToggleProps) {
           onClick={() => onChange(mode)}
           className={`px-3 py-1.5 rounded text-sm transition-all flex items-center gap-2 ${
             viewMode === mode
-              ? 'bg-cyan-500/20 text-cyan-400'
+              ? 'bg-orange-500/20 text-orange-400'
               : 'text-slate-400 hover:text-white'
           }`}
         >

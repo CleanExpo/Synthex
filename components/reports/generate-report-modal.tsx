@@ -5,7 +5,13 @@
  * Modal for creating new reports
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from '@/components/icons';
 import { reportTypes, formatOptions } from './reports-config';
@@ -52,9 +58,9 @@ export function GenerateReportModal({
             <input
               type="text"
               value={reportName}
-              onChange={(e) => onReportNameChange(e.target.value)}
+              onChange={e => onReportNameChange(e.target.value)}
               placeholder="Enter report name..."
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
 
@@ -63,21 +69,23 @@ export function GenerateReportModal({
               Report Type
             </label>
             <div className="grid grid-cols-1 gap-2">
-              {reportTypes.map((type) => (
+              {reportTypes.map(type => (
                 <button
                   key={type.id}
                   onClick={() => onReportTypeChange(type.id)}
                   className={`p-3 rounded-lg text-left transition-colors ${
                     reportType === type.id
-                      ? 'bg-cyan-500/20 border border-cyan-500'
+                      ? 'bg-orange-500/20 border border-orange-500'
                       : 'bg-white/5 border border-white/10 hover:bg-white/10'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <type.icon className="w-5 h-5 text-cyan-400" />
+                    <type.icon className="w-5 h-5 text-orange-400" />
                     <div>
                       <p className="font-medium text-white">{type.name}</p>
-                      <p className="text-xs text-gray-400">{type.description}</p>
+                      <p className="text-xs text-gray-400">
+                        {type.description}
+                      </p>
                     </div>
                   </div>
                 </button>
@@ -90,7 +98,7 @@ export function GenerateReportModal({
               Format
             </label>
             <div className="flex gap-2">
-              {formatOptions.map((format) => (
+              {formatOptions.map(format => (
                 <Button
                   key={format}
                   variant={reportFormat === format ? 'default' : 'outline'}

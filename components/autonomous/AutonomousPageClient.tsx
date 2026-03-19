@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 /**
  * Autonomous Page — Natural language → Workflow execution
@@ -9,11 +9,11 @@
  * 3. Executing — status + link to /dashboard/workflows
  */
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { ConfidenceBadge } from '@/components/workflows/ConfidenceBadge'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ConfidenceBadge } from '@/components/workflows/ConfidenceBadge';
 import {
   Sparkles,
   Brain,
@@ -24,9 +24,9 @@ import {
   ArrowRight,
   RotateCcw,
   Loader2,
-} from '@/components/icons'
-import type { ParsedInstruction } from '@/lib/autonomous/types'
-import type { WorkflowStepDefinition } from '@/lib/workflow/types'
+} from '@/components/icons';
+import type { ParsedInstruction } from '@/lib/autonomous/types';
+import type { WorkflowStepDefinition } from '@/lib/workflow/types';
 
 // ---------------------------------------------------------------------------
 // Example instruction chips
@@ -38,7 +38,7 @@ const EXAMPLES = [
   'Draft 3 Instagram reels scripts about our latest product launch',
   'Research competitor content strategies and create a summary',
   'Optimise our existing blog posts for SEO and suggest improvements',
-]
+];
 
 // ---------------------------------------------------------------------------
 // Step type icon (preview version — steps don't have execution status yet)
@@ -47,30 +47,30 @@ const EXAMPLES = [
 function StepIcon({ stepType }: { stepType: string }) {
   switch (stepType) {
     case 'ai':
-      return <Brain className="h-4 w-4" />
+      return <Brain className="h-4 w-4" />;
     case 'approval':
-      return <User className="h-4 w-4" />
+      return <User className="h-4 w-4" />;
     case 'action':
-      return <Zap className="h-4 w-4" />
+      return <Zap className="h-4 w-4" />;
     case 'validation':
-      return <CheckCircle className="h-4 w-4" />
+      return <CheckCircle className="h-4 w-4" />;
     default:
-      return <Zap className="h-4 w-4" />
+      return <Zap className="h-4 w-4" />;
   }
 }
 
 function stepTypeColour(type: string): string {
   switch (type) {
     case 'ai':
-      return 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'
+      return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
     case 'approval':
-      return 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+      return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
     case 'action':
-      return 'text-green-400 bg-green-500/10 border-green-500/20'
+      return 'text-green-400 bg-green-500/10 border-green-500/20';
     case 'validation':
-      return 'text-purple-400 bg-purple-500/10 border-purple-500/20'
+      return 'text-purple-400 bg-purple-500/10 border-purple-500/20';
     default:
-      return 'text-gray-400 bg-gray-500/10 border-gray-500/20'
+      return 'text-gray-400 bg-gray-500/10 border-gray-500/20';
   }
 }
 
@@ -79,49 +79,49 @@ function stepTypeColour(type: string): string {
 // ---------------------------------------------------------------------------
 
 export function AutonomousPageClient() {
-  const router = useRouter()
-  const [instruction, setInstruction] = useState('')
-  const [parsed, setParsed] = useState<ParsedInstruction | null>(null)
-  const [executionId, setExecutionId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
+  const [instruction, setInstruction] = useState('');
+  const [parsed, setParsed] = useState<ParsedInstruction | null>(null);
+  const [executionId, setExecutionId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // ---- State: input | preview | executing ----
-  const state = executionId ? 'executing' : parsed ? 'preview' : 'input'
+  const state = executionId ? 'executing' : parsed ? 'preview' : 'input';
 
   // ---- Parse instruction ----
   async function handleParse() {
     if (instruction.trim().length < 10) {
-      setError('Instruction must be at least 10 characters')
-      return
+      setError('Instruction must be at least 10 characters');
+      return;
     }
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
       const res = await fetch('/api/autonomous/parse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ instruction: instruction.trim() }),
-      })
-      const data = await res.json()
+      });
+      const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Failed to parse instruction')
-        return
+        setError(data.error || 'Failed to parse instruction');
+        return;
       }
-      setParsed(data.parsed)
+      setParsed(data.parsed);
     } catch {
-      setError('Network error — please try again')
+      setError('Network error — please try again');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   // ---- Execute workflow ----
   async function handleExecute() {
-    if (!parsed) return
-    setLoading(true)
-    setError(null)
+    if (!parsed) return;
+    setLoading(true);
+    setError(null);
     try {
       const res = await fetch('/api/autonomous/execute', {
         method: 'POST',
@@ -136,26 +136,26 @@ export function AutonomousPageClient() {
             parserConfidence: parsed.confidence,
           },
         }),
-      })
-      const data = await res.json()
+      });
+      const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Failed to execute workflow')
-        return
+        setError(data.error || 'Failed to execute workflow');
+        return;
       }
-      setExecutionId(data.execution.id)
+      setExecutionId(data.execution.id);
     } catch {
-      setError('Network error — please try again')
+      setError('Network error — please try again');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   // ---- Reset to input ----
   function handleReset() {
-    setParsed(null)
-    setExecutionId(null)
-    setError(null)
-    setInstruction('')
+    setParsed(null);
+    setExecutionId(null);
+    setError(null);
+    setInstruction('');
   }
 
   return (
@@ -163,11 +163,12 @@ export function AutonomousPageClient() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-cyan-500" />
+          <Sparkles className="h-6 w-6 text-orange-500" />
           Autonomous
         </h1>
         <p className="text-sm text-gray-400 mt-1">
-          Describe what you want done in plain English. Synthex will build and execute a workflow for you.
+          Describe what you want done in plain English. Synthex will build and
+          execute a workflow for you.
         </p>
       </div>
 
@@ -187,11 +188,11 @@ export function AutonomousPageClient() {
           <div className="relative">
             <textarea
               value={instruction}
-              onChange={(e) => setInstruction(e.target.value)}
+              onChange={e => setInstruction(e.target.value)}
               placeholder="e.g., Create a LinkedIn campaign about AI in restoration, 5 posts, schedule next week"
               rows={4}
               maxLength={2000}
-              className="w-full rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-gray-500 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 resize-none"
+              className="w-full rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-gray-500 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 resize-none"
             />
             <span className="absolute bottom-2 right-3 text-[11px] text-gray-600 tabular-nums">
               {instruction.length}/2000
@@ -200,9 +201,11 @@ export function AutonomousPageClient() {
 
           {/* Example chips */}
           <div className="space-y-2">
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Examples</p>
+            <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+              Examples
+            </p>
             <div className="flex flex-wrap gap-2">
-              {EXAMPLES.map((ex) => (
+              {EXAMPLES.map(ex => (
                 <button
                   key={ex}
                   onClick={() => setInstruction(ex)}
@@ -218,7 +221,7 @@ export function AutonomousPageClient() {
           <Button
             onClick={handleParse}
             disabled={loading || instruction.trim().length < 10}
-            className="w-full bg-cyan-600 hover:bg-cyan-700 text-white"
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white"
           >
             {loading ? (
               <>
@@ -244,7 +247,9 @@ export function AutonomousPageClient() {
           <div className="rounded-lg bg-white/[0.03] border border-white/10 p-4 space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-white">{parsed.title}</h2>
+                <h2 className="text-lg font-semibold text-white">
+                  {parsed.title}
+                </h2>
                 <p className="text-sm text-gray-400 mt-1">{parsed.summary}</p>
               </div>
               <ConfidenceBadge score={parsed.confidence} />
@@ -252,10 +257,10 @@ export function AutonomousPageClient() {
 
             {/* Intents */}
             <div className="flex flex-wrap gap-1.5">
-              {parsed.intents.map((intent) => (
+              {parsed.intents.map(intent => (
                 <span
                   key={intent}
-                  className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 capitalize"
+                  className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20 capitalize"
                 >
                   {intent}
                 </span>
@@ -272,7 +277,9 @@ export function AutonomousPageClient() {
               </p>
               <ul className="space-y-0.5">
                 {parsed.warnings.map((w, i) => (
-                  <li key={i} className="text-sm text-amber-300/80">• {w}</li>
+                  <li key={i} className="text-sm text-amber-300/80">
+                    • {w}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -285,7 +292,7 @@ export function AutonomousPageClient() {
             </h3>
             <ol className="relative">
               {parsed.steps.map((step: WorkflowStepDefinition, idx: number) => {
-                const isLast = idx === parsed.steps.length - 1
+                const isLast = idx === parsed.steps.length - 1;
                 return (
                   <li key={idx} className="relative pl-8 pb-5">
                     {!isLast && (
@@ -301,7 +308,9 @@ export function AutonomousPageClient() {
                     </span>
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-medium text-white">{step.name}</span>
+                        <span className="text-sm font-medium text-white">
+                          {step.name}
+                        </span>
                         <span
                           className={cn(
                             'text-[10px] font-semibold px-1.5 py-0.5 rounded-full border capitalize',
@@ -311,7 +320,9 @@ export function AutonomousPageClient() {
                           {step.type}
                         </span>
                         {step.actionType && (
-                          <span className="text-[10px] text-gray-500">→ {step.actionType}</span>
+                          <span className="text-[10px] text-gray-500">
+                            → {step.actionType}
+                          </span>
                         )}
                       </div>
                       {step.promptTemplate && (
@@ -321,7 +332,7 @@ export function AutonomousPageClient() {
                       )}
                     </div>
                   </li>
-                )
+                );
               })}
             </ol>
           </div>
@@ -364,7 +375,9 @@ export function AutonomousPageClient() {
         <div className="space-y-5">
           <div className="rounded-lg bg-green-500/10 border border-green-500/20 px-4 py-6 text-center space-y-3">
             <CheckCircle className="h-10 w-10 text-green-400 mx-auto" />
-            <h2 className="text-lg font-semibold text-white">Workflow Created</h2>
+            <h2 className="text-lg font-semibold text-white">
+              Workflow Created
+            </h2>
             <p className="text-sm text-gray-400">
               Your workflow is now queued and will execute automatically.
             </p>
@@ -381,7 +394,7 @@ export function AutonomousPageClient() {
             </Button>
             <Button
               onClick={() => router.push('/dashboard/workflows')}
-              className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white"
+              className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
             >
               View Workflows
               <ArrowRight className="h-4 w-4 ml-2" />
@@ -393,10 +406,14 @@ export function AutonomousPageClient() {
       {/* Original instruction reference (visible in preview/executing states) */}
       {(state === 'preview' || state === 'executing') && parsed && (
         <div className="rounded-lg bg-white/[0.02] border border-white/[0.06] px-4 py-3">
-          <p className="text-[11px] text-gray-600 font-medium uppercase tracking-wider mb-1">Original Instruction</p>
-          <p className="text-xs text-gray-400 italic">&ldquo;{parsed.originalInstruction}&rdquo;</p>
+          <p className="text-[11px] text-gray-600 font-medium uppercase tracking-wider mb-1">
+            Original Instruction
+          </p>
+          <p className="text-xs text-gray-400 italic">
+            &ldquo;{parsed.originalInstruction}&rdquo;
+          </p>
         </div>
       )}
     </div>
-  )
+  );
 }

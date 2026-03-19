@@ -21,19 +21,21 @@ const posts: Post[] = [
     id: 1,
     username: 'TechCEO',
     handle: '@techceo',
-    content: 'Just launched our new AI features! The engagement metrics are through the roof 🚀 Thanks to @SYNTHEX',
+    content:
+      'Just launched our new AI features! The engagement metrics are through the roof 🚀 Thanks to @SYNTHEX',
     likes: '12.5K',
     comments: '342',
     shares: '1.2K',
     verified: true,
-    gradient: 'from-cyan-500 to-cyan-600',
+    gradient: 'from-orange-500 to-orange-600',
     offset: 0,
   },
   {
     id: 2,
     username: 'MarketingPro',
     handle: '@marketingpro',
-    content: 'Stop paying agencies $10K/month. Started using SYNTHEX last month and our engagement is up 300%.',
+    content:
+      'Stop paying agencies $10K/month. Started using SYNTHEX last month and our engagement is up 300%.',
     likes: '8.3K',
     comments: '189',
     shares: '567',
@@ -45,12 +47,13 @@ const posts: Post[] = [
     id: 3,
     username: 'StartupFounder',
     handle: '@founder',
-    content: 'The AI-generated content is indistinguishable from human writing. Game changer. 🔥',
+    content:
+      'The AI-generated content is indistinguishable from human writing. Game changer. 🔥',
     likes: '15.7K',
     comments: '423',
     shares: '2.1K',
     verified: true,
-    gradient: 'from-cyan-500 to-blue-600',
+    gradient: 'from-orange-500 to-blue-600',
     offset: 3,
   },
 ];
@@ -66,7 +69,8 @@ function PostCard({ post, index }: { post: Post; index: number }) {
     return () => clearInterval(interval);
   }, [post.offset]);
 
-  const rotation = index === 0 ? 'rotate-[-5deg]' : index === 2 ? 'rotate-[5deg]' : '';
+  const rotation =
+    index === 0 ? 'rotate-[-5deg]' : index === 2 ? 'rotate-[5deg]' : '';
   const scale = index === 1 ? 'scale-105 z-20' : 'z-10';
 
   return (
@@ -75,18 +79,26 @@ function PostCard({ post, index }: { post: Post; index: number }) {
       style={{ transform: `translateY(${floatY}px)` }}
     >
       {/* Glow effect */}
-      <div className={`absolute -inset-4 bg-gradient-to-r ${post.gradient} rounded-3xl blur-2xl opacity-30`} />
+      <div
+        className={`absolute -inset-4 bg-gradient-to-r ${post.gradient} rounded-3xl blur-2xl opacity-30`}
+      />
 
       {/* Card */}
       <div className="relative bg-slate-900/90 backdrop-blur-xl rounded-2xl p-6 border border-white/10 w-[320px] shadow-2xl">
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
-          <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${post.gradient}`} />
+          <div
+            className={`w-12 h-12 rounded-full bg-gradient-to-br ${post.gradient}`}
+          />
           <div className="flex-1">
             <div className="flex items-center gap-1">
               <span className="font-bold text-white">{post.username}</span>
               {post.verified && (
-                <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="w-4 h-4 text-blue-400"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
                 </svg>
               )}
@@ -96,7 +108,9 @@ function PostCard({ post, index }: { post: Post; index: number }) {
         </div>
 
         {/* Content */}
-        <p className="text-white/90 text-sm leading-relaxed mb-4">{post.content}</p>
+        <p className="text-white/90 text-sm leading-relaxed mb-4">
+          {post.content}
+        </p>
 
         {/* Engagement */}
         <div className="flex items-center justify-between pt-4 border-t border-white/10">
@@ -115,7 +129,7 @@ function PostCard({ post, index }: { post: Post; index: number }) {
             <Share2 className="w-5 h-5" />
             <span className="text-sm">{post.shares}</span>
           </button>
-          <button className="text-slate-400 hover:text-cyan-400 transition-colors">
+          <button className="text-slate-400 hover:text-orange-400 transition-colors">
             <Bookmark className="w-5 h-5" />
           </button>
         </div>
@@ -144,7 +158,7 @@ export default function FloatingPostsSVG() {
           return (
             <div
               key={i}
-              className="absolute w-1 h-1 bg-cyan-400 rounded-full animate-pulse"
+              className="absolute w-1 h-1 bg-orange-400 rounded-full animate-pulse"
               style={{
                 left: `${x}%`,
                 top: `${y}%`,
@@ -166,7 +180,8 @@ export default function FloatingPostsSVG() {
       {/* Bottom label */}
       <div className="absolute bottom-4 left-4 right-4 text-center pointer-events-none z-20">
         <p className="text-white/60 text-sm backdrop-blur-sm bg-black/20 rounded-full px-4 py-2 inline-block">
-          Hover to interact • Click hearts to like • Real engagement visualization
+          Hover to interact • Click hearts to like • Real engagement
+          visualization
         </p>
       </div>
     </div>

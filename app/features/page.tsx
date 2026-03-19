@@ -42,12 +42,12 @@ export default function FeaturesPage() {
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-4">
+          <p className="text-sm font-semibold text-orange-400 uppercase tracking-widest mb-4">
             Platform Features
           </p>
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
             Every Feature You Need to{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
               Grow Faster
             </span>
           </h1>
@@ -61,7 +61,7 @@ export default function FeaturesPage() {
       {/* Video Demos Section */}
       <section className="pb-20 px-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest text-center mb-3">
+          <p className="text-sm font-semibold text-orange-400 uppercase tracking-widest text-center mb-3">
             See It in Action
           </p>
           <h2 className="text-3xl font-bold text-center text-white mb-4">
@@ -96,7 +96,7 @@ export default function FeaturesPage() {
             ].map((video, i) => (
               <div
                 key={i}
-                className="rounded-xl overflow-hidden border border-white/10 bg-white/5 hover:border-cyan-500/30 transition-colors"
+                className="rounded-xl overflow-hidden border border-white/10 bg-white/5 hover:border-orange-500/30 transition-colors"
               >
                 <div className="aspect-video">
                   <iframe
@@ -123,7 +123,7 @@ export default function FeaturesPage() {
       {/* Core Features */}
       <section className="py-20 md:py-28 px-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest text-center mb-3">
+          <p className="text-sm font-semibold text-orange-400 uppercase tracking-widest text-center mb-3">
             Core Features
           </p>
           <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4">
@@ -137,8 +137,8 @@ export default function FeaturesPage() {
             {/* 1. AI Persona Learning */}
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
-                  <Brain className="w-6 h-6 text-cyan-400" />
+                <div className="bg-orange-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <Brain className="w-6 h-6 text-orange-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-3">
                   AI That Sounds Like You
@@ -150,20 +150,20 @@ export default function FeaturesPage() {
                 </p>
                 <ul className="space-y-2">
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Learns from real examples — not templates
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Analyses sentence structure, vocabulary, emoji usage, and
                     formatting
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Improves accuracy with every post you approve or edit
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Supports multiple personas (one per brand or client)
                   </li>
                 </ul>
@@ -173,8 +173,8 @@ export default function FeaturesPage() {
             {/* 2. Viral Pattern Analysis */}
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
-                  <TrendingUp className="w-6 h-6 text-cyan-400" />
+                <div className="bg-orange-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <TrendingUp className="w-6 h-6 text-orange-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-3">
                   Know What Works Before You Post
@@ -186,22 +186,22 @@ export default function FeaturesPage() {
                 </p>
                 <ul className="space-y-2">
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Tracks trending hashtags and topics per platform in
                     real-time
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Identifies which content formats are driving the highest
                     engagement right now
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Optimal posting time recommendations based on your
                     audience&apos;s behaviour
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Competitor content tracking — see what&apos;s performing in
                     your space
                   </li>
@@ -212,8 +212,8 @@ export default function FeaturesPage() {
             {/* 3. Smart Content Generation */}
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
-                  <Sparkles className="w-6 h-6 text-cyan-400" />
+                <div className="bg-orange-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <Sparkles className="w-6 h-6 text-orange-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-3">
                   10–15 On-Brand Variations in Seconds
@@ -224,21 +224,21 @@ export default function FeaturesPage() {
                 </p>
                 <ul className="space-y-2">
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Platform-specific formatting (TikTok captions vs LinkedIn
                     articles vs Twitter threads)
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Hook optimisation — AI tests multiple opening lines for
                     maximum stop-scroll impact
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Hashtag suggestions drawn from your viral pattern data
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Image prompt generation for visual content
                   </li>
                 </ul>
@@ -248,8 +248,8 @@ export default function FeaturesPage() {
             {/* 4. Intelligent Scheduling */}
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
-                  <Calendar className="w-6 h-6 text-cyan-400" />
+                <div className="bg-orange-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <Calendar className="w-6 h-6 text-orange-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-3">
                   Post at the Perfect Moment
@@ -260,19 +260,19 @@ export default function FeaturesPage() {
                 </p>
                 <ul className="space-y-2">
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Audience activity analysis per platform
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Drag-and-drop content calendar
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Bulk import and schedule via CSV or paste
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Auto-requeue evergreen content + cross-platform simultaneous
                     publishing
                   </li>
@@ -283,8 +283,8 @@ export default function FeaturesPage() {
             {/* 5. Advanced Analytics */}
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
-                  <BarChart3 className="w-6 h-6 text-cyan-400" />
+                <div className="bg-orange-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <BarChart3 className="w-6 h-6 text-orange-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-3">
                   See What&apos;s Actually Working
@@ -296,19 +296,19 @@ export default function FeaturesPage() {
                 </p>
                 <ul className="space-y-2">
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Unified analytics across all 9 platforms
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Post-level performance breakdown
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Follower growth tracking and attribution
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Content ROI calculator + exportable PDF reports (white-label
                     on Agency plan)
                   </li>
@@ -319,8 +319,8 @@ export default function FeaturesPage() {
             {/* 6. Multi-Platform Publishing */}
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
-                  <Globe className="w-6 h-6 text-cyan-400" />
+                <div className="bg-orange-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <Globe className="w-6 h-6 text-orange-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-3">
                   One Dashboard, 9 Platforms
@@ -332,20 +332,20 @@ export default function FeaturesPage() {
                 </p>
                 <ul className="space-y-2">
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Platform-native formatting (images, video specs, character
                     limits auto-applied)
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Unified content inbox — all comments and DMs in one place
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Team collaboration with role-based permissions
                   </li>
                   <li className="flex items-start text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 mr-2 mt-0.5 shrink-0" />
                     Client workspace isolation (Agency plan)
                   </li>
                 </ul>
@@ -358,7 +358,7 @@ export default function FeaturesPage() {
       {/* Platform Grid */}
       <section className="py-20 md:py-28 px-6 bg-white/[0.02] backdrop-blur-xl border-y border-white/[0.08]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest text-center mb-3">
+          <p className="text-sm font-semibold text-orange-400 uppercase tracking-widest text-center mb-3">
             Supported Platforms
           </p>
           <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4">
@@ -431,7 +431,7 @@ export default function FeaturesPage() {
               },
             ].map(platform => (
               <div key={platform.name} className="text-center group">
-                <GlowCard className="bg-white/5 border border-white/10 rounded-xl p-4 mb-3 hover:border-cyan-500/30 transition-colors hover:scale-105 duration-200">
+                <GlowCard className="bg-white/5 border border-white/10 rounded-xl p-4 mb-3 hover:border-orange-500/30 transition-colors hover:scale-105 duration-200">
                   <platform.Icon
                     size={32}
                     color={platform.color}
@@ -453,7 +453,7 @@ export default function FeaturesPage() {
       {/* Advanced Capabilities */}
       <section className="py-20 md:py-28 px-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest text-center mb-3">
+          <p className="text-sm font-semibold text-orange-400 uppercase tracking-widest text-center mb-3">
             Advanced Capabilities
           </p>
           <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4">
@@ -466,8 +466,8 @@ export default function FeaturesPage() {
           <ContainerStagger className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
-                  <TrendingUp className="w-6 h-6 text-cyan-400" />
+                <div className="bg-orange-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <TrendingUp className="w-6 h-6 text-orange-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">
                   A/B Testing
@@ -480,8 +480,8 @@ export default function FeaturesPage() {
             </ContainerAnimated>
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
-                  <Sparkles className="w-6 h-6 text-cyan-400" />
+                <div className="bg-orange-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <Sparkles className="w-6 h-6 text-orange-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">
                   Brand Kit
@@ -495,8 +495,8 @@ export default function FeaturesPage() {
             </ContainerAnimated>
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
-                  <Globe className="w-6 h-6 text-cyan-400" />
+                <div className="bg-orange-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <Globe className="w-6 h-6 text-orange-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">
                   Content Moderation
@@ -509,8 +509,8 @@ export default function FeaturesPage() {
             </ContainerAnimated>
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
-                  <Users className="w-6 h-6 text-cyan-400" />
+                <div className="bg-orange-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <Users className="w-6 h-6 text-orange-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">
                   Team Collaboration
@@ -528,7 +528,7 @@ export default function FeaturesPage() {
       {/* CTA */}
       <section className="py-20 md:py-28 px-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="p-12 text-center bg-gradient-to-r from-cyan-500/10 to-cyan-600/10 border-cyan-500/20 backdrop-blur-xl">
+          <Card className="p-12 text-center bg-gradient-to-r from-orange-500/10 to-orange-600/10 border-orange-500/20 backdrop-blur-xl">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Experience the Power of AI-Driven Social Media
             </h2>
@@ -539,7 +539,7 @@ export default function FeaturesPage() {
             <Link href="/signup">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-10 py-6 text-lg hover:from-cyan-600 hover:to-cyan-700"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-10 py-6 text-lg hover:from-orange-600 hover:to-orange-700"
               >
                 Start Free Trial
                 <ArrowRight className="ml-2" />

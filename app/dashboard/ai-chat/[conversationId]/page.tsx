@@ -75,7 +75,7 @@ export default function AIConversationPage({ params }: PageProps) {
   const [archivingId, setArchivingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredConversations = conversations.filter((c) =>
+  const filteredConversations = conversations.filter(c =>
     c.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -100,7 +100,7 @@ export default function AIConversationPage({ params }: PageProps) {
         await deleteConversation(id);
         // If deleting the active conversation, route to next available or index
         if (pathname === `/dashboard/ai-chat/${id}`) {
-          const remaining = conversations.filter((c) => c.id !== id);
+          const remaining = conversations.filter(c => c.id !== id);
           if (remaining.length > 0) {
             router.replace(`/dashboard/ai-chat/${remaining[0].id}`);
           } else {
@@ -123,7 +123,7 @@ export default function AIConversationPage({ params }: PageProps) {
         await archiveConversation(id);
         // If archiving the active conversation, route to next available or index
         if (pathname === `/dashboard/ai-chat/${id}`) {
-          const remaining = conversations.filter((c) => c.id !== id);
+          const remaining = conversations.filter(c => c.id !== id);
           if (remaining.length > 0) {
             router.replace(`/dashboard/ai-chat/${remaining[0].id}`);
           } else {
@@ -147,12 +147,14 @@ export default function AIConversationPage({ params }: PageProps) {
     return (
       <div className="p-6 max-w-4xl mx-auto">
         <div className="flex items-start gap-3 mb-8">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
-            <MessageSquare className="h-6 w-6 text-cyan-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+            <MessageSquare className="h-6 w-6 text-orange-400" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-white">AI Chat Assistant</h1>
-            <p className="text-gray-400">Get AI-powered help with your content strategy</p>
+            <p className="text-gray-400">
+              Get AI-powered help with your content strategy
+            </p>
           </div>
         </div>
 
@@ -167,7 +169,8 @@ export default function AIConversationPage({ params }: PageProps) {
               </h3>
               <p className="text-gray-300 mb-6">
                 AI Chat Assistant is available on Professional plan and above.
-                Get unlimited AI-powered conversations to help with your content strategy.
+                Get unlimited AI-powered conversations to help with your content
+                strategy.
               </p>
               <Button
                 asChild
@@ -190,7 +193,7 @@ export default function AIConversationPage({ params }: PageProps) {
     return (
       <div className="h-[calc(100vh-8rem)] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-gray-400">
-          <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
           <span>Loading conversations...</span>
         </div>
       </div>
@@ -232,15 +235,20 @@ export default function AIConversationPage({ params }: PageProps) {
       {/* Page Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
-            <MessageSquare className="h-5 w-5 text-cyan-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+            <MessageSquare className="h-5 w-5 text-orange-400" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">AI Chat Assistant</h1>
-            <p className="text-sm text-gray-400">Get help with content strategy and ideas</p>
+            <p className="text-sm text-gray-400">
+              Get help with content strategy and ideas
+            </p>
           </div>
         </div>
-        <Badge variant="outline" className="bg-cyan-500/10 border-cyan-500/30 text-cyan-300">
+        <Badge
+          variant="outline"
+          className="bg-orange-500/10 border-orange-500/30 text-orange-300"
+        >
           Professional
         </Badge>
       </div>
@@ -254,7 +262,7 @@ export default function AIConversationPage({ params }: PageProps) {
             <Button
               onClick={handleCreateConversation}
               disabled={isCreating}
-              className="w-full bg-cyan-500/20 border border-cyan-500/30 hover:bg-cyan-500/30 text-cyan-300"
+              className="w-full bg-orange-500/20 border border-orange-500/30 hover:bg-orange-500/30 text-orange-300"
             >
               {isCreating ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -269,9 +277,9 @@ export default function AIConversationPage({ params }: PageProps) {
               type="text"
               placeholder="Search conversations..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="w-full px-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg
-                         text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
+                         text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50"
             />
           </div>
 
@@ -280,15 +288,19 @@ export default function AIConversationPage({ params }: PageProps) {
             {conversations.length === 0 ? (
               <div className="p-4 text-center text-gray-400">
                 <p className="text-sm">No conversations yet</p>
-                <p className="text-xs mt-1">Click &quot;New Chat&quot; to start</p>
+                <p className="text-xs mt-1">
+                  Click &quot;New Chat&quot; to start
+                </p>
               </div>
             ) : filteredConversations.length === 0 ? (
               <div className="p-4 text-center text-gray-400">
-                <p className="text-sm">No results for &quot;{searchQuery}&quot;</p>
+                <p className="text-sm">
+                  No results for &quot;{searchQuery}&quot;
+                </p>
               </div>
             ) : (
               <div className="p-2 space-y-1">
-                {filteredConversations.map((conv) => {
+                {filteredConversations.map(conv => {
                   const isActive = pathname === `/dashboard/ai-chat/${conv.id}`;
                   return (
                     <Link
@@ -297,7 +309,7 @@ export default function AIConversationPage({ params }: PageProps) {
                       className={cn(
                         'w-full text-left px-3 py-3 rounded-lg transition-colors group flex',
                         isActive
-                          ? 'bg-cyan-500/20 border border-cyan-500/30'
+                          ? 'bg-orange-500/20 border border-orange-500/30'
                           : 'bg-white/5 border border-transparent hover:bg-white/10'
                       )}
                     >
@@ -319,7 +331,7 @@ export default function AIConversationPage({ params }: PageProps) {
                         {/* Archive + Delete buttons (visible on hover) */}
                         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
-                            onClick={(e) => handleArchiveConversation(conv.id, e)}
+                            onClick={e => handleArchiveConversation(conv.id, e)}
                             disabled={archivingId === conv.id}
                             title="Archive conversation"
                             className="p-1.5 rounded hover:bg-amber-500/20 text-gray-400 hover:text-amber-400"
@@ -331,7 +343,7 @@ export default function AIConversationPage({ params }: PageProps) {
                             )}
                           </button>
                           <button
-                            onClick={(e) => handleDeleteConversation(conv.id, e)}
+                            onClick={e => handleDeleteConversation(conv.id, e)}
                             disabled={deletingId === conv.id}
                             title="Delete conversation"
                             className="p-1.5 rounded hover:bg-red-500/20 text-gray-400 hover:text-red-400"

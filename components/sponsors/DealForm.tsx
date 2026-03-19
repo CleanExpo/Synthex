@@ -9,7 +9,12 @@
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { X, Loader2 } from '@/components/icons';
-import type { SponsorDeal, DealStage, CreateDealInput, UpdateDealInput } from '@/hooks/useSponsorCRM';
+import type {
+  SponsorDeal,
+  DealStage,
+  CreateDealInput,
+  UpdateDealInput,
+} from '@/hooks/useSponsorCRM';
 import { DEAL_STAGES, STAGE_LABELS } from '@/hooks/useSponsorCRM';
 
 interface DealFormProps {
@@ -122,10 +127,12 @@ export function DealForm({
             <input
               type="text"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={e =>
+                setFormData({ ...formData, title: e.target.value })
+              }
               placeholder="Deal title"
               required
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
             />
           </div>
 
@@ -136,10 +143,12 @@ export function DealForm({
             </label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={e =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               placeholder="Deal description..."
               rows={2}
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent resize-none"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent resize-none"
             />
           </div>
 
@@ -152,12 +161,14 @@ export function DealForm({
               <input
                 type="number"
                 value={formData.value}
-                onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, value: e.target.value })
+                }
                 placeholder="0.00"
                 min="0"
                 step="0.01"
                 required
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
               />
             </div>
             <div>
@@ -166,10 +177,12 @@ export function DealForm({
               </label>
               <select
                 value={formData.currency}
-                onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+                onChange={e =>
+                  setFormData({ ...formData, currency: e.target.value })
+                }
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
               >
-                {CURRENCIES.map((curr) => (
+                {CURRENCIES.map(curr => (
                   <option key={curr} value={curr} className="bg-surface-base">
                     {curr}
                   </option>
@@ -185,10 +198,12 @@ export function DealForm({
             </label>
             <select
               value={formData.stage}
-              onChange={(e) => setFormData({ ...formData, stage: e.target.value as DealStage })}
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+              onChange={e =>
+                setFormData({ ...formData, stage: e.target.value as DealStage })
+              }
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
             >
-              {DEAL_STAGES.map((stage) => (
+              {DEAL_STAGES.map(stage => (
                 <option key={stage} value={stage} className="bg-surface-base">
                   {STAGE_LABELS[stage]}
                 </option>
@@ -205,8 +220,10 @@ export function DealForm({
               <input
                 type="date"
                 value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+                onChange={e =>
+                  setFormData({ ...formData, startDate: e.target.value })
+                }
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
               />
             </div>
             <div>
@@ -216,8 +233,10 @@ export function DealForm({
               <input
                 type="date"
                 value={formData.endDate}
-                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+                onChange={e =>
+                  setFormData({ ...formData, endDate: e.target.value })
+                }
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
               />
             </div>
           </div>
@@ -237,7 +256,7 @@ export function DealForm({
               disabled={isLoading || !formData.title.trim() || !formData.value}
               className={cn(
                 'flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-colors',
-                'bg-cyan-600 hover:bg-cyan-500 text-white',
+                'bg-orange-600 hover:bg-orange-500 text-white',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
             >

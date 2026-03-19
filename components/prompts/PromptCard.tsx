@@ -19,33 +19,40 @@ import { CATEGORY_CONFIG } from '@/lib/prompts/types';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface PromptCardData {
-  id: string
-  promptText: string
-  promptCategory: string
-  status: string          // pending | tested | scheduled
-  brandMentioned: boolean | null
-  brandPosition: number | null
-  entityName: string
+  id: string;
+  promptText: string;
+  promptCategory: string;
+  status: string; // pending | tested | scheduled
+  brandMentioned: boolean | null;
+  brandPosition: number | null;
+  entityName: string;
 }
 
 interface PromptCardProps {
-  tracker: PromptCardData
-  onTested?: (trackerId: string, brandMentioned: boolean, brandPosition: number | null) => void
+  tracker: PromptCardData;
+  onTested?: (
+    trackerId: string,
+    brandMentioned: boolean,
+    brandPosition: number | null
+  ) => void;
 }
 
 // ─── Category badge colours ───────────────────────────────────────────────────
 
 const CATEGORY_COLOURS: Record<PromptCategory, string> = {
-  'brand-awareness':      'bg-purple-500/20 text-purple-300 border-purple-500/30',
+  'brand-awareness': 'bg-purple-500/20 text-purple-300 border-purple-500/30',
   'competitor-comparison': 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-  'local-discovery':      'bg-green-500/20 text-green-300 border-green-500/30',
-  'use-case':             'bg-blue-500/20 text-blue-300 border-blue-500/30',
-  'how-to':               'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
-  'product-feature':      'bg-slate-500/20 text-slate-300 border-slate-500/30',
+  'local-discovery': 'bg-green-500/20 text-green-300 border-green-500/30',
+  'use-case': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+  'how-to': 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+  'product-feature': 'bg-slate-500/20 text-slate-300 border-slate-500/30',
 };
 
 function categoryColour(cat: string): string {
-  return CATEGORY_COLOURS[cat as PromptCategory] ?? 'bg-slate-500/20 text-slate-300 border-slate-500/30';
+  return (
+    CATEGORY_COLOURS[cat as PromptCategory] ??
+    'bg-slate-500/20 text-slate-300 border-slate-500/30'
+  );
 }
 
 function categoryLabel(cat: string): string {
@@ -59,9 +66,9 @@ function StatusBadge({
   brandMentioned,
   brandPosition,
 }: {
-  status: string
-  brandMentioned: boolean | null
-  brandPosition: number | null
+  status: string;
+  brandMentioned: boolean | null;
+  brandPosition: number | null;
 }) {
   if (status === 'pending' || brandMentioned === null) {
     return (
@@ -100,13 +107,15 @@ export function PromptCard({ tracker, onTested }: PromptCardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [localResult, setLocalResult] = useState<{
-    brandMentioned: boolean
-    brandPosition: number | null
+    brandMentioned: boolean;
+    brandPosition: number | null;
   } | null>(null);
 
-  const effectiveMentioned = localResult !== null ? localResult.brandMentioned : tracker.brandMentioned;
-  const effectivePosition  = localResult !== null ? localResult.brandPosition  : tracker.brandPosition;
-  const effectiveStatus    = localResult !== null ? 'tested' : tracker.status;
+  const effectiveMentioned =
+    localResult !== null ? localResult.brandMentioned : tracker.brandMentioned;
+  const effectivePosition =
+    localResult !== null ? localResult.brandPosition : tracker.brandPosition;
+  const effectiveStatus = localResult !== null ? 'tested' : tracker.status;
 
   async function handleTest() {
     setLoading(true);
@@ -135,7 +144,7 @@ export function PromptCard({ tracker, onTested }: PromptCardProps) {
       const data = await res.json();
       const result = {
         brandMentioned: data.brandMentioned as boolean,
-        brandPosition:  data.brandPosition as number | null,
+        brandPosition: data.brandPosition as number | null,
       };
       setLocalResult(result);
       onTested?.(tracker.id, result.brandMentioned, result.brandPosition);
@@ -180,9 +189,7 @@ export function PromptCard({ tracker, onTested }: PromptCardProps) {
       </p>
 
       {/* Error */}
-      {error && (
-        <p className="text-xs text-red-400">{error}</p>
-      )}
+      {error && <p className="text-xs text-red-400">{error}</p>}
 
       {/* Test button */}
       <div className="flex justify-end">

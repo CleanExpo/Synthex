@@ -5,7 +5,13 @@
  * Theme, language, timezone, and developer settings
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -22,7 +28,10 @@ import type { AdvancedSettings } from './types';
 
 interface AdvancedTabProps {
   settings: AdvancedSettings;
-  onSettingChange: <K extends keyof AdvancedSettings>(field: K, value: AdvancedSettings[K]) => void;
+  onSettingChange: <K extends keyof AdvancedSettings>(
+    field: K,
+    value: AdvancedSettings[K]
+  ) => void;
   onSave: () => void;
   isSaving: boolean;
 }
@@ -51,13 +60,15 @@ export function AdvancedTab({
               <Label>Theme</Label>
               <Select
                 value={settings.theme}
-                onValueChange={(value) => onSettingChange('theme', value as AdvancedSettings['theme'])}
+                onValueChange={value =>
+                  onSettingChange('theme', value as AdvancedSettings['theme'])
+                }
               >
                 <SelectTrigger className="bg-white/5 border-white/10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {themes.map((theme) => (
+                  {themes.map(theme => (
                     <SelectItem key={theme.value} value={theme.value}>
                       {theme.label}
                     </SelectItem>
@@ -79,13 +90,13 @@ export function AdvancedTab({
               <Label>Language</Label>
               <Select
                 value={settings.language}
-                onValueChange={(value) => onSettingChange('language', value)}
+                onValueChange={value => onSettingChange('language', value)}
               >
                 <SelectTrigger className="bg-white/5 border-white/10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {languages.map((lang) => (
+                  {languages.map(lang => (
                     <SelectItem key={lang.value} value={lang.value}>
                       {lang.label}
                     </SelectItem>
@@ -97,13 +108,13 @@ export function AdvancedTab({
               <Label>Timezone</Label>
               <Select
                 value={settings.timezone}
-                onValueChange={(value) => onSettingChange('timezone', value)}
+                onValueChange={value => onSettingChange('timezone', value)}
               >
                 <SelectTrigger className="bg-white/5 border-white/10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {timezones.map((tz) => (
+                  {timezones.map(tz => (
                     <SelectItem key={tz.value} value={tz.value}>
                       {tz.label}
                     </SelectItem>
@@ -124,33 +135,45 @@ export function AdvancedTab({
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-white">Debug Mode</Label>
-                <p className="text-sm text-slate-400">Show detailed error messages and logs</p>
+                <p className="text-sm text-slate-400">
+                  Show detailed error messages and logs
+                </p>
               </div>
               <Switch
                 checked={settings.debugMode}
-                onCheckedChange={(checked) => onSettingChange('debugMode', checked)}
+                onCheckedChange={checked =>
+                  onSettingChange('debugMode', checked)
+                }
                 aria-label="Debug mode"
               />
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Beaker className="w-4 h-4 text-cyan-500" />
+                <Beaker className="w-4 h-4 text-orange-500" />
                 <div>
                   <Label className="text-white">Beta Features</Label>
-                  <p className="text-sm text-slate-400">Try experimental features early</p>
+                  <p className="text-sm text-slate-400">
+                    Try experimental features early
+                  </p>
                 </div>
               </div>
               <Switch
                 checked={settings.betaFeatures}
-                onCheckedChange={(checked) => onSettingChange('betaFeatures', checked)}
+                onCheckedChange={checked =>
+                  onSettingChange('betaFeatures', checked)
+                }
                 aria-label="Beta features"
               />
             </div>
           </div>
         </div>
 
-        <Button onClick={onSave} disabled={isSaving} className="gradient-primary">
+        <Button
+          onClick={onSave}
+          disabled={isSaving}
+          className="gradient-primary"
+        >
           {isSaving ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

@@ -2,7 +2,12 @@
 
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, Sparkles, Zap } from '@/components/icons';
 
@@ -40,7 +45,12 @@ export interface PricingCardProps {
   variant?: 'default' | 'popular' | 'enterprise';
 }
 
-export function PricingCard({ tier, onSelect, className, variant = 'default' }: PricingCardProps) {
+export function PricingCard({
+  tier,
+  onSelect,
+  className,
+  variant = 'default',
+}: PricingCardProps) {
   const isPopular = variant === 'popular' || tier.popular;
   const isEnterprise = variant === 'enterprise';
 
@@ -58,26 +68,30 @@ export function PricingCard({ tier, onSelect, className, variant = 'default' }: 
     >
       {/* Popular badge */}
       {isPopular && (
-        <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-cyan-500 to-cyan-500" />
+        <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-orange-500 to-orange-500" />
       )}
 
       {/* Badge */}
       {tier.badge && (
-        <div className="absolute -right-8 top-6 rotate-45 bg-gradient-to-r from-cyan-500 to-cyan-500 px-10 py-1 text-xs font-semibold text-white shadow-lg">
+        <div className="absolute -right-8 top-6 rotate-45 bg-gradient-to-r from-orange-500 to-orange-500 px-10 py-1 text-xs font-semibold text-white shadow-lg">
           {tier.badge}
         </div>
       )}
 
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3 mb-2">
-          {tier.icon || (
-            isPopular ? <Sparkles className="w-5 h-5 text-cyan-400" /> :
-            isEnterprise ? <Zap className="w-5 h-5 text-emerald-400" /> : null
-          )}
-          <h3 className={cn(
-            'text-xl font-bold',
-            isPopular ? 'text-white' : 'text-slate-100'
-          )}>
+          {tier.icon ||
+            (isPopular ? (
+              <Sparkles className="w-5 h-5 text-orange-400" />
+            ) : isEnterprise ? (
+              <Zap className="w-5 h-5 text-emerald-400" />
+            ) : null)}
+          <h3
+            className={cn(
+              'text-xl font-bold',
+              isPopular ? 'text-white' : 'text-slate-100'
+            )}
+          >
             {tier.name}
           </h3>
         </div>
@@ -93,12 +107,14 @@ export function PricingCard({ tier, onSelect, className, variant = 'default' }: 
                 {tier.originalPrice}
               </span>
             )}
-            <span className={cn(
-              'text-4xl font-bold tracking-tight',
-              isPopular
-                ? 'bg-gradient-to-r from-cyan-200 to-cyan-200 bg-clip-text text-transparent'
-                : 'text-white'
-            )}>
+            <span
+              className={cn(
+                'text-4xl font-bold tracking-tight',
+                isPopular
+                  ? 'bg-gradient-to-r from-orange-200 to-orange-200 bg-clip-text text-transparent'
+                  : 'text-white'
+              )}
+            >
               {tier.price}
             </span>
             {tier.period && (
@@ -122,12 +138,16 @@ export function PricingCard({ tier, onSelect, className, variant = 'default' }: 
                   'w-4 h-4 mt-0.5 flex-shrink-0',
                   feature.included
                     ? feature.highlight
-                      ? 'text-cyan-400'
+                      ? 'text-orange-400'
                       : 'text-emerald-400'
                     : 'text-slate-600'
                 )}
               />
-              <span className={feature.highlight ? 'font-medium text-slate-200' : ''}>
+              <span
+                className={
+                  feature.highlight ? 'font-medium text-slate-200' : ''
+                }
+              >
                 {feature.text}
               </span>
             </li>
@@ -141,7 +161,7 @@ export function PricingCard({ tier, onSelect, className, variant = 'default' }: 
           className={cn(
             'w-full font-semibold transition-all duration-300',
             isPopular
-              ? 'bg-gradient-to-r from-cyan-500 to-cyan-500 hover:from-cyan-400 hover:to-cyan-400 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)]'
+              ? 'bg-gradient-to-r from-orange-500 to-orange-500 hover:from-orange-400 hover:to-orange-400 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)]'
               : isEnterprise
                 ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white'
                 : 'bg-white/10 hover:bg-white/15 text-white border border-white/10'

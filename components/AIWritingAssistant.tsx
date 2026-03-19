@@ -2,19 +2,31 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { 
-  Sparkles, 
-  Wand2, 
-  RefreshCw, 
-  Copy, 
+import {
+  Sparkles,
+  Wand2,
+  RefreshCw,
+  Copy,
   Check,
   TrendingUp,
   Lightbulb,
@@ -27,7 +39,7 @@ import {
   AlertCircle,
   ChevronRight,
   Settings,
-  Loader2
+  Loader2,
 } from '@/components/icons';
 import {
   generateContent,
@@ -40,7 +52,7 @@ import {
   type ContentLength,
   type WritingStyle,
   type AIWritingRequest,
-  type AIWritingResponse
+  type AIWritingResponse,
 } from '@/lib/ai-writing-assistant';
 import { notify } from '@/lib/notifications';
 import { fadeInUp, scaleIn } from '@/lib/animations';
@@ -56,7 +68,7 @@ export function AIWritingAssistant({
   initialContent = '',
   onContentGenerated,
   platform = 'general',
-  compact = false
+  compact = false,
 }: AIWritingAssistantProps) {
   const [content, setContent] = useState(initialContent);
   const [prompt, setPrompt] = useState('');
@@ -70,8 +82,12 @@ export function AIWritingAssistant({
   const [useHashtags, setUseHashtags] = useState(true);
   const [keywords, setKeywords] = useState<string[]>([]);
   const [audience, setAudience] = useState('general');
-  
-  const tones: { value: WritingTone; label: string; icon: React.ElementType }[] = [
+
+  const tones: {
+    value: WritingTone;
+    label: string;
+    icon: React.ElementType;
+  }[] = [
     { value: 'professional', label: 'Professional', icon: Target },
     { value: 'casual', label: 'Casual', icon: Smile },
     { value: 'friendly', label: 'Friendly', icon: Heart },
@@ -81,24 +97,24 @@ export function AIWritingAssistant({
     { value: 'educational', label: 'Educational', icon: BookOpen },
     { value: 'persuasive', label: 'Persuasive', icon: TrendingUp },
     { value: 'empathetic', label: 'Empathetic', icon: Heart },
-    { value: 'confident', label: 'Confident', icon: Zap }
+    { value: 'confident', label: 'Confident', icon: Zap },
   ];
-  
+
   const lengths: { value: ContentLength; label: string; words: string }[] = [
     { value: 'short', label: 'Short', words: '~50 words' },
     { value: 'medium', label: 'Medium', words: '~150 words' },
-    { value: 'long', label: 'Long', words: '~300 words' }
+    { value: 'long', label: 'Long', words: '~300 words' },
   ];
-  
+
   // Generate content
   const handleGenerate = async () => {
     if (!prompt.trim()) {
       notify.error('Please enter a prompt');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       const request: AIWritingRequest = {
         prompt,
@@ -108,19 +124,19 @@ export function AIWritingAssistant({
           keywords,
           audience,
           emojis: useEmojis,
-          hashtags: useHashtags
+          hashtags: useHashtags,
         },
-        platform
+        platform,
       };
-      
+
       const result = await generateContent(request);
       setResponse(result);
       setContent(result.content);
-      
+
       if (onContentGenerated) {
         onContentGenerated(result.content);
       }
-      
+
       notify.success('Content generated successfully!');
     } catch (error) {
       notify.error('Failed to generate content');
@@ -129,11 +145,11 @@ export function AIWritingAssistant({
       setLoading(false);
     }
   };
-  
+
   // Rewrite with different tone
   const handleRewrite = async (newTone: WritingTone) => {
     if (!content) return;
-    
+
     setLoading(true);
     try {
       const rewritten = rewriteWithTone(content, tone, newTone);
@@ -146,7 +162,7 @@ export function AIWritingAssistant({
       setLoading(false);
     }
   };
-  
+
   // Copy content
   const handleCopy = () => {
     navigator.clipboard.writeText(content);
@@ -154,17 +170,17 @@ export function AIWritingAssistant({
     notify.success('Copied to clipboard!');
     setTimeout(() => setCopied(false), 2000);
   };
-  
+
   // Generate variations
   const handleVariations = async () => {
     if (!content) return;
-    
+
     setLoading(true);
     try {
       const variations = generateVariations(content, 3);
       setResponse(prev => ({
         ...prev!,
-        alternatives: variations
+        alternatives: variations,
       }));
       notify.success('Generated 3 variations');
     } catch (error) {
@@ -173,35 +189,37 @@ export function AIWritingAssistant({
       setLoading(false);
     }
   };
-  
+
   // Check tone consistency
   const checkTone = () => {
     if (!content) return null;
-    
+
     const check = checkToneConsistency(content, tone);
     return check;
   };
-  
+
   const toneCheck = checkTone();
-  
+
   if (compact) {
     return <CompactAIAssistant content={content} onGenerate={handleGenerate} />;
   }
-  
+
   return (
     <Card variant="glass">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
-              <Wand2 className="h-5 w-5 text-cyan-400" />
+            <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+              <Wand2 className="h-5 w-5 text-orange-400" />
             </div>
             <div>
               <CardTitle>AI Writing Assistant</CardTitle>
-              <CardDescription>Generate and optimize content with AI</CardDescription>
+              <CardDescription>
+                Generate and optimize content with AI
+              </CardDescription>
             </div>
           </div>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -211,7 +229,7 @@ export function AIWritingAssistant({
           </Button>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-6">
         {/* Settings Panel */}
         <AnimatePresence>
@@ -226,25 +244,37 @@ export function AIWritingAssistant({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-400">Use Emojis</span>
-                    <Switch checked={useEmojis} onCheckedChange={setUseEmojis} />
+                    <Switch
+                      checked={useEmojis}
+                      onCheckedChange={setUseEmojis}
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-400">Use Hashtags</span>
-                    <Switch checked={useHashtags} onCheckedChange={setUseHashtags} />
+                    <Switch
+                      checked={useHashtags}
+                      onCheckedChange={setUseHashtags}
+                    />
                   </div>
                 </div>
-                
+
                 <div>
-                  <label className="text-sm text-gray-400">Target Audience</label>
+                  <label className="text-sm text-gray-400">
+                    Target Audience
+                  </label>
                   <Select value={audience} onValueChange={setAudience}>
                     <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="general">General</SelectItem>
-                      <SelectItem value="professionals">Professionals</SelectItem>
+                      <SelectItem value="professionals">
+                        Professionals
+                      </SelectItem>
                       <SelectItem value="students">Students</SelectItem>
-                      <SelectItem value="entrepreneurs">Entrepreneurs</SelectItem>
+                      <SelectItem value="entrepreneurs">
+                        Entrepreneurs
+                      </SelectItem>
                       <SelectItem value="developers">Developers</SelectItem>
                     </SelectContent>
                   </Select>
@@ -253,21 +283,24 @@ export function AIWritingAssistant({
             </motion.div>
           )}
         </AnimatePresence>
-        
+
         {/* Input Section */}
         <div className="space-y-4">
           <Textarea
             placeholder="Enter your content idea or prompt..."
             value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
+            onChange={e => setPrompt(e.target.value)}
             className="min-h-[100px] bg-white/5 border-white/10"
           />
-          
+
           {/* Tone Selection */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm text-gray-400 mb-2 block">Tone</label>
-              <Select value={tone} onValueChange={(v) => setTone(v as WritingTone)}>
+              <Select
+                value={tone}
+                onValueChange={v => setTone(v as WritingTone)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -283,10 +316,13 @@ export function AIWritingAssistant({
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="text-sm text-gray-400 mb-2 block">Length</label>
-              <Select value={length} onValueChange={(v) => setLength(v as ContentLength)}>
+              <Select
+                value={length}
+                onValueChange={v => setLength(v as ContentLength)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -303,9 +339,9 @@ export function AIWritingAssistant({
               </Select>
             </div>
           </div>
-          
+
           {/* Generate Button */}
-          <Button 
+          <Button
             className="w-full gradient-primary"
             onClick={handleGenerate}
             disabled={loading || !prompt}
@@ -318,7 +354,7 @@ export function AIWritingAssistant({
             Generate Content
           </Button>
         </div>
-        
+
         {/* Generated Content */}
         {content && (
           <motion.div
@@ -329,32 +365,34 @@ export function AIWritingAssistant({
           >
             <div className="p-4 bg-white/5 rounded-lg">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-gray-300">Generated Content</span>
+                <span className="text-sm font-medium text-gray-300">
+                  Generated Content
+                </span>
                 <div className="flex items-center gap-2">
                   {toneCheck && (
-                    <Badge 
+                    <Badge
                       variant={toneCheck.score > 80 ? 'default' : 'secondary'}
                       className="text-xs"
                     >
                       {toneCheck.score}% tone match
                     </Badge>
                   )}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleCopy}
-                  >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  <Button size="sm" variant="ghost" onClick={handleCopy}>
+                    {copied ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
-              
+
               <Textarea
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={e => setContent(e.target.value)}
                 className="min-h-[150px] bg-black/20 border-white/10"
               />
-              
+
               {/* Content Metrics */}
               {response && (
                 <div className="flex items-center gap-4 mt-3 text-xs text-gray-400">
@@ -365,7 +403,7 @@ export function AIWritingAssistant({
                 </div>
               )}
             </div>
-            
+
             {/* Actions */}
             <div className="flex flex-wrap gap-2">
               <Button
@@ -377,7 +415,7 @@ export function AIWritingAssistant({
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Generate Variations
               </Button>
-              
+
               <Button
                 size="sm"
                 variant="outline"
@@ -388,11 +426,11 @@ export function AIWritingAssistant({
                     keywords,
                     audience,
                     emojis: useEmojis,
-                    hashtags: useHashtags
+                    hashtags: useHashtags,
                   });
                   setResponse(prev => ({
                     ...prev!,
-                    suggestions: enhanced
+                    suggestions: enhanced,
                   }));
                 }}
                 className="bg-white/5 border-white/10"
@@ -401,27 +439,34 @@ export function AIWritingAssistant({
                 Get Suggestions
               </Button>
             </div>
-            
+
             {/* Suggestions */}
             {response?.suggestions && response.suggestions.length > 0 && (
               <div className="space-y-2">
-                <span className="text-sm font-medium text-gray-300">Suggestions</span>
+                <span className="text-sm font-medium text-gray-300">
+                  Suggestions
+                </span>
                 {response.suggestions.map((suggestion, i) => (
-                  <div key={i} className="flex items-start gap-2 p-2 bg-yellow-500/10 rounded">
+                  <div
+                    key={i}
+                    className="flex items-start gap-2 p-2 bg-yellow-500/10 rounded"
+                  >
                     <Lightbulb className="h-4 w-4 text-yellow-400 mt-0.5" />
                     <span className="text-sm text-gray-300">{suggestion}</span>
                   </div>
                 ))}
               </div>
             )}
-            
+
             {/* Alternatives */}
             {response?.alternatives && response.alternatives.length > 0 && (
               <div className="space-y-2">
-                <span className="text-sm font-medium text-gray-300">Alternative Versions</span>
+                <span className="text-sm font-medium text-gray-300">
+                  Alternative Versions
+                </span>
                 {response.alternatives.map((alt, i) => (
-                  <div 
-                    key={i} 
+                  <div
+                    key={i}
                     className="p-3 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
                     onClick={() => {
                       setContent(alt);
@@ -433,13 +478,18 @@ export function AIWritingAssistant({
                 ))}
               </div>
             )}
-            
+
             {/* Tone Issues */}
             {toneCheck && toneCheck.issues.length > 0 && (
               <div className="space-y-2">
-                <span className="text-sm font-medium text-gray-300">Tone Issues</span>
+                <span className="text-sm font-medium text-gray-300">
+                  Tone Issues
+                </span>
                 {toneCheck.issues.map((issue, i) => (
-                  <div key={i} className="flex items-start gap-2 p-2 bg-red-500/10 rounded">
+                  <div
+                    key={i}
+                    className="flex items-start gap-2 p-2 bg-red-500/10 rounded"
+                  >
                     <AlertCircle className="h-4 w-4 text-red-400 mt-0.5" />
                     <span className="text-sm text-gray-300">{issue}</span>
                   </div>
@@ -454,16 +504,16 @@ export function AIWritingAssistant({
 }
 
 // Compact version for inline use
-function CompactAIAssistant({ 
-  content, 
-  onGenerate 
-}: { 
+function CompactAIAssistant({
+  content,
+  onGenerate,
+}: {
   content: string;
   onGenerate: () => void;
 }) {
   return (
     <div className="flex items-center gap-2 p-2 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg">
-      <Wand2 className="h-4 w-4 text-cyan-400" />
+      <Wand2 className="h-4 w-4 text-orange-400" />
       <span className="text-sm text-gray-400">AI Assistant</span>
       <Button
         size="sm"

@@ -8,7 +8,9 @@ import { X, Zap } from '@/components/icons';
 
 /** Per-business dismiss key so each business gets its own banner state */
 function getDismissKey(orgId: string | null): string {
-  return orgId ? `socialBannerDismissed_${orgId}` : 'socialBannerDismissed_default';
+  return orgId
+    ? `socialBannerDismissed_${orgId}`
+    : 'socialBannerDismissed_default';
 }
 
 export function SocialConnectBanner() {
@@ -19,7 +21,8 @@ export function SocialConnectBanner() {
 
   useEffect(() => {
     // Check localStorage only after mount; re-check when business changes
-    const wasDismissed = localStorage.getItem(getDismissKey(activeOrganizationId)) === 'true';
+    const wasDismissed =
+      localStorage.getItem(getDismissKey(activeOrganizationId)) === 'true';
     setDismissed(wasDismissed);
   }, [activeOrganizationId]);
 
@@ -34,22 +37,25 @@ export function SocialConnectBanner() {
   }
 
   return (
-    <div className="mx-4 mt-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4 flex items-center justify-between gap-4">
+    <div className="mx-4 mt-4 rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 flex items-center justify-between gap-4">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="flex-shrink-0 p-2 rounded-lg bg-cyan-500/20">
-          <Zap className="h-4 w-4 text-cyan-400" />
+        <div className="flex-shrink-0 p-2 rounded-lg bg-orange-500/20">
+          <Zap className="h-4 w-4 text-orange-400" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-white">Connect your first social account</p>
+          <p className="text-sm font-semibold text-white">
+            Connect your first social account
+          </p>
           <p className="text-xs text-slate-400 mt-0.5">
-            Link a platform to start publishing, scheduling, and tracking performance.
+            Link a platform to start publishing, scheduling, and tracking
+            performance.
           </p>
         </div>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         <Link
           href="/dashboard/platforms"
-          className="inline-flex items-center px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-semibold transition-colors"
+          className="inline-flex items-center px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-400 text-black text-xs font-semibold transition-colors"
         >
           Connect a platform
         </Link>

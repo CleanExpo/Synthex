@@ -7,14 +7,26 @@ import { sanitizeHtml } from '@/lib/sanitize';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, User, Share2, Twitter, Linkedin, Facebook, Copy, Check } from '@/components/icons';
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  User,
+  Share2,
+  Twitter,
+  Linkedin,
+  Facebook,
+  Copy,
+  Check,
+} from '@/components/icons';
 
 // Sample blog post data - in production, this would come from a database
 const blogPosts = {
   'what-is-skill-md-claude-code': {
     id: 'what-is-skill-md-claude-code',
     title: 'What Is a SKILL.md File? The Complete Guide for Claude Code Agents',
-    excerpt: 'The definitive guide to SKILL.md — the open standard for defining reusable agent skills in Claude Code. Learn the format, see real examples, and understand how SKILL.md compares to AGENTS.md and CLAUDE.md.',
+    excerpt:
+      'The definitive guide to SKILL.md — the open standard for defining reusable agent skills in Claude Code. Learn the format, see real examples, and understand how SKILL.md compares to AGENTS.md and CLAUDE.md.',
     content: `
       <p>If you've used Claude Code for more than a few sessions, you've probably noticed <code>.claude/skills/</code> directories appearing in projects. Inside each one sits a single file: <strong>SKILL.md</strong>. But what exactly is a SKILL.md file, and why has it become the cornerstone of how AI agents learn specialised workflows?</p>
 
@@ -201,18 +213,25 @@ before being delivered to the writer.</code></pre>
     author: {
       name: 'Phill McGurk',
       role: 'Founder & Lead Developer',
-      avatar: '/images/authors/phill-mcgurk.jpg'
+      avatar: '/images/authors/phill-mcgurk.jpg',
     },
     category: 'Developer Tools',
-    tags: ['Claude Code', 'SKILL.md', 'AI Agents', 'Developer Tools', 'Automation'],
+    tags: [
+      'Claude Code',
+      'SKILL.md',
+      'AI Agents',
+      'Developer Tools',
+      'Automation',
+    ],
     publishedAt: '2026-02-28',
     readTime: '8 min read',
-    image: '/images/blog/skill-md-guide.jpg'
+    image: '/images/blog/skill-md-guide.jpg',
   },
   'ai-revolution-social-media': {
     id: 'ai-revolution-social-media',
     title: 'The AI Revolution in Social Media Marketing',
-    excerpt: 'How artificial intelligence is transforming the way brands connect with their audience',
+    excerpt:
+      'How artificial intelligence is transforming the way brands connect with their audience',
     content: `
       <p>Artificial Intelligence is no longer a futuristic concept—it's here, and it's revolutionizing how we approach social media marketing. From content creation to audience analysis, AI tools are empowering marketers to work smarter, not harder.</p>
       
@@ -248,18 +267,19 @@ before being delivered to the writer.</code></pre>
     author: {
       name: 'Alex Rivera',
       role: 'Head of AI Research',
-      avatar: '/images/authors/alex-rivera.jpg'
+      avatar: '/images/authors/alex-rivera.jpg',
     },
     category: 'AI & Technology',
     tags: ['AI', 'Social Media', 'Marketing', 'Innovation'],
     publishedAt: '2025-08-05',
     readTime: '5 min read',
-    image: '/images/blog/ai-revolution.jpg'
+    image: '/images/blog/ai-revolution.jpg',
   },
   'maximizing-engagement-2025': {
     id: 'maximizing-engagement-2025',
     title: '10 Strategies to Maximize Engagement in 2025',
-    excerpt: 'Evidence-based tactics that actually work in today\'s social landscape',
+    excerpt:
+      "Evidence-based tactics that actually work in today's social landscape",
     content: `
       <p>Social media engagement isn't just about likes and shares—it's about building genuine connections with your audience. Here are 10 proven strategies that will transform your engagement metrics in 2025.</p>
       
@@ -298,18 +318,19 @@ before being delivered to the writer.</code></pre>
     author: {
       name: 'Maria Santos',
       role: 'Content Strategy Director',
-      avatar: '/images/authors/maria-santos.jpg'
+      avatar: '/images/authors/maria-santos.jpg',
     },
     category: 'Strategy',
     tags: ['Engagement', 'Strategy', 'Social Media', '2025 Trends'],
     publishedAt: '2025-08-03',
     readTime: '7 min read',
-    image: '/images/blog/engagement-strategies.jpg'
+    image: '/images/blog/engagement-strategies.jpg',
   },
   'content-creation-scale': {
     id: 'content-creation-scale',
     title: 'Content Creation at Scale: A Complete Guide',
-    excerpt: 'Learn how to produce quality content consistently without burning out',
+    excerpt:
+      'Learn how to produce quality content consistently without burning out',
     content: `
       <p>Creating content at scale doesn't mean sacrificing quality for quantity. With the right systems and tools, you can maintain high standards while dramatically increasing your output.</p>
       
@@ -362,14 +383,14 @@ before being delivered to the writer.</code></pre>
     author: {
       name: 'David Kim',
       role: 'VP of Marketing Operations',
-      avatar: '/images/authors/david-kim.jpg'
+      avatar: '/images/authors/david-kim.jpg',
     },
     category: 'Content Marketing',
     tags: ['Content Creation', 'Productivity', 'Scale', 'Automation'],
     publishedAt: '2025-08-01',
     readTime: '8 min read',
-    image: '/images/blog/content-scale.jpg'
-  }
+    image: '/images/blog/content-scale.jpg',
+  },
 };
 
 export default function BlogPostPage() {
@@ -396,32 +417,32 @@ export default function BlogPostPage() {
   if (!post) {
     return null;
   }
-  
+
   const handleShare = (platform: string) => {
     const url = encodeURIComponent(shareUrl);
     const text = encodeURIComponent(post.title);
-    
+
     const shareUrls = {
       twitter: `https://twitter.com/intent/tweet?url=${url}&text=${text}`,
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
     };
-    
+
     window.open(shareUrls[platform as keyof typeof shareUrls], '_blank');
   };
-  
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#111111] to-[#1A1A1A]">
       {/* Header */}
       <header className="border-b border-gray-800">
         <div className="container mx-auto px-4 py-6">
-          <Link 
+          <Link
             href="/blog"
             className="inline-flex items-center text-gray-400 hover:text-white transition"
           >
@@ -430,22 +451,25 @@ export default function BlogPostPage() {
           </Link>
         </div>
       </header>
-      
+
       {/* Main Content */}
       <main className="container mx-auto px-4 py-12">
         <article className="max-w-4xl mx-auto">
           {/* Article Header */}
           <div className="mb-8">
             <div className="flex items-center gap-4 mb-4">
-              <Badge variant="secondary" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">
+              <Badge
+                variant="secondary"
+                className="bg-orange-500/10 text-orange-400 border-orange-500/20"
+              >
                 {post.category}
               </Badge>
               <div className="flex items-center gap-2 text-gray-400 text-sm">
                 <Calendar className="h-4 w-4" />
-                {new Date(post.publishedAt).toLocaleDateString('en-US', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
+                {new Date(post.publishedAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
                 })}
               </div>
               <div className="flex items-center gap-2 text-gray-400 text-sm">
@@ -453,19 +477,17 @@ export default function BlogPostPage() {
                 {post.readTime}
               </div>
             </div>
-            
+
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
               {post.title}
             </h1>
-            
-            <p className="text-xl text-gray-400 mb-8">
-              {post.excerpt}
-            </p>
-            
+
+            <p className="text-xl text-gray-400 mb-8">{post.excerpt}</p>
+
             {/* Author Info */}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-blue-500 flex items-center justify-center">
                   <User className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -473,7 +495,7 @@ export default function BlogPostPage() {
                   <p className="text-sm text-gray-400">{post.author.role}</p>
                 </div>
               </div>
-              
+
               {/* Share Buttons */}
               <div className="flex items-center gap-2">
                 <Button
@@ -506,38 +528,42 @@ export default function BlogPostPage() {
                   onClick={handleCopyLink}
                   className="border-gray-700 hover:bg-gray-900"
                 >
-                  {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>
           </div>
-          
+
           {/* Featured Image Placeholder */}
-          <div className="w-full h-96 bg-gradient-to-br from-cyan-600/20 to-blue-600/20 rounded-xl mb-12 flex items-center justify-center border border-gray-800">
+          <div className="w-full h-96 bg-gradient-to-br from-orange-600/20 to-blue-600/20 rounded-xl mb-12 flex items-center justify-center border border-gray-800">
             <div className="text-center">
-              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
-                <Share2 className="h-12 w-12 text-cyan-400" />
+              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-orange-500/20 to-blue-500/20 flex items-center justify-center">
+                <Share2 className="h-12 w-12 text-orange-400" />
               </div>
               <p className="text-gray-500">Featured Image</p>
             </div>
           </div>
-          
+
           {/* Article Content - sanitized to prevent XSS */}
           <div
             className="prose prose-invert prose-lg max-w-none"
             dangerouslySetInnerHTML={{
-              __html: sanitizeHtml(post.content)
+              __html: sanitizeHtml(post.content),
             }}
           />
-          
+
           {/* Tags */}
           <div className="mt-12 pt-8 border-t border-gray-800">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-gray-400">Tags:</span>
               {post.tags.map((tag: string) => (
-                <Badge 
+                <Badge
                   key={tag}
-                  variant="outline" 
+                  variant="outline"
                   className="border-gray-700 text-gray-300"
                 >
                   {tag}
@@ -545,7 +571,7 @@ export default function BlogPostPage() {
               ))}
             </div>
           </div>
-          
+
           {/* CTA Section */}
           <Card variant="glass-primary" className="mt-12">
             <CardContent className="p-8 text-center">
@@ -553,16 +579,17 @@ export default function BlogPostPage() {
                 Ready to Transform Your Social Media Strategy?
               </h3>
               <p className="text-gray-400 mb-6">
-                Join thousands of marketers using SYNTHEX to create engaging content at scale.
+                Join thousands of marketers using SYNTHEX to create engaging
+                content at scale.
               </p>
               <div className="flex gap-4 justify-center">
-                <Button 
+                <Button
                   onClick={() => router.push('/signup')}
-                  className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+                  className="bg-gradient-to-r from-orange-600 to-blue-600 hover:from-orange-700 hover:to-blue-700"
                 >
                   Start Free Trial
                 </Button>
-                <Button 
+                <Button
                   variant="outline"
                   onClick={() => router.push('/demo')}
                   className="border-gray-700 hover:bg-gray-900"

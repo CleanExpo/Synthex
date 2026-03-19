@@ -1,9 +1,23 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  AreaChart, Area, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from 'recharts';
 import type { SentimentTrend } from './types';
 import { CHART_TOOLTIP_STYLE } from './helpers';
@@ -29,14 +43,32 @@ export function OverviewTab({ trends, emotionRadarData }: OverviewTabProps) {
               <XAxis
                 dataKey="date"
                 stroke="#666"
-                tickFormatter={(date) => new Date(date).toLocaleDateString()}
+                tickFormatter={date => new Date(date).toLocaleDateString()}
               />
               <YAxis stroke="#666" />
               <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
               <Legend />
-              <Area type="monotone" dataKey="positive" stackId="1" fill="#10b981" stroke="#10b981" />
-              <Area type="monotone" dataKey="neutral" stackId="1" fill="#f59e0b" stroke="#f59e0b" />
-              <Area type="monotone" dataKey="negative" stackId="1" fill="#ef4444" stroke="#ef4444" />
+              <Area
+                type="monotone"
+                dataKey="positive"
+                stackId="1"
+                fill="#10b981"
+                stroke="#10b981"
+              />
+              <Area
+                type="monotone"
+                dataKey="neutral"
+                stackId="1"
+                fill="#f59e0b"
+                stroke="#f59e0b"
+              />
+              <Area
+                type="monotone"
+                dataKey="negative"
+                stackId="1"
+                fill="#ef4444"
+                stroke="#ef4444"
+              />
             </AreaChart>
           </ResponsiveContainer>
         </CardContent>
@@ -55,7 +87,7 @@ export function OverviewTab({ trends, emotionRadarData }: OverviewTabProps) {
               <XAxis dataKey="emotion" stroke="#666" />
               <YAxis stroke="#666" />
               <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-              <Bar dataKey="score" fill="#06b6d4" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="score" fill="#ffb87b" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

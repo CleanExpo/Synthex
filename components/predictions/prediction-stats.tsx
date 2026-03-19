@@ -41,7 +41,7 @@ export function PredictionStats({ stats }: PredictionStatsProps) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      {items.map((item) => {
+      {items.map(item => {
         const Icon = item.icon;
         const displayValue =
           item.value !== null ? item.format(item.value) : '\u2014';
@@ -60,7 +60,7 @@ export function PredictionStats({ stats }: PredictionStatsProps) {
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm text-slate-400">{item.label}</span>
                 <div className="p-2 rounded-lg bg-white/5">
-                  <Icon className="h-4 w-4 text-cyan-400" />
+                  <Icon className="h-4 w-4 text-orange-400" />
                 </div>
               </div>
               <p className={`text-2xl font-bold ${valueColor}`}>

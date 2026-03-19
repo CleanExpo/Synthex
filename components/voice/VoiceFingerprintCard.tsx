@@ -41,7 +41,8 @@ function deriveTraits(fp: VoiceFingerprint): string[] {
   if (fp.adverbDensity < 1.5) traits.push('Lean');
   if (fp.passiveVoiceEstimate < 0.1) traits.push('Active voice');
   if (fp.passiveVoiceEstimate > 0.3) traits.push('Passive tendency');
-  if (fp.avgWordLength < 4.5 && fp.fleschReadingEase >= 70) traits.push('Conversational');
+  if (fp.avgWordLength < 4.5 && fp.fleschReadingEase >= 70)
+    traits.push('Conversational');
 
   return traits.slice(0, 6);
 }
@@ -58,22 +59,31 @@ interface MetricBarProps {
   barColour?: string;
 }
 
-function MetricBar({ label, value, subLabel, barPct, barColour = 'bg-cyan-500' }: MetricBarProps) {
+function MetricBar({
+  label,
+  value,
+  subLabel,
+  barPct,
+  barColour = 'bg-orange-500',
+}: MetricBarProps) {
   return (
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-xs text-slate-400 truncate">{label}</span>
-        <span className="text-sm font-semibold text-white flex-shrink-0">{value}</span>
+        <span className="text-sm font-semibold text-white flex-shrink-0">
+          {value}
+        </span>
       </div>
       <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
         <div
-          className={cn('h-full rounded-full transition-all duration-500', barColour)}
+          className={cn(
+            'h-full rounded-full transition-all duration-500',
+            barColour
+          )}
           style={{ width: `${Math.max(2, Math.min(100, barPct))}%` }}
         />
       </div>
-      {subLabel && (
-        <span className="text-xs text-slate-500">{subLabel}</span>
-      )}
+      {subLabel && <span className="text-xs text-slate-500">{subLabel}</span>}
     </div>
   );
 }
@@ -82,27 +92,54 @@ function MetricBar({ label, value, subLabel, barPct, barColour = 'bg-cyan-500' }
 // VoiceFingerprintCard
 // ---------------------------------------------------------------------------
 
-export function VoiceFingerprintCard({ fingerprint: fp, className }: VoiceFingerprintCardProps) {
+export function VoiceFingerprintCard({
+  fingerprint: fp,
+  className,
+}: VoiceFingerprintCardProps) {
   const traits = deriveTraits(fp);
   const ttrPct = Math.round(fp.ttr * 100);
-  const ttrLabel = ttrPct >= 60 ? 'High diversity' : ttrPct >= 40 ? 'Medium diversity' : 'Accessible vocabulary';
+  const ttrLabel =
+    ttrPct >= 60
+      ? 'High diversity'
+      : ttrPct >= 40
+        ? 'Medium diversity'
+        : 'Accessible vocabulary';
   const firstPersonPct = Math.round(fp.firstPersonRate * 100);
-  const firstPersonLabel = fp.firstPersonRate > 0.02 ? 'Personal' : 'Institutional';
+  const firstPersonLabel =
+    fp.firstPersonRate > 0.02 ? 'Personal' : 'Institutional';
   const passivePct = Math.round(fp.passiveVoiceEstimate * 100);
-  const passiveLabel = fp.passiveVoiceEstimate < 0.1 ? 'Active tendency' : fp.passiveVoiceEstimate > 0.3 ? 'Passive tendency' : 'Mixed';
-  const adverbLabel = fp.adverbDensity < 2 ? 'Lean' : fp.adverbDensity > 5 ? 'Modifier-heavy' : 'Moderate';
+  const passiveLabel =
+    fp.passiveVoiceEstimate < 0.1
+      ? 'Active tendency'
+      : fp.passiveVoiceEstimate > 0.3
+        ? 'Passive tendency'
+        : 'Mixed';
+  const adverbLabel =
+    fp.adverbDensity < 2
+      ? 'Lean'
+      : fp.adverbDensity > 5
+        ? 'Modifier-heavy'
+        : 'Moderate';
 
   return (
-    <div className={cn('bg-white/5 border border-white/10 backdrop-blur-sm rounded-xl p-4 space-y-4', className)}>
+    <div
+      className={cn(
+        'bg-white/5 border border-white/10 backdrop-blur-sm rounded-xl p-4 space-y-4',
+        className
+      )}
+    >
       {/* Header */}
       <div className="flex items-centre justify-between gap-3 flex-wrap">
         <div>
-          <h3 className="text-base font-semibold text-white">Voice Fingerprint</h3>
+          <h3 className="text-base font-semibold text-white">
+            Voice Fingerprint
+          </h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            Analysed {fp.sampleWordCount.toLocaleString()} words · {fp.sampleSentenceCount} sentences
+            Analysed {fp.sampleWordCount.toLocaleString()} words ·{' '}
+            {fp.sampleSentenceCount} sentences
           </p>
         </div>
-        <span className="text-xs bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-1 rounded-full flex-shrink-0">
+        <span className="text-xs bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-1 rounded-full flex-shrink-0">
           {fp.sampleWordCount} words
         </span>
       </div>
@@ -124,7 +161,13 @@ export function VoiceFingerprintCard({ fingerprint: fp, className }: VoiceFinger
           value={`${ttrPct}%`}
           subLabel={ttrLabel}
           barPct={ttrPct}
-          barColour={ttrPct >= 60 ? 'bg-emerald-500' : ttrPct >= 40 ? 'bg-amber-500' : 'bg-slate-500'}
+          barColour={
+            ttrPct >= 60
+              ? 'bg-emerald-500'
+              : ttrPct >= 40
+                ? 'bg-amber-500'
+                : 'bg-slate-500'
+          }
         />
 
         {/* Reading Level */}
@@ -133,7 +176,13 @@ export function VoiceFingerprintCard({ fingerprint: fp, className }: VoiceFinger
           value={fp.fleschReadingEase.toString()}
           subLabel={fleschGrade(fp.fleschReadingEase)}
           barPct={fp.fleschReadingEase}
-          barColour={fp.fleschReadingEase >= 70 ? 'bg-emerald-500' : fp.fleschReadingEase >= 50 ? 'bg-amber-500' : 'bg-red-500'}
+          barColour={
+            fp.fleschReadingEase >= 70
+              ? 'bg-emerald-500'
+              : fp.fleschReadingEase >= 50
+                ? 'bg-amber-500'
+                : 'bg-red-500'
+          }
         />
 
         {/* First Person Rate */}
@@ -150,14 +199,16 @@ export function VoiceFingerprintCard({ fingerprint: fp, className }: VoiceFinger
           label="Question Rate"
           value={`${fp.questionRate.toFixed(2)} per 100w`}
           barPct={Math.min(100, fp.questionRate * 20)}
-          barColour="bg-cyan-500"
+          barColour="bg-orange-500"
         />
 
         {/* Em Dash Usage */}
         <MetricBar
           label="Em-dash Usage"
           value={`${fp.emDashRate.toFixed(2)} per 100w`}
-          subLabel={fp.emDashRate > 1.0 ? 'High editorial style' : 'Low editorial style'}
+          subLabel={
+            fp.emDashRate > 1.0 ? 'High editorial style' : 'Low editorial style'
+          }
           barPct={Math.min(100, fp.emDashRate * 20)}
           barColour="bg-pink-500"
         />
@@ -177,16 +228,24 @@ export function VoiceFingerprintCard({ fingerprint: fp, className }: VoiceFinger
           value={`${passivePct}%`}
           subLabel={passiveLabel}
           barPct={passivePct}
-          barColour={passivePct < 10 ? 'bg-emerald-500' : passivePct > 30 ? 'bg-red-500' : 'bg-amber-500'}
+          barColour={
+            passivePct < 10
+              ? 'bg-emerald-500'
+              : passivePct > 30
+                ? 'bg-red-500'
+                : 'bg-amber-500'
+          }
         />
       </div>
 
       {/* Trait Badges */}
       {traits.length > 0 && (
         <div className="space-y-1.5">
-          <p className="text-xs text-slate-500 uppercase tracking-wider">Writing traits</p>
+          <p className="text-xs text-slate-500 uppercase tracking-wider">
+            Writing traits
+          </p>
           <div className="flex flex-wrap gap-1.5">
-            {traits.map((trait) => (
+            {traits.map(trait => (
               <span
                 key={trait}
                 className="text-xs bg-white/5 border border-white/10 text-slate-300 px-2 py-0.5 rounded-full"

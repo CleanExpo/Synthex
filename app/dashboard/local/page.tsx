@@ -111,16 +111,66 @@ const INSIGHTS_ACTIONS_DATA = [
 ];
 
 const RANKINGS_DATA = [
-  { keyword: 'plumber sydney', rank: 3, previous: 5, lastChecked: '2026-02-28' },
-  { keyword: 'emergency plumber near me', rank: 2, previous: 2, lastChecked: '2026-02-28' },
-  { keyword: 'blocked drain sydney', rank: 5, previous: 4, lastChecked: '2026-02-28' },
-  { keyword: 'hot water system repair', rank: 4, previous: 7, lastChecked: '2026-02-27' },
-  { keyword: 'plumber inner west', rank: 1, previous: 1, lastChecked: '2026-02-28' },
-  { keyword: 'gas fitting sydney', rank: 8, previous: 6, lastChecked: '2026-02-27' },
-  { keyword: 'bathroom renovation plumber', rank: 6, previous: 9, lastChecked: '2026-02-27' },
-  { keyword: 'leak detection sydney', rank: 3, previous: 3, lastChecked: '2026-02-28' },
-  { keyword: 'commercial plumber sydney cbd', rank: 7, previous: 10, lastChecked: '2026-02-26' },
-  { keyword: '24 hour plumber sydney', rank: 4, previous: 4, lastChecked: '2026-02-28' },
+  {
+    keyword: 'plumber sydney',
+    rank: 3,
+    previous: 5,
+    lastChecked: '2026-02-28',
+  },
+  {
+    keyword: 'emergency plumber near me',
+    rank: 2,
+    previous: 2,
+    lastChecked: '2026-02-28',
+  },
+  {
+    keyword: 'blocked drain sydney',
+    rank: 5,
+    previous: 4,
+    lastChecked: '2026-02-28',
+  },
+  {
+    keyword: 'hot water system repair',
+    rank: 4,
+    previous: 7,
+    lastChecked: '2026-02-27',
+  },
+  {
+    keyword: 'plumber inner west',
+    rank: 1,
+    previous: 1,
+    lastChecked: '2026-02-28',
+  },
+  {
+    keyword: 'gas fitting sydney',
+    rank: 8,
+    previous: 6,
+    lastChecked: '2026-02-27',
+  },
+  {
+    keyword: 'bathroom renovation plumber',
+    rank: 6,
+    previous: 9,
+    lastChecked: '2026-02-27',
+  },
+  {
+    keyword: 'leak detection sydney',
+    rank: 3,
+    previous: 3,
+    lastChecked: '2026-02-28',
+  },
+  {
+    keyword: 'commercial plumber sydney cbd',
+    rank: 7,
+    previous: 10,
+    lastChecked: '2026-02-26',
+  },
+  {
+    keyword: '24 hour plumber sydney',
+    rank: 4,
+    previous: 4,
+    lastChecked: '2026-02-28',
+  },
 ];
 
 const MOCK_POSTS = [
@@ -175,17 +225,23 @@ interface CaseStudy {
 // HELPER COMPONENTS
 // ============================================
 
-function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md' }) {
+function StarRating({
+  rating,
+  size = 'sm',
+}: {
+  rating: number;
+  size?: 'sm' | 'md';
+}) {
   const iconClass = size === 'md' ? 'h-5 w-5' : 'h-4 w-4';
   return (
     <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
+      {[1, 2, 3, 4, 5].map(star =>
         star <= rating ? (
           <StarSolid key={star} className={`${iconClass} text-amber-400`} />
         ) : (
           <Star key={star} className={`${iconClass} text-gray-600`} />
         )
-      ))}
+      )}
     </div>
   );
 }
@@ -195,7 +251,7 @@ function MetricCard({
   label,
   value,
   subtext,
-  iconColour = 'text-cyan-400',
+  iconColour = 'text-orange-400',
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
@@ -204,7 +260,7 @@ function MetricCard({
   iconColour?: string;
 }) {
   return (
-    <Card className="bg-surface-base/80 border border-cyan-500/10">
+    <Card className="bg-surface-base/80 border border-orange-500/10">
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div>
@@ -221,13 +277,18 @@ function MetricCard({
   );
 }
 
-function RankChange({ current, previous }: { current: number; previous: number }) {
+function RankChange({
+  current,
+  previous,
+}: {
+  current: number;
+  previous: number;
+}) {
   const diff = previous - current;
   if (diff > 0) {
     return (
       <span className="flex items-center gap-1 text-emerald-400 text-sm font-medium">
-        <TrendingUp className="h-4 w-4" />
-        +{diff}
+        <TrendingUp className="h-4 w-4" />+{diff}
       </span>
     );
   }
@@ -264,7 +325,9 @@ export default function LocalPage() {
   const fetchCaseStudies = async () => {
     try {
       setCaseStudiesLoading(true);
-      const res = await fetch('/api/local/case-studies', { credentials: 'include' });
+      const res = await fetch('/api/local/case-studies', {
+        credentials: 'include',
+      });
       if (res.ok) {
         const data = await res.json();
         setCaseStudies(data.caseStudies || []);
@@ -277,7 +340,7 @@ export default function LocalPage() {
   };
 
   const filteredReviews = ratingFilter
-    ? MOCK_REVIEWS.filter((r) => r.rating === ratingFilter)
+    ? MOCK_REVIEWS.filter(r => r.rating === ratingFilter)
     : MOCK_REVIEWS;
 
   return (
@@ -296,24 +359,26 @@ export default function LocalPage() {
         {/* Page Header */}
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <MapPin className="h-7 w-7 text-cyan-400" />
+            <MapPin className="h-7 w-7 text-orange-400" />
             Local SEO Dashboard
           </h1>
           <p className="text-gray-400 mt-1">
-            Manage your Google Business Profile, track rankings, and grow local visibility
+            Manage your Google Business Profile, track rankings, and grow local
+            visibility
           </p>
         </div>
 
         {/* Connect GBP Banner */}
-        <Card className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20">
+        <Card className="bg-gradient-to-r from-orange-500/10 to-blue-500/10 border border-orange-500/20">
           <CardContent className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Info className="h-5 w-5 text-cyan-400 flex-shrink-0" />
+              <Info className="h-5 w-5 text-orange-400 flex-shrink-0" />
               <p className="text-sm text-gray-300">
-                Connect your Google Business Profile to see live data and manage your listing directly.
+                Connect your Google Business Profile to see live data and manage
+                your listing directly.
               </p>
             </div>
-            <Button className="bg-cyan-600 hover:bg-cyan-700 text-white flex-shrink-0">
+            <Button className="bg-orange-600 hover:bg-orange-700 text-white flex-shrink-0">
               <Globe className="h-4 w-4 mr-2" />
               Connect GBP
             </Button>
@@ -322,7 +387,10 @@ export default function LocalPage() {
 
         {/* Tabbed Dashboard */}
         <Tabs defaultValue="overview">
-          <TabsList variant="glass-primary" className="w-full justify-start flex-wrap gap-1">
+          <TabsList
+            variant="glass-primary"
+            className="w-full justify-start flex-wrap gap-1"
+          >
             <TabsTrigger value="overview" className="gap-1.5">
               <BarChart3 className="h-4 w-4" />
               Overview
@@ -352,14 +420,17 @@ export default function LocalPage() {
           {/* ========== OVERVIEW TAB ========== */}
           <TabsContent value="overview" className="space-y-6 mt-6">
             {/* Rating highlight */}
-            <Card className="bg-surface-base/80 border border-cyan-500/10">
+            <Card className="bg-surface-base/80 border border-orange-500/10">
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <div className="text-4xl font-bold text-white">
                     {OVERVIEW_METRICS.averageRating}
                   </div>
                   <div>
-                    <StarRating rating={Math.round(OVERVIEW_METRICS.averageRating)} size="md" />
+                    <StarRating
+                      rating={Math.round(OVERVIEW_METRICS.averageRating)}
+                      size="md"
+                    />
                     <p className="text-sm text-gray-400 mt-1">
                       Based on {OVERVIEW_METRICS.totalReviews} reviews
                     </p>
@@ -420,7 +491,7 @@ export default function LocalPage() {
                 <Filter className="h-4 w-4" />
                 Filter:
               </div>
-              {[null, 5, 4, 3, 2, 1].map((rating) => (
+              {[null, 5, 4, 3, 2, 1].map(rating => (
                 <Button
                   key={rating ?? 'all'}
                   variant="ghost"
@@ -428,7 +499,7 @@ export default function LocalPage() {
                   onClick={() => setRatingFilter(rating)}
                   className={`text-sm ${
                     ratingFilter === rating
-                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                      ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
@@ -439,26 +510,32 @@ export default function LocalPage() {
 
             {/* Reviews list */}
             <div className="space-y-4">
-              {filteredReviews.map((review) => (
+              {filteredReviews.map(review => (
                 <Card
                   key={review.id}
-                  className="bg-surface-base/80 border border-cyan-500/10"
+                  className="bg-surface-base/80 border border-orange-500/10"
                 >
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <div className="flex items-center gap-3">
-                          <span className="font-medium text-white">{review.reviewer}</span>
+                          <span className="font-medium text-white">
+                            {review.reviewer}
+                          </span>
                           <StarRating rating={review.rating} />
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">{review.date}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {review.date}
+                        </p>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-cyan-400 hover:text-cyan-300"
+                        className="text-orange-400 hover:text-orange-300"
                         onClick={() => {
-                          setReplyingTo(replyingTo === review.id ? null : review.id);
+                          setReplyingTo(
+                            replyingTo === review.id ? null : review.id
+                          );
                           setReplyText('');
                         }}
                       >
@@ -466,7 +543,9 @@ export default function LocalPage() {
                         Reply
                       </Button>
                     </div>
-                    <p className="text-sm text-gray-300 leading-relaxed">{review.text}</p>
+                    <p className="text-sm text-gray-300 leading-relaxed">
+                      {review.text}
+                    </p>
 
                     {/* Inline reply composer */}
                     {replyingTo === review.id && (
@@ -476,7 +555,7 @@ export default function LocalPage() {
                           resize="none"
                           placeholder="Write your reply..."
                           value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
+                          onChange={e => setReplyText(e.target.value)}
                           className="min-h-[80px]"
                         />
                         <div className="flex items-center gap-2 justify-end">
@@ -493,7 +572,7 @@ export default function LocalPage() {
                           </Button>
                           <Button
                             size="sm"
-                            className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                            className="bg-orange-600 hover:bg-orange-700 text-white"
                             disabled={!replyText.trim()}
                           >
                             <Send className="h-3.5 w-3.5 mr-1.5" />
@@ -507,7 +586,7 @@ export default function LocalPage() {
               ))}
 
               {filteredReviews.length === 0 && (
-                <Card className="bg-surface-base/80 border border-cyan-500/10">
+                <Card className="bg-surface-base/80 border border-orange-500/10">
                   <CardContent className="p-12 text-center text-gray-400">
                     <Star className="h-10 w-10 mx-auto mb-3 opacity-30" />
                     <p>No reviews match this filter</p>
@@ -520,10 +599,10 @@ export default function LocalPage() {
           {/* ========== INSIGHTS TAB ========== */}
           <TabsContent value="insights" className="space-y-6 mt-6">
             {/* Views line chart */}
-            <Card className="bg-surface-base/80 border border-cyan-500/10">
+            <Card className="bg-surface-base/80 border border-orange-500/10">
               <CardHeader>
                 <CardTitle className="text-lg text-white flex items-center gap-2">
-                  <Eye className="h-5 w-5 text-cyan-400" />
+                  <Eye className="h-5 w-5 text-orange-400" />
                   Profile Views — Last 30 Days
                 </CardTitle>
               </CardHeader>
@@ -531,7 +610,10 @@ export default function LocalPage() {
                 <div className="h-[300px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={INSIGHTS_VIEWS_DATA}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="rgba(255,255,255,0.05)"
+                      />
                       <XAxis
                         dataKey="day"
                         stroke="#6b7280"
@@ -553,10 +635,10 @@ export default function LocalPage() {
                       <Line
                         type="monotone"
                         dataKey="views"
-                        stroke="#22d3ee"
+                        stroke="#ffdcc2"
                         strokeWidth={2}
                         dot={false}
-                        activeDot={{ r: 4, fill: '#22d3ee' }}
+                        activeDot={{ r: 4, fill: '#ffdcc2' }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -565,10 +647,10 @@ export default function LocalPage() {
             </Card>
 
             {/* Actions bar chart */}
-            <Card className="bg-surface-base/80 border border-cyan-500/10">
+            <Card className="bg-surface-base/80 border border-orange-500/10">
               <CardHeader>
                 <CardTitle className="text-lg text-white flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-cyan-400" />
+                  <BarChart3 className="h-5 w-5 text-orange-400" />
                   Actions Breakdown — February 2026
                 </CardTitle>
               </CardHeader>
@@ -576,7 +658,10 @@ export default function LocalPage() {
                 <div className="h-[300px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={INSIGHTS_ACTIONS_DATA}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="rgba(255,255,255,0.05)"
+                      />
                       <XAxis
                         dataKey="name"
                         stroke="#6b7280"
@@ -594,16 +679,31 @@ export default function LocalPage() {
                           color: '#fff',
                         }}
                       />
-                      <Bar dataKey="websiteClicks" name="Website Clicks" fill="#22d3ee" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="phoneCalls" name="Phone Calls" fill="#34d399" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="directions" name="Directions" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                      <Bar
+                        dataKey="websiteClicks"
+                        name="Website Clicks"
+                        fill="#ffdcc2"
+                        radius={[4, 4, 0, 0]}
+                      />
+                      <Bar
+                        dataKey="phoneCalls"
+                        name="Phone Calls"
+                        fill="#34d399"
+                        radius={[4, 4, 0, 0]}
+                      />
+                      <Bar
+                        dataKey="directions"
+                        name="Directions"
+                        fill="#f59e0b"
+                        radius={[4, 4, 0, 0]}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
                 {/* Legend */}
                 <div className="flex items-center gap-6 mt-4 justify-center">
                   <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <div className="w-3 h-3 rounded-sm bg-cyan-400" />
+                    <div className="w-3 h-3 rounded-sm bg-orange-400" />
                     Website Clicks
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-400">
@@ -621,10 +721,10 @@ export default function LocalPage() {
 
           {/* ========== RANKINGS TAB ========== */}
           <TabsContent value="rankings" className="space-y-6 mt-6">
-            <Card className="bg-surface-base/80 border border-cyan-500/10">
+            <Card className="bg-surface-base/80 border border-orange-500/10">
               <CardHeader>
                 <CardTitle className="text-lg text-white flex items-center gap-2">
-                  <Search className="h-5 w-5 text-cyan-400" />
+                  <Search className="h-5 w-5 text-orange-400" />
                   Local Keyword Rankings
                 </CardTitle>
               </CardHeader>
@@ -633,36 +733,57 @@ export default function LocalPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-white/10">
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Keyword</th>
-                        <th className="text-center py-3 px-4 text-gray-400 font-medium">Rank</th>
-                        <th className="text-center py-3 px-4 text-gray-400 font-medium">Previous</th>
-                        <th className="text-center py-3 px-4 text-gray-400 font-medium">Change</th>
-                        <th className="text-right py-3 px-4 text-gray-400 font-medium">Last Checked</th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-medium">
+                          Keyword
+                        </th>
+                        <th className="text-center py-3 px-4 text-gray-400 font-medium">
+                          Rank
+                        </th>
+                        <th className="text-center py-3 px-4 text-gray-400 font-medium">
+                          Previous
+                        </th>
+                        <th className="text-center py-3 px-4 text-gray-400 font-medium">
+                          Change
+                        </th>
+                        <th className="text-right py-3 px-4 text-gray-400 font-medium">
+                          Last Checked
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {RANKINGS_DATA.map((row) => (
+                      {RANKINGS_DATA.map(row => (
                         <tr
                           key={row.keyword}
                           className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
                         >
-                          <td className="py-3 px-4 text-white font-medium">{row.keyword}</td>
+                          <td className="py-3 px-4 text-white font-medium">
+                            {row.keyword}
+                          </td>
                           <td className="py-3 px-4 text-center">
-                            <Badge className={
-                              row.rank <= 3
-                                ? 'bg-emerald-500/20 text-emerald-400'
-                                : row.rank <= 5
-                                ? 'bg-cyan-500/20 text-cyan-400'
-                                : 'bg-gray-500/20 text-gray-400'
-                            }>
+                            <Badge
+                              className={
+                                row.rank <= 3
+                                  ? 'bg-emerald-500/20 text-emerald-400'
+                                  : row.rank <= 5
+                                    ? 'bg-orange-500/20 text-orange-400'
+                                    : 'bg-gray-500/20 text-gray-400'
+                              }
+                            >
                               #{row.rank}
                             </Badge>
                           </td>
-                          <td className="py-3 px-4 text-center text-gray-500">#{row.previous}</td>
-                          <td className="py-3 px-4 text-center">
-                            <RankChange current={row.rank} previous={row.previous} />
+                          <td className="py-3 px-4 text-center text-gray-500">
+                            #{row.previous}
                           </td>
-                          <td className="py-3 px-4 text-right text-gray-500">{row.lastChecked}</td>
+                          <td className="py-3 px-4 text-center">
+                            <RankChange
+                              current={row.rank}
+                              previous={row.previous}
+                            />
+                          </td>
+                          <td className="py-3 px-4 text-right text-gray-500">
+                            {row.lastChecked}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -677,7 +798,7 @@ export default function LocalPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-white">GBP Posts</h2>
               <Button
-                className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                className="bg-orange-600 hover:bg-orange-700 text-white"
                 onClick={() => {
                   // Placeholder — toast coming soon
                   if (typeof window !== 'undefined') {
@@ -691,10 +812,10 @@ export default function LocalPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {MOCK_POSTS.map((post) => (
+              {MOCK_POSTS.map(post => (
                 <Card
                   key={post.id}
-                  className="bg-surface-base/80 border border-cyan-500/10 hover:border-cyan-500/20 transition-all"
+                  className="bg-surface-base/80 border border-orange-500/10 hover:border-orange-500/20 transition-all"
                 >
                   <CardContent className="p-5">
                     {/* Image placeholder */}
@@ -702,7 +823,7 @@ export default function LocalPage() {
                       <Globe className="h-8 w-8 text-gray-600" />
                     </div>
                     <div className="flex items-center justify-between mb-2">
-                      <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">
+                      <Badge className="bg-orange-500/20 text-orange-400 text-xs">
                         {post.type}
                       </Badge>
                       <Badge
@@ -712,10 +833,14 @@ export default function LocalPage() {
                             : 'bg-amber-500/20 text-amber-400'
                         }
                       >
-                        {post.status === 'published' ? 'Published' : 'Scheduled'}
+                        {post.status === 'published'
+                          ? 'Published'
+                          : 'Scheduled'}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-300 line-clamp-3 mb-3">{post.text}</p>
+                    <p className="text-sm text-gray-300 line-clamp-3 mb-3">
+                      {post.text}
+                    </p>
                     <div className="flex items-center gap-1.5 text-xs text-gray-500">
                       <Calendar className="h-3.5 w-3.5" />
                       {post.date}
@@ -730,12 +855,15 @@ export default function LocalPage() {
           <TabsContent value="case-studies" className="space-y-6 mt-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-white">Local Case Studies</h2>
+                <h2 className="text-lg font-semibold text-white">
+                  Local Case Studies
+                </h2>
                 <p className="text-sm text-gray-400 mt-0.5">
-                  Hyper-local case studies with NAP consistency and location schema
+                  Hyper-local case studies with NAP consistency and location
+                  schema
                 </p>
               </div>
-              <Button className="bg-cyan-600 hover:bg-cyan-700">
+              <Button className="bg-orange-600 hover:bg-orange-700">
                 <Plus className="h-4 w-4 mr-2" />
                 New Case Study
               </Button>
@@ -743,8 +871,11 @@ export default function LocalPage() {
 
             {caseStudiesLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[1, 2].map((i) => (
-                  <Card key={i} className="bg-surface-base/80 border border-cyan-500/10">
+                {[1, 2].map(i => (
+                  <Card
+                    key={i}
+                    className="bg-surface-base/80 border border-orange-500/10"
+                  >
                     <CardContent className="p-6 animate-pulse space-y-3">
                       <div className="h-6 bg-white/10 rounded w-2/3" />
                       <div className="h-4 bg-white/10 rounded w-full" />
@@ -753,7 +884,7 @@ export default function LocalPage() {
                 ))}
               </div>
             ) : caseStudies.length === 0 ? (
-              <Card className="bg-surface-base/80 border border-cyan-500/10">
+              <Card className="bg-surface-base/80 border border-orange-500/10">
                 <CardContent className="p-12 text-center text-gray-400">
                   <Map className="h-12 w-12 mx-auto mb-3 opacity-30" />
                   <p>No case studies yet</p>
@@ -764,14 +895,16 @@ export default function LocalPage() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {caseStudies.map((cs) => (
+                {caseStudies.map(cs => (
                   <Card
                     key={cs.id}
-                    className="bg-surface-base/80 border border-cyan-500/10 hover:border-cyan-500/30 transition-all"
+                    className="bg-surface-base/80 border border-orange-500/10 hover:border-orange-500/30 transition-all"
                   >
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-3">
-                        <h3 className="text-lg font-semibold text-white">{cs.title}</h3>
+                        <h3 className="text-lg font-semibold text-white">
+                          {cs.title}
+                        </h3>
                         <Badge
                           className={
                             cs.publishedAt
@@ -783,14 +916,20 @@ export default function LocalPage() {
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
-                        <MapPin className="h-4 w-4 text-cyan-400" />
+                        <MapPin className="h-4 w-4 text-orange-400" />
                         <span>
                           {cs.suburb}, {cs.city}, {cs.state} {cs.postcode}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-400 line-clamp-2">{cs.summary}</p>
+                      <p className="text-sm text-gray-400 line-clamp-2">
+                        {cs.summary}
+                      </p>
                       <div className="flex justify-end mt-3">
-                        <Button variant="ghost" size="sm" className="text-cyan-400">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-orange-400"
+                        >
                           <Eye className="h-4 w-4 mr-1" /> View
                         </Button>
                       </div>

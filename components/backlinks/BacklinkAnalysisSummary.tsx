@@ -36,18 +36,18 @@ export interface BacklinkAnalysisSummaryProps {
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 const TYPE_COLOURS: Record<BacklinkOpportunityType, string> = {
-  'resource-page':      'bg-blue-500',
-  'guest-post':         'bg-emerald-500',
-  'broken-link':        'bg-amber-500',
-  'competitor-link':    'bg-purple-500',
-  'journalist-mention': 'bg-cyan-500',
+  'resource-page': 'bg-blue-500',
+  'guest-post': 'bg-emerald-500',
+  'broken-link': 'bg-amber-500',
+  'competitor-link': 'bg-purple-500',
+  'journalist-mention': 'bg-orange-500',
 };
 
 const TYPE_SHORT: Record<BacklinkOpportunityType, string> = {
-  'resource-page':      'Resource',
-  'guest-post':         'Guest Post',
-  'broken-link':        'Broken Link',
-  'competitor-link':    'Competitor',
+  'resource-page': 'Resource',
+  'guest-post': 'Guest Post',
+  'broken-link': 'Broken Link',
+  'competitor-link': 'Competitor',
   'journalist-mention': 'Journalist',
 };
 
@@ -71,11 +71,14 @@ export function BacklinkAnalysisSummary({
 }: BacklinkAnalysisSummaryProps) {
   const result = analysis.analysisResult;
   const byType = result.byType ?? {};
-  const topic  = result.topic ?? analysis.sourceUrl;
-  const total  = analysis.linksFound;
+  const topic = result.topic ?? analysis.sourceUrl;
+  const total = analysis.linksFound;
   const highValue = analysis.highValueCount;
 
-  const typeEntries = Object.entries(byType) as [BacklinkOpportunityType, number][];
+  const typeEntries = Object.entries(byType) as [
+    BacklinkOpportunityType,
+    number,
+  ][];
   const totalForBar = typeEntries.reduce((acc, [, n]) => acc + n, 0) || 1;
 
   return (
@@ -83,19 +86,27 @@ export function BacklinkAnalysisSummary({
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          <div className="text-sm font-semibold text-white truncate max-w-xs">{topic}</div>
-          <div className="text-xs text-slate-500 mt-0.5">{formatDate(analysis.createdAt)}</div>
+          <div className="text-sm font-semibold text-white truncate max-w-xs">
+            {topic}
+          </div>
+          <div className="text-xs text-slate-500 mt-0.5">
+            {formatDate(analysis.createdAt)}
+          </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <div className="text-right">
-            <div className="text-2xl font-bold text-white tabular-nums">{total}</div>
+            <div className="text-2xl font-bold text-white tabular-nums">
+              {total}
+            </div>
             <div className="text-xs text-slate-500">opportunities</div>
           </div>
           {highValue > 0 && (
             <div className="text-right">
               <div className="flex items-center gap-1 text-emerald-400">
                 <TrendingUp className="h-4 w-4" />
-                <span className="text-xl font-bold tabular-nums">{highValue}</span>
+                <span className="text-xl font-bold tabular-nums">
+                  {highValue}
+                </span>
               </div>
               <div className="text-xs text-slate-500">high value</div>
             </div>
@@ -122,8 +133,16 @@ export function BacklinkAnalysisSummary({
             {typeEntries
               .filter(([, count]) => count > 0)
               .map(([type, count]) => (
-                <div key={type} className="flex items-center gap-1 text-xs text-slate-400">
-                  <span className={cn('inline-block h-2 w-2 rounded-full', TYPE_COLOURS[type])} />
+                <div
+                  key={type}
+                  className="flex items-center gap-1 text-xs text-slate-400"
+                >
+                  <span
+                    className={cn(
+                      'inline-block h-2 w-2 rounded-full',
+                      TYPE_COLOURS[type]
+                    )}
+                  />
                   {TYPE_SHORT[type]}: {count}
                 </div>
               ))}
@@ -133,7 +152,8 @@ export function BacklinkAnalysisSummary({
 
       {total === 0 && (
         <p className="text-xs text-slate-500 mb-3">
-          No opportunities found for this topic. Try a broader search term or add API keys for Google CSE.
+          No opportunities found for this topic. Try a broader search term or
+          add API keys for Google CSE.
         </p>
       )}
 

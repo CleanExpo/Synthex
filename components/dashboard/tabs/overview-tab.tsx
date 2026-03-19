@@ -7,7 +7,15 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, Share2, Calendar, TrendingUp, Users, Zap, MessageSquare } from '@/components/icons';
+import {
+  BarChart3,
+  Share2,
+  Calendar,
+  TrendingUp,
+  Users,
+  Zap,
+  MessageSquare,
+} from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { AnimatedCard } from '../animated-card';
 import { AIPMWidget } from '@/components/ai-pm';
@@ -67,16 +75,23 @@ export function OverviewTab({ stats }: OverviewTabProps) {
           <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
             <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06] flex items-center gap-2">
               <BarChart3 className="h-3.5 w-3.5 text-white/25" />
-              <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">Performance Overview</span>
+              <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
+                Performance Overview
+              </span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 divide-x-[0.5px] divide-white/[0.06]">
-              {statItems.map((item) => {
+              {statItems.map(item => {
                 const Icon = item.icon;
                 return (
-                  <div key={item.label} className="px-4 py-4 hover:bg-white/[0.02] transition-colors">
+                  <div
+                    key={item.label}
+                    className="px-4 py-4 hover:bg-white/[0.02] transition-colors"
+                  >
                     <div className="flex items-center gap-1.5 mb-2">
                       <Icon className="h-3 w-3 text-white/20" />
-                      <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">{item.label}</span>
+                      <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">
+                        {item.label}
+                      </span>
                     </div>
                     <span
                       className="font-mono text-xl font-medium tabular-nums leading-none block"
@@ -84,11 +99,19 @@ export function OverviewTab({ stats }: OverviewTabProps) {
                     >
                       {item.value}
                     </span>
-                    <span className={cn(
-                      'text-[9px] font-mono tabular-nums mt-1.5 block',
-                      item.trend === '—' ? 'text-white/25' : item.trendUp ? 'text-emerald-400' : 'text-red-400'
-                    )}>
-                      {item.trend === '—' ? '—' : `${item.trendUp ? '↑' : '↓'} ${item.trend}`}
+                    <span
+                      className={cn(
+                        'text-[9px] font-mono tabular-nums mt-1.5 block',
+                        item.trend === '—'
+                          ? 'text-white/25'
+                          : item.trendUp
+                            ? 'text-emerald-400'
+                            : 'text-red-400'
+                      )}
+                    >
+                      {item.trend === '—'
+                        ? '—'
+                        : `${item.trendUp ? '↑' : '↓'} ${item.trend}`}
                     </span>
                   </div>
                 );
@@ -102,7 +125,9 @@ export function OverviewTab({ stats }: OverviewTabProps) {
           <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden h-full">
             <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06] flex items-center gap-2">
               <Zap className="h-3.5 w-3.5 text-amber-400" />
-              <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">Trending Topics</span>
+              <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
+                Trending Topics
+              </span>
             </div>
             <div className="p-5">
               {stats?.trendingTopics && stats.trendingTopics.length > 0 ? (
@@ -137,7 +162,9 @@ export function OverviewTab({ stats }: OverviewTabProps) {
         <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
           <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06] flex items-center gap-2">
             <MessageSquare className="h-3.5 w-3.5 text-white/25" />
-            <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">Recent Activity</span>
+            <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
+              Recent Activity
+            </span>
           </div>
 
           {stats?.recentActivity && stats.recentActivity.length > 0 ? (
@@ -147,15 +174,25 @@ export function OverviewTab({ stats }: OverviewTabProps) {
                   key={activity.id}
                   initial={{ opacity: 0, x: -12 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.05 * index, duration: 0.4, ease: [0.19, 1, 0.22, 1] }}
+                  transition={{
+                    delay: 0.05 * index,
+                    duration: 0.4,
+                    ease: [0.19, 1, 0.22, 1],
+                  }}
                   className="flex items-center justify-between px-5 py-3 hover:bg-white/[0.02] transition-colors gap-3"
                 >
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <div className={cn(
-                      'h-1.5 w-1.5 rounded-full shrink-0',
-                      activity.type === 'milestone' ? 'bg-amber-400' : 'bg-cyan-400'
-                    )} />
-                    <span className="text-xs text-white/60 line-clamp-1">{activity.message}</span>
+                    <div
+                      className={cn(
+                        'h-1.5 w-1.5 rounded-full shrink-0',
+                        activity.type === 'milestone'
+                          ? 'bg-amber-400'
+                          : 'bg-orange-400'
+                      )}
+                    />
+                    <span className="text-xs text-white/60 line-clamp-1">
+                      {activity.message}
+                    </span>
                   </div>
                   <span className="font-mono text-[10px] text-white/25 whitespace-nowrap shrink-0 tabular-nums">
                     {activity.timestamp}

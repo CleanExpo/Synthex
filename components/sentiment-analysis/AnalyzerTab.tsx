@@ -1,7 +1,13 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +24,11 @@ interface AnalyzerTabProps {
 }
 
 export function AnalyzerTab({
-  testText, setTestText, testResult, loading, onAnalyze,
+  testText,
+  setTestText,
+  testResult,
+  loading,
+  onAnalyze,
 }: AnalyzerTabProps) {
   return (
     <div className="space-y-4">
@@ -31,7 +41,7 @@ export function AnalyzerTab({
           <Textarea
             placeholder="Enter text to analyze sentiment..."
             value={testText}
-            onChange={(e) => setTestText(e.target.value)}
+            onChange={e => setTestText(e.target.value)}
             className="bg-white/5 border-white/10 min-h-[100px]"
           />
 
@@ -64,15 +74,23 @@ export function AnalyzerTab({
 
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-400">Confidence</span>
-                <span className="text-white">{testResult.confidence.toFixed(1)}%</span>
+                <span className="text-white">
+                  {testResult.confidence.toFixed(1)}%
+                </span>
               </div>
 
               {testResult.emotions.length > 0 && (
                 <div>
-                  <p className="text-sm text-gray-400 mb-2">Detected Emotions</p>
+                  <p className="text-sm text-gray-400 mb-2">
+                    Detected Emotions
+                  </p>
                   <div className="flex gap-2">
                     {testResult.emotions.map((emotion: EmotionScore) => (
-                      <Badge key={emotion.emotion} variant="secondary" className="text-xs">
+                      <Badge
+                        key={emotion.emotion}
+                        variant="secondary"
+                        className="text-xs"
+                      >
                         {emotion.emotion}: {(emotion.score * 100).toFixed(0)}%
                       </Badge>
                     ))}
@@ -85,7 +103,10 @@ export function AnalyzerTab({
                   <p className="text-sm text-gray-400 mb-2">Key Phrases</p>
                   <div className="flex flex-wrap gap-2">
                     {testResult.keyPhrases.map((phrase: string, i: number) => (
-                      <Badge key={i} className="bg-cyan-500/20 text-cyan-400 text-xs">
+                      <Badge
+                        key={i}
+                        className="bg-orange-500/20 text-orange-400 text-xs"
+                      >
                         {phrase}
                       </Badge>
                     ))}

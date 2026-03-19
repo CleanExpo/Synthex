@@ -122,7 +122,9 @@ function ScoreCircle({ score }: { score: number }) {
       `}
     >
       <div className="text-center">
-        <div className={`text-4xl font-bold ${getScoreColor(score)}`}>{score}</div>
+        <div className={`text-4xl font-bold ${getScoreColor(score)}`}>
+          {score}
+        </div>
         <div className="text-xs text-slate-400 mt-0.5">/ 100</div>
       </div>
     </div>
@@ -135,7 +137,9 @@ function DimensionBar({ label, score }: { label: string; score: number }) {
     <div className="space-y-1">
       <div className="flex justify-between items-center">
         <span className="text-sm text-slate-300">{label}</span>
-        <span className={`text-sm font-semibold ${getScoreColor(score)}`}>{score}</span>
+        <span className={`text-sm font-semibold ${getScoreColor(score)}`}>
+          {score}
+        </span>
       </div>
       <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
         <div
@@ -159,14 +163,16 @@ function TemplateSuggestionCard({
     <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
       <span className="text-2xl flex-shrink-0">{template.icon ?? '📄'}</span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-white truncate">{template.name}</p>
+        <p className="text-sm font-medium text-white truncate">
+          {template.name}
+        </p>
         <p className="text-xs text-slate-400 capitalize">{template.category}</p>
       </div>
       <Button
         size="sm"
         variant="ghost"
         onClick={() => onUse(template)}
-        className="flex-shrink-0 text-xs bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 border border-cyan-500/20"
+        className="flex-shrink-0 text-xs bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 border border-orange-500/20"
       >
         Use
       </Button>
@@ -237,7 +243,7 @@ export default function ContentOptimizePage() {
     if (body) assembled += `\n\n${body}`;
     if (cta) assembled += `\n\n${cta}`;
     if (hashtags && hashtags.length > 0) {
-      assembled += `\n\n${hashtags.map((h) => `#${h.replace(/^#/, '')}`).join(' ')}`;
+      assembled += `\n\n${hashtags.map(h => `#${h.replace(/^#/, '')}`).join(' ')}`;
     }
 
     // Replace {{variable}} placeholders
@@ -283,7 +289,7 @@ export default function ContentOptimizePage() {
           <Button
             onClick={handleOptimize}
             disabled={!content.trim() || isOptimizing}
-            className="bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 border border-cyan-500/30"
+            className="bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 border border-orange-500/30"
           >
             <Sparkles className="w-4 h-4 mr-2" />
             {isOptimizing ? 'Optimizing...' : 'Optimize with AI'}
@@ -293,20 +299,18 @@ export default function ContentOptimizePage() {
 
       {/* Split-panel layout */}
       <div className="flex flex-col lg:flex-row gap-6">
-
         {/* ============================================================
             LEFT PANEL — Editor (60%)
         ============================================================ */}
         <div className="w-full lg:w-[60%] space-y-4">
-          <Card className="bg-surface-base/80 border border-cyan-500/10">
+          <Card className="bg-surface-base/80 border border-orange-500/10">
             <CardHeader className="pb-4">
               <CardTitle className="text-white text-lg flex items-center gap-2">
-                <FileText className="w-5 h-5 text-cyan-400" />
+                <FileText className="w-5 h-5 text-orange-400" />
                 Content Editor
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-
               {/* Selectors row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Platform selector */}
@@ -316,11 +320,15 @@ export default function ContentOptimizePage() {
                   </label>
                   <select
                     value={platform}
-                    onChange={(e) => setPlatform(e.target.value)}
-                    className="w-full h-10 px-3 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/30"
+                    onChange={e => setPlatform(e.target.value)}
+                    className="w-full h-10 px-3 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-orange-500/50 focus:border-orange-500/30"
                   >
-                    {PLATFORMS.map((p) => (
-                      <option key={p.value} value={p.value} className="bg-slate-900 text-white">
+                    {PLATFORMS.map(p => (
+                      <option
+                        key={p.value}
+                        value={p.value}
+                        className="bg-slate-900 text-white"
+                      >
                         {p.label}
                       </option>
                     ))}
@@ -334,11 +342,15 @@ export default function ContentOptimizePage() {
                   </label>
                   <select
                     value={goal}
-                    onChange={(e) => setGoal(e.target.value)}
-                    className="w-full h-10 px-3 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/30"
+                    onChange={e => setGoal(e.target.value)}
+                    className="w-full h-10 px-3 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-orange-500/50 focus:border-orange-500/30"
                   >
-                    {GOALS.map((g) => (
-                      <option key={g.value} value={g.value} className="bg-slate-900 text-white">
+                    {GOALS.map(g => (
+                      <option
+                        key={g.value}
+                        value={g.value}
+                        className="bg-slate-900 text-white"
+                      >
                         {g.label}
                       </option>
                     ))}
@@ -353,19 +365,22 @@ export default function ContentOptimizePage() {
                 </label>
                 <textarea
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={e => setContent(e.target.value)}
                   placeholder={`Write your ${platform} content here...`}
                   rows={8}
-                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-slate-500 text-sm resize-y focus:outline-none focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/30 min-h-[160px]"
+                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-slate-500 text-sm resize-y focus:outline-none focus:ring-1 focus:ring-orange-500/50 focus:border-orange-500/30 min-h-[160px]"
                 />
               </div>
 
               {/* Character counter */}
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-500">
-                  {charCount.toLocaleString()} / {limit.toLocaleString()} characters
+                  {charCount.toLocaleString()} / {limit.toLocaleString()}{' '}
+                  characters
                 </span>
-                <span className={`font-semibold ${getCharCountColor(remaining, limit)}`}>
+                <span
+                  className={`font-semibold ${getCharCountColor(remaining, limit)}`}
+                >
                   {remaining >= 0
                     ? `${remaining.toLocaleString()} remaining`
                     : `${Math.abs(remaining).toLocaleString()} over limit`}
@@ -377,7 +392,7 @@ export default function ContentOptimizePage() {
                 <Button
                   onClick={handleOptimize}
                   disabled={!content.trim() || isOptimizing}
-                  className="w-full bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 border border-cyan-500/30"
+                  className="w-full bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 border border-orange-500/30"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
                   {isOptimizing ? 'Optimizing...' : 'Optimize with AI'}
@@ -391,12 +406,11 @@ export default function ContentOptimizePage() {
             RIGHT PANEL — Scoring (40%)
         ============================================================ */}
         <div className="w-full lg:w-[40%] space-y-4">
-
           {/* Overall score card */}
-          <Card className="bg-surface-base/80 border border-cyan-500/10">
+          <Card className="bg-surface-base/80 border border-orange-500/10">
             <CardHeader className="pb-3">
               <CardTitle className="text-white text-lg flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-cyan-400" />
+                <Sparkles className="w-5 h-5 text-orange-400" />
                 Content Score
                 {isScoring && (
                   <span className="text-xs text-slate-400 font-normal ml-2 animate-pulse">
@@ -415,15 +429,17 @@ export default function ContentOptimizePage() {
 
                   {/* Dimension bars */}
                   <div className="space-y-3">
-                    {(Object.keys(DIMENSION_LABELS) as Array<keyof ScoreResult['dimensions']>).map(
-                      (dim) => (
-                        <DimensionBar
-                          key={dim}
-                          label={DIMENSION_LABELS[dim]}
-                          score={score.dimensions[dim].score}
-                        />
-                      )
-                    )}
+                    {(
+                      Object.keys(DIMENSION_LABELS) as Array<
+                        keyof ScoreResult['dimensions']
+                      >
+                    ).map(dim => (
+                      <DimensionBar
+                        key={dim}
+                        label={DIMENSION_LABELS[dim]}
+                        score={score.dimensions[dim].score}
+                      />
+                    ))}
                   </div>
                 </>
               ) : (
@@ -431,8 +447,8 @@ export default function ContentOptimizePage() {
                   {content.trim().length === 0
                     ? 'Start typing to see your content score'
                     : isScoring
-                    ? 'Analyzing your content...'
-                    : 'Score will appear here'}
+                      ? 'Analyzing your content...'
+                      : 'Score will appear here'}
                 </div>
               )}
             </CardContent>
@@ -440,7 +456,7 @@ export default function ContentOptimizePage() {
 
           {/* Top suggestions card */}
           {score && score.topSuggestions.length > 0 && (
-            <Card className="bg-surface-base/80 border border-cyan-500/10">
+            <Card className="bg-surface-base/80 border border-orange-500/10">
               <CardHeader className="pb-3">
                 <CardTitle className="text-white text-base flex items-center gap-2">
                   <Lightbulb className="w-4 h-4 text-yellow-400" />
@@ -450,7 +466,10 @@ export default function ContentOptimizePage() {
               <CardContent>
                 <ul className="space-y-3">
                   {score.topSuggestions.map((suggestion, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2 text-sm text-slate-300"
+                    >
                       <Lightbulb className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
                       <span>{suggestion}</span>
                     </li>
@@ -461,10 +480,10 @@ export default function ContentOptimizePage() {
           )}
 
           {/* Suggested templates card */}
-          <Card className="bg-surface-base/80 border border-cyan-500/10">
+          <Card className="bg-surface-base/80 border border-orange-500/10">
             <CardHeader className="pb-3">
               <CardTitle className="text-white text-base flex items-center gap-2">
-                <FileText className="w-4 h-4 text-cyan-400" />
+                <FileText className="w-4 h-4 text-orange-400" />
                 Suggested Templates
               </CardTitle>
             </CardHeader>
@@ -477,7 +496,7 @@ export default function ContentOptimizePage() {
                 </div>
               ) : templates.length > 0 ? (
                 <div className="space-y-2">
-                  {templates.map((template) => (
+                  {templates.map(template => (
                     <TemplateSuggestionCard
                       key={template.id}
                       template={template}

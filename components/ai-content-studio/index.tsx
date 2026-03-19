@@ -9,11 +9,17 @@ import { toast } from 'sonner';
 import { ContentConfigForm } from './ContentConfigForm';
 import { GeneratedContentDisplay } from './GeneratedContentDisplay';
 import { ContentHistory } from './ContentHistory';
-import type { GeneratedContent, Business, ConnectionStatus, ContentFormData } from './types';
+import type {
+  GeneratedContent,
+  Business,
+  ConnectionStatus,
+  ContentFormData,
+} from './types';
 
 export function AIContentStudio() {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
+  const [generatedContent, setGeneratedContent] =
+    useState<GeneratedContent | null>(null);
   const [selectedVariation, setSelectedVariation] = useState(0);
   const [copiedContent, setCopiedContent] = useState('');
 
@@ -27,13 +33,15 @@ export function AIContentStudio() {
     length: 'medium',
     includeEmojis: true,
     includeHashtags: true,
-    includeCTA: false
+    includeCTA: false,
   });
 
   const [contentHistory, setContentHistory] = useState<GeneratedContent[]>([]);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [selectedBusinessId, setSelectedBusinessId] = useState<string>('');
-  const [connectedPlatforms, setConnectedPlatforms] = useState<Set<string>>(new Set());
+  const [connectedPlatforms, setConnectedPlatforms] = useState<Set<string>>(
+    new Set()
+  );
   const [loadingBusinesses, setLoadingBusinesses] = useState(true);
   const [loadingConnections, setLoadingConnections] = useState(false);
 
@@ -44,11 +52,13 @@ export function AIContentStudio() {
         const res = await fetch('/api/businesses', { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
-          const biz: Business[] = (data.businesses || []).map((b: Record<string, unknown>) => ({
-            organizationId: b.organizationId as string,
-            organizationName: b.organizationName as string,
-            displayName: b.displayName as string | null,
-          }));
+          const biz: Business[] = (data.businesses || []).map(
+            (b: Record<string, unknown>) => ({
+              organizationId: b.organizationId as string,
+              organizationName: b.organizationName as string,
+              displayName: b.displayName as string | null,
+            })
+          );
           setBusinesses(biz);
           const active = data.activeBusiness as string | null;
           if (active && biz.some(b => b.organizationId === active)) {
@@ -75,13 +85,16 @@ export function AIContentStudio() {
     async function fetchConnections() {
       setLoadingConnections(true);
       try {
-        const res = await fetch(`/api/auth/connections?organizationId=${selectedBusinessId}`, { credentials: 'include' });
+        const res = await fetch(
+          `/api/auth/connections?organizationId=${selectedBusinessId}`,
+          { credentials: 'include' }
+        );
         if (res.ok) {
           const data = await res.json();
           const connected = new Set<string>(
             ((data.connections || []) as ConnectionStatus[])
-              .filter((c) => c.connected)
-              .map((c) => c.platform.toLowerCase())
+              .filter(c => c.connected)
+              .map(c => c.platform.toLowerCase())
           );
           setConnectedPlatforms(connected);
           if (connected.size > 0 && !connected.has(formData.platform)) {
@@ -112,8 +125,10 @@ export function AIContentStudio() {
         method: 'POST',
         body: JSON.stringify({
           ...formData,
-          keywords: formData.keywords ? formData.keywords.split(',').map(k => k.trim()) : []
-        })
+          keywords: formData.keywords
+            ? formData.keywords.split(',').map(k => k.trim())
+            : [],
+        }),
       });
 
       if (!response.ok) {
@@ -142,9 +157,10 @@ export function AIContentStudio() {
 
   const downloadContent = () => {
     if (!generatedContent) return;
-    const content = selectedVariation === 0
-      ? generatedContent.content
-      : generatedContent.variations[selectedVariation - 1].content;
+    const content =
+      selectedVariation === 0
+        ? generatedContent.content
+        : generatedContent.variations[selectedVariation - 1].content;
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -162,11 +178,18 @@ export function AIContentStudio() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold gradient-text">AI Content Studio</h2>
-          <p className="text-gray-400 mt-2">Generate viral content with AI-powered creativity</p>
+          <h2 className="text-3xl font-bold gradient-text">
+            AI Content Studio
+          </h2>
+          <p className="text-gray-400 mt-2">
+            Generate viral content with AI-powered creativity
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="border-cyan-500 text-cyan-400">
+          <Badge
+            variant="outline"
+            className="border-orange-500 text-orange-400"
+          >
             <Zap className="w-3 h-3 mr-1" />
             AI Powered
           </Badge>
@@ -206,7 +229,7 @@ export function AIContentStudio() {
       <ContentHistory
         contentHistory={contentHistory}
         copiedContent={copiedContent}
-        onSelectContent={(item) => {
+        onSelectContent={item => {
           setGeneratedContent(item);
           setSelectedVariation(0);
         }}

@@ -101,7 +101,7 @@ export function AutoResearchWidget({ className }: { className?: string }) {
       );
     if (status === 'running')
       return (
-        <span className="text-xs px-2 py-0.5 rounded-sm bg-cyan-500/20 text-cyan-400 flex items-center gap-1">
+        <span className="text-xs px-2 py-0.5 rounded-sm bg-orange-500/20 text-orange-400 flex items-center gap-1">
           <Loader2 className="h-3 w-3 animate-spin" />
           running
         </span>
@@ -121,7 +121,7 @@ export function AutoResearchWidget({ className }: { className?: string }) {
       hook: 'bg-purple-500/20 text-purple-400',
       visual_style: 'bg-pink-500/20 text-pink-400',
       hashtag: 'bg-blue-500/20 text-blue-400',
-      topic: 'bg-cyan-500/20 text-cyan-400',
+      topic: 'bg-orange-500/20 text-orange-400',
       format: 'bg-amber-500/20 text-amber-400',
       cta: 'bg-emerald-500/20 text-emerald-400',
     };
@@ -148,7 +148,7 @@ export function AutoResearchWidget({ className }: { className?: string }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Brain className="h-4 w-4 text-cyan-400" />
+          <Brain className="h-4 w-4 text-orange-400" />
           <span className="text-sm font-medium text-white/80">
             Auto-Research
           </span>
@@ -156,7 +156,7 @@ export function AutoResearchWidget({ className }: { className?: string }) {
         <button
           onClick={handleRunResearch}
           disabled={triggering || latestRun?.status === 'running'}
-          className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border-[0.5px] border-cyan-500/20 rounded-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border-[0.5px] border-orange-500/20 rounded-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Zap className="h-3 w-3" />
           {triggering ? 'Queuing…' : 'Run Now'}
@@ -192,7 +192,7 @@ export function AutoResearchWidget({ className }: { className?: string }) {
           </p>
           {insights.map(insight => (
             <div key={insight.id} className="flex gap-2 items-start">
-              <TrendingUp className="h-3 w-3 text-cyan-400/60 shrink-0 mt-0.5" />
+              <TrendingUp className="h-3 w-3 text-orange-400/60 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-white/70 leading-relaxed truncate">
                   {insight.insight}

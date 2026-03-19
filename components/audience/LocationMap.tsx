@@ -17,7 +17,12 @@ import {
 import { cn } from '@/lib/utils';
 
 interface LocationMapProps {
-  data: Array<{ location: string; country: string; percentage: number; count: number }>;
+  data: Array<{
+    location: string;
+    country: string;
+    percentage: number;
+    count: number;
+  }>;
   isLoading?: boolean;
   className?: string;
 }
@@ -45,7 +50,12 @@ function formatNumber(num: number): string {
 interface CustomTooltipProps {
   active?: boolean;
   payload?: Array<{
-    payload: { location: string; country: string; percentage: number; count: number };
+    payload: {
+      location: string;
+      country: string;
+      percentage: number;
+      count: number;
+    };
   }>;
 }
 
@@ -67,7 +77,9 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
         </div>
         <div className="flex justify-between gap-4">
           <span className="text-gray-400 text-sm">Followers</span>
-          <span className="text-white font-medium">{formatNumber(data.count)}</span>
+          <span className="text-white font-medium">
+            {formatNumber(data.count)}
+          </span>
         </div>
       </div>
     </div>
@@ -90,15 +102,18 @@ function LoadingSkeleton() {
   );
 }
 
-export function LocationMap({
-  data,
-  isLoading,
-  className,
-}: LocationMapProps) {
+export function LocationMap({ data, isLoading, className }: LocationMapProps) {
   if (isLoading) {
     return (
-      <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
-        <h4 className="text-sm font-medium text-gray-400 mb-4">Top Locations</h4>
+      <div
+        className={cn(
+          'bg-gray-900/30 border border-white/10 rounded-xl p-4',
+          className
+        )}
+      >
+        <h4 className="text-sm font-medium text-gray-400 mb-4">
+          Top Locations
+        </h4>
         <LoadingSkeleton />
       </div>
     );
@@ -106,21 +121,35 @@ export function LocationMap({
 
   if (!data?.length) {
     return (
-      <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
-        <h4 className="text-sm font-medium text-gray-400 mb-4">Top Locations</h4>
-        <p className="text-gray-500 text-sm text-center py-8">No location data available</p>
+      <div
+        className={cn(
+          'bg-gray-900/30 border border-white/10 rounded-xl p-4',
+          className
+        )}
+      >
+        <h4 className="text-sm font-medium text-gray-400 mb-4">
+          Top Locations
+        </h4>
+        <p className="text-gray-500 text-sm text-center py-8">
+          No location data available
+        </p>
       </div>
     );
   }
 
   // Add flag to location name for display
-  const chartData = data.slice(0, 10).map((item) => ({
+  const chartData = data.slice(0, 10).map(item => ({
     ...item,
     displayName: `${COUNTRY_FLAGS[item.country] || ''} ${item.location}`,
   }));
 
   return (
-    <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
+    <div
+      className={cn(
+        'bg-gray-900/30 border border-white/10 rounded-xl p-4',
+        className
+      )}
+    >
       <h4 className="text-sm font-medium text-gray-400 mb-4">Top Locations</h4>
       <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -135,7 +164,7 @@ export function LocationMap({
               tick={{ fill: '#9ca3af', fontSize: 11 }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(v) => `${v}%`}
+              tickFormatter={v => `${v}%`}
             />
             <YAxis
               type="category"
@@ -145,8 +174,16 @@ export function LocationMap({
               axisLine={false}
               width={100}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-            <Bar dataKey="percentage" fill="#06b6d4" radius={[0, 4, 4, 0]} maxBarSize={20} />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+            />
+            <Bar
+              dataKey="percentage"
+              fill="#ffb87b"
+              radius={[0, 4, 4, 0]}
+              maxBarSize={20}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>

@@ -8,7 +8,15 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronRight, Edit, Trash2, Calendar, DollarSign, Package } from '@/components/icons';
+import {
+  ChevronDown,
+  ChevronRight,
+  Edit,
+  Trash2,
+  Calendar,
+  DollarSign,
+  Package,
+} from '@/components/icons';
 import type { SponsorDeal, DealStage } from '@/hooks/useSponsorCRM';
 import { STAGE_LABELS } from '@/hooks/useSponsorCRM';
 import { DeliverableList } from './DeliverableList';
@@ -21,7 +29,10 @@ interface DealListProps {
   onAddDeliverable?: (deal: SponsorDeal) => void;
   onEditDeliverable?: (deal: SponsorDeal, deliverableId: string) => void;
   onDeleteDeliverable?: (deal: SponsorDeal, deliverableId: string) => void;
-  onToggleDeliverableStatus?: (deal: SponsorDeal, deliverableId: string) => void;
+  onToggleDeliverableStatus?: (
+    deal: SponsorDeal,
+    deliverableId: string
+  ) => void;
   isLoading?: boolean;
   className?: string;
 }
@@ -31,7 +42,7 @@ const STAGE_COLORS: Record<DealStage, string> = {
   contracted: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
   in_progress: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
   delivered: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
-  paid: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
+  paid: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
   cancelled: 'bg-red-500/10 text-red-400 border-red-500/30',
 };
 
@@ -74,7 +85,9 @@ function DealRow({
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const deliverables = deal.deliverables ?? [];
-  const completedCount = deliverables.filter(d => d.status === 'approved').length;
+  const completedCount = deliverables.filter(
+    d => d.status === 'approved'
+  ).length;
   const totalCount = deliverables.length;
 
   return (
@@ -104,7 +117,9 @@ function DealRow({
         {/* Value */}
         <div className="flex items-center gap-1.5 text-sm">
           <DollarSign className="h-4 w-4 text-emerald-400" />
-          <span className="text-white font-medium">{formatCurrency(deal.value, deal.currency)}</span>
+          <span className="text-white font-medium">
+            {formatCurrency(deal.value, deal.currency)}
+          </span>
         </div>
 
         {/* Stage Badge */}
@@ -126,11 +141,16 @@ function DealRow({
         {/* Deliverable Progress */}
         <div className="flex items-center gap-1.5 text-sm text-white/50 min-w-[80px]">
           <Package className="h-4 w-4" />
-          <span>{completedCount}/{totalCount}</span>
+          <span>
+            {completedCount}/{totalCount}
+          </span>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex items-center gap-1"
+          onClick={e => e.stopPropagation()}
+        >
           <button
             onClick={onEdit}
             className="p-2 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
@@ -176,9 +196,17 @@ export function DealList({
 }: DealListProps) {
   if (isLoading) {
     return (
-      <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl overflow-hidden', className)}>
+      <div
+        className={cn(
+          'bg-gray-900/50 border border-white/10 rounded-xl overflow-hidden',
+          className
+        )}
+      >
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 p-4 border-b border-white/5">
+          <div
+            key={i}
+            className="flex items-center gap-4 p-4 border-b border-white/5"
+          >
             <div className="w-5 h-5 bg-white/5 rounded animate-pulse" />
             <div className="flex-1">
               <div className="w-48 h-5 bg-white/5 rounded animate-pulse mb-2" />
@@ -193,7 +221,12 @@ export function DealList({
 
   if (deals.length === 0) {
     return (
-      <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl p-8 text-center', className)}>
+      <div
+        className={cn(
+          'bg-gray-900/50 border border-white/10 rounded-xl p-8 text-center',
+          className
+        )}
+      >
         <Package className="h-10 w-10 text-white/20 mx-auto mb-3" />
         <p className="text-white/50">No deals yet for this sponsor</p>
       </div>
@@ -201,8 +234,13 @@ export function DealList({
   }
 
   return (
-    <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl overflow-hidden', className)}>
-      {deals.map((deal) => (
+    <div
+      className={cn(
+        'bg-gray-900/50 border border-white/10 rounded-xl overflow-hidden',
+        className
+      )}
+    >
+      {deals.map(deal => (
         <DealRow
           key={deal.id}
           deal={deal}
@@ -210,9 +248,11 @@ export function DealList({
           onEdit={() => onEdit?.(deal)}
           onDelete={() => onDelete?.(deal)}
           onAddDeliverable={() => onAddDeliverable?.(deal)}
-          onEditDeliverable={(id) => onEditDeliverable?.(deal, id)}
-          onDeleteDeliverable={(id) => onDeleteDeliverable?.(deal, id)}
-          onToggleDeliverableStatus={(id) => onToggleDeliverableStatus?.(deal, id)}
+          onEditDeliverable={id => onEditDeliverable?.(deal, id)}
+          onDeleteDeliverable={id => onDeleteDeliverable?.(deal, id)}
+          onToggleDeliverableStatus={id =>
+            onToggleDeliverableStatus?.(deal, id)
+          }
         />
       ))}
     </div>

@@ -49,7 +49,7 @@ export const CATEGORY_BADGE_STYLES: Record<
 > = {
   design: {
     label: 'Design',
-    className: 'bg-cyan-500/20 border-cyan-500/30 text-cyan-200',
+    className: 'bg-orange-500/20 border-orange-500/30 text-orange-200',
   },
   scheduling: {
     label: 'Scheduling',

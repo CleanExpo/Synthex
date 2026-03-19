@@ -20,7 +20,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     description: 'Learn the basics of using SYNTHEX',
     icon: Zap,
     articles: 12,
-    color: 'text-cyan-400',
+    color: 'text-orange-400',
     links: [
       { title: 'Quick start guide', href: '/docs/quickstart' },
       { title: 'Setting up your profile', href: '/dashboard/settings' },
@@ -33,7 +33,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     description: 'Master AI-powered content generation',
     icon: Sparkles,
     articles: 18,
-    color: 'text-cyan-400',
+    color: 'text-orange-400',
     links: [
       { title: 'Using AI for content', href: '/dashboard/content' },
       { title: 'Content templates', href: '/dashboard/content' },
@@ -97,32 +97,38 @@ export const HELP_CATEGORIES: HelpCategory[] = [
 export const FAQS: FAQ[] = [
   {
     question: 'How do I connect my social media accounts?',
-    answer: 'Go to Dashboard > Integrations and click "Connect" on any platform you want to add.',
+    answer:
+      'Go to Dashboard > Integrations and click "Connect" on any platform you want to add.',
     category: 'getting-started',
   },
   {
     question: 'Can I schedule posts for multiple platforms at once?',
-    answer: 'Yes! When creating content, you can select multiple platforms and customize the content for each.',
+    answer:
+      'Yes! When creating content, you can select multiple platforms and customize the content for each.',
     category: 'scheduling',
   },
   {
     question: 'How does the AI content generation work?',
-    answer: 'Our AI analyzes your brand voice, audience preferences, and trending topics to generate engaging content tailored to each platform.',
+    answer:
+      'Our AI analyzes your brand voice, audience preferences, and trending topics to generate engaging content tailored to each platform.',
     category: 'content-creation',
   },
   {
     question: 'What analytics metrics are available?',
-    answer: 'We track engagement rate, reach, impressions, clicks, shares, and custom conversion metrics across all connected platforms.',
+    answer:
+      'We track engagement rate, reach, impressions, clicks, shares, and custom conversion metrics across all connected platforms.',
     category: 'analytics',
   },
   {
     question: 'Can I add team members to my account?',
-    answer: 'Yes, depending on your plan. Go to Dashboard > Team to invite members and assign roles.',
+    answer:
+      'Yes, depending on your plan. Go to Dashboard > Team to invite members and assign roles.',
     category: 'team',
   },
   {
     question: 'How do I upgrade my plan?',
-    answer: 'Visit Dashboard > Settings > Billing or go to the Pricing page to compare and upgrade plans.',
+    answer:
+      'Visit Dashboard > Settings > Billing or go to the Pricing page to compare and upgrade plans.',
     category: 'billing',
   },
 ];
@@ -133,7 +139,7 @@ export function filterFAQs(
   selectedCategory: string | null
 ): FAQ[] {
   return faqs.filter(
-    (faq) =>
+    faq =>
       (!selectedCategory || faq.category === selectedCategory) &&
       (!searchQuery ||
         faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||

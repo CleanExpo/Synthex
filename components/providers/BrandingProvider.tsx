@@ -45,7 +45,7 @@ interface BrandingContextValue {
 
 const DEFAULT_BRANDING: BrandingConfig = {
   primaryColor: '#6366f1',
-  secondaryColor: '#06b6d4',
+  secondaryColor: '#ffb87b',
   logoUrl: null,
   faviconUrl: null,
   companyName: null,
@@ -114,8 +114,10 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
       const data = await response.json();
       if (data.theme) {
         const config: BrandingConfig = {
-          primaryColor: data.theme.primaryColor || DEFAULT_BRANDING.primaryColor,
-          secondaryColor: data.theme.secondaryColor || DEFAULT_BRANDING.secondaryColor,
+          primaryColor:
+            data.theme.primaryColor || DEFAULT_BRANDING.primaryColor,
+          secondaryColor:
+            data.theme.secondaryColor || DEFAULT_BRANDING.secondaryColor,
           logoUrl: data.theme.logoUrl || null,
           faviconUrl: data.theme.faviconUrl || null,
           companyName: data.theme.companyName || null,

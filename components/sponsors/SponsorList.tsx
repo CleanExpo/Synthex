@@ -7,7 +7,15 @@
  */
 
 import { cn } from '@/lib/utils';
-import { Building, Mail, Globe, Edit, Trash2, DollarSign, Briefcase } from '@/components/icons';
+import {
+  Building,
+  Mail,
+  Globe,
+  Edit,
+  Trash2,
+  DollarSign,
+  Briefcase,
+} from '@/components/icons';
 import type { Sponsor, SponsorStatus } from '@/hooks/useSponsorCRM';
 import { STATUS_LABELS } from '@/hooks/useSponsorCRM';
 
@@ -40,7 +48,10 @@ function LoadingSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
+        <div
+          key={i}
+          className="bg-gray-900/50 border border-white/10 rounded-xl p-5"
+        >
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-full bg-white/5 animate-pulse" />
             <div className="flex-1">
@@ -72,13 +83,16 @@ function SponsorCard({
   isSelected?: boolean;
 }) {
   const dealCount = sponsor.deals?.length ?? 0;
-  const totalValue = sponsor.deals?.reduce((sum, deal) => sum + deal.value, 0) ?? 0;
+  const totalValue =
+    sponsor.deals?.reduce((sum, deal) => sum + deal.value, 0) ?? 0;
 
   return (
     <div
       className={cn(
         'bg-gray-900/50 border rounded-xl p-5 transition-all cursor-pointer group',
-        isSelected ? 'border-cyan-500/50 ring-1 ring-cyan-500/30' : 'border-white/10 hover:border-white/20'
+        isSelected
+          ? 'border-orange-500/50 ring-1 ring-orange-500/30'
+          : 'border-white/10 hover:border-white/20'
       )}
       onClick={onSelect}
     >
@@ -93,7 +107,7 @@ function SponsorCard({
               className="w-12 h-12 rounded-full object-cover"
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500/20 to-purple-500/20 flex items-center justify-center">
               <Building className="h-6 w-6 text-white/50" />
             </div>
           )}
@@ -147,7 +161,7 @@ function SponsorCard({
       {/* Actions */}
       <div className="flex items-center gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             onEdit?.();
           }}
@@ -157,7 +171,7 @@ function SponsorCard({
           <span>Edit</span>
         </button>
         <button
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             onDelete?.();
           }}
@@ -186,17 +200,31 @@ export function SponsorList({
 
   if (sponsors.length === 0) {
     return (
-      <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl p-12 text-center', className)}>
+      <div
+        className={cn(
+          'bg-gray-900/50 border border-white/10 rounded-xl p-12 text-center',
+          className
+        )}
+      >
         <Building className="h-12 w-12 text-white/20 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-white mb-2">No sponsors yet</h3>
-        <p className="text-white/50">Add your first sponsor to start tracking brand relationships.</p>
+        <h3 className="text-lg font-semibold text-white mb-2">
+          No sponsors yet
+        </h3>
+        <p className="text-white/50">
+          Add your first sponsor to start tracking brand relationships.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4', className)}>
-      {sponsors.map((sponsor) => (
+    <div
+      className={cn(
+        'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4',
+        className
+      )}
+    >
+      {sponsors.map(sponsor => (
         <SponsorCard
           key={sponsor.id}
           sponsor={sponsor}

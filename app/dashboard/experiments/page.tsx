@@ -7,7 +7,7 @@
  * 3 tabs: Experiments (SEO A/B tests) | Self-Healing | Dog-food
  */
 
-import { useState, useCallback , Suspense } from 'react';
+import { useState, useCallback, Suspense } from 'react';
 import useSWR from 'swr';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -62,7 +62,12 @@ interface Experiment {
   variantScore?: number | null;
   improvement?: number | null;
   createdAt: string;
-  observations?: Array<{ id: string; variant: string; metricValue: number; recordedAt: string }>;
+  observations?: Array<{
+    id: string;
+    variant: string;
+    metricValue: number;
+    recordedAt: string;
+  }>;
 }
 
 // ============================================================================
@@ -70,7 +75,7 @@ interface Experiment {
 // ============================================================================
 
 const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => r.json());
+  fetch(url, { credentials: 'include' }).then(r => r.json());
 
 // ============================================================================
 // Tabs config
@@ -127,8 +132,10 @@ function ExperimentsTab() {
   const experiments = data?.experiments ?? [];
   const total = data?.pagination?.total ?? 0;
 
-  const runningCount = experiments.filter((e) => e.status === 'running').length;
-  const completedCount = experiments.filter((e) => e.status === 'completed').length;
+  const runningCount = experiments.filter(e => e.status === 'running').length;
+  const completedCount = experiments.filter(
+    e => e.status === 'completed'
+  ).length;
 
   const handleRefresh = useCallback(() => mutate(), [mutate]);
 
@@ -144,18 +151,24 @@ function ExperimentsTab() {
         {[
           { label: 'Total', value: total, colour: 'text-white' },
           { label: 'Running', value: runningCount, colour: 'text-green-400' },
-          { label: 'Completed', value: completedCount, colour: 'text-blue-400' },
+          {
+            label: 'Completed',
+            value: completedCount,
+            colour: 'text-blue-400',
+          },
           {
             label: 'Draft',
-            value: experiments.filter((e) => e.status === 'draft').length,
+            value: experiments.filter(e => e.status === 'draft').length,
             colour: 'text-gray-400',
           },
-        ].map((stat) => (
+        ].map(stat => (
           <div
             key={stat.label}
             className="p-4 bg-white/5 rounded-lg border border-white/10 text-center"
           >
-            <p className={cn('text-2xl font-bold', stat.colour)}>{stat.value}</p>
+            <p className={cn('text-2xl font-bold', stat.colour)}>
+              {stat.value}
+            </p>
             <p className="text-xs text-gray-400 mt-1">{stat.label}</p>
           </div>
         ))}
@@ -188,7 +201,9 @@ function ExperimentsTab() {
               <SelectItem value="meta-description">Meta Description</SelectItem>
               <SelectItem value="h1">H1 Heading</SelectItem>
               <SelectItem value="schema">Schema Markup</SelectItem>
-              <SelectItem value="content-structure">Content Structure</SelectItem>
+              <SelectItem value="content-structure">
+                Content Structure
+              </SelectItem>
               <SelectItem value="internal-links">Internal Links</SelectItem>
             </SelectContent>
           </Select>
@@ -238,7 +253,7 @@ function ExperimentsTab() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {experiments.map((experiment) => (
+          {experiments.map(experiment => (
             <ExperimentCard
               key={experiment.id}
               experiment={experiment}
@@ -253,7 +268,7 @@ function ExperimentsTab() {
         <DialogContent className="bg-gray-900 border border-white/10 max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Beaker className="w-5 h-5 text-cyan-400" />
+              <Beaker className="w-5 h-5 text-orange-400" />
               New SEO Experiment
             </DialogTitle>
           </DialogHeader>
@@ -283,9 +298,12 @@ function ExperimentsPageContent() {
 
   function handleTabChange(tab: TabId) {
     setActiveTab(tab);
-    router.replace(`/dashboard/experiments${tab !== 'experiments' ? `?tab=${tab}` : ''}`, {
-      scroll: false,
-    });
+    router.replace(
+      `/dashboard/experiments${tab !== 'experiments' ? `?tab=${tab}` : ''}`,
+      {
+        scroll: false,
+      }
+    );
   }
 
   return (
@@ -294,9 +312,11 @@ function ExperimentsPageContent() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Beaker className="w-6 h-6 text-cyan-400" />
+            <Beaker className="w-6 h-6 text-orange-400" />
             <h1 className="text-2xl font-bold text-white">Experiments</h1>
-            <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">Phase 98</Badge>
+            <Badge className="bg-orange-500/20 text-orange-400 text-xs">
+              Phase 98
+            </Badge>
           </div>
           <p className="text-sm text-gray-400">
             Autonomous A/B testing, self-healing SEO, and dog-food checks
@@ -306,14 +326,14 @@ function ExperimentsPageContent() {
 
       {/* Tabs */}
       <div className="flex gap-1 p-1 bg-white/5 rounded-xl border border-white/10 w-fit">
-        {TABS.map((tab) => (
+        {TABS.map(tab => (
           <button
             key={tab.id}
             onClick={() => handleTabChange(tab.id)}
             className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
               activeTab === tab.id
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             )}
           >
@@ -341,7 +361,7 @@ function ExperimentsPageContent() {
             {
               title: 'Set a clear hypothesis',
               body: 'Define what metric you expect to improve and by how much.',
-              colour: 'bg-cyan-500/10 border-cyan-500/20',
+              colour: 'bg-orange-500/10 border-orange-500/20',
             },
             {
               title: 'Wait for meaningful data',
@@ -353,7 +373,7 @@ function ExperimentsPageContent() {
               body: 'Once a winner is identified, apply the change and move to the next test.',
               colour: 'bg-amber-500/10 border-amber-500/20',
             },
-          ].map((tip) => (
+          ].map(tip => (
             <div
               key={tip.title}
               className={cn('p-4 rounded-lg border', tip.colour)}

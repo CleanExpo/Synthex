@@ -10,7 +10,10 @@ import { useState } from 'react';
 import { Edit, Trash2, ChevronDown, DollarSign } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { RevenueEntry, RevenueSource } from '@/lib/revenue/revenue-service';
+import type {
+  RevenueEntry,
+  RevenueSource,
+} from '@/lib/revenue/revenue-service';
 
 interface RevenueEntryListProps {
   entries: RevenueEntry[];
@@ -21,7 +24,7 @@ interface RevenueEntryListProps {
 }
 
 const SOURCE_COLORS: Record<RevenueSource, { bg: string; text: string }> = {
-  sponsorship: { bg: 'bg-cyan-500/10', text: 'text-cyan-400' },
+  sponsorship: { bg: 'bg-orange-500/10', text: 'text-orange-400' },
   affiliate: { bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
   ads: { bg: 'bg-violet-500/10', text: 'text-violet-400' },
   tips: { bg: 'bg-orange-500/10', text: 'text-orange-400' },
@@ -94,9 +97,16 @@ export function RevenueEntryList({
 
   if (!entries || entries.length === 0) {
     return (
-      <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-8 text-center', className)}>
+      <div
+        className={cn(
+          'bg-gray-900/30 border border-white/10 rounded-xl p-8 text-center',
+          className
+        )}
+      >
         <DollarSign className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-        <h3 className="text-lg font-medium text-white mb-1">No Revenue Entries</h3>
+        <h3 className="text-lg font-medium text-white mb-1">
+          No Revenue Entries
+        </h3>
         <p className="text-gray-500 text-sm">
           Add your first revenue entry to start tracking your income.
         </p>
@@ -117,7 +127,7 @@ export function RevenueEntryList({
 
   return (
     <div className={cn('space-y-2', className)}>
-      {entries.map((entry) => {
+      {entries.map(entry => {
         const colors = SOURCE_COLORS[entry.source];
         const isExpanded = expanded === entry.id;
         const isConfirmingDelete = deleteConfirm === entry.id;
@@ -131,7 +141,13 @@ export function RevenueEntryList({
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-4 flex-1 min-w-0">
                 {/* Source badge */}
-                <span className={cn('px-2.5 py-1 rounded text-xs font-medium', colors.bg, colors.text)}>
+                <span
+                  className={cn(
+                    'px-2.5 py-1 rounded text-xs font-medium',
+                    colors.bg,
+                    colors.text
+                  )}
+                >
                   {SOURCE_LABELS[entry.source]}
                 </span>
 
@@ -179,7 +195,11 @@ export function RevenueEntryList({
                         ? 'text-red-400 bg-red-500/10'
                         : 'text-gray-400 hover:text-red-400'
                     )}
-                    aria-label={isConfirmingDelete ? 'Confirm delete revenue entry' : 'Delete revenue entry'}
+                    aria-label={
+                      isConfirmingDelete
+                        ? 'Confirm delete revenue entry'
+                        : 'Delete revenue entry'
+                    }
                     onClick={() => handleDelete(entry.id)}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -188,10 +208,17 @@ export function RevenueEntryList({
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-gray-400 hover:text-white md:hidden"
-                    aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+                    aria-label={
+                      isExpanded ? 'Collapse details' : 'Expand details'
+                    }
                     onClick={() => setExpanded(isExpanded ? null : entry.id)}
                   >
-                    <ChevronDown className={cn('w-4 h-4 transition-transform', isExpanded && 'rotate-180')} />
+                    <ChevronDown
+                      className={cn(
+                        'w-4 h-4 transition-transform',
+                        isExpanded && 'rotate-180'
+                      )}
+                    />
                   </Button>
                 </div>
               </div>
@@ -208,7 +235,9 @@ export function RevenueEntryList({
                 )}
                 <div className="flex justify-between">
                   <span className="text-gray-500">Date</span>
-                  <span className="text-gray-300">{formatDate(entry.paidAt)}</span>
+                  <span className="text-gray-300">
+                    {formatDate(entry.paidAt)}
+                  </span>
                 </div>
                 {entry.brandName && (
                   <div className="flex justify-between">

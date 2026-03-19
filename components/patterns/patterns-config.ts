@@ -3,13 +3,19 @@
  * Mock data and constants
  */
 
-import type { ViralPattern, HookType, EngagementDataPoint, RadarDataPoint } from './types';
+import type {
+  ViralPattern,
+  HookType,
+  EngagementDataPoint,
+  RadarDataPoint,
+} from './types';
 
 export const viralPatterns: ViralPattern[] = [
   {
     id: 1,
     platform: 'Twitter',
-    content: 'Just shipped a new feature that our users have been asking for! 🚀',
+    content:
+      'Just shipped a new feature that our users have been asking for! 🚀',
     type: 'Product Update',
     engagement: 45600,
     impressions: 234000,
@@ -51,15 +57,33 @@ export const viralPatterns: ViralPattern[] = [
 ];
 
 export const engagementData: EngagementDataPoint[] = [
-  { hour: '12am', twitter: 2400, linkedin: 1200, tiktok: 3400, instagram: 2800 },
+  {
+    hour: '12am',
+    twitter: 2400,
+    linkedin: 1200,
+    tiktok: 3400,
+    instagram: 2800,
+  },
   { hour: '6am', twitter: 3200, linkedin: 2800, tiktok: 2200, instagram: 3100 },
-  { hour: '12pm', twitter: 5600, linkedin: 4200, tiktok: 4800, instagram: 5200 },
+  {
+    hour: '12pm',
+    twitter: 5600,
+    linkedin: 4200,
+    tiktok: 4800,
+    instagram: 5200,
+  },
   { hour: '6pm', twitter: 7800, linkedin: 3500, tiktok: 8900, instagram: 7600 },
-  { hour: '11pm', twitter: 4200, linkedin: 1800, tiktok: 6200, instagram: 5400 },
+  {
+    hour: '11pm',
+    twitter: 4200,
+    linkedin: 1800,
+    tiktok: 6200,
+    instagram: 5400,
+  },
 ];
 
 export const hookTypes: HookType[] = [
-  { name: 'Question', value: 30, color: '#06b6d4' },
+  { name: 'Question', value: 30, color: '#ffb87b' },
   { name: 'Story', value: 25, color: '#ec4899' },
   { name: 'Controversy', value: 20, color: '#f59e0b' },
   { name: 'Data', value: 15, color: '#10b981' },
@@ -67,10 +91,22 @@ export const hookTypes: HookType[] = [
 ];
 
 export const radarData: RadarDataPoint[] = [
-  { metric: 'Engagement', twitter: 85, linkedin: 78, tiktok: 95, instagram: 88 },
+  {
+    metric: 'Engagement',
+    twitter: 85,
+    linkedin: 78,
+    tiktok: 95,
+    instagram: 88,
+  },
   { metric: 'Reach', twitter: 72, linkedin: 65, tiktok: 88, instagram: 82 },
   { metric: 'Virality', twitter: 90, linkedin: 70, tiktok: 92, instagram: 85 },
-  { metric: 'Consistency', twitter: 75, linkedin: 85, tiktok: 70, instagram: 80 },
+  {
+    metric: 'Consistency',
+    twitter: 75,
+    linkedin: 85,
+    tiktok: 70,
+    instagram: 80,
+  },
   { metric: 'Growth', twitter: 80, linkedin: 75, tiktok: 95, instagram: 90 },
 ];
 
@@ -95,10 +131,12 @@ export function filterPatterns(
   platform: string,
   searchQuery: string
 ): ViralPattern[] {
-  return patterns.filter((pattern) => {
-    const matchesPlatform = platform === 'all' || pattern.platform.toLowerCase() === platform;
-    const matchesSearch = pattern.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          pattern.type.toLowerCase().includes(searchQuery.toLowerCase());
+  return patterns.filter(pattern => {
+    const matchesPlatform =
+      platform === 'all' || pattern.platform.toLowerCase() === platform;
+    const matchesSearch =
+      pattern.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pattern.type.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesPlatform && matchesSearch;
   });
 }
@@ -127,7 +165,9 @@ export function exportReport(
     engagementTimeline: engagementData,
   };
 
-  const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(reportData, null, 2)], {
+    type: 'application/json',
+  });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

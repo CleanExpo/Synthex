@@ -3,7 +3,9 @@
 import { cn } from '@/lib/utils';
 import type { ComponentType, SVGProps } from 'react';
 
-type IconComponent = ComponentType<SVGProps<SVGSVGElement> & { className?: string }>;
+type IconComponent = ComponentType<
+  SVGProps<SVGSVGElement> & { className?: string }
+>;
 
 interface DashboardEmptyStateProps {
   icon: IconComponent;
@@ -40,19 +42,23 @@ export function DashboardEmptyState({
     >
       {/* Icon container */}
       <div className="mb-6 w-14 h-14 flex items-center justify-center border-[0.5px] border-white/[0.1] bg-white/[0.02] rounded-sm">
-        <Icon className="h-6 w-6 text-cyan-400/70" />
+        <Icon className="h-6 w-6 text-orange-400/70" />
       </div>
 
       {/* Content */}
-      <h3 className="text-lg font-light text-white tracking-tight mb-2">{title}</h3>
-      <p className="text-sm text-white/40 max-w-sm leading-relaxed mb-8">{description}</p>
+      <h3 className="text-lg font-light text-white tracking-tight mb-2">
+        {title}
+      </h3>
+      <p className="text-sm text-white/40 max-w-sm leading-relaxed mb-8">
+        {description}
+      </p>
 
       {/* Actions */}
       <div className="flex items-center gap-3">
         {action && (
           <button
             onClick={action.onClick}
-            className="flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-[#0a1628] text-xs font-semibold tracking-wide rounded-sm transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors"
           >
             {action.icon && <action.icon className="h-3.5 w-3.5" />}
             {action.label}

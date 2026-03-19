@@ -79,34 +79,55 @@ export function GEOEditorPanel({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="text-sm font-medium text-slate-300 mb-2">Content Editor</div>
+      <div className="text-sm font-medium text-slate-300 mb-2">
+        Content Editor
+      </div>
 
       {/* Textarea */}
       <textarea
         value={content}
         onChange={handleChange}
         placeholder="Paste your content here to score it against the 9 Princeton GEO tactics — authoritative citations, statistics, quotations, fluency, readability, technical vocabulary, uniqueness, information flow, and persuasion..."
-        className="flex-1 w-full bg-white/5 border border-white/10 rounded-lg p-4 text-slate-200 text-sm resize-none focus:outline-none focus:border-cyan-500/50 placeholder:text-slate-600 font-mono leading-relaxed min-h-[500px] transition-colors"
+        className="flex-1 w-full bg-white/5 border border-white/10 rounded-lg p-4 text-slate-200 text-sm resize-none focus:outline-none focus:border-orange-500/50 placeholder:text-slate-600 font-mono leading-relaxed min-h-[500px] transition-colors"
       />
 
       {/* Content too short hint */}
       {content.length > 0 && content.length < 50 && (
         <p className="text-xs text-slate-600 mt-1">
-          Add at least 50 characters to start scoring ({50 - content.length} more needed)
+          Add at least 50 characters to start scoring ({50 - content.length}{' '}
+          more needed)
         </p>
       )}
 
       {/* Footer */}
       <div className="flex items-centre gap-3 mt-2 text-xs text-slate-500">
-        <span>{wordCount.toLocaleString()} {wordCount === 1 ? 'word' : 'words'}</span>
+        <span>
+          {wordCount.toLocaleString()} {wordCount === 1 ? 'word' : 'words'}
+        </span>
         <span>·</span>
         {error ? (
           <span className="text-red-400">{error}</span>
         ) : isScoring ? (
           <span className="flex items-centre gap-1.5 text-amber-400">
-            <svg className="h-3 w-3 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            <svg
+              className="h-3 w-3 animate-spin"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
             </svg>
             Scoring...
           </span>

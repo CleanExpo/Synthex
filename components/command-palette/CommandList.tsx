@@ -27,7 +27,7 @@ export function CommandList({
           <div className="px-2 py-1 text-xs text-gray-500 uppercase">
             {category}
           </div>
-          {items.map((cmd) => {
+          {items.map(cmd => {
             const Icon = cmd.icon;
             const isSelected = filteredCommands.indexOf(cmd) === selectedIndex;
 
@@ -38,9 +38,10 @@ export function CommandList({
                 className={`
                   w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left
                   transition-colors duration-150
-                  ${isSelected
-                    ? 'bg-cyan-500/20 text-white'
-                    : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                  ${
+                    isSelected
+                      ? 'bg-orange-500/20 text-white'
+                      : 'text-gray-300 hover:bg-white/5 hover:text-white'
                   }
                 `}
               >
@@ -53,9 +54,7 @@ export function CommandList({
                     </div>
                   )}
                 </div>
-                {isSelected && (
-                  <ArrowRight className="w-4 h-4 text-gray-400" />
-                )}
+                {isSelected && <ArrowRight className="w-4 h-4 text-gray-400" />}
               </button>
             );
           })}

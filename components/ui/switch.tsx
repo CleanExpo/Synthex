@@ -11,23 +11,23 @@ const switchVariants = cva(
     variants: {
       variant: {
         default:
-          'data-[state=checked]:bg-primary data-[state=unchecked]:bg-input dark:data-[state=checked]:bg-cyan-600 dark:data-[state=unchecked]:bg-slate-700',
+          'data-[state=checked]:bg-primary data-[state=unchecked]:bg-input dark:data-[state=checked]:bg-orange-600 dark:data-[state=unchecked]:bg-slate-700',
         // Premium Glassmorphism variants
         glass:
           'data-[state=checked]:bg-white/30 data-[state=unchecked]:bg-white/[0.08] backdrop-blur-md border-white/[0.1]',
         'glass-solid':
           'data-[state=checked]:bg-slate-600 data-[state=unchecked]:bg-slate-800/80 backdrop-blur-md border-white/[0.08]',
         'glass-primary':
-          'data-[state=checked]:bg-cyan-500/60 data-[state=unchecked]:bg-cyan-500/20 backdrop-blur-md border-cyan-500/30',
+          'data-[state=checked]:bg-orange-500/60 data-[state=unchecked]:bg-orange-500/20 backdrop-blur-md border-orange-500/30',
         'glass-secondary':
-          'data-[state=checked]:bg-cyan-500/60 data-[state=unchecked]:bg-cyan-500/20 backdrop-blur-md border-cyan-500/30',
+          'data-[state=checked]:bg-orange-500/60 data-[state=unchecked]:bg-orange-500/20 backdrop-blur-md border-orange-500/30',
         'glass-success':
           'data-[state=checked]:bg-emerald-500/60 data-[state=unchecked]:bg-emerald-500/20 backdrop-blur-md border-emerald-500/30',
         // Gradient variants
         'gradient-primary':
-          'data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-cyan-500 data-[state=unchecked]:bg-white/[0.08] backdrop-blur-md',
+          'data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-orange-500 data-[state=unchecked]:bg-white/[0.08] backdrop-blur-md',
         'gradient-secondary':
-          'data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-500 data-[state=unchecked]:bg-white/[0.08] backdrop-blur-md',
+          'data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-blue-500 data-[state=unchecked]:bg-white/[0.08] backdrop-blur-md',
       },
       size: {
         default: 'h-6 w-11',
@@ -57,7 +57,8 @@ const switchThumbVariants = cva(
         'gradient-secondary': 'bg-white shadow-[0_0_10px_rgba(6,182,212,0.3)]',
       },
       size: {
-        default: 'h-5 w-5 data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0',
+        default:
+          'h-5 w-5 data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0',
         sm: 'h-4 w-4 data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0',
         lg: 'h-6 w-6 data-[state=checked]:translate-x-7 data-[state=unchecked]:translate-x-0',
       },
@@ -70,7 +71,8 @@ const switchThumbVariants = cva(
 );
 
 export interface SwitchProps
-  extends React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>,
+  extends
+    React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>,
     VariantProps<typeof switchVariants> {}
 
 const Switch = React.forwardRef<

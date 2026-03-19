@@ -19,8 +19,8 @@ const sheetOverlayVariants = cva(
         default: 'bg-background/80 backdrop-blur-sm',
         glass: 'bg-black/40 backdrop-blur-md',
         'glass-solid': 'bg-slate-950/60 backdrop-blur-lg',
-        'glass-primary': 'bg-cyan-950/40 backdrop-blur-md',
-        'glass-secondary': 'bg-cyan-950/40 backdrop-blur-md',
+        'glass-primary': 'bg-orange-950/40 backdrop-blur-md',
+        'glass-secondary': 'bg-orange-950/40 backdrop-blur-md',
       },
     },
     defaultVariants: {
@@ -30,7 +30,8 @@ const sheetOverlayVariants = cva(
 );
 
 export interface SheetOverlayProps
-  extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>,
+  extends
+    React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>,
     VariantProps<typeof sheetOverlayVariants> {}
 
 const SheetOverlay = React.forwardRef<
@@ -57,9 +58,9 @@ const sheetContentVariants = cva(
         'glass-solid':
           'bg-slate-900/95 backdrop-blur-xl border border-white/[0.08] text-white',
         'glass-primary':
-          'bg-cyan-500/10 backdrop-blur-xl border border-cyan-500/20 text-white',
+          'bg-orange-500/10 backdrop-blur-xl border border-orange-500/20 text-white',
         'glass-secondary':
-          'bg-cyan-500/10 backdrop-blur-xl border border-cyan-500/20 text-white',
+          'bg-orange-500/10 backdrop-blur-xl border border-orange-500/20 text-white',
       },
       side: {
         top: 'inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top',
@@ -85,8 +86,8 @@ const sheetCloseVariants = cva(
         default: 'data-[state=open]:bg-secondary',
         glass: 'text-white hover:bg-white/10',
         'glass-solid': 'text-white hover:bg-white/10',
-        'glass-primary': 'text-cyan-200 hover:bg-cyan-500/20',
-        'glass-secondary': 'text-cyan-200 hover:bg-cyan-500/20',
+        'glass-primary': 'text-orange-200 hover:bg-orange-500/20',
+        'glass-secondary': 'text-orange-200 hover:bg-orange-500/20',
       },
     },
     defaultVariants: {
@@ -101,7 +102,8 @@ const SheetVariantContext = React.createContext<{
 }>({});
 
 export interface SheetContentProps
-  extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
+  extends
+    React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetContentVariants> {}
 
 const SheetContent = React.forwardRef<
@@ -114,10 +116,10 @@ const SheetContent = React.forwardRef<
         variant === 'glass' || variant === 'glass-solid'
           ? 'glass'
           : variant === 'glass-primary'
-          ? 'glass-primary'
-          : variant === 'glass-secondary'
-          ? 'glass-secondary'
-          : 'default'
+            ? 'glass-primary'
+            : variant === 'glass-secondary'
+              ? 'glass-secondary'
+              : 'default'
       }
     />
     <SheetVariantContext.Provider value={{ variant }}>
@@ -134,10 +136,10 @@ const SheetContent = React.forwardRef<
                 variant === 'glass' || variant === 'glass-solid'
                   ? 'glass'
                   : variant === 'glass-primary'
-                  ? 'glass-primary'
-                  : variant === 'glass-secondary'
-                  ? 'glass-secondary'
-                  : 'default',
+                    ? 'glass-primary'
+                    : variant === 'glass-secondary'
+                      ? 'glass-secondary'
+                      : 'default',
             })
           )}
         >
@@ -150,14 +152,29 @@ const SheetContent = React.forwardRef<
 ));
 SheetContent.displayName = SheetPrimitive.Content.displayName;
 
-const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col space-y-2 text-center sm:text-left', className)} {...props} />
+const SheetHeader = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      'flex flex-col space-y-2 text-center sm:text-left',
+      className
+    )}
+    {...props}
+  />
 );
 SheetHeader.displayName = 'SheetHeader';
 
-const SheetFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+const SheetFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2', className)}
+    className={cn(
+      'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2',
+      className
+    )}
     {...props}
   />
 );
@@ -173,7 +190,11 @@ const SheetTitle = React.forwardRef<
   return (
     <SheetPrimitive.Title
       ref={ref}
-      className={cn('text-lg font-semibold', isGlass ? 'text-white' : 'text-foreground', className)}
+      className={cn(
+        'text-lg font-semibold',
+        isGlass ? 'text-white' : 'text-foreground',
+        className
+      )}
       {...props}
     />
   );
@@ -190,7 +211,11 @@ const SheetDescription = React.forwardRef<
   return (
     <SheetPrimitive.Description
       ref={ref}
-      className={cn('text-sm', isGlass ? 'text-white/70' : 'text-muted-foreground', className)}
+      className={cn(
+        'text-sm',
+        isGlass ? 'text-white/70' : 'text-muted-foreground',
+        className
+      )}
       {...props}
     />
   );

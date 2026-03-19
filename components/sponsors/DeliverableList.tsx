@@ -7,8 +7,20 @@
  */
 
 import { cn } from '@/lib/utils';
-import { Plus, Edit, Trash2, Calendar, CheckCircle2, Circle, ExternalLink } from '@/components/icons';
-import type { DealDeliverable, DeliverableType, DeliverableStatus } from '@/hooks/useSponsorCRM';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Calendar,
+  CheckCircle2,
+  Circle,
+  ExternalLink,
+} from '@/components/icons';
+import type {
+  DealDeliverable,
+  DeliverableType,
+  DeliverableStatus,
+} from '@/hooks/useSponsorCRM';
 import { TYPE_LABELS, DELIVERABLE_STATUS_LABELS } from '@/hooks/useSponsorCRM';
 
 interface DeliverableListProps {
@@ -27,7 +39,7 @@ const TYPE_COLORS: Record<DeliverableType, string> = {
   reel: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
   video: 'bg-red-500/10 text-red-400 border-red-500/30',
   mention: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
-  review: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
+  review: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
   other: 'bg-gray-500/10 text-gray-400 border-gray-500/30',
 };
 
@@ -79,7 +91,12 @@ function DeliverableRow({
 
       {/* Title */}
       <div className="flex-1 min-w-0">
-        <p className={cn('text-sm font-medium truncate', isCompleted ? 'text-white/50 line-through' : 'text-white')}>
+        <p
+          className={cn(
+            'text-sm font-medium truncate',
+            isCompleted ? 'text-white/50 line-through' : 'text-white'
+          )}
+        >
           {deliverable.title}
         </p>
       </div>
@@ -123,8 +140,8 @@ function DeliverableRow({
           href={deliverable.contentUrl}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="p-1.5 text-white/40 hover:text-cyan-400 transition-colors"
+          onClick={e => e.stopPropagation()}
+          className="p-1.5 text-white/40 hover:text-orange-400 transition-colors"
         >
           <ExternalLink className="h-4 w-4" />
         </a>
@@ -186,7 +203,7 @@ export function DeliverableList({
       </button>
 
       {/* Deliverable Rows */}
-      {deliverables.map((deliverable) => (
+      {deliverables.map(deliverable => (
         <DeliverableRow
           key={deliverable.id}
           deliverable={deliverable}

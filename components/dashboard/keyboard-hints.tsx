@@ -37,10 +37,14 @@ export function KeyboardHints() {
       <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-xl p-4 shadow-xl max-w-xs">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 text-white">
-            <Command className="w-4 h-4 text-cyan-400" />
+            <Command className="w-4 h-4 text-orange-400" />
             <span className="font-medium text-sm">Keyboard Shortcuts</span>
           </div>
-          <button onClick={handleDismiss} className="text-gray-400 hover:text-white" aria-label="Dismiss keyboard shortcuts">
+          <button
+            onClick={handleDismiss}
+            className="text-gray-400 hover:text-white"
+            aria-label="Dismiss keyboard shortcuts"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -50,7 +54,10 @@ export function KeyboardHints() {
               <span className="text-gray-400">{shortcut.description}</span>
               <div className="flex gap-1">
                 {shortcut.keys.map((key, j) => (
-                  <kbd key={j} className="px-1.5 py-0.5 bg-white/10 rounded text-xs text-white">
+                  <kbd
+                    key={j}
+                    className="px-1.5 py-0.5 bg-white/10 rounded text-xs text-white"
+                  >
                     {key}
                   </kbd>
                 ))}

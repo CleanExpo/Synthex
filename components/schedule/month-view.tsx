@@ -63,7 +63,10 @@ export function MonthView({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>
-            {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            {currentDate.toLocaleDateString('en-US', {
+              month: 'long',
+              year: 'numeric',
+            })}
           </CardTitle>
           <div className="flex space-x-2">
             <Button
@@ -96,46 +99,58 @@ export function MonthView({
       <CardContent>
         <div className="grid grid-cols-7 gap-px bg-white/10 rounded-lg overflow-hidden">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="bg-slate-900 p-2 text-center text-xs font-medium text-slate-400">
+            <div
+              key={day}
+              className="bg-slate-900 p-2 text-center text-xs font-medium text-slate-400"
+            >
               {day}
             </div>
           ))}
 
           {getDaysInMonth(currentDate).map((date, index) => {
             const postsForDay = date ? getPostsForDate(date) : [];
-            const isToday = date && date.toDateString() === new Date().toDateString();
+            const isToday =
+              date && date.toDateString() === new Date().toDateString();
 
             return (
               <div
                 key={index}
                 className={`bg-slate-900 min-h-[100px] p-2 ${
                   date ? 'hover:bg-white/5 cursor-pointer' : ''
-                } ${isToday ? 'ring-1 ring-cyan-500' : ''}`}
+                } ${isToday ? 'ring-1 ring-orange-500' : ''}`}
                 onClick={() => date && onCreatePost(date, 12)}
               >
                 {date && (
                   <>
-                    <div className={`text-sm mb-1 ${isToday ? 'text-cyan-400 font-bold' : 'text-slate-400'}`}>
+                    <div
+                      className={`text-sm mb-1 ${isToday ? 'text-orange-400 font-bold' : 'text-slate-400'}`}
+                    >
                       {date.getDate()}
                     </div>
                     <div className="space-y-1">
                       {postsForDay.slice(0, 3).map(post => {
-                        const IconComponent = getPlatformIconComponent(post.platforms[0]);
+                        const IconComponent = getPlatformIconComponent(
+                          post.platforms[0]
+                        );
                         return (
                           <div
                             key={post.id}
-                            onClick={(e) => {
+                            onClick={e => {
                               e.stopPropagation();
                               onPostClick(post);
                             }}
                             className={`text-xs p-1 rounded flex items-center space-x-1 cursor-pointer hover:scale-[1.02] transition-transform ${
                               post.status === 'published'
                                 ? 'bg-green-500/20 text-green-300'
-                                : 'bg-cyan-500/20 text-cyan-300'
+                                : 'bg-orange-500/20 text-orange-300'
                             }`}
                           >
-                            {IconComponent && <IconComponent className="h-4 w-4" />}
-                            <span className="truncate flex-1">{post.content.slice(0, 20)}...</span>
+                            {IconComponent && (
+                              <IconComponent className="h-4 w-4" />
+                            )}
+                            <span className="truncate flex-1">
+                              {post.content.slice(0, 20)}...
+                            </span>
                           </div>
                         );
                       })}

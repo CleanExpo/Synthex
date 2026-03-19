@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ArrowRight } from '@/components/icons';
 import type { ComponentType, SVGProps } from 'react';
 
-type LucideIcon = ComponentType<SVGProps<SVGSVGElement> & { className?: string }>;
+type LucideIcon = ComponentType<
+  SVGProps<SVGSVGElement> & { className?: string }
+>;
 
 /**
  * Feature Card Component
@@ -35,7 +37,12 @@ export interface FeatureCardProps {
   onClick?: () => void;
 }
 
-export function FeatureCard({ feature, className, variant = 'default', onClick }: FeatureCardProps) {
+export function FeatureCard({
+  feature,
+  className,
+  variant = 'default',
+  onClick,
+}: FeatureCardProps) {
   const Icon = feature.icon;
   const isHorizontal = variant === 'horizontal';
   const isCompact = variant === 'compact';
@@ -51,59 +58,77 @@ export function FeatureCard({ feature, className, variant = 'default', onClick }
         className
       )}
       onClick={onClick}
-      {...(onClick ? { role: 'button', tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } } : {})}
+      {...(onClick
+        ? {
+            role: 'button',
+            tabIndex: 0,
+            onKeyDown: (e: React.KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick();
+              }
+            },
+          }
+        : {})}
     >
       {/* Badge */}
       {feature.badge && (
-        <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-medium">
+        <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-300 text-xs font-medium">
           {feature.badge}
         </div>
       )}
 
       {/* Gradient glow on hover */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-        <div className={cn(
-          'absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full blur-3xl',
-          feature.iconColor || 'bg-cyan-500/20'
-        )} />
+        <div
+          className={cn(
+            'absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full blur-3xl',
+            feature.iconColor || 'bg-orange-500/20'
+          )}
+        />
       </div>
 
-      <CardHeader className={cn(
-        'relative',
-        isHorizontal && 'flex-shrink-0 pb-0',
-        isCompact && 'pb-2'
-      )}>
+      <CardHeader
+        className={cn(
+          'relative',
+          isHorizontal && 'flex-shrink-0 pb-0',
+          isCompact && 'pb-2'
+        )}
+      >
         {Icon && (
-          <div className={cn(
-            'flex items-center justify-center rounded-xl transition-transform group-hover:scale-110',
-            isCompact ? 'w-10 h-10 mb-2' : 'w-12 h-12 mb-4',
-            feature.iconColor
-              ? `bg-gradient-to-br ${feature.iconColor}`
-              : 'bg-gradient-to-br from-cyan-500/20 to-cyan-500/20 border border-cyan-500/20'
-          )}>
-            <Icon className={cn(
-              'text-white',
-              isCompact ? 'w-5 h-5' : 'w-6 h-6'
-            )} />
+          <div
+            className={cn(
+              'flex items-center justify-center rounded-xl transition-transform group-hover:scale-110',
+              isCompact ? 'w-10 h-10 mb-2' : 'w-12 h-12 mb-4',
+              feature.iconColor
+                ? `bg-gradient-to-br ${feature.iconColor}`
+                : 'bg-gradient-to-br from-orange-500/20 to-orange-500/20 border border-orange-500/20'
+            )}
+          >
+            <Icon
+              className={cn('text-white', isCompact ? 'w-5 h-5' : 'w-6 h-6')}
+            />
           </div>
         )}
-        <h3 className={cn(
-          'font-semibold text-white',
-          isCompact ? 'text-base' : 'text-lg'
-        )}>
+        <h3
+          className={cn(
+            'font-semibold text-white',
+            isCompact ? 'text-base' : 'text-lg'
+          )}
+        >
           {feature.title}
         </h3>
       </CardHeader>
 
-      <CardContent className={cn(
-        'relative',
-        isHorizontal && 'pt-6',
-        isCompact && 'pt-0'
-      )}>
-        <p className={cn(
-          'text-slate-400 leading-relaxed',
-          isCompact ? 'text-sm' : 'text-base'
-        )}>
+      <CardContent
+        className={cn('relative', isHorizontal && 'pt-6', isCompact && 'pt-0')}
+      >
+        <p
+          className={cn(
+            'text-slate-400 leading-relaxed',
+            isCompact ? 'text-sm' : 'text-base'
+          )}
+        >
           {feature.description}
         </p>
 
@@ -111,17 +136,19 @@ export function FeatureCard({ feature, className, variant = 'default', onClick }
         {feature.stats && isDetailed && (
           <div className="mt-4 pt-4 border-t border-white/10">
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-cyan-400 bg-clip-text text-transparent">
+              <span className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-400 bg-clip-text text-transparent">
                 {feature.stats.value}
               </span>
-              <span className="text-sm text-slate-500">{feature.stats.label}</span>
+              <span className="text-sm text-slate-500">
+                {feature.stats.label}
+              </span>
             </div>
           </div>
         )}
 
         {/* Arrow link indicator */}
         {feature.href && (
-          <div className="mt-4 flex items-center gap-2 text-cyan-400 text-sm font-medium group-hover:gap-3 transition-all">
+          <div className="mt-4 flex items-center gap-2 text-orange-400 text-sm font-medium group-hover:gap-3 transition-all">
             Learn more
             <ArrowRight className="w-4 h-4" />
           </div>
@@ -151,7 +178,12 @@ export interface FeatureGridProps {
   className?: string;
 }
 
-export function FeatureGrid({ features, columns = 3, variant = 'default', className }: FeatureGridProps) {
+export function FeatureGrid({
+  features,
+  columns = 3,
+  variant = 'default',
+  className,
+}: FeatureGridProps) {
   return (
     <div
       className={cn(
@@ -195,7 +227,7 @@ export function FeatureSection({
     <section className={cn('py-20', className)}>
       <div className="text-center mb-16">
         {subtitle && (
-          <span className="inline-block px-4 py-1.5 mb-4 text-sm font-medium text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 rounded-full">
+          <span className="inline-block px-4 py-1.5 mb-4 text-sm font-medium text-orange-300 bg-orange-500/10 border border-orange-500/20 rounded-full">
             {subtitle}
           </span>
         )}

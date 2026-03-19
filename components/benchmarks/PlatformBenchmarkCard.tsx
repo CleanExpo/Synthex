@@ -15,7 +15,10 @@ import {
   Linkedin,
   Facebook,
 } from '@/components/icons';
-import type { PlatformReport, BenchmarkComparison } from '@/lib/analytics/benchmark-service';
+import type {
+  PlatformReport,
+  BenchmarkComparison,
+} from '@/lib/analytics/benchmark-service';
 
 // Platform icons
 type IconComponent = React.ComponentType<{ className?: string }>;
@@ -36,10 +39,26 @@ interface PlatformBenchmarkCardProps {
 }
 
 const RATING_COLORS = {
-  below: { text: 'text-red-400', bg: 'bg-red-500', badge: 'bg-red-500/10 text-red-400' },
-  average: { text: 'text-yellow-400', bg: 'bg-yellow-500', badge: 'bg-yellow-500/10 text-yellow-400' },
-  good: { text: 'text-green-400', bg: 'bg-green-500', badge: 'bg-green-500/10 text-green-400' },
-  excellent: { text: 'text-cyan-400', bg: 'bg-cyan-500', badge: 'bg-cyan-500/10 text-cyan-400' },
+  below: {
+    text: 'text-red-400',
+    bg: 'bg-red-500',
+    badge: 'bg-red-500/10 text-red-400',
+  },
+  average: {
+    text: 'text-yellow-400',
+    bg: 'bg-yellow-500',
+    badge: 'bg-yellow-500/10 text-yellow-400',
+  },
+  good: {
+    text: 'text-green-400',
+    bg: 'bg-green-500',
+    badge: 'bg-green-500/10 text-green-400',
+  },
+  excellent: {
+    text: 'text-orange-400',
+    bg: 'bg-orange-500',
+    badge: 'bg-orange-500/10 text-orange-400',
+  },
 };
 
 const RATING_LABELS = {
@@ -74,15 +93,19 @@ function MetricRow({ comparison }: { comparison: BenchmarkComparison }) {
         <span className="text-sm text-gray-400">{comparison.displayName}</span>
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-white">
-            {comparison.userValue.toFixed(1)}{comparison.unit}
+            {comparison.userValue.toFixed(1)}
+            {comparison.unit}
           </span>
           <span
             className={cn(
               'text-xs px-1.5 py-0.5 rounded',
-              comparison.delta >= 0 ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'
+              comparison.delta >= 0
+                ? 'bg-green-500/10 text-green-400'
+                : 'bg-red-500/10 text-red-400'
             )}
           >
-            {deltaSign}{comparison.deltaPercent}%
+            {deltaSign}
+            {comparison.deltaPercent}%
           </span>
         </div>
       </div>
@@ -90,14 +113,20 @@ function MetricRow({ comparison }: { comparison: BenchmarkComparison }) {
       {/* Progress bar */}
       <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
         <div
-          className={cn('h-full rounded-full transition-all duration-500', colors.bg)}
+          className={cn(
+            'h-full rounded-full transition-all duration-500',
+            colors.bg
+          )}
           style={{ width: `${Math.min(100, comparison.percentile)}%` }}
         />
       </div>
 
       {/* Benchmark reference */}
       <div className="flex justify-between text-xs text-gray-500">
-        <span>Avg: {comparison.benchmark.average}{comparison.unit}</span>
+        <span>
+          Avg: {comparison.benchmark.average}
+          {comparison.unit}
+        </span>
         <span>{comparison.percentile}th percentile</span>
       </div>
     </div>
@@ -135,14 +164,19 @@ export function PlatformBenchmarkCard({
         </div>
 
         {/* Rating badge */}
-        <span className={cn('text-xs font-medium px-2.5 py-1 rounded-full', colors.badge)}>
+        <span
+          className={cn(
+            'text-xs font-medium px-2.5 py-1 rounded-full',
+            colors.badge
+          )}
+        >
           {RATING_LABELS[report.overallRating]}
         </span>
       </div>
 
       {/* Metrics */}
       <div className="space-y-4">
-        {report.comparisons.map((comparison) => (
+        {report.comparisons.map(comparison => (
           <MetricRow key={comparison.metric} comparison={comparison} />
         ))}
       </div>

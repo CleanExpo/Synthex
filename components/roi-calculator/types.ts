@@ -48,7 +48,7 @@ export interface FunnelStage {
 }
 
 export const COST_BREAKDOWN = [
-  { name: 'Advertising', value: 45, fill: '#06b6d4' },
+  { name: 'Advertising', value: 45, fill: '#ffb87b' },
   { name: 'Content Creation', value: 20, fill: '#ec4899' },
   { name: 'Tools & Software', value: 15, fill: '#3b82f6' },
   { name: 'Influencers', value: 12, fill: '#10b981' },

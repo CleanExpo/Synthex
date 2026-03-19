@@ -5,7 +5,13 @@
  * Line chart showing follower growth and engagement rate
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   LineChart as RechartsLineChart,
   Line,
@@ -50,7 +56,7 @@ export function GrowthChart({ data }: GrowthChartProps) {
               yAxisId="left"
               type="monotone"
               dataKey="followers"
-              stroke="#06b6d4"
+              stroke="#ffb87b"
               strokeWidth={2}
               name="Followers"
             />

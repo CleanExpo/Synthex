@@ -16,7 +16,13 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -37,7 +43,7 @@ import type { BaseCompositionProps, SceneProps } from '@/lib/remotion/types';
 // ── Dynamic import of Remotion Player (no SSR) ──────────────────────────────
 
 const Player = dynamic(
-  () => import('@remotion/player').then((mod) => mod.Player),
+  () => import('@remotion/player').then(mod => mod.Player),
   { ssr: false }
 );
 
@@ -52,12 +58,12 @@ const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
 
 export default function RemotionStudioPage() {
   const [selectedId, setSelectedId] = useState(COMPOSITION_REGISTRY[0].id);
-  const [editProps, setEditProps] = useState<BaseCompositionProps>(
-    () => ({ ...COMPOSITION_REGISTRY[0].defaultProps })
-  );
+  const [editProps, setEditProps] = useState<BaseCompositionProps>(() => ({
+    ...COMPOSITION_REGISTRY[0].defaultProps,
+  }));
 
   const composition = useMemo(
-    () => COMPOSITION_REGISTRY.find((c) => c.id === selectedId)!,
+    () => COMPOSITION_REGISTRY.find(c => c.id === selectedId)!,
     [selectedId]
   );
 
@@ -67,43 +73,48 @@ export default function RemotionStudioPage() {
 
   const handleCompositionChange = useCallback((id: string) => {
     setSelectedId(id);
-    const comp = COMPOSITION_REGISTRY.find((c) => c.id === id);
+    const comp = COMPOSITION_REGISTRY.find(c => c.id === id);
     if (comp) {
       setEditProps({ ...comp.defaultProps });
     }
   }, []);
 
   const handleTitleChange = useCallback((title: string) => {
-    setEditProps((prev) => ({ ...prev, title }));
+    setEditProps(prev => ({ ...prev, title }));
   }, []);
 
   const handleBrandColourChange = useCallback((brandColour: string) => {
-    setEditProps((prev) => ({ ...prev, brandColour }));
+    setEditProps(prev => ({ ...prev, brandColour }));
   }, []);
 
   const handleSceneTextChange = useCallback((index: number, text: string) => {
-    setEditProps((prev) => ({
+    setEditProps(prev => ({
       ...prev,
       scenes: prev.scenes.map((s, i) => (i === index ? { ...s, text } : s)),
     }));
   }, []);
 
-  const handleSceneSubtitleChange = useCallback((index: number, subtitle: string) => {
-    setEditProps((prev) => ({
-      ...prev,
-      scenes: prev.scenes.map((s, i) => (i === index ? { ...s, subtitle } : s)),
-    }));
-  }, []);
+  const handleSceneSubtitleChange = useCallback(
+    (index: number, subtitle: string) => {
+      setEditProps(prev => ({
+        ...prev,
+        scenes: prev.scenes.map((s, i) =>
+          i === index ? { ...s, subtitle } : s
+        ),
+      }));
+    },
+    []
+  );
 
   const handleAddScene = useCallback(() => {
-    setEditProps((prev) => ({
+    setEditProps(prev => ({
       ...prev,
       scenes: [...prev.scenes, { text: 'New scene', duration: 60 }],
     }));
   }, []);
 
   const handleRemoveScene = useCallback((index: number) => {
-    setEditProps((prev) => ({
+    setEditProps(prev => ({
       ...prev,
       scenes: prev.scenes.filter((_, i) => i !== index),
     }));
@@ -112,7 +123,9 @@ export default function RemotionStudioPage() {
   // Calculate total duration from scenes
   const totalDuration = useMemo(() => {
     const titleFrames = selectedId === 'SocialReel' ? 30 : 60;
-    return titleFrames + editProps.scenes.reduce((sum, s) => sum + s.duration, 0);
+    return (
+      titleFrames + editProps.scenes.reduce((sum, s) => sum + s.duration, 0)
+    );
   }, [editProps.scenes, selectedId]);
 
   return (
@@ -120,15 +133,22 @@ export default function RemotionStudioPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-cyan-500/10">
-            <Video className="h-6 w-6 text-cyan-400" />
+          <div className="p-2 rounded-lg bg-orange-500/10">
+            <Video className="h-6 w-6 text-orange-400" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-white">Remotion Studio</h1>
-            <p className="text-sm text-gray-400">Programmatic video composition preview</p>
+            <h1 className="text-xl font-semibold text-white">
+              Remotion Studio
+            </h1>
+            <p className="text-sm text-gray-400">
+              Programmatic video composition preview
+            </p>
           </div>
         </div>
-        <Badge variant="outline" className="border-cyan-500/30 text-cyan-400">
+        <Badge
+          variant="outline"
+          className="border-orange-500/30 text-orange-400"
+        >
           God Mode
         </Badge>
       </div>
@@ -142,12 +162,15 @@ export default function RemotionStudioPage() {
               <CardTitle className="text-sm">Composition</CardTitle>
             </CardHeader>
             <CardContent>
-              <Select value={selectedId} onValueChange={handleCompositionChange}>
+              <Select
+                value={selectedId}
+                onValueChange={handleCompositionChange}
+              >
                 <SelectTrigger className="bg-white/5 border-white/10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {COMPOSITION_REGISTRY.map((comp) => (
+                  {COMPOSITION_REGISTRY.map(comp => (
                     <SelectItem key={comp.id} value={comp.id}>
                       {comp.name} — {comp.description}
                     </SelectItem>
@@ -155,7 +178,9 @@ export default function RemotionStudioPage() {
                 </SelectContent>
               </Select>
               <div className="flex gap-3 mt-3 text-[11px] text-gray-500">
-                <span>{composition.width}×{composition.height}</span>
+                <span>
+                  {composition.width}×{composition.height}
+                </span>
                 <span>{composition.fps}fps</span>
                 <span>{(totalDuration / composition.fps).toFixed(1)}s</span>
               </div>
@@ -169,28 +194,32 @@ export default function RemotionStudioPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">Title</label>
+                <label className="text-xs text-gray-400 mb-1 block">
+                  Title
+                </label>
                 <input
                   type="text"
                   value={editProps.title}
-                  onChange={(e) => handleTitleChange(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+                  onChange={e => handleTitleChange(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">Brand Colour</label>
+                <label className="text-xs text-gray-400 mb-1 block">
+                  Brand Colour
+                </label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
                     value={editProps.brandColour || '#06B6D4'}
-                    onChange={(e) => handleBrandColourChange(e.target.value)}
+                    onChange={e => handleBrandColourChange(e.target.value)}
                     className="w-8 h-8 rounded border border-white/10 bg-transparent cursor-pointer"
                   />
                   <input
                     type="text"
                     value={editProps.brandColour || '#06B6D4'}
-                    onChange={(e) => handleBrandColourChange(e.target.value)}
-                    className="flex-1 bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-cyan-500/50"
+                    onChange={e => handleBrandColourChange(e.target.value)}
+                    className="flex-1 bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-orange-500/50"
                   />
                 </div>
               </div>
@@ -201,11 +230,13 @@ export default function RemotionStudioPage() {
           <Card variant="glass">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm">Scenes ({editProps.scenes.length})</CardTitle>
+                <CardTitle className="text-sm">
+                  Scenes ({editProps.scenes.length})
+                </CardTitle>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 text-xs text-cyan-400 hover:text-cyan-300"
+                  className="h-7 text-xs text-orange-400 hover:text-orange-300"
                   onClick={handleAddScene}
                 >
                   <Plus className="h-3 w-3 mr-1" />
@@ -235,16 +266,16 @@ export default function RemotionStudioPage() {
                   <input
                     type="text"
                     value={scene.text}
-                    onChange={(e) => handleSceneTextChange(i, e.target.value)}
+                    onChange={e => handleSceneTextChange(i, e.target.value)}
                     placeholder="Scene text"
-                    className="w-full bg-white/5 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500/50"
                   />
                   <input
                     type="text"
                     value={scene.subtitle || ''}
-                    onChange={(e) => handleSceneSubtitleChange(i, e.target.value)}
+                    onChange={e => handleSceneSubtitleChange(i, e.target.value)}
                     placeholder="Subtitle (optional)"
-                    className="w-full bg-white/5 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white/60 focus:outline-none focus:border-cyan-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white/60 focus:outline-none focus:border-orange-500/50"
                   />
                 </div>
               ))}
@@ -258,7 +289,7 @@ export default function RemotionStudioPage() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Play className="h-4 w-4 text-cyan-400" />
+                  <Play className="h-4 w-4 text-orange-400" />
                   <CardTitle className="text-sm">Preview</CardTitle>
                 </div>
                 <CardDescription className="text-[11px]">
@@ -270,7 +301,9 @@ export default function RemotionStudioPage() {
               <div
                 className={cn(
                   'rounded-lg overflow-hidden border border-white/[0.08] bg-black',
-                  composition.width > composition.height ? 'aspect-video' : 'aspect-[9/16] max-h-[600px] mx-auto'
+                  composition.width > composition.height
+                    ? 'aspect-video'
+                    : 'aspect-[9/16] max-h-[600px] mx-auto'
                 )}
               >
                 {CompositionComponent && (
@@ -297,7 +330,9 @@ export default function RemotionStudioPage() {
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <span className="text-gray-500">Resolution</span>
-                  <p className="text-white font-mono">{composition.width}×{composition.height}</p>
+                  <p className="text-white font-mono">
+                    {composition.width}×{composition.height}
+                  </p>
                 </div>
                 <div>
                   <span className="text-gray-500">Frame Rate</span>
@@ -305,11 +340,16 @@ export default function RemotionStudioPage() {
                 </div>
                 <div>
                   <span className="text-gray-500">Duration</span>
-                  <p className="text-white font-mono">{(totalDuration / composition.fps).toFixed(1)}s ({totalDuration} frames)</p>
+                  <p className="text-white font-mono">
+                    {(totalDuration / composition.fps).toFixed(1)}s (
+                    {totalDuration} frames)
+                  </p>
                 </div>
                 <div>
                   <span className="text-gray-500">Scenes</span>
-                  <p className="text-white font-mono">{editProps.scenes.length}</p>
+                  <p className="text-white font-mono">
+                    {editProps.scenes.length}
+                  </p>
                 </div>
               </div>
             </CardContent>

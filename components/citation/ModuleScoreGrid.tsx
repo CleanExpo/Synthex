@@ -27,7 +27,7 @@ const MODULES: ModuleConfig[] = [
   {
     label: 'GEO Analysis',
     href: '/dashboard/geo',
-    getValue: (o) => ({
+    getValue: o => ({
       display: o.geoSummary.count > 0 ? `${o.geoSummary.avgScore}` : '—',
       numeric: o.geoSummary.avgScore,
     }),
@@ -36,7 +36,7 @@ const MODULES: ModuleConfig[] = [
   {
     label: 'Entity Coherence',
     href: '/dashboard/geo',
-    getValue: (o) => ({
+    getValue: o => ({
       display:
         o.entitySummary.avgCoherenceScore > 0
           ? `${o.entitySummary.avgCoherenceScore}`
@@ -48,7 +48,7 @@ const MODULES: ModuleConfig[] = [
   {
     label: 'Authority Engine',
     href: '/dashboard/authority',
-    getValue: (o) => ({
+    getValue: o => ({
       display: o.geoSummary.count > 0 ? `${o.geoSummary.avgScore}` : '—',
       numeric: o.geoSummary.avgScore,
     }),
@@ -57,7 +57,7 @@ const MODULES: ModuleConfig[] = [
   {
     label: 'Writing Quality',
     href: '/dashboard/quality',
-    getValue: (o) => ({
+    getValue: o => ({
       display:
         o.qualitySummary.avgQualityScore > 0
           ? `${o.qualitySummary.avgQualityScore}`
@@ -69,7 +69,7 @@ const MODULES: ModuleConfig[] = [
   {
     label: 'AI Slop Detection',
     href: '/dashboard/quality',
-    getValue: (o) => ({
+    getValue: o => ({
       display:
         o.qualitySummary.auditsRun > 0
           ? `${o.qualitySummary.auditsRun} audits`
@@ -81,7 +81,7 @@ const MODULES: ModuleConfig[] = [
   {
     label: 'E-E-A-T Builder',
     href: '/dashboard/eeat',
-    getValue: (o) => ({
+    getValue: o => ({
       display:
         o.qualitySummary.avgEeatScore > 0
           ? `${o.qualitySummary.avgEeatScore}`
@@ -93,7 +93,7 @@ const MODULES: ModuleConfig[] = [
   {
     label: 'Brand Builder',
     href: '/dashboard/brand',
-    getValue: (o) => ({
+    getValue: o => ({
       display:
         o.entitySummary.profilesCreated > 0
           ? `${o.entitySummary.profilesCreated} profiles`
@@ -105,7 +105,7 @@ const MODULES: ModuleConfig[] = [
   {
     label: 'PR Manager',
     href: '/dashboard/pr',
-    getValue: (o) => ({
+    getValue: o => ({
       display:
         o.backlinkSummary.contacted > 0
           ? `${o.backlinkSummary.contacted} pitched`
@@ -117,7 +117,7 @@ const MODULES: ModuleConfig[] = [
   {
     label: 'Backlink Prospector',
     href: '/dashboard/backlinks',
-    getValue: (o) => ({
+    getValue: o => ({
       display:
         o.backlinkSummary.prospectsFound > 0
           ? `${o.backlinkSummary.prospectsFound} found`
@@ -129,11 +129,9 @@ const MODULES: ModuleConfig[] = [
   {
     label: 'Prompt Intelligence',
     href: '/dashboard/prompts',
-    getValue: (o) => ({
+    getValue: o => ({
       display:
-        o.promptSummary.tracked > 0
-          ? `${o.promptSummary.coverageRate}%`
-          : '—',
+        o.promptSummary.tracked > 0 ? `${o.promptSummary.coverageRate}%` : '—',
       numeric: o.promptSummary.coverageRate,
     }),
     description: 'AI mention rate',
@@ -141,7 +139,7 @@ const MODULES: ModuleConfig[] = [
   {
     label: 'Algorithm Sentinel',
     href: '/dashboard/sentinel',
-    getValue: (o) => ({
+    getValue: o => ({
       display:
         o.alertsSummary.recent7Days > 0
           ? `${o.alertsSummary.recent7Days} alerts`
@@ -160,12 +158,19 @@ function ScoreColour(numeric: number, module: string): string {
     return 'text-red-400';
   }
   // Count modules
-  if (['Brand Builder', 'PR Manager', 'Backlink Prospector', 'AI Slop Detection'].includes(module)) {
-    return numeric > 0 ? 'text-cyan-400' : 'text-gray-500';
+  if (
+    [
+      'Brand Builder',
+      'PR Manager',
+      'Backlink Prospector',
+      'AI Slop Detection',
+    ].includes(module)
+  ) {
+    return numeric > 0 ? 'text-orange-400' : 'text-gray-500';
   }
   // Score modules
   if (numeric >= 80) return 'text-emerald-400';
-  if (numeric >= 60) return 'text-cyan-400';
+  if (numeric >= 60) return 'text-orange-400';
   if (numeric >= 40) return 'text-amber-400';
   if (numeric > 0) return 'text-red-400';
   return 'text-gray-500';
@@ -183,11 +188,14 @@ function StatusDot({ active }: { active: boolean }) {
   return <span className="inline-flex rounded-full h-2 w-2 bg-gray-600" />;
 }
 
-export function ModuleScoreGrid({ overview, loading = false }: ModuleScoreGridProps) {
+export function ModuleScoreGrid({
+  overview,
+  loading = false,
+}: ModuleScoreGridProps) {
   if (loading || !overview) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        {MODULES.map((m) => (
+        {MODULES.map(m => (
           <div
             key={m.label}
             className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 animate-pulse"
@@ -203,7 +211,7 @@ export function ModuleScoreGrid({ overview, loading = false }: ModuleScoreGridPr
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-      {MODULES.map((module) => {
+      {MODULES.map(module => {
         const { display, numeric } = module.getValue(overview);
         const hasData = numeric > 0 || display === 'All clear';
         const scoreColour = ScoreColour(numeric, module.label);

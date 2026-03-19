@@ -1,13 +1,27 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Sparkles, Copy, Download, RefreshCw, Zap, TrendingUp,
-  Hash, Target, Check, MessageSquare
+  Sparkles,
+  Copy,
+  Download,
+  RefreshCw,
+  Zap,
+  TrendingUp,
+  Hash,
+  Target,
+  Check,
+  MessageSquare,
 } from '@/components/icons';
 import { platformIcons } from './constants';
 import { getViralScoreColor, getEngagementColor } from './constants';
@@ -34,14 +48,15 @@ export function GeneratedContentDisplay({
   onDownload,
   onRegenerate,
 }: GeneratedContentDisplayProps) {
-  const PlatformIcon = platformIcons[platform as keyof typeof platformIcons] || MessageSquare;
+  const PlatformIcon =
+    platformIcons[platform as keyof typeof platformIcons] || MessageSquare;
 
   return (
     <Card variant="glass">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <PlatformIcon className="w-5 h-5 text-cyan-500" />
+            <PlatformIcon className="w-5 h-5 text-orange-500" />
             Generated Content
           </div>
           {generatedContent && (
@@ -50,12 +65,15 @@ export function GeneratedContentDisplay({
                 size="icon"
                 variant="ghost"
                 aria-label="Copy content"
-                onClick={() => onCopy(
-                  selectedVariation === 0
-                    ? generatedContent.content
-                    : generatedContent.variations[selectedVariation - 1].content,
-                  'content'
-                )}
+                onClick={() =>
+                  onCopy(
+                    selectedVariation === 0
+                      ? generatedContent.content
+                      : generatedContent.variations[selectedVariation - 1]
+                          .content,
+                    'content'
+                  )
+                }
               >
                 {copiedContent === 'content' ? (
                   <Check className="w-4 h-4 text-green-500" />
@@ -63,10 +81,20 @@ export function GeneratedContentDisplay({
                   <Copy className="w-4 h-4" />
                 )}
               </Button>
-              <Button size="icon" variant="ghost" aria-label="Download content" onClick={onDownload}>
+              <Button
+                size="icon"
+                variant="ghost"
+                aria-label="Download content"
+                onClick={onDownload}
+              >
                 <Download className="w-4 h-4" />
               </Button>
-              <Button size="icon" variant="ghost" aria-label="Regenerate content" onClick={onRegenerate}>
+              <Button
+                size="icon"
+                variant="ghost"
+                aria-label="Regenerate content"
+                onClick={onRegenerate}
+              >
                 <RefreshCw className="w-4 h-4" />
               </Button>
             </div>
@@ -74,7 +102,8 @@ export function GeneratedContentDisplay({
         </CardTitle>
         {generatedContent && (
           <CardDescription>
-            Generated in {generatedContent.metadata.processingTime}ms using {generatedContent.metadata.model}
+            Generated in {generatedContent.metadata.processingTime}ms using{' '}
+            {generatedContent.metadata.model}
           </CardDescription>
         )}
       </CardHeader>
@@ -86,25 +115,36 @@ export function GeneratedContentDisplay({
               <div className="p-3 bg-white/5 rounded-lg">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-400">Viral Score</span>
-                  <TrendingUp className={`w-4 h-4 ${getViralScoreColor(generatedContent.viralScore)}`} />
+                  <TrendingUp
+                    className={`w-4 h-4 ${getViralScoreColor(generatedContent.viralScore)}`}
+                  />
                 </div>
-                <p className={`text-2xl font-bold ${getViralScoreColor(generatedContent.viralScore)}`}>
+                <p
+                  className={`text-2xl font-bold ${getViralScoreColor(generatedContent.viralScore)}`}
+                >
                   {generatedContent.viralScore}%
                 </p>
               </div>
               <div className="p-3 bg-white/5 rounded-lg">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-400">Est. Engagement</span>
-                  <Zap className={`w-4 h-4 ${getEngagementColor(generatedContent.estimatedEngagement)}`} />
+                  <Zap
+                    className={`w-4 h-4 ${getEngagementColor(generatedContent.estimatedEngagement)}`}
+                  />
                 </div>
-                <p className={`text-2xl font-bold ${getEngagementColor(generatedContent.estimatedEngagement)}`}>
+                <p
+                  className={`text-2xl font-bold ${getEngagementColor(generatedContent.estimatedEngagement)}`}
+                >
                   {generatedContent.estimatedEngagement}%
                 </p>
               </div>
             </div>
 
             {/* Content Variations */}
-            <Tabs value={selectedVariation.toString()} onValueChange={(v) => setSelectedVariation(parseInt(v))}>
+            <Tabs
+              value={selectedVariation.toString()}
+              onValueChange={v => setSelectedVariation(parseInt(v))}
+            >
               <TabsList className="grid grid-cols-3 w-full">
                 <TabsTrigger value="0">Original</TabsTrigger>
                 {generatedContent.variations.slice(0, 2).map((_, index) => (
@@ -115,20 +155,30 @@ export function GeneratedContentDisplay({
               </TabsList>
               <TabsContent value="0" className="mt-4">
                 <div className="p-4 bg-white/5 rounded-lg">
-                  <p className="whitespace-pre-wrap">{generatedContent.content}</p>
+                  <p className="whitespace-pre-wrap">
+                    {generatedContent.content}
+                  </p>
                 </div>
               </TabsContent>
-              {generatedContent.variations.slice(0, 2).map((variation, index) => (
-                <TabsContent key={index + 1} value={(index + 1).toString()} className="mt-4">
-                  <div className="p-4 bg-white/5 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge variant="outline">{variation.style}</Badge>
-                      <span className="text-sm text-gray-400">Score: {variation.score.toFixed(0)}</span>
+              {generatedContent.variations
+                .slice(0, 2)
+                .map((variation, index) => (
+                  <TabsContent
+                    key={index + 1}
+                    value={(index + 1).toString()}
+                    className="mt-4"
+                  >
+                    <div className="p-4 bg-white/5 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="outline">{variation.style}</Badge>
+                        <span className="text-sm text-gray-400">
+                          Score: {variation.score.toFixed(0)}
+                        </span>
+                      </div>
+                      <p className="whitespace-pre-wrap">{variation.content}</p>
                     </div>
-                    <p className="whitespace-pre-wrap">{variation.content}</p>
-                  </div>
-                </TabsContent>
-              ))}
+                  </TabsContent>
+                ))}
             </Tabs>
 
             {/* Hashtags */}
@@ -142,7 +192,9 @@ export function GeneratedContentDisplay({
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => onCopy(generatedContent.hashtags.join(' '), 'hashtags')}
+                    onClick={() =>
+                      onCopy(generatedContent.hashtags.join(' '), 'hashtags')
+                    }
                   >
                     {copiedContent === 'hashtags' ? (
                       <Check className="w-3 h-3 text-green-500" />
@@ -153,7 +205,9 @@ export function GeneratedContentDisplay({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {generatedContent.hashtags.map((tag, index) => (
-                    <Badge key={index} variant="secondary">{tag}</Badge>
+                    <Badge key={index} variant="secondary">
+                      {tag}
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -182,7 +236,7 @@ export function GeneratedContentDisplay({
 
             {/* CTA */}
             {generatedContent.cta && (
-              <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
+              <div className="p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
                 <Label className="flex items-center gap-2 mb-2">
                   <Target className="w-4 h-4" />
                   Call to Action
@@ -195,7 +249,9 @@ export function GeneratedContentDisplay({
           <div className="text-center py-12">
             <Sparkles className="w-12 h-12 text-gray-600 mx-auto mb-4" />
             <p className="text-gray-400">Generate content to see it here</p>
-            <p className="text-sm text-gray-500 mt-2">AI-powered content will appear instantly</p>
+            <p className="text-sm text-gray-500 mt-2">
+              AI-powered content will appear instantly
+            </p>
           </div>
         )}
       </CardContent>

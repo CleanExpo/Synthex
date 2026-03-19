@@ -54,7 +54,9 @@ export default function SponsorCRMPage() {
   } = useSponsorCRM();
 
   // Filters
-  const [statusFilter, setStatusFilter] = useState<SponsorStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<SponsorStatus | 'all'>(
+    'all'
+  );
   const [stageFilter, setStageFilter] = useState<DealStage | null>(null);
 
   // Selection state
@@ -68,11 +70,12 @@ export default function SponsorCRMPage() {
   // Editing state
   const [editingSponsor, setEditingSponsor] = useState<Sponsor | null>(null);
   const [editingDeal, setEditingDeal] = useState<SponsorDeal | null>(null);
-  const [editingDeliverable, setEditingDeliverable] = useState<DealDeliverable | null>(null);
+  const [editingDeliverable, setEditingDeliverable] =
+    useState<DealDeliverable | null>(null);
   const [currentDeal, setCurrentDeal] = useState<SponsorDeal | null>(null);
 
   // Filter sponsors
-  const filteredSponsors = sponsors.filter((sponsor) => {
+  const filteredSponsors = sponsors.filter(sponsor => {
     if (statusFilter !== 'all' && sponsor.status !== statusFilter) return false;
     return true;
   });
@@ -118,9 +121,18 @@ export default function SponsorCRMPage() {
     async (data: CreateDeliverableInput | UpdateDeliverableInput) => {
       try {
         if (editingDeliverable && selectedSponsor && currentDeal) {
-          await updateDeliverable(selectedSponsor.id, currentDeal.id, editingDeliverable.id, data);
+          await updateDeliverable(
+            selectedSponsor.id,
+            currentDeal.id,
+            editingDeliverable.id,
+            data
+          );
         } else if (selectedSponsor && currentDeal) {
-          await createDeliverable(selectedSponsor.id, currentDeal.id, data as CreateDeliverableInput);
+          await createDeliverable(
+            selectedSponsor.id,
+            currentDeal.id,
+            data as CreateDeliverableInput
+          );
         }
         setShowDeliverableForm(false);
         setEditingDeliverable(null);
@@ -129,13 +141,23 @@ export default function SponsorCRMPage() {
         console.error('Failed to save deliverable:', err);
       }
     },
-    [selectedSponsor, currentDeal, editingDeliverable, createDeliverable, updateDeliverable]
+    [
+      selectedSponsor,
+      currentDeal,
+      editingDeliverable,
+      createDeliverable,
+      updateDeliverable,
+    ]
   );
 
   // Handle delete sponsor
   const handleDeleteSponsor = useCallback(
     async (sponsor: Sponsor) => {
-      if (!confirm(`Delete "${sponsor.name}"? This will remove all associated deals and deliverables.`)) {
+      if (
+        !confirm(
+          `Delete "${sponsor.name}"? This will remove all associated deals and deliverables.`
+        )
+      ) {
         return;
       }
       try {
@@ -154,7 +176,11 @@ export default function SponsorCRMPage() {
   const handleDeleteDeal = useCallback(
     async (deal: SponsorDeal) => {
       if (!selectedSponsor) return;
-      if (!confirm(`Delete deal "${deal.title}"? This will remove all associated deliverables.`)) {
+      if (
+        !confirm(
+          `Delete deal "${deal.title}"? This will remove all associated deliverables.`
+        )
+      ) {
         return;
       }
       try {
@@ -170,12 +196,15 @@ export default function SponsorCRMPage() {
   const handleToggleDeliverableStatus = useCallback(
     async (deal: SponsorDeal, deliverableId: string) => {
       if (!selectedSponsor) return;
-      const deliverable = deal.deliverables?.find((d) => d.id === deliverableId);
+      const deliverable = deal.deliverables?.find(d => d.id === deliverableId);
       if (!deliverable) return;
 
-      const newStatus = deliverable.status === 'approved' ? 'pending' : 'approved';
+      const newStatus =
+        deliverable.status === 'approved' ? 'pending' : 'approved';
       try {
-        await updateDeliverable(selectedSponsor.id, deal.id, deliverableId, { status: newStatus });
+        await updateDeliverable(selectedSponsor.id, deal.id, deliverableId, {
+          status: newStatus,
+        });
       } catch (err) {
         console.error('Failed to toggle deliverable status:', err);
       }
@@ -188,7 +217,9 @@ export default function SponsorCRMPage() {
     return (
       <div className="p-6">
         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 text-center">
-          <p className="text-red-400 mb-4">Failed to load sponsor data: {error}</p>
+          <p className="text-red-400 mb-4">
+            Failed to load sponsor data: {error}
+          </p>
           <button
             onClick={refetch}
             className="flex items-center gap-2 mx-auto px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
@@ -214,7 +245,7 @@ export default function SponsorCRMPage() {
             setEditingSponsor(null);
             setShowSponsorForm(true);
           }}
-          className="flex items-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-medium transition-colors"
         >
           <Plus className="h-4 w-4" />
           Add Sponsor
@@ -237,7 +268,7 @@ export default function SponsorCRMPage() {
             >
               All
             </button>
-            {SPONSOR_STATUSES.map((status) => (
+            {SPONSOR_STATUSES.map(status => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
@@ -266,7 +297,9 @@ export default function SponsorCRMPage() {
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sponsor List */}
-        <div className={cn(selectedSponsor ? 'lg:col-span-1' : 'lg:col-span-3')}>
+        <div
+          className={cn(selectedSponsor ? 'lg:col-span-1' : 'lg:col-span-3')}
+        >
           {!isLoading && filteredSponsors.length === 0 ? (
             <DashboardEmptyState
               icon={Briefcase}
@@ -284,7 +317,7 @@ export default function SponsorCRMPage() {
             <SponsorList
               sponsors={filteredSponsors}
               onSelect={setSelectedSponsor}
-              onEdit={(sponsor) => {
+              onEdit={sponsor => {
                 setEditingSponsor(sponsor);
                 setShowSponsorForm(true);
               }}
@@ -301,9 +334,13 @@ export default function SponsorCRMPage() {
             {/* Panel Header */}
             <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-white">{selectedSponsor.name}</h3>
+                <h3 className="text-lg font-semibold text-white">
+                  {selectedSponsor.name}
+                </h3>
                 {selectedSponsor.company && (
-                  <p className="text-sm text-white/50">{selectedSponsor.company}</p>
+                  <p className="text-sm text-white/50">
+                    {selectedSponsor.company}
+                  </p>
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -312,7 +349,7 @@ export default function SponsorCRMPage() {
                     setEditingDeal(null);
                     setShowDealForm(true);
                   }}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-400 rounded-lg text-sm transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 rounded-lg text-sm transition-colors"
                 >
                   <Plus className="h-4 w-4" />
                   Add Deal
@@ -332,18 +369,20 @@ export default function SponsorCRMPage() {
               <DealList
                 deals={selectedSponsor.deals ?? []}
                 sponsorId={selectedSponsor.id}
-                onEdit={(deal) => {
+                onEdit={deal => {
                   setEditingDeal(deal);
                   setShowDealForm(true);
                 }}
                 onDelete={handleDeleteDeal}
-                onAddDeliverable={(deal) => {
+                onAddDeliverable={deal => {
                   setCurrentDeal(deal);
                   setEditingDeliverable(null);
                   setShowDeliverableForm(true);
                 }}
                 onEditDeliverable={(deal, deliverableId) => {
-                  const deliverable = deal.deliverables?.find((d) => d.id === deliverableId);
+                  const deliverable = deal.deliverables?.find(
+                    d => d.id === deliverableId
+                  );
                   if (deliverable) {
                     setCurrentDeal(deal);
                     setEditingDeliverable(deliverable);
@@ -353,7 +392,11 @@ export default function SponsorCRMPage() {
                 onDeleteDeliverable={async (deal, deliverableId) => {
                   if (!confirm('Delete this deliverable?')) return;
                   try {
-                    await deleteDeliverable(selectedSponsor.id, deal.id, deliverableId);
+                    await deleteDeliverable(
+                      selectedSponsor.id,
+                      deal.id,
+                      deliverableId
+                    );
                   } catch (err) {
                     console.error('Failed to delete deliverable:', err);
                   }

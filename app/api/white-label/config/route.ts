@@ -11,24 +11,37 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
 // Validation schema for white-label configuration
 const whiteLabelConfigSchema = z.object({
-  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-  secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+  primaryColor: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .optional(),
+  secondaryColor: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .optional(),
   logoUrl: z.string().url().optional(),
   faviconUrl: z.string().url().optional(),
   companyName: z.string().max(100).optional(),
   customCss: z.string().max(10000).optional(),
   customDomain: z.string().max(253).optional(),
-  footerLinks: z.array(z.object({
-    label: z.string().max(50),
-    url: z.string().url(),
-  })).optional(),
+  footerLinks: z
+    .array(
+      z.object({
+        label: z.string().max(50),
+        url: z.string().url(),
+      })
+    )
+    .optional(),
 });
 
 /**
@@ -76,7 +89,7 @@ export async function GET(request: NextRequest) {
     const settings = (organization?.settings as Record<string, unknown>) || {};
     const whiteLabelConfig = {
       primaryColor: settings.primaryColor || '#6366f1',
-      secondaryColor: settings.secondaryColor || '#06b6d4',
+      secondaryColor: settings.secondaryColor || '#ffb87b',
       logoUrl: settings.logoUrl || null,
       faviconUrl: settings.faviconUrl || null,
       companyName: settings.companyName || null,
@@ -114,8 +127,11 @@ export async function PUT(request: NextRequest) {
   if (!security.allowed) {
     return APISecurityChecker.createSecureResponse(
       { error: security.error || 'Admin access required' },
-      security.error?.includes('Rate limit') ? 429 :
-      security.error?.includes('permission') ? 403 : 401,
+      security.error?.includes('Rate limit')
+        ? 429
+        : security.error?.includes('permission')
+          ? 403
+          : 401,
       security.context
     );
   }
@@ -154,7 +170,8 @@ export async function PUT(request: NextRequest) {
       select: { settings: true },
     });
 
-    const currentSettings = (organization?.settings as Record<string, unknown>) || {};
+    const currentSettings =
+      (organization?.settings as Record<string, unknown>) || {};
     const configUpdate = validation.data;
 
     // Separate customDomain for direct field update
@@ -193,4 +210,3 @@ export async function PUT(request: NextRequest) {
 
 // Node.js runtime required for Prisma
 export const runtime = 'nodejs';
-

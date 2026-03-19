@@ -1,7 +1,13 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -19,7 +25,7 @@ import {
   Loader2,
   Play,
   Pause,
-  Settings
+  Settings,
 } from '@/components/icons';
 import { toast } from 'sonner';
 
@@ -72,11 +78,11 @@ export default function BackupsPage() {
     const now = new Date();
     const next = new Date();
     next.setHours(2, 0, 0, 0);
-    
+
     if (next <= now) {
       next.setDate(next.getDate() + 1);
     }
-    
+
     setNextBackup(next);
   };
 
@@ -88,8 +94,8 @@ export default function BackupsPage() {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || 'manual-backup'}`
-        }
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || 'manual-backup'}`,
+        },
       });
 
       if (response.ok) {
@@ -113,7 +119,11 @@ export default function BackupsPage() {
   };
 
   const restoreBackup = (backupId: string) => {
-    if (confirm('Are you sure you want to restore this backup? This will overwrite current data.')) {
+    if (
+      confirm(
+        'Are you sure you want to restore this backup? This will overwrite current data.'
+      )
+    ) {
       toast.success('Backup restoration initiated');
       // In production, this would trigger a restoration process
     }
@@ -157,12 +167,15 @@ export default function BackupsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Backup Management</h1>
-          <p className="text-gray-400">Automated database backups and recovery</p>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Backup Management
+          </h1>
+          <p className="text-gray-400">
+            Automated database backups and recovery
+          </p>
         </div>
         <Button
           onClick={createManualBackup}
@@ -195,7 +208,13 @@ export default function BackupsPage() {
           <CardContent>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-400">Auto Backup</span>
-              <Badge className={autoBackupEnabled ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"}>
+              <Badge
+                className={
+                  autoBackupEnabled
+                    ? 'bg-green-500/20 text-green-400'
+                    : 'bg-gray-500/20 text-gray-400'
+                }
+              >
                 {autoBackupEnabled ? 'Enabled' : 'Disabled'}
               </Badge>
             </div>
@@ -214,7 +233,9 @@ export default function BackupsPage() {
               {lastBackup ? new Date(lastBackup).toLocaleString() : 'Never'}
             </p>
             <p className="text-xs text-gray-400 mt-1">
-              {lastBackup ? `${Math.floor((Date.now() - new Date(lastBackup).getTime()) / (1000 * 60 * 60))} hours ago` : 'No backups yet'}
+              {lastBackup
+                ? `${Math.floor((Date.now() - new Date(lastBackup).getTime()) / (1000 * 60 * 60))} hours ago`
+                : 'No backups yet'}
             </p>
           </CardContent>
         </Card>
@@ -222,7 +243,7 @@ export default function BackupsPage() {
         <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
-              <Calendar className="w-4 h-4 mr-2 text-cyan-400" />
+              <Calendar className="w-4 h-4 mr-2 text-orange-400" />
               Next Backup
             </CardTitle>
           </CardHeader>
@@ -231,7 +252,9 @@ export default function BackupsPage() {
               {nextBackup ? nextBackup.toLocaleString() : 'Not scheduled'}
             </p>
             <p className="text-xs text-gray-400 mt-1">
-              {nextBackup ? `In ${Math.floor((nextBackup.getTime() - Date.now()) / (1000 * 60 * 60))} hours` : ''}
+              {nextBackup
+                ? `In ${Math.floor((nextBackup.getTime() - Date.now()) / (1000 * 60 * 60))} hours`
+                : ''}
             </p>
           </CardContent>
         </Card>
@@ -263,14 +286,22 @@ export default function BackupsPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
               <div>
-                <p className="font-medium text-white">Automated Daily Backups</p>
-                <p className="text-sm text-gray-400">Backup database every day at 2:00 AM</p>
+                <p className="font-medium text-white">
+                  Automated Daily Backups
+                </p>
+                <p className="text-sm text-gray-400">
+                  Backup database every day at 2:00 AM
+                </p>
               </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setAutoBackupEnabled(!autoBackupEnabled)}
-                className={autoBackupEnabled ? "border-green-400 text-green-400" : "border-gray-400"}
+                className={
+                  autoBackupEnabled
+                    ? 'border-green-400 text-green-400'
+                    : 'border-gray-400'
+                }
               >
                 {autoBackupEnabled ? (
                   <>
@@ -300,8 +331,9 @@ export default function BackupsPage() {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Backups include all user data, posts, campaigns, and analytics from the last 30 days.
-                Older backups are automatically deleted after the retention period.
+                Backups include all user data, posts, campaigns, and analytics
+                from the last 30 days. Older backups are automatically deleted
+                after the retention period.
               </AlertDescription>
             </Alert>
           </div>
@@ -320,26 +352,32 @@ export default function BackupsPage() {
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
+              <Loader2 className="w-8 h-8 animate-spin text-orange-400" />
             </div>
           ) : backups.length === 0 ? (
             <div className="text-center py-8">
               <Database className="w-12 h-12 text-gray-500 mx-auto mb-4" />
               <p className="text-gray-400">No backups found</p>
-              <p className="text-sm text-gray-500 mt-2">Create your first backup to get started</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Create your first backup to get started
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
-              {backups.map((backup) => (
-                <div key={backup.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+              {backups.map(backup => (
+                <div
+                  key={backup.id}
+                  className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                >
                   <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                      <Database className="w-5 h-5 text-cyan-400" />
+                    <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                      <Database className="w-5 h-5 text-orange-400" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-white">
-                          Backup {new Date(backup.created_at).toLocaleDateString()}
+                          Backup{' '}
+                          {new Date(backup.created_at).toLocaleDateString()}
                         </p>
                         {getStatusBadge(backup.status)}
                         <Badge variant="outline" className="text-xs">
@@ -347,13 +385,15 @@ export default function BackupsPage() {
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-400">
-                        {new Date(backup.created_at).toLocaleTimeString()} • 
-                        {backup.size_bytes ? ` ${formatBytes(backup.size_bytes)}` : ' Size unknown'}
+                        {new Date(backup.created_at).toLocaleTimeString()} •
+                        {backup.size_bytes
+                          ? ` ${formatBytes(backup.size_bytes)}`
+                          : ' Size unknown'}
                       </p>
                       {backup.statistics && (
                         <p className="text-xs text-gray-500 mt-1">
-                          {backup.statistics.profileCount} users • 
-                          {backup.statistics.postCount} posts • 
+                          {backup.statistics.profileCount} users •
+                          {backup.statistics.postCount} posts •
                           {backup.statistics.campaignCount} campaigns
                         </p>
                       )}

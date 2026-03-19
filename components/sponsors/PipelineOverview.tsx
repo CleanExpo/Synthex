@@ -24,11 +24,17 @@ const STAGE_COLORS: Record<DealStage, string> = {
   contracted: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
   in_progress: 'bg-purple-500/10 border-purple-500/30 text-purple-400',
   delivered: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
-  paid: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400',
+  paid: 'bg-orange-500/10 border-orange-500/30 text-orange-400',
   cancelled: 'bg-red-500/10 border-red-500/30 text-red-400',
 };
 
-const ACTIVE_STAGES: DealStage[] = ['negotiation', 'contracted', 'in_progress', 'delivered', 'paid'];
+const ACTIVE_STAGES: DealStage[] = [
+  'negotiation',
+  'contracted',
+  'in_progress',
+  'delivered',
+  'paid',
+];
 
 function formatCurrency(amount: number, currency: string = 'USD'): string {
   return new Intl.NumberFormat('en-US', {
@@ -71,31 +77,46 @@ export function PipelineOverview({
 
   if (!pipeline) {
     return (
-      <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl p-6', className)}>
+      <div
+        className={cn(
+          'bg-gray-900/50 border border-white/10 rounded-xl p-6',
+          className
+        )}
+      >
         <p className="text-white/50 text-center">No pipeline data</p>
       </div>
     );
   }
 
-  const totalDeals = ACTIVE_STAGES.reduce((sum, stage) => sum + pipeline.dealsByStage[stage], 0);
+  const totalDeals = ACTIVE_STAGES.reduce(
+    (sum, stage) => sum + pipeline.dealsByStage[stage],
+    0
+  );
 
   return (
-    <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl p-6', className)}>
+    <div
+      className={cn(
+        'bg-gray-900/50 border border-white/10 rounded-xl p-6',
+        className
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-semibold text-white">Deal Pipeline</h3>
           <span className="text-sm text-white/50">({totalDeals} deals)</span>
         </div>
-        <div className="flex items-center gap-2 text-cyan-400">
+        <div className="flex items-center gap-2 text-orange-400">
           <DollarSign className="h-5 w-5" />
-          <span className="text-xl font-bold">{formatCurrency(pipeline.totalValue)}</span>
+          <span className="text-xl font-bold">
+            {formatCurrency(pipeline.totalValue)}
+          </span>
         </div>
       </div>
 
       {/* Stage Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {ACTIVE_STAGES.map((stage) => {
+        {ACTIVE_STAGES.map(stage => {
           const count = pipeline.dealsByStage[stage];
           const isSelected = selectedStage === stage;
 
@@ -110,7 +131,9 @@ export function PipelineOverview({
                 'hover:scale-[1.02] active:scale-[0.98]'
               )}
             >
-              <p className="text-xs font-medium opacity-80 mb-1">{STAGE_LABELS[stage]}</p>
+              <p className="text-xs font-medium opacity-80 mb-1">
+                {STAGE_LABELS[stage]}
+              </p>
               <p className="text-2xl font-bold">{count}</p>
             </button>
           );

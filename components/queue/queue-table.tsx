@@ -49,7 +49,7 @@ interface QueueTableProps {
 // ============================================================================
 
 const STATUS_COLOURS: Record<string, string> = {
-  scheduled: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+  scheduled: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
   published: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
   failed: 'bg-red-500/20 text-red-300 border-red-500/30',
   draft: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
@@ -71,7 +71,11 @@ function StatusBadge({ status }: { status: string }) {
 // RETRY BADGE
 // ============================================================================
 
-function RetryBadge({ metadata }: { metadata: Record<string, unknown> | null }) {
+function RetryBadge({
+  metadata,
+}: {
+  metadata: Record<string, unknown> | null;
+}) {
   if (!metadata) return null;
   const retryCount = metadata.retryCount as number | undefined;
   if (!retryCount || retryCount <= 0) return null;
@@ -175,14 +179,15 @@ export function QueueTable({
   sortOrder,
   onSortChange,
 }: QueueTableProps) {
-  const allSelected = posts.length > 0 && posts.every((p) => selectedIds.has(p.id));
-  const someSelected = posts.some((p) => selectedIds.has(p.id)) && !allSelected;
+  const allSelected =
+    posts.length > 0 && posts.every(p => selectedIds.has(p.id));
+  const someSelected = posts.some(p => selectedIds.has(p.id)) && !allSelected;
 
   function toggleAll() {
     if (allSelected) {
       onSelectionChange(new Set());
     } else {
-      onSelectionChange(new Set(posts.map((p) => p.id)));
+      onSelectionChange(new Set(posts.map(p => p.id)));
     }
   }
 
@@ -209,32 +214,56 @@ export function QueueTable({
             className={someSelected ? 'opacity-60' : ''}
           />
         </div>
-        <SortableHeader label="Platform" field="platform" sortBy={sortBy} sortOrder={sortOrder} onSortChange={onSortChange} />
-        <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Content</span>
-        <SortableHeader label="Status" field="status" sortBy={sortBy} sortOrder={sortOrder} onSortChange={onSortChange} />
-        <SortableHeader label="Scheduled For" field="scheduledAt" sortBy={sortBy} sortOrder={sortOrder} onSortChange={onSortChange} />
-        <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 text-right">Actions</span>
+        <SortableHeader
+          label="Platform"
+          field="platform"
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={onSortChange}
+        />
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          Content
+        </span>
+        <SortableHeader
+          label="Status"
+          field="status"
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={onSortChange}
+        />
+        <SortableHeader
+          label="Scheduled For"
+          field="scheduledAt"
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={onSortChange}
+        />
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 text-right">
+          Actions
+        </span>
       </div>
 
       {/* Table rows */}
-      {posts.map((post) => {
+      {posts.map(post => {
         const isFailed = post.status === 'failed';
         const errorMsg =
           isFailed && post.metadata
-            ? (post.metadata as Record<string, unknown>).publishError as string | undefined
+            ? ((post.metadata as Record<string, unknown>).publishError as
+                | string
+                | undefined)
             : undefined;
 
         return (
           <div key={post.id} className="group">
             <div
               className={`grid grid-cols-[40px_100px_1fr_100px_170px_100px] gap-2 px-4 py-3 border-b border-white/5 hover:bg-white/[0.03] transition-colors cursor-pointer ${
-                selectedIds.has(post.id) ? 'bg-cyan-500/[0.05]' : ''
+                selectedIds.has(post.id) ? 'bg-orange-500/[0.05]' : ''
               }`}
             >
               {/* Checkbox */}
               <div
                 className="flex items-center justify-center"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <Checkbox
                   checked={selectedIds.has(post.id)}
@@ -283,13 +312,13 @@ export function QueueTable({
               {/* Actions */}
               <div
                 className="flex items-center justify-end gap-1"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 {isFailed && (
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-7 w-7 p-0 text-cyan-400 hover:text-cyan-300 hover:bg-white/10"
+                    className="h-7 w-7 p-0 text-orange-400 hover:text-orange-300 hover:bg-white/10"
                     onClick={() => onRetryPost(post.id)}
                     aria-label="Retry post"
                   >
@@ -312,7 +341,9 @@ export function QueueTable({
             {isFailed && errorMsg && (
               <div className="flex items-center gap-2 px-4 py-2 bg-red-500/[0.05] border-b border-white/5">
                 <AlertCircle className="h-3.5 w-3.5 text-red-400 flex-shrink-0" />
-                <span className="text-xs text-red-400 truncate">{errorMsg}</span>
+                <span className="text-xs text-red-400 truncate">
+                  {errorMsg}
+                </span>
               </div>
             )}
           </div>

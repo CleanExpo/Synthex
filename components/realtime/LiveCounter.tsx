@@ -143,7 +143,7 @@ export function LiveCounter({
 
       {/* Pulse animation on update */}
       {isAnimating && (
-        <span className="absolute inset-0 bg-cyan-500/20 rounded-lg animate-ping pointer-events-none" />
+        <span className="absolute inset-0 bg-orange-500/20 rounded-lg animate-ping pointer-events-none" />
       )}
     </div>
   );
@@ -162,7 +162,7 @@ export function PercentageCounter({
       value={value}
       previousValue={previousValue}
       suffix="%"
-      formatter={(v) => v.toFixed(1)}
+      formatter={v => v.toFixed(1)}
       {...props}
     />
   );
@@ -189,7 +189,7 @@ export function CurrencyCounter({
       value={value}
       previousValue={previousValue}
       prefix={currencySymbols[currency] || '$'}
-      formatter={(v) => v.toLocaleString('en-US', { minimumFractionDigits: 0 })}
+      formatter={v => v.toLocaleString('en-US', { minimumFractionDigits: 0 })}
       {...props}
     />
   );

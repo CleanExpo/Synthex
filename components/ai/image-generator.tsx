@@ -28,7 +28,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import {
-  Image,
+  Image as ImageIcon,
   Sparkles,
   Loader2,
   ChevronDown,
@@ -118,7 +118,11 @@ const ASPECT_RATIOS: { id: AspectRatio; label: string }[] = [
 ];
 
 // Provider options
-const PROVIDERS: { id: ImageProvider | 'auto'; label: string; description: string }[] = [
+const PROVIDERS: {
+  id: ImageProvider | 'auto';
+  label: string;
+  description: string;
+}[] = [
   { id: 'auto', label: 'Auto', description: 'Best available provider' },
   { id: 'stability', label: 'Stability AI', description: 'Stable Diffusion 3' },
   { id: 'dalle', label: 'DALL·E 3', description: 'OpenAI' },
@@ -143,10 +147,15 @@ export function ImageGenerator({
   // State
   const [prompt, setPrompt] = useState('');
   const [negativePrompt, setNegativePrompt] = useState('');
-  const [selectedStyle, setSelectedStyle] = useState<ImageStyle>('photorealistic');
-  const [selectedPlatform, setSelectedPlatform] = useState(defaultPlatform || '');
+  const [selectedStyle, setSelectedStyle] =
+    useState<ImageStyle>('photorealistic');
+  const [selectedPlatform, setSelectedPlatform] = useState(
+    defaultPlatform || ''
+  );
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
-  const [selectedProvider, setSelectedProvider] = useState<ImageProvider | 'auto'>('auto');
+  const [selectedProvider, setSelectedProvider] = useState<
+    ImageProvider | 'auto'
+  >('auto');
   const [quality, setQuality] = useState<'standard' | 'hd'>('standard');
   const [enhancePrompt, setEnhancePrompt] = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -169,7 +178,7 @@ export function ImageGenerator({
   // Update aspect ratio when platform changes
   useEffect(() => {
     if (selectedPlatform) {
-      const platform = PLATFORM_PRESETS.find((p) => p.id === selectedPlatform);
+      const platform = PLATFORM_PRESETS.find(p => p.id === selectedPlatform);
       if (platform) {
         setAspectRatio(platform.ratio as AspectRatio);
       }
@@ -217,7 +226,7 @@ export function ImageGenerator({
     >
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-white">
-          <Image className="h-5 w-5 text-cyan-400" />
+          <ImageIcon className="h-5 w-5 text-orange-400" />
           Generate Image
         </CardTitle>
       </CardHeader>
@@ -233,14 +242,14 @@ export function ImageGenerator({
               <textarea
                 ref={textareaRef}
                 value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
+                onChange={e => setPrompt(e.target.value)}
                 placeholder="A vibrant sunset over a city skyline, golden hour lighting..."
                 rows={2}
                 disabled={isGenerating}
                 className={cn(
                   'w-full resize-none rounded-xl px-4 py-3 text-sm',
                   'bg-white/5 border border-white/10 text-white placeholder:text-gray-500',
-                  'focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50',
+                  'focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50',
                   'disabled:opacity-50 disabled:cursor-not-allowed',
                   'transition-colors duration-200',
                   isOverLimit && 'border-red-500/50 focus:ring-red-500/50'
@@ -249,7 +258,9 @@ export function ImageGenerator({
               />
             </div>
             <div className="flex justify-between items-center px-1 text-xs">
-              <span className="text-gray-500">Be descriptive for best results</span>
+              <span className="text-gray-500">
+                Be descriptive for best results
+              </span>
               <span
                 className={cn(isOverLimit ? 'text-red-400' : 'text-gray-500')}
               >
@@ -273,7 +284,7 @@ export function ImageGenerator({
                     'border transition-all duration-200',
                     'disabled:opacity-50 disabled:cursor-not-allowed',
                     selectedStyle === id
-                      ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
+                      ? 'bg-orange-500/20 border-orange-500/50 text-orange-300'
                       : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
                   )}
                 >
@@ -301,7 +312,7 @@ export function ImageGenerator({
                 </SelectTrigger>
                 <SelectContent variant="glass-solid">
                   <SelectItem value="">Custom dimensions</SelectItem>
-                  {PLATFORM_PRESETS.map((platform) => (
+                  {PLATFORM_PRESETS.map(platform => (
                     <SelectItem key={platform.id} value={platform.id}>
                       <div className="flex items-center justify-between gap-2 w-full">
                         <span>{platform.label}</span>
@@ -322,14 +333,14 @@ export function ImageGenerator({
               </label>
               <Select
                 value={aspectRatio}
-                onValueChange={(v) => setAspectRatio(v as AspectRatio)}
+                onValueChange={v => setAspectRatio(v as AspectRatio)}
                 disabled={isGenerating}
               >
                 <SelectTrigger variant="glass">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent variant="glass-solid">
-                  {ASPECT_RATIOS.map((ratio) => (
+                  {ASPECT_RATIOS.map(ratio => (
                     <SelectItem key={ratio.id} value={ratio.id}>
                       {ratio.label}
                     </SelectItem>
@@ -363,14 +374,14 @@ export function ImageGenerator({
                 </label>
                 <textarea
                   value={negativePrompt}
-                  onChange={(e) => setNegativePrompt(e.target.value)}
+                  onChange={e => setNegativePrompt(e.target.value)}
                   placeholder="Things to avoid: blurry, low quality, distorted..."
                   rows={2}
                   disabled={isGenerating}
                   className={cn(
                     'w-full resize-none rounded-xl px-4 py-3 text-sm',
                     'bg-white/5 border border-white/10 text-white placeholder:text-gray-500',
-                    'focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50',
+                    'focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50',
                     'disabled:opacity-50 disabled:cursor-not-allowed'
                   )}
                 />
@@ -386,7 +397,7 @@ export function ImageGenerator({
                 </label>
                 <Select
                   value={selectedProvider}
-                  onValueChange={(v) =>
+                  onValueChange={v =>
                     setSelectedProvider(v as ImageProvider | 'auto')
                   }
                   disabled={isGenerating}
@@ -395,7 +406,7 @@ export function ImageGenerator({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent variant="glass-solid">
-                    {PROVIDERS.map((provider) => (
+                    {PROVIDERS.map(provider => (
                       <SelectItem key={provider.id} value={provider.id}>
                         <div className="flex items-center gap-2">
                           <span>{provider.label}</span>
@@ -421,7 +432,7 @@ export function ImageGenerator({
                 </div>
                 <Switch
                   checked={quality === 'hd'}
-                  onCheckedChange={(checked) =>
+                  onCheckedChange={checked =>
                     setQuality(checked ? 'hd' : 'standard')
                   }
                   disabled={isGenerating}
@@ -462,8 +473,8 @@ export function ImageGenerator({
             disabled={!canGenerate}
             className={cn(
               'w-full h-12 rounded-xl font-medium',
-              'bg-gradient-to-r from-cyan-500 to-cyan-600',
-              'hover:from-cyan-400 hover:to-cyan-500',
+              'bg-gradient-to-r from-orange-500 to-orange-600',
+              'hover:from-orange-400 hover:to-orange-500',
               'disabled:opacity-50 disabled:cursor-not-allowed',
               'transition-all duration-200'
             )}

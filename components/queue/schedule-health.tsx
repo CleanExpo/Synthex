@@ -50,7 +50,7 @@ interface ScheduleHealthStats {
 // =============================================================================
 
 const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => {
+  fetch(url, { credentials: 'include' }).then(r => {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return r.json();
   });
@@ -96,11 +96,14 @@ function formatRelativeTime(dateStr: string | null): string {
 // =============================================================================
 
 export function ScheduleHealth() {
-  const { data: stats, isLoading, error } = useSWR<ScheduleHealthStats>(
-    '/api/scheduler/stats',
-    fetchJson,
-    { revalidateOnFocus: false, refreshInterval: 60_000 }
-  );
+  const {
+    data: stats,
+    isLoading,
+    error,
+  } = useSWR<ScheduleHealthStats>('/api/scheduler/stats', fetchJson, {
+    revalidateOnFocus: false,
+    refreshInterval: 60_000,
+  });
 
   if (isLoading) {
     return (
@@ -122,15 +125,22 @@ export function ScheduleHealth() {
     return null; // Silently hide if stats unavailable
   }
 
-  const { last7Days, averageDelayMinutes, failureReasons, nextScheduled, retryQueue } = stats;
-  const hasActivity = last7Days.total > 0 || last7Days.published > 0 || last7Days.failed > 0;
+  const {
+    last7Days,
+    averageDelayMinutes,
+    failureReasons,
+    nextScheduled,
+    retryQueue,
+  } = stats;
+  const hasActivity =
+    last7Days.total > 0 || last7Days.published > 0 || last7Days.failed > 0;
 
   return (
     <div className="rounded-xl border border-white/10 bg-gray-900/50 backdrop-blur-sm overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
         <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-cyan-400" />
+          <TrendingUp className="h-4 w-4 text-orange-400" />
           <h3 className="text-sm font-semibold text-white">Schedule Health</h3>
         </div>
         <span className="text-xs text-gray-500">Last 7 days</span>
@@ -188,8 +198,8 @@ export function ScheduleHealth() {
 
             {/* Average Delay */}
             <div className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.02] border border-white/5">
-              <div className="p-2 rounded-lg bg-cyan-500/10">
-                <Clock className="h-4 w-4 text-cyan-400" />
+              <div className="p-2 rounded-lg bg-orange-500/10">
+                <Clock className="h-4 w-4 text-orange-400" />
               </div>
               <div>
                 <p className="text-xs text-gray-500">Avg Delay</p>

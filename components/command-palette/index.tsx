@@ -29,11 +29,14 @@ export function CommandPalette() {
   });
 
   // Group commands by category
-  const groupedCommands = filteredCommands.reduce((acc, cmd) => {
-    if (!acc[cmd.category]) acc[cmd.category] = [];
-    acc[cmd.category].push(cmd);
-    return acc;
-  }, {} as Record<string, CommandItem[]>);
+  const groupedCommands = filteredCommands.reduce(
+    (acc, cmd) => {
+      if (!acc[cmd.category]) acc[cmd.category] = [];
+      acc[cmd.category].push(cmd);
+      return acc;
+    },
+    {} as Record<string, CommandItem[]>
+  );
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -89,7 +92,9 @@ export function CommandPalette() {
 
   // Scroll selected item into view
   useEffect(() => {
-    const selectedElement = listRef.current?.children[selectedIndex] as HTMLElement;
+    const selectedElement = listRef.current?.children[
+      selectedIndex
+    ] as HTMLElement;
     selectedElement?.scrollIntoView({ block: 'nearest' });
   }, [selectedIndex]);
 
@@ -113,10 +118,10 @@ export function CommandPalette() {
               ref={inputRef}
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={e => setSearch(e.target.value)}
               placeholder="Type a command or search..."
               aria-label="Search commands"
-              className="flex-1 px-4 py-4 bg-transparent text-white placeholder-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-0"
+              className="flex-1 px-4 py-4 bg-transparent text-white placeholder-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-0"
             />
             <kbd className="px-2 py-1 text-xs bg-gray-800 rounded">ESC</kbd>
           </div>
@@ -126,7 +131,7 @@ export function CommandPalette() {
             filteredCommands={filteredCommands}
             selectedIndex={selectedIndex}
             search={search}
-            onSelect={(cmd) => {
+            onSelect={cmd => {
               cmd.action();
               setIsOpen(false);
             }}
@@ -136,9 +141,15 @@ export function CommandPalette() {
           {/* Footer */}
           <div className="border-t border-white/10 px-4 py-2 flex items-center justify-between text-xs text-gray-500">
             <div className="flex gap-4">
-              <span><kbd>&#8593;&#8595;</kbd> Navigate</span>
-              <span><kbd>&#8629;</kbd> Select</span>
-              <span><kbd>ESC</kbd> Close</span>
+              <span>
+                <kbd>&#8593;&#8595;</kbd> Navigate
+              </span>
+              <span>
+                <kbd>&#8629;</kbd> Select
+              </span>
+              <span>
+                <kbd>ESC</kbd> Close
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <Command className="w-3 h-3" />

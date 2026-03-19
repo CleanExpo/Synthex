@@ -14,44 +14,56 @@ import {
   Star,
   Code2,
   Cpu,
-  Play
+  Play,
 } from '@/components/icons';
 import MarketingLayout from '@/components/marketing/MarketingLayout';
 
 const demos = [
   {
     title: 'Ultra Modern Animations',
-    description: 'Cutting-edge animations with Matrix rain, holographic cards, and cyberpunk effects',
+    description:
+      'Cutting-edge animations with Matrix rain, holographic cards, and cyberpunk effects',
     href: '/demo/ultra-animations',
     icon: Rocket,
-    gradient: 'from-cyan-500 to-teal-500',
-    features: ['Matrix Rain', 'Cyberpunk UI', 'Holographic Cards', 'DNA Loader'],
-    new: true
+    gradient: 'from-orange-500 to-teal-500',
+    features: [
+      'Matrix Rain',
+      'Cyberpunk UI',
+      'Holographic Cards',
+      'DNA Loader',
+    ],
+    new: true,
   },
   {
     title: 'Animation Showcase',
     description: 'Comprehensive collection of reusable animation components',
     href: '/demo/animation-showcase',
     icon: Sparkles,
-    gradient: 'from-cyan-600 to-cyan-400',
-    features: ['3D Cards', 'Magnetic Buttons', 'Parallax', 'Morphing Shapes']
+    gradient: 'from-orange-600 to-orange-400',
+    features: ['3D Cards', 'Magnetic Buttons', 'Parallax', 'Morphing Shapes'],
   },
   {
     title: 'Enhanced Landing Page',
-    description: 'Next-gen landing page with 3D effects and advanced animations',
+    description:
+      'Next-gen landing page with 3D effects and advanced animations',
     href: '/demo/enhanced-landing',
     icon: Globe,
-    gradient: 'from-teal-500 to-cyan-500',
-    features: ['3D Spheres', 'Particle Fields', 'Profile Cards', 'Glassmorphism']
+    gradient: 'from-teal-500 to-orange-500',
+    features: [
+      '3D Spheres',
+      'Particle Fields',
+      'Profile Cards',
+      'Glassmorphism',
+    ],
   },
   {
     title: 'Enhanced Sandbox',
     description: 'AI-powered content creation with 3D visualization',
     href: '/demo/enhanced-sandbox',
     icon: Layers,
-    gradient: 'from-cyan-400 to-teal-400',
-    features: ['AI Generator', 'Platform Selector', '3D Preview', 'Analytics']
-  }
+    gradient: 'from-orange-400 to-teal-400',
+    features: ['AI Generator', 'Platform Selector', '3D Preview', 'Analytics'],
+  },
 ];
 
 const backgroundElements = [
@@ -59,7 +71,7 @@ const backgroundElements = [
   { icon: Code2, delay: 2, duration: 25 },
   { icon: Cpu, delay: 4, duration: 30 },
   { icon: Zap, delay: 6, duration: 22 },
-  { icon: Palette, delay: 8, duration: 28 }
+  { icon: Palette, delay: 8, duration: 28 },
 ];
 
 export default function DemoIndex() {
@@ -76,7 +88,7 @@ export default function DemoIndex() {
   // Deterministic pseudo-random positions per element index (avoids Math.random
   // producing different results on server vs client).
   const seedPos = (index: number, range: number) =>
-    ((index * 397 + 251) % 1000) / 1000 * range;
+    (((index * 397 + 251) % 1000) / 1000) * range;
 
   return (
     <MarketingLayout currentPage="demo">
@@ -90,47 +102,49 @@ export default function DemoIndex() {
               initial={{
                 x: seedPos(i, dims.w),
                 y: -100,
-                rotate: 0
+                rotate: 0,
               }}
               animate={{
                 y: dims.h + 100,
                 rotate: 360,
-                x: seedPos(i + 5, dims.w)
+                x: seedPos(i + 5, dims.w),
               }}
               transition={{
                 duration,
                 delay,
                 repeat: Infinity,
-                ease: "linear"
+                ease: 'linear',
               }}
             >
-              <Icon className={`w-8 h-8 text-cyan-500/20 ${!mounted ? 'opacity-0' : ''}`} />
+              <Icon
+                className={`w-8 h-8 text-orange-500/20 ${!mounted ? 'opacity-0' : ''}`}
+              />
             </motion.div>
           ))}
 
           {/* Gradient Orbs */}
           <motion.div
-            className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl"
+            className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl"
             animate={{
               scale: [1, 1.2, 1],
-              opacity: [0.3, 0.5, 0.3]
+              opacity: [0.3, 0.5, 0.3],
             }}
             transition={{
               duration: 8,
               repeat: Infinity,
-              ease: "easeInOut"
+              ease: 'easeInOut',
             }}
           />
           <motion.div
             className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl"
             animate={{
               scale: [1.2, 1, 1.2],
-              opacity: [0.5, 0.3, 0.5]
+              opacity: [0.5, 0.3, 0.5],
             }}
             transition={{
               duration: 8,
               repeat: Infinity,
-              ease: "easeInOut"
+              ease: 'easeInOut',
             }}
           />
         </div>
@@ -149,24 +163,25 @@ export default function DemoIndex() {
               transition={{ duration: 4, repeat: Infinity }}
               className="inline-block mb-6"
             >
-              <Sparkles className="w-16 h-16 text-cyan-400 mx-auto" />
+              <Sparkles className="w-16 h-16 text-orange-400 mx-auto" />
             </motion.div>
 
             <h1 className="text-6xl md:text-7xl font-bold mb-6">
-              <span className="bg-gradient-to-r from-cyan-400 via-teal-400 to-cyan-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-orange-400 via-teal-400 to-orange-300 bg-clip-text text-transparent">
                 Animation Gallery
               </span>
             </h1>
 
             <p className="text-xl text-gray-400 max-w-2xl mx-auto px-6">
-              Explore our collection of cutting-edge UI animations, 3D effects, and interactive components
+              Explore our collection of cutting-edge UI animations, 3D effects,
+              and interactive components
             </p>
           </motion.header>
 
           {/* Product Demo Video */}
           <div className="container mx-auto px-6 pb-16">
             <div className="max-w-4xl mx-auto">
-              <div className="relative rounded-2xl overflow-hidden border border-cyan-500/20 bg-surface-base/80 shadow-2xl shadow-cyan-500/10">
+              <div className="relative rounded-2xl overflow-hidden border border-orange-500/20 bg-surface-base/80 shadow-2xl shadow-orange-500/10">
                 <div className="aspect-video">
                   <iframe
                     src="https://www.youtube.com/embed/vnn6SJUlsWU"
@@ -178,8 +193,14 @@ export default function DemoIndex() {
                   />
                 </div>
                 <div className="p-6">
-                  <h2 className="text-2xl font-bold text-white mb-2">Synthex Product Demo</h2>
-                  <p className="text-gray-400">Full walkthrough of the Synthex AI marketing platform — see the dashboard, content generator, scheduler, and analytics in action.</p>
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    Synthex Product Demo
+                  </h2>
+                  <p className="text-gray-400">
+                    Full walkthrough of the Synthex AI marketing platform — see
+                    the dashboard, content generator, scheduler, and analytics
+                    in action.
+                  </p>
                 </div>
               </div>
             </div>
@@ -204,7 +225,7 @@ export default function DemoIndex() {
                         className="relative group h-full"
                       >
                         {/* Card */}
-                        <div className="relative bg-surface-base/80 backdrop-blur-xl rounded-2xl border border-cyan-500/20 overflow-hidden h-full hover:border-cyan-500/40 transition-colors">
+                        <div className="relative bg-surface-base/80 backdrop-blur-xl rounded-2xl border border-orange-500/20 overflow-hidden h-full hover:border-orange-500/40 transition-colors">
                           {/* New Badge */}
                           {demo.new && (
                             <motion.div
@@ -213,24 +234,28 @@ export default function DemoIndex() {
                               transition={{ delay: 0.5 + index * 0.1 }}
                               className="absolute top-4 right-4 z-10"
                             >
-                              <span className="px-3 py-1 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-full text-xs font-bold text-white">
+                              <span className="px-3 py-1 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full text-xs font-bold text-white">
                                 NEW
                               </span>
                             </motion.div>
                           )}
 
                           {/* Gradient Overlay */}
-                          <div className={`absolute inset-0 bg-gradient-to-br ${demo.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+                          <div
+                            className={`absolute inset-0 bg-gradient-to-br ${demo.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
+                          />
 
                           {/* Content */}
                           <div className="relative p-8">
                             {/* Icon */}
-                            <div className={`w-16 h-16 bg-gradient-to-br ${demo.gradient} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                            <div
+                              className={`w-16 h-16 bg-gradient-to-br ${demo.gradient} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}
+                            >
                               <Icon className="w-8 h-8 text-white" />
                             </div>
 
                             {/* Title & Description */}
-                            <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-cyan-400 group-hover:to-teal-400 group-hover:bg-clip-text transition-all duration-300">
+                            <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-orange-400 group-hover:to-teal-400 group-hover:bg-clip-text transition-all duration-300">
                               {demo.title}
                             </h3>
                             <p className="text-gray-400 mb-6">
@@ -239,10 +264,10 @@ export default function DemoIndex() {
 
                             {/* Features */}
                             <div className="flex flex-wrap gap-2 mb-6">
-                              {demo.features.map((feature) => (
+                              {demo.features.map(feature => (
                                 <span
                                   key={feature}
-                                  className="px-3 py-1 bg-cyan-500/10 backdrop-blur-sm rounded-full text-xs text-cyan-300 border border-cyan-500/20"
+                                  className="px-3 py-1 bg-orange-500/10 backdrop-blur-sm rounded-full text-xs text-orange-300 border border-orange-500/20"
                                 >
                                   {feature}
                                 </span>
@@ -250,8 +275,10 @@ export default function DemoIndex() {
                             </div>
 
                             {/* CTA */}
-                            <div className="flex items-center text-white group-hover:text-cyan-400 transition-colors">
-                              <span className="font-semibold">Explore Demo</span>
+                            <div className="flex items-center text-white group-hover:text-orange-400 transition-colors">
+                              <span className="font-semibold">
+                                Explore Demo
+                              </span>
                               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                             </div>
                           </div>
@@ -264,12 +291,12 @@ export default function DemoIndex() {
                                 '0 0 0 0px rgba(6, 182, 212, 0)',
                                 '0 0 0 2px rgba(6, 182, 212, 0.3)',
                                 '0 0 0 0px rgba(6, 182, 212, 0)',
-                              ]
+                              ],
                             }}
                             transition={{
                               duration: 2,
                               repeat: Infinity,
-                              delay: index * 0.2
+                              delay: index * 0.2,
                             }}
                           />
                         </div>

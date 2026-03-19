@@ -130,9 +130,13 @@ export function VideoGenerationModal({
   const [duration, setDuration] = useState<string>('15-60s');
 
   // Generation state
-  const [status, setStatus] = useState<'idle' | 'generating' | 'rendered' | 'failed'>('idle');
+  const [status, setStatus] = useState<
+    'idle' | 'generating' | 'rendered' | 'failed'
+  >('idle');
   const [errorMessage, setErrorMessage] = useState('');
-  const [generatedVideo, setGeneratedVideo] = useState<GeneratedVideo | null>(null);
+  const [generatedVideo, setGeneratedVideo] = useState<GeneratedVideo | null>(
+    null
+  );
 
   // Publish state
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
@@ -159,7 +163,8 @@ export function VideoGenerationModal({
   // Update duration when style changes (each style has a fixed duration)
   const handleStyleChange = useCallback((newStyle: string) => {
     setStyle(newStyle);
-    const durations = DURATION_OPTIONS[newStyle as keyof typeof DURATION_OPTIONS];
+    const durations =
+      DURATION_OPTIONS[newStyle as keyof typeof DURATION_OPTIONS];
     if (durations?.length) {
       setDuration(durations[0].value);
     }
@@ -212,9 +217,9 @@ export function VideoGenerationModal({
 
   // Toggle platform selection for publishing
   const togglePlatform = useCallback((platform: string) => {
-    setSelectedPlatforms((prev) =>
+    setSelectedPlatforms(prev =>
       prev.includes(platform)
-        ? prev.filter((p) => p !== platform)
+        ? prev.filter(p => p !== platform)
         : [...prev, platform]
     );
   }, []);
@@ -243,7 +248,9 @@ export function VideoGenerationModal({
       }
 
       const count = data.data?.scheduledPosts?.length || 0;
-      toast.success(`Scheduled ${count} post${count !== 1 ? 's' : ''} successfully`);
+      toast.success(
+        `Scheduled ${count} post${count !== 1 ? 's' : ''} successfully`
+      );
       handleOpenChange(false);
     } catch {
       toast.error('Failed to publish. Please try again.');
@@ -253,7 +260,8 @@ export function VideoGenerationModal({
   }, [generatedVideo, selectedPlatforms, handleOpenChange]);
 
   // Determine available duration for selected style
-  const availableDurations = DURATION_OPTIONS[style as keyof typeof DURATION_OPTIONS] || [];
+  const availableDurations =
+    DURATION_OPTIONS[style as keyof typeof DURATION_OPTIONS] || [];
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -264,7 +272,7 @@ export function VideoGenerationModal({
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Video className="w-5 h-5 text-cyan-400" />
+            <Video className="w-5 h-5 text-orange-400" />
             Generate Video Script
           </DialogTitle>
           <DialogDescription>
@@ -287,7 +295,7 @@ export function VideoGenerationModal({
             </p>
             <a
               href="/dashboard/settings"
-              className="inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-orange-400 hover:text-orange-300 transition-colors"
             >
               <Settings className="w-3 h-3" />
               Go to Settings
@@ -305,11 +313,11 @@ export function VideoGenerationModal({
                   </label>
                   <textarea
                     value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
+                    onChange={e => setTopic(e.target.value)}
                     placeholder="e.g. 5 tips for small business Instagram marketing"
                     rows={2}
                     maxLength={500}
-                    className="w-full rounded-lg bg-white/[0.03] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/20 resize-none transition-all"
+                    className="w-full rounded-lg bg-white/[0.03] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/20 resize-none transition-all"
                   />
                   <p className="text-xs text-gray-500">
                     {topic.length}/500 characters
@@ -326,7 +334,7 @@ export function VideoGenerationModal({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent variant="glass-solid">
-                      {STYLE_OPTIONS.map((opt) => (
+                      {STYLE_OPTIONS.map(opt => (
                         <SelectItem key={opt.value} value={opt.value}>
                           <span className="flex flex-col">
                             <span>{opt.label}</span>
@@ -350,7 +358,7 @@ export function VideoGenerationModal({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent variant="glass-solid">
-                      {availableDurations.map((opt) => (
+                      {availableDurations.map(opt => (
                         <SelectItem key={opt.value} value={opt.value}>
                           {opt.label}
                         </SelectItem>
@@ -361,17 +369,14 @@ export function VideoGenerationModal({
 
                 {/* Error from previous attempt */}
                 {status === 'failed' && (
-                  <VideoProgress
-                    status="failed"
-                    errorMessage={errorMessage}
-                  />
+                  <VideoProgress status="failed" errorMessage={errorMessage} />
                 )}
 
                 {/* Generate button */}
                 <button
                   onClick={handleGenerate}
                   disabled={!topic.trim()}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 font-medium text-sm hover:bg-cyan-500/30 hover:border-cyan-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-orange-500/20 border border-orange-500/30 text-orange-400 font-medium text-sm hover:bg-orange-500/30 hover:border-orange-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Sparkles className="w-4 h-4" />
                   Generate Script
@@ -380,9 +385,7 @@ export function VideoGenerationModal({
             ) : null}
 
             {/* === Generating State === */}
-            {status === 'generating' && (
-              <VideoProgress status="generating" />
-            )}
+            {status === 'generating' && <VideoProgress status="generating" />}
 
             {/* === Rendered State — Script Preview + Publish === */}
             {status === 'rendered' && generatedVideo?.scriptContent && (
@@ -390,14 +393,12 @@ export function VideoGenerationModal({
                 <VideoProgress status="rendered" />
 
                 {/* Script preview */}
-                <VideoScriptPreview
-                  script={generatedVideo.scriptContent}
-                />
+                <VideoScriptPreview script={generatedVideo.scriptContent} />
 
                 {/* Publish section */}
                 <div className="space-y-3 pt-3 border-t border-white/[0.06]">
                   <h4 className="text-white font-medium text-sm flex items-center gap-2">
-                    <Send className="w-3.5 h-3.5 text-cyan-400" />
+                    <Send className="w-3.5 h-3.5 text-orange-400" />
                     Schedule to Platforms
                   </h4>
                   <p className="text-xs text-gray-500">
@@ -406,7 +407,7 @@ export function VideoGenerationModal({
 
                   {/* Platform toggles */}
                   <div className="flex flex-wrap gap-2">
-                    {PUBLISH_PLATFORMS.map((p) => {
+                    {PUBLISH_PLATFORMS.map(p => {
                       const isSelected = selectedPlatforms.includes(p.value);
                       return (
                         <button
@@ -414,7 +415,7 @@ export function VideoGenerationModal({
                           onClick={() => togglePlatform(p.value)}
                           className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                             isSelected
-                              ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-400'
+                              ? 'bg-orange-500/20 border border-orange-500/40 text-orange-400'
                               : 'bg-white/[0.03] border border-white/[0.08] text-gray-400 hover:border-white/[0.15] hover:text-gray-300'
                           }`}
                         >

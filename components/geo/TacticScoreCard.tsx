@@ -31,10 +31,15 @@ function statusColours(status: 'green' | 'amber' | 'red') {
   };
 }
 
-export function TacticScoreCard({ score, onImprove, improving = false }: TacticScoreCardProps) {
+export function TacticScoreCard({
+  score,
+  onImprove,
+  improving = false,
+}: TacticScoreCardProps) {
   const colours = statusColours(score.status);
   const showImprove = score.status !== 'green';
-  const showSuggestions = score.status !== 'green' && score.suggestions.length > 0;
+  const showSuggestions =
+    score.status !== 'green' && score.suggestions.length > 0;
 
   return (
     <div
@@ -44,8 +49,12 @@ export function TacticScoreCard({ score, onImprove, improving = false }: TacticS
       <div className="flex items-centre justify-between gap-2">
         <div className="flex items-centre gap-1.5 min-w-0">
           {/* Status dot */}
-          <span className={`inline-block w-1.5 h-1.5 rounded-full flex-shrink-0 ${colours.bg}`} />
-          <span className="text-sm font-medium text-slate-200 truncate">{score.label}</span>
+          <span
+            className={`inline-block w-1.5 h-1.5 rounded-full flex-shrink-0 ${colours.bg}`}
+          />
+          <span className="text-sm font-medium text-slate-200 truncate">
+            {score.label}
+          </span>
         </div>
         <span className={`text-sm font-bold flex-shrink-0 ${colours.text}`}>
           {score.score}
@@ -61,7 +70,9 @@ export function TacticScoreCard({ score, onImprove, improving = false }: TacticS
       </div>
 
       {/* Explanation */}
-      <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">{score.explanation}</p>
+      <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">
+        {score.explanation}
+      </p>
 
       {/* Suggestions (amber/red only) */}
       {showSuggestions && (
@@ -80,7 +91,7 @@ export function TacticScoreCard({ score, onImprove, improving = false }: TacticS
         <button
           onClick={() => onImprove(score.tactic)}
           disabled={improving}
-          className="mt-2 text-xs text-cyan-400 hover:text-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-centre gap-1 transition-colors"
+          className="mt-2 text-xs text-orange-400 hover:text-orange-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-centre gap-1 transition-colors"
         >
           {improving ? (
             <>
@@ -90,8 +101,19 @@ export function TacticScoreCard({ score, onImprove, improving = false }: TacticS
                 fill="none"
                 viewBox="0 0 24 24"
               >
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
               </svg>
               Improving...
             </>

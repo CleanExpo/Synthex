@@ -7,7 +7,13 @@
  */
 
 import { cn } from '@/lib/utils';
-import { Globe, TrendingUp, TrendingDown, Clock, DollarSign } from '@/components/icons';
+import {
+  Globe,
+  TrendingUp,
+  TrendingDown,
+  Clock,
+  DollarSign,
+} from '@/components/icons';
 import type { PlatformROI } from '@/lib/roi/roi-service';
 
 interface PlatformROICardsProps {
@@ -36,15 +42,19 @@ function formatNumber(num: number, decimals: number = 1): string {
 function getROIBadgeStyles(roi: number): string {
   if (roi < 0) return 'bg-red-500/10 text-red-400 border-red-500/30';
   if (roi < 50) return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30';
-  if (roi < 100) return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
-  return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30';
+  if (roi < 100)
+    return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+  return 'bg-orange-500/10 text-orange-400 border-orange-500/30';
 }
 
 function LoadingSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
+        <div
+          key={i}
+          className="bg-gray-900/50 border border-white/10 rounded-xl p-5"
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="w-24 h-5 bg-white/5 rounded animate-pulse" />
             <div className="w-16 h-6 bg-white/5 rounded animate-pulse" />
@@ -87,7 +97,8 @@ function PlatformCard({ platform, currency }: PlatformCardProps) {
           ) : (
             <TrendingDown className="w-3.5 h-3.5" />
           )}
-          {platform.roi > 0 ? '+' : ''}{formatNumber(platform.roi)}%
+          {platform.roi > 0 ? '+' : ''}
+          {formatNumber(platform.roi)}%
         </div>
       </div>
 
@@ -122,7 +133,7 @@ function PlatformCard({ platform, currency }: PlatformCardProps) {
         </div>
         <div className="pt-2 border-t border-white/5 flex items-center justify-between text-sm">
           <span className="text-gray-400">ROI/Hour</span>
-          <span className="text-cyan-400 font-medium">
+          <span className="text-orange-400 font-medium">
             {formatCurrency(platform.roiPerHour, currency)}/hr
           </span>
         </div>
@@ -143,10 +154,17 @@ export function PlatformROICards({
 
   if (!data || data.length === 0) {
     return (
-      <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl p-8 text-center', className)}>
+      <div
+        className={cn(
+          'bg-gray-900/50 border border-white/10 rounded-xl p-8 text-center',
+          className
+        )}
+      >
         <Globe className="w-12 h-12 text-gray-600 mx-auto mb-3" />
         <p className="text-gray-400">No platform data available</p>
-        <p className="text-sm text-gray-500 mt-1">Track investments by platform to see ROI breakdown</p>
+        <p className="text-sm text-gray-500 mt-1">
+          Track investments by platform to see ROI breakdown
+        </p>
       </div>
     );
   }
@@ -158,8 +176,12 @@ export function PlatformROICards({
     <div className={cn('space-y-4', className)}>
       <h3 className="font-medium text-white">ROI by Platform</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sortedData.map((platform) => (
-          <PlatformCard key={platform.platform} platform={platform} currency={currency} />
+        {sortedData.map(platform => (
+          <PlatformCard
+            key={platform.platform}
+            platform={platform}
+            currency={currency}
+          />
         ))}
       </div>
     </div>

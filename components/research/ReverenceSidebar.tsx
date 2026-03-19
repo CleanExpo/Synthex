@@ -52,46 +52,90 @@ export interface ReverenceSidebarProps {
   className?: string;
 }
 
-const TrendIcon: React.FC<{ trend: 'up' | 'down' | 'stable' }> = ({ trend }) => {
+const TrendIcon: React.FC<{ trend: 'up' | 'down' | 'stable' }> = ({
+  trend,
+}) => {
   if (trend === 'up') {
     return (
-      <svg className="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+      <svg
+        className="h-4 w-4 text-emerald-400"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M5 10l7-7m0 0l7 7m-7-7v18"
+        />
       </svg>
     );
   }
   if (trend === 'down') {
     return (
-      <svg className="h-4 w-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+      <svg
+        className="h-4 w-4 text-red-400"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 14l-7 7m0 0l-7-7m7 7V3"
+        />
       </svg>
     );
   }
   return (
-    <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
+    <svg
+      className="h-4 w-4 text-gray-400"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 12h14"
+      />
     </svg>
   );
 };
 
-const ShareIcon: React.FC<{ platform: 'linkedin' | 'twitter' | 'email' }> = ({ platform }) => {
+const ShareIcon: React.FC<{ platform: 'linkedin' | 'twitter' | 'email' }> = ({
+  platform,
+}) => {
   switch (platform) {
     case 'linkedin':
       return (
         <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
         </svg>
       );
     case 'twitter':
       return (
         <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
         </svg>
       );
     case 'email':
       return (
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+          />
         </svg>
       );
   }
@@ -147,7 +191,7 @@ export function ReverenceSidebar({
     <aside className={cn('sticky top-24 w-full max-w-xs', className)}>
       <Card variant="glass-primary" className="overflow-hidden">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-cyan-400">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-orange-400">
             Key Statistics
           </CardTitle>
         </CardHeader>
@@ -159,12 +203,16 @@ export function ReverenceSidebar({
               className="border-b border-white/10 pb-4 last:border-0 last:pb-0"
             >
               <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold text-white">{stat.value}</span>
+                <span className="text-2xl font-bold text-white">
+                  {stat.value}
+                </span>
                 {stat.trend && <TrendIcon trend={stat.trend} />}
               </div>
               <p className="mt-1 text-sm text-gray-300">{stat.label}</p>
               {stat.source && (
-                <p className="mt-1 text-xs text-gray-500">Source: {stat.source}</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Source: {stat.source}
+                </p>
               )}
             </div>
           ))}
@@ -175,13 +223,13 @@ export function ReverenceSidebar({
               Share Research
             </p>
             <div className="flex gap-2">
-              {shareButtons.map((platform) => (
+              {shareButtons.map(platform => (
                 <Button
                   key={platform}
                   variant="outline"
                   size="sm"
                   onClick={() => handleShare(platform)}
-                  className="flex-1 border-white/10 bg-white/5 hover:bg-cyan-500/20 hover:border-cyan-500/40"
+                  className="flex-1 border-white/10 bg-white/5 hover:bg-orange-500/20 hover:border-orange-500/40"
                 >
                   <ShareIcon platform={platform} />
                 </Button>
@@ -199,7 +247,7 @@ export function ReverenceSidebar({
                 variant="outline"
                 size="sm"
                 onClick={() => handleCopyCitation('apa')}
-                className="w-full justify-start border-white/10 bg-white/5 hover:bg-cyan-500/20 hover:border-cyan-500/40 text-xs"
+                className="w-full justify-start border-white/10 bg-white/5 hover:bg-orange-500/20 hover:border-orange-500/40 text-xs"
               >
                 {copiedFormat === 'apa' ? '✓ Copied!' : 'Copy APA Citation'}
               </Button>
@@ -207,9 +255,11 @@ export function ReverenceSidebar({
                 variant="outline"
                 size="sm"
                 onClick={() => handleCopyCitation('harvard')}
-                className="w-full justify-start border-white/10 bg-white/5 hover:bg-cyan-500/20 hover:border-cyan-500/40 text-xs"
+                className="w-full justify-start border-white/10 bg-white/5 hover:bg-orange-500/20 hover:border-orange-500/40 text-xs"
               >
-                {copiedFormat === 'harvard' ? '✓ Copied!' : 'Copy Harvard Citation'}
+                {copiedFormat === 'harvard'
+                  ? '✓ Copied!'
+                  : 'Copy Harvard Citation'}
               </Button>
             </div>
           </div>
@@ -226,9 +276,11 @@ export function ReverenceSidebar({
                     variant="outline"
                     size="sm"
                     asChild
-                    className="flex-1 border-white/10 bg-white/5 hover:bg-cyan-500/20 hover:border-cyan-500/40"
+                    className="flex-1 border-white/10 bg-white/5 hover:bg-orange-500/20 hover:border-orange-500/40"
                   >
-                    <a href={pdfUrl} download>PDF</a>
+                    <a href={pdfUrl} download>
+                      PDF
+                    </a>
                   </Button>
                 )}
                 {downloadOptions.includes('csv') && csvUrl && (
@@ -236,9 +288,11 @@ export function ReverenceSidebar({
                     variant="outline"
                     size="sm"
                     asChild
-                    className="flex-1 border-white/10 bg-white/5 hover:bg-cyan-500/20 hover:border-cyan-500/40"
+                    className="flex-1 border-white/10 bg-white/5 hover:bg-orange-500/20 hover:border-orange-500/40"
                   >
-                    <a href={csvUrl} download>CSV Data</a>
+                    <a href={csvUrl} download>
+                      CSV Data
+                    </a>
                   </Button>
                 )}
               </div>

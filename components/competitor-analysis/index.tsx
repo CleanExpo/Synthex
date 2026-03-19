@@ -25,12 +25,15 @@ export { CompetitorDetailView } from './CompetitorDetailView';
 
 export function CompetitorAnalysis() {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
-  const [selectedCompetitor, setSelectedCompetitor] = useState<Competitor | null>(null);
+  const [selectedCompetitor, setSelectedCompetitor] =
+    useState<Competitor | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newCompetitorUrl, setNewCompetitorUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [comparisonMode, setComparisonMode] = useState(false);
-  const [selectedForComparison, setSelectedForComparison] = useState<string[]>([]);
+  const [selectedForComparison, setSelectedForComparison] = useState<string[]>(
+    []
+  );
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
@@ -88,17 +91,27 @@ export function CompetitorAnalysis() {
       let domain = newCompetitorUrl;
       let name = newCompetitorUrl;
       try {
-        const url = new URL(newCompetitorUrl.startsWith('http') ? newCompetitorUrl : `https://${newCompetitorUrl}`);
+        const url = new URL(
+          newCompetitorUrl.startsWith('http')
+            ? newCompetitorUrl
+            : `https://${newCompetitorUrl}`
+        );
         domain = url.hostname.replace(/^www\./, '');
-        name = domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1);
-      } catch { /* use as-is */ }
+        name =
+          domain.split('.')[0].charAt(0).toUpperCase() +
+          domain.split('.')[0].slice(1);
+      } catch {
+        /* use as-is */
+      }
 
       const response = await fetch('/api/competitors/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
-          domain: newCompetitorUrl.startsWith('http') ? newCompetitorUrl : `https://${newCompetitorUrl}`,
+          domain: newCompetitorUrl.startsWith('http')
+            ? newCompetitorUrl
+            : `https://${newCompetitorUrl}`,
           description: 'Added for competitive analysis',
           trackingFrequency: 'daily',
         }),
@@ -129,7 +142,8 @@ export function CompetitorAnalysis() {
 
   const toggleComparison = (competitorId: string) => {
     setSelectedForComparison(prev => {
-      if (prev.includes(competitorId)) return prev.filter(id => id !== competitorId);
+      if (prev.includes(competitorId))
+        return prev.filter(id => id !== competitorId);
       if (prev.length >= 3) {
         notify.error('Maximum 3 competitors for comparison');
         return prev;
@@ -143,24 +157,35 @@ export function CompetitorAnalysis() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
-            <Target className="h-6 w-6 text-cyan-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+            <Target className="h-6 w-6 text-orange-400" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">Competitor Analysis</h2>
-            <p className="text-gray-400">Track and analyze competitor performance</p>
+            <h2 className="text-2xl font-bold text-white">
+              Competitor Analysis
+            </h2>
+            <p className="text-gray-400">
+              Track and analyze competitor performance
+            </p>
           </div>
         </div>
         <div className="flex gap-2">
           <Button
             variant="outline"
             onClick={() => setComparisonMode(!comparisonMode)}
-            className={comparisonMode ? 'bg-cyan-500/20 border-cyan-500' : 'bg-white/5 border-white/10'}
+            className={
+              comparisonMode
+                ? 'bg-orange-500/20 border-orange-500'
+                : 'bg-white/5 border-white/10'
+            }
           >
             <BarChart3 className="h-4 w-4 mr-2" />
             Compare
           </Button>
-          <Button onClick={() => setShowAddForm(true)} className="gradient-primary">
+          <Button
+            onClick={() => setShowAddForm(true)}
+            className="gradient-primary"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Competitor
           </Button>
@@ -175,13 +200,17 @@ export function CompetitorAnalysis() {
               <Input
                 placeholder="Enter competitor website or social profile URL..."
                 value={newCompetitorUrl}
-                onChange={(e) => setNewCompetitorUrl(e.target.value)}
+                onChange={e => setNewCompetitorUrl(e.target.value)}
                 className="flex-1 bg-white/5 border-white/10"
               />
               <Button onClick={addCompetitor} disabled={loading}>
                 {loading ? 'Analyzing...' : 'Add'}
               </Button>
-              <Button variant="outline" onClick={() => setShowAddForm(false)} className="bg-white/5 border-white/10">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddForm(false)}
+                className="bg-white/5 border-white/10"
+              >
                 Cancel
               </Button>
             </div>
@@ -197,7 +226,9 @@ export function CompetitorAnalysis() {
             competitor={competitor}
             isSelected={selectedCompetitor?.id === competitor.id}
             isComparing={comparisonMode}
-            isSelectedForComparison={selectedForComparison.includes(competitor.id)}
+            isSelectedForComparison={selectedForComparison.includes(
+              competitor.id
+            )}
             onSelect={() => setSelectedCompetitor(competitor)}
             onToggleComparison={() => toggleComparison(competitor.id)}
           />
@@ -206,7 +237,10 @@ export function CompetitorAnalysis() {
 
       {/* Comparison View */}
       {comparisonMode && selectedForComparison.length > 1 && (
-        <ComparisonView competitors={competitors} selectedIds={selectedForComparison} />
+        <ComparisonView
+          competitors={competitors}
+          selectedIds={selectedForComparison}
+        />
       )}
 
       {/* Selected Competitor Details */}

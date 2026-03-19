@@ -15,7 +15,13 @@
 import useSWR from 'swr';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -86,7 +92,7 @@ interface PlatformStatsApiResponse {
 // =============================================================================
 
 function fetchJson(url: string) {
-  return fetch(url, { credentials: 'include' }).then((r) => r.json());
+  return fetch(url, { credentials: 'include' }).then(r => r.json());
 }
 
 // =============================================================================
@@ -146,7 +152,9 @@ export function PlatformHealth() {
       toast.success(json.message ?? 'Failed jobs queued for retry');
       mutateJobs();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to retry jobs');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to retry jobs'
+      );
     } finally {
       setIsRetrying(false);
     }
@@ -160,7 +168,7 @@ export function PlatformHealth() {
     label,
     value,
     icon: Icon,
-    iconClass = 'text-cyan-400',
+    iconClass = 'text-orange-400',
     description,
   }: {
     label: string;
@@ -179,7 +187,9 @@ export function PlatformHealth() {
         </CardHeader>
         <CardContent>
           <p className="text-2xl font-bold text-white">{value}</p>
-          {description && <p className="text-xs text-gray-400 mt-1">{description}</p>}
+          {description && (
+            <p className="text-xs text-gray-400 mt-1">{description}</p>
+          )}
         </CardContent>
       </Card>
     );
@@ -293,7 +303,9 @@ export function PlatformHealth() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-2 px-3 text-gray-400 font-medium">Queue</th>
+                    <th className="text-left py-2 px-3 text-gray-400 font-medium">
+                      Queue
+                    </th>
                     <th className="text-right py-2 px-3 text-gray-400 font-medium">
                       <Clock className="w-3 h-3 inline mr-1 text-yellow-400" />
                       Pending
@@ -313,7 +325,7 @@ export function PlatformHealth() {
                   </tr>
                 </thead>
                 <tbody>
-                  {queueStats.map((q) => (
+                  {queueStats.map(q => (
                     <tr
                       key={q.name}
                       className="border-b border-white/5 hover:bg-white/5 transition-colors"
@@ -326,10 +338,18 @@ export function PlatformHealth() {
                           </Badge>
                         )}
                       </td>
-                      <td className="text-right py-2 px-3 text-yellow-300">{q.pending}</td>
-                      <td className="text-right py-2 px-3 text-blue-300">{q.active}</td>
-                      <td className="text-right py-2 px-3 text-green-300">{q.completed}</td>
-                      <td className="text-right py-2 px-3 text-red-300">{q.failed}</td>
+                      <td className="text-right py-2 px-3 text-yellow-300">
+                        {q.pending}
+                      </td>
+                      <td className="text-right py-2 px-3 text-blue-300">
+                        {q.active}
+                      </td>
+                      <td className="text-right py-2 px-3 text-green-300">
+                        {q.completed}
+                      </td>
+                      <td className="text-right py-2 px-3 text-red-300">
+                        {q.failed}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

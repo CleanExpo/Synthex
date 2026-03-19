@@ -61,14 +61,16 @@ export function MemberCard({
       <div className="flex items-center space-x-4">
         <Avatar className="h-10 w-10">
           <AvatarImage src={member.avatar} alt={member.name} />
-          <AvatarFallback className="bg-gradient-to-r from-cyan-500 to-pink-500 text-white">
+          <AvatarFallback className="bg-gradient-to-r from-orange-500 to-pink-500 text-white">
             {member.name.charAt(0)}
           </AvatarFallback>
         </Avatar>
         <div>
           <div className="flex items-center space-x-2">
             <h3 className="font-medium text-white">{member.name}</h3>
-            {member.role === 'Admin' && <Crown className="h-4 w-4 text-red-400" />}
+            {member.role === 'Admin' && (
+              <Crown className="h-4 w-4 text-red-400" />
+            )}
           </div>
           <p className="text-sm text-slate-400">{member.email}</p>
           <div className="flex items-center space-x-2 mt-1">
@@ -117,17 +119,25 @@ export function MemberCard({
             )}
 
             <DropdownMenuLabel>Change Role</DropdownMenuLabel>
-            {(['Admin', 'Editor', 'Viewer'] as const).map((role) => (
+            {(['Admin', 'Editor', 'Viewer'] as const).map(role => (
               <DropdownMenuItem
                 key={role}
                 onClick={() => onUpdateRole(member.id, role)}
                 disabled={member.role === role}
               >
-                {role === 'Admin' && <Crown className="mr-2 h-4 w-4 text-red-400" />}
-                {role === 'Editor' && <Edit className="mr-2 h-4 w-4 text-blue-400" />}
-                {role === 'Viewer' && <Eye className="mr-2 h-4 w-4 text-slate-400" />}
+                {role === 'Admin' && (
+                  <Crown className="mr-2 h-4 w-4 text-red-400" />
+                )}
+                {role === 'Editor' && (
+                  <Edit className="mr-2 h-4 w-4 text-blue-400" />
+                )}
+                {role === 'Viewer' && (
+                  <Eye className="mr-2 h-4 w-4 text-slate-400" />
+                )}
                 {role}
-                {member.role === role && <span className="ml-auto text-xs">(current)</span>}
+                {member.role === role && (
+                  <span className="ml-auto text-xs">(current)</span>
+                )}
               </DropdownMenuItem>
             ))}
 

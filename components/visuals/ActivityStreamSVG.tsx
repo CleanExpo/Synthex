@@ -15,17 +15,59 @@ const typeConfig = {
   like: { color: '#ef4444', icon: '❤️' },
   comment: { color: '#3b82f6', icon: '💬' },
   share: { color: '#10b981', icon: '🔄' },
-  follow: { color: '#06b6d4', icon: '➕' },
+  follow: { color: '#ffb87b', icon: '➕' },
   post: { color: '#f59e0b', icon: '📝' },
 };
 
 const initialActivities: Activity[] = [
-  { id: 1, type: 'like', user: '@sarah', action: 'liked', icon: '❤️', color: '#ef4444' },
-  { id: 2, type: 'comment', user: '@john', action: 'commented', icon: '💬', color: '#3b82f6' },
-  { id: 3, type: 'share', user: '@emma', action: 'shared', icon: '🔄', color: '#10b981' },
-  { id: 4, type: 'follow', user: '@alex', action: 'followed', icon: '➕', color: '#06b6d4' },
-  { id: 5, type: 'post', user: '@mike', action: 'posted', icon: '📝', color: '#f59e0b' },
-  { id: 6, type: 'like', user: '@lisa', action: 'liked', icon: '❤️', color: '#ef4444' },
+  {
+    id: 1,
+    type: 'like',
+    user: '@sarah',
+    action: 'liked',
+    icon: '❤️',
+    color: '#ef4444',
+  },
+  {
+    id: 2,
+    type: 'comment',
+    user: '@john',
+    action: 'commented',
+    icon: '💬',
+    color: '#3b82f6',
+  },
+  {
+    id: 3,
+    type: 'share',
+    user: '@emma',
+    action: 'shared',
+    icon: '🔄',
+    color: '#10b981',
+  },
+  {
+    id: 4,
+    type: 'follow',
+    user: '@alex',
+    action: 'followed',
+    icon: '➕',
+    color: '#ffb87b',
+  },
+  {
+    id: 5,
+    type: 'post',
+    user: '@mike',
+    action: 'posted',
+    icon: '📝',
+    color: '#f59e0b',
+  },
+  {
+    id: 6,
+    type: 'like',
+    user: '@lisa',
+    action: 'liked',
+    icon: '❤️',
+    color: '#ef4444',
+  },
 ];
 
 function FlowingParticle({ delay, color }: { delay: number; color: string }) {
@@ -52,8 +94,22 @@ export default function ActivityStreamSVG() {
   // Generate new activities periodically
   useEffect(() => {
     const interval = setInterval(() => {
-      const types: Activity['type'][] = ['like', 'comment', 'share', 'follow', 'post'];
-      const users = ['@user1', '@user2', '@user3', '@user4', '@user5', '@creator', '@brand'];
+      const types: Activity['type'][] = [
+        'like',
+        'comment',
+        'share',
+        'follow',
+        'post',
+      ];
+      const users = [
+        '@user1',
+        '@user2',
+        '@user3',
+        '@user4',
+        '@user5',
+        '@creator',
+        '@brand',
+      ];
       const actions = ['liked', 'commented', 'shared', 'followed', 'posted'];
 
       const randomType = Math.floor(Math.random() * types.length);
@@ -77,7 +133,7 @@ export default function ActivityStreamSVG() {
   // Pulse animation
   useEffect(() => {
     const pulseInterval = setInterval(() => {
-      setPulseScale(s => s === 1 ? 1.1 : 1);
+      setPulseScale(s => (s === 1 ? 1.1 : 1));
     }, 1500);
 
     const ringInterval = setInterval(() => {
@@ -139,8 +195,8 @@ export default function ActivityStreamSVG() {
           <defs>
             <radialGradient id="hubGradient" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#67e8f9" />
-              <stop offset="50%" stopColor="#06b6d4" />
-              <stop offset="100%" stopColor="#0891b2" />
+              <stop offset="50%" stopColor="#ffb87b" />
+              <stop offset="100%" stopColor="#ff8f00" />
             </radialGradient>
             <filter id="hubGlow" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="15" result="blur" />
@@ -160,7 +216,10 @@ export default function ActivityStreamSVG() {
             stroke="#67e8f9"
             strokeWidth="1"
             opacity="0.5"
-            style={{ transform: `scale(${ringScale.r1})`, transformOrigin: 'center' }}
+            style={{
+              transform: `scale(${ringScale.r1})`,
+              transformOrigin: 'center',
+            }}
           />
           <circle
             cx="200"
@@ -170,7 +229,10 @@ export default function ActivityStreamSVG() {
             stroke="#c4b5fd"
             strokeWidth="0.5"
             opacity="0.3"
-            style={{ transform: `scale(${ringScale.r2})`, transformOrigin: 'center' }}
+            style={{
+              transform: `scale(${ringScale.r2})`,
+              transformOrigin: 'center',
+            }}
           />
           <circle
             cx="200"
@@ -180,7 +242,10 @@ export default function ActivityStreamSVG() {
             stroke="#ddd6fe"
             strokeWidth="0.5"
             opacity="0.2"
-            style={{ transform: `scale(${ringScale.r3})`, transformOrigin: 'center' }}
+            style={{
+              transform: `scale(${ringScale.r3})`,
+              transformOrigin: 'center',
+            }}
           />
 
           {/* Central hub */}
@@ -191,11 +256,27 @@ export default function ActivityStreamSVG() {
               r="50"
               fill="url(#hubGradient)"
               opacity="0.2"
-              style={{ transform: `scale(${pulseScale})`, transformOrigin: 'center' }}
+              style={{
+                transform: `scale(${pulseScale})`,
+                transformOrigin: 'center',
+              }}
             />
-            <circle cx="200" cy="200" r="40" fill="url(#hubGradient)" opacity="0.4" />
+            <circle
+              cx="200"
+              cy="200"
+              r="40"
+              fill="url(#hubGradient)"
+              opacity="0.4"
+            />
             <circle cx="200" cy="200" r="30" fill="url(#hubGradient)" />
-            <ellipse cx="192" cy="190" rx="10" ry="6" fill="white" opacity="0.3" />
+            <ellipse
+              cx="192"
+              cy="190"
+              rx="10"
+              ry="6"
+              fill="white"
+              opacity="0.3"
+            />
           </g>
 
           {/* Orbiting activity nodes */}
@@ -218,7 +299,13 @@ export default function ActivityStreamSVG() {
                   opacity="0.3"
                 />
                 {/* Node glow */}
-                <circle cx={x} cy={y} r="20" fill={activity.color} opacity="0.2" />
+                <circle
+                  cx={x}
+                  cy={y}
+                  r="20"
+                  fill={activity.color}
+                  opacity="0.2"
+                />
                 {/* Node */}
                 <circle cx={x} cy={y} r="12" fill={activity.color} />
                 {/* Icon */}
@@ -252,25 +339,29 @@ export default function ActivityStreamSVG() {
 
       {/* Stats display */}
       <div className="absolute top-8 left-1/2 -translate-x-1/2 text-center">
-        <p className="text-cyan-400 font-bold text-lg">LIVE ACTIVITY</p>
-        <p className="text-cyan-300/70 text-sm">{activityCount.toLocaleString()} actions/min</p>
+        <p className="text-orange-400 font-bold text-lg">LIVE ACTIVITY</p>
+        <p className="text-orange-300/70 text-sm">
+          {activityCount.toLocaleString()} actions/min
+        </p>
       </div>
 
       {/* Activity feed overlay */}
-      <div className="absolute top-4 right-4 w-64 bg-black/70 backdrop-blur-xl rounded-xl p-4 border border-cyan-500/30 shadow-[0_0_30px_rgba(6,182,212,0.2)]">
+      <div className="absolute top-4 right-4 w-64 bg-black/70 backdrop-blur-xl rounded-xl p-4 border border-orange-500/30 shadow-[0_0_30px_rgba(6,182,212,0.2)]">
         <h3 className="text-white font-bold mb-3 text-sm flex items-center gap-2">
           <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
           Real-Time Activity
         </h3>
         <div className="space-y-2 max-h-32 overflow-y-auto">
-          {activities.slice(0, 4).map((activity) => (
+          {activities.slice(0, 4).map(activity => (
             <div
               key={activity.id}
               className="flex items-center space-x-2 text-xs text-white/80 py-1 px-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
             >
               <span className="text-base">{activity.icon}</span>
               <span className="flex-1">
-                <span className="font-semibold text-white">{activity.user}</span>{' '}
+                <span className="font-semibold text-white">
+                  {activity.user}
+                </span>{' '}
                 <span className="text-white/60">{activity.action}</span>
               </span>
             </div>

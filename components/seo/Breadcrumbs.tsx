@@ -32,14 +32,22 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
-      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-gray-400 mb-6">
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-1.5 text-sm text-gray-400 mb-6"
+      >
         {fullItems.map((item, index) => (
           <span key={item.href} className="flex items-center gap-1.5">
-            {index > 0 && <ChevronRight className="w-3.5 h-3.5 text-gray-600" />}
+            {index > 0 && (
+              <ChevronRight className="w-3.5 h-3.5 text-gray-600" />
+            )}
             {index === fullItems.length - 1 ? (
               <span className="text-gray-300">{item.name}</span>
             ) : (
-              <Link href={item.href} className="hover:text-cyan-400 transition-colors">
+              <Link
+                href={item.href}
+                className="hover:text-orange-400 transition-colors"
+              >
                 {item.name}
               </Link>
             )}

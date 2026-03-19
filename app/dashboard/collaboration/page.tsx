@@ -12,8 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useActivity, type ActivityItem, type ActivityFilter } from '@/hooks/use-activity';
-import { useShares, type ContentShare, type ShareFilter } from '@/hooks/use-shares';
+import {
+  useActivity,
+  type ActivityItem,
+  type ActivityFilter,
+} from '@/hooks/use-activity';
+import {
+  useShares,
+  type ContentShare,
+  type ShareFilter,
+} from '@/hooks/use-shares';
 import {
   MessageSquare,
   Activity,
@@ -64,7 +72,7 @@ function getActivityIcon(type: string) {
     case 'post_published':
       return <Send className="h-4 w-4 text-green-400" />;
     case 'post_scheduled':
-      return <Calendar className="h-4 w-4 text-cyan-400" />;
+      return <Calendar className="h-4 w-4 text-orange-400" />;
     case 'post_edited':
       return <Edit className="h-4 w-4 text-yellow-400" />;
     case 'post_deleted':
@@ -75,7 +83,7 @@ function getActivityIcon(type: string) {
       return <User className="h-4 w-4 text-blue-400" />;
     case 'comment_received':
     case 'comment':
-      return <MessageSquare className="h-4 w-4 text-cyan-400" />;
+      return <MessageSquare className="h-4 w-4 text-orange-400" />;
     case 'mention':
       return <Bell className="h-4 w-4 text-yellow-400" />;
     case 'team_member_joined':
@@ -109,7 +117,7 @@ function getActivityColor(type: string): string {
     case 'post_scheduled':
     case 'comment_received':
     case 'comment':
-      return 'border-cyan-500/30 bg-cyan-500/10';
+      return 'border-orange-500/30 bg-orange-500/10';
     case 'post_edited':
     case 'mention':
     case 'milestone_reached':
@@ -128,14 +136,30 @@ function getActivityColor(type: string): string {
 function getPermissionBadge(permission: string) {
   switch (permission) {
     case 'admin':
-      return <Badge className="bg-red-500/20 text-red-300 border-red-500/30">Admin</Badge>;
+      return (
+        <Badge className="bg-red-500/20 text-red-300 border-red-500/30">
+          Admin
+        </Badge>
+      );
     case 'edit':
-      return <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">Edit</Badge>;
+      return (
+        <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
+          Edit
+        </Badge>
+      );
     case 'comment':
-      return <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30">Comment</Badge>;
+      return (
+        <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30">
+          Comment
+        </Badge>
+      );
     case 'view':
     default:
-      return <Badge className="bg-gray-500/20 text-gray-300 border-gray-500/30">View</Badge>;
+      return (
+        <Badge className="bg-gray-500/20 text-gray-300 border-gray-500/30">
+          View
+        </Badge>
+      );
   }
 }
 
@@ -144,7 +168,8 @@ function getPermissionBadge(permission: string) {
 // ============================================================================
 
 function ActivityTab() {
-  const { activities, loading, error, hasMore, refresh, loadMore } = useActivity({ limit: 20 });
+  const { activities, loading, error, hasMore, refresh, loadMore } =
+    useActivity({ limit: 20 });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = async () => {
@@ -159,7 +184,7 @@ function ActivityTab() {
   if (loading && activities.length === 0) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
       </div>
     );
   }
@@ -179,13 +204,15 @@ function ActivityTab() {
 
   if (activities.length === 0) {
     return (
-      <Card className="bg-white/5 border-cyan-500/10">
+      <Card className="bg-white/5 border-orange-500/10">
         <CardContent className="py-16">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cyan-500/10 mb-4">
-              <Activity className="w-8 h-8 text-cyan-400" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 mb-4">
+              <Activity className="w-8 h-8 text-orange-400" />
             </div>
-            <h3 className="text-lg font-medium text-white mb-2">No recent activity</h3>
+            <h3 className="text-lg font-medium text-white mb-2">
+              No recent activity
+            </h3>
             <p className="text-gray-400 max-w-sm mx-auto">
               Start creating content to see team updates here.
             </p>
@@ -214,33 +241,44 @@ function ActivityTab() {
       </div>
 
       <div className="space-y-2">
-        {activities.map((activity) => (
+        {activities.map(activity => (
           <Card
             key={activity.id}
-            className="bg-white/5 border-cyan-500/10 hover:bg-white/10 transition-colors cursor-pointer"
+            className="bg-white/5 border-orange-500/10 hover:bg-white/10 transition-colors cursor-pointer"
           >
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <div className={`flex-shrink-0 p-2 rounded-lg border ${getActivityColor(activity.type)}`}>
+                <div
+                  className={`flex-shrink-0 p-2 rounded-lg border ${getActivityColor(activity.type)}`}
+                >
                   {getActivityIcon(activity.type)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium text-white">{activity.title}</p>
+                    <p className="text-sm font-medium text-white">
+                      {activity.title}
+                    </p>
                     <span className="text-xs text-gray-500 whitespace-nowrap">
                       {formatRelativeTime(activity.timestamp)}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-400 mt-0.5 line-clamp-2">{activity.description}</p>
+                  <p className="text-sm text-gray-400 mt-0.5 line-clamp-2">
+                    {activity.description}
+                  </p>
                   {activity.platform && (
-                    <Badge variant="outline" className="mt-2 text-xs capitalize bg-white/5">
+                    <Badge
+                      variant="outline"
+                      className="mt-2 text-xs capitalize bg-white/5"
+                    >
                       {activity.platform}
                     </Badge>
                   )}
                 </div>
                 {activity.userAvatar && (
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback>{activity.userName?.[0] || 'U'}</AvatarFallback>
+                    <AvatarFallback>
+                      {activity.userName?.[0] || 'U'}
+                    </AvatarFallback>
                   </Avatar>
                 )}
               </div>
@@ -257,9 +295,7 @@ function ActivityTab() {
             disabled={loading}
             className="border-white/10 hover:bg-white/5"
           >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : null}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
             Load more
           </Button>
         </div>
@@ -278,15 +314,18 @@ function CommentsTab() {
   // In a real implementation, we'd have a separate API endpoint for "all comments"
 
   return (
-    <Card className="bg-white/5 border-cyan-500/10">
+    <Card className="bg-white/5 border-orange-500/10">
       <CardContent className="py-16">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cyan-500/10 mb-4">
-            <MessageSquare className="w-8 h-8 text-cyan-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 mb-4">
+            <MessageSquare className="w-8 h-8 text-orange-400" />
           </div>
-          <h3 className="text-lg font-medium text-white mb-2">No comments yet</h3>
+          <h3 className="text-lg font-medium text-white mb-2">
+            No comments yet
+          </h3>
           <p className="text-gray-400 max-w-sm mx-auto">
-            Start collaborating on content to see comments here. Open any content item to view and add comments.
+            Start collaborating on content to see comments here. Open any
+            content item to view and add comments.
           </p>
         </div>
       </CardContent>
@@ -299,8 +338,13 @@ function CommentsTab() {
 // ============================================================================
 
 function SharesTab() {
-  const [shareFilter, setShareFilter] = useState<'sharedWithMe' | 'sharedByMe'>('sharedWithMe');
-  const filter: ShareFilter = shareFilter === 'sharedWithMe' ? { sharedWithMe: true } : { sharedByMe: true };
+  const [shareFilter, setShareFilter] = useState<'sharedWithMe' | 'sharedByMe'>(
+    'sharedWithMe'
+  );
+  const filter: ShareFilter =
+    shareFilter === 'sharedWithMe'
+      ? { sharedWithMe: true }
+      : { sharedByMe: true };
   const { shares, loading, error, refresh, revoke } = useShares(filter);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
@@ -326,7 +370,7 @@ function SharesTab() {
   if (loading && shares.length === 0) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
       </div>
     );
   }
@@ -352,7 +396,9 @@ function SharesTab() {
             size="sm"
             variant={shareFilter === 'sharedWithMe' ? 'default' : 'outline'}
             onClick={() => setShareFilter('sharedWithMe')}
-            className={shareFilter !== 'sharedWithMe' ? 'bg-white/5 border-white/10' : ''}
+            className={
+              shareFilter !== 'sharedWithMe' ? 'bg-white/5 border-white/10' : ''
+            }
           >
             Shared with me
           </Button>
@@ -360,7 +406,9 @@ function SharesTab() {
             size="sm"
             variant={shareFilter === 'sharedByMe' ? 'default' : 'outline'}
             onClick={() => setShareFilter('sharedByMe')}
-            className={shareFilter !== 'sharedByMe' ? 'bg-white/5 border-white/10' : ''}
+            className={
+              shareFilter !== 'sharedByMe' ? 'bg-white/5 border-white/10' : ''
+            }
           >
             Shared by me
           </Button>
@@ -381,13 +429,15 @@ function SharesTab() {
       </div>
 
       {shares.length === 0 ? (
-        <Card className="bg-white/5 border-cyan-500/10">
+        <Card className="bg-white/5 border-orange-500/10">
           <CardContent className="py-16">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cyan-500/10 mb-4">
-                <Share2 className="w-8 h-8 text-cyan-400" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 mb-4">
+                <Share2 className="w-8 h-8 text-orange-400" />
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">Nothing shared yet</h3>
+              <h3 className="text-lg font-medium text-white mb-2">
+                Nothing shared yet
+              </h3>
               <p className="text-gray-400 max-w-sm mx-auto">
                 {shareFilter === 'sharedWithMe'
                   ? 'Content shared with you will appear here.'
@@ -398,16 +448,16 @@ function SharesTab() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {shares.map((share) => (
+          {shares.map(share => (
             <Card
               key={share.id}
-              className="bg-white/5 border-cyan-500/10 hover:bg-white/10 transition-colors"
+              className="bg-white/5 border-orange-500/10 hover:bg-white/10 transition-colors"
             >
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30">
-                      <FileText className="h-4 w-4 text-cyan-400" />
+                    <div className="p-2 rounded-lg bg-orange-500/10 border border-orange-500/30">
+                      <FileText className="h-4 w-4 text-orange-400" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-white capitalize">
@@ -493,8 +543,16 @@ export default function CollaborationPage() {
   const [activeTab, setActiveTab] = useState<TabType>('activity');
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
-    { id: 'activity', label: 'Activity', icon: <Activity className="w-4 h-4" /> },
-    { id: 'comments', label: 'Comments', icon: <MessageSquare className="w-4 h-4" /> },
+    {
+      id: 'activity',
+      label: 'Activity',
+      icon: <Activity className="w-4 h-4" />,
+    },
+    {
+      id: 'comments',
+      label: 'Comments',
+      icon: <MessageSquare className="w-4 h-4" />,
+    },
     { id: 'shares', label: 'Shares', icon: <Share2 className="w-4 h-4" /> },
   ];
 
@@ -503,19 +561,23 @@ export default function CollaborationPage() {
       {/* Page Header */}
       <div className="flex items-start justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
-            <Users className="h-6 w-6 text-cyan-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+            <Users className="h-6 w-6 text-orange-400" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-white">Team Collaboration</h1>
-            <p className="text-gray-400">Activity feed, comments, and shared content</p>
+            <h1 className="text-3xl font-bold text-white">
+              Team Collaboration
+            </h1>
+            <p className="text-gray-400">
+              Activity feed, comments, and shared content
+            </p>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 border-b border-white/10 pb-4">
-        {tabs.map((tab) => (
+        {tabs.map(tab => (
           <Button
             key={tab.id}
             size="sm"

@@ -15,15 +15,16 @@ const GlowCard = React.forwardRef<HTMLDivElement, GlowCardProps>(
       <motion.div
         ref={ref}
         initial={{
-          boxShadow: '0 0 0px rgba(34, 211, 238, 0)',
+          boxShadow: '0 0 0px rgba(255, 184, 123, 0)',
         }}
         whileHover={{
-          boxShadow: '0 0 24px rgba(34, 211, 238, 0.18), 0 0 48px rgba(34, 211, 238, 0.06)',
+          boxShadow:
+            '0 0 24px rgba(255, 184, 123, 0.18), 0 0 48px rgba(255, 184, 123, 0.06)',
         }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
         className={cn(
           'relative rounded-sm border-[0.5px] border-white/[0.06] bg-[#080e1a]',
-          'hover:border-cyan-500/30 transition-colors duration-300',
+          'hover:border-orange-500/30 transition-colors duration-300',
           className
         )}
       >
@@ -41,18 +42,13 @@ interface GlowCardCanvasProps {
 
 const GlowCardCanvas = ({ children, className }: GlowCardCanvasProps) => {
   return (
-    <div
-      className={cn(
-        'relative flex items-center justify-center',
-        className
-      )}
-    >
+    <div className={cn('relative flex items-center justify-center', className)}>
       {/* Ambient background glow layer */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse at 50% 50%, rgba(34, 211, 238, 0.04) 0%, transparent 70%)',
+            'radial-gradient(ellipse at 50% 50%, rgba(255, 184, 123, 0.04) 0%, transparent 70%)',
         }}
       />
       {children}

@@ -5,7 +5,13 @@
  * Form for entering content to analyze
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Brain, Loader2 } from '@/components/icons';
 import { PLATFORMS, CONTENT_TYPES } from './config';
@@ -36,14 +42,14 @@ export function ContentInput({
   onTargetAudienceChange,
   onAnalyze,
 }: ContentInputProps) {
-  const selectedPlatform = PLATFORMS.find((p) => p.id === platform);
+  const selectedPlatform = PLATFORMS.find(p => p.id === platform);
   const maxLength = selectedPlatform?.maxLength || 5000;
 
   return (
     <Card variant="glass">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <MessageSquare className="w-5 h-5 mr-2 text-cyan-400" />
+          <MessageSquare className="w-5 h-5 mr-2 text-orange-400" />
           Content to Analyze
         </CardTitle>
         <CardDescription>
@@ -54,9 +60,9 @@ export function ContentInput({
         <div>
           <textarea
             value={content}
-            onChange={(e) => onContentChange(e.target.value)}
+            onChange={e => onContentChange(e.target.value)}
             placeholder="Enter your content here... (e.g., social media post, email subject line, ad copy)"
-            className="w-full h-48 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
+            className="w-full h-48 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
             maxLength={maxLength}
           />
           <div className="flex justify-between mt-2 text-sm text-gray-400">
@@ -72,10 +78,10 @@ export function ContentInput({
             </label>
             <select
               value={platform}
-              onChange={(e) => onPlatformChange(e.target.value)}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              onChange={e => onPlatformChange(e.target.value)}
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
-              {PLATFORMS.map((p) => (
+              {PLATFORMS.map(p => (
                 <option key={p.id} value={p.id} className="bg-gray-800">
                   {p.name}
                 </option>
@@ -89,10 +95,10 @@ export function ContentInput({
             </label>
             <select
               value={contentType}
-              onChange={(e) => onContentTypeChange(e.target.value)}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              onChange={e => onContentTypeChange(e.target.value)}
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
-              {CONTENT_TYPES.map((ct) => (
+              {CONTENT_TYPES.map(ct => (
                 <option key={ct.id} value={ct.id} className="bg-gray-800">
                   {ct.name}
                 </option>
@@ -108,9 +114,9 @@ export function ContentInput({
           <input
             type="text"
             value={targetAudience}
-            onChange={(e) => onTargetAudienceChange(e.target.value)}
+            onChange={e => onTargetAudienceChange(e.target.value)}
             placeholder="e.g., Tech professionals aged 25-45"
-            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         </div>
 

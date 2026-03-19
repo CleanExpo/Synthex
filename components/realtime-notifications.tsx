@@ -1,7 +1,14 @@
 ﻿'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Bell, X, Check, AlertCircle, Info, CheckCircle } from '@/components/icons';
+import {
+  Bell,
+  X,
+  Check,
+  AlertCircle,
+  Info,
+  CheckCircle,
+} from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -11,16 +18,17 @@ import { toast } from 'sonner';
 // Simple auth hook replacement
 function useUser() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
-  
+
   useEffect(() => {
     // For now, return a mock user or null
     // In production, this would check actual auth state
-    const mockUser = typeof window !== 'undefined' && localStorage.getItem('user_id') 
-      ? { id: localStorage.getItem('user_id')! }
-      : null;
+    const mockUser =
+      typeof window !== 'undefined' && localStorage.getItem('user_id')
+        ? { id: localStorage.getItem('user_id')! }
+        : null;
     setUser(mockUser);
   }, []);
-  
+
   return user;
 }
 
@@ -49,14 +57,14 @@ export default function RealtimeNotifications() {
       type: (message.metadata?.type as Notification['type']) || 'info',
       timestamp: message.timestamp,
       read: Boolean(message.metadata?.read),
-      actionUrl: message.metadata?.actionUrl as string | undefined
+      actionUrl: message.metadata?.actionUrl as string | undefined,
     };
 
     setNotifications(prev => [notification, ...prev].slice(0, 50)); // Keep last 50
-    
+
     if (!notification.read) {
       setUnreadCount(prev => prev + 1);
-      
+
       // Show toast notification
       const toastMessage = `${notification.title}: ${notification.message}`;
       switch (notification.type) {
@@ -84,17 +92,20 @@ export default function RealtimeNotifications() {
         `notifications:${user.id}`,
         {
           onMessage: handleNewNotification,
-          onPresence: (presence) => {
-          }
+          onPresence: presence => {},
         }
       );
 
       if (channel) {
         setIsConnected(true);
-        
+
         // Subscribe to notification table changes
-        realtimeService.subscribeToNotifications(user.id, (payload) => {
-          if (payload.eventType === 'INSERT' && payload.new && 'id' in payload.new) {
+        realtimeService.subscribeToNotifications(user.id, payload => {
+          if (
+            payload.eventType === 'INSERT' &&
+            payload.new &&
+            'id' in payload.new
+          ) {
             const newRecord = payload.new;
             handleNewNotification({
               id: String(newRecord.id || Date.now()),
@@ -105,8 +116,8 @@ export default function RealtimeNotifications() {
               metadata: {
                 type: newRecord.type,
                 actionUrl: newRecord.action_url,
-                read: newRecord.read
-              }
+                read: newRecord.read,
+              },
             });
           }
         });
@@ -126,10 +137,12 @@ export default function RealtimeNotifications() {
   }, [handleNewNotification, user]);
 
   const markAsRead = async (notificationId: string) => {
-    const success = await realtimeService.markNotificationsRead([notificationId]);
+    const success = await realtimeService.markNotificationsRead([
+      notificationId,
+    ]);
     if (success) {
       setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+        prev.map(n => (n.id === notificationId ? { ...n, read: true } : n))
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
     }
@@ -198,7 +211,10 @@ export default function RealtimeNotifications() {
 
       {/* Notifications Dropdown */}
       {isOpen && (
-        <Card variant="glass" className="absolute right-0 top-12 w-96 max-h-[500px] z-50 overflow-hidden">
+        <Card
+          variant="glass"
+          className="absolute right-0 top-12 w-96 max-h-[500px] z-50 overflow-hidden"
+        >
           {/* Header */}
           <div className="p-4 border-b border-white/10 flex items-center justify-between">
             <h3 className="font-semibold text-white">Notifications</h3>
@@ -243,7 +259,7 @@ export default function RealtimeNotifications() {
               </div>
             ) : (
               <div className="divide-y divide-white/5">
-                {notifications.map((notification) => (
+                {notifications.map(notification => (
                   <div
                     key={notification.id}
                     className={`p-4 hover:bg-white/5 transition-colors cursor-pointer ${
@@ -276,7 +292,7 @@ export default function RealtimeNotifications() {
                           <Button
                             size="sm"
                             variant="link"
-                            className="p-0 h-auto text-cyan-400 text-xs mt-2"
+                            className="p-0 h-auto text-orange-400 text-xs mt-2"
                           >
                             View details →
                           </Button>

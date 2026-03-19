@@ -79,12 +79,12 @@ interface LiveActivityFeedProps {
 const activityIcons: Record<ActivityType, React.ReactNode> = {
   post_created: <Edit className="h-4 w-4 text-blue-400" />,
   post_published: <Send className="h-4 w-4 text-green-400" />,
-  post_scheduled: <Calendar className="h-4 w-4 text-cyan-400" />,
+  post_scheduled: <Calendar className="h-4 w-4 text-orange-400" />,
   post_edited: <Edit className="h-4 w-4 text-yellow-400" />,
   post_deleted: <Trash2 className="h-4 w-4 text-red-400" />,
   engagement_spike: <TrendingUp className="h-4 w-4 text-green-400" />,
   new_follower: <User className="h-4 w-4 text-blue-400" />,
-  comment_received: <MessageSquare className="h-4 w-4 text-cyan-400" />,
+  comment_received: <MessageSquare className="h-4 w-4 text-orange-400" />,
   mention: <Bell className="h-4 w-4 text-yellow-400" />,
   team_member_joined: <Users className="h-4 w-4 text-green-400" />,
   team_member_action: <Activity className="h-4 w-4 text-blue-400" />,
@@ -97,12 +97,12 @@ const activityIcons: Record<ActivityType, React.ReactNode> = {
 const activityColors: Record<ActivityType, string> = {
   post_created: 'border-blue-500/30 bg-blue-500/10',
   post_published: 'border-green-500/30 bg-green-500/10',
-  post_scheduled: 'border-cyan-500/30 bg-cyan-500/10',
+  post_scheduled: 'border-orange-500/30 bg-orange-500/10',
   post_edited: 'border-yellow-500/30 bg-yellow-500/10',
   post_deleted: 'border-red-500/30 bg-red-500/10',
   engagement_spike: 'border-green-500/30 bg-green-500/10',
   new_follower: 'border-blue-500/30 bg-blue-500/10',
-  comment_received: 'border-cyan-500/30 bg-cyan-500/10',
+  comment_received: 'border-orange-500/30 bg-orange-500/10',
   mention: 'border-yellow-500/30 bg-yellow-500/10',
   team_member_joined: 'border-green-500/30 bg-green-500/10',
   team_member_action: 'border-blue-500/30 bg-blue-500/10',
@@ -148,9 +148,9 @@ export function LiveActivityFeed({
   // Add new activity with animation
   const addActivity = useCallback(
     (activity: ActivityItem) => {
-      setActivities((prev) => {
+      setActivities(prev => {
         // Prevent duplicates
-        if (prev.some((a) => a.id === activity.id)) return prev;
+        if (prev.some(a => a.id === activity.id)) return prev;
 
         // Add to top and limit size
         const updated = [activity, ...prev].slice(0, maxItems);
@@ -165,7 +165,9 @@ export function LiveActivityFeed({
     (message: RealtimeMessage) => {
       const activity: ActivityItem = {
         id: message.id,
-        type: (message.metadata?.activityType as ActivityType) || 'team_member_action',
+        type:
+          (message.metadata?.activityType as ActivityType) ||
+          'team_member_action',
         title: message.title || 'Activity',
         description: message.content,
         timestamp: message.timestamp,
@@ -187,17 +189,21 @@ export function LiveActivityFeed({
     const channelName = teamId
       ? `activity:team:${teamId}`
       : userId
-      ? `activity:user:${userId}`
-      : 'activity:global';
+        ? `activity:user:${userId}`
+        : 'activity:global';
 
     const setup = async () => {
       const channel = await realtimeService.subscribeToChannel(channelName, {
         onMessage: handleMessage,
-        onUpdate: (payload) => {
+        onUpdate: payload => {
           // Handle database changes
           if (payload.table === 'content_posts') {
             const eventType = payload.eventType;
-            const rawPost = (payload.new && Object.keys(payload.new).length > 0 ? payload.new : payload.old) as Record<string, unknown> | null;
+            const rawPost = (
+              payload.new && Object.keys(payload.new).length > 0
+                ? payload.new
+                : payload.old
+            ) as Record<string, unknown> | null;
             if (!rawPost || !rawPost.id) return;
 
             const activity: ActivityItem = {
@@ -206,17 +212,18 @@ export function LiveActivityFeed({
                 eventType === 'INSERT'
                   ? 'post_created'
                   : eventType === 'UPDATE'
-                  ? rawPost.status === 'published'
-                    ? 'post_published'
-                    : 'post_edited'
-                  : 'post_deleted',
+                    ? rawPost.status === 'published'
+                      ? 'post_published'
+                      : 'post_edited'
+                    : 'post_deleted',
               title:
                 eventType === 'INSERT'
                   ? 'New post created'
                   : eventType === 'UPDATE'
-                  ? 'Post updated'
-                  : 'Post deleted',
-              description: String(rawPost.content || '').slice(0, 100) || 'Content update',
+                    ? 'Post updated'
+                    : 'Post deleted',
+              description:
+                String(rawPost.content || '').slice(0, 100) || 'Content update',
               timestamp: new Date(),
               platform: rawPost.platform as string | undefined,
               metadata: { postId: String(rawPost.id) },
@@ -256,7 +263,8 @@ export function LiveActivityFeed({
           id: 'demo-2',
           type: 'engagement_spike',
           title: 'Engagement Spike',
-          description: 'Your LinkedIn post is getting 3x more engagement than usual',
+          description:
+            'Your LinkedIn post is getting 3x more engagement than usual',
           timestamp: new Date(Date.now() - 300000),
           platform: 'linkedin',
         },
@@ -280,7 +288,8 @@ export function LiveActivityFeed({
           id: 'demo-5',
           type: 'milestone_reached',
           title: 'Milestone Reached!',
-          description: 'You reached 10,000 total followers across all platforms',
+          description:
+            'You reached 10,000 total followers across all platforms',
           timestamp: new Date(Date.now() - 1800000),
         },
       ];
@@ -293,7 +302,7 @@ export function LiveActivityFeed({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <Activity className="h-5 w-5 text-cyan-400" />
+          <Activity className="h-5 w-5 text-orange-400" />
           <h3 className="font-semibold text-white">Live Activity</h3>
         </div>
         <div className="flex items-center gap-2">
@@ -384,7 +393,7 @@ export function LiveActivityFeed({
 
       {/* Footer */}
       <div className="px-4 py-2 border-t border-white/10 text-center">
-        <button className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
+        <button className="text-xs text-orange-400 hover:text-orange-300 transition-colors">
           View all activity
         </button>
       </div>

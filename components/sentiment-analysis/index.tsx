@@ -5,16 +5,30 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Brain, RefreshCw, Download, ArrowUp, ArrowDown,
+  Brain,
+  RefreshCw,
+  Download,
+  ArrowUp,
+  ArrowDown,
 } from '@/components/icons';
 import {
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
-  RadialBarChart, RadialBar,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  RadialBarChart,
+  RadialBar,
 } from 'recharts';
 import { notify } from '@/lib/notifications';
 import type {
-  SentimentData, EmotionScore, SentimentTrend, TopicSentiment,
-  AnalyticsResponse, AnalysisResponse, SingleAnalysisResponse,
+  SentimentData,
+  EmotionScore,
+  SentimentTrend,
+  TopicSentiment,
+  AnalyticsResponse,
+  AnalysisResponse,
+  SingleAnalysisResponse,
 } from './types';
 import { getSentimentColor } from './helpers';
 import { OverviewTab } from './OverviewTab';
@@ -35,7 +49,11 @@ export function SentimentAnalysis() {
 
   // Overall metrics
   const [overallSentiment, setOverallSentiment] = useState({
-    score: 0, positive: 0, negative: 0, neutral: 0, trend: 0
+    score: 0,
+    positive: 0,
+    negative: 0,
+    neutral: 0,
+    trend: 0,
   });
 
   const loadSentimentData = useCallback(async () => {
@@ -43,8 +61,12 @@ export function SentimentAnalysis() {
 
     try {
       const [analyticsRes, analysesRes] = await Promise.all([
-        fetch(`/api/analytics/sentiment?days=${selectedTimeRange === '7d' ? 7 : selectedTimeRange === '30d' ? 30 : 90}${selectedPlatform !== 'all' ? `&platform=${selectedPlatform}` : ''}`),
-        fetch(`/api/ai-content/sentiment?limit=50${selectedPlatform !== 'all' ? `&platform=${selectedPlatform}` : ''}`)
+        fetch(
+          `/api/analytics/sentiment?days=${selectedTimeRange === '7d' ? 7 : selectedTimeRange === '30d' ? 30 : 90}${selectedPlatform !== 'all' ? `&platform=${selectedPlatform}` : ''}`
+        ),
+        fetch(
+          `/api/ai-content/sentiment?limit=50${selectedPlatform !== 'all' ? `&platform=${selectedPlatform}` : ''}`
+        ),
       ]);
 
       if (!analyticsRes.ok || !analysesRes.ok) {
@@ -55,52 +77,63 @@ export function SentimentAnalysis() {
       const analysesData: AnalysisResponse = await analysesRes.json();
 
       // Transform API analyses to component's SentimentData format
-      const transformedData: SentimentData[] = analysesData.analyses.map((analysis, i) => ({
-        id: analysis.id || `sent-${i}`,
-        content: '',
-        platform: analysis.platform || 'Unknown',
-        author: 'User',
-        timestamp: new Date(analysis.analyzedAt),
-        sentiment: analysis.sentiment === 'mixed' ? 'neutral' : analysis.sentiment,
-        score: analysis.score / 100,
-        confidence: analysis.confidence * 100,
-        emotions: analysis.emotions.map(e => ({
-          emotion: e.emotion as EmotionScore['emotion'],
-          score: e.intensity
-        })),
-        topics: [],
-        entities: [],
-        engagement: { likes: 0, comments: 0, shares: 0, reach: 0 },
-        actionable: false,
-        priority: 'low'
-      }));
+      const transformedData: SentimentData[] = analysesData.analyses.map(
+        (analysis, i) => ({
+          id: analysis.id || `sent-${i}`,
+          content: '',
+          platform: analysis.platform || 'Unknown',
+          author: 'User',
+          timestamp: new Date(analysis.analyzedAt),
+          sentiment:
+            analysis.sentiment === 'mixed' ? 'neutral' : analysis.sentiment,
+          score: analysis.score / 100,
+          confidence: analysis.confidence * 100,
+          emotions: analysis.emotions.map(e => ({
+            emotion: e.emotion as EmotionScore['emotion'],
+            score: e.intensity,
+          })),
+          topics: [],
+          entities: [],
+          engagement: { likes: 0, comments: 0, shares: 0, reach: 0 },
+          actionable: false,
+          priority: 'low',
+        })
+      );
 
       setSentimentData(transformedData);
 
-      const transformedTrends: SentimentTrend[] = analyticsData.trends.map(t => ({
-        date: new Date(t.date),
-        positive: t.positive,
-        negative: t.negative,
-        neutral: t.neutral,
-        volume: t.count
-      }));
+      const transformedTrends: SentimentTrend[] = analyticsData.trends.map(
+        t => ({
+          date: new Date(t.date),
+          positive: t.positive,
+          negative: t.negative,
+          neutral: t.neutral,
+          volume: t.count,
+        })
+      );
       setTrends(transformedTrends);
 
-      const topicSentimentData: TopicSentiment[] = analyticsData.topEmotions.map(e => ({
-        topic: e.emotion,
-        mentions: e.count,
-        sentiment: e.percentage / 100 - 0.5,
-        trend: 'stable' as const
-      }));
+      const topicSentimentData: TopicSentiment[] =
+        analyticsData.topEmotions.map(e => ({
+          topic: e.emotion,
+          mentions: e.count,
+          sentiment: e.percentage / 100 - 0.5,
+          trend: 'stable' as const,
+        }));
       setTopicSentiments(topicSentimentData);
 
       if (analyticsData.overall.total > 0) {
         setOverallSentiment({
           score: analyticsData.overall.avgScore / 100,
-          positive: (analyticsData.overall.positive / analyticsData.overall.total) * 100,
-          negative: (analyticsData.overall.negative / analyticsData.overall.total) * 100,
-          neutral: (analyticsData.overall.neutral / analyticsData.overall.total) * 100,
-          trend: 0
+          positive:
+            (analyticsData.overall.positive / analyticsData.overall.total) *
+            100,
+          negative:
+            (analyticsData.overall.negative / analyticsData.overall.total) *
+            100,
+          neutral:
+            (analyticsData.overall.neutral / analyticsData.overall.total) * 100,
+          trend: 0,
         });
       }
     } catch (error) {
@@ -132,8 +165,8 @@ export function SentimentAnalysis() {
         body: JSON.stringify({
           text: testText,
           contentType: 'text',
-          predictEngagement: false
-        })
+          predictEngagement: false,
+        }),
       });
 
       if (!response.ok) {
@@ -144,15 +177,16 @@ export function SentimentAnalysis() {
       const analysis = data.analysis;
 
       setTestResult({
-        sentiment: analysis.sentiment === 'mixed' ? 'neutral' : analysis.sentiment,
+        sentiment:
+          analysis.sentiment === 'mixed' ? 'neutral' : analysis.sentiment,
         score: analysis.score / 100,
         confidence: analysis.confidence * 100,
         emotions: analysis.emotions.map(e => ({
           emotion: e.emotion,
-          score: e.intensity
+          score: e.intensity,
         })),
         topics: analysis.toneIndicators || [],
-        keyPhrases: analysis.keyPhrases || []
+        keyPhrases: analysis.keyPhrases || [],
       });
 
       notify.success('Sentiment analysis complete!');
@@ -167,20 +201,25 @@ export function SentimentAnalysis() {
   const sentimentDistribution = [
     { name: 'Positive', value: overallSentiment.positive, fill: '#10b981' },
     { name: 'Negative', value: overallSentiment.negative, fill: '#ef4444' },
-    { name: 'Neutral', value: overallSentiment.neutral, fill: '#f59e0b' }
+    { name: 'Neutral', value: overallSentiment.neutral, fill: '#f59e0b' },
   ];
 
-  const emotionRadarData = sentimentData.slice(0, 10).flatMap(d => d.emotions)
-    .reduce((acc, emotion) => {
-      const existing = acc.find(e => e.emotion === emotion.emotion);
-      if (existing) {
-        existing.score += emotion.score;
-        existing.count++;
-      } else {
-        acc.push({ ...emotion, count: 1 });
-      }
-      return acc;
-    }, [] as Array<{ emotion: string; score: number; count: number }>)
+  const emotionRadarData = sentimentData
+    .slice(0, 10)
+    .flatMap(d => d.emotions)
+    .reduce(
+      (acc, emotion) => {
+        const existing = acc.find(e => e.emotion === emotion.emotion);
+        if (existing) {
+          existing.score += emotion.score;
+          existing.count++;
+        } else {
+          acc.push({ ...emotion, count: 1 });
+        }
+        return acc;
+      },
+      [] as Array<{ emotion: string; score: number; count: number }>
+    )
     .map(e => ({ emotion: e.emotion, score: e.score / e.count }));
 
   return (
@@ -188,17 +227,23 @@ export function SentimentAnalysis() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
-            <Brain className="h-6 w-6 text-cyan-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+            <Brain className="h-6 w-6 text-orange-400" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">Sentiment Analysis</h2>
+            <h2 className="text-2xl font-bold text-white">
+              Sentiment Analysis
+            </h2>
             <p className="text-gray-400">AI-powered emotional intelligence</p>
           </div>
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" onClick={loadSentimentData} className="bg-white/5 border-white/10">
+          <Button
+            variant="outline"
+            onClick={loadSentimentData}
+            className="bg-white/5 border-white/10"
+          >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -219,15 +264,27 @@ export function SentimentAnalysis() {
                 <div className="w-32 h-32">
                   <ResponsiveContainer width="100%" height="100%">
                     <RadialBarChart
-                      cx="50%" cy="50%" innerRadius="60%" outerRadius="100%"
-                      data={[{ value: Math.abs(overallSentiment.score) * 100, fill: overallSentiment.score > 0 ? '#10b981' : '#ef4444' }]}
-                      startAngle={90} endAngle={-270}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="60%"
+                      outerRadius="100%"
+                      data={[
+                        {
+                          value: Math.abs(overallSentiment.score) * 100,
+                          fill:
+                            overallSentiment.score > 0 ? '#10b981' : '#ef4444',
+                        },
+                      ]}
+                      startAngle={90}
+                      endAngle={-270}
                     >
                       <RadialBar dataKey="value" cornerRadius={10} />
                     </RadialBarChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className={`text-3xl font-bold ${getSentimentColor(overallSentiment.score)}`}>
+                    <span
+                      className={`text-3xl font-bold ${getSentimentColor(overallSentiment.score)}`}
+                    >
                       {(overallSentiment.score * 100).toFixed(0)}
                     </span>
                     <span className="text-xs text-gray-400">Score</span>
@@ -253,9 +310,12 @@ export function SentimentAnalysis() {
                 <PieChart>
                   <Pie
                     data={sentimentDistribution}
-                    cx="50%" cy="50%"
-                    innerRadius={40} outerRadius={60}
-                    paddingAngle={5} dataKey="value"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={60}
+                    paddingAngle={5}
+                    dataKey="value"
                   >
                     {sentimentDistribution.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -267,7 +327,10 @@ export function SentimentAnalysis() {
               <div className="flex justify-center gap-4 mt-2">
                 {sentimentDistribution.map(item => (
                   <div key={item.name} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.fill }} />
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: item.fill }}
+                    />
                     <span className="text-xs text-gray-400">
                       {item.name}: {item.value.toFixed(1)}%
                     </span>
@@ -280,7 +343,9 @@ export function SentimentAnalysis() {
             <div className="space-y-3">
               <div>
                 <p className="text-xs text-gray-400">Total Mentions</p>
-                <p className="text-2xl font-bold text-white">{sentimentData.length}</p>
+                <p className="text-2xl font-bold text-white">
+                  {sentimentData.length}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-gray-400">Response Rate</p>
@@ -290,8 +355,14 @@ export function SentimentAnalysis() {
                 <p className="text-xs text-gray-400">Avg. Confidence</p>
                 <p className="text-2xl font-bold text-white">
                   {sentimentData.length > 0
-                    ? (sentimentData.reduce((sum, d) => sum + d.confidence, 0) / sentimentData.length).toFixed(0)
-                    : 0}%
+                    ? (
+                        sentimentData.reduce(
+                          (sum, d) => sum + d.confidence,
+                          0
+                        ) / sentimentData.length
+                      ).toFixed(0)
+                    : 0}
+                  %
                 </p>
               </div>
             </div>

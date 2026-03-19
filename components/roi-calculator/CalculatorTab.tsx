@@ -1,15 +1,34 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
-  DollarSign, Users, Target, ShoppingCart, Activity, Sparkles, Coins,
+  DollarSign,
+  Users,
+  Target,
+  ShoppingCart,
+  Activity,
+  Sparkles,
+  Coins,
 } from '@/components/icons';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from 'recharts';
 import type { ROIMetrics } from './types';
 import { formatCurrency, getROIColor } from './helpers';
@@ -38,9 +57,20 @@ const CHART_TOOLTIP_STYLE = {
 };
 
 export function CalculatorTab({
-  metrics, monthlyBudget, setMonthlyBudget, avgConversionRate, setAvgConversionRate,
-  avgOrderValue, setAvgOrderValue, monthlyTraffic, setMonthlyTraffic, costPerClick,
-  setCostPerClick, retentionRate, setRetentionRate, roiTrendData,
+  metrics,
+  monthlyBudget,
+  setMonthlyBudget,
+  avgConversionRate,
+  setAvgConversionRate,
+  avgOrderValue,
+  setAvgOrderValue,
+  monthlyTraffic,
+  setMonthlyTraffic,
+  costPerClick,
+  setCostPerClick,
+  retentionRate,
+  setRetentionRate,
+  roiTrendData,
 }: CalculatorTabProps) {
   return (
     <div className="space-y-6">
@@ -53,12 +83,56 @@ export function CalculatorTab({
           </CardHeader>
           <CardContent className="space-y-4">
             {[
-              { id: 'budget', label: 'Monthly Marketing Budget', icon: DollarSign, value: monthlyBudget, onChange: setMonthlyBudget, type: 'number' },
-              { id: 'traffic', label: 'Monthly Website Traffic', icon: Users, value: monthlyTraffic, onChange: setMonthlyTraffic, type: 'number' },
-              { id: 'conversion', label: 'Average Conversion Rate (%)', icon: Target, value: avgConversionRate, onChange: setAvgConversionRate, type: 'number', step: '0.1' },
-              { id: 'aov', label: 'Average Order Value', icon: ShoppingCart, value: avgOrderValue, onChange: setAvgOrderValue, type: 'number' },
-              { id: 'cpc', label: 'Cost Per Click', icon: Coins, value: costPerClick, onChange: setCostPerClick, type: 'number', step: '0.01' },
-              { id: 'retention', label: 'Customer Retention Rate (%)', icon: Activity, value: retentionRate, onChange: setRetentionRate, type: 'number' },
+              {
+                id: 'budget',
+                label: 'Monthly Marketing Budget',
+                icon: DollarSign,
+                value: monthlyBudget,
+                onChange: setMonthlyBudget,
+                type: 'number',
+              },
+              {
+                id: 'traffic',
+                label: 'Monthly Website Traffic',
+                icon: Users,
+                value: monthlyTraffic,
+                onChange: setMonthlyTraffic,
+                type: 'number',
+              },
+              {
+                id: 'conversion',
+                label: 'Average Conversion Rate (%)',
+                icon: Target,
+                value: avgConversionRate,
+                onChange: setAvgConversionRate,
+                type: 'number',
+                step: '0.1',
+              },
+              {
+                id: 'aov',
+                label: 'Average Order Value',
+                icon: ShoppingCart,
+                value: avgOrderValue,
+                onChange: setAvgOrderValue,
+                type: 'number',
+              },
+              {
+                id: 'cpc',
+                label: 'Cost Per Click',
+                icon: Coins,
+                value: costPerClick,
+                onChange: setCostPerClick,
+                type: 'number',
+                step: '0.01',
+              },
+              {
+                id: 'retention',
+                label: 'Customer Retention Rate (%)',
+                icon: Activity,
+                value: retentionRate,
+                onChange: setRetentionRate,
+                type: 'number',
+              },
             ].map(({ id, label, icon: Icon, value, onChange, step }) => (
               <div key={id}>
                 <Label htmlFor={id}>{label}</Label>
@@ -69,7 +143,7 @@ export function CalculatorTab({
                     type="number"
                     step={step}
                     value={value}
-                    onChange={(e) => onChange(e.target.value)}
+                    onChange={e => onChange(e.target.value)}
                     className="pl-10 bg-white/5 border-white/10"
                   />
                 </div>
@@ -88,19 +162,28 @@ export function CalculatorTab({
             <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-400">Net Profit</span>
-                <span className="text-2xl font-bold text-white">{formatCurrency(metrics.profit)}</span>
+                <span className="text-2xl font-bold text-white">
+                  {formatCurrency(metrics.profit)}
+                </span>
               </div>
-              <Progress value={metrics.roi > 0 ? Math.min(metrics.roi, 100) : 0} className="h-2" />
+              <Progress
+                value={metrics.roi > 0 ? Math.min(metrics.roi, 100) : 0}
+                className="h-2"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="p-3 bg-white/5 rounded-lg">
                 <p className="text-xs text-gray-400">Break-even Point</p>
-                <p className="text-lg font-bold text-white">{Math.ceil(metrics.breakEvenPoint)} sales</p>
+                <p className="text-lg font-bold text-white">
+                  {Math.ceil(metrics.breakEvenPoint)} sales
+                </p>
               </div>
               <div className="p-3 bg-white/5 rounded-lg">
                 <p className="text-xs text-gray-400">Payback Period</p>
-                <p className="text-lg font-bold text-white">{metrics.paybackPeriod.toFixed(1)} months</p>
+                <p className="text-lg font-bold text-white">
+                  {metrics.paybackPeriod.toFixed(1)} months
+                </p>
               </div>
             </div>
 
@@ -108,30 +191,61 @@ export function CalculatorTab({
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-400">CLV to CAC Ratio</span>
                 <span className="text-sm font-medium text-white">
-                  {metrics.customerAcquisitionCost > 0 ? (metrics.customerLifetimeValue / metrics.customerAcquisitionCost).toFixed(1) : '0'}:1
+                  {metrics.customerAcquisitionCost > 0
+                    ? (
+                        metrics.customerLifetimeValue /
+                        metrics.customerAcquisitionCost
+                      ).toFixed(1)
+                    : '0'}
+                  :1
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">Monthly Conversions</span>
+                <span className="text-sm text-gray-400">
+                  Monthly Conversions
+                </span>
                 <span className="text-sm font-medium text-white">
-                  {Math.floor(parseFloat(monthlyTraffic) * (parseFloat(avgConversionRate) / 100))}
+                  {Math.floor(
+                    parseFloat(monthlyTraffic) *
+                      (parseFloat(avgConversionRate) / 100)
+                  )}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">Cost Per Conversion</span>
-                <span className="text-sm font-medium text-white">{formatCurrency(metrics.customerAcquisitionCost)}</span>
+                <span className="text-sm text-gray-400">
+                  Cost Per Conversion
+                </span>
+                <span className="text-sm font-medium text-white">
+                  {formatCurrency(metrics.customerAcquisitionCost)}
+                </span>
               </div>
             </div>
 
-            <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
+            <div className="p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="h-4 w-4 text-cyan-400" />
-                <p className="text-sm font-medium text-white">AI Recommendations</p>
+                <Sparkles className="h-4 w-4 text-orange-400" />
+                <p className="text-sm font-medium text-white">
+                  AI Recommendations
+                </p>
               </div>
               <div className="space-y-1">
-                {metrics.roi < 100 && <p className="text-xs text-gray-300">&bull; Consider reducing CPC or improving conversion rate</p>}
-                {metrics.customerAcquisitionCost > metrics.averageOrderValue * 0.3 && <p className="text-xs text-gray-300">&bull; CAC is high relative to AOV, focus on retention</p>}
-                {metrics.conversionRate < 2 && <p className="text-xs text-gray-300">&bull; Conversion rate below industry average, optimize landing pages</p>}
+                {metrics.roi < 100 && (
+                  <p className="text-xs text-gray-300">
+                    &bull; Consider reducing CPC or improving conversion rate
+                  </p>
+                )}
+                {metrics.customerAcquisitionCost >
+                  metrics.averageOrderValue * 0.3 && (
+                  <p className="text-xs text-gray-300">
+                    &bull; CAC is high relative to AOV, focus on retention
+                  </p>
+                )}
+                {metrics.conversionRate < 2 && (
+                  <p className="text-xs text-gray-300">
+                    &bull; Conversion rate below industry average, optimize
+                    landing pages
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -152,8 +266,20 @@ export function CalculatorTab({
               <YAxis stroke="#666" />
               <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
               <Legend />
-              <Line type="monotone" dataKey="roi" stroke="#10b981" strokeWidth={2} name="ROI %" />
-              <Line type="monotone" dataKey="target" stroke="#ef4444" strokeDasharray="5 5" name="Target" />
+              <Line
+                type="monotone"
+                dataKey="roi"
+                stroke="#10b981"
+                strokeWidth={2}
+                name="ROI %"
+              />
+              <Line
+                type="monotone"
+                dataKey="target"
+                stroke="#ef4444"
+                strokeDasharray="5 5"
+                name="Target"
+              />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>

@@ -8,7 +8,7 @@
  * @module app/dashboard/eeat/page
  */
 
-import { useState, useCallback , Suspense } from 'react';
+import { useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { Award, AlertCircle } from '@/components/icons';
@@ -72,12 +72,18 @@ function gradeFromScore(score: number): string {
 
 function gradeColour(grade: string): string {
   switch (grade) {
-    case 'A': return 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30';
-    case 'B': return 'text-cyan-400 bg-cyan-500/20 border-cyan-500/30';
-    case 'C': return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
-    case 'D': return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
-    case 'F': return 'text-red-400 bg-red-500/20 border-red-500/30';
-    default:  return 'text-gray-400 bg-gray-500/20 border-gray-500/30';
+    case 'A':
+      return 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30';
+    case 'B':
+      return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
+    case 'C':
+      return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
+    case 'D':
+      return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
+    case 'F':
+      return 'text-red-400 bg-red-500/20 border-red-500/30';
+    default:
+      return 'text-gray-400 bg-gray-500/20 border-gray-500/30';
   }
 }
 
@@ -100,7 +106,9 @@ function TabButton({
       onClick={onClick}
       className={cn(
         'px-4 py-2 text-sm font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500',
-        active ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5',
+        active
+          ? 'bg-white/10 text-white'
+          : 'text-gray-400 hover:text-white hover:bg-white/5'
       )}
     >
       {children}
@@ -141,7 +149,9 @@ function ScoreTab({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error((data as { error?: string }).error ?? `Error ${res.status}`);
+        throw new Error(
+          (data as { error?: string }).error ?? `Error ${res.status}`
+        );
       }
 
       const data = (await res.json()) as AuditApiResponse;
@@ -159,17 +169,25 @@ function ScoreTab({
       {/* Textarea */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label htmlFor="eeat-content" className="text-sm font-medium text-slate-300">
+          <label
+            htmlFor="eeat-content"
+            className="text-sm font-medium text-slate-300"
+          >
             Content to Audit
           </label>
-          <span className={cn('text-xs tabular-nums', words > 0 ? 'text-slate-400' : 'text-slate-600')}>
+          <span
+            className={cn(
+              'text-xs tabular-nums',
+              words > 0 ? 'text-slate-400' : 'text-slate-600'
+            )}
+          >
             {words.toLocaleString()} {words === 1 ? 'word' : 'words'}
           </span>
         </div>
         <textarea
           id="eeat-content"
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={e => setText(e.target.value)}
           placeholder="Paste your content here to run an E-E-A-T audit across Experience, Expertise, Authority, and Trust..."
           rows={8}
           className="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-600 text-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-y"
@@ -182,7 +200,7 @@ function ScoreTab({
           id="generate-assets"
           type="checkbox"
           checked={generateAssets}
-          onChange={(e) => setGenerateAssets(e.target.checked)}
+          onChange={e => setGenerateAssets(e.target.checked)}
           className="w-4 h-4 accent-amber-500"
         />
         <label htmlFor="generate-assets" className="text-sm text-slate-300">
@@ -199,7 +217,7 @@ function ScoreTab({
           'w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500',
           loading || !text.trim()
             ? 'bg-white/5 text-slate-500 cursor-not-allowed'
-            : 'bg-amber-600 hover:bg-amber-500 text-white cursor-pointer',
+            : 'bg-amber-600 hover:bg-amber-500 text-white cursor-pointer'
         )}
       >
         <Award className="w-4 h-4" />
@@ -241,13 +259,16 @@ function AssetsTab({
         <Award className="w-10 h-10 text-slate-600" />
         <p className="text-slate-400 text-sm font-medium">No asset plan yet</p>
         <p className="text-slate-600 text-xs">
-          Run an audit with &ldquo;Generate asset plan&rdquo; ticked to see templates here.
+          Run an audit with &ldquo;Generate asset plan&rdquo; ticked to see
+          templates here.
         </p>
       </div>
     );
   }
 
-  return <EEATAssetPanel plan={assetPlan} currentScore={auditResult.overallScore} />;
+  return (
+    <EEATAssetPanel plan={assetPlan} currentScore={auditResult.overallScore} />
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -258,7 +279,7 @@ function HistoryTab() {
   const { data, isLoading, error } = useSWR<HistoryResponse>(
     '/api/eeat/v2/audit',
     fetchJson,
-    { revalidateOnFocus: false },
+    { revalidateOnFocus: false }
   );
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -274,7 +295,9 @@ function HistoryTab() {
     return (
       <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-lg p-4">
         <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-        <span className="text-sm text-red-300">Failed to load audit history.</span>
+        <span className="text-sm text-red-300">
+          Failed to load audit history.
+        </span>
       </div>
     );
   }
@@ -285,9 +308,12 @@ function HistoryTab() {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
         <Award className="w-10 h-10 text-slate-600" />
-        <p className="text-slate-400 text-sm font-medium">No saved audits yet</p>
+        <p className="text-slate-400 text-sm font-medium">
+          No saved audits yet
+        </p>
         <p className="text-slate-600 text-xs">
-          Run an audit and tick &ldquo;Save to history&rdquo; to see results here.
+          Run an audit and tick &ldquo;Save to history&rdquo; to see results
+          here.
         </p>
       </div>
     );
@@ -295,40 +321,50 @@ function HistoryTab() {
 
   return (
     <div className="space-y-2">
-      {audits.map((record) => {
+      {audits.map(record => {
         const grade = gradeFromScore(record.overallScore);
         const isOpen = expanded === record.id;
         const date = new Date(record.createdAt).toLocaleDateString('en-AU', {
-          day: '2-digit', month: 'short', year: 'numeric',
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
         });
 
         return (
-          <div key={record.id} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+          <div
+            key={record.id}
+            className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
+          >
             <button
               type="button"
               onClick={() => setExpanded(isOpen ? null : record.id)}
               className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-amber-500"
             >
-              <span className={cn(
-                'flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border',
-                gradeColour(grade),
-              )}>
+              <span
+                className={cn(
+                  'flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border',
+                  gradeColour(grade)
+                )}
+              >
                 {grade}
               </span>
 
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">
-                  {record.contentText.slice(0, 80)}{record.contentText.length > 80 ? '\u2026' : ''}
+                  {record.contentText.slice(0, 80)}
+                  {record.contentText.length > 80 ? '\u2026' : ''}
                 </p>
                 <p className="text-xs text-slate-500 mt-0.5">
                   {date} \u00b7 Score {Math.round(record.overallScore)}
                 </p>
               </div>
 
-              <span className={cn(
-                'flex-shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border',
-                gradeColour(grade),
-              )}>
+              <span
+                className={cn(
+                  'flex-shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border',
+                  gradeColour(grade)
+                )}
+              >
                 {Math.round(record.overallScore)}/100
               </span>
             </button>
@@ -358,16 +394,21 @@ function EEATBuilderPageContent() {
     rawTab === 'assets' ? 'assets' : rawTab === 'history' ? 'history' : 'score';
 
   const setTab = (tab: string) => {
-    router.push(tab === 'score' ? '/dashboard/eeat' : `/dashboard/eeat?tab=${tab}`);
+    router.push(
+      tab === 'score' ? '/dashboard/eeat' : `/dashboard/eeat?tab=${tab}`
+    );
   };
 
   const [auditResult, setAuditResult] = useState<EEATAuditResult | null>(null);
   const [assetPlan, setAssetPlan] = useState<EEATAssetPlan | null>(null);
 
-  const handleAuditComplete = useCallback((audit: EEATAuditResult, assets?: EEATAssetPlan) => {
-    setAuditResult(audit);
-    setAssetPlan(assets ?? null);
-  }, []);
+  const handleAuditComplete = useCallback(
+    (audit: EEATAuditResult, assets?: EEATAssetPlan) => {
+      setAuditResult(audit);
+      setAssetPlan(assets ?? null);
+    },
+    []
+  );
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -379,28 +420,42 @@ function EEATBuilderPageContent() {
         <div>
           <h1 className="text-2xl font-bold text-white">E-E-A-T Builder</h1>
           <p className="text-sm text-slate-400 mt-1">
-            Score content across Experience, Expertise, Authority, and Trust \u2014 then generate templates to fix gaps.
+            Score content across Experience, Expertise, Authority, and Trust
+            \u2014 then generate templates to fix gaps.
           </p>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1 w-fit">
-        <TabButton active={activeTab === 'score'} onClick={() => setTab('score')}>
+        <TabButton
+          active={activeTab === 'score'}
+          onClick={() => setTab('score')}
+        >
           Score
         </TabButton>
-        <TabButton active={activeTab === 'assets'} onClick={() => setTab('assets')}>
+        <TabButton
+          active={activeTab === 'assets'}
+          onClick={() => setTab('assets')}
+        >
           Assets
         </TabButton>
-        <TabButton active={activeTab === 'history'} onClick={() => setTab('history')}>
+        <TabButton
+          active={activeTab === 'history'}
+          onClick={() => setTab('history')}
+        >
           History
         </TabButton>
       </div>
 
       {/* Tab content */}
       <div>
-        {activeTab === 'score' && <ScoreTab onAuditComplete={handleAuditComplete} />}
-        {activeTab === 'assets' && <AssetsTab auditResult={auditResult} assetPlan={assetPlan} />}
+        {activeTab === 'score' && (
+          <ScoreTab onAuditComplete={handleAuditComplete} />
+        )}
+        {activeTab === 'assets' && (
+          <AssetsTab auditResult={auditResult} assetPlan={assetPlan} />
+        )}
         {activeTab === 'history' && <HistoryTab />}
       </div>
     </div>

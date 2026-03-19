@@ -38,7 +38,10 @@ import {
   RotateCcw,
 } from '@/components/icons';
 
-const platformIcons: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
+const platformIcons: Record<
+  string,
+  React.ComponentType<{ className?: string; style?: React.CSSProperties }>
+> = {
   twitter: Twitter,
   linkedin: Linkedin,
   instagram: Instagram,
@@ -128,7 +131,7 @@ export function PostDetailModal({
   const togglePlatform = (platform: string) => {
     if (!editedPost) return;
     const platforms = editedPost.platforms.includes(platform)
-      ? editedPost.platforms.filter((p) => p !== platform)
+      ? editedPost.platforms.filter(p => p !== platform)
       : [...editedPost.platforms, platform];
 
     if (platforms.length > 0) {
@@ -179,10 +182,10 @@ export function PostDetailModal({
               editedPost.status === 'published'
                 ? 'bg-green-500/20 text-green-300'
                 : editedPost.status === 'failed'
-                ? 'bg-red-500/20 text-red-300'
-                : editedPost.status === 'scheduled'
-                ? 'bg-cyan-500/20 text-cyan-300'
-                : 'bg-gray-500/20 text-gray-300'
+                  ? 'bg-red-500/20 text-red-300'
+                  : editedPost.status === 'scheduled'
+                    ? 'bg-orange-500/20 text-orange-300'
+                    : 'bg-gray-500/20 text-gray-300'
             }
           `}
           >
@@ -261,9 +264,7 @@ export function PostDetailModal({
                       />
                     )}
                     <span
-                      className={`text-sm ${
-                        isSelected ? '' : 'text-gray-400'
-                      }`}
+                      className={`text-sm ${isSelected ? '' : 'text-gray-400'}`}
                       style={{ color: isSelected ? color : undefined }}
                     >
                       {name}
@@ -282,7 +283,7 @@ export function PostDetailModal({
             <Textarea
               id="content"
               value={editedPost.content}
-              onChange={(e) =>
+              onChange={e =>
                 setEditedPost({ ...editedPost, content: e.target.value })
               }
               disabled={editedPost.status === 'published'}
@@ -303,7 +304,7 @@ export function PostDetailModal({
               id="scheduledFor"
               type="datetime-local"
               value={formatDateTimeLocal(new Date(editedPost.scheduledFor))}
-              onChange={(e) =>
+              onChange={e =>
                 setEditedPost({
                   ...editedPost,
                   scheduledFor: new Date(e.target.value),
@@ -322,13 +323,13 @@ export function PostDetailModal({
             <Input
               id="hashtags"
               value={editedPost.hashtags?.join(' ') || ''}
-              onChange={(e) =>
+              onChange={e =>
                 setEditedPost({
                   ...editedPost,
                   hashtags: e.target.value
                     .split(' ')
-                    .filter((h) => h.startsWith('#') || h.length > 0)
-                    .map((h) => (h.startsWith('#') ? h : `#${h}`)),
+                    .filter(h => h.startsWith('#') || h.length > 0)
+                    .map(h => (h.startsWith('#') ? h : `#${h}`)),
                 })
               }
               disabled={editedPost.status === 'published'}
@@ -464,7 +465,11 @@ interface HistoryEntry {
 
 const EVENT_CONFIG: Record<
   string,
-  { label: string; dotClass: string; icon: React.ComponentType<{ className?: string }> }
+  {
+    label: string;
+    dotClass: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }
 > = {
   published: {
     label: 'Published',
@@ -483,7 +488,7 @@ const EVENT_CONFIG: Record<
   },
   scheduled: {
     label: 'Scheduled',
-    dotClass: 'bg-cyan-500',
+    dotClass: 'bg-orange-500',
     icon: Clock,
   },
   created: {
@@ -505,7 +510,11 @@ function formatTimelineDate(dateStr: string): string {
   });
 }
 
-function PostLifecycleTimeline({ metadata }: { metadata?: Record<string, unknown> | null }) {
+function PostLifecycleTimeline({
+  metadata,
+}: {
+  metadata?: Record<string, unknown> | null;
+}) {
   if (!metadata) return null;
 
   const history = (metadata.history as HistoryEntry[]) || [];
@@ -543,7 +552,8 @@ function PostLifecycleTimeline({ metadata }: { metadata?: Record<string, unknown
                     {config.label}
                     {entry.attempt !== undefined && (
                       <span className="text-xs text-gray-400 ml-1">
-                        ({entry.attempt}/{(metadata?.maxRetries as number) ?? 3})
+                        ({entry.attempt}/{(metadata?.maxRetries as number) ?? 3}
+                        )
                       </span>
                     )}
                   </span>

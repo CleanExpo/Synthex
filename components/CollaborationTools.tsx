@@ -2,15 +2,21 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Users, 
-  MessageSquare, 
+import {
+  Users,
+  MessageSquare,
   Send,
   AtSign,
   Smile,
@@ -30,14 +36,14 @@ import {
   CheckCircle,
   XCircle,
   MousePointer,
-  Type
+  Type,
 } from '@/components/icons';
 import {
   CollaborationManager,
   type Participant,
   type Comment,
   type Notification,
-  type ActiveUser
+  type ActiveUser,
 } from '@/lib/collaboration';
 import { notify } from '@/lib/notifications';
 import { fadeInUp, scaleIn } from '@/lib/animations';
@@ -56,10 +62,10 @@ const getCurrentUser = (): Participant => {
       color: CollaborationManager.generateUserColor(),
       joinedAt: new Date(),
       lastSeen: new Date(),
-      isOnline: true
+      isOnline: true,
     };
   }
-  
+
   return {
     id: 'user-1',
     name: 'You',
@@ -68,7 +74,7 @@ const getCurrentUser = (): Participant => {
     color: CollaborationManager.generateUserColor(),
     joinedAt: new Date(),
     lastSeen: new Date(),
-    isOnline: true
+    isOnline: true,
   };
 };
 
@@ -77,9 +83,9 @@ interface CollaborationToolsProps {
   onUserActivity?: (activity: any) => void;
 }
 
-export function CollaborationTools({ 
-  documentId, 
-  onUserActivity 
+export function CollaborationTools({
+  documentId,
+  onUserActivity,
 }: CollaborationToolsProps) {
   const [manager, setManager] = useState<CollaborationManager | null>(null);
   const [onlineUsers, setOnlineUsers] = useState<Participant[]>([]);
@@ -92,26 +98,26 @@ export function CollaborationTools({
   const [replyContent, setReplyContent] = useState('');
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const currentUser = useMemo(() => getCurrentUser(), []);
-  
+
   // Initialize collaboration
   useEffect(() => {
     const collabManager = new CollaborationManager(currentUser.id);
     setManager(collabManager);
-    
+
     // Join session
     collabManager.joinSession(documentId, currentUser);
-    
+
     // Set up event listeners
     collabManager.on('user-joined', (data: any) => {
       notify.info(`${data.user.name} joined the session`);
       setOnlineUsers(collabManager.getOnlineUsers());
     });
-    
+
     collabManager.on('user-left', (data: any) => {
       notify.info(`User left the session`);
       setOnlineUsers(collabManager.getOnlineUsers());
     });
-    
+
     collabManager.on('comment', (data: unknown) => {
       const comment = data as Comment;
       setComments(prev => [...prev, comment]);
@@ -119,7 +125,7 @@ export function CollaborationTools({
         notify.info(`${comment.userName} added a comment`);
       }
     });
-    
+
     collabManager.on('typing', (data: any) => {
       if (data.userId !== currentUser.id) {
         setTypingUsers(prev => {
@@ -133,7 +139,7 @@ export function CollaborationTools({
         });
       }
     });
-    
+
     collabManager.on('notification', (data: unknown) => {
       const notification = data as Notification;
       if (notification.to === currentUser.id) {
@@ -141,24 +147,26 @@ export function CollaborationTools({
         notify.info(notification.message);
       }
     });
-    
+
     // Load existing data
     setComments(collabManager.getComments());
-    setNotifications(collabManager.getNotifications().filter(n => n.to === currentUser.id));
+    setNotifications(
+      collabManager.getNotifications().filter(n => n.to === currentUser.id)
+    );
     setOnlineUsers(collabManager.getOnlineUsers());
-    
+
     return () => {
       collabManager.leaveSession(documentId, currentUser.id);
     };
   }, [documentId, currentUser]);
-  
+
   // Send comment
   const sendComment = () => {
     if (!newComment.trim() || !manager) return;
-    
+
     // Extract mentions
     const mentions = extractMentions(newComment);
-    
+
     const comment = manager.addComment({
       userId: currentUser.id,
       userName: currentUser.name,
@@ -166,77 +174,77 @@ export function CollaborationTools({
       resolved: false,
       replies: [],
       mentions,
-      reactions: []
+      reactions: [],
     });
-    
+
     setNewComment('');
     notify.success('Comment added');
   };
-  
+
   // Send reply
   const sendReply = (commentId: string) => {
     if (!replyContent.trim() || !manager) return;
-    
+
     manager.replyToComment(commentId, {
       userId: currentUser.id,
       userName: currentUser.name,
-      content: replyContent
+      content: replyContent,
     });
-    
+
     setReplyContent('');
     setReplyingTo(null);
     notify.success('Reply added');
   };
-  
+
   // Add reaction
   const addReaction = (commentId: string, emoji: string) => {
     if (!manager) return;
-    
+
     manager.addReaction(commentId, {
       emoji,
       userId: currentUser.id,
-      userName: currentUser.name
+      userName: currentUser.name,
     });
   };
-  
+
   // Resolve comment
   const resolveComment = (commentId: string, resolved: boolean) => {
     if (!manager) return;
-    
+
     manager.resolveComment(commentId, resolved);
     setComments(manager.getComments());
     notify.success(resolved ? 'Comment resolved' : 'Comment reopened');
   };
-  
+
   // Mark notification as read
   const markNotificationRead = (notificationId: string) => {
     if (!manager) return;
-    
+
     manager.markNotificationRead(notificationId);
-    setNotifications(prev => 
-      prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+    setNotifications(prev =>
+      prev.map(n => (n.id === notificationId ? { ...n, read: true } : n))
     );
   };
-  
+
   // Extract mentions from text
   const extractMentions = (text: string): string[] => {
     const mentionRegex = /@(\w+)/g;
     const matches = text.matchAll(mentionRegex);
     return Array.from(matches).map(match => match[1]);
   };
-  
+
   // Handle typing
   const handleTyping = () => {
     if (!manager) return;
-    
+
     manager.sendTyping(true);
-    
+
     // Clear typing after delay
     setTimeout(() => {
       manager.sendTyping(false);
     }, 1000);
   };
-  
+
   return (
     <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-4">
       {/* Online Users */}
@@ -266,18 +274,19 @@ export function CollaborationTools({
             </motion.div>
           ))}
         </div>
-        
+
         {onlineUsers.length > 5 && (
           <Badge variant="secondary" className="text-xs">
             +{onlineUsers.length - 5}
           </Badge>
         )}
-        
+
         <span className="text-xs text-gray-400">
-          {onlineUsers.length} {onlineUsers.length === 1 ? 'user' : 'users'} online
+          {onlineUsers.length} {onlineUsers.length === 1 ? 'user' : 'users'}{' '}
+          online
         </span>
       </motion.div>
-      
+
       {/* Action Buttons */}
       <div className="flex gap-2">
         {/* Notifications */}
@@ -294,7 +303,7 @@ export function CollaborationTools({
             </span>
           )}
         </Button>
-        
+
         {/* Comments */}
         <Button
           size="sm"
@@ -306,7 +315,7 @@ export function CollaborationTools({
           Comments ({comments.length})
         </Button>
       </div>
-      
+
       {/* Comments Panel */}
       <AnimatePresence>
         {showComments && (
@@ -328,14 +337,14 @@ export function CollaborationTools({
                 </Button>
               </div>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto max-h-[400px] p-4 space-y-4">
               {comments.map(comment => (
                 <CommentItem
                   key={comment.id}
                   comment={comment}
                   currentUserId={currentUser.id}
-                  onReply={(id) => setReplyingTo(id)}
+                  onReply={id => setReplyingTo(id)}
                   onReact={addReaction}
                   onResolve={resolveComment}
                   replyingTo={replyingTo === comment.id}
@@ -344,7 +353,7 @@ export function CollaborationTools({
                   onSendReply={() => sendReply(comment.id)}
                 />
               ))}
-              
+
               {comments.length === 0 && (
                 <div className="text-center py-8 text-gray-400">
                   <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
@@ -353,14 +362,14 @@ export function CollaborationTools({
                 </div>
               )}
             </div>
-            
+
             <div className="p-4 border-t border-white/10">
               <div className="flex gap-2">
                 <Input
                   placeholder="Add a comment... Use @ to mention"
                   value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  onKeyDown={(e) => {
+                  onChange={e => setNewComment(e.target.value)}
+                  onKeyDown={e => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
                       sendComment();
@@ -382,7 +391,7 @@ export function CollaborationTools({
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Notifications Panel */}
       <AnimatePresence>
         {showNotifications && (
@@ -404,40 +413,53 @@ export function CollaborationTools({
                 </Button>
               </div>
             </div>
-            
+
             <div className="overflow-y-auto max-h-[320px]">
               {notifications.map(notification => (
                 <div
                   key={notification.id}
                   className={`p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors ${
-                    !notification.read ? 'bg-cyan-500/10' : ''
+                    !notification.read ? 'bg-orange-500/10' : ''
                   }`}
                   onClick={() => markNotificationRead(notification.id)}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`p-1.5 rounded-full ${
-                      notification.type === 'mention' ? 'bg-cyan-500/20' :
-                      notification.type === 'comment' ? 'bg-blue-500/20' :
-                      notification.type === 'reply' ? 'bg-green-500/20' :
-                      'bg-gray-500/20'
-                    }`}>
-                      {notification.type === 'mention' && <AtSign className="h-3 w-3 text-cyan-400" />}
-                      {notification.type === 'comment' && <MessageSquare className="h-3 w-3 text-blue-400" />}
-                      {notification.type === 'reply' && <Reply className="h-3 w-3 text-green-400" />}
+                    <div
+                      className={`p-1.5 rounded-full ${
+                        notification.type === 'mention'
+                          ? 'bg-orange-500/20'
+                          : notification.type === 'comment'
+                            ? 'bg-blue-500/20'
+                            : notification.type === 'reply'
+                              ? 'bg-green-500/20'
+                              : 'bg-gray-500/20'
+                      }`}
+                    >
+                      {notification.type === 'mention' && (
+                        <AtSign className="h-3 w-3 text-orange-400" />
+                      )}
+                      {notification.type === 'comment' && (
+                        <MessageSquare className="h-3 w-3 text-blue-400" />
+                      )}
+                      {notification.type === 'reply' && (
+                        <Reply className="h-3 w-3 text-green-400" />
+                      )}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-white">{notification.message}</p>
+                      <p className="text-sm text-white">
+                        {notification.message}
+                      </p>
                       <p className="text-xs text-gray-400 mt-1">
                         {new Date(notification.timestamp).toLocaleTimeString()}
                       </p>
                     </div>
                     {!notification.read && (
-                      <div className="w-2 h-2 bg-cyan-500 rounded-full" />
+                      <div className="w-2 h-2 bg-orange-500 rounded-full" />
                     )}
                   </div>
                 </div>
               ))}
-              
+
               {notifications.length === 0 && (
                 <div className="text-center py-8 text-gray-400">
                   <Bell className="h-12 w-12 mx-auto mb-3 opacity-50" />
@@ -462,7 +484,7 @@ function CommentItem({
   replyingTo,
   replyContent,
   onReplyContentChange,
-  onSendReply
+  onSendReply,
 }: {
   comment: Comment;
   currentUserId: string;
@@ -475,17 +497,19 @@ function CommentItem({
   onSendReply: () => void;
 }) {
   const reactions = ['👍', '❤️', '😂', '🎉', '🤔'];
-  
+
   return (
     <div className={`space-y-2 ${comment.resolved ? 'opacity-50' : ''}`}>
       <div className="flex items-start gap-2">
         <Avatar className="h-8 w-8">
           <AvatarFallback>{comment.userName.charAt(0)}</AvatarFallback>
         </Avatar>
-        
+
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-white">{comment.userName}</span>
+            <span className="text-sm font-medium text-white">
+              {comment.userName}
+            </span>
             <span className="text-xs text-gray-400">
               {new Date(comment.timestamp).toLocaleTimeString()}
             </span>
@@ -495,17 +519,20 @@ function CommentItem({
               </Badge>
             )}
           </div>
-          
+
           <p className="text-sm text-gray-300 mt-1">{comment.content}</p>
-          
+
           {/* Reactions */}
           {comment.reactions.length > 0 && (
             <div className="flex gap-1 mt-2">
               {Object.entries(
-                comment.reactions.reduce((acc, r) => {
-                  acc[r.emoji] = (acc[r.emoji] || 0) + 1;
-                  return acc;
-                }, {} as Record<string, number>)
+                comment.reactions.reduce(
+                  (acc, r) => {
+                    acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+                    return acc;
+                  },
+                  {} as Record<string, number>
+                )
               ).map(([emoji, count]) => (
                 <Badge key={emoji} variant="secondary" className="text-xs">
                   {emoji} {count}
@@ -513,7 +540,7 @@ function CommentItem({
               ))}
             </div>
           )}
-          
+
           {/* Actions */}
           <div className="flex items-center gap-2 mt-2">
             <Button
@@ -525,7 +552,7 @@ function CommentItem({
               <Reply className="h-3 w-3 mr-1" />
               Reply
             </Button>
-            
+
             <div className="flex gap-1">
               {reactions.map(emoji => (
                 <Button
@@ -539,7 +566,7 @@ function CommentItem({
                 </Button>
               ))}
             </div>
-            
+
             {comment.userId === currentUserId && (
               <Button
                 size="sm"
@@ -561,7 +588,7 @@ function CommentItem({
               </Button>
             )}
           </div>
-          
+
           {/* Replies */}
           {comment.replies.length > 0 && (
             <div className="ml-4 mt-2 space-y-2">
@@ -574,26 +601,30 @@ function CommentItem({
                   </Avatar>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-white">{reply.userName}</span>
+                      <span className="text-xs font-medium text-white">
+                        {reply.userName}
+                      </span>
                       <span className="text-xs text-gray-400">
                         {new Date(reply.timestamp).toLocaleTimeString()}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-300 mt-0.5">{reply.content}</p>
+                    <p className="text-xs text-gray-300 mt-0.5">
+                      {reply.content}
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
           )}
-          
+
           {/* Reply Input */}
           {replyingTo && (
             <div className="flex gap-2 mt-2">
               <Input
                 placeholder="Write a reply..."
                 value={replyContent}
-                onChange={(e) => onReplyContentChange(e.target.value)}
-                onKeyDown={(e) => {
+                onChange={e => onReplyContentChange(e.target.value)}
+                onKeyDown={e => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     onSendReply();

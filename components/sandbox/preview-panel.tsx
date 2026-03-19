@@ -6,7 +6,13 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Eye, Code, Maximize2, Minimize2, XCircle } from '@/components/icons';
 import { devicePresets } from './sandbox-config';
@@ -65,7 +71,7 @@ export function PreviewPanel({
                     onClick={() => onDeviceChange(key as Device)}
                     className={`p-2 rounded transition-all ${
                       device === key
-                        ? 'bg-cyan-500/20 text-cyan-400'
+                        ? 'bg-orange-500/20 text-orange-400'
                         : 'text-gray-400 hover:text-white'
                     }`}
                     title={preset.label}
@@ -81,13 +87,20 @@ export function PreviewPanel({
               onClick={onToggleFullscreen}
               className="text-gray-400"
             >
-              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              {isFullscreen ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs value={previewMode} onValueChange={(v) => onPreviewModeChange(v as PreviewMode)}>
+        <Tabs
+          value={previewMode}
+          onValueChange={v => onPreviewModeChange(v as PreviewMode)}
+        >
           <TabsList className="grid grid-cols-2 bg-white/5">
             <TabsTrigger value="visual">
               <Eye className="mr-2 h-4 w-4" />
@@ -99,7 +112,9 @@ export function PreviewPanel({
             </TabsTrigger>
           </TabsList>
           <TabsContent value="visual" className="mt-4">
-            <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-gray-900 p-8' : ''}`}>
+            <div
+              className={`${isFullscreen ? 'fixed inset-0 z-50 bg-gray-900 p-8' : ''}`}
+            >
               {isFullscreen && (
                 <Button
                   size="sm"
@@ -110,25 +125,37 @@ export function PreviewPanel({
                   <XCircle className="h-5 w-5" />
                 </Button>
               )}
-              <div className={`mx-auto ${device === 'mobile' ? 'max-w-sm' : device === 'tablet' ? 'max-w-2xl' : 'max-w-4xl'}`}>
-                <PlatformMockup platform={platform} content={content} mediaType={mediaType} />
+              <div
+                className={`mx-auto ${device === 'mobile' ? 'max-w-sm' : device === 'tablet' ? 'max-w-2xl' : 'max-w-4xl'}`}
+              >
+                <PlatformMockup
+                  platform={platform}
+                  content={content}
+                  mediaType={mediaType}
+                />
               </div>
             </div>
           </TabsContent>
           <TabsContent value="code" className="mt-4">
             <div className="bg-gray-900 rounded-lg p-4">
               <pre className="text-xs text-gray-300 overflow-x-auto">
-                <code>{JSON.stringify({
-                  platform,
-                  content,
-                  metadata: {
-                    hashtags,
-                    mentions,
-                    mediaType,
-                    characterCount,
-                    wordCount,
-                  }
-                }, null, 2)}</code>
+                <code>
+                  {JSON.stringify(
+                    {
+                      platform,
+                      content,
+                      metadata: {
+                        hashtags,
+                        mentions,
+                        mediaType,
+                        characterCount,
+                        wordCount,
+                      },
+                    },
+                    null,
+                    2
+                  )}
+                </code>
               </pre>
             </div>
           </TabsContent>

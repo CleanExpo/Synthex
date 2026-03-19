@@ -19,7 +19,7 @@ interface RevenueBySourceProps {
 }
 
 const SOURCE_COLORS: Record<RevenueSource, string> = {
-  sponsorship: '#06b6d4', // cyan
+  sponsorship: '#ffb87b', // cyan
   affiliate: '#10b981', // emerald
   ads: '#8b5cf6', // violet
   tips: '#f97316', // orange
@@ -80,7 +80,9 @@ function CustomTooltip({ active, payload, currency }: CustomTooltipProps) {
   return (
     <div className="bg-gray-900 border border-white/10 rounded-lg p-3 shadow-xl">
       <p className="text-sm text-gray-400">{SOURCE_LABELS[source]}</p>
-      <p className="text-lg font-bold text-white">{formatCurrency(amount, currency)}</p>
+      <p className="text-lg font-bold text-white">
+        {formatCurrency(amount, currency)}
+      </p>
     </div>
   );
 }
@@ -110,7 +112,12 @@ export function RevenueBySource({
 
   if (chartData.length === 0) {
     return (
-      <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl p-8 text-center', className)}>
+      <div
+        className={cn(
+          'bg-gray-900/50 border border-white/10 rounded-xl p-8 text-center',
+          className
+        )}
+      >
         <PieChartIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
         <p className="text-gray-400">No revenue sources to display</p>
       </div>
@@ -118,7 +125,12 @@ export function RevenueBySource({
   }
 
   return (
-    <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl p-5', className)}>
+    <div
+      className={cn(
+        'bg-gray-900/50 border border-white/10 rounded-xl p-5',
+        className
+      )}
+    >
       <div className="flex items-center gap-2 mb-4">
         <div className="p-2 bg-violet-500/10 rounded-lg">
           <PieChartIcon className="w-4 h-4 text-violet-400" />
@@ -138,7 +150,7 @@ export function RevenueBySource({
               paddingAngle={2}
               dataKey="amount"
             >
-              {chartData.map((entry) => (
+              {chartData.map(entry => (
                 <Cell key={entry.source} fill={entry.color} />
               ))}
             </Pie>
@@ -149,10 +161,14 @@ export function RevenueBySource({
 
       {/* Legend */}
       <div className="space-y-2 mt-4">
-        {chartData.map((item) => {
-          const percent = total > 0 ? ((item.amount / total) * 100).toFixed(1) : '0';
+        {chartData.map(item => {
+          const percent =
+            total > 0 ? ((item.amount / total) * 100).toFixed(1) : '0';
           return (
-            <div key={item.source} className="flex items-center justify-between text-sm">
+            <div
+              key={item.source}
+              className="flex items-center justify-between text-sm"
+            >
               <div className="flex items-center gap-2">
                 <div
                   className="w-3 h-3 rounded-full"

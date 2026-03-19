@@ -1,13 +1,18 @@
 'use client';
 
-import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/react';
+import {
+  useEditor,
+  EditorContent,
+  BubbleMenu,
+  FloatingMenu,
+} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { 
-  Bold, 
-  Italic, 
-  Strikethrough, 
-  Code, 
-  List, 
+import {
+  Bold,
+  Italic,
+  Strikethrough,
+  Code,
+  List,
   ListOrdered,
   Quote,
   Undo,
@@ -20,7 +25,7 @@ import {
   Heading1,
   Heading2,
   Heading3,
-  Pilcrow
+  Pilcrow,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -48,12 +53,10 @@ export function RichTextEditor({
   showToolbar = true,
   autoFocus = false,
   minHeight = '200px',
-  maxHeight = '500px'
+  maxHeight = '500px',
 }: RichTextEditorProps) {
   const editor = useEditor({
-    extensions: [
-      StarterKit
-    ],
+    extensions: [StarterKit],
     content,
     editable,
     autofocus: autoFocus,
@@ -67,28 +70,28 @@ export function RichTextEditor({
           'prose-headings:text-white prose-p:text-gray-300',
           'prose-strong:text-white prose-em:text-gray-300',
           'prose-ul:text-gray-300 prose-ol:text-gray-300',
-          'prose-blockquote:text-gray-400 prose-code:text-cyan-400',
+          'prose-blockquote:text-gray-400 prose-code:text-orange-400',
           'min-h-[200px] p-4',
           className
-        )
-      }
-    }
+        ),
+      },
+    },
   });
-  
+
   // Update content when prop changes
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
       editor.commands.setContent(content);
     }
   }, [content, editor]);
-  
+
   // Toolbar button component
-  const ToolbarButton = ({ 
-    onClick, 
-    active = false, 
-    disabled = false, 
-    children, 
-    tooltip 
+  const ToolbarButton = ({
+    onClick,
+    active = false,
+    disabled = false,
+    children,
+    tooltip,
   }: {
     onClick: () => void;
     active?: boolean;
@@ -102,54 +105,51 @@ export function RichTextEditor({
       disabled={disabled}
       variant="ghost"
       size="sm"
-      className={cn(
-        'h-8 w-8 p-0',
-        active && 'bg-white/10 text-cyan-400'
-      )}
+      className={cn('h-8 w-8 p-0', active && 'bg-white/10 text-orange-400')}
       title={tooltip}
     >
       {children}
     </Button>
   );
-  
+
   // Insert link
   const setLink = useCallback(() => {
     if (!editor) return;
-    
+
     const previousUrl = editor.getAttributes('link').href;
     const url = window.prompt('URL', previousUrl);
-    
+
     if (url === null) return;
-    
+
     if (url === '') {
       // Link extension not installed
       toast.error('Link feature not available');
       return;
     }
-    
+
     // Link extension not installed
     toast.error('Link feature not available');
   }, [editor]);
-  
+
   // Insert image
   const addImage = useCallback(() => {
     if (!editor) return;
-    
+
     const url = window.prompt('Image URL');
     if (url) {
       // Image extension not installed
       toast.error('Image feature not available');
     }
   }, [editor]);
-  
+
   // Word count
   const wordCount = editor?.storage.characterCount?.words() || 0;
   const charCount = editor?.storage.characterCount?.characters() || 0;
-  
+
   if (!editor) {
     return null;
   }
-  
+
   return (
     <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg overflow-hidden">
       {/* Toolbar */}
@@ -186,25 +186,31 @@ export function RichTextEditor({
               <Code className="h-4 w-4" />
             </ToolbarButton>
           </div>
-          
+
           {/* Headings */}
           <div className="flex items-center gap-1 pr-2 border-r border-white/10">
             <ToolbarButton
-              onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 1 }).run()
+              }
               active={editor.isActive('heading', { level: 1 })}
               tooltip="Heading 1"
             >
               <Heading1 className="h-4 w-4" />
             </ToolbarButton>
             <ToolbarButton
-              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 2 }).run()
+              }
               active={editor.isActive('heading', { level: 2 })}
               tooltip="Heading 2"
             >
               <Heading2 className="h-4 w-4" />
             </ToolbarButton>
             <ToolbarButton
-              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 3 }).run()
+              }
               active={editor.isActive('heading', { level: 3 })}
               tooltip="Heading 3"
             >
@@ -218,7 +224,7 @@ export function RichTextEditor({
               <Pilcrow className="h-4 w-4" />
             </ToolbarButton>
           </div>
-          
+
           {/* Lists */}
           <div className="flex items-center gap-1 pr-2 border-r border-white/10">
             <ToolbarButton
@@ -243,7 +249,7 @@ export function RichTextEditor({
               <Quote className="h-4 w-4" />
             </ToolbarButton>
           </div>
-          
+
           {/* Links & Media */}
           <div className="flex items-center gap-1 pr-2 border-r border-white/10">
             <ToolbarButton
@@ -253,14 +259,11 @@ export function RichTextEditor({
             >
               <Link className="h-4 w-4" />
             </ToolbarButton>
-            <ToolbarButton
-              onClick={addImage}
-              tooltip="Add Image"
-            >
+            <ToolbarButton onClick={addImage} tooltip="Add Image">
               <ImageIcon className="h-4 w-4" />
             </ToolbarButton>
           </div>
-          
+
           {/* History */}
           <div className="flex items-center gap-1">
             <ToolbarButton
@@ -280,18 +283,18 @@ export function RichTextEditor({
           </div>
         </div>
       )}
-      
+
       {/* Editor */}
-      <div 
+      <div
         className="relative overflow-y-auto"
         style={{ minHeight, maxHeight }}
       >
         <EditorContent editor={editor} />
-        
+
         {/* Bubble Menu */}
         {editor && editable && (
-          <BubbleMenu 
-            editor={editor} 
+          <BubbleMenu
+            editor={editor}
             tippyOptions={{ duration: 100 }}
             className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] p-1 flex items-center gap-1 rounded-lg shadow-xl"
           >
@@ -307,16 +310,13 @@ export function RichTextEditor({
             >
               <Italic className="h-3 w-3" />
             </ToolbarButton>
-            <ToolbarButton
-              onClick={setLink}
-              active={editor.isActive('link')}
-            >
+            <ToolbarButton onClick={setLink} active={editor.isActive('link')}>
               <Link className="h-3 w-3" />
             </ToolbarButton>
           </BubbleMenu>
         )}
       </div>
-      
+
       {/* Status bar */}
       {showToolbar && (
         <div className="border-t border-white/10 px-4 py-2 flex items-center justify-between text-xs text-gray-400">
@@ -325,10 +325,12 @@ export function RichTextEditor({
             <span>{charCount} characters</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className={cn(
-              'w-2 h-2 rounded-full',
-              editable ? 'bg-green-400' : 'bg-gray-400'
-            )} />
+            <span
+              className={cn(
+                'w-2 h-2 rounded-full',
+                editable ? 'bg-green-400' : 'bg-gray-400'
+              )}
+            />
             <span>{editable ? 'Editing' : 'Read-only'}</span>
           </div>
         </div>
@@ -343,7 +345,7 @@ export function SimpleEditor({
   onChange,
   placeholder = 'Write a comment...',
   className = '',
-  autoFocus = false
+  autoFocus = false,
 }: {
   content?: string;
   onChange?: (content: string) => void;
@@ -356,8 +358,8 @@ export function SimpleEditor({
       StarterKit.configure({
         heading: false,
         codeBlock: false,
-        blockquote: false
-      })
+        blockquote: false,
+      }),
     ],
     content,
     autofocus: autoFocus,
@@ -371,13 +373,13 @@ export function SimpleEditor({
           'prose-p:text-gray-300 prose-p:my-1',
           'min-h-[60px] p-3',
           className
-        )
-      }
-    }
+        ),
+      },
+    },
   });
-  
+
   if (!editor) return null;
-  
+
   return (
     <div className="glass-input rounded-lg overflow-hidden">
       <EditorContent editor={editor} />
@@ -389,7 +391,7 @@ export function SimpleEditor({
           size="sm"
           className={cn(
             'h-6 w-6 p-0',
-            editor.isActive('bold') && 'text-cyan-400'
+            editor.isActive('bold') && 'text-orange-400'
           )}
         >
           <Bold className="h-3 w-3" />
@@ -401,7 +403,7 @@ export function SimpleEditor({
           size="sm"
           className={cn(
             'h-6 w-6 p-0',
-            editor.isActive('italic') && 'text-cyan-400'
+            editor.isActive('italic') && 'text-orange-400'
           )}
         >
           <Italic className="h-3 w-3" />

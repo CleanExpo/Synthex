@@ -41,21 +41,32 @@ export interface PlatformPreviewProps {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function truncateForPreview(text: string, limit: number): { text: string; truncated: boolean } {
+function truncateForPreview(
+  text: string,
+  limit: number
+): { text: string; truncated: boolean } {
   if (text.length <= limit) return { text, truncated: false };
   return { text: text.slice(0, limit), truncated: true };
 }
 
 /** Build a responsive media grid layout */
-function MediaGrid({ urls, aspectRatio }: { urls: string[]; aspectRatio?: string }) {
+function MediaGrid({
+  urls,
+  aspectRatio,
+}: {
+  urls: string[];
+  aspectRatio?: string;
+}) {
   if (urls.length === 0) return null;
 
   const isPinStyle = aspectRatio === '2:3';
 
   if (urls.length === 1) {
     return (
-      <div className={`mt-3 rounded-lg overflow-hidden border border-white/10 ${isPinStyle ? 'max-w-[260px]' : ''}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+      <div
+        className={`mt-3 rounded-lg overflow-hidden border border-white/10 ${isPinStyle ? 'max-w-[260px]' : ''}`}
+      >
+        {}
         <img
           src={urls[0]}
           alt="Preview attachment"
@@ -69,7 +80,6 @@ function MediaGrid({ urls, aspectRatio }: { urls: string[]; aspectRatio?: string
     return (
       <div className="mt-3 grid grid-cols-2 gap-1 rounded-lg overflow-hidden border border-white/10">
         {urls.map((url, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             key={i}
             src={url}
@@ -85,7 +95,7 @@ function MediaGrid({ urls, aspectRatio }: { urls: string[]; aspectRatio?: string
   return (
     <div className="mt-3 grid grid-cols-2 gap-1 rounded-lg overflow-hidden border border-white/10">
       <div className="col-span-1 row-span-2">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {}
         <img
           src={urls[0]}
           alt="Attachment 1"
@@ -94,7 +104,6 @@ function MediaGrid({ urls, aspectRatio }: { urls: string[]; aspectRatio?: string
       </div>
       <div className="flex flex-col gap-1">
         {urls.slice(1, 3).map((url, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             key={i}
             src={url}
@@ -116,13 +125,19 @@ function MediaGrid({ urls, aspectRatio }: { urls: string[]; aspectRatio?: string
 // Platform-specific content rendering
 // ---------------------------------------------------------------------------
 
-function TwitterContent({ content, maxChars }: { content: string; maxChars: number }) {
+function TwitterContent({
+  content,
+  maxChars,
+}: {
+  content: string;
+  maxChars: number;
+}) {
   const showThread = content.length > maxChars;
   return (
     <>
       <p className="text-sm text-white whitespace-pre-wrap leading-relaxed">
         {showThread ? content.slice(0, maxChars) : content}
-        {showThread && <span className="text-slate-500">{' '}[...]</span>}
+        {showThread && <span className="text-slate-500"> [...]</span>}
       </p>
       {showThread && (
         <div className="mt-2 flex items-center gap-1.5 text-xs text-sky-400">
@@ -141,7 +156,7 @@ function LinkedInContent({ content }: { content: string }) {
     <p className="text-sm text-white whitespace-pre-wrap leading-relaxed">
       {showReadMore ? content.slice(0, previewLimit) : content}
       {showReadMore && (
-        <span className="text-blue-400 cursor-default">{' '}...see more</span>
+        <span className="text-blue-400 cursor-default"> ...see more</span>
       )}
     </p>
   );
@@ -164,17 +179,25 @@ function InstagramContent({
           </div>
         </div>
       )}
-      <p className="text-sm text-white whitespace-pre-wrap leading-relaxed">{content}</p>
+      <p className="text-sm text-white whitespace-pre-wrap leading-relaxed">
+        {content}
+      </p>
     </>
   );
 }
 
-function DefaultContent({ content, maxChars }: { content: string; maxChars: number }) {
+function DefaultContent({
+  content,
+  maxChars,
+}: {
+  content: string;
+  maxChars: number;
+}) {
   const { text, truncated } = truncateForPreview(content, maxChars);
   return (
     <p className="text-sm text-white whitespace-pre-wrap leading-relaxed">
       {text}
-      {truncated && <span className="text-slate-500">{' '}[...]</span>}
+      {truncated && <span className="text-slate-500"> [...]</span>}
     </p>
   );
 }
@@ -209,7 +232,7 @@ export function PlatformPreview({
   const fullContent = useMemo(() => {
     if (hashtags.length === 0) return content;
     const hashtagText = hashtags
-      .map((t) => (t.startsWith('#') ? t : `#${t}`))
+      .map(t => (t.startsWith('#') ? t : `#${t}`))
       .join(' ');
     return `${content}\n\n${hashtagText}`;
   }, [content, hashtags]);
@@ -224,7 +247,12 @@ export function PlatformPreview({
       case 'linkedin':
         return <LinkedInContent content={fullContent} />;
       case 'instagram':
-        return <InstagramContent content={fullContent} hasMedia={mediaUrls.length > 0} />;
+        return (
+          <InstagramContent
+            content={fullContent}
+            hasMedia={mediaUrls.length > 0}
+          />
+        );
       default:
         return <DefaultContent content={fullContent} maxChars={maxChars} />;
     }
@@ -239,7 +267,9 @@ export function PlatformPreview({
       {/* Platform header */}
       <div className="flex items-center gap-2">
         {PlatformIcon && <PlatformIcon className={`h-4 w-4 ${brandColour}`} />}
-        <span className={`text-sm font-medium ${brandColour}`}>{displayName} Preview</span>
+        <span className={`text-sm font-medium ${brandColour}`}>
+          {displayName} Preview
+        </span>
       </div>
 
       {/* Mock post card */}
@@ -269,18 +299,34 @@ export function PlatformPreview({
 
         {/* Engagement icons (decorative) */}
         <div className="flex items-center gap-6 mt-4 pt-3 border-t border-white/5">
-          <button type="button" className="flex items-center gap-1.5 text-slate-500 hover:text-red-400 transition-colors" disabled>
+          <button
+            type="button"
+            className="flex items-center gap-1.5 text-slate-500 hover:text-red-400 transition-colors"
+            disabled
+          >
             <Heart className="h-4 w-4" />
             <span className="text-xs">0</span>
           </button>
-          <button type="button" className="flex items-center gap-1.5 text-slate-500 hover:text-cyan-400 transition-colors" disabled>
+          <button
+            type="button"
+            className="flex items-center gap-1.5 text-slate-500 hover:text-orange-400 transition-colors"
+            disabled
+          >
             <MessageCircle className="h-4 w-4" />
             <span className="text-xs">0</span>
           </button>
-          <button type="button" className="flex items-center gap-1.5 text-slate-500 hover:text-green-400 transition-colors" disabled>
+          <button
+            type="button"
+            className="flex items-center gap-1.5 text-slate-500 hover:text-green-400 transition-colors"
+            disabled
+          >
             <Share2 className="h-4 w-4" />
           </button>
-          <button type="button" className="ml-auto flex items-center gap-1.5 text-slate-500 hover:text-amber-400 transition-colors" disabled>
+          <button
+            type="button"
+            className="ml-auto flex items-center gap-1.5 text-slate-500 hover:text-amber-400 transition-colors"
+            disabled
+          >
             <Bookmark className="h-4 w-4" />
           </button>
         </div>

@@ -18,10 +18,14 @@ import {
   Copy,
   Check,
   Zap,
-  Image,
+  Image as ImageIcon,
 } from '@/components/icons';
 import type { AffiliateLink } from '@/hooks/useAffiliateLinks';
-import { NETWORK_LABELS, NETWORK_COLORS, type NetworkSlug } from '@/hooks/useAffiliateLinks';
+import {
+  NETWORK_LABELS,
+  NETWORK_COLORS,
+  type NetworkSlug,
+} from '@/hooks/useAffiliateLinks';
 
 interface LinkListProps {
   links: AffiliateLink[];
@@ -54,7 +58,10 @@ function LoadingSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
+        <div
+          key={i}
+          className="bg-gray-900/50 border border-white/10 rounded-xl p-5"
+        >
           <div className="flex items-start gap-3 mb-4">
             <div className="w-16 h-16 rounded-lg bg-white/5 animate-pulse" />
             <div className="flex-1">
@@ -105,7 +112,7 @@ function LinkCard({
       className={cn(
         'bg-gray-900/50 border rounded-xl p-5 transition-all cursor-pointer group',
         isSelected
-          ? 'border-cyan-500/50 ring-1 ring-cyan-500/30'
+          ? 'border-orange-500/50 ring-1 ring-orange-500/30'
           : 'border-white/10 hover:border-white/20'
       )}
       onClick={onSelect}
@@ -120,8 +127,8 @@ function LinkCard({
             className="w-16 h-16 rounded-lg object-cover"
           />
         ) : (
-          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center">
-            <Image className="h-6 w-6 text-white/40" />
+          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-orange-500/20 to-purple-500/20 flex items-center justify-center">
+            <ImageIcon className="h-6 w-6 text-white/40" />
           </div>
         )}
         <div className="flex-1 min-w-0">
@@ -138,7 +145,8 @@ function LinkCard({
                 color: networkColor,
               }}
             >
-              {NETWORK_LABELS[link.network.slug as NetworkSlug] || link.network.name}
+              {NETWORK_LABELS[link.network.slug as NetworkSlug] ||
+                link.network.name}
             </span>
           )}
         </div>
@@ -197,7 +205,7 @@ function LinkCard({
       {/* Actions */}
       <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             window.open(link.affiliateUrl, '_blank');
           }}
@@ -207,7 +215,7 @@ function LinkCard({
           <span>Open</span>
         </button>
         <button
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             onEdit?.();
           }}
@@ -217,7 +225,7 @@ function LinkCard({
           <span>Edit</span>
         </button>
         <button
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             onDelete?.();
           }}
@@ -248,10 +256,19 @@ export function LinkList({
 
   if (links.length === 0) {
     return (
-      <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl p-12 text-center', className)}>
+      <div
+        className={cn(
+          'bg-gray-900/50 border border-white/10 rounded-xl p-12 text-center',
+          className
+        )}
+      >
         <LinkIcon className="h-12 w-12 text-white/20 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-white mb-2">No affiliate links yet</h3>
-        <p className="text-white/50">Add your first affiliate link to start tracking.</p>
+        <h3 className="text-lg font-semibold text-white mb-2">
+          No affiliate links yet
+        </h3>
+        <p className="text-white/50">
+          Add your first affiliate link to start tracking.
+        </p>
       </div>
     );
   }
@@ -264,7 +281,9 @@ export function LinkList({
       case 'revenue':
         return b.totalRevenue - a.totalRevenue;
       default:
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
     }
   });
 
@@ -274,7 +293,7 @@ export function LinkList({
       <div className="flex items-center gap-2 mb-4">
         <span className="text-sm text-white/50">Sort by:</span>
         <div className="flex items-center gap-1 bg-gray-900/50 border border-white/10 rounded-lg p-1">
-          {(['recent', 'clicks', 'revenue'] as SortKey[]).map((key) => (
+          {(['recent', 'clicks', 'revenue'] as SortKey[]).map(key => (
             <button
               key={key}
               onClick={() => setSortBy(key)}
@@ -285,7 +304,11 @@ export function LinkList({
                   : 'text-white/50 hover:text-white'
               )}
             >
-              {key === 'recent' ? 'Recent' : key === 'clicks' ? 'Clicks' : 'Revenue'}
+              {key === 'recent'
+                ? 'Recent'
+                : key === 'clicks'
+                  ? 'Clicks'
+                  : 'Revenue'}
             </button>
           ))}
         </div>
@@ -293,7 +316,7 @@ export function LinkList({
 
       {/* Links Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sortedLinks.map((link) => (
+        {sortedLinks.map(link => (
           <LinkCard
             key={link.id}
             link={link}

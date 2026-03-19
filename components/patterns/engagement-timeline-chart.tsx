@@ -5,7 +5,13 @@
  * Area chart showing peak engagement times by platform
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { BarChart3 } from '@/components/icons';
 import {
   AreaChart,
@@ -24,7 +30,7 @@ export function EngagementTimelineChart() {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Engagement Timeline</span>
-          <BarChart3 className="h-4 w-4 text-cyan-500" />
+          <BarChart3 className="h-4 w-4 text-orange-500" />
         </CardTitle>
         <CardDescription className="text-gray-400">
           Peak engagement times by platform

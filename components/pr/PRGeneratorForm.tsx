@@ -11,7 +11,15 @@
  */
 
 import { useState } from 'react';
-import { Loader2, Sparkles, ChevronDown, ChevronUp, AlertCircle, Save, CheckCircle } from '@/components/icons';
+import {
+  Loader2,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  AlertCircle,
+  Save,
+  CheckCircle,
+} from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -79,14 +87,22 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
     setGenerated(null);
     setSaved(false);
 
-    if (!brandName.trim() || !angle.trim() || !targetAudience.trim() || !quoteName.trim() || !quoteText.trim()) {
-      setError('Please fill in Brand Name, Angle, Target Audience, Quote Name and Quote Text.');
+    if (
+      !brandName.trim() ||
+      !angle.trim() ||
+      !targetAudience.trim() ||
+      !quoteName.trim() ||
+      !quoteText.trim()
+    ) {
+      setError(
+        'Please fill in Brand Name, Angle, Target Audience, Quote Name and Quote Text.'
+      );
       return;
     }
 
     const factsArray = keyFacts
       .split('\n')
-      .map((f) => f.trim())
+      .map(f => f.trim())
       .filter(Boolean);
 
     if (factsArray.length === 0) {
@@ -112,7 +128,11 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
 
       setGenerated(data.generated);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Generation failed. Please try again.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Generation failed. Please try again.'
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -145,7 +165,9 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
       setIsExpanded(false);
       onSaved?.(data.release);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Save failed. Please try again.');
+      setError(
+        err instanceof Error ? err.message : 'Save failed. Please try again.'
+      );
     } finally {
       setIsSaving(false);
     }
@@ -156,17 +178,21 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="mb-6 rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.03] overflow-hidden">
+    <div className="mb-6 rounded-2xl border border-orange-500/20 bg-orange-500/[0.03] overflow-hidden">
       {/* Toggle header */}
       <button
         type="button"
-        onClick={() => setIsExpanded((v) => !v)}
+        onClick={() => setIsExpanded(v => !v)}
         className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/[0.03] transition-colors"
       >
         <div className="flex items-center gap-2.5">
-          <Sparkles className="h-4 w-4 text-cyan-400" />
-          <span className="text-sm font-semibold text-white">Generate with AI</span>
-          <span className="text-xs text-gray-500">— fill in the details, we write the press release</span>
+          <Sparkles className="h-4 w-4 text-orange-400" />
+          <span className="text-sm font-semibold text-white">
+            Generate with AI
+          </span>
+          <span className="text-xs text-gray-500">
+            — fill in the details, we write the press release
+          </span>
         </div>
         {isExpanded ? (
           <ChevronUp className="h-4 w-4 text-gray-400" />
@@ -187,19 +213,21 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
               <input
                 type="text"
                 value={brandName}
-                onChange={(e) => setBrandName(e.target.value)}
+                onChange={e => setBrandName(e.target.value)}
                 placeholder="Acme Corp"
-                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
               />
             </div>
 
             {/* Category */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Category</label>
+              <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                Category
+              </label>
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                onChange={e => setCategory(e.target.value)}
+                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50"
               >
                 <option value="funding">Funding</option>
                 <option value="product">Product</option>
@@ -217,10 +245,10 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
             </label>
             <textarea
               value={angle}
-              onChange={(e) => setAngle(e.target.value)}
+              onChange={e => setAngle(e.target.value)}
               placeholder="e.g. Series A funding round of $5M AUD to accelerate product development"
               rows={2}
-              className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none"
+              className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/50 resize-none"
             />
           </div>
 
@@ -228,14 +256,16 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-1.5">
               Key Facts <span className="text-red-400">*</span>
-              <span className="ml-1 text-gray-600 font-normal">— one fact per line</span>
+              <span className="ml-1 text-gray-600 font-normal">
+                — one fact per line
+              </span>
             </label>
             <textarea
               value={keyFacts}
-              onChange={(e) => setKeyFacts(e.target.value)}
+              onChange={e => setKeyFacts(e.target.value)}
               placeholder={`$5M AUD raised in Series A\n3 lead investors: XYZ Ventures, ABC Capital\nProduct launches Q2 2026\n2,000 customers in ANZ region`}
               rows={4}
-              className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none font-mono"
+              className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/50 resize-none font-mono"
             />
           </div>
 
@@ -247,9 +277,9 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
             <input
               type="text"
               value={targetAudience}
-              onChange={(e) => setTargetAudience(e.target.value)}
+              onChange={e => setTargetAudience(e.target.value)}
               placeholder="e.g. B2B SaaS founders and tech journalists in Australia"
-              className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+              className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
             />
           </div>
 
@@ -257,14 +287,15 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
             {/* Quote name */}
             <div>
               <label className="block text-xs font-medium text-gray-400 mb-1.5">
-                Quote — Spokesperson Name <span className="text-red-400">*</span>
+                Quote — Spokesperson Name{' '}
+                <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
                 value={quoteName}
-                onChange={(e) => setQuoteName(e.target.value)}
+                onChange={e => setQuoteName(e.target.value)}
                 placeholder="Jane Smith, CEO"
-                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
               />
             </div>
 
@@ -276,9 +307,9 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
               <input
                 type="text"
                 value={quoteText}
-                onChange={(e) => setQuoteText(e.target.value)}
+                onChange={e => setQuoteText(e.target.value)}
                 placeholder="This investment validates our vision for..."
-                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
               />
             </div>
           </div>
@@ -296,7 +327,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
             type="button"
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold text-black transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold text-black transition-colors"
           >
             {isGenerating ? (
               <>
@@ -318,14 +349,18 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
                 <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                   Generated Preview
                   {!generated.isAIGenerated && (
-                    <span className="ml-2 text-amber-400 normal-case font-normal">(template fallback — no AI key configured)</span>
+                    <span className="ml-2 text-amber-400 normal-case font-normal">
+                      (template fallback — no AI key configured)
+                    </span>
                   )}
                 </h3>
               </div>
 
               <div>
                 <p className="text-xs text-gray-500 mb-0.5">Headline</p>
-                <p className="text-sm font-semibold text-white">{generated.title}</p>
+                <p className="text-sm font-semibold text-white">
+                  {generated.title}
+                </p>
               </div>
 
               <div>
@@ -335,10 +370,12 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
 
               <div>
                 <p className="text-xs text-gray-500 mb-1">Body</p>
-                <pre className={cn(
-                  'text-xs text-gray-300 whitespace-pre-wrap font-sans leading-relaxed',
-                  'max-h-64 overflow-y-auto rounded-lg bg-black/20 p-3',
-                )}>
+                <pre
+                  className={cn(
+                    'text-xs text-gray-300 whitespace-pre-wrap font-sans leading-relaxed',
+                    'max-h-64 overflow-y-auto rounded-lg bg-black/20 p-3'
+                  )}
+                >
                   {generated.body}
                 </pre>
               </div>
@@ -351,9 +388,13 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 disabled:opacity-50 text-xs font-semibold text-green-300 transition-colors"
                 >
                   {isSaving ? (
-                    <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving...</>
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving...
+                    </>
                   ) : (
-                    <><Save className="h-3.5 w-3.5" /> Save as Draft</>
+                    <>
+                      <Save className="h-3.5 w-3.5" /> Save as Draft
+                    </>
                   )}
                 </button>
 

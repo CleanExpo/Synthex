@@ -42,7 +42,9 @@ export function GEOAnalyzer({ initialContent }: GEOAnalyzerProps) {
 
       setResult(await response.json());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to analyze content');
+      setError(
+        err instanceof Error ? err.message : 'Failed to analyze content'
+      );
     } finally {
       setLoading(false);
     }
@@ -54,22 +56,22 @@ export function GEOAnalyzer({ initialContent }: GEOAnalyzerProps) {
       <Card className="bg-white/[0.02] border-white/[0.08]">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
-            <Search className="h-5 w-5 text-cyan-400" />
+            <Search className="h-5 w-5 text-orange-400" />
             Content Analyzer
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <textarea
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={e => setContent(e.target.value)}
             placeholder="Paste your content here for GEO analysis..."
-            className="w-full h-48 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-gray-500 p-4 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            className="w-full h-48 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-gray-500 p-4 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-orange-500/50"
           />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <select
                 value={platform}
-                onChange={(e) => setPlatform(e.target.value)}
+                onChange={e => setPlatform(e.target.value)}
                 className="bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm"
               >
                 <option value="all">All Platforms</option>
@@ -82,8 +84,16 @@ export function GEOAnalyzer({ initialContent }: GEOAnalyzerProps) {
                 {content.split(/\s+/).filter(Boolean).length} words
               </span>
             </div>
-            <Button onClick={analyze} disabled={loading || content.length < 50} className="bg-cyan-600 hover:bg-cyan-700">
-              {loading ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <Globe className="h-4 w-4 mr-2" />}
+            <Button
+              onClick={analyze}
+              disabled={loading || content.length < 50}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {loading ? (
+                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Globe className="h-4 w-4 mr-2" />
+              )}
               {loading ? 'Analyzing...' : 'Analyze'}
             </Button>
           </div>

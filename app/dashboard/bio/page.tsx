@@ -7,7 +7,7 @@
  * Shows list of all bio pages with stats and actions.
  */
 
-import { useState, useCallback, useEffect , Suspense } from 'react';
+import { useState, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useLinkBio, LinkBioPage } from '@/hooks/useLinkBio';
 import { PageHeader } from '@/components/dashboard/page-header';
@@ -49,7 +49,8 @@ function slugify(text: string): string {
 function BioPagesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { pages, totals, isLoading, error, createPage, deletePage, refresh } = useLinkBio();
+  const { pages, totals, isLoading, error, createPage, deletePage, refresh } =
+    useLinkBio();
 
   // Dialog states
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -125,12 +126,14 @@ function BioPagesPageContent() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-cyan-500/10">
-              <FileText className="w-5 h-5 text-cyan-400" />
+            <div className="p-2 rounded-lg bg-orange-500/10">
+              <FileText className="w-5 h-5 text-orange-400" />
             </div>
             <div>
               <p className="text-sm text-gray-400">Total Pages</p>
-              <p className="text-2xl font-bold text-white">{totals.totalPages}</p>
+              <p className="text-2xl font-bold text-white">
+                {totals.totalPages}
+              </p>
             </div>
           </div>
         </div>
@@ -141,7 +144,9 @@ function BioPagesPageContent() {
             </div>
             <div>
               <p className="text-sm text-gray-400">Total Views</p>
-              <p className="text-2xl font-bold text-white">{totals.totalViews.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-white">
+                {totals.totalViews.toLocaleString()}
+              </p>
             </div>
           </div>
         </div>
@@ -152,7 +157,9 @@ function BioPagesPageContent() {
             </div>
             <div>
               <p className="text-sm text-gray-400">Total Clicks</p>
-              <p className="text-2xl font-bold text-white">{totals.totalClicks.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-white">
+                {totals.totalClicks.toLocaleString()}
+              </p>
             </div>
           </div>
         </div>
@@ -161,7 +168,7 @@ function BioPagesPageContent() {
       {/* Loading State */}
       {isLoading && pages.length === 0 && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
         </div>
       )}
 
@@ -181,7 +188,7 @@ function BioPagesPageContent() {
       {/* Pages Grid */}
       {pages.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {pages.map((page) => (
+          {pages.map(page => (
             <div
               key={page.id}
               className="bg-gray-900/50 border border-white/10 rounded-xl p-4 hover:border-white/20 transition-colors"
@@ -195,12 +202,14 @@ function BioPagesPageContent() {
                     className="w-12 h-12 rounded-full object-cover border border-white/10"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                    <Link2 className="w-6 h-6 text-cyan-400" />
+                  <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
+                    <Link2 className="w-6 h-6 text-orange-400" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-white truncate">{page.title}</h3>
+                  <h3 className="font-semibold text-white truncate">
+                    {page.title}
+                  </h3>
                   <p className="text-sm text-gray-400 truncate">/{page.slug}</p>
                 </div>
                 <Badge
@@ -293,13 +302,14 @@ function BioPagesPageContent() {
                 id="title"
                 placeholder="My Links"
                 value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                onChange={e => setNewTitle(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleCreate()}
               />
             </div>
             {newTitle && (
               <p className="text-sm text-gray-400">
-                URL will be: /bio/<span className="text-cyan-400">{slugify(newTitle)}</span>
+                URL will be: /bio/
+                <span className="text-orange-400">{slugify(newTitle)}</span>
               </p>
             )}
           </div>
@@ -331,17 +341,15 @@ function BioPagesPageContent() {
             <DialogTitle>Delete Bio Page</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-gray-400 py-4">
-            Are you sure you want to delete "{pageToDelete?.title}"? This action cannot be undone
-            and all links and analytics will be permanently lost.
+            Are you sure you want to delete "{pageToDelete?.title}"? This action
+            cannot be undone and all links and analytics will be permanently
+            lost.
           </p>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setShowDeleteDialog(false)}>
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-            >
+            <Button variant="destructive" onClick={handleDelete}>
               Delete
             </Button>
           </DialogFooter>

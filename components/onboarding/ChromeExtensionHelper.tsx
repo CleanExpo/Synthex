@@ -55,7 +55,8 @@ export function useExtensionHelper(): ExtensionHelperState {
 
     async function detect() {
       try {
-        const capabilities: ExtensionCapabilities = await checkExtensionAvailability();
+        const capabilities: ExtensionCapabilities =
+          await checkExtensionAvailability();
 
         if (cancelled) return;
 
@@ -72,7 +73,7 @@ export function useExtensionHelper(): ExtensionHelperState {
         setState({
           loading: false,
           available: true,
-          loggedInPlatforms: platforms.filter((p) => p.loggedIn),
+          loggedInPlatforms: platforms.filter(p => p.loggedIn),
         });
       } catch {
         if (!cancelled) {
@@ -82,7 +83,9 @@ export function useExtensionHelper(): ExtensionHelperState {
     }
 
     detect();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return state;
@@ -100,11 +103,15 @@ interface ExtensionInstallPromptProps {
  * Shown when the extension is NOT installed.
  * Subtle — never blocks the onboarding flow.
  */
-export function ExtensionInstallPrompt({ className }: ExtensionInstallPromptProps) {
+export function ExtensionInstallPrompt({
+  className,
+}: ExtensionInstallPromptProps) {
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg bg-white/3 border border-white/5 ${className ?? ''}`}>
-      <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center shrink-0">
-        <Chrome className="w-4 h-4 text-cyan-400/60" />
+    <div
+      className={`flex items-center gap-3 p-3 rounded-lg bg-white/3 border border-white/5 ${className ?? ''}`}
+    >
+      <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
+        <Chrome className="w-4 h-4 text-orange-400/60" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs text-gray-500">
@@ -113,7 +120,7 @@ export function ExtensionInstallPrompt({ className }: ExtensionInstallPromptProp
             href="https://chrome.google.com/webstore/detail/synthex"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-cyan-400/70 hover:text-cyan-400 underline decoration-dotted transition-colors"
+            className="text-orange-400/70 hover:text-orange-400 underline decoration-dotted transition-colors"
           >
             Synthex Chrome Extension
           </a>{' '}
@@ -137,17 +144,20 @@ interface ExtensionSocialHintProps {
  * Inline hint shown inside a platform card when the extension detects
  * that the user is already logged in on that platform.
  */
-export function ExtensionSocialHint({ platformId, loggedInPlatforms }: ExtensionSocialHintProps) {
+export function ExtensionSocialHint({
+  platformId,
+  loggedInPlatforms,
+}: ExtensionSocialHintProps) {
   const match = loggedInPlatforms.find(
-    (p) => p.platform.toLowerCase() === platformId.toLowerCase() && p.loggedIn,
+    p => p.platform.toLowerCase() === platformId.toLowerCase() && p.loggedIn
   );
 
   if (!match) return null;
 
   return (
     <div className="flex items-center gap-1.5 mt-1.5">
-      <Zap className="w-3 h-3 text-cyan-400 shrink-0" />
-      <p className="text-[11px] text-cyan-400">
+      <Zap className="w-3 h-3 text-orange-400 shrink-0" />
+      <p className="text-[11px] text-orange-400">
         {match.username
           ? `Logged in as @${match.username} — one click!`
           : 'Already logged in — one click!'}
@@ -169,27 +179,33 @@ interface ExtensionStatusBannerProps {
  * and has detected logged-in platforms. Hidden if no platforms detected.
  */
 export function ExtensionStatusBanner({ state }: ExtensionStatusBannerProps) {
-  if (state.loading || !state.available || state.loggedInPlatforms.length === 0) {
+  if (
+    state.loading ||
+    !state.available ||
+    state.loggedInPlatforms.length === 0
+  ) {
     return null;
   }
 
   const count = state.loggedInPlatforms.length;
   const names = state.loggedInPlatforms
     .slice(0, 3)
-    .map((p) => p.platform.charAt(0).toUpperCase() + p.platform.slice(1))
+    .map(p => p.platform.charAt(0).toUpperCase() + p.platform.slice(1))
     .join(', ');
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-cyan-500/5 border border-cyan-500/20 max-w-2xl mx-auto">
-      <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center shrink-0">
-        <Zap className="w-4 h-4 text-cyan-400" />
+    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-500/5 border border-orange-500/20 max-w-2xl mx-auto">
+      <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
+        <Zap className="w-4 h-4 text-orange-400" />
       </div>
       <div>
-        <p className="text-sm text-cyan-400 font-medium">
+        <p className="text-sm text-orange-400 font-medium">
           Extension detected {count} active session{count !== 1 ? 's' : ''}
         </p>
         <p className="text-xs text-gray-400">
-          You&apos;re logged into {names}{count > 3 ? ` +${count - 3} more` : ''} — connect them below with one click.
+          You&apos;re logged into {names}
+          {count > 3 ? ` +${count - 3} more` : ''} — connect them below with one
+          click.
         </p>
       </div>
     </div>

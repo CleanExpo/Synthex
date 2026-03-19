@@ -20,8 +20,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#0891b2' },
-    { media: '(prefers-color-scheme: dark)', color: '#0891b2' },
+    { media: '(prefers-color-scheme: light)', color: '#ff8f00' },
+    { media: '(prefers-color-scheme: dark)', color: '#ff8f00' },
   ],
 };
 
@@ -328,7 +328,11 @@ export default function RootLayout({
         {/* Preload critical resources */}
         <link rel="preload" href="/grid.svg" as="image" type="image/svg+xml" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
         {/* Schema.org Structured Data (JSON-LD) — all values are hardcoded constants */}
         {structuredData.map(({ id, json }) => (
           <script
@@ -342,7 +346,7 @@ export default function RootLayout({
         {/* Skip to main content link for accessibility */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-cyan-600 focus:text-white focus:rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-gray-900"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-orange-600 focus:text-white focus:rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 focus:ring-offset-gray-900"
         >
           Skip to main content
         </a>

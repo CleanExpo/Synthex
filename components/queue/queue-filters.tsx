@@ -8,7 +8,10 @@
 
 import { Button } from '@/components/ui/button';
 import { Search, X } from '@/components/icons';
-import { platformOptions, statusOptions } from '@/components/schedule/schedule-config';
+import {
+  platformOptions,
+  statusOptions,
+} from '@/components/schedule/schedule-config';
 
 interface QueueFiltersProps {
   platform: string;
@@ -56,10 +59,10 @@ export function QueueFilters({
       {/* Platform dropdown */}
       <select
         value={platform}
-        onChange={(e) => onPlatformChange(e.target.value)}
-        className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-cyan-500 appearance-none cursor-pointer"
+        onChange={e => onPlatformChange(e.target.value)}
+        className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500 appearance-none cursor-pointer"
       >
-        {platformOptions.map((opt) => (
+        {platformOptions.map(opt => (
           <option key={opt.value} value={opt.value} className="bg-gray-900">
             {opt.label}
           </option>
@@ -69,10 +72,10 @@ export function QueueFilters({
       {/* Status dropdown */}
       <select
         value={status}
-        onChange={(e) => onStatusChange(e.target.value)}
-        className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-cyan-500 appearance-none cursor-pointer"
+        onChange={e => onStatusChange(e.target.value)}
+        className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500 appearance-none cursor-pointer"
       >
-        {queueStatusOptions.map((opt) => (
+        {queueStatusOptions.map(opt => (
           <option key={opt.value} value={opt.value} className="bg-gray-900">
             {opt.label}
           </option>
@@ -84,17 +87,17 @@ export function QueueFilters({
         <input
           type="date"
           value={startDate}
-          onChange={(e) => onStartDateChange(e.target.value)}
+          onChange={e => onStartDateChange(e.target.value)}
           placeholder="From"
-          className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-cyan-500"
+          className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
         />
         <span className="text-gray-500 text-xs">to</span>
         <input
           type="date"
           value={endDate}
-          onChange={(e) => onEndDateChange(e.target.value)}
+          onChange={e => onEndDateChange(e.target.value)}
           placeholder="To"
-          className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-cyan-500"
+          className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
         />
       </div>
 
@@ -104,9 +107,9 @@ export function QueueFilters({
         <input
           type="text"
           value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={e => onSearchChange(e.target.value)}
           placeholder="Search content..."
-          className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+          className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
         />
       </div>
 

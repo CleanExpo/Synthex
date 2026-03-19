@@ -37,8 +37,8 @@ const sizeMap = {
 
 const colorMap = {
   default: 'text-slate-400',
-  primary: 'text-cyan-500',
-  secondary: 'text-cyan-500',
+  primary: 'text-orange-500',
+  secondary: 'text-orange-500',
   white: 'text-white',
 };
 
@@ -70,14 +70,14 @@ function DotsSpinner({ size, color, className }: SpinnerProps) {
 
   const colorClass = {
     default: 'bg-slate-400',
-    primary: 'bg-cyan-500',
-    secondary: 'bg-cyan-500',
+    primary: 'bg-orange-500',
+    secondary: 'bg-orange-500',
     white: 'bg-white',
   };
 
   return (
     <div className={cn('flex items-center gap-1', className)}>
-      {[0, 1, 2].map((i) => (
+      {[0, 1, 2].map(i => (
         <div
           key={i}
           className={cn(
@@ -103,14 +103,14 @@ function BarsSpinner({ size, color, className }: SpinnerProps) {
 
   const colorClass = {
     default: 'bg-slate-400',
-    primary: 'bg-cyan-500',
-    secondary: 'bg-cyan-500',
+    primary: 'bg-orange-500',
+    secondary: 'bg-orange-500',
     white: 'bg-white',
   };
 
   return (
     <div className={cn('flex items-center gap-0.5', className)}>
-      {[0, 1, 2, 3].map((i) => (
+      {[0, 1, 2, 3].map(i => (
         <div
           key={i}
           className={cn(
@@ -131,8 +131,8 @@ function BarsSpinner({ size, color, className }: SpinnerProps) {
 function PulseSpinner({ size, color, className }: SpinnerProps) {
   const colorClass = {
     default: 'border-slate-400',
-    primary: 'border-cyan-500',
-    secondary: 'border-cyan-500',
+    primary: 'border-orange-500',
+    secondary: 'border-orange-500',
     white: 'border-white',
   };
 
@@ -154,12 +154,13 @@ function GradientSpinner({ size, className }: SpinnerProps) {
       className={cn(
         'rounded-full animate-spin',
         sizeMap[size || 'md'],
-        'bg-gradient-to-r from-cyan-500 via-cyan-500 to-cyan-500',
+        'bg-gradient-to-r from-orange-500 via-orange-500 to-orange-500',
         className
       )}
       style={{
         mask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 3px))',
-        WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 3px))',
+        WebkitMask:
+          'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 3px))',
       }}
     />
   );
@@ -185,11 +186,7 @@ export function Spinner({
   }[variant];
 
   const spinner = (
-    <SpinnerComponent
-      size={size}
-      color={color}
-      className={className}
-    />
+    <SpinnerComponent size={size} color={color} className={className} />
   );
 
   if (label) {
@@ -237,9 +234,7 @@ export function LoadingOverlay({
           )}
         >
           <Spinner {...spinner} />
-          {text && (
-            <p className="mt-3 text-sm text-slate-300">{text}</p>
-          )}
+          {text && <p className="mt-3 text-sm text-slate-300">{text}</p>}
         </div>
       )}
     </div>
@@ -255,13 +250,14 @@ export interface FullPageLoadingProps {
   spinner?: SpinnerProps;
 }
 
-export function FullPageLoading({ text = 'Loading...', spinner }: FullPageLoadingProps) {
+export function FullPageLoading({
+  text = 'Loading...',
+  spinner,
+}: FullPageLoadingProps) {
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-slate-950 z-50">
       <Spinner size="xl" variant="gradient" {...spinner} />
-      {text && (
-        <p className="mt-4 text-slate-400">{text}</p>
-      )}
+      {text && <p className="mt-4 text-slate-400">{text}</p>}
     </div>
   );
 }

@@ -22,7 +22,10 @@ interface ErrorBoundaryState {
   error?: Error;
 }
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
@@ -49,17 +52,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         credentials: 'include',
         body: JSON.stringify({
           sessionId: `session_${Date.now()}`,
-          errors: [{
-            message: error.message,
-            stack: error.stack,
-            userAgent: navigator.userAgent,
-            timestamp: new Date().toISOString(),
-            context: {
-              componentStack: errorInfo.componentStack,
-              errorBoundary: true,
-              url: window.location.href,
+          errors: [
+            {
+              message: error.message,
+              stack: error.stack,
+              userAgent: navigator.userAgent,
+              timestamp: new Date().toISOString(),
+              context: {
+                componentStack: errorInfo.componentStack,
+                errorBoundary: true,
+                url: window.location.href,
+              },
             },
-          }],
+          ],
           actions: [],
           timestamp: new Date().toISOString(),
         }),
@@ -75,55 +80,62 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   render() {
     if (this.state.hasError) {
       // Render fallback UI
-      return this.props.fallback || (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-red-900/20 to-gray-900 p-4">
-          <Card className="liquid-glass max-w-2xl w-full p-8">
-            <div className="text-center space-y-6">
-              <div className="flex justify-center">
-                <div className="relative">
-                  <AlertTriangle className="w-20 h-20 text-red-400" />
-                  <div className="absolute inset-0 animate-ping">
-                    <AlertTriangle className="w-20 h-20 text-red-400 opacity-30" />
+      return (
+        this.props.fallback || (
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-red-900/20 to-gray-900 p-4">
+            <Card className="liquid-glass max-w-2xl w-full p-8">
+              <div className="text-center space-y-6">
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <AlertTriangle className="w-20 h-20 text-red-400" />
+                    <div className="absolute inset-0 animate-ping">
+                      <AlertTriangle className="w-20 h-20 text-red-400 opacity-30" />
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold text-white">Oops! Something went wrong</h1>
-                <p className="text-gray-400">
-                  We encountered an unexpected error. Don't worry, we've been notified and are working on it.
-                </p>
-              </div>
 
-              {process.env.NODE_ENV === 'development' && this.state.error && (
-                <div className="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-left">
-                  <h3 className="text-sm font-semibold text-red-400 mb-2">Error Details (Development Only)</h3>
-                  <pre className="text-xs text-gray-300 overflow-auto max-h-40">
-                    {this.state.error.toString()}
-                  </pre>
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-bold text-white">
+                    Oops! Something went wrong
+                  </h1>
+                  <p className="text-gray-400">
+                    We encountered an unexpected error. Don't worry, we've been
+                    notified and are working on it.
+                  </p>
                 </div>
-              )}
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
-                <Button
-                  onClick={() => window.location.reload()}
-                  className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Try Again
-                </Button>
-                <Button
-                  onClick={() => window.location.href = '/'}
-                  variant="outline"
-                  className="border-cyan-400/50 text-cyan-400 hover:bg-cyan-400/10"
-                >
-                  <Home className="w-4 h-4 mr-2" />
-                  Go Home
-                </Button>
+                {process.env.NODE_ENV === 'development' && this.state.error && (
+                  <div className="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-left">
+                    <h3 className="text-sm font-semibold text-red-400 mb-2">
+                      Error Details (Development Only)
+                    </h3>
+                    <pre className="text-xs text-gray-300 overflow-auto max-h-40">
+                      {this.state.error.toString()}
+                    </pre>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
+                  <Button
+                    onClick={() => window.location.reload()}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Try Again
+                  </Button>
+                  <Button
+                    onClick={() => (window.location.href = '/')}
+                    variant="outline"
+                    className="border-orange-400/50 text-orange-400 hover:bg-orange-400/10"
+                  >
+                    <Home className="w-4 h-4 mr-2" />
+                    Go Home
+                  </Button>
+                </div>
               </div>
-            </div>
-          </Card>
-        </div>
+            </Card>
+          </div>
+        )
       );
     }
 

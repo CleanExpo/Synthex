@@ -20,10 +20,12 @@ export function TeamStatsGrid({ stats }: TeamStatsGridProps) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-400">Total Members</p>
+              <p className="text-sm font-medium text-slate-400">
+                Total Members
+              </p>
               <p className="text-2xl font-bold text-white">{stats.total}</p>
             </div>
-            <Users className="h-8 w-8 text-cyan-400" />
+            <Users className="h-8 w-8 text-orange-400" />
           </div>
         </CardContent>
       </Card>
@@ -32,7 +34,9 @@ export function TeamStatsGrid({ stats }: TeamStatsGridProps) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-400">Active Members</p>
+              <p className="text-sm font-medium text-slate-400">
+                Active Members
+              </p>
               <p className="text-2xl font-bold text-white">{stats.active}</p>
             </div>
             <CheckCircle className="h-8 w-8 text-green-400" />
@@ -44,7 +48,9 @@ export function TeamStatsGrid({ stats }: TeamStatsGridProps) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-400">Pending Invites</p>
+              <p className="text-sm font-medium text-slate-400">
+                Pending Invites
+              </p>
               <p className="text-2xl font-bold text-white">{stats.pending}</p>
             </div>
             <AlertTriangle className="h-8 w-8 text-yellow-400" />

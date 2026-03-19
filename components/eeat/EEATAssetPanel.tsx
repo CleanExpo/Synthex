@@ -12,25 +12,37 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import type { EEATAssetPlan, EEATAsset, EEATAssetPriority } from '@/lib/eeat/audit-types';
+import type {
+  EEATAssetPlan,
+  EEATAsset,
+  EEATAssetPriority,
+} from '@/lib/eeat/audit-types';
 
 // ─── Priority badge ───────────────────────────────────────────────────────────
 
 function priorityClass(priority: EEATAssetPriority): string {
   switch (priority) {
-    case 'high':   return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
-    case 'medium': return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
-    case 'low':    return 'bg-gray-500/20 text-gray-400 border border-gray-500/30';
+    case 'high':
+      return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+    case 'medium':
+      return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
+    case 'low':
+      return 'bg-gray-500/20 text-gray-400 border border-gray-500/30';
   }
 }
 
 function typeLabel(type: EEATAsset['type']): string {
   switch (type) {
-    case 'author-bio':          return 'Author Bio';
-    case 'credential-checklist': return 'Credentials';
-    case 'schema-template':     return 'Schema';
-    case 'trust-signal':        return 'Trust Signal';
-    case 'citation-template':   return 'Citation';
+    case 'author-bio':
+      return 'Author Bio';
+    case 'credential-checklist':
+      return 'Credentials';
+    case 'schema-template':
+      return 'Schema';
+    case 'trust-signal':
+      return 'Trust Signal';
+    case 'citation-template':
+      return 'Citation';
   }
 }
 
@@ -56,10 +68,15 @@ function AssetCard({ asset }: { asset: EEATAsset }) {
       <button
         type="button"
         onClick={() => setOpen(prev => !prev)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-cyan-500"
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-orange-500"
       >
         {/* Priority badge */}
-        <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 capitalize', priorityClass(asset.priority))}>
+        <span
+          className={cn(
+            'text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 capitalize',
+            priorityClass(asset.priority)
+          )}
+        >
           {asset.priority}
         </span>
         {/* Type badge */}
@@ -67,9 +84,16 @@ function AssetCard({ asset }: { asset: EEATAsset }) {
           {typeLabel(asset.type)}
         </span>
         {/* Title */}
-        <span className="text-sm font-medium text-white flex-1 text-left truncate">{asset.title}</span>
+        <span className="text-sm font-medium text-white flex-1 text-left truncate">
+          {asset.title}
+        </span>
         {/* Chevron */}
-        <span className={cn('text-slate-500 text-xs transition-transform flex-shrink-0', open && 'rotate-180')}>
+        <span
+          className={cn(
+            'text-slate-500 text-xs transition-transform flex-shrink-0',
+            open && 'rotate-180'
+          )}
+        >
           ▼
         </span>
       </button>
@@ -84,7 +108,7 @@ function AssetCard({ asset }: { asset: EEATAsset }) {
             type="button"
             onClick={handleCopy}
             className={cn(
-              'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500',
+              'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
               copied
                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                 : 'bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white'
@@ -106,17 +130,31 @@ interface EEATAssetPanelProps {
   className?: string;
 }
 
-export function EEATAssetPanel({ plan, currentScore, className }: EEATAssetPanelProps) {
+export function EEATAssetPanel({
+  plan,
+  currentScore,
+  className,
+}: EEATAssetPanelProps) {
   const { assets, totalImpact, quickWins } = plan;
-  const estimatedScore = currentScore !== undefined
-    ? Math.min(100, currentScore + totalImpact)
-    : undefined;
+  const estimatedScore =
+    currentScore !== undefined
+      ? Math.min(100, currentScore + totalImpact)
+      : undefined;
 
   if (assets.length === 0) {
     return (
-      <div className={cn('bg-white/5 border border-white/10 rounded-xl p-6 text-center space-y-2', className)}>
-        <p className="text-emerald-400 font-medium">All E-E-A-T signals detected</p>
-        <p className="text-sm text-slate-500">No additional assets needed. Your content has strong E-E-A-T signals.</p>
+      <div
+        className={cn(
+          'bg-white/5 border border-white/10 rounded-xl p-6 text-center space-y-2',
+          className
+        )}
+      >
+        <p className="text-emerald-400 font-medium">
+          All E-E-A-T signals detected
+        </p>
+        <p className="text-sm text-slate-500">
+          No additional assets needed. Your content has strong E-E-A-T signals.
+        </p>
       </div>
     );
   }
@@ -127,15 +165,17 @@ export function EEATAssetPanel({ plan, currentScore, className }: EEATAssetPanel
       <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-2 justify-between">
         <div>
           <p className="text-sm font-semibold text-white">
-            {assets.length} asset{assets.length !== 1 ? 's' : ''} ready to implement
+            {assets.length} asset{assets.length !== 1 ? 's' : ''} ready to
+            implement
           </p>
           {estimatedScore !== undefined && (
             <p className="text-xs text-slate-400 mt-0.5">
-              Implementing all assets could improve your score to ~{estimatedScore}
+              Implementing all assets could improve your score to ~
+              {estimatedScore}
             </p>
           )}
         </div>
-        <span className="text-xs px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-medium">
+        <span className="text-xs px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 font-medium">
           +{totalImpact} estimated pts
         </span>
       </div>

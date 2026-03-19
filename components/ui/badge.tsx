@@ -8,22 +8,21 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          'border-transparent bg-primary text-primary-foreground hover:bg-primary/80 dark:bg-cyan-600 dark:text-white dark:hover:bg-cyan-700',
+          'border-transparent bg-primary text-primary-foreground hover:bg-primary/80 dark:bg-orange-600 dark:text-white dark:hover:bg-orange-700',
         secondary:
           'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600',
         destructive:
           'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80 dark:bg-red-600 dark:text-white dark:hover:bg-red-700',
-        outline:
-          'text-foreground dark:text-slate-200 dark:border-slate-700',
+        outline: 'text-foreground dark:text-slate-200 dark:border-slate-700',
         // Premium Glassmorphism variants
         glass:
           'bg-white/[0.08] backdrop-blur-md border-white/[0.12] text-white hover:bg-white/[0.12]',
         'glass-solid':
           'bg-slate-800/80 backdrop-blur-md border-white/[0.1] text-white hover:bg-slate-800/90',
         'glass-primary':
-          'bg-cyan-500/20 backdrop-blur-md border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/30',
+          'bg-orange-500/20 backdrop-blur-md border-orange-500/30 text-orange-200 hover:bg-orange-500/30',
         'glass-secondary':
-          'bg-cyan-500/20 backdrop-blur-md border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/30',
+          'bg-orange-500/20 backdrop-blur-md border-orange-500/30 text-orange-200 hover:bg-orange-500/30',
         'glass-success':
           'bg-emerald-500/20 backdrop-blur-md border-emerald-500/30 text-emerald-200 hover:bg-emerald-500/30',
         'glass-warning':
@@ -41,9 +40,9 @@ const badgeVariants = cva(
           'bg-red-500/20 border-red-500/30 text-red-300 before:content-[""] before:w-1.5 before:h-1.5 before:rounded-full before:bg-red-400 before:mr-1.5',
         // Premium gradient badges
         'gradient-primary':
-          'bg-gradient-to-r from-cyan-500/30 to-cyan-500/30 border-cyan-500/30 text-white',
+          'bg-gradient-to-r from-orange-500/30 to-orange-500/30 border-orange-500/30 text-white',
         'gradient-secondary':
-          'bg-gradient-to-r from-cyan-500/30 to-blue-500/30 border-cyan-500/30 text-white',
+          'bg-gradient-to-r from-orange-500/30 to-blue-500/30 border-orange-500/30 text-white',
       },
       size: {
         default: 'px-2.5 py-0.5 text-xs',
@@ -59,12 +58,16 @@ const badgeVariants = cva(
 );
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, size, ...props }: BadgeProps) {
   return (
-    <div className={cn(badgeVariants({ variant, size }), className)} {...props} />
+    <div
+      className={cn(badgeVariants({ variant, size }), className)}
+      {...props}
+    />
   );
 }
 

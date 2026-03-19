@@ -17,14 +17,15 @@ const tabsListVariants = cva(
         'glass-solid':
           'bg-slate-900/80 backdrop-blur-md border border-white/[0.08] text-white/70',
         'glass-primary':
-          'bg-cyan-500/10 backdrop-blur-md border border-cyan-500/20 text-cyan-200/70',
+          'bg-orange-500/10 backdrop-blur-md border border-orange-500/20 text-orange-200/70',
         'glass-secondary':
-          'bg-cyan-500/10 backdrop-blur-md border border-cyan-500/20 text-cyan-200/70',
+          'bg-orange-500/10 backdrop-blur-md border border-orange-500/20 text-orange-200/70',
         // Pill variants (no background on list)
         pill: 'bg-transparent gap-1 p-0',
         'pill-glass': 'bg-transparent gap-1 p-0',
         // Underline variant
-        underline: 'bg-transparent rounded-none border-b border-white/[0.08] p-0 gap-0',
+        underline:
+          'bg-transparent rounded-none border-b border-white/[0.08] p-0 gap-0',
       },
       size: {
         default: 'h-10',
@@ -51,15 +52,14 @@ const tabsTriggerVariants = cva(
         'glass-solid':
           'rounded-sm data-[state=active]:bg-white/[0.15] data-[state=active]:text-white data-[state=active]:shadow-sm text-white/70 hover:text-white/90',
         'glass-primary':
-          'rounded-sm data-[state=active]:bg-cyan-500/30 data-[state=active]:text-white data-[state=active]:shadow-sm text-cyan-200/70 hover:text-cyan-200',
+          'rounded-sm data-[state=active]:bg-orange-500/30 data-[state=active]:text-white data-[state=active]:shadow-sm text-orange-200/70 hover:text-orange-200',
         'glass-secondary':
-          'rounded-sm data-[state=active]:bg-cyan-500/30 data-[state=active]:text-white data-[state=active]:shadow-sm text-cyan-200/70 hover:text-cyan-200',
-        pill:
-          'rounded-full bg-transparent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted',
+          'rounded-sm data-[state=active]:bg-orange-500/30 data-[state=active]:text-white data-[state=active]:shadow-sm text-orange-200/70 hover:text-orange-200',
+        pill: 'rounded-full bg-transparent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted',
         'pill-glass':
           'rounded-full bg-transparent data-[state=active]:bg-white/[0.1] data-[state=active]:text-white text-white/70 hover:bg-white/[0.05] hover:text-white/90',
         underline:
-          'rounded-none border-b-2 border-transparent data-[state=active]:border-cyan-500 data-[state=active]:text-white pb-3 text-white/70 hover:text-white/90',
+          'rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-white pb-3 text-white/70 hover:text-white/90',
       },
     },
     defaultVariants: {
@@ -76,7 +76,8 @@ const TabsVariantContext = React.createContext<{
 const Tabs = TabsPrimitive.Root;
 
 export interface TabsListProps
-  extends React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>,
+  extends
+    React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>,
     VariantProps<typeof tabsListVariants> {}
 
 const TabsList = React.forwardRef<
@@ -96,7 +97,8 @@ const TabsList = React.forwardRef<
 TabsList.displayName = TabsPrimitive.List.displayName;
 
 export interface TabsTriggerProps
-  extends React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>,
+  extends
+    React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>,
     Omit<VariantProps<typeof tabsTriggerVariants>, 'variant'> {}
 
 const TabsTrigger = React.forwardRef<
@@ -106,24 +108,27 @@ const TabsTrigger = React.forwardRef<
   const { variant } = React.useContext(TabsVariantContext);
 
   // Map list variant to trigger variant
-  const triggerVariant = variant === 'glass-primary'
-    ? 'glass-primary'
-    : variant === 'glass-secondary'
-    ? 'glass-secondary'
-    : variant === 'pill'
-    ? 'pill'
-    : variant === 'pill-glass'
-    ? 'pill-glass'
-    : variant === 'underline'
-    ? 'underline'
-    : variant === 'glass' || variant === 'glass-solid'
-    ? 'glass'
-    : 'default';
+  const triggerVariant =
+    variant === 'glass-primary'
+      ? 'glass-primary'
+      : variant === 'glass-secondary'
+        ? 'glass-secondary'
+        : variant === 'pill'
+          ? 'pill'
+          : variant === 'pill-glass'
+            ? 'pill-glass'
+            : variant === 'underline'
+              ? 'underline'
+              : variant === 'glass' || variant === 'glass-solid'
+                ? 'glass'
+                : 'default';
 
   return (
     <TabsPrimitive.Trigger
       ref={ref}
-      className={cn(tabsTriggerVariants({ variant: triggerVariant, className }))}
+      className={cn(
+        tabsTriggerVariants({ variant: triggerVariant, className })
+      )}
       {...props}
     />
   );

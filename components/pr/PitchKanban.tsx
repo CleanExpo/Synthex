@@ -52,22 +52,38 @@ async function fetchJson<T>(url: string): Promise<T> {
 // ---------------------------------------------------------------------------
 
 const STATUSES = [
-  { key: 'draft',    label: 'Draft',    colour: 'border-gray-500/40 bg-gray-500/5' },
-  { key: 'sent',     label: 'Sent',     colour: 'border-blue-500/40 bg-blue-500/5' },
-  { key: 'opened',   label: 'Opened',   colour: 'border-purple-500/40 bg-purple-500/5' },
-  { key: 'replied',  label: 'Replied',  colour: 'border-yellow-500/40 bg-yellow-500/5' },
-  { key: 'covered',  label: 'Covered',  colour: 'border-green-500/40 bg-green-500/5' },
-  { key: 'declined', label: 'Declined', colour: 'border-red-500/40 bg-red-500/5' },
+  { key: 'draft', label: 'Draft', colour: 'border-gray-500/40 bg-gray-500/5' },
+  { key: 'sent', label: 'Sent', colour: 'border-blue-500/40 bg-blue-500/5' },
+  {
+    key: 'opened',
+    label: 'Opened',
+    colour: 'border-purple-500/40 bg-purple-500/5',
+  },
+  {
+    key: 'replied',
+    label: 'Replied',
+    colour: 'border-yellow-500/40 bg-yellow-500/5',
+  },
+  {
+    key: 'covered',
+    label: 'Covered',
+    colour: 'border-green-500/40 bg-green-500/5',
+  },
+  {
+    key: 'declined',
+    label: 'Declined',
+    colour: 'border-red-500/40 bg-red-500/5',
+  },
 ] as const;
 
 type PitchStatusKey = (typeof STATUSES)[number]['key'];
 
 const STATUS_TRANSITIONS: Record<PitchStatusKey, PitchStatusKey[]> = {
-  draft:    ['sent', 'archived'] as PitchStatusKey[],
-  sent:     ['opened', 'replied', 'declined'] as PitchStatusKey[],
-  opened:   ['replied', 'covered', 'declined'] as PitchStatusKey[],
-  replied:  ['covered', 'declined'] as PitchStatusKey[],
-  covered:  [] as PitchStatusKey[],
+  draft: ['sent', 'archived'] as PitchStatusKey[],
+  sent: ['opened', 'replied', 'declined'] as PitchStatusKey[],
+  opened: ['replied', 'covered', 'declined'] as PitchStatusKey[],
+  replied: ['covered', 'declined'] as PitchStatusKey[],
+  covered: [] as PitchStatusKey[],
   declined: [] as PitchStatusKey[],
 };
 
@@ -95,25 +111,37 @@ function PitchCard({ pitch, onStatusChange, updating }: PitchCardProps) {
 
   return (
     <div className="bg-white/[0.04] border border-white/10 rounded-xl p-3 relative">
-      <div className="text-sm font-medium text-white mb-1 line-clamp-2">{pitch.subject}</div>
-      <div className="text-xs text-gray-400 mb-2 line-clamp-2">{pitch.angle}</div>
+      <div className="text-sm font-medium text-white mb-1 line-clamp-2">
+        {pitch.subject}
+      </div>
+      <div className="text-xs text-gray-400 mb-2 line-clamp-2">
+        {pitch.angle}
+      </div>
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-xs text-cyan-300 font-medium">{pitch.journalist.name}</div>
-          <div className="text-xs text-gray-500">{pitch.journalist.outlet} · {formatDate(pitch.createdAt)}</div>
+          <div className="text-xs text-orange-300 font-medium">
+            {pitch.journalist.name}
+          </div>
+          <div className="text-xs text-gray-500">
+            {pitch.journalist.outlet} · {formatDate(pitch.createdAt)}
+          </div>
         </div>
         {transitions.length > 0 && (
           <div className="relative">
             <button
-              onClick={() => setShowMenu((v) => !v)}
+              onClick={() => setShowMenu(v => !v)}
               disabled={updating === pitch.id}
               className="px-2 py-1 text-xs bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50 text-gray-300"
             >
-              {updating === pitch.id ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Move →'}
+              {updating === pitch.id ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                'Move →'
+              )}
             </button>
             {showMenu && (
               <div className="absolute right-0 top-full mt-1 z-20 bg-gray-900 border border-white/10 rounded-lg shadow-xl min-w-[120px]">
-                {transitions.map((status) => (
+                {transitions.map(status => (
                   <button
                     key={status}
                     onClick={() => {
@@ -158,7 +186,10 @@ export function PitchKanban({ onNewPitch }: PitchKanbanProps) {
 
   const pitches = data?.pitches ?? [];
 
-  const handleStatusChange = async (pitchId: string, newStatus: PitchStatusKey) => {
+  const handleStatusChange = async (
+    pitchId: string,
+    newStatus: PitchStatusKey
+  ) => {
     setUpdating(pitchId);
     try {
       const res = await fetch(`/api/pr/pitches/${pitchId}`, {
@@ -197,11 +228,13 @@ export function PitchKanban({ onNewPitch }: PitchKanbanProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-gray-400">{pitches.length} total pitches</h3>
+        <h3 className="text-sm font-medium text-gray-400">
+          {pitches.length} total pitches
+        </h3>
         {onNewPitch && (
           <button
             onClick={onNewPitch}
-            className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <Send className="h-4 w-4" />
             New Pitch
@@ -211,8 +244,8 @@ export function PitchKanban({ onNewPitch }: PitchKanbanProps) {
 
       {/* Kanban columns */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-        {STATUSES.map((col) => {
-          const colPitches = pitches.filter((p) => p.status === col.key);
+        {STATUSES.map(col => {
+          const colPitches = pitches.filter(p => p.status === col.key);
           return (
             <div
               key={col.key}
@@ -227,7 +260,7 @@ export function PitchKanban({ onNewPitch }: PitchKanbanProps) {
                 </span>
               </div>
               <div className="space-y-2">
-                {colPitches.map((pitch) => (
+                {colPitches.map(pitch => (
                   <PitchCard
                     key={pitch.id}
                     pitch={pitch}
@@ -236,7 +269,9 @@ export function PitchKanban({ onNewPitch }: PitchKanbanProps) {
                   />
                 ))}
                 {colPitches.length === 0 && (
-                  <div className="text-xs text-gray-600 text-center py-4">Empty</div>
+                  <div className="text-xs text-gray-600 text-center py-4">
+                    Empty
+                  </div>
                 )}
               </div>
             </div>

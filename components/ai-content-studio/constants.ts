@@ -1,5 +1,10 @@
 import {
-  Twitter, Instagram, Linkedin, Youtube, Facebook, MessageSquare,
+  Twitter,
+  Instagram,
+  Linkedin,
+  Youtube,
+  Facebook,
+  MessageSquare,
 } from '@/components/icons';
 
 export const platformIcons = {
@@ -8,16 +13,16 @@ export const platformIcons = {
   linkedin: Linkedin,
   youtube: Youtube,
   facebook: Facebook,
-  tiktok: MessageSquare
+  tiktok: MessageSquare,
 };
 
 export const platformColors = {
   twitter: 'bg-blue-500',
-  instagram: 'bg-gradient-to-br from-cyan-600 to-pink-500',
+  instagram: 'bg-gradient-to-br from-orange-600 to-pink-500',
   linkedin: 'bg-blue-700',
   youtube: 'bg-red-600',
   facebook: 'bg-blue-600',
-  tiktok: 'bg-black'
+  tiktok: 'bg-black',
 };
 
 export const getViralScoreColor = (score: number) => {

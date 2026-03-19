@@ -52,21 +52,39 @@ function formatDate(dateStr: string): string {
 function getTrendConfig(trend: EngagementForecast['trend']) {
   switch (trend) {
     case 'rising':
-      return { label: 'Rising', className: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' };
+      return {
+        label: 'Rising',
+        className:
+          'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+      };
     case 'declining':
-      return { label: 'Declining', className: 'bg-red-500/20 text-red-400 border border-red-500/30' };
+      return {
+        label: 'Declining',
+        className: 'bg-red-500/20 text-red-400 border border-red-500/30',
+      };
     case 'stable':
-      return { label: 'Stable', className: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' };
+      return {
+        label: 'Stable',
+        className:
+          'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
+      };
     case 'volatile':
-      return { label: 'Volatile', className: 'bg-orange-500/20 text-orange-400 border border-orange-500/30' };
+      return {
+        label: 'Volatile',
+        className:
+          'bg-orange-500/20 text-orange-400 border border-orange-500/30',
+      };
     default:
-      return { label: 'Unknown', className: 'bg-slate-500/20 text-slate-400 border border-slate-500/30' };
+      return {
+        label: 'Unknown',
+        className: 'bg-slate-500/20 text-slate-400 border border-slate-500/30',
+      };
   }
 }
 
 // Transform forecast points to chart-ready format (bandWidth stacked on lowerBound)
 function transformForecastData(predictions: ForecastPoint[]) {
-  return predictions.map((point) => ({
+  return predictions.map(point => ({
     date: formatDate(point.date),
     rawDate: point.date,
     predicted: point.predicted,
@@ -83,19 +101,21 @@ function transformForecastData(predictions: ForecastPoint[]) {
 function ForecastTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
 
-  const predicted = payload.find((p) => p.dataKey === 'predicted')?.value ?? 0;
-  const lowerBound = payload.find((p) => p.dataKey === 'lowerBound')?.value ?? 0;
-  const bandWidth = payload.find((p) => p.dataKey === 'bandWidth')?.value ?? 0;
+  const predicted = payload.find(p => p.dataKey === 'predicted')?.value ?? 0;
+  const lowerBound = payload.find(p => p.dataKey === 'lowerBound')?.value ?? 0;
+  const bandWidth = payload.find(p => p.dataKey === 'bandWidth')?.value ?? 0;
   const upperBound = lowerBound + bandWidth;
 
   return (
     <div className="rounded-lg bg-surface-base/90 border border-white/10 px-3 py-2 shadow-xl text-xs">
       <p className="text-slate-400 mb-1">{label}</p>
-      <p className="text-cyan-400 font-medium">
-        Predicted: <span className="text-white">{predicted.toLocaleString()}</span>
+      <p className="text-orange-400 font-medium">
+        Predicted:{' '}
+        <span className="text-white">{predicted.toLocaleString()}</span>
       </p>
       <p className="text-slate-400">
-        Range: {lowerBound.toLocaleString()} – {Math.round(upperBound).toLocaleString()}
+        Range: {lowerBound.toLocaleString()} –{' '}
+        {Math.round(upperBound).toLocaleString()}
       </p>
     </div>
   );
@@ -134,7 +154,9 @@ function ForecastChartEmpty() {
       </CardHeader>
       <CardContent>
         <div className="h-[280px] flex items-center justify-center">
-          <p className="text-sm text-slate-500">Select a platform to see engagement forecast</p>
+          <p className="text-sm text-slate-500">
+            Select a platform to see engagement forecast
+          </p>
         </div>
       </CardContent>
     </Card>
@@ -168,7 +190,8 @@ export function ForecastChart({ forecast, isLoading }: ForecastChartProps) {
                 {trendConfig.label}
               </span>
               <span className="text-xs text-slate-400">
-                {growthSign}{forecast.growthRate.toFixed(1)}% growth
+                {growthSign}
+                {forecast.growthRate.toFixed(1)}% growth
               </span>
               <span className="text-xs text-slate-500">
                 {Math.round(forecast.confidence * 100)}% confidence
@@ -179,21 +202,55 @@ export function ForecastChart({ forecast, isLoading }: ForecastChartProps) {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={280}>
-          <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+          <AreaChart
+            data={chartData}
+            margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+          >
             <defs>
               {/* Confidence band gradient */}
-              <linearGradient id="forecastBandGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="rgba(34,211,238,0.25)" stopOpacity={1} />
-                <stop offset="95%" stopColor="rgba(34,211,238,0.05)" stopOpacity={1} />
+              <linearGradient
+                id="forecastBandGradient"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="5%"
+                  stopColor="rgba(34,211,238,0.25)"
+                  stopOpacity={1}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="rgba(34,211,238,0.05)"
+                  stopOpacity={1}
+                />
               </linearGradient>
               {/* Predicted line gradient */}
-              <linearGradient id="forecastLineGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="rgba(34,211,238,0.1)" stopOpacity={1} />
-                <stop offset="95%" stopColor="rgba(34,211,238,0)" stopOpacity={1} />
+              <linearGradient
+                id="forecastLineGradient"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="5%"
+                  stopColor="rgba(34,211,238,0.1)"
+                  stopOpacity={1}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="rgba(34,211,238,0)"
+                  stopOpacity={1}
+                />
               </linearGradient>
             </defs>
 
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="rgba(255,255,255,0.05)"
+            />
 
             <XAxis
               dataKey="date"
@@ -244,12 +301,17 @@ export function ForecastChart({ forecast, isLoading }: ForecastChartProps) {
             <Area
               type="monotone"
               dataKey="predicted"
-              stroke="#22d3ee"
+              stroke="#ffdcc2"
               strokeWidth={2}
               fill="url(#forecastLineGradient)"
               fillOpacity={1}
               dot={false}
-              activeDot={{ r: 4, fill: '#22d3ee', stroke: '#0f172a', strokeWidth: 2 }}
+              activeDot={{
+                r: 4,
+                fill: '#ffdcc2',
+                stroke: '#111111',
+                strokeWidth: 2,
+              }}
             />
           </AreaChart>
         </ResponsiveContainer>

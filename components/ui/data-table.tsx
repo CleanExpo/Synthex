@@ -143,7 +143,7 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      'border-b border-white/[0.06] transition-colors data-[state=selected]:bg-cyan-500/10',
+      'border-b border-white/[0.06] transition-colors data-[state=selected]:bg-orange-500/10',
       className
     )}
     {...props}
@@ -237,7 +237,9 @@ export function DataTable<T extends Record<string, any>>({
       const isCurrentlySelected = isSelected(row);
 
       if (isCurrentlySelected) {
-        onSelectionChange(selectedRows.filter((r, i) => getRowKey(r, i) !== key));
+        onSelectionChange(
+          selectedRows.filter((r, i) => getRowKey(r, i) !== key)
+        );
       } else {
         onSelectionChange([...selectedRows, row]);
       }
@@ -267,7 +269,9 @@ export function DataTable<T extends Record<string, any>>({
   const handleSort = (columnId: string) => {
     if (!sorting) return;
     const newDirection =
-      sorting.column === columnId && sorting.direction === 'asc' ? 'desc' : 'asc';
+      sorting.column === columnId && sorting.direction === 'asc'
+        ? 'desc'
+        : 'asc';
     sorting.onSort(columnId, newDirection);
   };
 
@@ -295,7 +299,7 @@ export function DataTable<T extends Record<string, any>>({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               value={search.value}
-              onChange={(e) => search.onChange(e.target.value)}
+              onChange={e => search.onChange(e.target.value)}
               placeholder={search.placeholder || 'Search...'}
               className="pl-10"
               aria-label="Search table"
@@ -311,13 +315,15 @@ export function DataTable<T extends Record<string, any>>({
             {selectable && (
               <TableHead className="w-12">
                 <Checkbox
-                  checked={selectedRows.length === data.length && data.length > 0}
+                  checked={
+                    selectedRows.length === data.length && data.length > 0
+                  }
                   onCheckedChange={toggleAll}
                   aria-label="Select all"
                 />
               </TableHead>
             )}
-            {columns.map((column) => (
+            {columns.map(column => (
               <TableHead
                 key={column.id}
                 style={{ width: column.width }}
@@ -327,7 +333,7 @@ export function DataTable<T extends Record<string, any>>({
                   column.sortable && 'cursor-pointer select-none'
                 )}
                 onClick={() => column.sortable && handleSort(column.id)}
-                onKeyDown={(e) => {
+                onKeyDown={e => {
                   if (column.sortable && (e.key === 'Enter' || e.key === ' ')) {
                     e.preventDefault();
                     handleSort(column.id);
@@ -337,10 +343,16 @@ export function DataTable<T extends Record<string, any>>({
                 role={column.sortable ? 'button' : undefined}
                 aria-sort={
                   column.sortable && sorting?.column === column.id
-                    ? sorting.direction === 'asc' ? 'ascending' : 'descending'
+                    ? sorting.direction === 'asc'
+                      ? 'ascending'
+                      : 'descending'
                     : undefined
                 }
-                aria-label={column.sortable ? `Sort by ${typeof column.header === 'string' ? column.header : column.id}` : undefined}
+                aria-label={
+                  column.sortable
+                    ? `Sort by ${typeof column.header === 'string' ? column.header : column.id}`
+                    : undefined
+                }
               >
                 <div
                   className={cn(
@@ -379,7 +391,7 @@ export function DataTable<T extends Record<string, any>>({
                     <div className="w-4 h-4 bg-white/[0.05] rounded animate-pulse" />
                   </TableCell>
                 )}
-                {columns.map((column) => (
+                {columns.map(column => (
                   <TableCell key={column.id} className={cellPadding}>
                     <div className="h-4 bg-white/[0.05] rounded animate-pulse" />
                   </TableCell>
@@ -395,7 +407,9 @@ export function DataTable<T extends Record<string, any>>({
             // Empty state
             <TableRow>
               <TableCell
-                colSpan={columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)}
+                colSpan={
+                  columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)
+                }
                 className="h-48 text-center"
               >
                 {emptyState || (
@@ -420,12 +434,12 @@ export function DataTable<T extends Record<string, any>>({
                     <Checkbox
                       checked={isSelected(row)}
                       onCheckedChange={() => toggleRow(row)}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={e => e.stopPropagation()}
                       aria-label={`Select row ${rowIndex + 1}`}
                     />
                   </TableCell>
                 )}
-                {columns.map((column) => (
+                {columns.map(column => (
                   <TableCell
                     key={column.id}
                     className={cn(
@@ -445,7 +459,7 @@ export function DataTable<T extends Record<string, any>>({
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0"
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={e => e.stopPropagation()}
                           aria-label="Row actions"
                         >
                           <MoreHorizontal className="w-4 h-4" />
@@ -473,7 +487,10 @@ export function DataTable<T extends Record<string, any>>({
             </span>{' '}
             to{' '}
             <span className="font-medium text-white">
-              {Math.min(pagination.page * pagination.pageSize, pagination.total)}
+              {Math.min(
+                pagination.page * pagination.pageSize,
+                pagination.total
+              )}
             </span>{' '}
             of{' '}
             <span className="font-medium text-white">{pagination.total}</span>{' '}
@@ -484,11 +501,13 @@ export function DataTable<T extends Record<string, any>>({
             {pagination.pageSizeOptions && pagination.onPageSizeChange && (
               <select
                 value={pagination.pageSize}
-                onChange={(e) => pagination.onPageSizeChange?.(Number(e.target.value))}
+                onChange={e =>
+                  pagination.onPageSizeChange?.(Number(e.target.value))
+                }
                 className="h-8 rounded-md border border-white/[0.1] bg-transparent px-2 text-sm"
                 aria-label="Rows per page"
               >
-                {pagination.pageSizeOptions.map((size) => (
+                {pagination.pageSizeOptions.map(size => (
                   <option key={size} value={size}>
                     {size} per page
                   </option>
@@ -518,13 +537,17 @@ export function DataTable<T extends Record<string, any>>({
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <span className="px-3 text-sm text-slate-400">
-                Page {pagination.page} of {Math.ceil(pagination.total / pagination.pageSize)}
+                Page {pagination.page} of{' '}
+                {Math.ceil(pagination.total / pagination.pageSize)}
               </span>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => pagination.onPageChange(pagination.page + 1)}
-                disabled={pagination.page >= Math.ceil(pagination.total / pagination.pageSize)}
+                disabled={
+                  pagination.page >=
+                  Math.ceil(pagination.total / pagination.pageSize)
+                }
                 className="h-8 w-8 p-0"
                 aria-label="Go to next page"
               >
@@ -534,9 +557,14 @@ export function DataTable<T extends Record<string, any>>({
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  pagination.onPageChange(Math.ceil(pagination.total / pagination.pageSize))
+                  pagination.onPageChange(
+                    Math.ceil(pagination.total / pagination.pageSize)
+                  )
                 }
-                disabled={pagination.page >= Math.ceil(pagination.total / pagination.pageSize)}
+                disabled={
+                  pagination.page >=
+                  Math.ceil(pagination.total / pagination.pageSize)
+                }
                 className="h-8 w-8 p-0"
                 aria-label="Go to last page"
               >

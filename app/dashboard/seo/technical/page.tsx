@@ -46,12 +46,14 @@ function CwvHistoryChart({ history }: { history: CwvHistoryEntry[] }) {
     return (
       <div className="text-center py-12">
         <Activity className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-white mb-2">No CWV history yet</h3>
+        <h3 className="text-lg font-medium text-white mb-2">
+          No CWV history yet
+        </h3>
         <p className="text-gray-400 mb-6">
           Run your first SEO audit to start tracking Core Web Vitals over time.
         </p>
         <Link href="/dashboard/seo/audit">
-          <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500">
+          <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500">
             Run First Audit
           </Button>
         </Link>
@@ -59,8 +61,11 @@ function CwvHistoryChart({ history }: { history: CwvHistoryEntry[] }) {
     );
   }
 
-  const chartData = history.map((entry) => ({
-    date: new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+  const chartData = history.map(entry => ({
+    date: new Date(entry.date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    }),
     lcp: entry.lcp ? Number(entry.lcp.toFixed(2)) : null,
     cls: entry.cls ? Number(entry.cls.toFixed(3)) : null,
     inp: entry.inp ? Math.round(entry.inp) : null,
@@ -70,27 +75,43 @@ function CwvHistoryChart({ history }: { history: CwvHistoryEntry[] }) {
   return (
     <div className="space-y-4">
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+        <LineChart
+          data={chartData}
+          margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+        >
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="rgba(255,255,255,0.05)"
+          />
           <XAxis dataKey="date" stroke="#64748b" fontSize={12} />
           <YAxis stroke="#64748b" fontSize={12} />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#0f172a',
+              backgroundColor: '#111111',
               border: '1px solid rgba(6, 182, 212, 0.2)',
               borderRadius: '8px',
               color: '#fff',
             }}
           />
           {/* LCP thresholds */}
-          <ReferenceLine y={2.5} stroke="#22c55e" strokeDasharray="3 3" strokeOpacity={0.3} />
-          <ReferenceLine y={4.0} stroke="#ef4444" strokeDasharray="3 3" strokeOpacity={0.3} />
+          <ReferenceLine
+            y={2.5}
+            stroke="#22c55e"
+            strokeDasharray="3 3"
+            strokeOpacity={0.3}
+          />
+          <ReferenceLine
+            y={4.0}
+            stroke="#ef4444"
+            strokeDasharray="3 3"
+            strokeOpacity={0.3}
+          />
           <Line
             type="monotone"
             dataKey="lcp"
-            stroke="#06b6d4"
+            stroke="#ffb87b"
             strokeWidth={2}
-            dot={{ fill: '#06b6d4', r: 3 }}
+            dot={{ fill: '#ffb87b', r: 3 }}
             name="LCP (s)"
             connectNulls
           />
@@ -116,7 +137,7 @@ function CwvHistoryChart({ history }: { history: CwvHistoryEntry[] }) {
       </ResponsiveContainer>
       <div className="flex items-center justify-center gap-6 text-xs text-gray-400">
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-0.5 bg-cyan-500 rounded" /> LCP (seconds)
+          <span className="w-3 h-0.5 bg-orange-500 rounded" /> LCP (seconds)
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-0.5 bg-violet-500 rounded" /> CLS
@@ -166,16 +187,20 @@ function MobileParitySection({
         <Input
           type="text"
           value={url}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={e => setUrl(e.target.value)}
           placeholder="Enter URL to check (e.g., example.com)"
           className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
         />
         <Button
           type="submit"
           disabled={loading || !url.trim()}
-          className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white"
+          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Monitor className="w-4 h-4 mr-2" />}
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Monitor className="w-4 h-4 mr-2" />
+          )}
           {loading ? 'Checking...' : 'Check Parity'}
         </Button>
       </form>
@@ -197,31 +222,50 @@ function MobileParitySection({
           {/* Performance Comparison */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-white/5 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">Mobile Score</h4>
-              <p className="text-2xl font-bold text-white">{result.mobileScore}/100</p>
+              <h4 className="text-sm font-medium text-gray-400 mb-2">
+                Mobile Score
+              </h4>
+              <p className="text-2xl font-bold text-white">
+                {result.mobileScore}/100
+              </p>
             </div>
             <div className="p-4 bg-white/5 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">Desktop Score</h4>
-              <p className="text-2xl font-bold text-white">{result.desktopScore}/100</p>
+              <h4 className="text-sm font-medium text-gray-400 mb-2">
+                Desktop Score
+              </h4>
+              <p className="text-2xl font-bold text-white">
+                {result.desktopScore}/100
+              </p>
             </div>
           </div>
 
           {/* Issues */}
           {result.issues.length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-300">Issues Found ({result.issues.length})</h4>
+              <h4 className="text-sm font-medium text-gray-300">
+                Issues Found ({result.issues.length})
+              </h4>
               {result.issues.map((issue: MobileParityIssue, i: number) => (
                 <div
                   key={i}
                   className="p-3 bg-white/5 rounded-lg flex items-start gap-3"
                 >
-                  <AlertTriangle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                    issue.severity === 'critical' ? 'text-red-400' :
-                    issue.severity === 'major' ? 'text-yellow-400' : 'text-blue-400'
-                  }`} />
+                  <AlertTriangle
+                    className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+                      issue.severity === 'critical'
+                        ? 'text-red-400'
+                        : issue.severity === 'major'
+                          ? 'text-yellow-400'
+                          : 'text-blue-400'
+                    }`}
+                  />
                   <div>
-                    <p className="text-sm font-medium text-white">{issue.title}</p>
-                    <p className="text-xs text-gray-400 mt-1">{issue.description}</p>
+                    <p className="text-sm font-medium text-white">
+                      {issue.title}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {issue.description}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -231,9 +275,14 @@ function MobileParitySection({
           {/* Recommendations */}
           {result.recommendations.length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-300">Recommendations</h4>
+              <h4 className="text-sm font-medium text-gray-300">
+                Recommendations
+              </h4>
               {result.recommendations.map((rec: string, i: number) => (
-                <div key={i} className="flex items-start gap-2 text-sm text-gray-400">
+                <div
+                  key={i}
+                  className="flex items-start gap-2 text-sm text-gray-400"
+                >
                   <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
                   <span>{rec}</span>
                 </div>
@@ -247,8 +296,18 @@ function MobileParitySection({
 }
 
 function ScoreCard({ label, value }: { label: string; value: number }) {
-  const color = value >= 90 ? 'text-green-400' : value >= 70 ? 'text-yellow-400' : 'text-red-400';
-  const bg = value >= 90 ? 'bg-green-500/10' : value >= 70 ? 'bg-yellow-500/10' : 'bg-red-500/10';
+  const color =
+    value >= 90
+      ? 'text-green-400'
+      : value >= 70
+        ? 'text-yellow-400'
+        : 'text-red-400';
+  const bg =
+    value >= 90
+      ? 'bg-green-500/10'
+      : value >= 70
+        ? 'bg-yellow-500/10'
+        : 'bg-red-500/10';
   return (
     <div className={`p-4 ${bg} rounded-lg`}>
       <h4 className="text-sm font-medium text-gray-400 mb-1">{label}</h4>
@@ -279,12 +338,20 @@ function RobotsTxtSection({
     if (url.trim()) {
       const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
       // Strip trailing path — API appends /robots.txt
-      const baseUrl = normalizedUrl.replace(/\/robots\.txt\/?$/, '').replace(/\/+$/, '');
+      const baseUrl = normalizedUrl
+        .replace(/\/robots\.txt\/?$/, '')
+        .replace(/\/+$/, '');
       onValidate(baseUrl);
     }
   };
 
-  const AI_BOTS = ['GPTBot', 'ClaudeBot', 'PerplexityBot', 'Google-Extended', 'CCBot'];
+  const AI_BOTS = [
+    'GPTBot',
+    'ClaudeBot',
+    'PerplexityBot',
+    'Google-Extended',
+    'CCBot',
+  ];
 
   return (
     <div className="space-y-4">
@@ -292,16 +359,20 @@ function RobotsTxtSection({
         <Input
           type="text"
           value={url}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={e => setUrl(e.target.value)}
           placeholder="Enter domain (e.g., example.com)"
           className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
         />
         <Button
           type="submit"
           disabled={loading || !url.trim()}
-          className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white"
+          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSearch className="w-4 h-4 mr-2" />}
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <FileSearch className="w-4 h-4 mr-2" />
+          )}
           {loading ? 'Validating...' : 'Validate'}
         </Button>
       </form>
@@ -327,7 +398,8 @@ function RobotsTxtSection({
             )}
             {result.sitemapUrls.length > 0 && (
               <span className="text-xs text-gray-500">
-                {result.sitemapUrls.length} sitemap{result.sitemapUrls.length !== 1 ? 's' : ''} declared
+                {result.sitemapUrls.length} sitemap
+                {result.sitemapUrls.length !== 1 ? 's' : ''} declared
               </span>
             )}
             {result.crawlDelay !== null && (
@@ -340,11 +412,11 @@ function RobotsTxtSection({
           {/* AI Bot Access */}
           <div className="p-4 bg-white/5 rounded-lg space-y-3">
             <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2">
-              <Bot className="w-4 h-4 text-cyan-400" />
+              <Bot className="w-4 h-4 text-orange-400" />
               AI Bot Access
             </h4>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {AI_BOTS.map((bot) => {
+              {AI_BOTS.map(bot => {
                 const blocked = result.aiBotsBlocked.includes(bot);
                 const allowed = result.aiBotsAllowed.includes(bot);
                 return (
@@ -370,7 +442,8 @@ function RobotsTxtSection({
             </div>
             {result.aiBotsBlocked.length > 0 && (
               <p className="text-xs text-yellow-400">
-                Blocking AI bots may reduce your content&apos;s visibility in AI-powered search results.
+                Blocking AI bots may reduce your content&apos;s visibility in
+                AI-powered search results.
               </p>
             )}
           </div>
@@ -378,23 +451,32 @@ function RobotsTxtSection({
           {/* Directives */}
           {result.directives.length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-300">Directives ({result.directives.length})</h4>
+              <h4 className="text-sm font-medium text-gray-300">
+                Directives ({result.directives.length})
+              </h4>
               <div className="space-y-2 max-h-48 overflow-y-auto">
-                {result.directives.map((directive: RobotsTxtDirective, i: number) => (
-                  <div key={i} className="p-3 bg-white/5 rounded-lg text-sm">
-                    <span className="font-mono text-cyan-400">User-agent: {directive.userAgent}</span>
-                    {directive.rules.map((rule, j) => (
-                      <div key={j} className="ml-4 text-gray-400 font-mono text-xs">
-                        {rule.type === 'allow' ? (
-                          <span className="text-green-400">Allow:</span>
-                        ) : (
-                          <span className="text-red-400">Disallow:</span>
-                        )}{' '}
-                        {rule.path}
-                      </div>
-                    ))}
-                  </div>
-                ))}
+                {result.directives.map(
+                  (directive: RobotsTxtDirective, i: number) => (
+                    <div key={i} className="p-3 bg-white/5 rounded-lg text-sm">
+                      <span className="font-mono text-orange-400">
+                        User-agent: {directive.userAgent}
+                      </span>
+                      {directive.rules.map((rule, j) => (
+                        <div
+                          key={j}
+                          className="ml-4 text-gray-400 font-mono text-xs"
+                        >
+                          {rule.type === 'allow' ? (
+                            <span className="text-green-400">Allow:</span>
+                          ) : (
+                            <span className="text-red-400">Disallow:</span>
+                          )}{' '}
+                          {rule.path}
+                        </div>
+                      ))}
+                    </div>
+                  )
+                )}
               </div>
             </div>
           )}
@@ -402,18 +484,35 @@ function RobotsTxtSection({
           {/* Issues */}
           {result.issues.length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-300">Issues ({result.issues.length})</h4>
+              <h4 className="text-sm font-medium text-gray-300">
+                Issues ({result.issues.length})
+              </h4>
               {result.issues.map((issue, i) => (
-                <div key={i} className="p-3 bg-white/5 rounded-lg flex items-start gap-3">
-                  <AlertTriangle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                    issue.severity === 'critical' ? 'text-red-400' :
-                    issue.severity === 'major' ? 'text-yellow-400' :
-                    issue.severity === 'minor' ? 'text-blue-400' : 'text-gray-400'
-                  }`} />
+                <div
+                  key={i}
+                  className="p-3 bg-white/5 rounded-lg flex items-start gap-3"
+                >
+                  <AlertTriangle
+                    className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+                      issue.severity === 'critical'
+                        ? 'text-red-400'
+                        : issue.severity === 'major'
+                          ? 'text-yellow-400'
+                          : issue.severity === 'minor'
+                            ? 'text-blue-400'
+                            : 'text-gray-400'
+                    }`}
+                  />
                   <div>
-                    <p className="text-sm font-medium text-white">{issue.title}</p>
-                    <p className="text-xs text-gray-400 mt-1">{issue.description}</p>
-                    <p className="text-xs text-cyan-400 mt-1">{issue.recommendation}</p>
+                    <p className="text-sm font-medium text-white">
+                      {issue.title}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {issue.description}
+                    </p>
+                    <p className="text-xs text-orange-400 mt-1">
+                      {issue.recommendation}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -464,17 +563,18 @@ export default function TechnicalSEOPage() {
         <div>
           <Link
             href="/dashboard/seo"
-            className="text-sm text-gray-400 hover:text-cyan-400 flex items-center gap-1 mb-2 transition-colors"
+            className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to SEO Tools
           </Link>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Settings className="w-8 h-8 text-cyan-400" />
+            <Settings className="w-8 h-8 text-orange-400" />
             Technical SEO
           </h1>
           <p className="text-gray-400 mt-2">
-            Monitor Core Web Vitals trends, check mobile/desktop parity, and validate robots.txt configuration.
+            Monitor Core Web Vitals trends, check mobile/desktop parity, and
+            validate robots.txt configuration.
           </p>
         </div>
       </div>
@@ -485,12 +585,12 @@ export default function TechnicalSEOPage() {
         description="Access Core Web Vitals monitoring, mobile parity analysis, and robots.txt validation tools."
       >
         {/* CWV History */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-cyan-400" />
+                  <Activity className="w-5 h-5 text-orange-400" />
                   Core Web Vitals History
                 </h2>
                 <p className="text-sm text-gray-400 mt-1">
@@ -502,9 +602,11 @@ export default function TechnicalSEOPage() {
                 size="sm"
                 onClick={refreshCwvHistory}
                 disabled={cwvHistoryLoading}
-                className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
               >
-                <RefreshCw className={`w-4 h-4 mr-1 ${cwvHistoryLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`w-4 h-4 mr-1 ${cwvHistoryLoading ? 'animate-spin' : ''}`}
+                />
                 Refresh
               </Button>
             </div>
@@ -514,7 +616,7 @@ export default function TechnicalSEOPage() {
               </div>
             ) : cwvHistoryLoading && cwvHistory.length === 0 ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+                <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
               </div>
             ) : (
               <CwvHistoryChart history={cwvHistory} />
@@ -523,15 +625,16 @@ export default function TechnicalSEOPage() {
         </Card>
 
         {/* Mobile Parity Checker */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Monitor className="w-5 h-5 text-cyan-400" />
+                <Monitor className="w-5 h-5 text-orange-400" />
                 Mobile Parity Checker
               </h2>
               <p className="text-sm text-gray-400 mt-1">
-                Compare mobile vs desktop performance and content to ensure mobile-first indexing compliance
+                Compare mobile vs desktop performance and content to ensure
+                mobile-first indexing compliance
               </p>
             </div>
             <MobileParitySection
@@ -544,15 +647,16 @@ export default function TechnicalSEOPage() {
         </Card>
 
         {/* Robots.txt Validator */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <FileSearch className="w-5 h-5 text-cyan-400" />
+                <FileSearch className="w-5 h-5 text-orange-400" />
                 Robots.txt Validator
               </h2>
               <p className="text-sm text-gray-400 mt-1">
-                Validate robots.txt directives and check AI bot access configuration
+                Validate robots.txt directives and check AI bot access
+                configuration
               </p>
             </div>
             <RobotsTxtSection

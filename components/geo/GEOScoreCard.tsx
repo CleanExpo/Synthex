@@ -20,18 +20,63 @@ interface GEOScoreCardProps {
 }
 
 const scoreDimensions = [
-  { key: 'citability', label: 'Citability', icon: Eye, weight: '25%', color: 'bg-cyan-500' },
-  { key: 'structure', label: 'Structure', icon: Database, weight: '20%', color: 'bg-purple-500' },
-  { key: 'multiModal', label: 'Multi-Modal', icon: Globe, weight: '15%', color: 'bg-amber-500' },
-  { key: 'authority', label: 'Authority', icon: Shield, weight: '20%', color: 'bg-emerald-500' },
-  { key: 'technical', label: 'Technical', icon: TrendingUp, weight: '20%', color: 'bg-rose-500' },
+  {
+    key: 'citability',
+    label: 'Citability',
+    icon: Eye,
+    weight: '25%',
+    color: 'bg-orange-500',
+  },
+  {
+    key: 'structure',
+    label: 'Structure',
+    icon: Database,
+    weight: '20%',
+    color: 'bg-purple-500',
+  },
+  {
+    key: 'multiModal',
+    label: 'Multi-Modal',
+    icon: Globe,
+    weight: '15%',
+    color: 'bg-amber-500',
+  },
+  {
+    key: 'authority',
+    label: 'Authority',
+    icon: Shield,
+    weight: '20%',
+    color: 'bg-emerald-500',
+  },
+  {
+    key: 'technical',
+    label: 'Technical',
+    icon: TrendingUp,
+    weight: '20%',
+    color: 'bg-rose-500',
+  },
 ] as const;
 
 function getScoreTier(score: number): { label: string; color: string } {
-  if (score >= 80) return { label: 'Excellent', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' };
-  if (score >= 60) return { label: 'Good', color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' };
-  if (score >= 40) return { label: 'Needs Work', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' };
-  return { label: 'Poor', color: 'bg-red-500/20 text-red-400 border-red-500/30' };
+  if (score >= 80)
+    return {
+      label: 'Excellent',
+      color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+    };
+  if (score >= 60)
+    return {
+      label: 'Good',
+      color: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    };
+  if (score >= 40)
+    return {
+      label: 'Needs Work',
+      color: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    };
+  return {
+    label: 'Poor',
+    color: 'bg-red-500/20 text-red-400 border-red-500/30',
+  };
 }
 
 export function GEOScoreCard({ score, loading }: GEOScoreCardProps) {
@@ -43,7 +88,9 @@ export function GEOScoreCard({ score, loading }: GEOScoreCardProps) {
             <div className="h-8 bg-white/10 rounded w-1/3" />
             <div className="h-24 bg-white/10 rounded" />
             <div className="space-y-2">
-              {[1,2,3,4,5].map(i => <div key={i} className="h-4 bg-white/10 rounded" />)}
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="h-4 bg-white/10 rounded" />
+              ))}
             </div>
           </div>
         </CardContent>
@@ -60,7 +107,7 @@ export function GEOScoreCard({ score, loading }: GEOScoreCardProps) {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-white flex items-center gap-2">
-            <Globe className="h-5 w-5 text-cyan-400" />
+            <Globe className="h-5 w-5 text-orange-400" />
             GEO Score
           </CardTitle>
           <Badge className={tier.color}>{tier.label}</Badge>
@@ -83,7 +130,9 @@ export function GEOScoreCard({ score, loading }: GEOScoreCardProps) {
                   <span>{label}</span>
                   <span className="text-gray-500 text-xs">({weight})</span>
                 </div>
-                <span className="text-white font-medium">{score[key as keyof GEOScore]}</span>
+                <span className="text-white font-medium">
+                  {score[key as keyof GEOScore]}
+                </span>
               </div>
               <Progress value={score[key as keyof GEOScore]} className="h-2" />
             </div>

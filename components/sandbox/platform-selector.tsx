@@ -13,7 +13,10 @@ interface PlatformSelectorProps {
   onSelect: (platform: string) => void;
 }
 
-export function PlatformSelector({ selected, onSelect }: PlatformSelectorProps) {
+export function PlatformSelector({
+  selected,
+  onSelect,
+}: PlatformSelectorProps) {
   return (
     <div>
       <Label className="text-gray-400">Platform</Label>
@@ -26,7 +29,7 @@ export function PlatformSelector({ selected, onSelect }: PlatformSelectorProps) 
               onClick={() => onSelect(key)}
               className={`p-3 rounded-lg border transition-all ${
                 selected === key
-                  ? 'bg-cyan-500/20 border-cyan-500'
+                  ? 'bg-orange-500/20 border-orange-500'
                   : 'bg-white/5 border-white/10 hover:bg-white/10'
               }`}
             >

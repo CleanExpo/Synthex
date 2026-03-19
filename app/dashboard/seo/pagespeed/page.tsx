@@ -97,7 +97,9 @@ function getScoreRing(score: number): string {
 
 function ScoreGauge({ label, score }: { label: string; score: number }) {
   return (
-    <div className={`p-4 rounded-xl ${getScoreBg(score)} border ${getScoreRing(score)} text-center`}>
+    <div
+      className={`p-4 rounded-xl ${getScoreBg(score)} border ${getScoreRing(score)} text-center`}
+    >
       <div className={`text-3xl font-bold ${getScoreColor(score)} mb-1`}>
         {score}
       </div>
@@ -175,14 +177,20 @@ function AnalysisResults({ analysis }: { analysis: PageSpeedAnalysis }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <ScoreGauge label="Performance" score={analysis.scores.performance} />
         <ScoreGauge label="SEO" score={analysis.scores.seo} />
-        <ScoreGauge label="Accessibility" score={analysis.scores.accessibility} />
-        <ScoreGauge label="Best Practices" score={analysis.scores.bestPractices} />
+        <ScoreGauge
+          label="Accessibility"
+          score={analysis.scores.accessibility}
+        />
+        <ScoreGauge
+          label="Best Practices"
+          score={analysis.scores.bestPractices}
+        />
       </div>
 
       {/* Core Web Vitals */}
       <div>
         <h3 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
-          <Activity className="w-4 h-4 text-cyan-400" />
+          <Activity className="w-4 h-4 text-orange-400" />
           Core Web Vitals
           <span className="text-xs text-gray-500">({cwvSource})</span>
         </h3>
@@ -218,18 +226,23 @@ function AnalysisResults({ analysis }: { analysis: PageSpeedAnalysis }) {
       {analysis.opportunities.length > 0 && (
         <div>
           <h3 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-cyan-400" />
+            <TrendingUp className="w-4 h-4 text-orange-400" />
             Opportunities ({analysis.opportunities.length})
           </h3>
           <div className="space-y-2">
             {analysis.opportunities.map((opp, i) => (
-              <div key={i} className="p-3 bg-white/5 rounded-lg flex items-start justify-between gap-3">
+              <div
+                key={i}
+                className="p-3 bg-white/5 rounded-lg flex items-start justify-between gap-3"
+              >
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-white">{opp.title}</p>
-                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">{opp.description}</p>
+                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                    {opp.description}
+                  </p>
                 </div>
                 {opp.savings && (
-                  <span className="flex-shrink-0 px-2 py-1 bg-cyan-500/10 text-cyan-400 rounded text-xs font-medium border border-cyan-500/20">
+                  <span className="flex-shrink-0 px-2 py-1 bg-orange-500/10 text-orange-400 rounded text-xs font-medium border border-orange-500/20">
                     {opp.savings}
                   </span>
                 )}
@@ -243,15 +256,20 @@ function AnalysisResults({ analysis }: { analysis: PageSpeedAnalysis }) {
       {analysis.diagnostics.length > 0 && (
         <div>
           <h3 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
-            <Search className="w-4 h-4 text-cyan-400" />
+            <Search className="w-4 h-4 text-orange-400" />
             Diagnostics ({analysis.diagnostics.length})
           </h3>
           <div className="space-y-2">
             {analysis.diagnostics.map((diag, i) => (
-              <div key={i} className="p-3 bg-white/5 rounded-lg flex items-start justify-between gap-3">
+              <div
+                key={i}
+                className="p-3 bg-white/5 rounded-lg flex items-start justify-between gap-3"
+              >
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-white">{diag.title}</p>
-                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">{diag.description}</p>
+                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                    {diag.description}
+                  </p>
                 </div>
                 {diag.displayValue && (
                   <span className="flex-shrink-0 text-xs text-gray-400 font-mono whitespace-nowrap">
@@ -271,12 +289,18 @@ function AnalysisResults({ analysis }: { analysis: PageSpeedAnalysis }) {
 // Performance Trends Chart
 // ============================================================================
 
-function PerformanceTrendsChart({ trends }: { trends: PerformanceTrendPoint[] }) {
+function PerformanceTrendsChart({
+  trends,
+}: {
+  trends: PerformanceTrendPoint[];
+}) {
   if (trends.length === 0) {
     return (
       <div className="text-center py-12">
         <TrendingUp className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-white mb-2">No trend data yet</h3>
+        <h3 className="text-lg font-medium text-white mb-2">
+          No trend data yet
+        </h3>
         <p className="text-gray-400">
           Run PageSpeed analyses to start tracking performance trends over time.
         </p>
@@ -284,8 +308,11 @@ function PerformanceTrendsChart({ trends }: { trends: PerformanceTrendPoint[] })
     );
   }
 
-  const chartData = trends.map((point) => ({
-    date: new Date(point.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+  const chartData = trends.map(point => ({
+    date: new Date(point.date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    }),
     performance: point.avgPerformance,
     lcp: point.avgLcp,
     cls: point.avgCls,
@@ -294,14 +321,30 @@ function PerformanceTrendsChart({ trends }: { trends: PerformanceTrendPoint[] })
   return (
     <div className="space-y-4">
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+        <LineChart
+          data={chartData}
+          margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+        >
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="rgba(255,255,255,0.05)"
+          />
           <XAxis dataKey="date" stroke="#64748b" fontSize={12} />
-          <YAxis yAxisId="score" stroke="#64748b" fontSize={12} domain={[0, 100]} />
-          <YAxis yAxisId="seconds" orientation="right" stroke="#64748b" fontSize={12} />
+          <YAxis
+            yAxisId="score"
+            stroke="#64748b"
+            fontSize={12}
+            domain={[0, 100]}
+          />
+          <YAxis
+            yAxisId="seconds"
+            orientation="right"
+            stroke="#64748b"
+            fontSize={12}
+          />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#0f172a',
+              backgroundColor: '#111111',
               border: '1px solid rgba(6, 182, 212, 0.2)',
               borderRadius: '8px',
               color: '#fff',
@@ -312,9 +355,9 @@ function PerformanceTrendsChart({ trends }: { trends: PerformanceTrendPoint[] })
             yAxisId="score"
             type="monotone"
             dataKey="performance"
-            stroke="#06b6d4"
+            stroke="#ffb87b"
             strokeWidth={2}
-            dot={{ fill: '#06b6d4', r: 3 }}
+            dot={{ fill: '#ffb87b', r: 3 }}
             name="Performance"
             connectNulls
           />
@@ -342,7 +385,8 @@ function PerformanceTrendsChart({ trends }: { trends: PerformanceTrendPoint[] })
       </ResponsiveContainer>
       <div className="flex items-center justify-center gap-6 text-xs text-gray-400">
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-0.5 bg-cyan-500 rounded" /> Performance (0-100)
+          <span className="w-3 h-0.5 bg-orange-500 rounded" /> Performance
+          (0-100)
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-0.5 bg-amber-500 rounded" /> LCP (seconds)
@@ -359,12 +403,18 @@ function PerformanceTrendsChart({ trends }: { trends: PerformanceTrendPoint[] })
 // History Table
 // ============================================================================
 
-function AnalysisHistoryTable({ history }: { history: PageSpeedHistoryEntry[] }) {
+function AnalysisHistoryTable({
+  history,
+}: {
+  history: PageSpeedHistoryEntry[];
+}) {
   if (history.length === 0) {
     return (
       <div className="text-center py-12">
         <Activity className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-white mb-2">No analysis history</h3>
+        <h3 className="text-lg font-medium text-white mb-2">
+          No analysis history
+        </h3>
         <p className="text-gray-400">
           Run your first PageSpeed analysis to see results tracked here.
         </p>
@@ -377,16 +427,29 @@ function AnalysisHistoryTable({ history }: { history: PageSpeedHistoryEntry[] })
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/10">
-            <th className="text-left py-3 px-2 text-gray-400 font-medium">URL</th>
-            <th className="text-left py-3 px-2 text-gray-400 font-medium">Date</th>
-            <th className="text-right py-3 px-2 text-gray-400 font-medium">Performance</th>
-            <th className="text-right py-3 px-2 text-gray-400 font-medium">LCP</th>
-            <th className="text-right py-3 px-2 text-gray-400 font-medium">CLS</th>
+            <th className="text-left py-3 px-2 text-gray-400 font-medium">
+              URL
+            </th>
+            <th className="text-left py-3 px-2 text-gray-400 font-medium">
+              Date
+            </th>
+            <th className="text-right py-3 px-2 text-gray-400 font-medium">
+              Performance
+            </th>
+            <th className="text-right py-3 px-2 text-gray-400 font-medium">
+              LCP
+            </th>
+            <th className="text-right py-3 px-2 text-gray-400 font-medium">
+              CLS
+            </th>
           </tr>
         </thead>
         <tbody>
-          {history.map((entry) => (
-            <tr key={entry.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+          {history.map(entry => (
+            <tr
+              key={entry.id}
+              className="border-b border-white/5 hover:bg-white/5 transition-colors"
+            >
               <td className="py-2.5 px-2 text-white font-mono text-xs truncate max-w-[250px]">
                 {entry.url}
               </td>
@@ -449,17 +512,18 @@ export default function PageSpeedPage() {
         <div>
           <Link
             href="/dashboard/seo"
-            className="text-sm text-gray-400 hover:text-cyan-400 flex items-center gap-1 mb-2 transition-colors"
+            className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to SEO Tools
           </Link>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Zap className="w-8 h-8 text-cyan-400" />
+            <Zap className="w-8 h-8 text-orange-400" />
             PageSpeed Insights
           </h1>
           <p className="text-gray-400 mt-2">
-            Analyze page performance, Core Web Vitals, and track improvements over time
+            Analyze page performance, Core Web Vitals, and track improvements
+            over time
           </p>
         </div>
       </div>
@@ -470,15 +534,16 @@ export default function PageSpeedPage() {
         description="Access real-time page performance analysis with Lighthouse scores, Core Web Vitals, and historical trend tracking."
       >
         {/* Analyze URL Section */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Zap className="w-5 h-5 text-cyan-400" />
+                <Zap className="w-5 h-5 text-orange-400" />
                 Analyze URL
               </h2>
               <p className="text-sm text-gray-400 mt-1">
-                Enter a URL to run PageSpeed Insights analysis with Lighthouse scores and Core Web Vitals
+                Enter a URL to run PageSpeed Insights analysis with Lighthouse
+                scores and Core Web Vitals
               </p>
             </div>
 
@@ -487,14 +552,14 @@ export default function PageSpeedPage() {
                 <Input
                   type="text"
                   value={url}
-                  onChange={(e) => setUrl(e.target.value)}
+                  onChange={e => setUrl(e.target.value)}
                   placeholder="Enter URL to analyze (e.g., example.com)"
                   className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
                 />
                 <Button
                   type="submit"
                   disabled={analysisLoading || !url.trim()}
-                  className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
                 >
                   {analysisLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -508,7 +573,7 @@ export default function PageSpeedPage() {
               {/* Strategy Toggle */}
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-400 mr-2">Device:</span>
-                {(['mobile', 'desktop'] as const).map((s) => (
+                {(['mobile', 'desktop'] as const).map(s => (
                   <Button
                     key={s}
                     type="button"
@@ -517,7 +582,7 @@ export default function PageSpeedPage() {
                     onClick={() => setStrategy(s)}
                     className={`text-xs capitalize ${
                       strategy === s
-                        ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-400'
+                        ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
                         : 'border-white/10 text-gray-400 hover:bg-white/5'
                     }`}
                   >
@@ -538,9 +603,10 @@ export default function PageSpeedPage() {
             {analysisLoading && (
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
-                  <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mx-auto mb-3" />
+                  <Loader2 className="w-8 h-8 text-orange-400 animate-spin mx-auto mb-3" />
                   <p className="text-sm text-gray-400">
-                    Running PageSpeed analysis... This may take up to 30 seconds.
+                    Running PageSpeed analysis... This may take up to 30
+                    seconds.
                   </p>
                 </div>
               </div>
@@ -556,20 +622,21 @@ export default function PageSpeedPage() {
         </Card>
 
         {/* Performance Trends */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-cyan-400" />
+                <TrendingUp className="w-5 h-5 text-orange-400" />
                 Performance Trends
               </h2>
               <p className="text-sm text-gray-400 mt-1">
-                Track performance score, LCP, and CLS trends over the last 30 days
+                Track performance score, LCP, and CLS trends over the last 30
+                days
               </p>
             </div>
             {trendsLoading && trends.length === 0 ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+                <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
               </div>
             ) : (
               <PerformanceTrendsChart trends={trends} />
@@ -578,11 +645,11 @@ export default function PageSpeedPage() {
         </Card>
 
         {/* Analysis History */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Activity className="w-5 h-5 text-cyan-400" />
+                <Activity className="w-5 h-5 text-orange-400" />
                 Analysis History
               </h2>
               <p className="text-sm text-gray-400 mt-1">
@@ -591,7 +658,7 @@ export default function PageSpeedPage() {
             </div>
             {historyLoading && history.length === 0 ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+                <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
               </div>
             ) : (
               <AnalysisHistoryTable history={history} />

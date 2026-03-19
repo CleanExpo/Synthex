@@ -36,9 +36,13 @@ function colourFor(score: number): {
   bg: string;
 } {
   if (score >= 80)
-    return { ring: '#10b981', text: 'text-emerald-400', bg: 'bg-emerald-500/10' };
+    return {
+      ring: '#10b981',
+      text: 'text-emerald-400',
+      bg: 'bg-emerald-500/10',
+    };
   if (score >= 60)
-    return { ring: '#06b6d4', text: 'text-cyan-400', bg: 'bg-cyan-500/10' };
+    return { ring: '#ffb87b', text: 'text-orange-400', bg: 'bg-orange-500/10' };
   if (score >= 40)
     return { ring: '#f59e0b', text: 'text-amber-400', bg: 'bg-amber-500/10' };
   return { ring: '#ef4444', text: 'text-red-400', bg: 'bg-red-500/10' };
@@ -58,10 +62,10 @@ export function CitationScoreGauge({
 }: CitationScoreGaugeProps) {
   const overall = Math.round(
     geoScore * 0.25 +
-      qualityScore * 0.20 +
-      eeatScore * 0.20 +
+      qualityScore * 0.2 +
+      eeatScore * 0.2 +
       authorityScore * 0.15 +
-      promptCoverage * 0.20
+      promptCoverage * 0.2
   );
 
   const grade = gradeFor(overall);
@@ -75,8 +79,11 @@ export function CitationScoreGauge({
       <div className="flex flex-col items-center gap-4 p-6">
         <div className="w-48 h-48 rounded-full bg-white/5 animate-pulse" />
         <div className="flex flex-wrap gap-2 justify-center">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-6 w-20 rounded-full bg-white/5 animate-pulse" />
+          {[1, 2, 3, 4, 5].map(i => (
+            <div
+              key={i}
+              className="h-6 w-20 rounded-full bg-white/5 animate-pulse"
+            />
           ))}
         </div>
       </div>
@@ -132,7 +139,9 @@ export function CitationScoreGauge({
           <span className="text-gray-400 text-xs font-semibold tracking-widest uppercase">
             /100
           </span>
-          <span className={`text-lg font-bold mt-1 px-2 py-0.5 rounded ${bg} ${text}`}>
+          <span
+            className={`text-lg font-bold mt-1 px-2 py-0.5 rounded ${bg} ${text}`}
+          >
             {grade}
           </span>
         </div>

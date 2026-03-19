@@ -25,25 +25,37 @@ function buildStats(data: DashboardStatsData): StatItem[] {
     {
       title: 'Generated Today',
       value: String(data.todayPosts),
-      change: data.todayPosts === 1 ? '1 post created today' : `${data.todayPosts} posts created today`,
+      change:
+        data.todayPosts === 1
+          ? '1 post created today'
+          : `${data.todayPosts} posts created today`,
       Icon: Sparkles,
     },
     {
       title: 'Avg Engagement',
       value: data.avgEngagement > 0 ? `${data.avgEngagement.toFixed(1)}%` : '—',
-      change: data.avgEngagement > 0 ? 'From connected platforms' : 'Connect platforms to track',
+      change:
+        data.avgEngagement > 0
+          ? 'From connected platforms'
+          : 'Connect platforms to track',
       Icon: BarChart3,
     },
     {
       title: 'Scheduled',
       value: String(data.scheduledPosts),
-      change: data.scheduledPosts === 1 ? '1 post queued' : `${data.scheduledPosts} posts queued`,
+      change:
+        data.scheduledPosts === 1
+          ? '1 post queued'
+          : `${data.scheduledPosts} posts queued`,
       Icon: Clock,
     },
     {
       title: 'Success Rate',
       value: `${data.successRate}%`,
-      change: data.totalPosts > 0 ? `${data.publishedPosts} of ${data.totalPosts} published` : 'No posts yet',
+      change:
+        data.totalPosts > 0
+          ? `${data.publishedPosts} of ${data.totalPosts} published`
+          : 'No posts yet',
       Icon: Target,
     },
   ];
@@ -85,8 +97,10 @@ export function ContentStats() {
       {stats.map(({ title, value, change, Icon }) => (
         <Card key={title} variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-400">{title}</CardTitle>
-            <Icon className="h-4 w-4 text-cyan-500" />
+            <CardTitle className="text-sm font-medium text-gray-400">
+              {title}
+            </CardTitle>
+            <Icon className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">{value}</div>

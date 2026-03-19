@@ -59,7 +59,7 @@ interface HealingAction {
 }
 
 const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => r.json());
+  fetch(url, { credentials: 'include' }).then(r => r.json());
 
 const ISSUE_TYPE_LABELS: Record<string, string> = {
   'missing-meta': 'Missing Meta',
@@ -134,7 +134,10 @@ function IssueCard({ issue }: { issue: HealingIssue }) {
           aria-label={expanded ? 'Collapse fix' : 'Expand fix'}
         >
           <ChevronDown
-            className={cn('w-4 h-4 transition-transform', expanded && 'rotate-180')}
+            className={cn(
+              'w-4 h-4 transition-transform',
+              expanded && 'rotate-180'
+            )}
           />
         </button>
       </div>
@@ -172,7 +175,8 @@ function IssueCard({ issue }: { issue: HealingIssue }) {
 
 export function HealingPanel() {
   const [url, setUrl] = useState('');
-  const [analysisResult, setAnalysisResult] = useState<HealingAnalysisResult | null>(null);
+  const [analysisResult, setAnalysisResult] =
+    useState<HealingAnalysisResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
 
   // Healing action history
@@ -200,7 +204,9 @@ export function HealingPanel() {
       const data = await res.json();
       setAnalysisResult(data);
       refreshHistory();
-      toast.success(`Found ${data.issueCount} issue${data.issueCount === 1 ? '' : 's'}`);
+      toast.success(
+        `Found ${data.issueCount} issue${data.issueCount === 1 ? '' : 's'}`
+      );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Analysis failed');
     } finally {
@@ -214,7 +220,7 @@ export function HealingPanel() {
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Search className="w-4 h-4 text-cyan-400" />
+            <Search className="w-4 h-4 text-orange-400" />
             Analyse URL for Healing Opportunities
           </CardTitle>
         </CardHeader>
@@ -222,10 +228,10 @@ export function HealingPanel() {
           <div className="flex gap-3">
             <Input
               value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              onChange={e => setUrl(e.target.value)}
               placeholder="https://example.com/page"
               className="flex-1 bg-white/5 border-white/10 text-white"
-              onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
+              onKeyDown={e => e.key === 'Enter' && handleAnalyze()}
             />
             <Button
               onClick={handleAnalyze}
@@ -242,7 +248,8 @@ export function HealingPanel() {
           </div>
 
           <p className="text-xs text-gray-500 mt-2">
-            Provide optional metadata (title, meta description, GEO score) for more accurate analysis.
+            Provide optional metadata (title, meta description, GEO score) for
+            more accurate analysis.
           </p>
         </CardContent>
       </Card>
@@ -268,7 +275,9 @@ export function HealingPanel() {
                 )}
               </div>
             </div>
-            <p className="text-xs text-gray-400 truncate">{analysisResult.url}</p>
+            <p className="text-xs text-gray-400 truncate">
+              {analysisResult.url}
+            </p>
           </CardHeader>
           <CardContent>
             {analysisResult.issues.length === 0 ? (
@@ -285,7 +294,9 @@ export function HealingPanel() {
                 {/* Critical first */}
                 {[...analysisResult.issues]
                   .sort((a, b) =>
-                    a.severity === 'critical' && b.severity !== 'critical' ? -1 : 1
+                    a.severity === 'critical' && b.severity !== 'critical'
+                      ? -1
+                      : 1
                   )
                   .map((issue, idx) => (
                     <IssueCard key={idx} issue={issue} />
@@ -304,7 +315,7 @@ export function HealingPanel() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {actions.slice(0, 8).map((action) => (
+              {actions.slice(0, 8).map(action => (
                 <div
                   key={action.id}
                   className="flex items-center gap-3 p-3 bg-white/5 rounded-lg"
@@ -312,11 +323,15 @@ export function HealingPanel() {
                   <div
                     className={cn(
                       'w-2 h-2 rounded-full shrink-0',
-                      action.severity === 'critical' ? 'bg-red-400' : 'bg-amber-400'
+                      action.severity === 'critical'
+                        ? 'bg-red-400'
+                        : 'bg-amber-400'
                     )}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-white truncate">{action.targetUrl}</p>
+                    <p className="text-xs text-white truncate">
+                      {action.targetUrl}
+                    </p>
                     <p className="text-xs text-gray-400 truncate">
                       {ISSUE_TYPE_LABELS[action.issueType] ?? action.issueType}
                     </p>

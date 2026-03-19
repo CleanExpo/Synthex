@@ -65,7 +65,7 @@ interface ReviewQueueProps {
 // ---------------------------------------------------------------------------
 
 const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => {
+  fetch(url, { credentials: 'include' }).then(r => {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return r.json();
   });
@@ -128,20 +128,22 @@ export function ReviewQueue({ onEdit, onMutate }: ReviewQueueProps) {
   // ── Approve ────────────────────────────────────────────────────────────────
   const handleApprove = useCallback(
     async (post: ReviewPost) => {
-      setApproving((prev) => new Set(prev).add(post.id));
+      setApproving(prev => new Set(prev).add(post.id));
       try {
         const res = await fetchWithCSRF('/api/scheduler/posts', {
           method: 'PATCH',
           body: JSON.stringify({ id: post.id, status: 'scheduled' }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        toast.success(`Post approved — will publish ${post.scheduledAt ? new Date(post.scheduledAt).toLocaleString() : 'when scheduled'}`);
+        toast.success(
+          `Post approved — will publish ${post.scheduledAt ? new Date(post.scheduledAt).toLocaleString() : 'when scheduled'}`
+        );
         await mutate();
         onMutate?.();
       } catch {
         toast.error('Failed to approve post. Please try again.');
       } finally {
-        setApproving((prev) => {
+        setApproving(prev => {
           const next = new Set(prev);
           next.delete(post.id);
           return next;
@@ -153,12 +155,16 @@ export function ReviewQueue({ onEdit, onMutate }: ReviewQueueProps) {
 
   // ── Approve All ────────────────────────────────────────────────────────────
   const handleApproveAll = useCallback(async () => {
-    const ids = posts.map((p) => p.id);
+    const ids = posts.map(p => p.id);
     setApproving(new Set(ids));
     try {
       const res = await fetchWithCSRF('/api/scheduler/posts/bulk', {
         method: 'POST',
-        body: JSON.stringify({ action: 'set-status', postIds: ids, status: 'scheduled' }),
+        body: JSON.stringify({
+          action: 'set-status',
+          postIds: ids,
+          status: 'scheduled',
+        }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       toast.success(`${ids.length} posts approved and scheduled`);
@@ -174,8 +180,9 @@ export function ReviewQueue({ onEdit, onMutate }: ReviewQueueProps) {
   // ── Reject ─────────────────────────────────────────────────────────────────
   const handleReject = useCallback(
     async (post: ReviewPost) => {
-      if (!confirm(`Discard this post?\n\n"${post.content.slice(0, 100)}..."`)) return;
-      setRejecting((prev) => new Set(prev).add(post.id));
+      if (!confirm(`Discard this post?\n\n"${post.content.slice(0, 100)}..."`))
+        return;
+      setRejecting(prev => new Set(prev).add(post.id));
       try {
         const res = await fetchWithCSRF(`/api/scheduler/posts?id=${post.id}`, {
           method: 'DELETE',
@@ -187,7 +194,7 @@ export function ReviewQueue({ onEdit, onMutate }: ReviewQueueProps) {
       } catch {
         toast.error('Failed to discard post. Please try again.');
       } finally {
-        setRejecting((prev) => {
+        setRejecting(prev => {
           const next = new Set(prev);
           next.delete(post.id);
           return next;
@@ -231,7 +238,8 @@ export function ReviewQueue({ onEdit, onMutate }: ReviewQueueProps) {
                 </Badge>
               </CardTitle>
               <p className="text-xs text-slate-400 mt-0.5">
-                These posts are drafted and ready — approve each one to schedule it for publishing.
+                These posts are drafted and ready — approve each one to schedule
+                it for publishing.
               </p>
             </div>
           </div>
@@ -251,7 +259,7 @@ export function ReviewQueue({ onEdit, onMutate }: ReviewQueueProps) {
               variant="ghost"
               size="sm"
               className="text-slate-400 hover:text-white"
-              onClick={() => setIsExpanded((v) => !v)}
+              onClick={() => setIsExpanded(v => !v)}
             >
               {showBody ? (
                 <ChevronUp className="h-4 w-4" />
@@ -266,7 +274,7 @@ export function ReviewQueue({ onEdit, onMutate }: ReviewQueueProps) {
       {/* Post list */}
       {showBody && (
         <CardContent className="pt-4 pb-4 px-4 space-y-3">
-          {posts.map((post) => (
+          {posts.map(post => (
             <ReviewPostCard
               key={post.id}
               post={post}
@@ -307,9 +315,8 @@ function ReviewPostCard({
   const [expanded, setExpanded] = useState(false);
 
   const colour = platformColour(post.platform);
-  const contentPreview = post.content.length > 180
-    ? post.content.slice(0, 180) + '…'
-    : post.content;
+  const contentPreview =
+    post.content.length > 180 ? post.content.slice(0, 180) + '…' : post.content;
   const scheduledDate = post.scheduledAt
     ? new Date(post.scheduledAt).toLocaleString('en-AU', {
         weekday: 'short',
@@ -355,8 +362,8 @@ function ReviewPostCard({
 
       {post.content.length > 180 && (
         <button
-          className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
-          onClick={() => setExpanded((v) => !v)}
+          className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1"
+          onClick={() => setExpanded(v => !v)}
         >
           <Eye className="h-3 w-3" />
           {expanded ? 'Show less' : 'Show full post'}
@@ -364,7 +371,10 @@ function ReviewPostCard({
       )}
 
       {/* Action buttons */}
-      <div className="flex items-center gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="flex items-center gap-2 pt-1"
+        onClick={e => e.stopPropagation()}
+      >
         {/* Approve */}
         <Button
           size="sm"
@@ -384,7 +394,7 @@ function ReviewPostCard({
         <Button
           size="sm"
           variant="ghost"
-          className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 text-xs h-7 px-3"
+          className="text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 text-xs h-7 px-3"
           onClick={onEdit}
           disabled={isApproving || isRejecting}
         >

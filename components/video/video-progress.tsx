@@ -36,7 +36,7 @@ export function VideoProgress({ status, errorMessage }: VideoProgressProps) {
 
     // Simulate progress through steps
     const interval = setInterval(() => {
-      setCurrentStep((prev) => {
+      setCurrentStep(prev => {
         if (prev >= PROGRESS_STEPS.length - 1) return prev;
         return prev + 1;
       });
@@ -60,7 +60,9 @@ export function VideoProgress({ status, errorMessage }: VideoProgressProps) {
       <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
         <div className="flex items-center gap-2 mb-2">
           <AlertTriangle className="w-4 h-4 text-red-400" />
-          <span className="text-red-400 font-medium text-sm">Generation Failed</span>
+          <span className="text-red-400 font-medium text-sm">
+            Generation Failed
+          </span>
         </div>
         <p className="text-red-400/80 text-xs">
           {errorMessage || 'An unexpected error occurred. Please try again.'}
@@ -74,7 +76,9 @@ export function VideoProgress({ status, errorMessage }: VideoProgressProps) {
       <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
         <div className="flex items-center gap-2">
           <Check className="w-4 h-4 text-emerald-400" />
-          <span className="text-emerald-400 font-medium text-sm">Script generated successfully</span>
+          <span className="text-emerald-400 font-medium text-sm">
+            Script generated successfully
+          </span>
         </div>
       </div>
     );
@@ -90,7 +94,7 @@ export function VideoProgress({ status, errorMessage }: VideoProgressProps) {
         animated
       />
       <div className="flex items-center gap-2">
-        <Loader2 className="w-3.5 h-3.5 text-cyan-400 animate-spin" />
+        <Loader2 className="w-3.5 h-3.5 text-orange-400 animate-spin" />
         <span className="text-sm text-gray-400">
           {currentStep < PROGRESS_STEPS.length
             ? PROGRESS_STEPS[currentStep].label

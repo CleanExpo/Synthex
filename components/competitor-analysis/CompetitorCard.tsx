@@ -56,17 +56,12 @@ export function CompetitorCard({
   onToggleComparison,
 }: CompetitorCardProps) {
   return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
+    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
       <Card
         variant="glass"
         className={`cursor-pointer ${
-          isSelected ? 'ring-2 ring-cyan-500' : ''
-        } ${
-          isSelectedForComparison ? 'ring-2 ring-blue-500' : ''
-        }`}
+          isSelected ? 'ring-2 ring-orange-500' : ''
+        } ${isSelectedForComparison ? 'ring-2 ring-blue-500' : ''}`}
         onClick={() => !isComparing && onSelect()}
       >
         <CardContent className="p-4">
@@ -86,7 +81,7 @@ export function CompetitorCard({
                 type="checkbox"
                 checked={isSelectedForComparison}
                 onChange={onToggleComparison}
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
                 className="h-4 w-4"
               />
             )}
@@ -122,13 +117,20 @@ export function CompetitorCard({
 
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400">Share of Voice</span>
-              <Progress value={competitor.metrics.shareOfVoice} className="w-20 h-2" />
+              <Progress
+                value={competitor.metrics.shareOfVoice}
+                className="w-20 h-2"
+              />
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400">Sentiment</span>
               <Badge
-                variant={competitor.metrics.sentimentScore > 70 ? 'default' : 'secondary'}
+                variant={
+                  competitor.metrics.sentimentScore > 70
+                    ? 'default'
+                    : 'secondary'
+                }
                 className="text-xs"
               >
                 {competitor.metrics.sentimentScore}%
@@ -139,7 +141,11 @@ export function CompetitorCard({
           {/* Platform Icons */}
           <div className="flex gap-2 mt-3">
             {Object.keys(competitor.metrics.followers)
-              .filter(p => p !== 'total' && competitor.metrics.followers[p as keyof PlatformMetrics])
+              .filter(
+                p =>
+                  p !== 'total' &&
+                  competitor.metrics.followers[p as keyof PlatformMetrics]
+              )
               .map(platform => {
                 const Icon = getPlatformIcon(platform);
                 return (

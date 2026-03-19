@@ -15,7 +15,13 @@ import { Building, ChevronDown, Globe, Plus } from '@/components/icons';
 import Link from 'next/link';
 
 export function BusinessSwitcher() {
-  const { businesses, activeBusiness, activeOrganizationId, isOwner, switchBusiness } = useActiveBusiness();
+  const {
+    businesses,
+    activeBusiness,
+    activeOrganizationId,
+    isOwner,
+    switchBusiness,
+  } = useActiveBusiness();
   const [isSwitching, setIsSwitching] = useState(false);
 
   if (!isOwner) {
@@ -42,18 +48,20 @@ export function BusinessSwitcher() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 text-white hover:bg-cyan-500/10 hover:border-cyan-500/20 transition-all"
+          className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 text-white hover:bg-orange-500/10 hover:border-orange-500/20 transition-all"
           disabled={isSwitching}
         >
-          <Building className="mr-2 h-4 w-4 text-cyan-400" />
+          <Building className="mr-2 h-4 w-4 text-orange-400" />
           <span className="max-w-[200px] truncate">{displayName}</span>
-          <ChevronDown className={`ml-2 h-4 w-4 text-gray-400 transition-transform ${isSwitching ? 'animate-spin' : ''}`} />
+          <ChevronDown
+            className={`ml-2 h-4 w-4 text-gray-400 transition-transform ${isSwitching ? 'animate-spin' : ''}`}
+          />
         </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
         align="start"
-        className="w-[280px] bg-gray-950 border border-cyan-500/10 backdrop-blur-xl"
+        className="w-[280px] bg-gray-950 border border-orange-500/10 backdrop-blur-xl"
       >
         <DropdownMenuLabel className="text-gray-400 text-xs font-medium uppercase tracking-wider">
           Switch Business
@@ -61,22 +69,22 @@ export function BusinessSwitcher() {
 
         <DropdownMenuItem
           onClick={() => handleSwitch(null)}
-          className="cursor-pointer hover:bg-cyan-500/10 focus:bg-cyan-500/10 text-white"
+          className="cursor-pointer hover:bg-orange-500/10 focus:bg-orange-500/10 text-white"
         >
-          <Globe className="mr-2 h-4 w-4 text-cyan-400" />
+          <Globe className="mr-2 h-4 w-4 text-orange-400" />
           <span className="flex-1">All Businesses</span>
           {activeOrganizationId === null && (
-            <div className="h-2 w-2 rounded-full bg-cyan-400" />
+            <div className="h-2 w-2 rounded-full bg-orange-400" />
           )}
         </DropdownMenuItem>
 
-        <DropdownMenuSeparator className="bg-cyan-500/10" />
+        <DropdownMenuSeparator className="bg-orange-500/10" />
 
-        {businesses.map((business) => (
+        {businesses.map(business => (
           <DropdownMenuItem
             key={business.organizationId}
             onClick={() => handleSwitch(business.organizationId)}
-            className="cursor-pointer hover:bg-cyan-500/10 focus:bg-cyan-500/10 text-white"
+            className="cursor-pointer hover:bg-orange-500/10 focus:bg-orange-500/10 text-white"
           >
             <div className="flex items-center flex-1 min-w-0">
               <div
@@ -94,15 +102,21 @@ export function BusinessSwitcher() {
               </div>
             </div>
             {activeOrganizationId === business.organizationId && (
-              <div className="h-2 w-2 rounded-full bg-cyan-400 flex-shrink-0 ml-2" />
+              <div className="h-2 w-2 rounded-full bg-orange-400 flex-shrink-0 ml-2" />
             )}
           </DropdownMenuItem>
         ))}
 
-        <DropdownMenuSeparator className="bg-cyan-500/10" />
+        <DropdownMenuSeparator className="bg-orange-500/10" />
 
-        <DropdownMenuItem asChild className="cursor-pointer hover:bg-cyan-500/10 focus:bg-cyan-500/10">
-          <Link href="/dashboard/businesses" className="text-cyan-400 hover:text-cyan-300">
+        <DropdownMenuItem
+          asChild
+          className="cursor-pointer hover:bg-orange-500/10 focus:bg-orange-500/10"
+        >
+          <Link
+            href="/dashboard/businesses"
+            className="text-orange-400 hover:text-orange-300"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Add Business
           </Link>

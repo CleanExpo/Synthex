@@ -15,11 +15,16 @@ interface ReportsStatsProps {
 
 export function ReportsStats({ reports }: ReportsStatsProps) {
   const completedCount = reports.filter(r => r.status === 'completed').length;
-  const inProgressCount = reports.filter(r => r.status === 'generating' || r.status === 'pending').length;
+  const inProgressCount = reports.filter(
+    r => r.status === 'generating' || r.status === 'pending'
+  ).length;
   const thisMonthCount = reports.filter(r => {
     const date = new Date(r.createdAt);
     const now = new Date();
-    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+    return (
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear()
+    );
   }).length;
 
   const stats = [
@@ -28,7 +33,7 @@ export function ReportsStats({ reports }: ReportsStatsProps) {
       value: reports.length,
       description: 'All time',
       Icon: FileText,
-      iconColor: 'text-cyan-400',
+      iconColor: 'text-orange-400',
     },
     {
       title: 'Completed',

@@ -104,7 +104,7 @@ export function LinkForm({
   };
 
   const handleRemoveTag = (tag: string) => {
-    setTags(tags.filter((t) => t !== tag));
+    setTags(tags.filter(t => t !== tag));
   };
 
   const handleAddKeyword = () => {
@@ -115,7 +115,7 @@ export function LinkForm({
   };
 
   const handleRemoveKeyword = (keyword: string) => {
-    setKeywords(keywords.filter((k) => k !== keyword));
+    setKeywords(keywords.filter(k => k !== keyword));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -142,7 +142,12 @@ export function LinkForm({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-label={isEditing ? 'Edit affiliate link' : 'Add affiliate link'}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-label={isEditing ? 'Edit affiliate link' : 'Add affiliate link'}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -176,11 +181,11 @@ export function LinkForm({
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={e => setName(e.target.value)}
                 placeholder="e.g., Blue Widget Pro"
                 required
                 aria-label="Link name"
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
               />
             </div>
 
@@ -191,12 +196,12 @@ export function LinkForm({
               </label>
               <select
                 value={networkId}
-                onChange={(e) => setNetworkId(e.target.value)}
+                onChange={e => setNetworkId(e.target.value)}
                 aria-label="Network"
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
               >
                 <option value="">No network</option>
-                {networks.map((n) => (
+                {networks.map(n => (
                   <option key={n.id} value={n.id}>
                     {n.name}
                   </option>
@@ -214,11 +219,11 @@ export function LinkForm({
               <input
                 type="url"
                 value={originalUrl}
-                onChange={(e) => setOriginalUrl(e.target.value)}
+                onChange={e => setOriginalUrl(e.target.value)}
                 placeholder="https://example.com/product"
                 required
                 aria-label="Original URL"
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
               />
             </div>
 
@@ -229,11 +234,11 @@ export function LinkForm({
               <input
                 type="url"
                 value={affiliateUrl}
-                onChange={(e) => setAffiliateUrl(e.target.value)}
+                onChange={e => setAffiliateUrl(e.target.value)}
                 placeholder="https://example.com/product?ref=YOUR_ID"
                 required
                 aria-label="Affiliate URL"
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
               />
             </div>
           </div>
@@ -248,7 +253,7 @@ export function LinkForm({
                 <input
                   type="checkbox"
                   checked={autoGenerateCode}
-                  onChange={(e) => setAutoGenerateCode(e.target.checked)}
+                  onChange={e => setAutoGenerateCode(e.target.checked)}
                   className="rounded border-white/20"
                 />
                 Auto-generate
@@ -260,10 +265,12 @@ export function LinkForm({
                 <input
                   type="text"
                   value={shortCode}
-                  onChange={(e) => setShortCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
+                  onChange={e =>
+                    setShortCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))
+                  }
                   placeholder="custom-code"
                   aria-label="Short code"
-                  className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+                  className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
                 />
               </div>
             )}
@@ -278,10 +285,10 @@ export function LinkForm({
               <input
                 type="text"
                 value={productName}
-                onChange={(e) => setProductName(e.target.value)}
+                onChange={e => setProductName(e.target.value)}
                 placeholder="Widget Pro 2024"
                 aria-label="Product name"
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
               />
             </div>
             <div>
@@ -291,10 +298,10 @@ export function LinkForm({
               <input
                 type="text"
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={e => setCategory(e.target.value)}
                 placeholder="e.g., Electronics"
                 aria-label="Category"
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
               />
             </div>
           </div>
@@ -306,10 +313,10 @@ export function LinkForm({
             <input
               type="url"
               value={productImage}
-              onChange={(e) => setProductImage(e.target.value)}
+              onChange={e => setProductImage(e.target.value)}
               placeholder="https://example.com/image.jpg"
               aria-label="Product image URL"
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
             />
           </div>
 
@@ -319,7 +326,7 @@ export function LinkForm({
               Tags
             </label>
             <div className="flex flex-wrap gap-2 mb-2">
-              {tags.map((tag) => (
+              {tags.map(tag => (
                 <span
                   key={tag}
                   className="flex items-center gap-1 px-2 py-1 bg-white/10 text-white/70 text-sm rounded-lg"
@@ -339,11 +346,13 @@ export function LinkForm({
               <input
                 type="text"
                 value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                onChange={e => setTagInput(e.target.value)}
+                onKeyDown={e =>
+                  e.key === 'Enter' && (e.preventDefault(), handleAddTag())
+                }
                 placeholder="Add tag..."
                 aria-label="Add tag"
-                className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+                className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
               />
               <button
                 type="button"
@@ -379,7 +388,8 @@ export function LinkForm({
               </button>
             </div>
             <p className="text-sm text-white/50 mb-3">
-              Automatically insert this affiliate link when keywords appear in your content.
+              Automatically insert this affiliate link when keywords appear in
+              your content.
             </p>
             {autoInsert && (
               <div>
@@ -387,7 +397,7 @@ export function LinkForm({
                   Trigger Keywords
                 </label>
                 <div className="flex flex-wrap gap-2 mb-2">
-                  {keywords.map((kw) => (
+                  {keywords.map(kw => (
                     <span
                       key={kw}
                       className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 text-amber-400 text-sm rounded-lg"
@@ -407,8 +417,11 @@ export function LinkForm({
                   <input
                     type="text"
                     value={keywordInput}
-                    onChange={(e) => setKeywordInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddKeyword())}
+                    onChange={e => setKeywordInput(e.target.value)}
+                    onKeyDown={e =>
+                      e.key === 'Enter' &&
+                      (e.preventDefault(), handleAddKeyword())
+                    }
                     placeholder="Add keyword..."
                     aria-label="Add keyword"
                     className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50"
@@ -433,7 +446,7 @@ export function LinkForm({
               onClick={() => setIsActive(!isActive)}
               className={cn(
                 'relative w-11 h-6 rounded-full transition-colors',
-                isActive ? 'bg-cyan-600' : 'bg-white/20'
+                isActive ? 'bg-orange-600' : 'bg-white/20'
               )}
             >
               <span
@@ -457,7 +470,7 @@ export function LinkForm({
             <button
               type="submit"
               disabled={isLoading || !name || !originalUrl || !affiliateUrl}
-              className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:bg-cyan-600/50 text-white rounded-lg font-medium transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:bg-orange-600/50 text-white rounded-lg font-medium transition-colors"
             >
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               {isEditing ? 'Save Changes' : 'Add Link'}

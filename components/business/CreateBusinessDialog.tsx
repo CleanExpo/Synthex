@@ -12,7 +12,11 @@ interface CreateBusinessDialogProps {
   onCreated: () => void;
 }
 
-export function CreateBusinessDialog({ open, onOpenChange, onCreated }: CreateBusinessDialogProps) {
+export function CreateBusinessDialog({
+  open,
+  onOpenChange,
+  onCreated,
+}: CreateBusinessDialogProps) {
   const [businessName, setBusinessName] = useState('');
   const [displayLabel, setDisplayLabel] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,8 +74,8 @@ export function CreateBusinessDialog({ open, onOpenChange, onCreated }: CreateBu
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <Card className="w-full max-w-md bg-gray-950 border border-cyan-500/10">
-        <CardHeader className="border-b border-cyan-500/10">
+      <Card className="w-full max-w-md bg-gray-950 border border-orange-500/10">
+        <CardHeader className="border-b border-orange-500/10">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-semibold text-white">
               Create New Business
@@ -81,7 +85,7 @@ export function CreateBusinessDialog({ open, onOpenChange, onCreated }: CreateBu
               size="sm"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="h-8 w-8 p-0 hover:bg-cyan-500/10"
+              className="h-8 w-8 p-0 hover:bg-orange-500/10"
             >
               <X className="h-4 w-4 text-gray-400" />
             </Button>
@@ -92,16 +96,19 @@ export function CreateBusinessDialog({ open, onOpenChange, onCreated }: CreateBu
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Business Name Field */}
             <div className="space-y-2">
-              <label htmlFor="businessName" className="text-sm font-medium text-white">
+              <label
+                htmlFor="businessName"
+                className="text-sm font-medium text-white"
+              >
                 Business Name <span className="text-red-400">*</span>
               </label>
               <input
                 id="businessName"
                 type="text"
                 value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
+                onChange={e => setBusinessName(e.target.value)}
                 placeholder="Acme Corporation"
-                className="w-full px-3 py-2 bg-surface-base/80 border border-cyan-500/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/30 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                className="w-full px-3 py-2 bg-surface-base/80 border border-orange-500/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-orange-500/30 focus:ring-2 focus:ring-orange-500/20 transition-all"
                 disabled={isSubmitting}
                 required
               />
@@ -112,16 +119,19 @@ export function CreateBusinessDialog({ open, onOpenChange, onCreated }: CreateBu
 
             {/* Display Label Field */}
             <div className="space-y-2">
-              <label htmlFor="displayLabel" className="text-sm font-medium text-white">
+              <label
+                htmlFor="displayLabel"
+                className="text-sm font-medium text-white"
+              >
                 Display Label <span className="text-gray-500">(Optional)</span>
               </label>
               <input
                 id="displayLabel"
                 type="text"
                 value={displayLabel}
-                onChange={(e) => setDisplayLabel(e.target.value)}
+                onChange={e => setDisplayLabel(e.target.value)}
                 placeholder="Acme Corp - Marketing"
-                className="w-full px-3 py-2 bg-surface-base/80 border border-cyan-500/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/30 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                className="w-full px-3 py-2 bg-surface-base/80 border border-orange-500/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-orange-500/30 focus:ring-2 focus:ring-orange-500/20 transition-all"
                 disabled={isSubmitting}
               />
               <p className="text-xs text-gray-500">
@@ -130,14 +140,19 @@ export function CreateBusinessDialog({ open, onOpenChange, onCreated }: CreateBu
             </div>
 
             {/* Pricing Notice */}
-            <div className="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
+            <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
               <div className="flex items-start gap-3">
-                <Plus className="h-5 w-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                <Plus className="h-5 w-5 text-orange-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-white">Additional Business Pricing</p>
+                  <p className="text-sm font-medium text-white">
+                    Additional Business Pricing
+                  </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Each additional business is <span className="text-cyan-400 font-semibold">$249/month</span>.
-                    You can manage billing in your account settings.
+                    Each additional business is{' '}
+                    <span className="text-orange-400 font-semibold">
+                      $249/month
+                    </span>
+                    . You can manage billing in your account settings.
                   </p>
                 </div>
               </div>
@@ -157,14 +172,14 @@ export function CreateBusinessDialog({ open, onOpenChange, onCreated }: CreateBu
                 variant="outline"
                 onClick={handleClose}
                 disabled={isSubmitting}
-                className="flex-1 bg-transparent border-cyan-500/10 text-white hover:bg-cyan-500/10 hover:border-cyan-500/20"
+                className="flex-1 bg-transparent border-orange-500/10 text-white hover:bg-orange-500/10 hover:border-orange-500/20"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting || !businessName.trim()}
-                className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white"
+                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
               >
                 {isSubmitting ? (
                   <>

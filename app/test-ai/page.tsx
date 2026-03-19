@@ -2,8 +2,20 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,7 +56,7 @@ export default function TestAI() {
           includeHashtags,
           includeCTA: true,
           targetAudience: 'Marketing professionals and business owners',
-          length: 'medium'
+          length: 'medium',
         }),
       });
 
@@ -58,7 +70,8 @@ export default function TestAI() {
       toast.success('Content generated successfully!');
     } catch (err: unknown) {
       console.error('Generation error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to generate content';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to generate content';
       setError(errorMessage);
 
       // If API key is not configured, show demo content
@@ -75,7 +88,13 @@ The future is here, and it's powered by AI. 💡
 
 #AI #Marketing #Automation #Innovation #FutureOfWork`,
           platform,
-          hashtags: ['#AI', '#Marketing', '#Automation', '#Innovation', '#FutureOfWork'],
+          hashtags: [
+            '#AI',
+            '#Marketing',
+            '#Automation',
+            '#Innovation',
+            '#FutureOfWork',
+          ],
           emojis: ['🚀', '💡'],
           estimatedEngagement: 85,
           viralScore: 7.5,
@@ -83,10 +102,12 @@ The future is here, and it's powered by AI. 💡
             generatedAt: new Date(),
             model: 'demo',
             tokens: 0,
-            processingTime: 0
-          }
+            processingTime: 0,
+          },
         });
-        setError('Using demo content (configure OpenRouter API key for real AI generation)');
+        setError(
+          'Using demo content (configure OpenRouter API key for real AI generation)'
+        );
       }
     } finally {
       setLoading(false);
@@ -106,8 +127,12 @@ The future is here, and it's powered by AI. 💡
     <div className="min-h-screen p-8 bg-gradient-to-br from-gray-900 to-gray-800">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">AI Content Generator</h1>
-          <p className="text-gray-400">Test the AI-powered content generation system</p>
+          <h1 className="text-4xl font-bold text-white mb-2">
+            AI Content Generator
+          </h1>
+          <p className="text-gray-400">
+            Test the AI-powered content generation system
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -115,7 +140,9 @@ The future is here, and it's powered by AI. 💡
           <Card>
             <CardHeader>
               <CardTitle>Content Parameters</CardTitle>
-              <CardDescription>Configure your content generation settings</CardDescription>
+              <CardDescription>
+                Configure your content generation settings
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -139,7 +166,7 @@ The future is here, and it's powered by AI. 💡
                 <Textarea
                   id="topic"
                   value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
+                  onChange={e => setTopic(e.target.value)}
                   placeholder="What should the content be about?"
                   className="min-h-[80px]"
                 />
@@ -179,8 +206,8 @@ The future is here, and it's powered by AI. 💡
                 <Label htmlFor="hashtags">Include Hashtags</Label>
               </div>
 
-              <Button 
-                onClick={generateContent} 
+              <Button
+                onClick={generateContent}
                 className="w-full"
                 disabled={loading || !topic}
               >
@@ -203,7 +230,9 @@ The future is here, and it's powered by AI. 💡
           <Card>
             <CardHeader>
               <CardTitle>Generated Content</CardTitle>
-              <CardDescription>AI-generated content will appear here</CardDescription>
+              <CardDescription>
+                AI-generated content will appear here
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {error && (
@@ -236,29 +265,41 @@ The future is here, and it's powered by AI. 💡
                     </Button>
                   </div>
 
-                  {generatedContent.hashtags && generatedContent.hashtags.length > 0 && (
-                    <div>
-                      <Label className="text-sm text-gray-600">Hashtags</Label>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {generatedContent.hashtags.map((tag: string, i: number) => (
-                          <span key={i} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm">
-                            {tag}
-                          </span>
-                        ))}
+                  {generatedContent.hashtags &&
+                    generatedContent.hashtags.length > 0 && (
+                      <div>
+                        <Label className="text-sm text-gray-600">
+                          Hashtags
+                        </Label>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {generatedContent.hashtags.map(
+                            (tag: string, i: number) => (
+                              <span
+                                key={i}
+                                className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm"
+                              >
+                                {tag}
+                              </span>
+                            )
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                     <div>
-                      <Label className="text-sm text-gray-600">Engagement Score</Label>
+                      <Label className="text-sm text-gray-600">
+                        Engagement Score
+                      </Label>
                       <div className="text-2xl font-bold text-green-600">
                         {generatedContent.estimatedEngagement || 'N/A'}%
                       </div>
                     </div>
                     <div>
-                      <Label className="text-sm text-gray-600">Viral Score</Label>
-                      <div className="text-2xl font-bold text-cyan-600">
+                      <Label className="text-sm text-gray-600">
+                        Viral Score
+                      </Label>
+                      <div className="text-2xl font-bold text-orange-600">
                         {generatedContent.viralScore || 'N/A'}/10
                       </div>
                     </div>
@@ -266,8 +307,11 @@ The future is here, and it's powered by AI. 💡
 
                   {generatedContent.metadata && (
                     <div className="text-xs text-gray-500 pt-2 border-t">
-                      Generated with {generatedContent.metadata.model || 'AI'} at{' '}
-                      {new Date(generatedContent.metadata.generatedAt).toLocaleTimeString()}
+                      Generated with {generatedContent.metadata.model || 'AI'}{' '}
+                      at{' '}
+                      {new Date(
+                        generatedContent.metadata.generatedAt
+                      ).toLocaleTimeString()}
                     </div>
                   )}
                 </div>
@@ -291,7 +335,8 @@ The future is here, and it's powered by AI. 💡
               <div>
                 <h3 className="font-semibold mb-2">1. Configure Settings</h3>
                 <p className="text-sm text-gray-600">
-                  Choose your platform, topic, and tone to match your brand voice
+                  Choose your platform, topic, and tone to match your brand
+                  voice
                 </p>
               </div>
               <div>

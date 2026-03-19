@@ -24,7 +24,9 @@ export function MentionsTab({ sentimentData }: MentionsTabProps) {
                   @{item.author} • {new Date(item.timestamp).toLocaleString()}
                 </span>
               </div>
-              <div className={`w-2 h-2 rounded-full ${getPriorityColor(item.priority)}`} />
+              <div
+                className={`w-2 h-2 rounded-full ${getPriorityColor(item.priority)}`}
+              />
             </div>
 
             <p className="text-sm text-gray-300 mb-3">{item.content}</p>
@@ -53,7 +55,7 @@ export function MentionsTab({ sentimentData }: MentionsTabProps) {
                   {item.actionable ? 'Action Required' : 'Monitor'}
                 </Badge>
                 <span className="text-xs text-gray-400">
-                  {(item.confidence).toFixed(0)}% confidence
+                  {item.confidence.toFixed(0)}% confidence
                 </span>
               </div>
             </div>
@@ -61,7 +63,10 @@ export function MentionsTab({ sentimentData }: MentionsTabProps) {
             {item.topics.length > 0 && (
               <div className="flex gap-2 mt-3">
                 {item.topics.map(topic => (
-                  <Badge key={topic} className="bg-cyan-500/20 text-cyan-400 text-xs">
+                  <Badge
+                    key={topic}
+                    className="bg-orange-500/20 text-orange-400 text-xs"
+                  >
                     {topic}
                   </Badge>
                 ))}

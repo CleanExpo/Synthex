@@ -1,6 +1,12 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   BarChart,
   Bar,
@@ -29,7 +35,10 @@ const CHART_TOOLTIP_STYLE = {
   borderRadius: '8px',
 };
 
-export function ComparisonView({ competitors, selectedIds }: ComparisonViewProps) {
+export function ComparisonView({
+  competitors,
+  selectedIds,
+}: ComparisonViewProps) {
   const selected = competitors.filter(c => selectedIds.includes(c.id));
 
   const followersData = selected.map(c => ({
@@ -57,27 +66,33 @@ export function ComparisonView({ competitors, selectedIds }: ComparisonViewProps
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Competitor Comparison</CardTitle>
-        <CardDescription>Comparing {selectedIds.length} competitors</CardDescription>
+        <CardDescription>
+          Comparing {selectedIds.length} competitors
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Follower Comparison */}
           <div>
-            <h4 className="text-sm font-medium text-white mb-3">Total Followers</h4>
+            <h4 className="text-sm font-medium text-white mb-3">
+              Total Followers
+            </h4>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={followersData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                 <XAxis dataKey="name" stroke="#666" />
                 <YAxis stroke="#666" />
                 <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                <Bar dataKey="value" fill="#06b6d4" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="value" fill="#ffb87b" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           {/* Engagement by Platform */}
           <div>
-            <h4 className="text-sm font-medium text-white mb-3">Engagement by Platform</h4>
+            <h4 className="text-sm font-medium text-white mb-3">
+              Engagement by Platform
+            </h4>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={engagementData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" />
@@ -94,19 +109,25 @@ export function ComparisonView({ competitors, selectedIds }: ComparisonViewProps
 
           {/* Radar Comparison */}
           <div className="lg:col-span-2">
-            <h4 className="text-sm font-medium text-white mb-3">Overall Performance</h4>
+            <h4 className="text-sm font-medium text-white mb-3">
+              Overall Performance
+            </h4>
             <ResponsiveContainer width="100%" height={300}>
               <RadarChart data={radarData[0] ? [radarData[0]] : []}>
                 <PolarGrid stroke="#333" />
-                <PolarAngleAxis dataKey="competitor" stroke="#666" tick={{ fill: '#999', fontSize: 12 }} />
+                <PolarAngleAxis
+                  dataKey="competitor"
+                  stroke="#666"
+                  tick={{ fill: '#999', fontSize: 12 }}
+                />
                 <PolarRadiusAxis stroke="#666" />
                 {radarData.map((_, index) => (
                   <Radar
                     key={index}
                     name={selected[index]?.name || ''}
                     dataKey="followers"
-                    stroke={['#06b6d4', '#ec4899', '#3b82f6'][index]}
-                    fill={['#06b6d4', '#ec4899', '#3b82f6'][index]}
+                    stroke={['#ffb87b', '#ec4899', '#3b82f6'][index]}
+                    fill={['#ffb87b', '#ec4899', '#3b82f6'][index]}
                     fillOpacity={0.3}
                   />
                 ))}

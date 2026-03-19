@@ -6,7 +6,13 @@
  */
 
 import Image from 'next/image';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,7 +39,9 @@ export function ProfileTab({
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Profile Information</CardTitle>
-        <CardDescription>Update your personal details and profile picture</CardDescription>
+        <CardDescription>
+          Update your personal details and profile picture
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Avatar */}
@@ -49,22 +57,28 @@ export function ProfileTab({
                 unoptimized
               />
             ) : (
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-3xl font-bold text-white">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-500 to-blue-600 flex items-center justify-center text-3xl font-bold text-white">
                 {(profile.name || 'U').charAt(0).toUpperCase()}
               </div>
             )}
             <button
               onClick={onAvatarUpload}
-              className="absolute bottom-0 right-0 p-2 bg-cyan-500 rounded-full text-white hover:bg-cyan-600 transition-colors"
+              className="absolute bottom-0 right-0 p-2 bg-orange-500 rounded-full text-white hover:bg-orange-600 transition-colors"
               aria-label="Upload avatar"
             >
               <Camera className="w-4 h-4" />
             </button>
           </div>
           <div>
-            <h3 className="font-semibold text-white">{profile.name || 'Your Name'}</h3>
-            <p className="text-sm text-slate-400">{profile.role || 'Your Role'}</p>
-            <p className="text-xs text-slate-500 mt-1">JPG, PNG or GIF. Max 2MB.</p>
+            <h3 className="font-semibold text-white">
+              {profile.name || 'Your Name'}
+            </h3>
+            <p className="text-sm text-slate-400">
+              {profile.role || 'Your Role'}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              JPG, PNG or GIF. Max 2MB.
+            </p>
           </div>
         </div>
 
@@ -75,7 +89,7 @@ export function ProfileTab({
             <Input
               id="name"
               value={profile.name}
-              onChange={(e) => onProfileChange('name', e.target.value)}
+              onChange={e => onProfileChange('name', e.target.value)}
               className="bg-white/5 border-white/10"
             />
           </div>
@@ -85,7 +99,7 @@ export function ProfileTab({
               id="email"
               type="email"
               value={profile.email}
-              onChange={(e) => onProfileChange('email', e.target.value)}
+              onChange={e => onProfileChange('email', e.target.value)}
               className="bg-white/5 border-white/10"
             />
           </div>
@@ -94,7 +108,7 @@ export function ProfileTab({
             <Input
               id="company"
               value={profile.company}
-              onChange={(e) => onProfileChange('company', e.target.value)}
+              onChange={e => onProfileChange('company', e.target.value)}
               className="bg-white/5 border-white/10"
             />
           </div>
@@ -103,7 +117,7 @@ export function ProfileTab({
             <Input
               id="role"
               value={profile.role}
-              onChange={(e) => onProfileChange('role', e.target.value)}
+              onChange={e => onProfileChange('role', e.target.value)}
               className="bg-white/5 border-white/10"
             />
           </div>
@@ -114,13 +128,17 @@ export function ProfileTab({
           <Textarea
             id="bio"
             value={profile.bio}
-            onChange={(e) => onProfileChange('bio', e.target.value)}
+            onChange={e => onProfileChange('bio', e.target.value)}
             placeholder="Tell us about yourself..."
             className="bg-white/5 border-white/10 min-h-[100px]"
           />
         </div>
 
-        <Button onClick={onSave} disabled={isSaving} className="gradient-primary">
+        <Button
+          onClick={onSave}
+          disabled={isSaving}
+          className="gradient-primary"
+        >
           {isSaving ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

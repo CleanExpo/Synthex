@@ -6,7 +6,13 @@
  */
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,7 +28,12 @@ interface TrainingUploadProps {
   onFetchUrl: (url: string) => void;
 }
 
-export function TrainingUpload({ persona, uploadProgress, onUpload, onFetchUrl }: TrainingUploadProps) {
+export function TrainingUpload({
+  persona,
+  uploadProgress,
+  onUpload,
+  onFetchUrl,
+}: TrainingUploadProps) {
   const [selectedContentType, setSelectedContentType] = useState('text');
   const [dragActive, setDragActive] = useState(false);
   const [urlInput, setUrlInput] = useState('');
@@ -63,13 +74,13 @@ export function TrainingUpload({ persona, uploadProgress, onUpload, onFetchUrl }
       <CardContent>
         {/* Content Type Selection */}
         <div className="grid grid-cols-5 gap-3 mb-6">
-          {contentTypes.map((type) => (
+          {contentTypes.map(type => (
             <button
               key={type.type}
               onClick={() => setSelectedContentType(type.type)}
               className={`p-3 rounded-lg border transition-all ${
                 selectedContentType === type.type
-                  ? 'bg-cyan-500/20 border-cyan-500'
+                  ? 'bg-orange-500/20 border-orange-500'
                   : 'bg-white/5 border-white/10 hover:bg-white/10'
               }`}
             >
@@ -83,7 +94,7 @@ export function TrainingUpload({ persona, uploadProgress, onUpload, onFetchUrl }
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${
             dragActive
-              ? 'border-cyan-500 bg-cyan-500/10'
+              ? 'border-orange-500 bg-orange-500/10'
               : 'border-white/20 bg-white/5'
           }`}
           onDragEnter={handleDrag}
@@ -103,10 +114,14 @@ export function TrainingUpload({ persona, uploadProgress, onUpload, onFetchUrl }
             multiple
             className="hidden"
             id="file-upload"
-            onChange={(e) => e.target.files && onUpload(e.target.files)}
+            onChange={e => e.target.files && onUpload(e.target.files)}
           />
           <label htmlFor="file-upload">
-            <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 cursor-pointer" asChild>
+            <Button
+              variant="outline"
+              className="bg-white/5 border-white/10 text-white hover:bg-white/10 cursor-pointer"
+              asChild
+            >
               <span>Choose Files</span>
             </Button>
           </label>
@@ -115,17 +130,22 @@ export function TrainingUpload({ persona, uploadProgress, onUpload, onFetchUrl }
         {/* URL Input */}
         {selectedContentType === 'url' && (
           <div className="mt-4">
-            <Label htmlFor="url" className="text-slate-400">Content URL</Label>
+            <Label htmlFor="url" className="text-slate-400">
+              Content URL
+            </Label>
             <div className="flex space-x-2 mt-2">
               <Input
                 id="url"
                 type="url"
                 value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
+                onChange={e => setUrlInput(e.target.value)}
                 placeholder="https://example.com/content"
                 className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
               />
-              <Button onClick={handleFetchClick} className="gradient-primary text-white">
+              <Button
+                onClick={handleFetchClick}
+                className="gradient-primary text-white"
+              >
                 <Link className="mr-2 h-4 w-4" />
                 Fetch
               </Button>
@@ -146,7 +166,9 @@ export function TrainingUpload({ persona, uploadProgress, onUpload, onFetchUrl }
 
         {/* Training Stats */}
         <div className="mt-6 p-4 bg-white/5 rounded-lg">
-          <h4 className="text-sm font-medium text-white mb-3">Training Statistics</h4>
+          <h4 className="text-sm font-medium text-white mb-3">
+            Training Statistics
+          </h4>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-2xl font-bold text-white">

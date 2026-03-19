@@ -6,7 +6,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Minus } from '@/components/icons';
 import type { ComponentType, SVGProps } from 'react';
 
-type LucideIcon = ComponentType<SVGProps<SVGSVGElement> & { className?: string }>;
+type LucideIcon = ComponentType<
+  SVGProps<SVGSVGElement> & { className?: string }
+>;
 
 /**
  * Stat Card Component
@@ -36,7 +38,12 @@ export interface StatCardProps {
   animated?: boolean;
 }
 
-export function StatCard({ stat, className, variant = 'default', animated = true }: StatCardProps) {
+export function StatCard({
+  stat,
+  className,
+  variant = 'default',
+  animated = true,
+}: StatCardProps) {
   const Icon = stat.icon;
   const isCompact = variant === 'compact';
   const isLarge = variant === 'large';
@@ -50,21 +57,27 @@ export function StatCard({ stat, className, variant = 'default', animated = true
         : 'neutral'
     : null;
 
-  const ChangeIcon = changeDirection === 'up'
-    ? TrendingUp
-    : changeDirection === 'down'
-      ? TrendingDown
-      : Minus;
+  const ChangeIcon =
+    changeDirection === 'up'
+      ? TrendingUp
+      : changeDirection === 'down'
+        ? TrendingDown
+        : Minus;
 
   if (isMinimal) {
     return (
       <div className={cn('text-center', className)}>
-        <div className={cn(
-          'text-4xl md:text-5xl font-bold mb-1',
-          animated && 'animate-in fade-in slide-in-from-bottom-4 duration-700',
-          'bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent'
-        )}>
-          {stat.prefix}{stat.value}{stat.suffix}
+        <div
+          className={cn(
+            'text-4xl md:text-5xl font-bold mb-1',
+            animated &&
+              'animate-in fade-in slide-in-from-bottom-4 duration-700',
+            'bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent'
+          )}
+        >
+          {stat.prefix}
+          {stat.value}
+          {stat.suffix}
         </div>
         <div className="text-slate-400 text-sm">{stat.label}</div>
       </div>
@@ -82,34 +95,48 @@ export function StatCard({ stat, className, variant = 'default', animated = true
     >
       {/* Background glow */}
       {Icon && (
-        <div className={cn(
-          'absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl opacity-20',
-          stat.iconColor || 'bg-cyan-500'
-        )} />
+        <div
+          className={cn(
+            'absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl opacity-20',
+            stat.iconColor || 'bg-orange-500'
+          )}
+        />
       )}
 
-      <CardContent className={cn(
-        'relative',
-        isCompact ? 'p-4' : isLarge ? 'p-8' : 'p-6'
-      )}>
-        <div className={cn(
-          'flex',
-          isLarge ? 'flex-col items-center' : 'items-start justify-between'
-        )}>
+      <CardContent
+        className={cn('relative', isCompact ? 'p-4' : isLarge ? 'p-8' : 'p-6')}
+      >
+        <div
+          className={cn(
+            'flex',
+            isLarge ? 'flex-col items-center' : 'items-start justify-between'
+          )}
+        >
           {/* Main content */}
           <div className={isLarge ? 'mb-4' : ''}>
-            <div className={cn(
-              'font-bold',
-              animated && 'animate-in fade-in slide-in-from-left-4 duration-500',
-              isCompact ? 'text-2xl' : isLarge ? 'text-5xl md:text-6xl' : 'text-3xl',
-              'bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent'
-            )}>
-              {stat.prefix}{stat.value}{stat.suffix}
+            <div
+              className={cn(
+                'font-bold',
+                animated &&
+                  'animate-in fade-in slide-in-from-left-4 duration-500',
+                isCompact
+                  ? 'text-2xl'
+                  : isLarge
+                    ? 'text-5xl md:text-6xl'
+                    : 'text-3xl',
+                'bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent'
+              )}
+            >
+              {stat.prefix}
+              {stat.value}
+              {stat.suffix}
             </div>
-            <div className={cn(
-              'text-slate-400 mt-1',
-              isCompact ? 'text-xs' : isLarge ? 'text-lg' : 'text-sm'
-            )}>
+            <div
+              className={cn(
+                'text-slate-400 mt-1',
+                isCompact ? 'text-xs' : isLarge ? 'text-lg' : 'text-sm'
+              )}
+            >
               {stat.label}
             </div>
             {stat.description && (
@@ -119,27 +146,30 @@ export function StatCard({ stat, className, variant = 'default', animated = true
 
           {/* Icon */}
           {Icon && !isLarge && (
-            <div className={cn(
-              'flex items-center justify-center rounded-xl',
-              isCompact ? 'w-10 h-10' : 'w-12 h-12',
-              stat.iconColor
-                ? `bg-gradient-to-br ${stat.iconColor}`
-                : 'bg-gradient-to-br from-cyan-500/20 to-cyan-500/20 border border-cyan-500/20'
-            )}>
-              <Icon className={cn(
-                'text-white',
-                isCompact ? 'w-5 h-5' : 'w-6 h-6'
-              )} />
+            <div
+              className={cn(
+                'flex items-center justify-center rounded-xl',
+                isCompact ? 'w-10 h-10' : 'w-12 h-12',
+                stat.iconColor
+                  ? `bg-gradient-to-br ${stat.iconColor}`
+                  : 'bg-gradient-to-br from-orange-500/20 to-orange-500/20 border border-orange-500/20'
+              )}
+            >
+              <Icon
+                className={cn('text-white', isCompact ? 'w-5 h-5' : 'w-6 h-6')}
+              />
             </div>
           )}
 
           {Icon && isLarge && (
-            <div className={cn(
-              'w-16 h-16 flex items-center justify-center rounded-2xl mb-4',
-              stat.iconColor
-                ? `bg-gradient-to-br ${stat.iconColor}`
-                : 'bg-gradient-to-br from-cyan-500/20 to-cyan-500/20 border border-cyan-500/20'
-            )}>
+            <div
+              className={cn(
+                'w-16 h-16 flex items-center justify-center rounded-2xl mb-4',
+                stat.iconColor
+                  ? `bg-gradient-to-br ${stat.iconColor}`
+                  : 'bg-gradient-to-br from-orange-500/20 to-orange-500/20 border border-orange-500/20'
+              )}
+            >
               <Icon className="w-8 h-8 text-white" />
             </div>
           )}
@@ -147,21 +177,29 @@ export function StatCard({ stat, className, variant = 'default', animated = true
 
         {/* Change indicator */}
         {stat.change && (
-          <div className={cn(
-            'flex items-center gap-1 mt-3',
-            isLarge && 'justify-center'
-          )}>
-            <div className={cn(
-              'flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium',
-              changeDirection === 'up' && 'bg-emerald-500/10 text-emerald-400',
-              changeDirection === 'down' && 'bg-red-500/10 text-red-400',
-              changeDirection === 'neutral' && 'bg-slate-500/10 text-slate-400'
-            )}>
+          <div
+            className={cn(
+              'flex items-center gap-1 mt-3',
+              isLarge && 'justify-center'
+            )}
+          >
+            <div
+              className={cn(
+                'flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium',
+                changeDirection === 'up' &&
+                  'bg-emerald-500/10 text-emerald-400',
+                changeDirection === 'down' && 'bg-red-500/10 text-red-400',
+                changeDirection === 'neutral' &&
+                  'bg-slate-500/10 text-slate-400'
+              )}
+            >
               <ChangeIcon className="w-3 h-3" />
               <span>{Math.abs(stat.change.value)}%</span>
             </div>
             {stat.change.period && (
-              <span className="text-xs text-slate-500">{stat.change.period}</span>
+              <span className="text-xs text-slate-500">
+                {stat.change.period}
+              </span>
             )}
           </div>
         )}
@@ -180,7 +218,12 @@ export interface StatsGridProps {
   className?: string;
 }
 
-export function StatsGrid({ stats, columns = 4, variant = 'default', className }: StatsGridProps) {
+export function StatsGrid({
+  stats,
+  columns = 4,
+  variant = 'default',
+  className,
+}: StatsGridProps) {
   return (
     <div
       className={cn(
@@ -213,10 +256,7 @@ export interface StatsBannerProps {
 
 export function StatsBanner({ stats, className }: StatsBannerProps) {
   return (
-    <div className={cn(
-      'glass rounded-2xl p-8 md:p-12',
-      className
-    )}>
+    <div className={cn('glass rounded-2xl p-8 md:p-12', className)}>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
         {stats.map((stat, index) => (
           <StatCard key={index} stat={stat} variant="minimal" />

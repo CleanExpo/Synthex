@@ -5,7 +5,13 @@
  * Radar chart showing content performance by type
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   RadarChart,
   PolarGrid,
@@ -40,8 +46,8 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
             <Radar
               name="Engagement"
               dataKey="engagement"
-              stroke="#06b6d4"
-              fill="#06b6d4"
+              stroke="#ffb87b"
+              fill="#ffb87b"
               fillOpacity={0.3}
             />
             <Radar

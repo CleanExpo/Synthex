@@ -7,7 +7,13 @@
  */
 
 import useSWR from 'swr';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { platformIcons, bestTimes } from './schedule-config';
 import { PLATFORM_COLORS } from '@/components/calendar';
 import { Zap } from '@/components/icons';
@@ -48,17 +54,16 @@ const fetchJson = async (url: string): Promise<ApiResponse | null> => {
 };
 
 export function OptimalTimes() {
-  const tz = typeof window !== 'undefined'
-    ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
-    : 'UTC';
+  const tz =
+    typeof window !== 'undefined'
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+      : 'UTC';
 
   const apiUrl = `/api/optimize/auto-schedule?action=multi-platform&platforms=${platforms}&timezone=${encodeURIComponent(tz)}`;
 
-  const { data, isLoading } = useSWR<ApiResponse | null>(
-    apiUrl,
-    fetchJson,
-    { revalidateOnFocus: false }
-  );
+  const { data, isLoading } = useSWR<ApiResponse | null>(apiUrl, fetchJson, {
+    revalidateOnFocus: false,
+  });
 
   const predictions = data?.data ?? null;
   const usingFallback = !isLoading && !predictions;
@@ -76,7 +81,7 @@ export function OptimalTimes() {
             </CardDescription>
           </div>
           {!usingFallback && predictions && (
-            <span className="flex items-center gap-1 text-xs bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded-full border border-cyan-500/20">
+            <span className="flex items-center gap-1 text-xs bg-orange-500/10 text-orange-400 px-2 py-1 rounded-full border border-orange-500/20">
               <Zap className="h-3 w-3" />
               ML Predicted
             </span>
@@ -98,7 +103,10 @@ export function OptimalTimes() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {(usingFallback ? Object.keys(bestTimes) : Object.keys(predictions || {})).map((platform) => {
+            {(usingFallback
+              ? Object.keys(bestTimes)
+              : Object.keys(predictions || {})
+            ).map(platform => {
               const Icon = platformIcons[platform];
               const color = PLATFORM_COLORS[platform];
 
@@ -106,14 +114,22 @@ export function OptimalTimes() {
                 const times = bestTimes[platform] || [];
                 return (
                   <div key={platform} className="flex items-start space-x-3">
-                    <div className="p-2 rounded-lg" style={{ backgroundColor: `${color}20` }}>
+                    <div
+                      className="p-2 rounded-lg"
+                      style={{ backgroundColor: `${color}20` }}
+                    >
                       {Icon && <Icon className="h-4 w-4" style={{ color }} />}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-white capitalize mb-1">{platform}</p>
+                      <p className="text-sm font-medium text-white capitalize mb-1">
+                        {platform}
+                      </p>
                       <div className="flex flex-wrap gap-1">
                         {times.map((time: string) => (
-                          <span key={time} className="text-xs bg-white/5 text-slate-400 px-2 py-1 rounded">
+                          <span
+                            key={time}
+                            className="text-xs bg-white/5 text-slate-400 px-2 py-1 rounded"
+                          >
                             {time}
                           </span>
                         ))}
@@ -129,13 +145,18 @@ export function OptimalTimes() {
 
               return (
                 <div key={platform} className="flex items-start space-x-3">
-                  <div className="p-2 rounded-lg" style={{ backgroundColor: `${color}20` }}>
+                  <div
+                    className="p-2 rounded-lg"
+                    style={{ backgroundColor: `${color}20` }}
+                  >
                     {Icon && <Icon className="h-4 w-4" style={{ color }} />}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-white capitalize mb-1">{platform}</p>
+                    <p className="text-sm font-medium text-white capitalize mb-1">
+                      {platform}
+                    </p>
                     <div className="flex flex-wrap gap-1">
-                      {topSlots.map((slot) => (
+                      {topSlots.map(slot => (
                         <span
                           key={`${slot.day}-${slot.hour}`}
                           className="text-xs bg-white/5 text-slate-400 px-2 py-1 rounded"

@@ -43,7 +43,7 @@ export function OptimizedImage({
   aspectRatio = '16/9',
   objectFit = 'cover',
   lazy = true,
-  zoomable = false
+  zoomable = false,
 }: OptimizedImageProps) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
@@ -51,17 +51,17 @@ export function OptimizedImage({
   const [isZoomed, setIsZoomed] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   // Intersection Observer for lazy loading
   useEffect(() => {
     if (!lazy || priority) {
       setIsInView(true);
       return;
     }
-    
+
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             setIsInView(true);
             observer.disconnect();
@@ -69,56 +69,56 @@ export function OptimizedImage({
         });
       },
       {
-        rootMargin: '50px'
+        rootMargin: '50px',
       }
     );
-    
+
     if (containerRef.current) {
       observer.observe(containerRef.current);
     }
-    
+
     return () => observer.disconnect();
   }, [lazy, priority]);
-  
+
   // Generate srcset for responsive images
   const generateSrcSet = () => {
     if (!width) return undefined;
-    
+
     const widths = [320, 640, 768, 1024, 1280, 1536];
     return widths
       .filter(w => w <= width)
       .map(w => `${getOptimizedUrl(src, w, quality)} ${w}w`)
       .join(', ');
   };
-  
+
   // Get optimized image URL (in production, this would use a CDN)
   const getOptimizedUrl = (url: string, width: number, quality: number) => {
     // Example with Cloudinary or similar service
     // return `https://res.cloudinary.com/your-cloud/image/upload/w_${width},q_${quality}/v1/${url}`;
     return url; // For now, return original URL
   };
-  
+
   const handleLoad = () => {
     setLoaded(true);
     onLoad?.();
   };
-  
+
   const handleError = () => {
     setError(true);
     onError?.();
   };
-  
+
   const handleClick = () => {
     if (zoomable) {
       setIsZoomed(!isZoomed);
     }
     onClick?.();
   };
-  
+
   // Error state
   if (error) {
     return (
-      <div 
+      <div
         className={`flex items-center justify-center bg-white/5 rounded-lg ${className}`}
         style={{ aspectRatio }}
       >
@@ -129,10 +129,10 @@ export function OptimizedImage({
       </div>
     );
   }
-  
+
   return (
     <>
-      <div 
+      <div
         ref={containerRef}
         className={`relative overflow-hidden ${className} ${zoomable ? 'cursor-zoom-in' : ''}`}
         style={{ aspectRatio }}
@@ -153,7 +153,7 @@ export function OptimizedImage({
             )}
           </div>
         )}
-        
+
         {/* Main Image */}
         {isInView && (
           <motion.img
@@ -176,10 +176,10 @@ export function OptimizedImage({
             onError={handleError}
             variants={fadeIn}
             initial="hidden"
-            animate={loaded ? "visible" : "hidden"}
+            animate={loaded ? 'visible' : 'hidden'}
           />
         )}
-        
+
         {/* Zoom indicator */}
         {zoomable && loaded && (
           <div className="absolute top-2 right-2 p-2 bg-black/50 rounded-lg opacity-0 hover:opacity-100 transition-opacity">
@@ -187,7 +187,7 @@ export function OptimizedImage({
           </div>
         )}
       </div>
-      
+
       {/* Zoomed view modal */}
       {isZoomed && (
         <motion.div
@@ -212,23 +212,23 @@ export function OptimizedImage({
 }
 
 // Image gallery with optimization
-export function ImageGallery({ 
+export function ImageGallery({
   images,
   columns = 3,
-  gap = 4
-}: { 
+  gap = 4,
+}: {
   images: { src: string; alt: string }[];
   columns?: number;
   gap?: number;
 }) {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
-  
+
   return (
     <>
-      <div 
+      <div
         className={`grid grid-cols-${columns} gap-${gap}`}
         style={{
-          gridTemplateColumns: `repeat(${columns}, 1fr)`
+          gridTemplateColumns: `repeat(${columns}, 1fr)`,
         }}
       >
         {images.map((image, index) => (
@@ -242,7 +242,7 @@ export function ImageGallery({
           />
         ))}
       </div>
-      
+
       {/* Lightbox */}
       {selectedImage !== null && (
         <motion.div
@@ -263,12 +263,12 @@ export function ImageGallery({
               alt={images[selectedImage].alt}
               className="max-w-full max-h-full object-contain"
             />
-            
+
             {/* Navigation */}
             {selectedImage > 0 && (
               <button
                 className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/10 rounded-full"
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   setSelectedImage(selectedImage - 1);
                 }}
@@ -276,11 +276,11 @@ export function ImageGallery({
                 ←
               </button>
             )}
-            
+
             {selectedImage < images.length - 1 && (
               <button
                 className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/10 rounded-full"
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   setSelectedImage(selectedImage + 1);
                 }}
@@ -301,7 +301,7 @@ export function OptimizedAvatar({
   alt,
   size = 40,
   fallback,
-  className = ''
+  className = '',
 }: {
   src?: string;
   alt: string;
@@ -310,18 +310,18 @@ export function OptimizedAvatar({
   className?: string;
 }) {
   const [error, setError] = useState(false);
-  
+
   if (!src || error) {
     return (
-      <div 
-        className={`flex items-center justify-center bg-gradient-to-br from-cyan-500 to-cyan-500 text-white font-semibold rounded-full ${className}`}
+      <div
+        className={`flex items-center justify-center bg-gradient-to-br from-orange-500 to-orange-500 text-white font-semibold rounded-full ${className}`}
         style={{ width: size, height: size }}
       >
         {fallback || alt.charAt(0).toUpperCase()}
       </div>
     );
   }
-  
+
   return (
     <OptimizedImage
       src={src}
@@ -342,7 +342,7 @@ export function OptimizedBackground({
   children,
   className = '',
   overlay = true,
-  parallax = false
+  parallax = false,
 }: {
   src: string;
   children: React.ReactNode;
@@ -351,7 +351,7 @@ export function OptimizedBackground({
   parallax?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
-  
+
   return (
     <div className={`relative overflow-hidden ${className}`}>
       {/* Background image — decorative, hidden from assistive technology */}
@@ -359,7 +359,7 @@ export function OptimizedBackground({
         aria-hidden="true"
         className={`absolute inset-0 ${parallax ? 'fixed' : ''}`}
         style={{
-          transform: parallax ? 'translateZ(-1px) scale(2)' : undefined
+          transform: parallax ? 'translateZ(-1px) scale(2)' : undefined,
         }}
       >
         <OptimizedImage
@@ -370,17 +370,13 @@ export function OptimizedBackground({
           onLoad={() => setLoaded(true)}
           priority
         />
-        
+
         {/* Overlay */}
-        {overlay && (
-          <div className="absolute inset-0 bg-black/50" />
-        )}
+        {overlay && <div className="absolute inset-0 bg-black/50" />}
       </div>
-      
+
       {/* Content */}
-      <div className="relative z-10">
-        {children}
-      </div>
+      <div className="relative z-10">{children}</div>
     </div>
   );
 }

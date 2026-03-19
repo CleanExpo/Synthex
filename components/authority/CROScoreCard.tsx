@@ -1,7 +1,10 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { CROReadinessScore, DesignIssue } from '@/lib/authority/design-audit/types';
+import type {
+  CROReadinessScore,
+  DesignIssue,
+} from '@/lib/authority/design-audit/types';
 
 interface CROScoreCardProps {
   score: CROReadinessScore;
@@ -21,7 +24,11 @@ export function CROScoreCard({ score, issues }: CROScoreCardProps) {
     { label: 'Trust Signals', value: score.trustSignals, max: 20 },
     { label: 'Friction Reduction', value: score.frictionReduction, max: 20 },
     { label: 'Mobile Conversion', value: score.mobileConversion, max: 20 },
-    { label: 'Above-Fold Conversion', value: score.aboveFoldConversion, max: 20 },
+    {
+      label: 'Above-Fold Conversion',
+      value: score.aboveFoldConversion,
+      max: 20,
+    },
   ];
 
   const lowestDims = [...dimensions]
@@ -36,7 +43,9 @@ export function CROScoreCard({ score, issues }: CROScoreCardProps) {
       <CardHeader>
         <CardTitle className="text-white text-sm font-medium flex items-center justify-between">
           CRO Readiness
-          <span className="text-2xl font-bold text-cyan-400">{score.total}</span>
+          <span className="text-2xl font-bold text-orange-400">
+            {score.total}
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -44,7 +53,9 @@ export function CROScoreCard({ score, issues }: CROScoreCardProps) {
           <div key={dim.label}>
             <div className="flex justify-between text-xs mb-1">
               <span className="text-slate-400">{dim.label}</span>
-              <span className="text-slate-300">{dim.value}/{dim.max}</span>
+              <span className="text-slate-300">
+                {dim.value}/{dim.max}
+              </span>
             </div>
             <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
               <div
@@ -57,7 +68,9 @@ export function CROScoreCard({ score, issues }: CROScoreCardProps) {
 
         {lowestDims.filter(d => d.value / d.max < 0.6).length > 0 && (
           <div className="mt-3 border-t border-white/10 pt-3">
-            <p className="text-xs text-slate-500 mb-1.5">Priority improvements:</p>
+            <p className="text-xs text-slate-500 mb-1.5">
+              Priority improvements:
+            </p>
             {lowestDims
               .filter(d => d.value / d.max < 0.6)
               .map(d => (

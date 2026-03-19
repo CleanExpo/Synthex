@@ -7,7 +7,14 @@
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Ban, CheckCircle, Edit, Mail, Trash2 } from '@/components/icons';
+import {
+  Shield,
+  Ban,
+  CheckCircle,
+  Edit,
+  Mail,
+  Trash2,
+} from '@/components/icons';
 import type { User, UserAction } from './types';
 
 interface UsersTableProps {
@@ -27,7 +34,7 @@ export function UsersTable({
   onToggleSelection,
   onToggleSelectAll,
   onUserAction,
-  onEditUser
+  onEditUser,
 }: UsersTableProps) {
   return (
     <div className="overflow-x-auto">
@@ -37,18 +44,50 @@ export function UsersTable({
             <th scope="col" className="py-3 px-4 w-10">
               <input
                 type="checkbox"
-                checked={selectedUserIds.size === users.length && users.length > 0}
+                checked={
+                  selectedUserIds.size === users.length && users.length > 0
+                }
                 onChange={onToggleSelectAll}
                 aria-label="Select all users"
-                className="rounded border-white/20 bg-white/5 text-cyan-500 focus:ring-cyan-500"
+                className="rounded border-white/20 bg-white/5 text-orange-500 focus:ring-orange-500"
               />
             </th>
-            <th scope="col" className="text-left py-3 px-4 text-sm font-medium text-gray-400">User</th>
-            <th scope="col" className="text-left py-3 px-4 text-sm font-medium text-gray-400">Status</th>
-            <th scope="col" className="text-left py-3 px-4 text-sm font-medium text-gray-400">Role</th>
-            <th scope="col" className="text-left py-3 px-4 text-sm font-medium text-gray-400">Joined</th>
-            <th scope="col" className="text-left py-3 px-4 text-sm font-medium text-gray-400">Last Active</th>
-            <th scope="col" className="text-left py-3 px-4 text-sm font-medium text-gray-400">Actions</th>
+            <th
+              scope="col"
+              className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+            >
+              User
+            </th>
+            <th
+              scope="col"
+              className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+            >
+              Status
+            </th>
+            <th
+              scope="col"
+              className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+            >
+              Role
+            </th>
+            <th
+              scope="col"
+              className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+            >
+              Joined
+            </th>
+            <th
+              scope="col"
+              className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+            >
+              Last Active
+            </th>
+            <th
+              scope="col"
+              className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+            >
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -65,11 +104,11 @@ export function UsersTable({
               </td>
             </tr>
           ) : (
-            users.map((user) => (
+            users.map(user => (
               <tr
                 key={user.id}
                 className={`border-b border-white/5 hover:bg-white/5 transition-colors ${
-                  selectedUserIds.has(user.id) ? 'bg-cyan-500/10' : ''
+                  selectedUserIds.has(user.id) ? 'bg-orange-500/10' : ''
                 }`}
               >
                 <td className="py-3 px-4">
@@ -78,12 +117,12 @@ export function UsersTable({
                     checked={selectedUserIds.has(user.id)}
                     onChange={() => onToggleSelection(user.id)}
                     aria-label={`Select ${user.name ?? user.email}`}
-                    className="rounded border-white/20 bg-white/5 text-cyan-500 focus:ring-cyan-500"
+                    className="rounded border-white/20 bg-white/5 text-orange-500 focus:ring-orange-500"
                   />
                 </td>
                 <td className="py-3 px-4">
                   <div className="flex items-center">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold mr-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold mr-3">
                       {user.email?.[0]?.toUpperCase()}
                     </div>
                     <div>
@@ -93,9 +132,13 @@ export function UsersTable({
                   </div>
                 </td>
                 <td className="py-3 px-4">
-                  <Badge className={`${
-                    user.status === 'banned' ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'
-                  }`}>
+                  <Badge
+                    className={`${
+                      user.status === 'banned'
+                        ? 'bg-red-500/20 text-red-400'
+                        : 'bg-green-500/20 text-green-400'
+                    }`}
+                  >
                     {user.status === 'banned' ? (
                       <Ban className="w-3 h-3 mr-1" />
                     ) : (
@@ -105,7 +148,7 @@ export function UsersTable({
                   </Badge>
                 </td>
                 <td className="py-3 px-4">
-                  <Badge className="bg-cyan-500/20 text-cyan-400">
+                  <Badge className="bg-orange-500/20 text-orange-400">
                     {user.role === 'admin' ? (
                       <Shield className="w-3 h-3 mr-1" />
                     ) : null}
@@ -118,8 +161,7 @@ export function UsersTable({
                 <td className="py-3 px-4 text-sm text-gray-400">
                   {user.lastLogin
                     ? new Date(user.lastLogin).toLocaleDateString()
-                    : 'Never'
-                  }
+                    : 'Never'}
                 </td>
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-2">
@@ -142,7 +184,12 @@ export function UsersTable({
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => onUserAction(user.id, user.status === 'banned' ? 'unban' : 'ban')}
+                      onClick={() =>
+                        onUserAction(
+                          user.id,
+                          user.status === 'banned' ? 'unban' : 'ban'
+                        )
+                      }
                       className="text-gray-400 hover:text-white"
                     >
                       <Ban className="w-4 h-4" />

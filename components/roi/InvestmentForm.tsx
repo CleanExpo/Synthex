@@ -76,13 +76,17 @@ export function InvestmentForm({
 
   // Form state
   const [type, setType] = useState<InvestmentType>(entry?.type || 'time');
-  const [category, setCategory] = useState<InvestmentCategory>(entry?.category || 'creation');
+  const [category, setCategory] = useState<InvestmentCategory>(
+    entry?.category || 'creation'
+  );
   const [amount, setAmount] = useState(entry?.amount?.toString() || '');
   const [currency, setCurrency] = useState(entry?.currency || 'USD');
   const [description, setDescription] = useState(entry?.description || '');
   const [platform, setPlatform] = useState(entry?.platform || '');
   const [investedAt, setInvestedAt] = useState(
-    entry?.investedAt ? formatDateForInput(entry.investedAt) : formatDateForInput(new Date())
+    entry?.investedAt
+      ? formatDateForInput(entry.investedAt)
+      : formatDateForInput(new Date())
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -127,7 +131,9 @@ export function InvestmentForm({
       });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save investment');
+      setError(
+        err instanceof Error ? err.message : 'Failed to save investment'
+      );
     }
   };
 
@@ -163,7 +169,7 @@ export function InvestmentForm({
           <div className="space-y-2">
             <Label>Investment Type</Label>
             <div className="grid grid-cols-2 gap-3">
-              {TYPES.map((t) => (
+              {TYPES.map(t => (
                 <button
                   key={t.value}
                   type="button"
@@ -171,17 +177,21 @@ export function InvestmentForm({
                   className={cn(
                     'p-3 rounded-lg border text-left transition-colors',
                     type === t.value
-                      ? 'border-cyan-500 bg-cyan-500/10'
+                      ? 'border-orange-500 bg-orange-500/10'
                       : 'border-white/10 bg-gray-800 hover:border-white/20'
                   )}
                 >
-                  <span className={cn(
-                    'font-medium',
-                    type === t.value ? 'text-cyan-400' : 'text-white'
-                  )}>
+                  <span
+                    className={cn(
+                      'font-medium',
+                      type === t.value ? 'text-orange-400' : 'text-white'
+                    )}
+                  >
                     {t.label}
                   </span>
-                  <p className="text-xs text-gray-400 mt-0.5">{t.description}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {t.description}
+                  </p>
                 </button>
               ))}
             </div>
@@ -190,12 +200,15 @@ export function InvestmentForm({
           {/* Category */}
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
-            <Select value={category} onValueChange={(v) => setCategory(v as InvestmentCategory)}>
+            <Select
+              value={category}
+              onValueChange={v => setCategory(v as InvestmentCategory)}
+            >
               <SelectTrigger className="bg-gray-800 border-white/10">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map((c) => (
+                {CATEGORIES.map(c => (
                   <SelectItem key={c.value} value={c.value}>
                     {c.label}
                   </SelectItem>
@@ -205,8 +218,15 @@ export function InvestmentForm({
           </div>
 
           {/* Amount + Currency (for money type) */}
-          <div className={cn('grid gap-3', type === 'money' ? 'grid-cols-3' : 'grid-cols-1')}>
-            <div className={cn('space-y-2', type === 'money' ? 'col-span-2' : '')}>
+          <div
+            className={cn(
+              'grid gap-3',
+              type === 'money' ? 'grid-cols-3' : 'grid-cols-1'
+            )}
+          >
+            <div
+              className={cn('space-y-2', type === 'money' ? 'col-span-2' : '')}
+            >
               <Label htmlFor="amount">
                 {type === 'time' ? 'Hours' : 'Amount'}
               </Label>
@@ -216,7 +236,7 @@ export function InvestmentForm({
                 step={type === 'time' ? '0.25' : '0.01'}
                 min="0"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={e => setAmount(e.target.value)}
                 placeholder={type === 'time' ? 'e.g., 2.5' : '0.00'}
                 className="bg-gray-800 border-white/10"
                 required
@@ -230,7 +250,7 @@ export function InvestmentForm({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {CURRENCIES.map((c) => (
+                    {CURRENCIES.map(c => (
                       <SelectItem key={c} value={c}>
                         {c}
                       </SelectItem>
@@ -247,8 +267,12 @@ export function InvestmentForm({
             <Input
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={type === 'time' ? 'e.g., Editing YouTube video' : 'e.g., Camera equipment'}
+              onChange={e => setDescription(e.target.value)}
+              placeholder={
+                type === 'time'
+                  ? 'e.g., Editing YouTube video'
+                  : 'e.g., Camera equipment'
+              }
               className="bg-gray-800 border-white/10"
             />
           </div>
@@ -256,13 +280,16 @@ export function InvestmentForm({
           {/* Platform */}
           <div className="space-y-2">
             <Label htmlFor="platform">Platform (optional)</Label>
-            <Select value={platform || 'none'} onValueChange={(v) => setPlatform(v === 'none' ? '' : v)}>
+            <Select
+              value={platform || 'none'}
+              onValueChange={v => setPlatform(v === 'none' ? '' : v)}
+            >
               <SelectTrigger className="bg-gray-800 border-white/10">
                 <SelectValue placeholder="Select platform" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">No platform</SelectItem>
-                {PLATFORMS.map((p) => (
+                {PLATFORMS.map(p => (
                   <SelectItem key={p} value={p}>
                     {p}
                   </SelectItem>
@@ -278,7 +305,7 @@ export function InvestmentForm({
               id="investedAt"
               type="date"
               value={investedAt}
-              onChange={(e) => setInvestedAt(e.target.value)}
+              onChange={e => setInvestedAt(e.target.value)}
               className="bg-gray-800 border-white/10"
               required
             />

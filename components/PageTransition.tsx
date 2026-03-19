@@ -11,9 +11,12 @@ interface PageTransitionProps {
 }
 
 // Main page transition wrapper
-export function PageTransition({ children, className = '' }: PageTransitionProps) {
+export function PageTransition({
+  children,
+  className = '',
+}: PageTransitionProps) {
   const pathname = usePathname();
-  
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -33,7 +36,7 @@ export function PageTransition({ children, className = '' }: PageTransitionProps
 // Slide transition
 export function SlideTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -44,7 +47,7 @@ export function SlideTransition({ children }: { children: ReactNode }) {
         transition={{
           type: 'spring',
           stiffness: 260,
-          damping: 20
+          damping: 20,
         }}
       >
         {children}
@@ -56,7 +59,7 @@ export function SlideTransition({ children }: { children: ReactNode }) {
 // Fade transition
 export function FadeTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -75,7 +78,7 @@ export function FadeTransition({ children }: { children: ReactNode }) {
 // Scale transition
 export function ScaleTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -86,7 +89,7 @@ export function ScaleTransition({ children }: { children: ReactNode }) {
         transition={{
           type: 'spring',
           stiffness: 300,
-          damping: 25
+          damping: 25,
         }}
       >
         {children}
@@ -98,7 +101,7 @@ export function ScaleTransition({ children }: { children: ReactNode }) {
 // Rotate transition
 export function RotateTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -109,7 +112,7 @@ export function RotateTransition({ children }: { children: ReactNode }) {
         transition={{
           type: 'spring',
           stiffness: 200,
-          damping: 20
+          damping: 20,
         }}
         style={{ transformStyle: 'preserve-3d' }}
       >
@@ -120,15 +123,15 @@ export function RotateTransition({ children }: { children: ReactNode }) {
 }
 
 // Loading transition with progress
-export function LoadingTransition({ 
+export function LoadingTransition({
   children,
-  loading = false 
-}: { 
+  loading = false,
+}: {
   children: ReactNode;
   loading?: boolean;
 }) {
   const [progress, setProgress] = useState(0);
-  
+
   useEffect(() => {
     if (loading) {
       const interval = setInterval(() => {
@@ -137,14 +140,14 @@ export function LoadingTransition({
           return prev + 10;
         });
       }, 100);
-      
+
       return () => clearInterval(interval);
     } else {
       setProgress(100);
       setTimeout(() => setProgress(0), 500);
     }
   }, [loading]);
-  
+
   return (
     <>
       {/* Progress bar */}
@@ -157,14 +160,14 @@ export function LoadingTransition({
             className="fixed top-0 left-0 right-0 z-50 h-1 bg-white/10"
           >
             <motion.div
-              className="h-full bg-gradient-to-r from-cyan-500 to-cyan-500"
+              className="h-full bg-gradient-to-r from-orange-500 to-orange-500"
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.3 }}
             />
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Content */}
       <motion.div
         animate={{ opacity: loading ? 0.5 : 1 }}
@@ -177,10 +180,10 @@ export function LoadingTransition({
 }
 
 // Stagger children animation
-export function StaggerChildren({ 
+export function StaggerChildren({
   children,
-  delay = 0.1 
-}: { 
+  delay = 0.1,
+}: {
   children: ReactNode;
   delay?: number;
 }) {
@@ -193,9 +196,9 @@ export function StaggerChildren({
         visible: {
           opacity: 1,
           transition: {
-            staggerChildren: delay
-          }
-        }
+            staggerChildren: delay,
+          },
+        },
       }}
     >
       {children}
@@ -206,7 +209,7 @@ export function StaggerChildren({
 // Parallax scrolling wrapper
 export function ParallaxSection({
   children,
-  offset = 50
+  offset = 50,
 }: {
   children: ReactNode;
   offset?: number;
@@ -235,7 +238,7 @@ export function ParallaxSection({
   return (
     <motion.div
       style={{
-        transform: `translateY(${scrollY * 0.5}px)`
+        transform: `translateY(${scrollY * 0.5}px)`,
       }}
     >
       {children}
@@ -244,20 +247,20 @@ export function ParallaxSection({
 }
 
 // Reveal on scroll
-export function RevealOnScroll({ 
+export function RevealOnScroll({
   children,
-  threshold = 0.1
-}: { 
+  threshold = 0.1,
+}: {
   children: ReactNode;
   threshold?: number;
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  
+
   useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             setIsVisible(true);
             observer.unobserve(entry.target);
@@ -266,14 +269,14 @@ export function RevealOnScroll({
       },
       { threshold }
     );
-    
+
     if (ref.current) {
       observer.observe(ref.current);
     }
-    
+
     return () => observer.disconnect();
   }, [threshold]);
-  
+
   return (
     <motion.div
       ref={ref}
@@ -287,10 +290,10 @@ export function RevealOnScroll({
 }
 
 // Morphing layout transition
-export function MorphTransition({ 
+export function MorphTransition({
   children,
-  layoutId
-}: { 
+  layoutId,
+}: {
   children: ReactNode;
   layoutId: string;
 }) {
@@ -301,7 +304,7 @@ export function MorphTransition({
       transition={{
         type: 'spring',
         stiffness: 300,
-        damping: 25
+        damping: 25,
       }}
     >
       {children}
@@ -343,8 +346,12 @@ export function CursorFollower() {
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    document.body.addEventListener('mouseover', handleMouseOver, { passive: true });
-    document.body.addEventListener('mouseout', handleMouseOut, { passive: true });
+    document.body.addEventListener('mouseover', handleMouseOver, {
+      passive: true,
+    });
+    document.body.addEventListener('mouseout', handleMouseOut, {
+      passive: true,
+    });
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
@@ -353,19 +360,19 @@ export function CursorFollower() {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
-  
+
   return (
     <motion.div
       className="fixed pointer-events-none z-50 mix-blend-difference"
       animate={{
         x: mousePosition.x - 16,
         y: mousePosition.y - 16,
-        scale: isHovering ? 1.5 : 1
+        scale: isHovering ? 1.5 : 1,
       }}
       transition={{
         type: 'spring',
         stiffness: 500,
-        damping: 28
+        damping: 28,
       }}
     >
       <div className="w-8 h-8 bg-white rounded-full opacity-50" />

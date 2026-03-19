@@ -21,8 +21,16 @@ import { Building, Plus } from '@/components/icons';
 export default function BusinessesPage() {
   const router = useRouter();
   const { user, isLoading: userLoading } = useUser();
-  const { businesses, switchBusiness, refetch: refetchBusinesses } = useActiveBusiness();
-  const { overview, isLoading: overviewLoading, refetch: refetchOverview } = useBusinessOverview();
+  const {
+    businesses,
+    switchBusiness,
+    refetch: refetchBusinesses,
+  } = useActiveBusiness();
+  const {
+    overview,
+    isLoading: overviewLoading,
+    refetch: refetchOverview,
+  } = useBusinessOverview();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   // Handle business switch
@@ -56,14 +64,17 @@ export default function BusinessesPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-cyan-500/10 rounded-lg animate-pulse" />
-            <div className="w-48 h-8 bg-cyan-500/10 rounded animate-pulse" />
+            <div className="w-8 h-8 bg-orange-500/10 rounded-lg animate-pulse" />
+            <div className="w-48 h-8 bg-orange-500/10 rounded animate-pulse" />
           </div>
-          <div className="w-40 h-10 bg-cyan-500/10 rounded-lg animate-pulse" />
+          <div className="w-40 h-10 bg-orange-500/10 rounded-lg animate-pulse" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm animate-pulse" />
+          {[1, 2, 3, 4].map(i => (
+            <div
+              key={i}
+              className="h-32 border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm animate-pulse"
+            />
           ))}
         </div>
         <div className="h-96 border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm animate-pulse" />
@@ -75,21 +86,23 @@ export default function BusinessesPage() {
   if (!user?.isMultiBusinessOwner) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Card className="max-w-md bg-surface-base/80 border border-cyan-500/10">
+        <Card className="max-w-md bg-surface-base/80 border border-orange-500/10">
           <CardContent className="p-8 text-center space-y-4">
             <div className="w-16 h-16 bg-red-500/10 rounded-sm flex items-center justify-center mx-auto border-[0.5px] border-red-500/20">
               <Building className="w-8 h-8 text-red-400" />
             </div>
             <div>
-              <h2 className="text-xl font-light text-white mb-2">Access Denied</h2>
+              <h2 className="text-xl font-light text-white mb-2">
+                Access Denied
+              </h2>
               <p className="text-white/40">
-                This page is only accessible to multi-business owners.
-                Please contact support if you believe this is an error.
+                This page is only accessible to multi-business owners. Please
+                contact support if you believe this is an error.
               </p>
             </div>
             <Button
               onClick={() => router.push('/dashboard')}
-              className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border-[0.5px] border-cyan-500/30"
+              className="bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border-[0.5px] border-orange-500/30"
             >
               Return to Dashboard
             </Button>
@@ -104,18 +117,24 @@ export default function BusinessesPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-cyan-500/10 rounded-sm flex items-center justify-center border-[0.5px] border-cyan-500/20">
-            <Building className="w-5 h-5 text-cyan-400" />
+          <div className="w-10 h-10 bg-orange-500/10 rounded-sm flex items-center justify-center border-[0.5px] border-orange-500/20">
+            <Building className="w-5 h-5 text-orange-400" />
           </div>
           <div>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-1 block">Workspace</span>
-            <h1 className="text-3xl font-extralight tracking-tight text-white">Business Management</h1>
-            <p className="text-sm text-white/40">Manage and monitor all your businesses</p>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-1 block">
+              Workspace
+            </span>
+            <h1 className="text-3xl font-extralight tracking-tight text-white">
+              Business Management
+            </h1>
+            <p className="text-sm text-white/40">
+              Manage and monitor all your businesses
+            </p>
           </div>
         </div>
         <Button
           onClick={() => setCreateDialogOpen(true)}
-          className="bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30"
+          className="bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30"
         >
           <Plus className="w-4 h-4 mr-2" />
           Create Business
@@ -125,14 +144,17 @@ export default function BusinessesPage() {
       {/* Cross-Business Overview Cards */}
       {overviewLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm animate-pulse" />
+          {[1, 2, 3, 4].map(i => (
+            <div
+              key={i}
+              className="h-32 border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm animate-pulse"
+            />
           ))}
         </div>
       ) : overview ? (
         <BusinessOverviewCards overview={overview} />
       ) : (
-        <Card className="bg-surface-base/80 border border-cyan-500/10">
+        <Card className="bg-surface-base/80 border border-orange-500/10">
           <CardContent className="p-8 text-center">
             <p className="text-white/40">No overview data available</p>
           </CardContent>

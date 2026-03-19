@@ -9,18 +9,42 @@
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { X, Loader2 } from '@/components/icons';
-import type { DealDeliverable, DeliverableType, DeliverableStatus, CreateDeliverableInput, UpdateDeliverableInput } from '@/hooks/useSponsorCRM';
-import { DELIVERABLE_TYPES, DELIVERABLE_STATUSES, TYPE_LABELS, DELIVERABLE_STATUS_LABELS } from '@/hooks/useSponsorCRM';
+import type {
+  DealDeliverable,
+  DeliverableType,
+  DeliverableStatus,
+  CreateDeliverableInput,
+  UpdateDeliverableInput,
+} from '@/hooks/useSponsorCRM';
+import {
+  DELIVERABLE_TYPES,
+  DELIVERABLE_STATUSES,
+  TYPE_LABELS,
+  DELIVERABLE_STATUS_LABELS,
+} from '@/hooks/useSponsorCRM';
 
 interface DeliverableFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateDeliverableInput | UpdateDeliverableInput) => Promise<void>;
+  onSubmit: (
+    data: CreateDeliverableInput | UpdateDeliverableInput
+  ) => Promise<void>;
   deliverable?: DealDeliverable | null;
   isLoading?: boolean;
 }
 
-const PLATFORMS = ['YouTube', 'Instagram', 'TikTok', 'Twitter', 'Facebook', 'LinkedIn', 'Pinterest', 'Reddit', 'Threads', 'Other'];
+const PLATFORMS = [
+  'YouTube',
+  'Instagram',
+  'TikTok',
+  'Twitter',
+  'Facebook',
+  'LinkedIn',
+  'Pinterest',
+  'Reddit',
+  'Threads',
+  'Other',
+];
 
 function formatDateForInput(date: Date | string | null): string {
   if (!date) return '';
@@ -122,10 +146,12 @@ export function DeliverableForm({
             <input
               type="text"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={e =>
+                setFormData({ ...formData, title: e.target.value })
+              }
               placeholder="Deliverable title"
               required
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
             />
           </div>
 
@@ -136,10 +162,12 @@ export function DeliverableForm({
             </label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={e =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               placeholder="Requirements or notes..."
               rows={2}
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent resize-none"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent resize-none"
             />
           </div>
 
@@ -151,10 +179,15 @@ export function DeliverableForm({
               </label>
               <select
                 value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value as DeliverableType })}
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    type: e.target.value as DeliverableType,
+                  })
+                }
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
               >
-                {DELIVERABLE_TYPES.map((type) => (
+                {DELIVERABLE_TYPES.map(type => (
                   <option key={type} value={type} className="bg-surface-base">
                     {TYPE_LABELS[type]}
                   </option>
@@ -167,12 +200,20 @@ export function DeliverableForm({
               </label>
               <select
                 value={formData.platform}
-                onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+                onChange={e =>
+                  setFormData({ ...formData, platform: e.target.value })
+                }
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
               >
-                <option value="" className="bg-surface-base">Select platform</option>
-                {PLATFORMS.map((platform) => (
-                  <option key={platform} value={platform} className="bg-surface-base">
+                <option value="" className="bg-surface-base">
+                  Select platform
+                </option>
+                {PLATFORMS.map(platform => (
+                  <option
+                    key={platform}
+                    value={platform}
+                    className="bg-surface-base"
+                  >
                     {platform}
                   </option>
                 ))}
@@ -188,11 +229,20 @@ export function DeliverableForm({
               </label>
               <select
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as DeliverableStatus })}
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    status: e.target.value as DeliverableStatus,
+                  })
+                }
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
               >
-                {DELIVERABLE_STATUSES.map((status) => (
-                  <option key={status} value={status} className="bg-surface-base">
+                {DELIVERABLE_STATUSES.map(status => (
+                  <option
+                    key={status}
+                    value={status}
+                    className="bg-surface-base"
+                  >
                     {DELIVERABLE_STATUS_LABELS[status]}
                   </option>
                 ))}
@@ -205,8 +255,10 @@ export function DeliverableForm({
               <input
                 type="date"
                 value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+                onChange={e =>
+                  setFormData({ ...formData, dueDate: e.target.value })
+                }
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
               />
             </div>
           </div>
@@ -219,9 +271,11 @@ export function DeliverableForm({
             <input
               type="url"
               value={formData.contentUrl}
-              onChange={(e) => setFormData({ ...formData, contentUrl: e.target.value })}
+              onChange={e =>
+                setFormData({ ...formData, contentUrl: e.target.value })
+              }
               placeholder="https://..."
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
             />
           </div>
 
@@ -240,7 +294,7 @@ export function DeliverableForm({
               disabled={isLoading || !formData.title.trim()}
               className={cn(
                 'flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-colors',
-                'bg-cyan-600 hover:bg-cyan-500 text-white',
+                'bg-orange-600 hover:bg-orange-500 text-white',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
             >

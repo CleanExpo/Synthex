@@ -11,7 +11,14 @@
 
 import { useState } from 'react';
 import useSWR from 'swr';
-import { FileText, Loader2, AlertCircle, Plus, Eye, Save } from '@/components/icons';
+import {
+  FileText,
+  Loader2,
+  AlertCircle,
+  Plus,
+  Eye,
+  Save,
+} from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -63,12 +70,17 @@ async function fetchJson<T>(url: string): Promise<T> {
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    draft:     'bg-gray-500/20 text-gray-400 border-gray-500/30',
+    draft: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
     published: 'bg-green-500/20 text-green-300 border-green-500/30',
-    archived:  'bg-red-500/20 text-red-400 border-red-500/30',
+    archived: 'bg-red-500/20 text-red-400 border-red-500/30',
   };
   return (
-    <span className={cn('text-xs px-2 py-0.5 rounded-full border', styles[status] ?? styles.draft)}>
+    <span
+      className={cn(
+        'text-xs px-2 py-0.5 rounded-full border',
+        styles[status] ?? styles.draft
+      )}
+    >
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
@@ -86,16 +98,16 @@ interface EditorPanelProps {
 
 function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
   const [form, setForm] = useState({
-    headline:     release?.headline     ?? '',
-    subheading:   release?.subheading   ?? '',
-    body:         release?.body         ?? '',
-    boilerplate:  release?.boilerplate  ?? '',
-    contactName:  release?.contactName  ?? '',
+    headline: release?.headline ?? '',
+    subheading: release?.subheading ?? '',
+    body: release?.body ?? '',
+    boilerplate: release?.boilerplate ?? '',
+    contactName: release?.contactName ?? '',
     contactEmail: release?.contactEmail ?? '',
     contactPhone: release?.contactPhone ?? '',
-    location:     release?.location     ?? 'Sydney, NSW, Australia',
-    keywords:     release?.keywords.join(', ') ?? '',
-    category:     release?.category     ?? '',
+    location: release?.location ?? 'Sydney, NSW, Australia',
+    keywords: release?.keywords.join(', ') ?? '',
+    category: release?.category ?? '',
   });
   const [showJsonLd, setShowJsonLd] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -110,7 +122,9 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
     articleBody: form.body ? form.body.slice(0, 200) + '...' : '(body)',
     datePublished: release?.datePublished ?? new Date().toISOString(),
     keywords: form.keywords || undefined,
-    locationCreated: form.location ? { '@type': 'Place', name: form.location } : undefined,
+    locationCreated: form.location
+      ? { '@type': 'Place', name: form.location }
+      : undefined,
     author: { '@type': 'Organization', name: '(your organisation)' },
     publisher: { '@type': 'Organization', name: '(your organisation)' },
   };
@@ -121,7 +135,10 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
     try {
       const payload = {
         ...form,
-        keywords: form.keywords.split(',').map((k) => k.trim()).filter(Boolean),
+        keywords: form.keywords
+          .split(',')
+          .map(k => k.trim())
+          .filter(Boolean),
         status: status ?? release?.status ?? 'draft',
       };
 
@@ -147,37 +164,44 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
     }
   };
 
-  const inputClass = 'w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50';
+  const inputClass =
+    'w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50';
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
       {/* Left: Form */}
       <div className="space-y-4">
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1">Headline *</label>
+          <label className="block text-xs font-medium text-gray-400 mb-1">
+            Headline *
+          </label>
           <input
             type="text"
             value={form.headline}
-            onChange={(e) => setForm((f) => ({ ...f, headline: e.target.value }))}
+            onChange={e => setForm(f => ({ ...f, headline: e.target.value }))}
             placeholder="Acme Corp Raises $5M Seed Round to Transform Australian Recruitment"
             className={inputClass}
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1">Subheading</label>
+          <label className="block text-xs font-medium text-gray-400 mb-1">
+            Subheading
+          </label>
           <input
             type="text"
             value={form.subheading}
-            onChange={(e) => setForm((f) => ({ ...f, subheading: e.target.value }))}
+            onChange={e => setForm(f => ({ ...f, subheading: e.target.value }))}
             placeholder="Sydney-based startup closes oversubscribed round"
             className={inputClass}
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1">Body (Markdown) *</label>
+          <label className="block text-xs font-medium text-gray-400 mb-1">
+            Body (Markdown) *
+          </label>
           <textarea
             value={form.body}
-            onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
+            onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
             placeholder="SYDNEY, Australia — [date] — ..."
             rows={10}
             className={cn(inputClass, 'resize-none font-mono text-xs')}
@@ -185,20 +209,24 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Location</label>
+            <label className="block text-xs font-medium text-gray-400 mb-1">
+              Location
+            </label>
             <input
               type="text"
               value={form.location}
-              onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
+              onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
               placeholder="Sydney, NSW, Australia"
               className={inputClass}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Category</label>
+            <label className="block text-xs font-medium text-gray-400 mb-1">
+              Category
+            </label>
             <select
               value={form.category}
-              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+              onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
               className={inputClass}
             >
               <option value="">Select category</option>
@@ -211,20 +239,26 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1">Keywords (comma-separated)</label>
+          <label className="block text-xs font-medium text-gray-400 mb-1">
+            Keywords (comma-separated)
+          </label>
           <input
             type="text"
             value={form.keywords}
-            onChange={(e) => setForm((f) => ({ ...f, keywords: e.target.value }))}
+            onChange={e => setForm(f => ({ ...f, keywords: e.target.value }))}
             placeholder="startup, funding, recruitment, AI"
             className={inputClass}
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1">Boilerplate (About section)</label>
+          <label className="block text-xs font-medium text-gray-400 mb-1">
+            Boilerplate (About section)
+          </label>
           <textarea
             value={form.boilerplate}
-            onChange={(e) => setForm((f) => ({ ...f, boilerplate: e.target.value }))}
+            onChange={e =>
+              setForm(f => ({ ...f, boilerplate: e.target.value }))
+            }
             placeholder="About Acme Corp: ..."
             rows={3}
             className={cn(inputClass, 'resize-none')}
@@ -232,16 +266,43 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Contact Name</label>
-            <input type="text" value={form.contactName} onChange={(e) => setForm((f) => ({ ...f, contactName: e.target.value }))} className={inputClass} />
+            <label className="block text-xs font-medium text-gray-400 mb-1">
+              Contact Name
+            </label>
+            <input
+              type="text"
+              value={form.contactName}
+              onChange={e =>
+                setForm(f => ({ ...f, contactName: e.target.value }))
+              }
+              className={inputClass}
+            />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Contact Email</label>
-            <input type="email" value={form.contactEmail} onChange={(e) => setForm((f) => ({ ...f, contactEmail: e.target.value }))} className={inputClass} />
+            <label className="block text-xs font-medium text-gray-400 mb-1">
+              Contact Email
+            </label>
+            <input
+              type="email"
+              value={form.contactEmail}
+              onChange={e =>
+                setForm(f => ({ ...f, contactEmail: e.target.value }))
+              }
+              className={inputClass}
+            />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Contact Phone</label>
-            <input type="tel" value={form.contactPhone} onChange={(e) => setForm((f) => ({ ...f, contactPhone: e.target.value }))} className={inputClass} />
+            <label className="block text-xs font-medium text-gray-400 mb-1">
+              Contact Phone
+            </label>
+            <input
+              type="tel"
+              value={form.contactPhone}
+              onChange={e =>
+                setForm(f => ({ ...f, contactPhone: e.target.value }))
+              }
+              className={inputClass}
+            />
           </div>
         </div>
 
@@ -277,9 +338,11 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
       {/* Right: JSON-LD preview */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-xs font-medium text-gray-400">JSON-LD Preview</label>
+          <label className="text-xs font-medium text-gray-400">
+            JSON-LD Preview
+          </label>
           <button
-            onClick={() => setShowJsonLd((v) => !v)}
+            onClick={() => setShowJsonLd(v => !v)}
             className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-colors"
           >
             <Eye className="h-3 w-3" />
@@ -293,7 +356,9 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
         )}
         {!showJsonLd && (
           <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center text-gray-500 text-sm">
-            Click &quot;Show schema&quot; to preview the JSON-LD structured data that will be included in the published press release page for AI engine indexing.
+            Click &quot;Show schema&quot; to preview the JSON-LD structured data
+            that will be included in the published press release page for AI
+            engine indexing.
           </div>
         )}
       </div>
@@ -307,10 +372,16 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
 
 export interface PressReleaseEditorProps {
   /** Called when the user selects a release row for distribution tracking */
-  onSelectRelease?: (release: { id: string; slug: string; headline: string }) => void;
+  onSelectRelease?: (release: {
+    id: string;
+    slug: string;
+    headline: string;
+  }) => void;
 }
 
-export function PressReleaseEditor({ onSelectRelease }: PressReleaseEditorProps = {}) {
+export function PressReleaseEditor({
+  onSelectRelease,
+}: PressReleaseEditorProps = {}) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
 
@@ -342,10 +413,15 @@ export function PressReleaseEditor({ onSelectRelease }: PressReleaseEditorProps 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-gray-400">{releases.length} press releases</h3>
+        <h3 className="text-sm font-medium text-gray-400">
+          {releases.length} press releases
+        </h3>
         <button
-          onClick={() => { setSelectedId(null); setShowNew(true); }}
-          className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition-colors"
+          onClick={() => {
+            setSelectedId(null);
+            setShowNew(true);
+          }}
+          className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-medium rounded-lg transition-colors"
         >
           <Plus className="h-4 w-4" />
           New Press Release
@@ -356,7 +432,10 @@ export function PressReleaseEditor({ onSelectRelease }: PressReleaseEditorProps 
       {showNew && (
         <EditorPanel
           release={null}
-          onSaved={() => { setShowNew(false); mutate(); }}
+          onSaved={() => {
+            setShowNew(false);
+            mutate();
+          }}
           onClose={() => setShowNew(false)}
         />
       )}
@@ -368,20 +447,27 @@ export function PressReleaseEditor({ onSelectRelease }: PressReleaseEditorProps 
         </div>
       ) : (
         <div className="space-y-2">
-          {releases.map((release) => (
+          {releases.map(release => (
             <div key={release.id}>
               <div
                 className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3 hover:bg-white/[0.08] transition-colors cursor-pointer"
                 onClick={() => {
                   const newId = selectedId === release.id ? null : release.id;
                   setSelectedId(newId);
-                  if (newId) onSelectRelease?.({ id: release.id, slug: release.slug, headline: release.headline });
+                  if (newId)
+                    onSelectRelease?.({
+                      id: release.id,
+                      slug: release.slug,
+                      headline: release.headline,
+                    });
                 }}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <FileText className="h-4 w-4 text-amber-400 flex-shrink-0" />
-                    <span className="text-white text-sm font-medium truncate">{release.headline}</span>
+                    <span className="text-white text-sm font-medium truncate">
+                      {release.headline}
+                    </span>
                     <StatusBadge status={release.status} />
                   </div>
                   <div className="text-xs text-gray-500 ml-6">

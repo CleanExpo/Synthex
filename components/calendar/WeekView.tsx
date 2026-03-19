@@ -21,7 +21,11 @@ import {
 } from '@dnd-kit/core';
 import { DroppableTimeSlot } from './DroppableTimeSlot';
 import { DraggablePostCard } from './DraggablePostCard';
-import { ScheduledPost, OPTIMAL_TIMES, CalendarViewProps } from './CalendarTypes';
+import {
+  ScheduledPost,
+  OPTIMAL_TIMES,
+  CalendarViewProps,
+} from './CalendarTypes';
 import { ChevronLeft, ChevronRight } from '@/components/icons';
 
 interface WeekViewProps extends CalendarViewProps {
@@ -41,7 +45,9 @@ export function WeekView({
   startHour = 6,
   endHour = 22,
 }: WeekViewProps) {
-  const [activePost, setActivePost] = React.useState<ScheduledPost | null>(null);
+  const [activePost, setActivePost] = React.useState<ScheduledPost | null>(
+    null
+  );
 
   // Configure sensors for drag detection
   const sensors = useSensors(
@@ -86,7 +92,7 @@ export function WeekView({
   const postsBySlot = useMemo(() => {
     const grouped: Record<string, ScheduledPost[]> = {};
 
-    posts.forEach((post) => {
+    posts.forEach(post => {
       const postDate = new Date(post.scheduledFor);
       const dateKey = postDate.toDateString();
       const hour = postDate.getHours();
@@ -103,7 +109,7 @@ export function WeekView({
 
   // Check if a slot is optimal for any platform
   const isOptimalSlot = (hour: number): boolean => {
-    return Object.values(optimalTimes).some((times) => times.includes(hour));
+    return Object.values(optimalTimes).some(times => times.includes(hour));
   };
 
   // Handle drag start
@@ -121,7 +127,9 @@ export function WeekView({
     if (!over || !active.data.current?.post) return;
 
     const post = active.data.current.post as ScheduledPost;
-    const dropData = over.data.current as { hour: number; date: Date } | undefined;
+    const dropData = over.data.current as
+      | { hour: number; date: Date }
+      | undefined;
 
     if (!dropData) return;
 
@@ -138,19 +146,19 @@ export function WeekView({
   const formatDayHeader = (date: Date) => {
     const isToday = date.toDateString() === new Date().toDateString();
     return (
-      <div className={`text-center py-3 ${isToday ? 'bg-cyan-500/10' : ''}`}>
+      <div className={`text-center py-3 ${isToday ? 'bg-orange-500/10' : ''}`}>
         <div className="text-xs text-gray-500 uppercase">
           {date.toLocaleDateString('en-US', { weekday: 'short' })}
         </div>
         <div
           className={`text-lg font-semibold ${
-            isToday ? 'text-cyan-400' : 'text-white'
+            isToday ? 'text-orange-400' : 'text-white'
           }`}
         >
           {date.getDate()}
         </div>
         {isToday && (
-          <div className="text-[10px] text-cyan-400 font-medium">Today</div>
+          <div className="text-[10px] text-orange-400 font-medium">Today</div>
         )}
       </div>
     );
@@ -184,7 +192,9 @@ export function WeekView({
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <h2 className="text-lg font-semibold text-white">{weekRangeDisplay}</h2>
+          <h2 className="text-lg font-semibold text-white">
+            {weekRangeDisplay}
+          </h2>
           <button
             onClick={() => onWeekChange?.('next')}
             className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
@@ -200,7 +210,7 @@ export function WeekView({
             <div className="w-16 border-r border-white/10" />
 
             {/* Day headers */}
-            {weekDates.map((date) => (
+            {weekDates.map(date => (
               <div
                 key={date.toISOString()}
                 className="border-r border-white/5 last:border-r-0"
@@ -212,7 +222,7 @@ export function WeekView({
 
           {/* Time slots */}
           <div className="relative">
-            {hours.map((hour) => (
+            {hours.map(hour => (
               <div
                 key={hour}
                 className="grid grid-cols-8 border-b border-white/5 last:border-b-0"
@@ -223,7 +233,7 @@ export function WeekView({
                 </div>
 
                 {/* Day slots */}
-                {weekDates.map((date) => {
+                {weekDates.map(date => {
                   const slotKey = `${date.toDateString()}-${hour}`;
                   const slotId = `slot-${date.toISOString()}-${hour}`;
                   const slotPosts = postsBySlot[slotKey] || [];

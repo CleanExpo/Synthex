@@ -10,7 +10,11 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { ScheduledPost, PLATFORM_COLORS, ApprovalStatus } from './CalendarTypes';
+import {
+  ScheduledPost,
+  PLATFORM_COLORS,
+  ApprovalStatus,
+} from './CalendarTypes';
 import {
   Twitter,
   Linkedin,
@@ -24,7 +28,10 @@ import {
   GripVertical,
 } from '@/components/icons';
 
-const platformIcons: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
+const platformIcons: Record<
+  string,
+  React.ComponentType<{ className?: string; style?: React.CSSProperties }>
+> = {
   twitter: Twitter,
   linkedin: Linkedin,
   instagram: Instagram,
@@ -33,12 +40,35 @@ const platformIcons: Record<string, React.ComponentType<{ className?: string; st
 };
 
 // Approval status badge colors and labels
-const approvalStatusConfig: Record<ApprovalStatus, { color: string; bgColor: string; label: string }> = {
-  pending: { color: 'bg-yellow-400', bgColor: 'bg-yellow-500/20', label: 'Pending Approval' },
-  in_review: { color: 'bg-blue-400', bgColor: 'bg-blue-500/20', label: 'In Review' },
-  approved: { color: 'bg-green-400', bgColor: 'bg-green-500/20', label: 'Approved' },
-  rejected: { color: 'bg-red-400', bgColor: 'bg-red-500/20', label: 'Rejected' },
-  revision_requested: { color: 'bg-orange-400', bgColor: 'bg-orange-500/20', label: 'Revision Requested' },
+const approvalStatusConfig: Record<
+  ApprovalStatus,
+  { color: string; bgColor: string; label: string }
+> = {
+  pending: {
+    color: 'bg-yellow-400',
+    bgColor: 'bg-yellow-500/20',
+    label: 'Pending Approval',
+  },
+  in_review: {
+    color: 'bg-blue-400',
+    bgColor: 'bg-blue-500/20',
+    label: 'In Review',
+  },
+  approved: {
+    color: 'bg-green-400',
+    bgColor: 'bg-green-500/20',
+    label: 'Approved',
+  },
+  rejected: {
+    color: 'bg-red-400',
+    bgColor: 'bg-red-500/20',
+    label: 'Rejected',
+  },
+  revision_requested: {
+    color: 'bg-orange-400',
+    bgColor: 'bg-orange-500/20',
+    label: 'Revision Requested',
+  },
 };
 
 interface DraggablePostCardProps {
@@ -54,17 +84,12 @@ export function DraggablePostCard({
   compact = false,
   disabled = false,
 }: DraggablePostCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    isDragging,
-  } = useDraggable({
-    id: post.id,
-    data: { type: 'post', post },
-    disabled,
-  });
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: post.id,
+      data: { type: 'post', post },
+      disabled,
+    });
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -74,7 +99,7 @@ export function DraggablePostCard({
 
   const statusColors = {
     draft: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
-    scheduled: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+    scheduled: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
     published: 'bg-green-500/20 text-green-300 border-green-500/30',
     failed: 'bg-red-500/20 text-red-300 border-red-500/30',
   };
@@ -103,7 +128,7 @@ export function DraggablePostCard({
           group relative flex items-center gap-1.5 p-1.5 rounded-md text-xs
           transition-all duration-200 border
           ${statusColors[post.status]}
-          ${isDragging ? 'ring-2 ring-cyan-500 shadow-lg z-50' : ''}
+          ${isDragging ? 'ring-2 ring-orange-500 shadow-lg z-50' : ''}
           ${post.conflict ? 'ring-1 ring-yellow-500/50' : ''}
           ${!disabled ? 'hover:scale-[1.02] hover:shadow-md' : ''}
         `}
@@ -119,10 +144,7 @@ export function DraggablePostCard({
             className="p-1 rounded flex-shrink-0"
             style={{ backgroundColor: `${platformColor}20` }}
           >
-            <PrimaryIcon
-              className="h-3 w-3"
-              style={{ color: platformColor }}
-            />
+            <PrimaryIcon className="h-3 w-3" style={{ color: platformColor }} />
           </div>
         )}
 
@@ -150,7 +172,9 @@ export function DraggablePostCard({
             className="absolute -top-1 -right-1 group/badge"
             title={approvalStatusConfig[post.approvalStatus].label}
           >
-            <div className={`w-2.5 h-2.5 rounded-full ${approvalStatusConfig[post.approvalStatus].color} ring-2 ring-gray-900`} />
+            <div
+              className={`w-2.5 h-2.5 rounded-full ${approvalStatusConfig[post.approvalStatus].color} ring-2 ring-gray-900`}
+            />
             <div className="absolute bottom-full right-0 mb-1 px-2 py-1 bg-gray-800 text-xs text-white rounded whitespace-nowrap opacity-0 group-hover/badge:opacity-100 transition-opacity pointer-events-none">
               {approvalStatusConfig[post.approvalStatus].label}
             </div>
@@ -170,7 +194,7 @@ export function DraggablePostCard({
       className={`
         group relative p-3 rounded-lg border transition-all duration-200
         ${statusColors[post.status]}
-        ${isDragging ? 'ring-2 ring-cyan-500 shadow-xl z-50' : ''}
+        ${isDragging ? 'ring-2 ring-orange-500 shadow-xl z-50' : ''}
         ${post.conflict ? 'ring-1 ring-yellow-500/50' : ''}
         ${post.approvalStatus === 'approved' ? 'ring-1 ring-green-500/30 shadow-green-500/10 shadow-md' : ''}
         ${!disabled ? 'hover:scale-[1.01] hover:shadow-lg cursor-pointer' : ''}
@@ -186,7 +210,7 @@ export function DraggablePostCard({
 
           {/* Platform Icons */}
           <div className="flex -space-x-1">
-            {post.platforms.slice(0, 3).map((platform) => {
+            {post.platforms.slice(0, 3).map(platform => {
               const Icon = platformIcons[platform];
               const color = PLATFORM_COLORS[platform];
               return Icon ? (
@@ -195,10 +219,7 @@ export function DraggablePostCard({
                   className="p-1.5 rounded-full border-2 border-gray-900"
                   style={{ backgroundColor: `${color}30` }}
                 >
-                  <Icon
-                    className="h-3 w-3"
-                    style={{ color }}
-                  />
+                  <Icon className="h-3 w-3" style={{ color }} />
                 </div>
               ) : null;
             })}
@@ -234,7 +255,7 @@ export function DraggablePostCard({
         </span>
 
         {post.engagement && (
-          <span className="text-cyan-400">
+          <span className="text-orange-400">
             Est. {post.engagement.estimated || 0}% engagement
           </span>
         )}
@@ -242,10 +263,12 @@ export function DraggablePostCard({
 
       {/* Conflict Banner */}
       {post.conflict && (
-        <div className={`
+        <div
+          className={`
           mt-2 p-2 rounded text-xs flex items-center gap-2
           ${post.conflict.severity === 'error' ? 'bg-red-500/20 text-red-300' : 'bg-yellow-500/20 text-yellow-300'}
-        `}>
+        `}
+        >
           <AlertTriangle className="h-3 w-3 flex-shrink-0" />
           <span>{post.conflict.message}</span>
         </div>
@@ -264,7 +287,9 @@ export function DraggablePostCard({
           className="absolute top-1 right-1 group/badge"
           title={approvalStatusConfig[post.approvalStatus].label}
         >
-          <div className={`w-3 h-3 rounded-full ${approvalStatusConfig[post.approvalStatus].color} ring-2 ring-gray-900`} />
+          <div
+            className={`w-3 h-3 rounded-full ${approvalStatusConfig[post.approvalStatus].color} ring-2 ring-gray-900`}
+          />
           <div className="absolute bottom-full right-0 mb-1 px-2 py-1 bg-gray-800 text-xs text-white rounded whitespace-nowrap opacity-0 group-hover/badge:opacity-100 transition-opacity pointer-events-none z-10">
             {approvalStatusConfig[post.approvalStatus].label}
           </div>
@@ -275,7 +300,9 @@ export function DraggablePostCard({
           className="absolute top-1 right-8 group/badge"
           title={approvalStatusConfig[post.approvalStatus].label}
         >
-          <div className={`w-3 h-3 rounded-full ${approvalStatusConfig[post.approvalStatus].color} ring-2 ring-gray-900`} />
+          <div
+            className={`w-3 h-3 rounded-full ${approvalStatusConfig[post.approvalStatus].color} ring-2 ring-gray-900`}
+          />
           <div className="absolute bottom-full right-0 mb-1 px-2 py-1 bg-gray-800 text-xs text-white rounded whitespace-nowrap opacity-0 group-hover/badge:opacity-100 transition-opacity pointer-events-none z-10">
             {approvalStatusConfig[post.approvalStatus].label}
           </div>

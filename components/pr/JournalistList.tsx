@@ -51,10 +51,22 @@ async function fetchJson<T>(url: string): Promise<T> {
 // ---------------------------------------------------------------------------
 
 const TIER_STYLES: Record<string, { label: string; className: string }> = {
-  cold:     { label: 'Cold',     className: 'bg-gray-500/20 text-gray-400 border-gray-500/30' },
-  warm:     { label: 'Warm',     className: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' },
-  hot:      { label: 'Hot',      className: 'bg-orange-500/20 text-orange-300 border-orange-500/30' },
-  advocate: { label: 'Advocate', className: 'bg-green-500/20 text-green-300 border-green-500/30' },
+  cold: {
+    label: 'Cold',
+    className: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+  },
+  warm: {
+    label: 'Warm',
+    className: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+  },
+  hot: {
+    label: 'Hot',
+    className: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+  },
+  advocate: {
+    label: 'Advocate',
+    className: 'bg-green-500/20 text-green-300 border-green-500/30',
+  },
 };
 
 function formatRelativeDate(dateStr: string | null | undefined): string {
@@ -89,14 +101,14 @@ export function JournalistList({ onSelectJournalist }: JournalistListProps) {
   const contacts = data?.contacts ?? [];
 
   // Client-side search filter
-  const filtered = contacts.filter((c) => {
+  const filtered = contacts.filter(c => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
       c.name.toLowerCase().includes(q) ||
       c.outlet.toLowerCase().includes(q) ||
       c.outletDomain.toLowerCase().includes(q) ||
-      c.beats.some((b) => b.toLowerCase().includes(q))
+      c.beats.some(b => b.toLowerCase().includes(q))
     );
   });
 
@@ -141,13 +153,13 @@ export function JournalistList({ onSelectJournalist }: JournalistListProps) {
             type="text"
             placeholder="Search journalists..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
           />
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="ml-3 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition-colors"
+          className="ml-3 px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-medium rounded-lg transition-colors"
         >
           + New Journalist
         </button>
@@ -156,11 +168,13 @@ export function JournalistList({ onSelectJournalist }: JournalistListProps) {
       {/* List */}
       {filtered.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
-          {search ? 'No journalists match your search.' : 'No journalists yet. Add your first contact.'}
+          {search
+            ? 'No journalists match your search.'
+            : 'No journalists yet. Add your first contact.'}
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map((journalist) => {
+          {filtered.map(journalist => {
             const tier = TIER_STYLES[journalist.tier] ?? TIER_STYLES.cold;
             return (
               <div
@@ -170,8 +184,15 @@ export function JournalistList({ onSelectJournalist }: JournalistListProps) {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-white font-medium truncate">{journalist.name}</span>
-                    <span className={cn('text-xs px-2 py-0.5 rounded-full border', tier.className)}>
+                    <span className="text-white font-medium truncate">
+                      {journalist.name}
+                    </span>
+                    <span
+                      className={cn(
+                        'text-xs px-2 py-0.5 rounded-full border',
+                        tier.className
+                      )}
+                    >
                       {tier.label}
                     </span>
                     {journalist.email && (
@@ -179,11 +200,12 @@ export function JournalistList({ onSelectJournalist }: JournalistListProps) {
                     )}
                   </div>
                   <div className="text-sm text-gray-400 truncate">
-                    {journalist.outlet} · {journalist.title ?? journalist.outletDomain}
+                    {journalist.outlet} ·{' '}
+                    {journalist.title ?? journalist.outletDomain}
                   </div>
                   {journalist.beats.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {journalist.beats.slice(0, 4).map((beat) => (
+                      {journalist.beats.slice(0, 4).map(beat => (
                         <span
                           key={beat}
                           className="text-xs px-1.5 py-0.5 bg-blue-500/10 text-blue-300 rounded border border-blue-500/20"
@@ -198,7 +220,8 @@ export function JournalistList({ onSelectJournalist }: JournalistListProps) {
                 <div className="flex items-center gap-3 ml-4 flex-shrink-0">
                   <div className="text-right">
                     <div className="text-xs text-gray-500">
-                      {journalist._count.pitches} pitch{journalist._count.pitches !== 1 ? 'es' : ''}
+                      {journalist._count.pitches} pitch
+                      {journalist._count.pitches !== 1 ? 'es' : ''}
                     </div>
                     <div className="text-xs text-gray-600">
                       {formatRelativeDate(journalist.lastContactedAt)}
@@ -206,7 +229,7 @@ export function JournalistList({ onSelectJournalist }: JournalistListProps) {
                   </div>
                   {!journalist.email && (
                     <button
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation();
                         handleEnrich(journalist);
                       }}

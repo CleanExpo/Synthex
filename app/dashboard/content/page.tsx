@@ -28,7 +28,8 @@ import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 
 export default function ContentPage() {
   // Multi-business context
-  const { businesses, activeBusiness, isOwner, switchBusiness } = useActiveBusiness();
+  const { businesses, activeBusiness, isOwner, switchBusiness } =
+    useActiveBusiness();
 
   // Fetch personas from API
   const { personas: apiPersonas, loading: personasLoading } = usePersonas();
@@ -36,8 +37,8 @@ export default function ContentPage() {
   // Transform personas for GenerationSettings (only active ones)
   const personas = useMemo(() => {
     return apiPersonas
-      .filter((p) => p.status === 'active')
-      .map((p) => ({ id: p.id, name: p.name }));
+      .filter(p => p.status === 'active')
+      .map(p => ({ id: p.id, name: p.name }));
   }, [apiPersonas]);
 
   const [platform, setPlatform] = useState('twitter');
@@ -49,13 +50,18 @@ export default function ContentPage() {
   const [includeEmojis, setIncludeEmojis] = useState(true);
   const [targetLength, setTargetLength] = useState('medium');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState<GeneratedContentData | null>(null);
+  const [generatedContent, setGeneratedContent] =
+    useState<GeneratedContentData | null>(null);
   const [selectedVariation, setSelectedVariation] = useState(0);
   const [editMode, setEditMode] = useState(false);
   const [editedContent, setEditedContent] = useState('');
   const [isLoading] = useState(false);
   const [error] = useState<string | null>(null);
-  const [psychologyScore, setPsychologyScore] = useState<{overallScore: number, topPrinciples: {name: string, strength: number}[], predictedEngagement: {level: string}} | null>(null);
+  const [psychologyScore, setPsychologyScore] = useState<{
+    overallScore: number;
+    topPrinciples: { name: string; strength: number }[];
+    predictedEngagement: { level: string };
+  } | null>(null);
 
   // Media attachments
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
@@ -68,8 +74,12 @@ export default function ContentPage() {
 
   // Multi-platform state
   const [multiPlatformEnabled, setMultiPlatformEnabled] = useState(false);
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['twitter']);
-  const [platformAdaptations, setPlatformAdaptations] = useState<Record<string, string>>({});
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([
+    'twitter',
+  ]);
+  const [platformAdaptations, setPlatformAdaptations] = useState<
+    Record<string, string>
+  >({});
   const [isAdapting, setIsAdapting] = useState(false);
 
   // Post status tracking (populated after multi-platform schedule)
@@ -107,25 +117,36 @@ export default function ContentPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        if (errorData.code === 'API_KEY_REQUIRED' || errorData.code === 'API_KEY_NOT_CONFIGURED') {
-          toast.error('Please configure an AI API key in Settings → AI Credentials');
+        if (
+          errorData.code === 'API_KEY_REQUIRED' ||
+          errorData.code === 'API_KEY_NOT_CONFIGURED'
+        ) {
+          toast.error(
+            'Please configure an AI API key in Settings → AI Credentials'
+          );
           return;
         }
-        throw new Error(errorData.error || errorData.message || `Request failed (${response.status})`);
+        throw new Error(
+          errorData.error ||
+            errorData.message ||
+            `Request failed (${response.status})`
+        );
       }
       const data = await response.json();
       if (data.success && data.data) {
         const aiData = data.data;
         const transformedContent: GeneratedContentData = {
           primary: aiData.content,
-          variations: aiData.variations?.map((v: { content: string }) => v.content) || [],
+          variations:
+            aiData.variations?.map((v: { content: string }) => v.content) || [],
           metadata: {
             platform: aiData.platform,
             hookType: hookType,
             length: aiData.content?.length || 0,
-            estimatedEngagement: aiData.estimatedEngagement || aiData.viralScore || 75,
+            estimatedEngagement:
+              aiData.estimatedEngagement || aiData.viralScore || 75,
             hashtags: aiData.hashtags || [],
-          }
+          },
         };
         setGeneratedContent(transformedContent);
         setEditedContent(transformedContent.primary);
@@ -133,7 +154,7 @@ export default function ContentPage() {
 
         // Multi-platform: adapt content for secondary platforms
         const secondaryPlatforms = multiPlatformEnabled
-          ? selectedPlatforms.filter((p) => p !== platform)
+          ? selectedPlatforms.filter(p => p !== platform)
           : [];
 
         if (secondaryPlatforms.length > 0) {
@@ -153,7 +174,9 @@ export default function ContentPage() {
             });
             if (!crossPostRes.ok) {
               const errData = await crossPostRes.json().catch(() => ({}));
-              throw new Error(errData.error || `Cross-post failed (${crossPostRes.status})`);
+              throw new Error(
+                errData.error || `Cross-post failed (${crossPostRes.status})`
+              );
             }
             const crossPostData = await crossPostRes.json();
             if (crossPostData.success && crossPostData.variants) {
@@ -164,7 +187,9 @@ export default function ContentPage() {
                 adaptations[variant.platform] = variant.content;
               }
               setPlatformAdaptations(adaptations);
-              toast.success(`Content adapted for ${secondaryPlatforms.length} additional platform${secondaryPlatforms.length > 1 ? 's' : ''}`);
+              toast.success(
+                `Content adapted for ${secondaryPlatforms.length} additional platform${secondaryPlatforms.length > 1 ? 's' : ''}`
+              );
             }
           } catch {
             toast.error('Failed to adapt content for other platforms');
@@ -187,15 +212,19 @@ export default function ContentPage() {
           });
           if (!psychRes.ok) {
             const errData = await psychRes.json().catch(() => ({}));
-            throw new Error(errData.error || `Psychology analysis failed (${psychRes.status})`);
+            throw new Error(
+              errData.error || `Psychology analysis failed (${psychRes.status})`
+            );
           }
           const psychData = await psychRes.json();
           if (psychData.success && psychData.data?.analysis) {
             setPsychologyScore({
               overallScore: psychData.data.analysis.overallScore,
-              topPrinciples: psychData.data.analysis.principlesDetected
-                ?.slice(0, 3)
-                .map((p: any) => ({ name: p.name, strength: p.strength })) || [],
+              topPrinciples:
+                psychData.data.analysis.principlesDetected
+                  ?.slice(0, 3)
+                  .map((p: any) => ({ name: p.name, strength: p.strength })) ||
+                [],
               predictedEngagement: psychData.data.analysis.predictedEngagement,
             });
           }
@@ -211,7 +240,18 @@ export default function ContentPage() {
     } finally {
       setIsGenerating(false);
     }
-  }, [topic, platform, tone, includeHashtags, includeEmojis, hookType, targetLength, personaId, multiPlatformEnabled, selectedPlatforms]);
+  }, [
+    topic,
+    platform,
+    tone,
+    includeHashtags,
+    includeEmojis,
+    hookType,
+    targetLength,
+    personaId,
+    multiPlatformEnabled,
+    selectedPlatforms,
+  ]);
 
   const handleCopy = useCallback((content: string) => {
     navigator.clipboard.writeText(content);
@@ -219,11 +259,12 @@ export default function ContentPage() {
   }, []);
 
   const handleSave = useCallback(async () => {
-    const contentToSave = editMode && editedContent
-      ? editedContent
-      : generatedContent?.variations?.[selectedVariation]
-        ? generatedContent.variations[selectedVariation]
-        : generatedContent?.primary;
+    const contentToSave =
+      editMode && editedContent
+        ? editedContent
+        : generatedContent?.variations?.[selectedVariation]
+          ? generatedContent.variations[selectedVariation]
+          : generatedContent?.primary;
 
     if (!contentToSave) {
       toast.error('Generate content first before saving');
@@ -254,13 +295,28 @@ export default function ContentPage() {
       toast.success('Draft saved!', {
         action: {
           label: 'View Drafts',
-          onClick: () => { window.location.href = '/dashboard/content/drafts'; },
+          onClick: () => {
+            window.location.href = '/dashboard/content/drafts';
+          },
         },
       });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save content');
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to save content'
+      );
     }
-  }, [generatedContent, editMode, editedContent, selectedVariation, topic, platform, tone, hookType, targetLength, mediaUrls]);
+  }, [
+    generatedContent,
+    editMode,
+    editedContent,
+    selectedVariation,
+    topic,
+    platform,
+    tone,
+    hookType,
+    targetLength,
+    mediaUrls,
+  ]);
 
   const handleScheduleClick = useCallback(() => {
     if (!generatedContent) {
@@ -270,111 +326,149 @@ export default function ContentPage() {
     setPublishModalOpen(true);
   }, [generatedContent]);
 
-  const handlePublishConfirm = useCallback(async (options: PublishOptions) => {
-    const contentText = editMode && editedContent
-      ? editedContent
-      : generatedContent?.variations?.[selectedVariation] || generatedContent?.primary;
+  const handlePublishConfirm = useCallback(
+    async (options: PublishOptions) => {
+      const contentText =
+        editMode && editedContent
+          ? editedContent
+          : generatedContent?.variations?.[selectedVariation] ||
+            generatedContent?.primary;
 
-    if (!contentText) {
-      toast.error('No content to schedule');
-      return;
-    }
+      if (!contentText) {
+        toast.error('No content to schedule');
+        return;
+      }
 
-    const response = await fetchWithCSRF('/api/scheduler/posts', {
-      method: 'POST',
-      body: JSON.stringify({
-        content: contentText,
-        platform: options.platform,
-        scheduledAt: options.scheduledAt,
-        metadata: {
-          hashtags: generatedContent?.metadata?.hashtags || [],
-          persona: personaId !== 'none' ? personaId : undefined,
-          estimatedEngagement: psychologyScore?.predictedEngagement ? 8 : 5,
-          ...(mediaUrls.length > 0 ? { images: mediaUrls } : {}),
+      const response = await fetchWithCSRF('/api/scheduler/posts', {
+        method: 'POST',
+        body: JSON.stringify({
+          content: contentText,
+          platform: options.platform,
+          scheduledAt: options.scheduledAt,
+          metadata: {
+            hashtags: generatedContent?.metadata?.hashtags || [],
+            persona: personaId !== 'none' ? personaId : undefined,
+            estimatedEngagement: psychologyScore?.predictedEngagement ? 8 : 5,
+            ...(mediaUrls.length > 0 ? { images: mediaUrls } : {}),
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          (errorData as { message?: string }).message ||
+            `Failed to schedule (${response.status})`
+        );
+      }
+
+      toast.success('Post scheduled! View it in your Schedule page.', {
+        action: {
+          label: 'View Schedule',
+          onClick: () => {
+            window.location.href = '/dashboard/schedule';
+          },
         },
-      }),
-    });
+      });
+    },
+    [
+      generatedContent,
+      editMode,
+      editedContent,
+      selectedVariation,
+      personaId,
+      psychologyScore,
+      mediaUrls,
+    ]
+  );
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error((errorData as { message?: string }).message || `Failed to schedule (${response.status})`);
-    }
+  const handleMultiPublishConfirm = useCallback(
+    async (options: {
+      scheduledAt: string;
+      platforms: string[];
+      batchId: string;
+    }): Promise<PlatformScheduleResult[]> => {
+      const results: PlatformScheduleResult[] = [];
 
-    toast.success('Post scheduled! View it in your Schedule page.', {
-      action: {
-        label: 'View Schedule',
-        onClick: () => { window.location.href = '/dashboard/schedule'; },
-      },
-    });
-  }, [generatedContent, editMode, editedContent, selectedVariation, personaId, psychologyScore, mediaUrls]);
+      for (const targetPlatform of options.platforms) {
+        try {
+          const contentText =
+            platformAdaptations[targetPlatform] ||
+            (editMode && editedContent ? editedContent : null) ||
+            generatedContent?.primary ||
+            '';
 
-  const handleMultiPublishConfirm = useCallback(async (options: {
-    scheduledAt: string;
-    platforms: string[];
-    batchId: string;
-  }): Promise<PlatformScheduleResult[]> => {
-    const results: PlatformScheduleResult[] = [];
+          const response = await fetchWithCSRF('/api/scheduler/posts', {
+            method: 'POST',
+            body: JSON.stringify({
+              content: contentText,
+              platform: targetPlatform,
+              scheduledAt: options.scheduledAt,
+              metadata: {
+                hashtags: generatedContent?.metadata?.hashtags || [],
+                persona: personaId !== 'none' ? personaId : undefined,
+                estimatedEngagement: psychologyScore?.predictedEngagement
+                  ? 8
+                  : 5,
+                batchId: options.batchId,
+                ...(mediaUrls.length > 0 ? { images: mediaUrls } : {}),
+              },
+            }),
+          });
 
-    for (const targetPlatform of options.platforms) {
-      try {
-        const contentText = platformAdaptations[targetPlatform]
-          || (editMode && editedContent ? editedContent : null)
-          || generatedContent?.primary
-          || '';
-
-        const response = await fetchWithCSRF('/api/scheduler/posts', {
-          method: 'POST',
-          body: JSON.stringify({
-            content: contentText,
-            platform: targetPlatform,
-            scheduledAt: options.scheduledAt,
-            metadata: {
-              hashtags: generatedContent?.metadata?.hashtags || [],
-              persona: personaId !== 'none' ? personaId : undefined,
-              estimatedEngagement: psychologyScore?.predictedEngagement ? 8 : 5,
-              batchId: options.batchId,
-              ...(mediaUrls.length > 0 ? { images: mediaUrls } : {}),
-            },
-          }),
-        });
-
-        if (response.ok) {
-          results.push({ platform: targetPlatform, success: true });
-        } else {
-          const errData = await response.json().catch(() => ({}));
+          if (response.ok) {
+            results.push({ platform: targetPlatform, success: true });
+          } else {
+            const errData = await response.json().catch(() => ({}));
+            results.push({
+              platform: targetPlatform,
+              success: false,
+              error:
+                (errData as { message?: string }).message ||
+                `HTTP ${response.status}`,
+            });
+          }
+        } catch (err) {
           results.push({
             platform: targetPlatform,
             success: false,
-            error: (errData as { message?: string }).message || `HTTP ${response.status}`,
+            error: err instanceof Error ? err.message : 'Unknown error',
           });
         }
-      } catch (err) {
-        results.push({
-          platform: targetPlatform,
-          success: false,
-          error: err instanceof Error ? err.message : 'Unknown error',
-        });
       }
-    }
 
-    const successCount = results.filter((r) => r.success).length;
-    if (successCount === results.length) {
-      setLastBatchId(options.batchId);
-      toast.success(`Scheduled to ${successCount} platforms!`, {
-        action: {
-          label: 'View Schedule',
-          onClick: () => { window.location.href = '/dashboard/schedule'; },
-        },
-      });
-    } else if (successCount > 0) {
-      setLastBatchId(options.batchId);
-      toast.warning(`Scheduled ${successCount}/${results.length} platforms. Some failed.`);
-    } else {
-      toast.error('All platform schedules failed.');
-    }
+      const successCount = results.filter(r => r.success).length;
+      if (successCount === results.length) {
+        setLastBatchId(options.batchId);
+        toast.success(`Scheduled to ${successCount} platforms!`, {
+          action: {
+            label: 'View Schedule',
+            onClick: () => {
+              window.location.href = '/dashboard/schedule';
+            },
+          },
+        });
+      } else if (successCount > 0) {
+        setLastBatchId(options.batchId);
+        toast.warning(
+          `Scheduled ${successCount}/${results.length} platforms. Some failed.`
+        );
+      } else {
+        toast.error('All platform schedules failed.');
+      }
 
-    return results;
-  }, [platformAdaptations, editMode, editedContent, generatedContent, personaId, psychologyScore, mediaUrls]);
+      return results;
+    },
+    [
+      platformAdaptations,
+      editMode,
+      editedContent,
+      generatedContent,
+      personaId,
+      psychologyScore,
+      mediaUrls,
+    ]
+  );
 
   const handleViewAnalytics = useCallback(() => {
     window.location.href = '/dashboard/analytics';
@@ -404,21 +498,23 @@ export default function ContentPage() {
       {isOwner && businesses.length > 0 && (
         <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Building className="h-4 w-4 text-cyan-400" />
+            <Building className="h-4 w-4 text-orange-400" />
             <span className="text-sm text-white/40">Creating for:</span>
             <select
               value={activeBusiness?.organizationId ?? ''}
-              onChange={async (e) => {
+              onChange={async e => {
                 try {
                   await switchBusiness(e.target.value || null);
-                  toast.success(`Switched to ${businesses.find(b => b.organizationId === e.target.value)?.displayName || businesses.find(b => b.organizationId === e.target.value)?.organizationName}`);
+                  toast.success(
+                    `Switched to ${businesses.find(b => b.organizationId === e.target.value)?.displayName || businesses.find(b => b.organizationId === e.target.value)?.organizationName}`
+                  );
                 } catch {
                   toast.error('Failed to switch business');
                 }
               }}
-              className="bg-white/[0.02] border-[0.5px] border-cyan-500/20 rounded-sm px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-cyan-500/30 focus:outline-none appearance-none cursor-pointer"
+              className="bg-white/[0.02] border-[0.5px] border-orange-500/20 rounded-sm px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-orange-500/30 focus:outline-none appearance-none cursor-pointer"
             >
-              {businesses.map((b) => (
+              {businesses.map(b => (
                 <option key={b.organizationId} value={b.organizationId}>
                   {b.displayName || b.organizationName}
                 </option>
@@ -501,7 +597,7 @@ export default function ContentPage() {
         <div className="flex justify-end">
           <button
             onClick={() => setBulkWizardOpen(true)}
-            className="flex items-center gap-1.5 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-orange-400 hover:text-orange-300 transition-colors"
           >
             <Layers className="h-4 w-4" />
             Schedule More Posts
@@ -514,7 +610,9 @@ export default function ContentPage() {
         onOpenChange={setBulkWizardOpen}
         initialContent={
           generatedContent
-            ? (editMode && editedContent ? editedContent : generatedContent.primary)
+            ? editMode && editedContent
+              ? editedContent
+              : generatedContent.primary
             : undefined
         }
         initialPlatform={platform}
@@ -523,21 +621,32 @@ export default function ContentPage() {
       {/* Platform preview(s) */}
       {generatedContent && (
         <>
-          {multiPlatformEnabled && Object.keys(platformAdaptations).length > 1 ? (
+          {multiPlatformEnabled &&
+          Object.keys(platformAdaptations).length > 1 ? (
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-white/40">
-                Platform Previews ({Object.keys(platformAdaptations).length} platforms)
-                {isAdapting && <span className="ml-2 text-cyan-400 animate-pulse">Adapting...</span>}
+                Platform Previews ({Object.keys(platformAdaptations).length}{' '}
+                platforms)
+                {isAdapting && (
+                  <span className="ml-2 text-orange-400 animate-pulse">
+                    Adapting...
+                  </span>
+                )}
               </h3>
               <div className="grid gap-4 lg:grid-cols-2">
-                {selectedPlatforms.map((p) => (
-                  <div key={p} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+                {selectedPlatforms.map(p => (
+                  <div
+                    key={p}
+                    className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4"
+                  >
                     <PlatformPreview
                       platform={p}
                       content={
                         p === platform
-                          ? (editMode ? editedContent : generatedContent.primary)
-                          : (platformAdaptations[p] || generatedContent.primary)
+                          ? editMode
+                            ? editedContent
+                            : generatedContent.primary
+                          : platformAdaptations[p] || generatedContent.primary
                       }
                       mediaUrls={mediaUrls}
                       hashtags={generatedContent.metadata?.hashtags}
@@ -566,33 +675,49 @@ export default function ContentPage() {
               <Brain className="h-4 w-4 text-purple-400" />
               Psychology Analysis
             </h3>
-            <Link href="/dashboard/psychology" className="text-xs text-cyan-400 hover:text-cyan-300">
+            <Link
+              href="/dashboard/psychology"
+              className="text-xs text-orange-400 hover:text-orange-300"
+            >
               Full Analysis →
             </Link>
           </div>
           <div className="flex items-center gap-6">
             <div className="text-center">
-              <div className={`text-2xl font-bold ${
-                psychologyScore.overallScore >= 70 ? 'text-green-400' :
-                psychologyScore.overallScore >= 40 ? 'text-yellow-400' : 'text-red-400'
-              }`}>
+              <div
+                className={`text-2xl font-bold ${
+                  psychologyScore.overallScore >= 70
+                    ? 'text-green-400'
+                    : psychologyScore.overallScore >= 40
+                      ? 'text-yellow-400'
+                      : 'text-red-400'
+                }`}
+              >
                 {psychologyScore.overallScore}
               </div>
               <div className="text-xs text-white/40">Score</div>
             </div>
             <div className="flex-1 flex flex-wrap gap-2">
-              {psychologyScore.topPrinciples.map((p) => (
-                <span key={p.name} className="text-xs bg-purple-500/10 text-purple-300 px-2 py-1 rounded-sm border-[0.5px] border-purple-500/20">
+              {psychologyScore.topPrinciples.map(p => (
+                <span
+                  key={p.name}
+                  className="text-xs bg-purple-500/10 text-purple-300 px-2 py-1 rounded-sm border-[0.5px] border-purple-500/20"
+                >
                   {p.name} ({p.strength}%)
                 </span>
               ))}
             </div>
-            <div className={`text-xs px-2 py-1 rounded-sm ${
-              psychologyScore.predictedEngagement.level === 'viral' ? 'bg-green-500/20 text-green-400' :
-              psychologyScore.predictedEngagement.level === 'high' ? 'bg-cyan-500/20 text-cyan-400' :
-              psychologyScore.predictedEngagement.level === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
-              'bg-red-500/20 text-red-400'
-            }`}>
+            <div
+              className={`text-xs px-2 py-1 rounded-sm ${
+                psychologyScore.predictedEngagement.level === 'viral'
+                  ? 'bg-green-500/20 text-green-400'
+                  : psychologyScore.predictedEngagement.level === 'high'
+                    ? 'bg-orange-500/20 text-orange-400'
+                    : psychologyScore.predictedEngagement.level === 'medium'
+                      ? 'bg-yellow-500/20 text-yellow-400'
+                      : 'bg-red-500/20 text-red-400'
+              }`}
+            >
               {psychologyScore.predictedEngagement.level} engagement
             </div>
           </div>
@@ -615,15 +740,23 @@ export default function ContentPage() {
         content={
           editMode && editedContent
             ? editedContent
-            : generatedContent?.variations?.[selectedVariation] || generatedContent?.primary || ''
+            : generatedContent?.variations?.[selectedVariation] ||
+              generatedContent?.primary ||
+              ''
         }
         platform={platform}
         mediaUrls={mediaUrls}
         hashtags={generatedContent?.metadata?.hashtags}
         onConfirm={handlePublishConfirm}
         selectedPlatforms={multiPlatformEnabled ? selectedPlatforms : undefined}
-        platformAdaptations={multiPlatformEnabled ? platformAdaptations : undefined}
-        onMultiConfirm={multiPlatformEnabled && selectedPlatforms.length > 1 ? handleMultiPublishConfirm : undefined}
+        platformAdaptations={
+          multiPlatformEnabled ? platformAdaptations : undefined
+        }
+        onMultiConfirm={
+          multiPlatformEnabled && selectedPlatforms.length > 1
+            ? handleMultiPublishConfirm
+            : undefined
+        }
       />
     </div>
   );

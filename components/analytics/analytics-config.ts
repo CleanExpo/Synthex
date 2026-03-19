@@ -56,7 +56,7 @@ export function transformPlatformData(
   return Object.entries(breakdown).map(([platform, data]) => ({
     name: platform.charAt(0).toUpperCase() + platform.slice(1),
     value: total > 0 ? Math.round((data.posts / total) * 100) : 0,
-    color: platformColors[platform] || '#06b6d4',
+    color: platformColors[platform] || '#ffb87b',
   }));
 }
 
@@ -68,8 +68,10 @@ export function transformTimelineToEngagement(
     return [];
   }
 
-  return timeline.map((item) => {
-    const dayName = new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' });
+  return timeline.map(item => {
+    const dayName = new Date(item.date).toLocaleDateString('en-US', {
+      weekday: 'short',
+    });
     // API returns aggregated engagement; distribute proportionally across major platforms
     // as a reasonable approximation when platform filter is 'all'
     const total = item.engagement;
@@ -91,8 +93,11 @@ export function transformTimelineToGrowth(
     return [];
   }
 
-  return timeline.map((item) => {
-    const monthLabel = new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return timeline.map(item => {
+    const monthLabel = new Date(item.date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
     return {
       month: monthLabel,
       followers: item.reach, // reach as proxy for audience size
@@ -114,8 +119,13 @@ export function transformTopContent(
     content: item.content,
     platform: item.platform,
     engagement: item.engagement,
-    impressions: Math.round(item.engagement / (item.engagementRate / 100 || 0.01)),
-    date: new Date(item.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    impressions: Math.round(
+      item.engagement / (item.engagementRate / 100 || 0.01)
+    ),
+    date: new Date(item.publishedAt).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    }),
   }));
 }
 
@@ -128,17 +138,26 @@ export function transformChartData(
     return [];
   }
 
-  const platforms = breakdown ? Object.keys(breakdown) : ['twitter', 'linkedin', 'instagram'];
-  const total = breakdown ? Object.values(breakdown).reduce((sum, p) => sum + p.posts, 0) : 1;
+  const platforms = breakdown
+    ? Object.keys(breakdown)
+    : ['twitter', 'linkedin', 'instagram'];
+  const total = breakdown
+    ? Object.values(breakdown).reduce((sum, p) => sum + p.posts, 0)
+    : 1;
   const platformRatios = breakdown
-    ? Object.entries(breakdown).reduce((acc, [platform, data]) => {
-        acc[platform] = total > 0 ? data.posts / total : 0;
-        return acc;
-      }, {} as Record<string, number>)
+    ? Object.entries(breakdown).reduce(
+        (acc, [platform, data]) => {
+          acc[platform] = total > 0 ? data.posts / total : 0;
+          return acc;
+        },
+        {} as Record<string, number>
+      )
     : { twitter: 0.4, linkedin: 0.3, instagram: 0.3 };
 
   return chartData.map(item => {
-    const dayName = new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' });
+    const dayName = new Date(item.date).toLocaleDateString('en-US', {
+      weekday: 'short',
+    });
     const baseValue = item.posts * 1000;
 
     return {

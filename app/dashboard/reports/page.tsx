@@ -30,7 +30,10 @@ export default function ReportsPage() {
       const params = new URLSearchParams();
       if (filterType) params.append('type', filterType);
 
-      const response = await fetch(`/api/reporting/reports?${params.toString()}`, { credentials: 'include' });
+      const response = await fetch(
+        `/api/reporting/reports?${params.toString()}`,
+        { credentials: 'include' }
+      );
       if (!response.ok) {
         throw new Error('Failed to fetch reports');
       }
@@ -49,39 +52,44 @@ export default function ReportsPage() {
     fetchReports();
   }, [fetchReports]);
 
-  const pollReportStatus = useCallback(async (reportId: string) => {
-    const maxAttempts = 30;
-    let attempts = 0;
+  const pollReportStatus = useCallback(
+    async (reportId: string) => {
+      const maxAttempts = 30;
+      let attempts = 0;
 
-    const poll = async () => {
-      if (attempts >= maxAttempts) {
-        toast.error('Report generation timed out');
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/reporting/reports/${reportId}`, { credentials: 'include' });
-        const data = await response.json();
-
-        if (data.data?.status === 'completed') {
-          toast.success('Report ready for download!');
-          fetchReports();
-          return;
-        } else if (data.data?.status === 'failed') {
-          toast.error('Report generation failed');
-          fetchReports();
+      const poll = async () => {
+        if (attempts >= maxAttempts) {
+          toast.error('Report generation timed out');
           return;
         }
 
-        attempts++;
-        setTimeout(poll, 2000);
-      } catch (error) {
-        console.error('Poll error:', error);
-      }
-    };
+        try {
+          const response = await fetch(`/api/reporting/reports/${reportId}`, {
+            credentials: 'include',
+          });
+          const data = await response.json();
 
-    setTimeout(poll, 2000);
-  }, [fetchReports]);
+          if (data.data?.status === 'completed') {
+            toast.success('Report ready for download!');
+            fetchReports();
+            return;
+          } else if (data.data?.status === 'failed') {
+            toast.error('Report generation failed');
+            fetchReports();
+            return;
+          }
+
+          attempts++;
+          setTimeout(poll, 2000);
+        } catch (error) {
+          console.error('Poll error:', error);
+        }
+      };
+
+      setTimeout(poll, 2000);
+    },
+    [fetchReports]
+  );
 
   const handleGenerateReport = useCallback(async () => {
     if (!newReportName.trim()) {
@@ -100,7 +108,9 @@ export default function ReportsPage() {
           type: newReportType,
           format: newReportFormat,
           dateRange: {
-            start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+            start: new Date(
+              Date.now() - 30 * 24 * 60 * 60 * 1000
+            ).toISOString(),
             end: new Date().toISOString(),
           },
         }),
@@ -125,7 +135,13 @@ export default function ReportsPage() {
     } finally {
       setIsGenerating(false);
     }
-  }, [newReportName, newReportType, newReportFormat, fetchReports, pollReportStatus]);
+  }, [
+    newReportName,
+    newReportType,
+    newReportFormat,
+    fetchReports,
+    pollReportStatus,
+  ]);
 
   const handleDownload = useCallback(async (report: Report) => {
     if (!report.downloadUrl) {
@@ -144,7 +160,6 @@ export default function ReportsPage() {
 
   return (
     <div className="p-6 space-y-6">
-
       <ReportsHeader
         isLoading={isLoading}
         onRefresh={fetchReports}
@@ -154,7 +169,7 @@ export default function ReportsPage() {
       {/* Custom Report Builder CTA */}
       <Link
         href="/dashboard/reports/builder"
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-cyan-500/10 border-[0.5px] border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/20 transition-colors text-sm"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20 text-orange-400 hover:bg-orange-500/20 transition-colors text-sm"
       >
         <Layout className="w-4 h-4" />
         Build Custom Report

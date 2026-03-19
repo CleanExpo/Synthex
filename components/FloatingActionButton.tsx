@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Plus, 
-  X, 
-  Edit, 
-  Calendar, 
-  TrendingUp, 
+import {
+  Plus,
+  X,
+  Edit,
+  Calendar,
+  TrendingUp,
   Users,
   Sparkles,
   Camera,
@@ -17,7 +17,7 @@ import {
   Hash,
   Image,
   Video,
-  Send
+  Send,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { notify } from '@/lib/notifications';
@@ -35,7 +35,7 @@ export function FloatingActionButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
-  
+
   // Detect mobile device — uses matchMedia instead of resize listener for performance
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)');
@@ -44,7 +44,7 @@ export function FloatingActionButton() {
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
-  
+
   // FAB Actions
   const actions: FABAction[] = [
     {
@@ -56,7 +56,7 @@ export function FloatingActionButton() {
         router.push('/create?type=post');
         setIsOpen(false);
         notify.success('Opening post creator...');
-      }
+      },
     },
     {
       id: 'schedule',
@@ -67,17 +67,17 @@ export function FloatingActionButton() {
         router.push('/schedule');
         setIsOpen(false);
         notify.success('Opening scheduler...');
-      }
+      },
     },
     {
       id: 'analytics',
       label: 'Analytics',
       icon: TrendingUp,
-      color: 'bg-cyan-500',
+      color: 'bg-orange-500',
       onClick: () => {
         router.push('/analytics');
         setIsOpen(false);
-      }
+      },
     },
     {
       id: 'ai-generate',
@@ -88,7 +88,7 @@ export function FloatingActionButton() {
         router.push('/create?ai=true');
         setIsOpen(false);
         notify.custom('✨ AI Assistant ready!');
-      }
+      },
     },
     {
       id: 'quick-photo',
@@ -98,7 +98,7 @@ export function FloatingActionButton() {
       onClick: () => {
         router.push('/create?type=photo');
         setIsOpen(false);
-      }
+      },
     },
     {
       id: 'quick-video',
@@ -108,22 +108,22 @@ export function FloatingActionButton() {
       onClick: () => {
         router.push('/create?type=video');
         setIsOpen(false);
-      }
-    }
+      },
+    },
   ];
-  
+
   // Quick compose actions (simplified for mobile)
   const quickActions = [
     { icon: FileText, action: 'text' },
     { icon: Image, action: 'image' },
     { icon: Video, action: 'video' },
     { icon: Link2, action: 'link' },
-    { icon: Hash, action: 'hashtag' }
+    { icon: Hash, action: 'hashtag' },
   ];
-  
+
   // Don't render on desktop
   if (!isMobile) return null;
-  
+
   return (
     <>
       {/* Backdrop */}
@@ -138,7 +138,7 @@ export function FloatingActionButton() {
           />
         )}
       </AnimatePresence>
-      
+
       {/* Speed Dial Actions */}
       <AnimatePresence>
         {isOpen && (
@@ -147,17 +147,17 @@ export function FloatingActionButton() {
               <motion.div
                 key={action.id}
                 initial={{ opacity: 0, scale: 0, y: 20 }}
-                animate={{ 
-                  opacity: 1, 
-                  scale: 1, 
+                animate={{
+                  opacity: 1,
+                  scale: 1,
                   y: 0,
-                  transition: { delay: index * 0.05 }
+                  transition: { delay: index * 0.05 },
                 }}
-                exit={{ 
-                  opacity: 0, 
-                  scale: 0, 
+                exit={{
+                  opacity: 0,
+                  scale: 0,
                   y: 20,
-                  transition: { delay: (actions.length - index) * 0.02 }
+                  transition: { delay: (actions.length - index) * 0.02 },
                 }}
                 className="flex items-center justify-end gap-3"
               >
@@ -179,7 +179,7 @@ export function FloatingActionButton() {
           </div>
         )}
       </AnimatePresence>
-      
+
       {/* Main FAB Button */}
       <motion.button
         className={`
@@ -187,9 +187,10 @@ export function FloatingActionButton() {
           w-14 h-14 rounded-full shadow-2xl
           flex items-center justify-center
           transform transition-all duration-200
-          ${isOpen 
-            ? 'bg-red-500 rotate-45' 
-            : 'bg-gradient-to-r from-cyan-500 to-cyan-500'
+          ${
+            isOpen
+              ? 'bg-red-500 rotate-45'
+              : 'bg-gradient-to-r from-orange-500 to-orange-500'
           }
         `}
         onClick={() => setIsOpen(!isOpen)}
@@ -206,7 +207,7 @@ export function FloatingActionButton() {
           )}
         </motion.div>
       </motion.button>
-      
+
       {/* Quick Compose Bar (Alternative compact design) */}
       {!isOpen && (
         <motion.div
@@ -215,7 +216,7 @@ export function FloatingActionButton() {
           className="fixed bottom-6 left-6 right-20 z-40 md:hidden"
         >
           <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-full px-4 py-2 flex items-center justify-around">
-            {quickActions.map((action) => (
+            {quickActions.map(action => (
               <button
                 key={action.action}
                 onClick={() => {
@@ -235,11 +236,11 @@ export function FloatingActionButton() {
 }
 
 // Mini FAB for specific pages
-export function MiniFAB({ 
-  icon: Icon = Plus, 
+export function MiniFAB({
+  icon: Icon = Plus,
   onClick,
-  className = ''
-}: { 
+  className = '',
+}: {
   icon?: React.ElementType;
   onClick: () => void;
   className?: string;
@@ -249,7 +250,7 @@ export function MiniFAB({
       className={`
         fixed bottom-6 right-6 z-40
         w-12 h-12 rounded-full
-        bg-cyan-500 shadow-lg
+        bg-orange-500 shadow-lg
         flex items-center justify-center
         md:hidden
         ${className}
@@ -269,11 +270,11 @@ export function MiniFAB({
 export function SmartFAB({ context }: { context?: string }) {
   const [suggestion, setSuggestion] = useState<string>('');
   const router = useRouter();
-  
+
   useEffect(() => {
     // Smart suggestions based on context
     const hour = new Date().getHours();
-    
+
     if (context === 'dashboard') {
       if (hour < 12) {
         setSuggestion('Schedule morning posts');
@@ -288,9 +289,9 @@ export function SmartFAB({ context }: { context?: string }) {
       setSuggestion('Fill content gaps');
     }
   }, [context]);
-  
+
   if (!suggestion) return <FloatingActionButton />;
-  
+
   return (
     <div className="fixed bottom-20 right-6 z-40 md:hidden">
       <motion.div
@@ -298,7 +299,7 @@ export function SmartFAB({ context }: { context?: string }) {
         animate={{ opacity: 1, x: 0 }}
         className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] px-4 py-2 rounded-full flex items-center gap-2 mb-2"
       >
-        <Sparkles className="h-4 w-4 text-cyan-400" />
+        <Sparkles className="h-4 w-4 text-orange-400" />
         <span className="text-sm text-white">{suggestion}</span>
       </motion.div>
       <FloatingActionButton />
@@ -310,7 +311,7 @@ export function SmartFAB({ context }: { context?: string }) {
 export function DraggableFAB() {
   const [position, setPosition] = useState({ x: -70, y: -100 });
   const [isDragging, setIsDragging] = useState(false);
-  
+
   return (
     <motion.div
       className="fixed bottom-20 right-20 z-50 md:hidden"
@@ -319,7 +320,7 @@ export function DraggableFAB() {
         left: -window.innerWidth + 100,
         right: 0,
         top: -window.innerHeight + 200,
-        bottom: 0
+        bottom: 0,
       }}
       dragElastic={0.2}
       onDragStart={() => setIsDragging(true)}
@@ -330,12 +331,14 @@ export function DraggableFAB() {
       animate={position}
       whileDrag={{ scale: 1.1 }}
     >
-      <div className={`
+      <div
+        className={`
         w-14 h-14 rounded-full
-        bg-gradient-to-r from-cyan-500 to-cyan-500
+        bg-gradient-to-r from-orange-500 to-orange-500
         shadow-2xl flex items-center justify-center
         ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
-      `}>
+      `}
+      >
         <Plus className="h-6 w-6 text-white" />
       </div>
     </motion.div>

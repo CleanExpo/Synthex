@@ -136,7 +136,7 @@ export function PricingSection({
           x: x / window.innerWidth,
           y: y / window.innerHeight,
         },
-        colors: ['#22d3ee', '#0891b2', '#06b6d4'],
+        colors: ['#ffb87b', '#ff8f00', '#ffdcc2'],
         ticks: 200,
         gravity: 1.2,
         decay: 0.94,
@@ -164,11 +164,11 @@ export function PricingSection({
           ref={switchRef as React.RefObject<HTMLButtonElement>}
           checked={!isMonthly}
           onCheckedChange={handleToggle}
-          className="data-[state=checked]:bg-cyan-500 data-[state=unchecked]:bg-white/10"
+          className="data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-white/10"
         />
         <span className="text-sm font-medium text-white/60">
           Annual{' '}
-          <span className="inline-flex items-center bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-full text-xs px-2.5 py-0.5 font-semibold ml-1">
+          <span className="inline-flex items-center bg-orange-500/10 text-orange-400 border border-orange-500/30 rounded-full text-xs px-2.5 py-0.5 font-semibold ml-1">
             Save 20%
           </span>
         </span>
@@ -200,7 +200,7 @@ export function PricingSection({
             className={cn(
               'rounded-2xl border p-6 text-center flex flex-col relative',
               plan.isPopular
-                ? 'border-cyan-500/50 bg-cyan-500/5'
+                ? 'border-orange-500/50 bg-orange-500/5'
                 : 'border-white/10 bg-white/5',
               !plan.isPopular && 'mt-5'
             )}
@@ -208,7 +208,7 @@ export function PricingSection({
             {/* Most Popular badge */}
             {plan.isPopular && (
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                <span className="inline-flex items-center gap-1 bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-full text-xs px-3 py-1 font-semibold whitespace-nowrap">
+                <span className="inline-flex items-center gap-1 bg-orange-500/10 text-orange-400 border border-orange-500/30 rounded-full text-xs px-3 py-1 font-semibold whitespace-nowrap">
                   <Star className="h-3 w-3 fill-current" />
                   Most Popular
                 </span>
@@ -269,7 +269,7 @@ export function PricingSection({
               <ul className="mt-5 gap-2 flex flex-col text-left">
                 {plan.features.map((feature, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-cyan-400 mt-0.5 flex-shrink-0" />
+                    <Check className="h-4 w-4 text-orange-400 mt-0.5 flex-shrink-0" />
                     <span className="text-gray-300 text-sm">{feature}</span>
                   </li>
                 ))}
@@ -284,8 +284,8 @@ export function PricingSection({
                   'group relative w-full gap-2 overflow-hidden text-sm font-semibold tracking-tight rounded-full py-3',
                   'transition-all duration-300',
                   plan.isPopular
-                    ? 'bg-cyan-500 text-white border-cyan-500 hover:bg-cyan-400 hover:border-cyan-400'
-                    : 'bg-transparent text-white border-white/20 hover:border-cyan-500/50 hover:bg-cyan-500/[0.08] hover:text-cyan-300'
+                    ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-400 hover:border-orange-400'
+                    : 'bg-transparent text-white border-white/20 hover:border-orange-500/50 hover:bg-orange-500/[0.08] hover:text-orange-300'
                 )}
               >
                 {plan.buttonText}

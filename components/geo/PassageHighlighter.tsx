@@ -28,11 +28,12 @@ export function PassageHighlighter({ passages }: PassageHighlighterProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-white text-lg flex items-center gap-2">
-            <Eye className="h-5 w-5 text-cyan-400" />
+            <Eye className="h-5 w-5 text-orange-400" />
             Citable Passages
           </CardTitle>
           <span className="text-sm text-gray-400">
-            {passages.filter(p => p.isOptimalLength).length}/{passages.length} optimal
+            {passages.filter(p => p.isOptimalLength).length}/{passages.length}{' '}
+            optimal
           </span>
         </div>
       </CardHeader>
@@ -56,21 +57,39 @@ export function PassageHighlighter({ passages }: PassageHighlighterProps) {
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <Badge className={`text-xs ${passage.isOptimalLength ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                  <Badge
+                    className={`text-xs ${passage.isOptimalLength ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-400'}`}
+                  >
                     {passage.wordCount}w
                   </Badge>
-                  <span className={`text-sm font-medium ${passage.score >= 70 ? 'text-emerald-400' : passage.score >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+                  <span
+                    className={`text-sm font-medium ${passage.score >= 70 ? 'text-emerald-400' : passage.score >= 50 ? 'text-amber-400' : 'text-red-400'}`}
+                  >
                     {passage.score}
                   </span>
                 </div>
               </div>
               {expanded === i && (
                 <div className="px-3 pb-3 border-t border-white/[0.05]">
-                  <p className="text-sm text-gray-300 mt-3 leading-relaxed">{passage.text}</p>
+                  <p className="text-sm text-gray-300 mt-3 leading-relaxed">
+                    {passage.text}
+                  </p>
                   <div className="flex gap-2 mt-2">
-                    {passage.answerFirst && <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">Answer-First</Badge>}
-                    {passage.hasCitation && <Badge className="bg-purple-500/20 text-purple-400 text-xs">Has Citation</Badge>}
-                    {passage.isOptimalLength && <Badge className="bg-emerald-500/20 text-emerald-400 text-xs">Optimal Length</Badge>}
+                    {passage.answerFirst && (
+                      <Badge className="bg-orange-500/20 text-orange-400 text-xs">
+                        Answer-First
+                      </Badge>
+                    )}
+                    {passage.hasCitation && (
+                      <Badge className="bg-purple-500/20 text-purple-400 text-xs">
+                        Has Citation
+                      </Badge>
+                    )}
+                    {passage.isOptimalLength && (
+                      <Badge className="bg-emerald-500/20 text-emerald-400 text-xs">
+                        Optimal Length
+                      </Badge>
+                    )}
                   </div>
                 </div>
               )}

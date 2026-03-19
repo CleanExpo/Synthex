@@ -21,23 +21,26 @@ import { CATEGORY_CONFIG } from '@/lib/prompts/types';
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 interface PromptGeneratorFormProps {
-  orgId: string
-  onTracked?: (count: number) => void
+  orgId: string;
+  onTracked?: (count: number) => void;
 }
 
 // ─── Category badge colours ───────────────────────────────────────────────────
 
 const CATEGORY_COLOURS: Record<PromptCategory, string> = {
-  'brand-awareness':       'bg-purple-500/20 text-purple-300 border-purple-500/30',
+  'brand-awareness': 'bg-purple-500/20 text-purple-300 border-purple-500/30',
   'competitor-comparison': 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-  'local-discovery':       'bg-green-500/20 text-green-300 border-green-500/30',
-  'use-case':              'bg-blue-500/20 text-blue-300 border-blue-500/30',
-  'how-to':                'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
-  'product-feature':       'bg-slate-500/20 text-slate-300 border-slate-500/30',
+  'local-discovery': 'bg-green-500/20 text-green-300 border-green-500/30',
+  'use-case': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+  'how-to': 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+  'product-feature': 'bg-slate-500/20 text-slate-300 border-slate-500/30',
 };
 
 function catColour(cat: string): string {
-  return CATEGORY_COLOURS[cat as PromptCategory] ?? 'bg-slate-500/20 text-slate-300 border-slate-500/30';
+  return (
+    CATEGORY_COLOURS[cat as PromptCategory] ??
+    'bg-slate-500/20 text-slate-300 border-slate-500/30'
+  );
 }
 
 // ─── Track a prompt via API ───────────────────────────────────────────────────
@@ -57,7 +60,7 @@ async function trackPrompt(
         orgId,
         entityName,
         entityType,
-        promptText:     template.text,
+        promptText: template.text,
         promptCategory: template.category,
       }),
     });
@@ -69,22 +72,25 @@ async function trackPrompt(
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function PromptGeneratorForm({ orgId, onTracked }: PromptGeneratorFormProps) {
+export function PromptGeneratorForm({
+  orgId,
+  onTracked,
+}: PromptGeneratorFormProps) {
   // Form state
-  const [entityName, setEntityName]   = useState('');
-  const [entityType, setEntityType]   = useState('brand');
-  const [topic, setTopic]             = useState('');
-  const [location, setLocation]       = useState('');
+  const [entityName, setEntityName] = useState('');
+  const [entityType, setEntityType] = useState('brand');
+  const [topic, setTopic] = useState('');
+  const [location, setLocation] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   // Generation state
-  const [generating, setGenerating]   = useState(false);
-  const [genError, setGenError]       = useState<string | null>(null);
-  const [templates, setTemplates]     = useState<PromptTemplate[]>([]);
+  const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState<string | null>(null);
+  const [templates, setTemplates] = useState<PromptTemplate[]>([]);
 
   // Track state (per-template)
-  const [tracked, setTracked]         = useState<Set<string>>(new Set());
-  const [tracking, setTracking]       = useState<Set<string>>(new Set());
+  const [tracked, setTracked] = useState<Set<string>>(new Set());
+  const [tracking, setTracking] = useState<Set<string>>(new Set());
   const [trackingAll, setTrackingAll] = useState(false);
 
   // ── Generate ──
@@ -130,13 +136,13 @@ export function PromptGeneratorForm({ orgId, onTracked }: PromptGeneratorFormPro
     const key = template.text;
     if (tracked.has(key) || tracking.has(key)) return;
 
-    setTracking((prev) => new Set(prev).add(key));
+    setTracking(prev => new Set(prev).add(key));
     const ok = await trackPrompt(orgId, entityName, entityType, template);
     if (ok) {
-      setTracked((prev) => new Set(prev).add(key));
+      setTracked(prev => new Set(prev).add(key));
       onTracked?.(1);
     }
-    setTracking((prev) => {
+    setTracking(prev => {
       const next = new Set(prev);
       next.delete(key);
       return next;
@@ -152,32 +158,40 @@ export function PromptGeneratorForm({ orgId, onTracked }: PromptGeneratorFormPro
       const ok = await trackPrompt(orgId, entityName, entityType, t);
       if (ok) {
         count++;
-        setTracked((prev) => new Set(prev).add(t.text));
+        setTracked(prev => new Set(prev).add(t.text));
       }
     }
     if (count > 0) onTracked?.(count);
     setTrackingAll(false);
   }
 
-  const filteredTemplates = categoryFilter === 'all'
-    ? templates
-    : templates.filter((t) => t.category === categoryFilter);
+  const filteredTemplates =
+    categoryFilter === 'all'
+      ? templates
+      : templates.filter(t => t.category === categoryFilter);
 
-  const categories = [...new Set(templates.map((t) => t.category))];
-  const untrackedCount = filteredTemplates.filter((t) => !tracked.has(t.text)).length;
+  const categories = [...new Set(templates.map(t => t.category))];
+  const untrackedCount = filteredTemplates.filter(
+    t => !tracked.has(t.text)
+  ).length;
 
   return (
     <div className="space-y-6">
       {/* Form */}
-      <form onSubmit={handleGenerate} className="rounded-xl border border-white/10 bg-white/5 p-5 space-y-4">
+      <form
+        onSubmit={handleGenerate}
+        className="rounded-xl border border-white/10 bg-white/5 p-5 space-y-4"
+      >
         <h3 className="text-sm font-semibold text-white">Generate Prompts</h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Entity Name *</label>
+            <label className="block text-xs text-slate-400 mb-1">
+              Entity Name *
+            </label>
             <Input
               value={entityName}
-              onChange={(e) => setEntityName(e.target.value)}
+              onChange={e => setEntityName(e.target.value)}
               placeholder="Synthex"
               required
               className="bg-white/5 border-white/20 text-white placeholder:text-slate-500 text-sm"
@@ -185,11 +199,13 @@ export function PromptGeneratorForm({ orgId, onTracked }: PromptGeneratorFormPro
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Entity Type *</label>
+            <label className="block text-xs text-slate-400 mb-1">
+              Entity Type *
+            </label>
             <select
               value={entityType}
-              onChange={(e) => setEntityType(e.target.value)}
-              className="w-full h-9 rounded-md border border-white/20 bg-white/5 text-white text-sm px-3 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              onChange={e => setEntityType(e.target.value)}
+              className="w-full h-9 rounded-md border border-white/20 bg-white/5 text-white text-sm px-3 focus:outline-none focus:ring-1 focus:ring-orange-500"
             >
               <option value="brand">Brand</option>
               <option value="product">Product</option>
@@ -200,10 +216,12 @@ export function PromptGeneratorForm({ orgId, onTracked }: PromptGeneratorFormPro
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Topic / Industry *</label>
+            <label className="block text-xs text-slate-400 mb-1">
+              Topic / Industry *
+            </label>
             <Input
               value={topic}
-              onChange={(e) => setTopic(e.target.value)}
+              onChange={e => setTopic(e.target.value)}
               placeholder="marketing automation"
               required
               className="bg-white/5 border-white/20 text-white placeholder:text-slate-500 text-sm"
@@ -211,10 +229,12 @@ export function PromptGeneratorForm({ orgId, onTracked }: PromptGeneratorFormPro
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Location (optional)</label>
+            <label className="block text-xs text-slate-400 mb-1">
+              Location (optional)
+            </label>
             <Input
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              onChange={e => setLocation(e.target.value)}
               placeholder="Sydney, Australia"
               className="bg-white/5 border-white/20 text-white placeholder:text-slate-500 text-sm"
             />
@@ -228,7 +248,7 @@ export function PromptGeneratorForm({ orgId, onTracked }: PromptGeneratorFormPro
             type="submit"
             disabled={generating || !entityName.trim() || !topic.trim()}
             size="sm"
-            className="bg-cyan-600 hover:bg-cyan-500 text-white"
+            className="bg-orange-600 hover:bg-orange-500 text-white"
           >
             {generating ? (
               <>Generating…</>
@@ -253,14 +273,14 @@ export function PromptGeneratorForm({ orgId, onTracked }: PromptGeneratorFormPro
                 className={cn(
                   'px-2.5 py-1 rounded-full text-xs border transition-colors',
                   categoryFilter === 'all'
-                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                    ? 'bg-orange-500/20 text-orange-300 border-orange-500/30'
                     : 'border-white/20 text-slate-400 hover:text-slate-300'
                 )}
               >
                 All ({templates.length})
               </button>
-              {categories.map((cat) => {
-                const count = templates.filter((t) => t.category === cat).length;
+              {categories.map(cat => {
+                const count = templates.filter(t => t.category === cat).length;
                 return (
                   <button
                     key={cat}
@@ -272,7 +292,8 @@ export function PromptGeneratorForm({ orgId, onTracked }: PromptGeneratorFormPro
                         : 'border-white/20 text-slate-400 hover:text-slate-300'
                     )}
                   >
-                    {CATEGORY_CONFIG[cat as PromptCategory]?.label ?? cat} ({count})
+                    {CATEGORY_CONFIG[cat as PromptCategory]?.label ?? cat} (
+                    {count})
                   </button>
                 );
               })}
@@ -293,9 +314,9 @@ export function PromptGeneratorForm({ orgId, onTracked }: PromptGeneratorFormPro
 
           {/* Prompt list */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {filteredTemplates.map((t) => {
-              const isTracked   = tracked.has(t.text);
-              const isTracking  = tracking.has(t.text);
+            {filteredTemplates.map(t => {
+              const isTracked = tracked.has(t.text);
+              const isTracking = tracking.has(t.text);
               return (
                 <div
                   key={t.text}
@@ -308,9 +329,12 @@ export function PromptGeneratorForm({ orgId, onTracked }: PromptGeneratorFormPro
                         catColour(t.category)
                       )}
                     >
-                      {CATEGORY_CONFIG[t.category as PromptCategory]?.label ?? t.category}
+                      {CATEGORY_CONFIG[t.category as PromptCategory]?.label ??
+                        t.category}
                     </span>
-                    <p className="text-xs text-slate-300 leading-relaxed">{t.text}</p>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      {t.text}
+                    </p>
                   </div>
                   <button
                     onClick={() => handleTrack(t)}

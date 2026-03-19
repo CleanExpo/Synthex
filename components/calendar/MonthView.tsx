@@ -20,7 +20,11 @@ import {
   useDroppable,
 } from '@dnd-kit/core';
 import { DraggablePostCard } from './DraggablePostCard';
-import { ScheduledPost, CalendarViewProps, PLATFORM_COLORS } from './CalendarTypes';
+import {
+  ScheduledPost,
+  CalendarViewProps,
+  PLATFORM_COLORS,
+} from './CalendarTypes';
 import { ChevronLeft, ChevronRight, Plus } from '@/components/icons';
 
 interface MonthViewProps extends CalendarViewProps {
@@ -59,8 +63,8 @@ function DroppableDayCell({
         min-h-[100px] p-1.5 border-r border-b border-white/5
         transition-colors duration-150 group relative
         ${isCurrentMonth ? 'bg-gray-900/30' : 'bg-gray-900/10'}
-        ${isOver ? 'bg-cyan-500/10 ring-1 ring-inset ring-cyan-500/30' : ''}
-        ${isToday ? 'ring-1 ring-inset ring-cyan-500/50' : ''}
+        ${isOver ? 'bg-orange-500/10 ring-1 ring-inset ring-orange-500/30' : ''}
+        ${isToday ? 'ring-1 ring-inset ring-orange-500/50' : ''}
       `}
     >
       {/* Day Number */}
@@ -68,7 +72,7 @@ function DroppableDayCell({
         <span
           className={`
             text-xs font-medium px-1.5 py-0.5 rounded-full
-            ${isToday ? 'bg-cyan-500 text-white' : isCurrentMonth ? 'text-gray-300' : 'text-gray-600'}
+            ${isToday ? 'bg-orange-500 text-white' : isCurrentMonth ? 'text-gray-300' : 'text-gray-600'}
           `}
         >
           {date.getDate()}
@@ -76,7 +80,7 @@ function DroppableDayCell({
 
         {/* Add button on hover */}
         <button
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             onCreateClick?.();
           }}
@@ -88,7 +92,7 @@ function DroppableDayCell({
 
       {/* Posts */}
       <div className="space-y-1">
-        {displayPosts.map((post) => (
+        {displayPosts.map(post => (
           <div
             key={post.id}
             onClick={() => onPostClick?.(post)}
@@ -100,7 +104,7 @@ function DroppableDayCell({
 
         {/* Overflow indicator */}
         {overflowCount > 0 && (
-          <div className="text-xs text-gray-400 px-1.5 py-0.5 hover:text-cyan-400 cursor-pointer transition-colors">
+          <div className="text-xs text-gray-400 px-1.5 py-0.5 hover:text-orange-400 cursor-pointer transition-colors">
             +{overflowCount} more
           </div>
         )}
@@ -160,7 +164,7 @@ export function MonthView({
   const postsByDate = useMemo(() => {
     const grouped: Record<string, ScheduledPost[]> = {};
 
-    posts.forEach((post) => {
+    posts.forEach(post => {
       const postDate = new Date(post.scheduledFor);
       const dateKey = postDate.toDateString();
 
@@ -171,9 +175,11 @@ export function MonthView({
     });
 
     // Sort posts within each day by time
-    Object.keys(grouped).forEach((key) => {
+    Object.keys(grouped).forEach(key => {
       grouped[key].sort(
-        (a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime()
+        (a, b) =>
+          new Date(a.scheduledFor).getTime() -
+          new Date(b.scheduledFor).getTime()
       );
     });
 
@@ -195,7 +201,9 @@ export function MonthView({
     if (!over || !active.data.current?.post) return;
 
     const post = active.data.current.post as ScheduledPost;
-    const dropData = over.data.current as { date: Date; hour: number } | undefined;
+    const dropData = over.data.current as
+      | { date: Date; hour: number }
+      | undefined;
 
     if (!dropData) return;
 
@@ -245,7 +253,7 @@ export function MonthView({
 
         {/* Day of week headers */}
         <div className="grid grid-cols-7 border-b border-white/10 bg-gray-900/60">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
             <div
               key={day}
               className="py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -258,7 +266,7 @@ export function MonthView({
         {/* Calendar Grid */}
         <div className="flex-1 overflow-auto">
           <div className="grid grid-cols-7">
-            {calendarDays.map((day) => {
+            {calendarDays.map(day => {
               const dateKey = day.toDateString();
               const dayPosts = postsByDate[dateKey] || [];
               const isToday = day.toDateString() === today.toDateString();

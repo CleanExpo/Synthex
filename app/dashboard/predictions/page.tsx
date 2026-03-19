@@ -54,9 +54,12 @@ const PLATFORM_OPTIONS = [
 
 export default function PredictionsPage() {
   const [platform, setPlatform] = useState('instagram');
-  const [predictionResult, setPredictionResult] = useState<PredictionResult | null>(null);
+  const [predictionResult, setPredictionResult] =
+    useState<PredictionResult | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
-  const [forecastData, setForecastData] = useState<EngagementForecast | null>(null);
+  const [forecastData, setForecastData] = useState<EngagementForecast | null>(
+    null
+  );
   const [isForecastLoading, setIsForecastLoading] = useState(false);
 
   // Fetch prediction history / stats
@@ -68,34 +71,40 @@ export default function PredictionsPage() {
   } = usePredictionHistory();
 
   // Fetch optimal times for selected platform
-  const {
-    data: optimalTimesData,
-    isLoading: optimalTimesLoading,
-  } = useOptimalTimes({ platform });
+  const { data: optimalTimesData, isLoading: optimalTimesLoading } =
+    useOptimalTimes({ platform });
 
   // Fetch engagement forecast when platform changes
   useEffect(() => {
     setIsForecastLoading(true);
-    fetchForecast({ accountId: 'current', platform, metric: 'engagement', days: 30 })
-      .then((response) => setForecastData(response.forecast))
+    fetchForecast({
+      accountId: 'current',
+      platform,
+      metric: 'engagement',
+      days: 30,
+    })
+      .then(response => setForecastData(response.forecast))
       .catch(() => setForecastData(null))
       .finally(() => setIsForecastLoading(false));
   }, [platform]);
 
   // Handle engagement prediction
-  const handlePredict = useCallback(async (input: PredictionInput) => {
-    setIsPredicting(true);
-    try {
-      const result = await fetchEngagementPrediction(input);
-      setPredictionResult(result);
-      // Refetch history to update stats after new prediction
-      refetchHistory();
-    } catch (err) {
-      console.error('Prediction failed:', err);
-    } finally {
-      setIsPredicting(false);
-    }
-  }, [refetchHistory]);
+  const handlePredict = useCallback(
+    async (input: PredictionInput) => {
+      setIsPredicting(true);
+      try {
+        const result = await fetchEngagementPrediction(input);
+        setPredictionResult(result);
+        // Refetch history to update stats after new prediction
+        refetchHistory();
+      } catch (err) {
+        console.error('Prediction failed:', err);
+      } finally {
+        setIsPredicting(false);
+      }
+    },
+    [refetchHistory]
+  );
 
   // Loading state
   if (historyLoading && !historyData) {
@@ -136,10 +145,10 @@ export default function PredictionsPage() {
         actions={
           <select
             value={platform}
-            onChange={(e) => setPlatform(e.target.value)}
-            className="rounded-lg bg-white/5 border border-white/10 text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            onChange={e => setPlatform(e.target.value)}
+            className="rounded-lg bg-white/5 border border-white/10 text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50"
           >
-            {PLATFORM_OPTIONS.map((p) => (
+            {PLATFORM_OPTIONS.map(p => (
               <option key={p.value} value={p.value}>
                 {p.label}
               </option>
@@ -166,10 +175,7 @@ export default function PredictionsPage() {
 
       {/* Visualizations: Forecast Chart + Best Time Heatmap */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ForecastChart
-          forecast={forecastData}
-          isLoading={isForecastLoading}
-        />
+        <ForecastChart forecast={forecastData} isLoading={isForecastLoading} />
         <BestTimeHeatmap
           slots={optimalTimesData?.slots ?? []}
           isLoading={optimalTimesLoading}

@@ -92,15 +92,19 @@ export default function CitationDashboardPage() {
     isValidating: overviewValidating,
   } = useSWR<OverviewResponse>('/api/citation/overview', fetchJson, SWR_OPTS);
 
-  const {
-    data: timelineRes,
-    isLoading: timelineLoading,
-  } = useSWR<TimelineResponse>('/api/citation/timeline?days=30', fetchJson, SWR_OPTS);
+  const { data: timelineRes, isLoading: timelineLoading } =
+    useSWR<TimelineResponse>(
+      '/api/citation/timeline?days=30',
+      fetchJson,
+      SWR_OPTS
+    );
 
-  const {
-    data: opportunitiesRes,
-    isLoading: opportunitiesLoading,
-  } = useSWR<OpportunitiesResponse>('/api/citation/opportunities', fetchJson, SWR_OPTS);
+  const { data: opportunitiesRes, isLoading: opportunitiesLoading } =
+    useSWR<OpportunitiesResponse>(
+      '/api/citation/opportunities',
+      fetchJson,
+      SWR_OPTS
+    );
 
   const overview = overviewRes?.data;
   const timeline = timelineRes?.data ?? [];
@@ -122,15 +126,16 @@ export default function CitationDashboardPage() {
       <div className="mb-8">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-cyan-500/10">
-              <CommandLine className="w-6 h-6 text-cyan-400" />
+            <div className="p-2.5 rounded-xl bg-orange-500/10">
+              <CommandLine className="w-6 h-6 text-orange-400" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">
                 Citation Performance Command Centre
               </h1>
               <p className="text-sm text-gray-400 mt-0.5">
-                Unified GEO + AI Citation Intelligence — all v5.0 modules in one view
+                Unified GEO + AI Citation Intelligence — all v5.0 modules in one
+                view
               </p>
             </div>
           </div>

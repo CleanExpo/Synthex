@@ -8,7 +8,13 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,7 +50,7 @@ interface BrandingConfig {
 
 const DEFAULT_CONFIG: BrandingConfig = {
   primaryColor: '#6366f1',
-  secondaryColor: '#06b6d4',
+  secondaryColor: '#ffb87b',
   logoUrl: '',
   faviconUrl: '',
   companyName: '',
@@ -60,11 +66,16 @@ interface BrandingTabProps {
   isSaving?: boolean;
 }
 
-export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabProps) {
+export function BrandingTab({
+  onSave,
+  isSaving: externalSaving,
+}: BrandingTabProps) {
   const [config, setConfig] = useState<BrandingConfig>(DEFAULT_CONFIG);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [errors, setErrors] = useState<Partial<Record<keyof BrandingConfig, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof BrandingConfig, string>>
+  >({});
 
   // Load current branding config
   const loadConfig = useCallback(async () => {
@@ -82,7 +93,8 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
       if (data.theme) {
         setConfig({
           primaryColor: data.theme.primaryColor || DEFAULT_CONFIG.primaryColor,
-          secondaryColor: data.theme.secondaryColor || DEFAULT_CONFIG.secondaryColor,
+          secondaryColor:
+            data.theme.secondaryColor || DEFAULT_CONFIG.secondaryColor,
           logoUrl: data.theme.logoUrl || '',
           faviconUrl: data.theme.faviconUrl || '',
           companyName: data.theme.companyName || '',
@@ -106,10 +118,10 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
   // Field change handler
   const handleChange = useCallback(
     (field: keyof BrandingConfig, value: string) => {
-      setConfig((prev) => ({ ...prev, [field]: value }));
+      setConfig(prev => ({ ...prev, [field]: value }));
 
       // Clear error on change
-      setErrors((prev) => {
+      setErrors(prev => {
         const next = { ...prev };
         delete next[field];
         return next;
@@ -126,7 +138,7 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
       newErrors.primaryColor = 'Must be a valid hex colour (e.g. #6366f1)';
     }
     if (config.secondaryColor && !HEX_COLOR_REGEX.test(config.secondaryColor)) {
-      newErrors.secondaryColor = 'Must be a valid hex colour (e.g. #06b6d4)';
+      newErrors.secondaryColor = 'Must be a valid hex colour (e.g. #ffb87b)';
     }
     if (config.companyName && config.companyName.length > 100) {
       newErrors.companyName = 'Company name must be 100 characters or fewer';
@@ -179,7 +191,8 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
       if (config.companyName) payload.companyName = config.companyName;
       if (config.customDomain) payload.customDomain = config.customDomain;
       if (config.customCss) payload.customCss = config.customCss;
-      if (config.footerLinks.length > 0) payload.footerLinks = config.footerLinks;
+      if (config.footerLinks.length > 0)
+        payload.footerLinks = config.footerLinks;
 
       const response = await fetch('/api/white-label/config', {
         method: 'PUT',
@@ -198,7 +211,9 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
     } catch (error) {
       console.error('Error saving branding config:', error);
       toast.error(
-        error instanceof Error ? error.message : 'Failed to save branding configuration'
+        error instanceof Error
+          ? error.message
+          : 'Failed to save branding configuration'
       );
     } finally {
       setIsSaving(false);
@@ -207,19 +222,19 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
 
   // Footer link handlers
   const addFooterLink = useCallback(() => {
-    setConfig((prev) => ({
+    setConfig(prev => ({
       ...prev,
       footerLinks: [...prev.footerLinks, { label: '', url: '' }],
     }));
   }, []);
 
   const removeFooterLink = useCallback((index: number) => {
-    setConfig((prev) => ({
+    setConfig(prev => ({
       ...prev,
       footerLinks: prev.footerLinks.filter((_, i) => i !== index),
     }));
     // Clear footer link errors
-    setErrors((prev) => {
+    setErrors(prev => {
       const next = { ...prev };
       delete next.footerLinks;
       return next;
@@ -228,14 +243,14 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
 
   const updateFooterLink = useCallback(
     (index: number, field: keyof FooterLink, value: string) => {
-      setConfig((prev) => ({
+      setConfig(prev => ({
         ...prev,
         footerLinks: prev.footerLinks.map((link, i) =>
           i === index ? { ...link, [field]: value } : link
         ),
       }));
       // Clear footer link errors on edit
-      setErrors((prev) => {
+      setErrors(prev => {
         const next = { ...prev };
         delete next.footerLinks;
         return next;
@@ -251,7 +266,7 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
       <Card variant="glass">
         <CardContent className="py-12">
           <div className="flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+            <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
             <p className="text-slate-400">Loading branding configuration...</p>
           </div>
         </CardContent>
@@ -265,7 +280,7 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Palette className="w-5 h-5 text-cyan-400" />
+            <Palette className="w-5 h-5 text-orange-400" />
             Brand Identity
           </CardTitle>
           <CardDescription>
@@ -279,7 +294,7 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
             <Input
               id="companyName"
               value={config.companyName}
-              onChange={(e) => handleChange('companyName', e.target.value)}
+              onChange={e => handleChange('companyName', e.target.value)}
               placeholder="Your Company Name"
               maxLength={100}
               className="bg-white/5 border-white/10"
@@ -296,7 +311,7 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
               <Input
                 id="logoUrl"
                 value={config.logoUrl}
-                onChange={(e) => handleChange('logoUrl', e.target.value)}
+                onChange={e => handleChange('logoUrl', e.target.value)}
                 placeholder="https://example.com/logo.png"
                 className="bg-white/5 border-white/10 flex-1"
               />
@@ -315,7 +330,8 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
               <p className="text-sm text-red-400">{errors.logoUrl}</p>
             )}
             <p className="text-xs text-slate-500">
-              Enter the URL of your company logo. Recommended: PNG or SVG, at least 200x50px.
+              Enter the URL of your company logo. Recommended: PNG or SVG, at
+              least 200x50px.
             </p>
           </div>
 
@@ -326,7 +342,7 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
               <Input
                 id="faviconUrl"
                 value={config.faviconUrl}
-                onChange={(e) => handleChange('faviconUrl', e.target.value)}
+                onChange={e => handleChange('faviconUrl', e.target.value)}
                 placeholder="https://example.com/favicon.ico"
                 className="bg-white/5 border-white/10 flex-1"
               />
@@ -357,13 +373,13 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
                 <input
                   type="color"
                   value={config.primaryColor}
-                  onChange={(e) => handleChange('primaryColor', e.target.value)}
+                  onChange={e => handleChange('primaryColor', e.target.value)}
                   className="w-10 h-10 rounded-md border border-white/10 bg-transparent cursor-pointer"
                 />
                 <Input
                   id="primaryColor"
                   value={config.primaryColor}
-                  onChange={(e) => handleChange('primaryColor', e.target.value)}
+                  onChange={e => handleChange('primaryColor', e.target.value)}
                   placeholder="#6366f1"
                   className="bg-white/5 border-white/10 flex-1 font-mono"
                 />
@@ -379,14 +395,14 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
                 <input
                   type="color"
                   value={config.secondaryColor}
-                  onChange={(e) => handleChange('secondaryColor', e.target.value)}
+                  onChange={e => handleChange('secondaryColor', e.target.value)}
                   className="w-10 h-10 rounded-md border border-white/10 bg-transparent cursor-pointer"
                 />
                 <Input
                   id="secondaryColor"
                   value={config.secondaryColor}
-                  onChange={(e) => handleChange('secondaryColor', e.target.value)}
-                  placeholder="#06b6d4"
+                  onChange={e => handleChange('secondaryColor', e.target.value)}
+                  placeholder="#ffb87b"
                   className="bg-white/5 border-white/10 flex-1 font-mono"
                 />
               </div>
@@ -402,7 +418,7 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Globe className="w-5 h-5 text-cyan-400" />
+            <Globe className="w-5 h-5 text-orange-400" />
             Custom Domain
           </CardTitle>
           <CardDescription>
@@ -415,12 +431,13 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
             <Input
               id="customDomain"
               value={config.customDomain}
-              onChange={(e) => handleChange('customDomain', e.target.value)}
+              onChange={e => handleChange('customDomain', e.target.value)}
               placeholder="app.yourdomain.com"
               className="bg-white/5 border-white/10"
             />
             <p className="text-xs text-slate-500">
-              Enter your custom domain. You will need to configure DNS records separately.
+              Enter your custom domain. You will need to configure DNS records
+              separately.
             </p>
           </div>
         </CardContent>
@@ -431,7 +448,7 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Link2 className="w-5 h-5 text-cyan-400" />
+              <Link2 className="w-5 h-5 text-orange-400" />
               Footer Links
             </CardTitle>
             <CardDescription>
@@ -453,7 +470,8 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
             <div className="text-center py-6">
               <Link2 className="w-8 h-8 text-slate-500 mx-auto mb-3" />
               <p className="text-slate-400 text-sm">
-                No footer links configured. Click &quot;Add Link&quot; to get started.
+                No footer links configured. Click &quot;Add Link&quot; to get
+                started.
               </p>
             </div>
           ) : (
@@ -468,7 +486,7 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
                       <Label className="text-xs text-slate-400">Label</Label>
                       <Input
                         value={link.label}
-                        onChange={(e) =>
+                        onChange={e =>
                           updateFooterLink(index, 'label', e.target.value)
                         }
                         placeholder="Link text"
@@ -480,7 +498,7 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
                       <Label className="text-xs text-slate-400">URL</Label>
                       <Input
                         value={link.url}
-                        onChange={(e) =>
+                        onChange={e =>
                           updateFooterLink(index, 'url', e.target.value)
                         }
                         placeholder="https://example.com"
@@ -510,18 +528,19 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Upload className="w-5 h-5 text-cyan-400" />
+            <Upload className="w-5 h-5 text-orange-400" />
             Custom CSS
           </CardTitle>
           <CardDescription>
-            Add custom CSS to further customise your branding (max 10,000 characters)
+            Add custom CSS to further customise your branding (max 10,000
+            characters)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Textarea
               value={config.customCss}
-              onChange={(e) => handleChange('customCss', e.target.value)}
+              onChange={e => handleChange('customCss', e.target.value)}
               placeholder={`/* Custom CSS overrides */\n.header {\n  background: var(--brand-primary);\n}`}
               className="bg-white/5 border-white/10 min-h-[160px] font-mono text-sm"
               maxLength={10000}
@@ -549,7 +568,7 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
         <CardContent>
           <div
             className="rounded-lg border border-white/10 overflow-hidden"
-            style={{ background: '#0f172a' }}
+            style={{ background: '#111111' }}
           >
             {/* Preview Header */}
             <div
@@ -558,12 +577,11 @@ export function BrandingTab({ onSave, isSaving: externalSaving }: BrandingTabPro
             >
               <div className="flex items-center gap-3">
                 {config.logoUrl ? (
-                   
                   <img
                     src={config.logoUrl}
                     alt="Logo preview"
                     className="h-8 w-auto max-w-[120px] object-contain"
-                    onError={(e) => {
+                    onError={e => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />

@@ -1,7 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Globe, Plus, ExternalLink, Edit, Trash2, Loader2, AlertCircle } from '@/components/icons';
+import {
+  Globe,
+  Plus,
+  ExternalLink,
+  Edit,
+  Trash2,
+  Loader2,
+  AlertCircle,
+} from '@/components/icons';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,7 +49,11 @@ export default function WebProjectsPage() {
   const [fetchError, setFetchError] = useState(false);
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', description: '', websiteUrl: '' });
+  const [form, setForm] = useState({
+    name: '',
+    description: '',
+    websiteUrl: '',
+  });
 
   async function fetchProjects() {
     try {
@@ -81,7 +93,7 @@ export default function WebProjectsPage() {
 
       if (!res.ok) throw new Error('Failed to create');
       const data = await res.json();
-      setProjects((prev) => [data.project, ...prev]);
+      setProjects(prev => [data.project, ...prev]);
       setForm({ name: '', description: '', websiteUrl: '' });
       setDialogOpen(false);
     } catch {
@@ -94,8 +106,11 @@ export default function WebProjectsPage() {
   async function handleDelete(id: string) {
     if (!confirm('Delete this project? This cannot be undone.')) return;
     try {
-      await fetch(`/api/web-projects/${id}`, { method: 'DELETE', credentials: 'include' });
-      setProjects((prev) => prev.filter((p) => p.id !== id));
+      await fetch(`/api/web-projects/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      setProjects(prev => prev.filter(p => p.id !== id));
     } catch {
       toast.error('Failed to delete project');
     }
@@ -114,7 +129,7 @@ export default function WebProjectsPage() {
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-cyan-600 hover:bg-cyan-500 text-white gap-2">
+            <Button className="bg-orange-600 hover:bg-orange-500 text-white gap-2">
               <Plus className="w-4 h-4" />
               New Project
             </Button>
@@ -130,7 +145,7 @@ export default function WebProjectsPage() {
                   id="name"
                   placeholder="My Client Site"
                   value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   className="bg-white/5 border-white/10"
                   required
                 />
@@ -141,7 +156,9 @@ export default function WebProjectsPage() {
                   id="description"
                   placeholder="Brief description of the project…"
                   value={form.description}
-                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  onChange={e =>
+                    setForm(f => ({ ...f, description: e.target.value }))
+                  }
                   className="bg-white/5 border-white/10 resize-none"
                   rows={2}
                 />
@@ -153,7 +170,9 @@ export default function WebProjectsPage() {
                   type="url"
                   placeholder="https://example.com"
                   value={form.websiteUrl}
-                  onChange={(e) => setForm((f) => ({ ...f, websiteUrl: e.target.value }))}
+                  onChange={e =>
+                    setForm(f => ({ ...f, websiteUrl: e.target.value }))
+                  }
                   className="bg-white/5 border-white/10"
                 />
               </div>
@@ -169,9 +188,11 @@ export default function WebProjectsPage() {
                 <Button
                   type="submit"
                   disabled={creating || !form.name.trim()}
-                  className="bg-cyan-600 hover:bg-cyan-500 text-white"
+                  className="bg-orange-600 hover:bg-orange-500 text-white"
                 >
-                  {creating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  {creating && (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  )}
                   Create Project
                 </Button>
               </div>
@@ -184,29 +205,40 @@ export default function WebProjectsPage() {
       {fetchError ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <AlertCircle className="w-12 h-12 text-red-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-300 mb-2">Failed to load projects</h3>
-          <p className="text-gray-500 text-sm mb-6">Something went wrong. Please try again.</p>
+          <h3 className="text-lg font-medium text-gray-300 mb-2">
+            Failed to load projects
+          </h3>
+          <p className="text-gray-500 text-sm mb-6">
+            Something went wrong. Please try again.
+          </p>
           <button
-            onClick={() => { setFetchError(false); setLoading(true); fetchProjects(); }}
-            className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm rounded-lg"
+            onClick={() => {
+              setFetchError(false);
+              setLoading(true);
+              fetchProjects();
+            }}
+            className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white text-sm rounded-lg"
           >
             Retry
           </button>
         </div>
       ) : loading ? (
         <div className="flex items-center justify-center py-24">
-          <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
         </div>
       ) : projects.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <Globe className="w-16 h-16 text-gray-700 mb-4" />
-          <h3 className="text-lg font-medium text-gray-300 mb-2">No web projects yet</h3>
+          <h3 className="text-lg font-medium text-gray-300 mb-2">
+            No web projects yet
+          </h3>
           <p className="text-gray-500 text-sm mb-6 max-w-sm">
-            Create your first web project to start managing builds, design tokens, and animation templates.
+            Create your first web project to start managing builds, design
+            tokens, and animation templates.
           </p>
           <Button
             onClick={() => setDialogOpen(true)}
-            className="bg-cyan-600 hover:bg-cyan-500 text-white gap-2"
+            className="bg-orange-600 hover:bg-orange-500 text-white gap-2"
           >
             <Plus className="w-4 h-4" />
             Create First Project
@@ -214,7 +246,7 @@ export default function WebProjectsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((project) => {
+          {projects.map(project => {
             const status = project.status ?? 'draft';
             const pages = project.pages ?? 0;
             const websiteUrl = project.websiteUrl;
@@ -222,7 +254,7 @@ export default function WebProjectsPage() {
             return (
               <div
                 key={project.id}
-                className="group relative bg-white/[0.03] border border-white/[0.08] rounded-xl p-5 hover:border-cyan-500/30 hover:bg-white/[0.05] transition-all"
+                className="group relative bg-white/[0.03] border border-white/[0.08] rounded-xl p-5 hover:border-orange-500/30 hover:bg-white/[0.05] transition-all"
               >
                 {/* Status badge */}
                 <div className="flex items-start justify-between mb-3">
@@ -233,7 +265,11 @@ export default function WebProjectsPage() {
                   </span>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Link href={`/dashboard/web-projects/${project.id}`}>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-gray-400 hover:text-white"
+                      >
                         <Edit className="w-3.5 h-3.5" />
                       </Button>
                     </Link>
@@ -250,26 +286,30 @@ export default function WebProjectsPage() {
 
                 {/* Project name */}
                 <Link href={`/dashboard/web-projects/${project.id}`}>
-                  <h3 className="font-semibold text-white hover:text-cyan-400 transition-colors line-clamp-1 mb-1">
+                  <h3 className="font-semibold text-white hover:text-orange-400 transition-colors line-clamp-1 mb-1">
                     {project.name}
                   </h3>
                 </Link>
 
                 {/* Description */}
                 {project.description && (
-                  <p className="text-sm text-gray-500 line-clamp-2 mb-3">{project.description}</p>
+                  <p className="text-sm text-gray-500 line-clamp-2 mb-3">
+                    {project.description}
+                  </p>
                 )}
 
                 {/* Meta row */}
                 <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/[0.06] text-xs text-gray-500">
-                  <span>{pages} {pages === 1 ? 'page' : 'pages'}</span>
+                  <span>
+                    {pages} {pages === 1 ? 'page' : 'pages'}
+                  </span>
                   {websiteUrl && (
                     <a
                       href={websiteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 hover:text-cyan-400 transition-colors"
-                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-1 hover:text-orange-400 transition-colors"
+                      onClick={e => e.stopPropagation()}
                     >
                       <ExternalLink className="w-3 h-3" />
                       View Site

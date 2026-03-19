@@ -21,7 +21,7 @@ export default function SocialNetworkSVG() {
     }, 50);
 
     const pulseInterval = setInterval(() => {
-      setPulseScale(s => s === 1 ? 1.05 : 1);
+      setPulseScale(s => (s === 1 ? 1.05 : 1));
     }, 2000);
 
     return () => {
@@ -70,8 +70,8 @@ export default function SocialNetworkSVG() {
           {/* Central orb gradient */}
           <radialGradient id="centralOrb" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#67e8f9" />
-            <stop offset="50%" stopColor="#06b6d4" />
-            <stop offset="100%" stopColor="#0891b2" />
+            <stop offset="50%" stopColor="#ffb87b" />
+            <stop offset="100%" stopColor="#ff8f00" />
           </radialGradient>
 
           {/* Glow filter */}
@@ -94,18 +94,52 @@ export default function SocialNetworkSVG() {
 
           {/* Platform gradients */}
           {platforms.map((platform, i) => (
-            <radialGradient key={i} id={`platform${i}`} cx="50%" cy="50%" r="50%">
+            <radialGradient
+              key={i}
+              id={`platform${i}`}
+              cx="50%"
+              cy="50%"
+              r="50%"
+            >
               <stop offset="0%" stopColor={platform.color} stopOpacity="1" />
-              <stop offset="100%" stopColor={platform.color} stopOpacity="0.6" />
+              <stop
+                offset="100%"
+                stopColor={platform.color}
+                stopOpacity="0.6"
+              />
             </radialGradient>
           ))}
         </defs>
 
         {/* Orbital rings */}
         <g opacity="0.3">
-          <circle cx={centerX} cy={centerY} r={radius} fill="none" stroke="#06b6d4" strokeWidth="1" strokeDasharray="5,5" />
-          <circle cx={centerX} cy={centerY} r={radius * 0.7} fill="none" stroke="#67e8f9" strokeWidth="0.5" strokeDasharray="3,3" />
-          <circle cx={centerX} cy={centerY} r={radius * 1.3} fill="none" stroke="#0891b2" strokeWidth="0.5" strokeDasharray="8,8" />
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r={radius}
+            fill="none"
+            stroke="#ffb87b"
+            strokeWidth="1"
+            strokeDasharray="5,5"
+          />
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r={radius * 0.7}
+            fill="none"
+            stroke="#67e8f9"
+            strokeWidth="0.5"
+            strokeDasharray="3,3"
+          />
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r={radius * 1.3}
+            fill="none"
+            stroke="#ff8f00"
+            strokeWidth="0.5"
+            strokeDasharray="8,8"
+          />
         </g>
 
         {/* Connection lines to platforms */}
@@ -148,7 +182,10 @@ export default function SocialNetworkSVG() {
             r={50}
             fill="url(#centralOrb)"
             opacity="0.2"
-            style={{ transform: `scale(${pulseScale})`, transformOrigin: 'center' }}
+            style={{
+              transform: `scale(${pulseScale})`,
+              transformOrigin: 'center',
+            }}
           />
           <circle
             cx={centerX}
@@ -158,12 +195,7 @@ export default function SocialNetworkSVG() {
             opacity="0.4"
           />
           {/* Core sphere */}
-          <circle
-            cx={centerX}
-            cy={centerY}
-            r={30}
-            fill="url(#centralOrb)"
-          />
+          <circle cx={centerX} cy={centerY} r={30} fill="url(#centralOrb)" />
           {/* Highlight */}
           <ellipse
             cx={centerX - 8}
@@ -182,7 +214,13 @@ export default function SocialNetworkSVG() {
           const y = centerY + Math.sin(angle) * radius;
 
           return (
-            <g key={`node-${i}`} style={{ transform: `rotate(${-rotation}deg)`, transformOrigin: `${x}px ${y}px` }}>
+            <g
+              key={`node-${i}`}
+              style={{
+                transform: `rotate(${-rotation}deg)`,
+                transformOrigin: `${x}px ${y}px`,
+              }}
+            >
               {/* Glow */}
               <circle
                 cx={x}
@@ -226,7 +264,10 @@ export default function SocialNetworkSVG() {
           fill="white"
           fontSize="24"
           fontWeight="bold"
-          style={{ transform: `rotate(${-rotation}deg)`, transformOrigin: `${centerX}px ${centerY}px` }}
+          style={{
+            transform: `rotate(${-rotation}deg)`,
+            transformOrigin: `${centerX}px ${centerY}px`,
+          }}
         >
           S
         </text>

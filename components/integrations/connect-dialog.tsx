@@ -27,14 +27,14 @@ export function ConnectDialog({
   const [error, setError] = useState<string | null>(null);
 
   const handleFieldChange = (field: string, value: string) => {
-    setFormValues((prev) => ({ ...prev, [field]: value }));
+    setFormValues(prev => ({ ...prev, [field]: value }));
     setError(null);
   };
 
   const handleSubmit = async () => {
     // Validate required fields for non-OAuth providers
     if (!oauthSupported) {
-      const missing = requiredFields.filter((f) => !formValues[f]?.trim());
+      const missing = requiredFields.filter(f => !formValues[f]?.trim());
       if (missing.length > 0) {
         setError(`Please fill in: ${missing.join(', ')}`);
         return;
@@ -49,7 +49,11 @@ export function ConnectDialog({
       setFormValues({});
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Connection failed. Please try again.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Connection failed. Please try again.'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -86,7 +90,8 @@ export function ConnectDialog({
           {oauthSupported ? (
             <div className="space-y-3">
               <p className="text-sm text-gray-400">
-                Click the button below to authorize access via {providerName}&apos;s secure OAuth flow.
+                Click the button below to authorize access via {providerName}
+                &apos;s secure OAuth flow.
               </p>
               <Button
                 onClick={handleSubmit}
@@ -108,7 +113,7 @@ export function ConnectDialog({
             </div>
           ) : (
             <div className="space-y-4">
-              {requiredFields.map((field) => (
+              {requiredFields.map(field => (
                 <div key={field} className="space-y-2">
                   <label
                     htmlFor={`${provider}-${field}`}
@@ -118,11 +123,16 @@ export function ConnectDialog({
                   </label>
                   <input
                     id={`${provider}-${field}`}
-                    type={field.toLowerCase().includes('key') || field.toLowerCase().includes('token') ? 'password' : 'text'}
+                    type={
+                      field.toLowerCase().includes('key') ||
+                      field.toLowerCase().includes('token')
+                        ? 'password'
+                        : 'text'
+                    }
                     value={formValues[field] || ''}
-                    onChange={(e) => handleFieldChange(field, e.target.value)}
+                    onChange={e => handleFieldChange(field, e.target.value)}
                     placeholder={`Enter your ${fieldLabels[field] || field}`}
-                    className="w-full px-3 py-2 rounded-md bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 text-sm"
+                    className="w-full px-3 py-2 rounded-md bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 text-sm"
                   />
                 </div>
               ))}

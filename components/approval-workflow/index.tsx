@@ -15,7 +15,7 @@ const currentUser: User = {
   id: 'user-1',
   name: 'You',
   email: 'you@example.com',
-  role: 'Manager'
+  role: 'Manager',
 };
 
 function getMockRequests(): ApprovalRequest[] {
@@ -29,7 +29,7 @@ function getMockRequests(): ApprovalRequest[] {
         id: 'user-2',
         name: 'Sarah Johnson',
         email: 'sarah@example.com',
-        role: 'Marketing Lead'
+        role: 'Marketing Lead',
       },
       approvers: [
         {
@@ -38,7 +38,7 @@ function getMockRequests(): ApprovalRequest[] {
           email: 'you@example.com',
           role: 'Manager',
           status: 'pending',
-          required: true
+          required: true,
         },
         {
           id: 'user-3',
@@ -48,8 +48,8 @@ function getMockRequests(): ApprovalRequest[] {
           status: 'approved',
           approvedAt: new Date(),
           feedback: 'Looks great! Love the creative direction.',
-          required: true
-        }
+          required: true,
+        },
       ],
       status: 'pending',
       priority: 'high',
@@ -66,23 +66,23 @@ function getMockRequests(): ApprovalRequest[] {
           name: 'Creative Review',
           approvers: ['user-3'],
           requireAll: true,
-          status: 'completed'
+          status: 'completed',
         },
         {
           id: 'stage-2',
           name: 'Management Approval',
           approvers: ['user-1'],
           requireAll: true,
-          status: 'in_progress'
+          status: 'in_progress',
         },
         {
           id: 'stage-3',
           name: 'Legal Review',
           approvers: ['user-4'],
           requireAll: false,
-          status: 'pending'
-        }
-      ]
+          status: 'pending',
+        },
+      ],
     },
     {
       id: 'req-2',
@@ -93,7 +93,7 @@ function getMockRequests(): ApprovalRequest[] {
         id: 'user-5',
         name: 'Alex Rivera',
         email: 'alex@example.com',
-        role: 'Content Creator'
+        role: 'Content Creator',
       },
       approvers: [
         {
@@ -104,8 +104,8 @@ function getMockRequests(): ApprovalRequest[] {
           status: 'approved',
           approvedAt: new Date(),
           feedback: 'Great work!',
-          required: true
-        }
+          required: true,
+        },
       ],
       status: 'approved',
       priority: 'medium',
@@ -121,17 +121,20 @@ function getMockRequests(): ApprovalRequest[] {
           name: 'Initial Review',
           approvers: ['user-1'],
           requireAll: true,
-          status: 'completed'
-        }
-      ]
-    }
+          status: 'completed',
+        },
+      ],
+    },
   ];
 }
 
 export function ApprovalWorkflow() {
   const [requests, setRequests] = useState<ApprovalRequest[]>([]);
-  const [selectedRequest, setSelectedRequest] = useState<ApprovalRequest | null>(null);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [selectedRequest, setSelectedRequest] =
+    useState<ApprovalRequest | null>(null);
+  const [filter, setFilter] = useState<
+    'all' | 'pending' | 'approved' | 'rejected'
+  >('all');
   const [feedback, setFeedback] = useState('');
 
   useEffect(() => {
@@ -144,32 +147,36 @@ export function ApprovalWorkflow() {
   });
 
   const approveRequest = (requestId: string) => {
-    setRequests(prev => prev.map(req => {
-      if (req.id === requestId) {
-        const approverIndex = req.approvers.findIndex(a => a.id === currentUser.id);
-        if (approverIndex !== -1) {
-          req.approvers[approverIndex].status = 'approved';
-          req.approvers[approverIndex].approvedAt = new Date();
-          req.approvers[approverIndex].feedback = feedback;
+    setRequests(prev =>
+      prev.map(req => {
+        if (req.id === requestId) {
+          const approverIndex = req.approvers.findIndex(
+            a => a.id === currentUser.id
+          );
+          if (approverIndex !== -1) {
+            req.approvers[approverIndex].status = 'approved';
+            req.approvers[approverIndex].approvedAt = new Date();
+            req.approvers[approverIndex].feedback = feedback;
 
-          const allApproved = req.approvers
-            .filter(a => a.required)
-            .every(a => a.status === 'approved');
+            const allApproved = req.approvers
+              .filter(a => a.required)
+              .every(a => a.status === 'approved');
 
-          if (allApproved) {
-            req.status = 'approved';
-            if (req.currentStage < req.stages.length - 1) {
-              req.stages[req.currentStage].status = 'completed';
-              req.currentStage++;
-              req.stages[req.currentStage].status = 'in_progress';
-              req.status = 'pending';
+            if (allApproved) {
+              req.status = 'approved';
+              if (req.currentStage < req.stages.length - 1) {
+                req.stages[req.currentStage].status = 'completed';
+                req.currentStage++;
+                req.stages[req.currentStage].status = 'in_progress';
+                req.status = 'pending';
+              }
             }
           }
+          req.updatedAt = new Date();
         }
-        req.updatedAt = new Date();
-      }
-      return req;
-    }));
+        return req;
+      })
+    );
 
     setFeedback('');
     notify.success('Request approved');
@@ -181,19 +188,23 @@ export function ApprovalWorkflow() {
       return;
     }
 
-    setRequests(prev => prev.map(req => {
-      if (req.id === requestId) {
-        const approverIndex = req.approvers.findIndex(a => a.id === currentUser.id);
-        if (approverIndex !== -1) {
-          req.approvers[approverIndex].status = 'rejected';
-          req.approvers[approverIndex].approvedAt = new Date();
-          req.approvers[approverIndex].feedback = feedback;
+    setRequests(prev =>
+      prev.map(req => {
+        if (req.id === requestId) {
+          const approverIndex = req.approvers.findIndex(
+            a => a.id === currentUser.id
+          );
+          if (approverIndex !== -1) {
+            req.approvers[approverIndex].status = 'rejected';
+            req.approvers[approverIndex].approvedAt = new Date();
+            req.approvers[approverIndex].feedback = feedback;
+          }
+          req.status = 'rejected';
+          req.updatedAt = new Date();
         }
-        req.status = 'rejected';
-        req.updatedAt = new Date();
-      }
-      return req;
-    }));
+        return req;
+      })
+    );
 
     setFeedback('');
     notify.info('Request rejected');
@@ -205,20 +216,22 @@ export function ApprovalWorkflow() {
       return;
     }
 
-    setRequests(prev => prev.map(req => {
-      if (req.id === requestId) {
-        req.status = 'revision';
-        req.revisionCount++;
-        req.comments.push({
-          id: `comment-${Date.now()}`,
-          user: currentUser,
-          content: `Revision requested: ${feedback}`,
-          timestamp: new Date()
-        });
-        req.updatedAt = new Date();
-      }
-      return req;
-    }));
+    setRequests(prev =>
+      prev.map(req => {
+        if (req.id === requestId) {
+          req.status = 'revision';
+          req.revisionCount++;
+          req.comments.push({
+            id: `comment-${Date.now()}`,
+            user: currentUser,
+            content: `Revision requested: ${feedback}`,
+            timestamp: new Date(),
+          });
+          req.updatedAt = new Date();
+        }
+        return req;
+      })
+    );
 
     setFeedback('');
     notify.info('Revision requested');
@@ -229,8 +242,8 @@ export function ApprovalWorkflow() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
-            <GitBranch className="h-6 w-6 text-cyan-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+            <GitBranch className="h-6 w-6 text-orange-400" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">Approval Workflow</h2>
@@ -270,7 +283,9 @@ export function ApprovalWorkflow() {
       {filteredRequests.length === 0 && (
         <Card variant="glass" className="p-12 text-center">
           <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-400">No {filter !== 'all' ? filter : ''} requests</p>
+          <p className="text-gray-400">
+            No {filter !== 'all' ? filter : ''} requests
+          </p>
         </Card>
       )}
 

@@ -1,9 +1,22 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from 'recharts';
 import type { ChannelPerformance } from './types';
 import { formatCurrency, getROIColor } from './helpers';
@@ -34,7 +47,12 @@ export function ChannelsTab({ channelPerformance }: ChannelsTabProps) {
               <YAxis stroke="#666" />
               <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
               <Legend />
-              <Bar dataKey="roi" fill="#06b6d4" name="ROI %" radius={[8, 8, 0, 0]} />
+              <Bar
+                dataKey="roi"
+                fill="#ffb87b"
+                name="ROI %"
+                radius={[8, 8, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -47,25 +65,37 @@ export function ChannelsTab({ channelPerformance }: ChannelsTabProps) {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium text-white">{channel.channel}</h4>
-                    <Badge className={`${getROIColor(channel.roi)}`}>{channel.roi}% ROI</Badge>
+                    <h4 className="font-medium text-white">
+                      {channel.channel}
+                    </h4>
+                    <Badge className={`${getROIColor(channel.roi)}`}>
+                      {channel.roi}% ROI
+                    </Badge>
                   </div>
                   <div className="grid grid-cols-4 gap-4 text-center">
                     <div>
                       <p className="text-xs text-gray-400">Investment</p>
-                      <p className="text-sm font-medium text-white">{formatCurrency(channel.investment)}</p>
+                      <p className="text-sm font-medium text-white">
+                        {formatCurrency(channel.investment)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-400">Revenue</p>
-                      <p className="text-sm font-medium text-white">{formatCurrency(channel.revenue)}</p>
+                      <p className="text-sm font-medium text-white">
+                        {formatCurrency(channel.revenue)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-400">Conversions</p>
-                      <p className="text-sm font-medium text-white">{channel.conversions}</p>
+                      <p className="text-sm font-medium text-white">
+                        {channel.conversions}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-400">CPA</p>
-                      <p className="text-sm font-medium text-white">{formatCurrency(channel.cpa)}</p>
+                      <p className="text-sm font-medium text-white">
+                        {formatCurrency(channel.cpa)}
+                      </p>
                     </div>
                   </div>
                 </div>

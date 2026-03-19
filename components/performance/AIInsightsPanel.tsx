@@ -26,7 +26,10 @@ interface AIInsightsPanelProps {
   className?: string;
 }
 
-const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const TYPE_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   topic: Lightbulb,
   format: FileText,
   timing: Clock,
@@ -34,12 +37,15 @@ const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   length: AlignLeft,
 };
 
-const IMPACT_STYLES: Record<string, { bg: string; border: string; text: string; glow?: string }> = {
+const IMPACT_STYLES: Record<
+  string,
+  { bg: string; border: string; text: string; glow?: string }
+> = {
   high: {
-    bg: 'bg-cyan-500/10',
-    border: 'border-cyan-500/30',
-    text: 'text-cyan-400',
-    glow: 'shadow-cyan-500/20',
+    bg: 'bg-orange-500/10',
+    border: 'border-orange-500/30',
+    text: 'text-orange-400',
+    glow: 'shadow-orange-500/20',
   },
   medium: {
     bg: 'bg-violet-500/10',
@@ -78,7 +84,9 @@ function InsightCard({ insight }: InsightCardProps) {
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <h4 className="text-sm font-semibold text-white">{insight.title}</h4>
+            <h4 className="text-sm font-semibold text-white">
+              {insight.title}
+            </h4>
             <span
               className={cn(
                 'px-2 py-0.5 text-xs font-medium rounded-full capitalize',
@@ -123,7 +131,10 @@ function InsightCard({ insight }: InsightCardProps) {
           {expanded && (
             <ul className="mt-2 space-y-1">
               {insight.evidence.map((item, idx) => (
-                <li key={idx} className="text-xs text-gray-400 flex items-start gap-2">
+                <li
+                  key={idx}
+                  className="text-xs text-gray-400 flex items-start gap-2"
+                >
                   <span className="text-gray-600">•</span>
                   <span>{item}</span>
                 </li>
@@ -140,7 +151,10 @@ function LoadingSkeleton() {
   return (
     <div className="space-y-3">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="border border-white/10 rounded-xl p-4 animate-pulse">
+        <div
+          key={i}
+          className="border border-white/10 rounded-xl p-4 animate-pulse"
+        >
           <div className="flex items-start gap-3 mb-3">
             <div className="w-10 h-10 bg-white/5 rounded-lg" />
             <div className="flex-1 space-y-2">
@@ -162,9 +176,14 @@ export function AIInsightsPanel({
 }: AIInsightsPanelProps) {
   if (isLoading) {
     return (
-      <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
+      <div
+        className={cn(
+          'bg-gray-900/30 border border-white/10 rounded-xl p-4',
+          className
+        )}
+      >
         <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="w-5 h-5 text-cyan-400" />
+          <Sparkles className="w-5 h-5 text-orange-400" />
           <h3 className="text-lg font-semibold text-white">AI Insights</h3>
         </div>
         <LoadingSkeleton />
@@ -174,9 +193,14 @@ export function AIInsightsPanel({
 
   if (!insights || insights.length === 0) {
     return (
-      <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-6', className)}>
+      <div
+        className={cn(
+          'bg-gray-900/30 border border-white/10 rounded-xl p-6',
+          className
+        )}
+      >
         <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="w-5 h-5 text-cyan-400" />
+          <Sparkles className="w-5 h-5 text-orange-400" />
           <h3 className="text-lg font-semibold text-white">AI Insights</h3>
         </div>
         <div className="text-center py-8">
@@ -197,11 +221,18 @@ export function AIInsightsPanel({
   });
 
   return (
-    <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
+    <div
+      className={cn(
+        'bg-gray-900/30 border border-white/10 rounded-xl p-4',
+        className
+      )}
+    >
       <div className="flex items-center gap-2 mb-4">
-        <Sparkles className="w-5 h-5 text-cyan-400" />
+        <Sparkles className="w-5 h-5 text-orange-400" />
         <h3 className="text-lg font-semibold text-white">AI Insights</h3>
-        <span className="text-xs text-gray-500">({insights.length} recommendations)</span>
+        <span className="text-xs text-gray-500">
+          ({insights.length} recommendations)
+        </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
