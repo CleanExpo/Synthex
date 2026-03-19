@@ -1,5 +1,6 @@
 'use client';
 
+import type { ComponentType } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -16,7 +17,7 @@ import {
 // ============================================================================
 
 interface CISCard {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   title: string;
   description: string;
   href: string;
@@ -101,6 +102,7 @@ function CISCardGrid() {
             {/* CTA */}
             <Link
               href={card.href}
+              aria-label={`Open ${card.title}`}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-400 hover:text-cyan-300 transition-colors mt-auto"
             >
               Open →
