@@ -62,7 +62,9 @@ export function NetworkErrorCard({ onRetry }: { onRetry?: () => void }) {
         <div className="p-4 rounded-full bg-yellow-500/10 mb-4">
           <WifiOff className="w-8 h-8 text-yellow-400" />
         </div>
-        <h3 className="text-lg font-semibold text-white mb-2">No Internet Connection</h3>
+        <h3 className="text-lg font-semibold text-white mb-2">
+          No Internet Connection
+        </h3>
         <p className="text-gray-400 mb-6 max-w-md">
           Please check your internet connection and try again.
         </p>
@@ -130,7 +132,10 @@ export function EmptyState({
         <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
         <p className="text-gray-400 mb-6 max-w-md">{message}</p>
         {onAction && actionLabel && (
-          <Button onClick={onAction} className="gradient-primary text-white gap-2">
+          <Button
+            onClick={onAction}
+            className="gradient-primary text-white gap-2"
+          >
             <Plus className="w-4 h-4" />
             {actionLabel}
           </Button>
@@ -153,7 +158,9 @@ export function NoResultsState({
         <div className="p-4 rounded-full bg-white/5 mb-4">
           <SearchX className="w-8 h-8 text-gray-400" />
         </div>
-        <h3 className="text-lg font-semibold text-white mb-2">No results found</h3>
+        <h3 className="text-lg font-semibold text-white mb-2">
+          No results found
+        </h3>
         <p className="text-gray-400 mb-6 max-w-md">
           {searchQuery
             ? `No results found for "${searchQuery}". Try a different search term.`
@@ -174,7 +181,10 @@ interface NotFoundStateProps {
   onBack?: () => void;
 }
 
-export function NotFoundState({ resource = 'page', onBack }: NotFoundStateProps) {
+export function NotFoundState({
+  resource = 'page',
+  onBack,
+}: NotFoundStateProps) {
   return (
     <Card variant="glass">
       <CardContent className="flex flex-col items-center justify-center py-12 text-center">
@@ -197,7 +207,7 @@ export function NotFoundState({ resource = 'page', onBack }: NotFoundStateProps)
   );
 }
 
-export default {
+const ErrorStates = {
   APIErrorCard,
   NetworkErrorCard,
   ServerErrorCard,
@@ -205,3 +215,4 @@ export default {
   NoResultsState,
   NotFoundState,
 };
+export default ErrorStates;

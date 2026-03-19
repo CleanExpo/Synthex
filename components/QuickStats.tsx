@@ -1,21 +1,22 @@
-import { useRouter } from 'next/navigation';
 'use client';
+
+import { useRouter } from 'next/navigation';
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Eye, 
-  Heart, 
-  Users, 
+import {
+  TrendingUp,
+  TrendingDown,
+  Eye,
+  Heart,
+  Users,
   FileText,
   ArrowUp,
   ArrowDown,
   Minus,
   Activity,
   Zap,
-  Target
+  Target,
 } from '@/components/icons';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -45,7 +46,7 @@ const defaultStats: Stat[] = [
     changeType: 'increase',
     icon: Eye,
     color: 'text-blue-400',
-    sparkline: [20, 35, 30, 45, 50, 60, 55, 70, 65, 80]
+    sparkline: [20, 35, 30, 45, 50, 60, 55, 70, 65, 80],
   },
   {
     label: 'Engagement Rate',
@@ -54,7 +55,7 @@ const defaultStats: Stat[] = [
     changeType: 'increase',
     icon: Heart,
     color: 'text-pink-400',
-    sparkline: [30, 35, 40, 38, 42, 45, 43, 47, 45, 48]
+    sparkline: [30, 35, 40, 38, 42, 45, 43, 47, 45, 48],
   },
   {
     label: 'New Followers',
@@ -63,7 +64,7 @@ const defaultStats: Stat[] = [
     changeType: 'increase',
     icon: Users,
     color: 'text-green-400',
-    sparkline: [10, 15, 12, 18, 20, 25, 22, 28, 30, 35]
+    sparkline: [10, 15, 12, 18, 20, 25, 22, 28, 30, 35],
   },
   {
     label: 'Content Score',
@@ -72,8 +73,8 @@ const defaultStats: Stat[] = [
     changeType: 'increase',
     icon: Target,
     color: 'text-cyan-400',
-    sparkline: [70, 72, 75, 78, 80, 82, 85, 88, 90, 92]
-  }
+    sparkline: [70, 72, 75, 78, 80, 82, 85, 88, 90, 92],
+  },
 ];
 
 const tickerStats = [
@@ -83,11 +84,17 @@ const tickerStats = [
   { label: 'Viral Score', value: '92/100', icon: Zap },
 ];
 
-function Sparkline({ data, color = 'text-cyan-400' }: { data: number[]; color?: string }) {
+function Sparkline({
+  data,
+  color = 'text-cyan-400',
+}: {
+  data: number[];
+  color?: string;
+}) {
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min;
-  
+
   return (
     <svg className="w-full h-8" viewBox="0 0 100 32">
       <polyline
@@ -95,24 +102,40 @@ function Sparkline({ data, color = 'text-cyan-400' }: { data: number[]; color?: 
         stroke="currentColor"
         strokeWidth="2"
         className={color}
-        points={data.map((value, index) => {
-          const x = (index / (data.length - 1)) * 100;
-          const y = 32 - ((value - min) / range) * 28;
-          return `${x},${y}`;
-        }).join(' ')}
+        points={data
+          .map((value, index) => {
+            const x = (index / (data.length - 1)) * 100;
+            const y = 32 - ((value - min) / range) * 28;
+            return `${x},${y}`;
+          })
+          .join(' ')}
       />
     </svg>
   );
 }
 
-function StatCard({ stat, compact = false }: { stat: Stat; compact?: boolean }) {
+function StatCard({
+  stat,
+  compact = false,
+}: {
+  stat: Stat;
+  compact?: boolean;
+}) {
   const Icon = stat.icon || Activity;
-  const TrendIcon = stat.changeType === 'increase' ? ArrowUp : 
-                    stat.changeType === 'decrease' ? ArrowDown : Minus;
-  
-  const trendColor = stat.changeType === 'increase' ? 'text-green-400' :
-                     stat.changeType === 'decrease' ? 'text-red-400' : 'text-gray-400';
-  
+  const TrendIcon =
+    stat.changeType === 'increase'
+      ? ArrowUp
+      : stat.changeType === 'decrease'
+        ? ArrowDown
+        : Minus;
+
+  const trendColor =
+    stat.changeType === 'increase'
+      ? 'text-green-400'
+      : stat.changeType === 'decrease'
+        ? 'text-red-400'
+        : 'text-gray-400';
+
   if (compact) {
     return (
       <div className="flex items-center justify-between p-3 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg hover:bg-white/5 transition-colors">
@@ -127,20 +150,23 @@ function StatCard({ stat, compact = false }: { stat: Stat; compact?: boolean }) 
           <div className={`flex items-center gap-1 ${trendColor}`}>
             <TrendIcon className="h-3 w-3" />
             <span className="text-xs font-medium">
-              {stat.change > 0 ? '+' : ''}{stat.change}%
+              {stat.change > 0 ? '+' : ''}
+              {stat.change}%
             </span>
           </div>
         )}
       </div>
     );
   }
-  
+
   return (
     <Card variant="glass" className="hover:scale-[1.02] transition-transform">
       <div className="p-4 space-y-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
-            <div className={`p-2 rounded-lg bg-white/5 ${stat.color || 'text-gray-400'}`}>
+            <div
+              className={`p-2 rounded-lg bg-white/5 ${stat.color || 'text-gray-400'}`}
+            >
               <Icon className="h-4 w-4" />
             </div>
             <div>
@@ -148,17 +174,18 @@ function StatCard({ stat, compact = false }: { stat: Stat; compact?: boolean }) 
               <p className="text-xl font-bold text-white">{stat.value}</p>
             </div>
           </div>
-          
+
           {stat.change !== undefined && (
             <div className={`flex items-center gap-1 ${trendColor}`}>
               <TrendIcon className="h-3 w-3" />
               <span className="text-sm font-medium">
-                {stat.change > 0 ? '+' : ''}{stat.change}%
+                {stat.change > 0 ? '+' : ''}
+                {stat.change}%
               </span>
             </div>
           )}
         </div>
-        
+
         {stat.sparkline && (
           <div className="pt-2">
             <Sparkline data={stat.sparkline} color={stat.color} />
@@ -169,33 +196,37 @@ function StatCard({ stat, compact = false }: { stat: Stat; compact?: boolean }) 
   );
 }
 
-export function QuickStats({ 
-  stats = defaultStats, 
-  loading = false, 
+export function QuickStats({
+  stats = defaultStats,
+  loading = false,
   compact = false,
-  className = '' 
+  className = '',
 }: QuickStatsProps) {
   const [animatedStats, setAnimatedStats] = useState(stats);
-  
+
   // Animate numbers on mount
   useEffect(() => {
     if (!loading) {
       setAnimatedStats(stats);
     }
   }, [stats, loading]);
-  
+
   if (loading) {
     return (
-      <div className={`grid gap-4 ${compact ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-4'} ${className}`}>
-        {[1, 2, 3, 4].map((i) => (
+      <div
+        className={`grid gap-4 ${compact ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-4'} ${className}`}
+      >
+        {[1, 2, 3, 4].map(i => (
           <Skeleton key={i} className="h-24" />
         ))}
       </div>
     );
   }
-  
+
   return (
-    <div className={`grid gap-4 ${compact ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-4'} ${className}`}>
+    <div
+      className={`grid gap-4 ${compact ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-4'} ${className}`}
+    >
       {animatedStats.map((stat, index) => (
         <StatCard key={index} stat={stat} compact={compact} />
       ))}
@@ -206,18 +237,18 @@ export function QuickStats({
 // Live Stats Ticker
 export function StatsTickker() {
   const [currentStat, setCurrentStat] = useState(0);
-  
+
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentStat((prev) => (prev + 1) % tickerStats.length);
+      setCurrentStat(prev => (prev + 1) % tickerStats.length);
     }, 3000);
-    
+
     return () => clearInterval(interval);
   }, []);
-  
+
   const stat = tickerStats[currentStat];
   const Icon = stat.icon;
-  
+
   return (
     <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-full">
       <Icon className="h-4 w-4 text-cyan-400" />
@@ -235,12 +266,12 @@ export function MiniStats() {
         <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
         <span className="text-xs text-gray-400">Live</span>
       </div>
-      
+
       <div className="flex items-center gap-1">
         <Eye className="h-3 w-3 text-gray-400" />
         <span className="text-xs text-white font-medium">2.3K</span>
       </div>
-      
+
       <div className="flex items-center gap-1">
         <TrendingUp className="h-3 w-3 text-green-400" />
         <span className="text-xs text-green-400 font-medium">+12%</span>

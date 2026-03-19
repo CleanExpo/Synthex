@@ -28,24 +28,31 @@ export interface LogoCloudProps {
   className?: string;
 }
 
-export function LogoCloud({ title, logos, variant = 'default', className }: LogoCloudProps) {
+export function LogoCloud({
+  title,
+  logos,
+  variant = 'default',
+  className,
+}: LogoCloudProps) {
   const isAnimated = variant === 'animated';
   const isGrayscale = variant === 'grayscale';
 
   return (
     <div className={cn('text-center', className)}>
-      {title && (
-        <p className="text-sm text-slate-400 mb-8">{title}</p>
-      )}
+      {title && <p className="text-sm text-slate-400 mb-8">{title}</p>}
 
-      <div className={cn(
-        'relative overflow-hidden',
-        isAnimated && 'mask-gradient'
-      )}>
-        <div className={cn(
-          'flex items-center gap-12 justify-center flex-wrap',
-          isAnimated && 'animate-scroll'
-        )}>
+      <div
+        className={cn(
+          'relative overflow-hidden',
+          isAnimated && 'mask-gradient'
+        )}
+      >
+        <div
+          className={cn(
+            'flex items-center gap-12 justify-center flex-wrap',
+            isAnimated && 'animate-scroll'
+          )}
+        >
           {logos.map((logo, index) => {
             const LogoContent = (
               <div
@@ -72,7 +79,12 @@ export function LogoCloud({ title, logos, variant = 'default', className }: Logo
             );
 
             return logo.href ? (
-              <a key={index} href={logo.href} target="_blank" rel="noopener noreferrer">
+              <a
+                key={index}
+                href={logo.href}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 {LogoContent}
               </a>
             ) : (
@@ -101,15 +113,27 @@ export interface TrustBadgesProps {
   className?: string;
 }
 
-export function TrustBadges({ badges, variant = 'default', className }: TrustBadgesProps) {
+export function TrustBadges({
+  badges,
+  variant = 'default',
+  className,
+}: TrustBadgesProps) {
   const isCompact = variant === 'compact';
   const isInline = variant === 'inline';
 
   if (isInline) {
     return (
-      <div className={cn('flex flex-wrap items-center justify-center gap-6', className)}>
+      <div
+        className={cn(
+          'flex flex-wrap items-center justify-center gap-6',
+          className
+        )}
+      >
         {badges.map((badge, index) => (
-          <div key={index} className="flex items-center gap-2 text-sm text-slate-400">
+          <div
+            key={index}
+            className="flex items-center gap-2 text-sm text-slate-400"
+          >
             <span className="text-emerald-400">{badge.icon}</span>
             <span>{badge.title}</span>
           </div>
@@ -119,11 +143,15 @@ export function TrustBadges({ badges, variant = 'default', className }: TrustBad
   }
 
   return (
-    <div className={cn(
-      'grid gap-6',
-      badges.length <= 3 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4',
-      className
-    )}>
+    <div
+      className={cn(
+        'grid gap-6',
+        badges.length <= 3
+          ? 'grid-cols-1 md:grid-cols-3'
+          : 'grid-cols-2 md:grid-cols-4',
+        className
+      )}
+    >
       {badges.map((badge, index) => (
         <div
           key={index}
@@ -132,17 +160,18 @@ export function TrustBadges({ badges, variant = 'default', className }: TrustBad
             isCompact && 'p-3'
           )}
         >
-          <div className={cn(
-            'flex items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400',
-            isCompact ? 'w-10 h-10' : 'w-12 h-12'
-          )}>
+          <div
+            className={cn(
+              'flex items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400',
+              isCompact ? 'w-10 h-10' : 'w-12 h-12'
+            )}
+          >
             {badge.icon}
           </div>
           <div>
-            <div className={cn(
-              'font-medium text-white',
-              isCompact && 'text-sm'
-            )}>
+            <div
+              className={cn('font-medium text-white', isCompact && 'text-sm')}
+            >
               {badge.title}
             </div>
             {badge.description && !isCompact && (
@@ -189,7 +218,9 @@ export function RatingDisplay({
   };
 
   return (
-    <div className={cn('flex items-center gap-2', sizeClasses[size], className)}>
+    <div
+      className={cn('flex items-center gap-2', sizeClasses[size], className)}
+    >
       <div className="flex gap-0.5">
         {Array.from({ length: maxRating }).map((_, i) => (
           <Star
@@ -211,9 +242,7 @@ export function RatingDisplay({
           ({count.toLocaleString()} {count === 1 ? 'review' : 'reviews'})
         </span>
       )}
-      {platform && (
-        <span className="text-slate-500">on {platform}</span>
-      )}
+      {platform && <span className="text-slate-500">on {platform}</span>}
     </div>
   );
 }
@@ -237,17 +266,22 @@ export interface AccoladesProps {
 
 export function Accolades({ accolades, className }: AccoladesProps) {
   return (
-    <div className={cn('flex flex-wrap items-center justify-center gap-6', className)}>
+    <div
+      className={cn(
+        'flex flex-wrap items-center justify-center gap-6',
+        className
+      )}
+    >
       {accolades.map((accolade, index) => {
         const Content = (
-          <div
-            className="flex items-center gap-3 px-4 py-2 rounded-xl glass hover:bg-white/[0.08] transition-colors"
-          >
+          <div className="flex items-center gap-3 px-4 py-2 rounded-xl glass hover:bg-white/[0.08] transition-colors">
             <div className="text-amber-400">
               {accolade.icon || <Award className="w-5 h-5" />}
             </div>
             <div>
-              <div className="text-sm font-medium text-white">{accolade.title}</div>
+              <div className="text-sm font-medium text-white">
+                {accolade.title}
+              </div>
               <div className="text-xs text-slate-400">
                 {accolade.source}
                 {accolade.year && ` · ${accolade.year}`}
@@ -257,7 +291,12 @@ export function Accolades({ accolades, className }: AccoladesProps) {
         );
 
         return accolade.href ? (
-          <a key={index} href={accolade.href} target="_blank" rel="noopener noreferrer">
+          <a
+            key={index}
+            href={accolade.href}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             {Content}
           </a>
         ) : (
@@ -279,7 +318,12 @@ export interface UserCountProps {
   className?: string;
 }
 
-export function UserCount({ count, label = 'users trust us', avatars, className }: UserCountProps) {
+export function UserCount({
+  count,
+  label = 'users trust us',
+  avatars,
+  className,
+}: UserCountProps) {
   return (
     <div className={cn('flex items-center gap-4', className)}>
       {avatars && avatars.length > 0 && (
@@ -303,8 +347,7 @@ export function UserCount({ count, label = 'users trust us', avatars, className 
         <div className="font-semibold text-white">
           {count >= 1000
             ? `${(count / 1000).toFixed(count >= 10000 ? 0 : 1)}K+`
-            : count.toLocaleString()
-          }
+            : count.toLocaleString()}
         </div>
         <div className="text-sm text-slate-400">{label}</div>
       </div>
@@ -333,9 +376,17 @@ const defaultSecurityBadges: SecurityBadge[] = [
   { name: '99.9% Uptime', icon: <Check className="w-4 h-4" /> },
 ];
 
-export function SecurityBadges({ badges = defaultSecurityBadges, className }: SecurityBadgesProps) {
+export function SecurityBadges({
+  badges = defaultSecurityBadges,
+  className,
+}: SecurityBadgesProps) {
   return (
-    <div className={cn('flex flex-wrap items-center justify-center gap-4', className)}>
+    <div
+      className={cn(
+        'flex flex-wrap items-center justify-center gap-4',
+        className
+      )}
+    >
       {badges.map((badge, index) => (
         <div
           key={index}
@@ -349,7 +400,7 @@ export function SecurityBadges({ badges = defaultSecurityBadges, className }: Se
   );
 }
 
-export default {
+const SocialProofComponents = {
   LogoCloud,
   TrustBadges,
   RatingDisplay,
@@ -357,3 +408,4 @@ export default {
   UserCount,
   SecurityBadges,
 };
+export default SocialProofComponents;
