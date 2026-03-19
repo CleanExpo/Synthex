@@ -1,14 +1,23 @@
 ﻿'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { ThirdPartyCard, ConnectDialog } from '@/components/integrations';
-import { useThirdPartyIntegrations, type ThirdPartyProvider } from '@/hooks/use-third-party-integrations';
+import {
+  useThirdPartyIntegrations,
+  type ThirdPartyProvider,
+} from '@/hooks/use-third-party-integrations';
+import { usePlatformIntegrations } from '@/hooks/use-platform-integrations';
 import { INTEGRATION_REGISTRY } from '@/lib/integrations/types';
-import { integrationsAPI } from '@/lib/api/settings';
 import {
   Twitter,
   Linkedin,
@@ -48,7 +57,10 @@ interface Integration {
   permissions?: string[];
 }
 
-const THIRD_PARTY_ICONS: Record<ThirdPartyProvider, React.ComponentType<{ className?: string }>> = {
+const THIRD_PARTY_ICONS: Record<
+  ThirdPartyProvider,
+  React.ComponentType<{ className?: string }>
+> = {
   canva: Palette,
   buffer: Clock,
   zapier: Zap,
@@ -144,35 +156,74 @@ const DEFAULT_ANALYTICS_INTEGRATIONS: Integration[] = [
   {
     id: 'searchconsole',
     name: 'Google Search Console',
-    description: 'Track search performance, queries, impressions, and ranking data',
+    description:
+      'Track search performance, queries, impressions, and ranking data',
     icon: Search,
     connected: false,
     color: 'text-green-400',
-    permissions: ['Read search queries', 'View impressions & clicks', 'Monitor rankings'],
+    permissions: [
+      'Read search queries',
+      'View impressions & clicks',
+      'Monitor rankings',
+    ],
   },
   {
     id: 'googleanalytics',
     name: 'Google Analytics (GA4)',
-    description: 'Web analytics: sessions, users, conversions, and campaign attribution',
+    description:
+      'Web analytics: sessions, users, conversions, and campaign attribution',
     icon: BarChart2,
     connected: false,
     color: 'text-orange-400',
-    permissions: ['Read analytics data', 'View conversions', 'Audience insights'],
+    permissions: [
+      'Read analytics data',
+      'View conversions',
+      'Audience insights',
+    ],
   },
   {
     id: 'googledrive',
     name: 'Google Drive',
-    description: 'Store and manage all content, media, and reports in your own Google Drive using QMD format',
+    description:
+      'Store and manage all content, media, and reports in your own Google Drive using QMD format',
     icon: HardDrive,
     connected: false,
     color: 'text-blue-300',
-    permissions: ['Store content & media', 'Organise with QMD taxonomy', 'AI-managed file structure'],
+    permissions: [
+      'Store content & media',
+      'Organise with QMD taxonomy',
+      'AI-managed file structure',
+    ],
   },
 ];
 
 export default function IntegrationsPage() {
-  const [isLoading, setIsLoading] = useState(true);
   const [connectingId, setConnectingId] = useState<string | null>(null);
+
+  // Platform (social + analytics) integrations via hook layer
+  const {
+    integrations: platformData,
+    loading: isLoading,
+    connect: platformConnect,
+    disconnect: platformDisconnect,
+    refresh: platformRefresh,
+  } = usePlatformIntegrations();
+
+  const connected = platformData.integrations;
+  const details = platformData.details;
+
+  const integrations: Integration[] = DEFAULT_INTEGRATIONS.map(integration => ({
+    ...integration,
+    connected: !!connected[integration.id],
+    accountName: details[integration.id]?.profileName || undefined,
+  }));
+
+  const analyticsIntegrations: Integration[] =
+    DEFAULT_ANALYTICS_INTEGRATIONS.map(integration => ({
+      ...integration,
+      connected: !!connected[integration.id],
+      accountName: details[integration.id]?.profileName || undefined,
+    }));
 
   // Third-party integrations
   const {
@@ -183,43 +234,10 @@ export default function IntegrationsPage() {
     refresh: thirdPartyRefresh,
   } = useThirdPartyIntegrations();
   const [connectDialogOpen, setConnectDialogOpen] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<ThirdPartyProvider | null>(null);
-  const [thirdPartyActionLoading, setThirdPartyActionLoading] = useState<ThirdPartyProvider | null>(null);
-
-  const [integrations, setIntegrations] = useState<Integration[]>(DEFAULT_INTEGRATIONS);
-  const [analyticsIntegrations, setAnalyticsIntegrations] = useState<Integration[]>(DEFAULT_ANALYTICS_INTEGRATIONS);
-
-  // Load actual connection status on mount
-  const loadConnectionStatus = useCallback(async () => {
-    try {
-      const data = await integrationsAPI.getIntegrations();
-      const connected = data.integrations || {};
-      const details = data.details || {};
-
-      setIntegrations(prev =>
-        prev.map(integration => ({
-          ...integration,
-          connected: !!connected[integration.id],
-          accountName: details[integration.id]?.profileName || undefined,
-        }))
-      );
-      setAnalyticsIntegrations(prev =>
-        prev.map(integration => ({
-          ...integration,
-          connected: !!connected[integration.id],
-          accountName: details[integration.id]?.profileName || undefined,
-        }))
-      );
-    } catch {
-      // Silently fail — show all as disconnected
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadConnectionStatus();
-  }, [loadConnectionStatus]);
+  const [selectedProvider, setSelectedProvider] =
+    useState<ThirdPartyProvider | null>(null);
+  const [thirdPartyActionLoading, setThirdPartyActionLoading] =
+    useState<ThirdPartyProvider | null>(null);
 
   // Handle full-page redirect OAuth results (e.g. Reddit)
   // The callback's no-opener fallback sends ?oauth_success=1&platform=...
@@ -238,12 +256,15 @@ export default function IntegrationsPage() {
     url.searchParams.delete('platform');
     window.history.replaceState({}, '', url.toString());
 
-    const allIntegrations = [...DEFAULT_INTEGRATIONS, ...DEFAULT_ANALYTICS_INTEGRATIONS];
+    const allIntegrations = [
+      ...DEFAULT_INTEGRATIONS,
+      ...DEFAULT_ANALYTICS_INTEGRATIONS,
+    ];
     const name = allIntegrations.find(i => i.id === platform)?.name || platform;
 
     if (oauthSuccess === '1') {
       toast.success(`Connected to ${name} successfully!`);
-      loadConnectionStatus();
+      platformRefresh();
     } else if (oauthError === '1') {
       toast.error(`Connection to ${name} was cancelled or failed.`);
     }
@@ -253,12 +274,16 @@ export default function IntegrationsPage() {
   const handleConnect = async (id: string) => {
     setConnectingId(id);
     try {
-      await integrationsAPI.connectPlatform(id);
-      // Reload connection status from API after successful connect
-      await loadConnectionStatus();
-      toast.success(`Connected to ${integrations.find(i => i.id === id)?.name || id} successfully!`);
+      await platformConnect(id);
+      toast.success(
+        `Connected to ${integrations.find(i => i.id === id)?.name || id} successfully!`
+      );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to connect. Please try again.');
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to connect. Please try again.'
+      );
     } finally {
       setConnectingId(null);
     }
@@ -267,21 +292,18 @@ export default function IntegrationsPage() {
   const handleDisconnect = async (id: string) => {
     setConnectingId(id);
     try {
-      await integrationsAPI.disconnectPlatform(id);
-      const disconnected = { connected: false as const, accountName: undefined };
-      setIntegrations(prev =>
-        prev.map(i => i.id === id ? { ...i, ...disconnected } : i)
-      );
-      setAnalyticsIntegrations(prev =>
-        prev.map(i => i.id === id ? { ...i, ...disconnected } : i)
-      );
       const name =
         integrations.find(i => i.id === id)?.name ||
         analyticsIntegrations.find(i => i.id === id)?.name ||
         id;
+      await platformDisconnect(id);
       toast.success(`${name} disconnected`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to disconnect. Please try again.');
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to disconnect. Please try again.'
+      );
     } finally {
       setConnectingId(null);
     }
@@ -291,11 +313,12 @@ export default function IntegrationsPage() {
     setConnectingId(id);
     try {
       // Re-run OAuth to get fresh tokens
-      await integrationsAPI.connectPlatform(id);
-      await loadConnectionStatus();
+      await platformConnect(id);
       toast.success('Connection refreshed successfully');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to refresh connection');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to refresh connection'
+      );
     } finally {
       setConnectingId(null);
     }
@@ -332,7 +355,9 @@ export default function IntegrationsPage() {
     }
   };
 
-  const handleThirdPartySubmit = async (credentials: Record<string, string>) => {
+  const handleThirdPartySubmit = async (
+    credentials: Record<string, string>
+  ) => {
     if (!selectedProvider) return;
     await thirdPartyConnect(selectedProvider, credentials);
     const config = INTEGRATION_REGISTRY[selectedProvider];
@@ -344,44 +369,59 @@ export default function IntegrationsPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Integrations</h1>
         <p className="text-gray-400">
-          Connect your social media accounts to start creating and scheduling content
+          Connect your social media accounts to start creating and scheduling
+          content
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {integrations.map((integration) => {
+        {integrations.map(integration => {
           const Icon = integration.icon;
           const isConnecting = connectingId === integration.id;
-          
+
           return (
             <Card key={integration.id} variant="glass">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg bg-gray-800/50 ${integration.color}`}>
+                    <div
+                      className={`p-2 rounded-lg bg-gray-800/50 ${integration.color}`}
+                    >
                       <Icon className="w-6 h-6" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{integration.name}</CardTitle>
+                      <CardTitle className="text-lg">
+                        {integration.name}
+                      </CardTitle>
                       {integration.connected && integration.accountName && (
-                        <p className="text-sm text-gray-400 mt-1">{integration.accountName}</p>
+                        <p className="text-sm text-gray-400 mt-1">
+                          {integration.accountName}
+                        </p>
                       )}
                     </div>
                   </div>
-                  <Badge variant={integration.connected ? "default" : "secondary"}>
-                    {integration.connected ? "Connected" : "Not connected"}
+                  <Badge
+                    variant={integration.connected ? 'default' : 'secondary'}
+                  >
+                    {integration.connected ? 'Connected' : 'Not connected'}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <CardDescription>{integration.description}</CardDescription>
-                
+
                 {integration.permissions && (
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-gray-400 mb-2">Permissions:</p>
+                    <p className="text-xs font-medium text-gray-400 mb-2">
+                      Permissions:
+                    </p>
                     <div className="flex flex-wrap gap-1">
-                      {integration.permissions.map((permission) => (
-                        <Badge key={permission} variant="outline" className="text-xs">
+                      {integration.permissions.map(permission => (
+                        <Badge
+                          key={permission}
+                          variant="outline"
+                          className="text-xs"
+                        >
                           {permission}
                         </Badge>
                       ))}
@@ -451,14 +491,17 @@ export default function IntegrationsPage() {
       {/* Analytics & SEO Section */}
       <div className="border-t border-white/10 mt-10 pt-10">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white mb-1">Analytics, SEO & Storage</h2>
+          <h2 className="text-2xl font-bold text-white mb-1">
+            Analytics, SEO & Storage
+          </h2>
           <p className="text-gray-400">
-            Connect Google tools to track performance, analytics, and store all your content in Drive
+            Connect Google tools to track performance, analytics, and store all
+            your content in Drive
           </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {analyticsIntegrations.map((integration) => {
+          {analyticsIntegrations.map(integration => {
             const Icon = integration.icon;
             const isConnecting = connectingId === integration.id;
 
@@ -467,18 +510,26 @@ export default function IntegrationsPage() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg bg-gray-800/50 ${integration.color}`}>
+                      <div
+                        className={`p-2 rounded-lg bg-gray-800/50 ${integration.color}`}
+                      >
                         <Icon className="w-6 h-6" />
                       </div>
                       <div>
-                        <CardTitle className="text-lg">{integration.name}</CardTitle>
+                        <CardTitle className="text-lg">
+                          {integration.name}
+                        </CardTitle>
                         {integration.connected && integration.accountName && (
-                          <p className="text-sm text-gray-400 mt-1">{integration.accountName}</p>
+                          <p className="text-sm text-gray-400 mt-1">
+                            {integration.accountName}
+                          </p>
                         )}
                       </div>
                     </div>
-                    <Badge variant={integration.connected ? "default" : "secondary"}>
-                      {integration.connected ? "Connected" : "Not connected"}
+                    <Badge
+                      variant={integration.connected ? 'default' : 'secondary'}
+                    >
+                      {integration.connected ? 'Connected' : 'Not connected'}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -487,10 +538,16 @@ export default function IntegrationsPage() {
 
                   {integration.permissions && (
                     <div className="space-y-1">
-                      <p className="text-xs font-medium text-gray-400 mb-2">Permissions:</p>
+                      <p className="text-xs font-medium text-gray-400 mb-2">
+                        Permissions:
+                      </p>
                       <div className="flex flex-wrap gap-1">
-                        {integration.permissions.map((permission) => (
-                          <Badge key={permission} variant="outline" className="text-xs">
+                        {integration.permissions.map(permission => (
+                          <Badge
+                            key={permission}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {permission}
                           </Badge>
                         ))}
@@ -561,34 +618,40 @@ export default function IntegrationsPage() {
       {/* Third-Party Tools Section */}
       <div className="border-t border-white/10 mt-10 pt-10">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white mb-1">Third-Party Tools</h2>
+          <h2 className="text-2xl font-bold text-white mb-1">
+            Third-Party Tools
+          </h2>
           <p className="text-gray-400">
             Connect design, scheduling, and automation tools
           </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {(Object.keys(INTEGRATION_REGISTRY) as ThirdPartyProvider[]).map((provider) => {
-            const config = INTEGRATION_REGISTRY[provider];
-            const integration = thirdPartyIntegrations.find((i) => i.provider === provider);
-            const Icon = THIRD_PARTY_ICONS[provider];
+          {(Object.keys(INTEGRATION_REGISTRY) as ThirdPartyProvider[]).map(
+            provider => {
+              const config = INTEGRATION_REGISTRY[provider];
+              const integration = thirdPartyIntegrations.find(
+                i => i.provider === provider
+              );
+              const Icon = THIRD_PARTY_ICONS[provider];
 
-            return (
-              <ThirdPartyCard
-                key={provider}
-                provider={provider}
-                name={config.name}
-                description={config.description}
-                icon={Icon}
-                category={config.category}
-                connected={integration?.connected ?? false}
-                loading={thirdPartyActionLoading === provider}
-                onConnect={() => handleThirdPartyConnect(provider)}
-                onDisconnect={() => handleThirdPartyDisconnect(provider)}
-                onConfigure={() => handleThirdPartyRefresh(provider)}
-              />
-            );
-          })}
+              return (
+                <ThirdPartyCard
+                  key={provider}
+                  provider={provider}
+                  name={config.name}
+                  description={config.description}
+                  icon={Icon}
+                  category={config.category}
+                  connected={integration?.connected ?? false}
+                  loading={thirdPartyActionLoading === provider}
+                  onConnect={() => handleThirdPartyConnect(provider)}
+                  onDisconnect={() => handleThirdPartyDisconnect(provider)}
+                  onConfigure={() => handleThirdPartyRefresh(provider)}
+                />
+              );
+            }
+          )}
         </div>
       </div>
 
@@ -633,7 +696,6 @@ export default function IntegrationsPage() {
           </div>
         </CardContent>
       </Card>
-
     </div>
   );
 }
