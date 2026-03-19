@@ -13,6 +13,7 @@ stepsCompleted:
     'step-08-scoping',
     'step-09-functional',
     'step-10-nonfunctional',
+    'step-11-polish',
   ]
 inputDocuments:
   - '.planning/STATE.md'
@@ -38,17 +39,11 @@ classification:
 
 Synthex Creative Intelligence Suite (CIS) is a guided online presence platform for small and medium business (SMB) owners who lack the time, budget, or expertise to manage their own website health, Google Business Profile, and social media marketing. CIS removes the setup barrier — the single largest cause of SMB marketing tool abandonment — by auto-populating a business's profile from a URL health check, capturing their story through a conversational AI interview, and guiding them through an action-gated journey of small, verifiable wins.
 
-The platform operates on a BYOK (Bring Your Own Key) model: clients connect their own API keys for AI, social platforms, and Google services. Synthex provides the orchestration layer, the guided journey, and the gamification engine. This model enables genuine $99/month pricing without cross-subsidising AI costs — a structural pricing advantage over all major incumbents.
+The platform operates on a BYOK (Bring Your Own Key) model: clients connect their own API keys for AI, social platforms, and Google services. Synthex provides the orchestration layer, the guided journey, and the gamification engine. This model enables genuine $249/month Pro pricing (with a $99/month Promotional rate for the first two months) without cross-subsidising AI costs — a structural pricing advantage over all major incumbents.
 
 The retention model is built into the onboarding: a first win must occur in session one. Subsequent engagement is driven by a Business Health Score (0–100, updated on each action), action-gated feature unlocks with celebration moments, and a weekly 15-Minute Monday brief. At 90 days, an auto-generated Story Replay becomes a shareable testimonial. Referral is built into the unlock system, making word-of-mouth a product mechanic rather than a marketing expense.
 
-### What Makes This Special
-
-- **URL-first entry:** Drop in a URL → instant public health check → system auto-populates brand profile, content seeds, and competitor gaps. No blank-slate problem. The public health check tool also functions as the top-of-funnel lead generation machine, converting cold visitors to $99/month signups without any ad spend.
-- **Conversational story capture:** AI-guided interview (5–7 questions) synthesises the business narrative into website copy, Google Business Profile content, and social post seeds. The owner talks; the system writes.
-- **BYOK pricing model:** Clients supply their own Google, social, and AI API keys. Synthex charges for orchestration and guidance only. Real $99/month pricing, not a subsidised loss-leader.
-- **Action-gated progressive unlock:** Features start closed. Each verifiable action (connected account, first post, GMB verified) unlocks the next tier with a celebration moment. No time-gating; no overwhelm.
-- **Business Health Score:** Single 0–100 metric replacing vanity stats. Shareable. Emotionally meaningful. The product's north star metric for both user and platform.
+Five structural differentiators — URL-first onboarding, conversational story capture, BYOK pricing, action-gated progressive unlock, and the Business Health Score as retention lever — are detailed in the Innovation & Novel Patterns section below.
 
 ## Project Classification
 
@@ -325,11 +320,7 @@ Synthex CIS occupies the uncontested space between them — SMB-priced, AI-nativ
 | Health Score gaming (owners doing pointless actions to raise score) | Score algorithm weights outcomes (ranking improvement, review count) not just actions (connected accounts) |
 | Competitor awareness causes discouragement not motivation           | Show competitor gap as opportunity ("You could rank here") not deficit ("You're losing")                   |
 
-## SaaS B2B Specific Requirements
-
-### Project-Type Overview
-
-Synthex CIS is a multi-tenant SaaS B2B platform — one tenant per business owner, isolated data, org-scoped queries throughout. The existing Synthex architecture (131 Prisma models, org-scoped API routes, AES-256-GCM Vault) provides the foundation. CIS extends it with a guided onboarding journey, gamification layer, and a video content pipeline powered by Claude AI.
+## Multi-Tenancy & Subscription Architecture
 
 ### Tenant Model
 
@@ -576,3 +567,7 @@ Claude AI (via client's own Anthropic API key — BYOK) powers the Pro video pip
 - **NFR21:** The system retries failed API calls to connected platforms up to 2 times with exponential backoff before surfacing an error to the user
 - **NFR22:** Connected platform OAuth tokens are refreshed automatically when possible — manual re-authorisation is only required when the platform revokes access
 - **NFR23:** All integrations comply with their respective platform developer policies — posting frequency limits and API quotas are enforced before calls are made, not after
+
+---
+
+_Document complete. 41 Functional Requirements · 23 Non-Functional Requirements · 5 User Journeys · MVP / Growth / Vision scope defined. Next: implementation planning._
