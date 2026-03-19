@@ -89,7 +89,10 @@
     "deps:check": "bash scripts/dependency-checks.sh",
     "deps:check:windows": "powershell -ExecutionPolicy Bypass -Command \". scripts/dependency-checks.ps1; Test-LockfileIntegrity; Test-DependencySync -Workspace .; Test-EnvVars\"",
     "health:check": "powershell -ExecutionPolicy Bypass -File scripts/health-check.ps1",
-    "health:check:quick": "powershell -ExecutionPolicy Bypass -File scripts/health-check.ps1 -Quick"
+    "health:check:quick": "powershell -ExecutionPolicy Bypass -File scripts/health-check.ps1 -Quick",
+    "render:videos": "npx tsx scripts/render-and-upload-videos.ts",
+    "render:videos:single": "npx tsx scripts/render-and-upload-videos.ts --id",
+    "render:videos:dry-run": "npx tsx scripts/render-and-upload-videos.ts --dry-run"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.14",
