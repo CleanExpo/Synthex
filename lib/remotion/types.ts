@@ -82,6 +82,100 @@ export interface BrandSquareProps extends BaseCompositionProps {
   ctaText?: string;
 }
 
+// ── Educational Composition Props (SYN-429) ───────────────────────────────────
+
+/** Props for the TipCard composition (9:16 portrait, 450 frames / 15s). */
+export interface TipCardProps extends BaseCompositionProps {
+  /** Tip number displayed in the badge (e.g. 1, 2, 3). */
+  tipNumber: number;
+  /** Short, bold tip headline. */
+  tip: string;
+  /** One-line explanation supporting the tip. */
+  explanation: string;
+}
+
+/** Props for the StatReveal composition (16:9, 600 frames / 20s). */
+export interface StatRevealProps extends BaseCompositionProps {
+  /** The statistic to display, e.g. "73%" or "2.4x". */
+  stat: string;
+  /** Label describing what the stat measures. */
+  statLabel: string;
+  /** Additional context or source attribution for the stat. */
+  context: string;
+}
+
+/** Props for the ComparisonSlide composition (16:9, 750 frames / 25s). */
+export interface ComparisonSlideProps extends BaseCompositionProps {
+  /** Description of the old/ineffective way. */
+  oldWay: string;
+  /** Description of the new/better way. */
+  newWay: string;
+  /** Optional label for the old-way panel. Defaults to "The Old Way". */
+  oldLabel?: string;
+  /** Optional label for the new-way panel. Defaults to "The New Way". */
+  newLabel?: string;
+}
+
+/** Props for the ListicleVideo composition (16:9, 900 frames / 30s). */
+export interface ListicleVideoProps extends BaseCompositionProps {
+  /** Up to 5 list items to reveal sequentially. */
+  items: string[];
+}
+
+/** A single step in a how-to guide. */
+export interface HowToStep {
+  /** The step instruction. */
+  step: string;
+  /** Optional supporting detail for the step. */
+  detail?: string;
+}
+
+/** Props for the HowToVideo composition (16:9, 1200 frames / 40s). */
+export interface HowToVideoProps extends BaseCompositionProps {
+  /** Up to 5 steps in the guide. */
+  steps: HowToStep[];
+}
+
+/** Props for the CaseStudyVideo composition (16:9, 1200 frames / 40s). */
+export interface CaseStudyVideoProps extends BaseCompositionProps {
+  /** Description of the client's challenge. */
+  challenge: string;
+  /** Description of the solution applied. */
+  solution: string;
+  /** Description of the result achieved. */
+  result: string;
+  /** Optional metric callout shown in the result scene, e.g. "+340% ROI". */
+  metric?: string;
+}
+
+/** Props for the QuoteCard composition (1:1 square, 600 frames / 20s). */
+export interface QuoteCardProps extends BaseCompositionProps {
+  /** The quote text to display. */
+  quote: string;
+  /** Optional attribution, e.g. "Sarah, Small Business Owner". */
+  attribution?: string;
+}
+
+/** Props for the CountdownCTA composition (16:9, 450 frames / 15s). */
+export interface CountdownCTAProps extends BaseCompositionProps {
+  /** Main headline driving urgency. */
+  headline: string;
+  /** Call-to-action button text. */
+  cta: string;
+  /** Optional URL to display below the CTA. */
+  url?: string;
+}
+
+/** Props for the DefinitionCard composition (16:9, 600 frames / 20s). */
+export interface DefinitionCardProps extends BaseCompositionProps {
+  /** The marketing term being defined. */
+  term: string;
+  /** Clear definition of the term. */
+  definition: string;
+  /** Optional usage example in context. */
+  example?: string;
+}
+
 /** Registry entry describing a composition. */
 export interface CompositionMeta {
   id: string;
