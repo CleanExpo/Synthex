@@ -9,6 +9,7 @@ stepsCompleted:
     'step-04-journeys',
     'step-05-domain',
     'step-06-innovation',
+    'step-07-project-type',
   ]
 inputDocuments:
   - '.planning/STATE.md'
@@ -320,3 +321,80 @@ Synthex CIS occupies the uncontested space between them — SMB-priced, AI-nativ
 | AI video clips feel generic / off-brand                             | Brand voice profile applied to all content; human approval required before any post publishes              |
 | Health Score gaming (owners doing pointless actions to raise score) | Score algorithm weights outcomes (ranking improvement, review count) not just actions (connected accounts) |
 | Competitor awareness causes discouragement not motivation           | Show competitor gap as opportunity ("You could rank here") not deficit ("You're losing")                   |
+
+## SaaS B2B Specific Requirements
+
+### Project-Type Overview
+
+Synthex CIS is a multi-tenant SaaS B2B platform — one tenant per business owner, isolated data, org-scoped queries throughout. The existing Synthex architecture (131 Prisma models, org-scoped API routes, AES-256-GCM Vault) provides the foundation. CIS extends it with a guided onboarding journey, gamification layer, and a video content pipeline powered by Claude AI.
+
+### Tenant Model
+
+- One organisation per business owner — complete data isolation between tenants
+- Tenant scoping applied at every database query (existing `organizationId` pattern in Synthex)
+- Health check (pre-signup) operates outside tenant scope — public, session-less
+- Post-signup: all data (brand profile, Health Score, connected accounts, post history, video assets) is org-scoped and non-portable between accounts
+
+### Permission Matrix (RBAC)
+
+| Role              | Access Level                                                                                                                    | Tier          |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| **Owner**         | Full access — settings, billing, all features, delegate management                                                              | Starter + Pro |
+| **Delegate**      | Approve/edit posts, update GMB details, view Health Score — no billing, no settings, no API key management                      | Pro only      |
+| **Synthex Admin** | Internal ops — churn dashboard, Health Score trends, re-engagement triggers — zero access to client credentials or payment data | Internal      |
+
+Delegation is invite-based (owner enters delegate email → invite sent → delegate accepts → scoped access granted).
+
+### Subscription Tiers
+
+| Tier            | Price                  | Features                                                                                                                     |
+| --------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Starter**     | $49/month              | URL health check, basic GMB, 1 social platform, Business Health Score, no delegation, no video, no BYOK                      |
+| **Pro**         | $249/month             | Full platform — all integrations, Claude-assisted video pipeline, delegation, full analytics, all social platforms, BYOK LLM |
+| **Promotional** | $99/month (months 1–2) | Pro at discounted rate — auto-upgrades to $249/month after 2 months                                                          |
+
+Feature gating enforced server-side at API layer. UI reflects locked features with upgrade prompts — not hidden, just locked with clear upgrade path.
+
+### Integration List
+
+**Pro Pack — all required at launch:**
+
+| Integration                 | Purpose                                                                  | API                           |
+| --------------------------- | ------------------------------------------------------------------------ | ----------------------------- |
+| Google Business Profile     | GMB health check, issue repair, posts                                    | Google My Business API v4     |
+| Google Search Console       | Rankings, crawl errors, indexed pages                                    | Search Console API v1         |
+| Meta (Facebook + Instagram) | Social posting, scheduling, analytics                                    | Meta Graph API v18+           |
+| TikTok                      | Short-form video posting, trend data                                     | TikTok Business API           |
+| LinkedIn                    | Professional audience posting                                            | LinkedIn Marketing API        |
+| YouTube                     | Long-form video uploads, Shorts                                          | YouTube Data API v3           |
+| Claude API (Anthropic)      | Video scripts, captions, brand voice, content generation, trend analysis | Anthropic Messages API — BYOK |
+| Stripe                      | Billing, subscription management, promotional pricing                    | Stripe API (existing)         |
+
+**Starter Pack — subset:** Google Business Profile (basic) + 1 social platform. No BYOK, no video, no delegation.
+
+### Video Pipeline — Claude-Assisted
+
+Claude AI (via client's own Anthropic API key — BYOK) powers the Pro video pipeline:
+
+- **Script generation**: Claude analyses business profile, current trends, and target platform to write posting scripts from the owner's raw talking points
+- **Caption + hashtag writing**: Platform-native captions per channel — TikTok casual, LinkedIn professional, Instagram conversational
+- **Content repurposing**: Long-form source video → platform-optimised clips (Remotion rendering, existing `lib/remotion/` infrastructure)
+- **Trend detection**: Claude surfaces trending formats and topics relevant to the business's industry
+- **Approval queue**: All AI-generated content requires one-tap human approval before publishing — no autonomous posting
+
+**Platform format targets:**
+
+| Platform                 | Format             | Duration |
+| ------------------------ | ------------------ | -------- |
+| TikTok / Instagram Reels | 9:16 vertical      | 15–60s   |
+| YouTube Shorts           | 9:16 vertical      | ≤60s     |
+| YouTube (long-form)      | 16:9 landscape     | 3–15min  |
+| Facebook / LinkedIn      | 1:1 square or 16:9 | 30–90s   |
+
+### Implementation Considerations
+
+- **Vault (existing):** AES-256-GCM org-scoped credential storage handles all OAuth tokens and BYOK API keys — no new credential system needed
+- **Remotion (existing):** `lib/remotion/` compositions already built — CIS adds SMB-specific templates
+- **Subscription gates (existing):** Stripe + plan-based feature gates already implemented — CIS adds Starter/Pro checks
+- **Multi-tenant patterns (existing):** `organizationId` scoping across all routes — all new CIS routes follow same pattern
+- **New required:** GMB API integration, Google Search Console integration, Business Health Score engine, action-gated onboarding wizard, Claude-assisted video pipeline
