@@ -1,5 +1,5 @@
 ---
-stepsCompleted: ['step-01-init', 'step-02-discovery']
+stepsCompleted: ['step-01-init', 'step-02-discovery', 'step-02b-vision']
 inputDocuments:
   - '.planning/STATE.md'
   - '.planning/PROJECT.md'
