@@ -28,12 +28,24 @@ interface PersonaData {
   accuracy: number;
 }
 
-
 export interface ContentRequest {
   type: 'post' | 'caption' | 'thread' | 'story' | 'reel' | 'article';
-  platform: 'twitter' | 'instagram' | 'linkedin' | 'tiktok' | 'facebook' | 'youtube';
+  platform:
+    | 'twitter'
+    | 'instagram'
+    | 'linkedin'
+    | 'tiktok'
+    | 'facebook'
+    | 'youtube';
   topic?: string;
-  tone?: 'professional' | 'casual' | 'humorous' | 'inspirational' | 'educational' | 'friendly' | 'authoritative';
+  tone?:
+    | 'professional'
+    | 'casual'
+    | 'humorous'
+    | 'inspirational'
+    | 'educational'
+    | 'friendly'
+    | 'authoritative';
   keywords?: string[];
   targetAudience?: string;
   length?: 'short' | 'medium' | 'long';
@@ -115,15 +127,26 @@ export class AIContentGenerator {
           },
         });
         if (persona) {
-          logger.info('Generating content with persona', { personaId: persona.id, personaName: persona.name });
+          logger.info('Generating content with persona', {
+            personaId: persona.id,
+            personaName: persona.name,
+          });
         }
       } catch (error) {
-        logger.warn('Failed to fetch persona, proceeding without', { personaId: request.personaId, error });
+        logger.warn('Failed to fetch persona, proceeding without', {
+          personaId: request.personaId,
+          error,
+        });
       }
     }
 
-    // Build the prompt based on request and persona
-    const prompt = this.buildPrompt(request, persona);
+    // Build the prompt based on request and persona, enriched with research insights
+    const researchContext = await this.fetchResearchContext(
+      request.platform,
+      // orgId is not in ContentRequest — pass undefined (global insights only)
+      undefined
+    );
+    const prompt = this.buildPrompt(request, persona) + researchContext;
 
     // Select appropriate model based on content type
     const model = this.selectModel(request);
@@ -131,29 +154,39 @@ export class AIContentGenerator {
     // Resolve which AI provider to use for this request.
     // User credentials take priority over the platform singleton.
     const aiClient: AIProvider = userCredentials
-      ? getAIProvider({ apiKey: userCredentials.apiKey, provider: userCredentials.provider as 'openrouter' | 'anthropic' | 'google' })
+      ? getAIProvider({
+          apiKey: userCredentials.apiKey,
+          provider: userCredentials.provider as
+            | 'openrouter'
+            | 'anthropic'
+            | 'google',
+        })
       : this.client;
 
     try {
       // Generate main content
       const mainContent = await this.callAI(prompt, model, aiClient);
-      
+
       // Generate variations for A/B testing
-      const variations = await this.generateVariations(mainContent, request, aiClient);
-      
+      const variations = await this.generateVariations(
+        mainContent,
+        request,
+        aiClient
+      );
+
       // Extract hashtags and emojis
       const hashtags = this.extractHashtags(mainContent);
       const emojis = this.extractEmojis(mainContent);
-      
+
       // Generate hooks for better engagement
       const hooks = await this.generateHooks(request);
-      
+
       // Calculate viral potential
       const viralScore = this.calculateViralScore(mainContent, request);
-      
+
       // Estimate engagement
       const estimatedEngagement = this.estimateEngagement(mainContent, request);
-      
+
       return {
         id: `content-${Date.now()}`,
         content: mainContent,
@@ -169,8 +202,8 @@ export class AIContentGenerator {
           generatedAt: new Date(),
           model,
           tokens: mainContent.split(' ').length * 1.3,
-          processingTime: Date.now() - startTime
-        }
+          processingTime: Date.now() - startTime,
+        },
       };
     } catch (error) {
       logger.error('Content generation pipeline failed', { error });
@@ -179,16 +212,61 @@ export class AIContentGenerator {
   }
 
   /**
+   * Fetch recent high-confidence trend insights for a platform.
+   * Returns a formatted string to append to the generation prompt,
+   * or an empty string if no insights are available.
+   */
+  private async fetchResearchContext(
+    platform: string,
+    orgId?: string | null
+  ): Promise<string> {
+    try {
+      const now = new Date();
+      const insights = await prisma.trendInsight.findMany({
+        where: {
+          platform,
+          confidence: { gte: 0.7 },
+          OR: [{ validUntil: null }, { validUntil: { gte: now } }],
+          AND: [
+            {
+              OR: [
+                { organizationId: null },
+                ...(orgId ? [{ organizationId: orgId }] : []),
+              ],
+            },
+          ],
+        },
+        orderBy: { confidence: 'desc' },
+        take: 5,
+      });
+
+      if (insights.length === 0) return '';
+
+      const bullets = insights
+        .map(i => `• [${i.category}] ${i.insight}`)
+        .join('\n');
+
+      return `\n\nCurrent trending patterns for ${platform}:\n${bullets}`;
+    } catch {
+      // Non-fatal — proceed without research context
+      return '';
+    }
+  }
+
+  /**
    * Build prompt for AI based on request and optional persona
    */
-  private buildPrompt(request: ContentRequest, persona?: PersonaData | null): string {
+  private buildPrompt(
+    request: ContentRequest,
+    persona?: PersonaData | null
+  ): string {
     const platformGuides = {
       twitter: 'concise, engaging, max 280 characters, thread-friendly',
       instagram: 'visual storytelling, engaging captions, lifestyle-focused',
       linkedin: 'professional, insightful, value-driven, thought leadership',
       tiktok: 'trendy, youth-oriented, entertaining, short-form',
       facebook: 'community-focused, shareable, conversational',
-      youtube: 'detailed, SEO-optimized, engaging hooks'
+      youtube: 'detailed, SEO-optimized, engaging hooks',
     };
 
     const toneGuides = {
@@ -196,17 +274,21 @@ export class AIContentGenerator {
       casual: 'friendly, conversational, relatable',
       humorous: 'witty, entertaining, light-hearted',
       inspirational: 'motivating, uplifting, empowering',
-      educational: 'informative, clear, structured'
+      educational: 'informative, clear, structured',
     };
 
     // Build persona instructions if available
     let personaInstructions = '';
     if (persona) {
       const vocabularyGuides: Record<string, string> = {
-        simple: 'Use simple, everyday language. Short sentences. Easy to understand.',
-        standard: 'Use standard vocabulary. Mix of simple and moderate complexity.',
-        technical: 'Use industry-specific terminology. Technical but accessible.',
-        sophisticated: 'Use sophisticated vocabulary. Eloquent and refined language.',
+        simple:
+          'Use simple, everyday language. Short sentences. Easy to understand.',
+        standard:
+          'Use standard vocabulary. Mix of simple and moderate complexity.',
+        technical:
+          'Use industry-specific terminology. Technical but accessible.',
+        sophisticated:
+          'Use sophisticated vocabulary. Eloquent and refined language.',
       };
 
       const emotionGuides: Record<string, string> = {
@@ -263,22 +345,27 @@ Generate content that will maximize engagement and shares.
    * @param model - Model identifier to use
    * @param client - Resolved AIProvider instance (platform or user key)
    */
-  private async callAI(prompt: string, model: string, client: AIProvider): Promise<string> {
+  private async callAI(
+    prompt: string,
+    model: string,
+    client: AIProvider
+  ): Promise<string> {
     try {
       const response = await client.complete({
         model,
         messages: [
           {
             role: 'system',
-            content: 'You are a viral content expert specializing in creating highly engaging social media content. Generate unique, creative content optimized for maximum engagement.'
+            content:
+              'You are a viral content expert specializing in creating highly engaging social media content. Generate unique, creative content optimized for maximum engagement.',
           },
           {
             role: 'user',
-            content: prompt
-          }
+            content: prompt,
+          },
         ],
         temperature: 0.8,
-        max_tokens: 1000
+        max_tokens: 1000,
       });
 
       const content = response.choices[0]?.message?.content;
@@ -289,7 +376,9 @@ Generate content that will maximize engagement and shares.
       return content;
     } catch (error) {
       logger.error('AI content generation failed', { error });
-      throw new Error('Content generation failed. AI service is temporarily unavailable. Please try again.');
+      throw new Error(
+        'Content generation failed. AI service is temporarily unavailable. Please try again.'
+      );
     }
   }
 
@@ -304,9 +393,15 @@ Generate content that will maximize engagement and shares.
     const variations: ContentVariation[] = [];
 
     // Style variations
-    const styles = ['more casual', 'more formal', 'with urgency', 'question-based'];
+    const styles = [
+      'more casual',
+      'more formal',
+      'with urgency',
+      'question-based',
+    ];
 
-    for (const style of styles.slice(0, 2)) { // Generate 2 variations
+    for (const style of styles.slice(0, 2)) {
+      // Generate 2 variations
       const variationPrompt = `
 Rewrite this content to be ${style}:
 "${originalContent}"
@@ -315,12 +410,16 @@ Keep the same message but change the style and tone.
       `;
 
       try {
-        const variation = await this.callAI(variationPrompt, this.models.fast, aiClient);
+        const variation = await this.callAI(
+          variationPrompt,
+          this.models.fast,
+          aiClient
+        );
         variations.push({
           id: `var-${crypto.randomUUID()}`,
           content: variation,
           style,
-          score: 0 // Score should be calculated from actual engagement data, not randomized
+          score: 0, // Score should be calculated from actual engagement data, not randomized
         });
       } catch (error) {
         // Use simple transformation as fallback
@@ -328,11 +427,11 @@ Keep the same message but change the style and tone.
           id: `var-${crypto.randomUUID()}`,
           content: this.transformStyle(originalContent, style),
           style,
-          score: 0
+          score: 0,
         });
       }
     }
-    
+
     return variations;
   }
 
@@ -367,46 +466,46 @@ Keep the same message but change the style and tone.
     const hooks = {
       twitter: [
         "Here's what nobody tells you about...",
-        "Unpopular opinion:",
-        "BREAKING:",
-        "Thread 🧵:",
-        "Hot take:"
+        'Unpopular opinion:',
+        'BREAKING:',
+        'Thread 🧵:',
+        'Hot take:',
       ],
       instagram: [
-        "Stop scrolling!",
+        'Stop scrolling!',
         "You won't believe...",
-        "POV:",
-        "This changed everything:",
-        "Save this before it's gone!"
+        'POV:',
+        'This changed everything:',
+        "Save this before it's gone!",
       ],
       linkedin: [
-        "After 10 years, I learned...",
-        "The truth about...",
-        "Why successful people...",
-        "3 lessons from...",
-        "The future of..."
+        'After 10 years, I learned...',
+        'The truth about...',
+        'Why successful people...',
+        '3 lessons from...',
+        'The future of...',
       ],
       tiktok: [
-        "Wait for it...",
-        "Part 1:",
+        'Wait for it...',
+        'Part 1:',
         "You've been doing it wrong!",
-        "Life hack alert!",
-        "This is insane!"
+        'Life hack alert!',
+        'This is insane!',
       ],
       facebook: [
-        "This is important:",
-        "Please share:",
-        "Everyone should know:",
+        'This is important:',
+        'Please share:',
+        'Everyone should know:',
         "I can't believe...",
-        "Amazing story:"
+        'Amazing story:',
       ],
       youtube: [
         "You Won't Believe...",
-        "The Truth About...",
-        "How to Actually...",
+        'The Truth About...',
+        'How to Actually...',
         "Why Everyone's Wrong About...",
-        "The Secret to..."
-      ]
+        'The Secret to...',
+      ],
     };
 
     return hooks[request.platform] || hooks.twitter;
@@ -424,7 +523,8 @@ Keep the same message but change the style and tone.
    * Extract emojis from content
    */
   private extractEmojis(content: string): string[] {
-    const emojiRegex = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+    const emojiRegex =
+      /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
     return content.match(emojiRegex) || [];
   }
 
@@ -433,23 +533,26 @@ Keep the same message but change the style and tone.
    */
   private generateCTA(request: ContentRequest): string {
     const ctas = {
-      twitter: "💬 Reply with your thoughts!",
-      instagram: "👆 Link in bio for more!",
-      linkedin: "Connect with me for insights",
-      tiktok: "Follow for Part 2!",
-      facebook: "Share if you agree!",
-      youtube: "Subscribe for more content!"
+      twitter: '💬 Reply with your thoughts!',
+      instagram: '👆 Link in bio for more!',
+      linkedin: 'Connect with me for insights',
+      tiktok: 'Follow for Part 2!',
+      facebook: 'Share if you agree!',
+      youtube: 'Subscribe for more content!',
     };
-    
-    return ctas[request.platform] || "Learn more →";
+
+    return ctas[request.platform] || 'Learn more →';
   }
 
   /**
    * Calculate viral potential score
    */
-  private calculateViralScore(content: string, request: ContentRequest): number {
+  private calculateViralScore(
+    content: string,
+    request: ContentRequest
+  ): number {
     let score = 50; // Base score
-    
+
     // Check for viral elements
     if (content.includes('?')) score += 10; // Questions engage
     if (content.includes('!')) score += 5; // Excitement
@@ -457,7 +560,7 @@ Keep the same message but change the style and tone.
     if (content.length < 280) score += 10; // Concise
     if (this.extractEmojis(content).length > 0) score += 5; // Visual appeal
     if (this.extractHashtags(content).length > 3) score += 10; // Discoverability
-    
+
     // Platform-specific bonuses
     const platformBonus = {
       twitter: content.includes('Thread') ? 15 : 0,
@@ -465,11 +568,11 @@ Keep the same message but change the style and tone.
       linkedin: content.includes('insight') ? 15 : 0,
       tiktok: content.includes('Part') ? 15 : 0,
       facebook: content.includes('Share') ? 15 : 0,
-      youtube: content.includes('Subscribe') ? 15 : 0
+      youtube: content.includes('Subscribe') ? 15 : 0,
     };
-    
+
     score += platformBonus[request.platform] || 0;
-    
+
     return Math.min(100, score);
   }
 
@@ -483,15 +586,15 @@ Keep the same message but change the style and tone.
       linkedin: 2.0,
       tiktok: 5.5,
       facebook: 1.8,
-      youtube: 4.2
+      youtube: 4.2,
     };
-    
+
     let rate = baseEngagement[request.platform] || 2.0;
-    
+
     // Adjust based on content quality
     const viralScore = this.calculateViralScore(content, request);
-    rate *= (viralScore / 50); // Multiply by viral factor
-    
+    rate *= viralScore / 50; // Multiply by viral factor
+
     return Math.round(rate * 100) / 100;
   }
 
@@ -527,14 +630,14 @@ Keep the same message but change the style and tone.
     postsPerDay: number
   ): Promise<Map<string, GeneratedContent[]>> {
     const calendar = new Map<string, GeneratedContent[]>();
-    
+
     for (let day = 0; day < days; day++) {
       const date = new Date();
       date.setDate(date.getDate() + day);
       const dateKey = date.toISOString().split('T')[0];
-      
+
       const dayContent: GeneratedContent[] = [];
-      
+
       for (const platform of platforms) {
         for (let post = 0; post < postsPerDay; post++) {
           const content = await this.generateContent({
@@ -543,16 +646,16 @@ Keep the same message but change the style and tone.
             tone: ['professional', 'casual', 'inspirational'][post % 3] as any,
             includeHashtags: true,
             includeEmojis: true,
-            includeCTA: post === postsPerDay - 1 // CTA on last post
+            includeCTA: post === postsPerDay - 1, // CTA on last post
           });
-          
+
           dayContent.push(content);
         }
       }
-      
+
       calendar.set(dateKey, dayContent);
     }
-    
+
     return calendar;
   }
 }

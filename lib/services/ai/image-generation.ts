@@ -23,7 +23,13 @@ export interface ImageGenerationOptions {
   width?: number;
   height?: number;
   aspectRatio?: '1:1' | '16:9' | '9:16' | '4:3' | '3:4';
-  style?: 'photorealistic' | 'artistic' | 'anime' | 'digital-art' | 'cinematic' | 'minimalist';
+  style?:
+    | 'photorealistic'
+    | 'artistic'
+    | 'anime'
+    | 'digital-art'
+    | 'cinematic'
+    | 'minimalist';
   quality?: 'standard' | 'hd';
   provider?: ImageProvider;
   seed?: number;
@@ -46,6 +52,35 @@ export interface ImageGenerationResult {
   error?: string;
 }
 
+/**
+ * Fetch visual style trend insights for a platform.
+ * Returns top 3 visual style insights as a comma-separated string,
+ * or empty string if none available.
+ */
+async function getVisualStyleInsights(platform: string): Promise<string> {
+  try {
+    // Dynamic import to avoid circular dependencies
+    const { default: prisma } = await import('@/lib/prisma');
+    const now = new Date();
+    const insights = await prisma.trendInsight.findMany({
+      where: {
+        platform,
+        category: 'visual_style',
+        confidence: { gte: 0.7 },
+        organizationId: null, // global insights only
+        OR: [{ validUntil: null }, { validUntil: { gte: now } }],
+      },
+      orderBy: { confidence: 'desc' },
+      take: 3,
+      select: { insight: true },
+    });
+    if (insights.length === 0) return '';
+    return insights.map(i => i.insight).join('. ');
+  } catch {
+    return '';
+  }
+}
+
 // Provider configurations
 const STABILITY_API_BASE = 'https://api.stability.ai/v2beta';
 const OPENAI_API_BASE = 'https://api.openai.com/v1';
@@ -62,9 +97,11 @@ const ASPECT_RATIOS: Record<string, { width: number; height: number }> = {
 
 // Style presets for enhanced prompts
 const STYLE_PROMPTS: Record<string, string> = {
-  photorealistic: 'Photorealistic, high detail, professional photography, 8k resolution',
+  photorealistic:
+    'Photorealistic, high detail, professional photography, 8k resolution',
   artistic: 'Artistic interpretation, creative, visually striking, painterly',
-  anime: 'Anime style, vibrant colors, clean lines, Japanese animation aesthetic',
+  anime:
+    'Anime style, vibrant colors, clean lines, Japanese animation aesthetic',
   'digital-art': 'Digital art, modern, sleek, professional illustration',
   cinematic: 'Cinematic, dramatic lighting, movie poster quality, epic scene',
   minimalist: 'Minimalist design, clean, simple, lots of whitespace, modern',
@@ -78,7 +115,11 @@ async function generateWithStability(
 ): Promise<ImageGenerationResult> {
   const apiKey = process.env.STABILITY_API_KEY;
   if (!apiKey) {
-    return { success: false, provider: 'stability', error: 'STABILITY_API_KEY not configured' };
+    return {
+      success: false,
+      provider: 'stability',
+      error: 'STABILITY_API_KEY not configured',
+    };
   }
 
   const dimensions = options.aspectRatio
@@ -86,31 +127,42 @@ async function generateWithStability(
     : { width: options.width || 1024, height: options.height || 1024 };
 
   const stylePrompt = options.style ? STYLE_PROMPTS[options.style] : '';
-  const fullPrompt = stylePrompt ? `${options.prompt}. ${stylePrompt}` : options.prompt;
+  const fullPrompt = stylePrompt
+    ? `${options.prompt}. ${stylePrompt}`
+    : options.prompt;
 
   try {
-    const response = await fetch(`${STABILITY_API_BASE}/stable-image/generate/sd3`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        prompt: fullPrompt,
-        negative_prompt: options.negativePrompt || 'blurry, low quality, distorted, deformed',
-        width: dimensions.width,
-        height: dimensions.height,
-        seed: options.seed || Math.floor(Math.random() * 2147483647),
-        steps: options.steps || 30,
-        cfg_scale: options.guidanceScale || 7,
-        output_format: 'png',
-      }),
-    });
+    const response = await fetch(
+      `${STABILITY_API_BASE}/stable-image/generate/sd3`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: fullPrompt,
+          negative_prompt:
+            options.negativePrompt ||
+            'blurry, low quality, distorted, deformed',
+          width: dimensions.width,
+          height: dimensions.height,
+          seed: options.seed || Math.floor(Math.random() * 2147483647),
+          steps: options.steps || 30,
+          cfg_scale: options.guidanceScale || 7,
+          output_format: 'png',
+        }),
+      }
+    );
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error instanceof Error ? error.message : String(error) || `Stability API error: ${response.status}`);
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : String(error) || `Stability API error: ${response.status}`
+      );
     }
 
     const data = await response.json();
@@ -128,7 +180,11 @@ async function generateWithStability(
     };
   } catch (error: unknown) {
     logger.error('Stability AI generation failed:', { error });
-    return { success: false, provider: 'stability', error: error instanceof Error ? error.message : String(error) };
+    return {
+      success: false,
+      provider: 'stability',
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
@@ -140,7 +196,11 @@ async function generateWithDalle(
 ): Promise<ImageGenerationResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return { success: false, provider: 'dalle', error: 'OPENAI_API_KEY not configured' };
+    return {
+      success: false,
+      provider: 'dalle',
+      error: 'OPENAI_API_KEY not configured',
+    };
   }
 
   // DALL-E 3 supports specific sizes
@@ -149,13 +209,15 @@ async function generateWithDalle(
   else if (options.aspectRatio === '9:16') size = '1024x1792';
 
   const stylePrompt = options.style ? STYLE_PROMPTS[options.style] : '';
-  const fullPrompt = stylePrompt ? `${options.prompt}. ${stylePrompt}` : options.prompt;
+  const fullPrompt = stylePrompt
+    ? `${options.prompt}. ${stylePrompt}`
+    : options.prompt;
 
   try {
     const response = await fetch(`${OPENAI_API_BASE}/images/generations`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -170,7 +232,9 @@ async function generateWithDalle(
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || `DALL-E API error: ${response.status}`);
+      throw new Error(
+        error.error?.message || `DALL-E API error: ${response.status}`
+      );
     }
 
     const data = await response.json();
@@ -189,7 +253,11 @@ async function generateWithDalle(
     };
   } catch (error: unknown) {
     logger.error('DALL-E generation failed:', { error });
-    return { success: false, provider: 'dalle', error: error instanceof Error ? error.message : String(error) };
+    return {
+      success: false,
+      provider: 'dalle',
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
@@ -201,11 +269,17 @@ async function generateWithGemini(
 ): Promise<ImageGenerationResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return { success: false, provider: 'gemini', error: 'GEMINI_API_KEY not configured' };
+    return {
+      success: false,
+      provider: 'gemini',
+      error: 'GEMINI_API_KEY not configured',
+    };
   }
 
   const stylePrompt = options.style ? STYLE_PROMPTS[options.style] : '';
-  const fullPrompt = stylePrompt ? `${options.prompt}. ${stylePrompt}` : options.prompt;
+  const fullPrompt = stylePrompt
+    ? `${options.prompt}. ${stylePrompt}`
+    : options.prompt;
 
   try {
     const response = await fetch(
@@ -216,11 +290,15 @@ async function generateWithGemini(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `Generate an image: ${fullPrompt}`,
-            }],
-          }],
+          contents: [
+            {
+              parts: [
+                {
+                  text: `Generate an image: ${fullPrompt}`,
+                },
+              ],
+            },
+          ],
           generationConfig: {
             responseModalities: ['image', 'text'],
             responseMimeType: 'image/png',
@@ -231,14 +309,17 @@ async function generateWithGemini(
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || `Gemini API error: ${response.status}`);
+      throw new Error(
+        error.error?.message || `Gemini API error: ${response.status}`
+      );
     }
 
     const data = await response.json();
 
     // Extract image from response
     const imagePart = data.candidates?.[0]?.content?.parts?.find(
-      (part: { inlineData?: { mimeType?: string; data?: string } }) => part.inlineData?.mimeType?.startsWith('image/')
+      (part: { inlineData?: { mimeType?: string; data?: string } }) =>
+        part.inlineData?.mimeType?.startsWith('image/')
     );
 
     if (!imagePart) {
@@ -261,7 +342,11 @@ async function generateWithGemini(
     };
   } catch (error: unknown) {
     logger.error('Gemini generation failed:', { error });
-    return { success: false, provider: 'gemini', error: error instanceof Error ? error.message : String(error) };
+    return {
+      success: false,
+      provider: 'gemini',
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
@@ -271,26 +356,37 @@ async function generateWithGemini(
 export async function generateImage(
   options: ImageGenerationOptions
 ): Promise<ImageGenerationResult> {
-  const providers: ImageProvider[] = options.provider
-    ? [options.provider]
+  // Enrich prompt with visual style trends
+  const visualTrends = await getVisualStyleInsights(
+    options.provider ?? 'instagram'
+  );
+  const enrichedOptions: ImageGenerationOptions = visualTrends
+    ? {
+        ...options,
+        prompt: `${options.prompt}. Visual style trends: ${visualTrends}`,
+      }
+    : options;
+
+  const providers: ImageProvider[] = enrichedOptions.provider
+    ? [enrichedOptions.provider]
     : ['stability', 'dalle', 'gemini'];
 
   for (const provider of providers) {
     logger.info(`Attempting image generation with ${provider}`, {
-      prompt: options.prompt.substring(0, 100),
+      prompt: enrichedOptions.prompt.substring(0, 100),
     });
 
     let result: ImageGenerationResult;
 
     switch (provider) {
       case 'stability':
-        result = await generateWithStability(options);
+        result = await generateWithStability(enrichedOptions);
         break;
       case 'dalle':
-        result = await generateWithDalle(options);
+        result = await generateWithDalle(enrichedOptions);
         break;
       case 'gemini':
-        result = await generateWithGemini(options);
+        result = await generateWithGemini(enrichedOptions);
         break;
       default:
         continue;
@@ -301,7 +397,9 @@ export async function generateImage(
       return result;
     }
 
-    logger.warn(`${provider} failed, trying next provider`, { error: result.error });
+    logger.warn(`${provider} failed, trying next provider`, {
+      error: result.error,
+    });
   }
 
   return {
@@ -369,10 +467,15 @@ export function enhancePrompt(
 /**
  * Validate image dimensions for platform requirements
  */
-export function getOptimalDimensions(
-  platform: string
-): { width: number; height: number; aspectRatio: string } {
-  const platformDimensions: Record<string, { width: number; height: number; aspectRatio: string }> = {
+export function getOptimalDimensions(platform: string): {
+  width: number;
+  height: number;
+  aspectRatio: string;
+} {
+  const platformDimensions: Record<
+    string,
+    { width: number; height: number; aspectRatio: string }
+  > = {
     instagram_feed: { width: 1080, height: 1080, aspectRatio: '1:1' },
     instagram_story: { width: 1080, height: 1920, aspectRatio: '9:16' },
     twitter: { width: 1600, height: 900, aspectRatio: '16:9' },
@@ -382,7 +485,13 @@ export function getOptimalDimensions(
     youtube_thumbnail: { width: 1280, height: 720, aspectRatio: '16:9' },
   };
 
-  return platformDimensions[platform] || { width: 1024, height: 1024, aspectRatio: '1:1' };
+  return (
+    platformDimensions[platform] || {
+      width: 1024,
+      height: 1024,
+      aspectRatio: '1:1',
+    }
+  );
 }
 
 // Export singleton functions
