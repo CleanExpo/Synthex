@@ -8,12 +8,12 @@
  * SECURITY: All endpoints require authentication
  */
 
+import { randomBytes } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
-
 
 // =============================================================================
 // Slug Generation
@@ -30,7 +30,7 @@ function slugify(text: string): string {
 }
 
 function generateRandomSuffix(): string {
-  return Math.random().toString(36).substring(2, 6);
+  return randomBytes(4).toString('hex');
 }
 
 async function generateUniqueSlug(title: string): Promise<string> {
@@ -47,7 +47,9 @@ async function generateUniqueSlug(title: string): Promise<string> {
   let attempts = 0;
   while (attempts < 10) {
     const newSlug = `${slug}-${generateRandomSuffix()}`;
-    const exists = await prisma.linkBioPage.findUnique({ where: { slug: newSlug } });
+    const exists = await prisma.linkBioPage.findUnique({
+      where: { slug: newSlug },
+    });
     if (!exists) {
       return newSlug;
     }
@@ -66,7 +68,10 @@ export async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const pages = await prisma.linkBioPage.findMany({
@@ -98,7 +103,10 @@ export async function GET(request: NextRequest) {
     logger.error('Failed to fetch bio pages', {
       error: error instanceof Error ? error.message : String(error),
     });
-    return NextResponse.json({ error: 'Failed to fetch pages' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch pages' },
+      { status: 500 }
+    );
   }
 }
 
@@ -115,14 +123,19 @@ export async function POST(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const body = await request.json();
     const validation = createPageSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: `Invalid request: ${validation.error.issues.map(i => i.message).join(', ')}` },
+        {
+          error: `Invalid request: ${validation.error.issues.map(i => i.message).join(', ')}`,
+        },
         { status: 400 }
       );
     }
@@ -152,7 +165,10 @@ export async function POST(request: NextRequest) {
     logger.error('Failed to create bio page', {
       error: error instanceof Error ? error.message : String(error),
     });
-    return NextResponse.json({ error: 'Failed to create page' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to create page' },
+      { status: 500 }
+    );
   }
 }
 
