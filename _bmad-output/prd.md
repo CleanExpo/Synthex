@@ -10,6 +10,7 @@ stepsCompleted:
     'step-05-domain',
     'step-06-innovation',
     'step-07-project-type',
+    'step-08-scoping',
   ]
 inputDocuments:
   - '.planning/STATE.md'
@@ -398,3 +399,71 @@ Claude AI (via client's own Anthropic API key — BYOK) powers the Pro video pip
 - **Subscription gates (existing):** Stripe + plan-based feature gates already implemented — CIS adds Starter/Pro checks
 - **Multi-tenant patterns (existing):** `organizationId` scoping across all routes — all new CIS routes follow same pattern
 - **New required:** GMB API integration, Google Search Console integration, Business Health Score engine, action-gated onboarding wizard, Claude-assisted video pipeline
+
+## Project Scoping & Phased Development
+
+### MVP Strategy & Philosophy
+
+**MVP Approach:** Experience MVP — the first release must deliver a complete, emotionally satisfying experience for an SMB owner in a single afternoon session. The goal is not a subset of features; it is a complete guided journey from zero to first win. Every MVP item below is essential to that moment.
+
+**Resource Requirements:** Full-stack developer(s) familiar with Next.js 15, Supabase, Prisma, Remotion, and the Google/Meta/TikTok API ecosystems. AI integration experience (Anthropic Claude API) required for video pipeline. Existing Synthex codebase covers auth, billing, vault, and multi-tenancy — no greenfield infrastructure needed.
+
+### MVP Feature Set (Phase 1)
+
+**Core User Journeys Supported:** All 5 journeys (Sarah, Dave, Admin, Marcus, Julie) are supported at launch.
+
+**Must-Have Capabilities:**
+
+| #   | Capability                                                          | Tier                    | Rationale                                 |
+| --- | ------------------------------------------------------------------- | ----------------------- | ----------------------------------------- |
+| 1   | Public URL health check (no login, ≤10s)                            | Both                    | Top-of-funnel + onboarding pre-loader     |
+| 2   | Health check → signup conversion flow (pre-fill)                    | Both                    | Eliminates blank-slate problem            |
+| 3   | GMB connection + issue repair workflow                              | Starter + Pro           | Session-1 win anchor                      |
+| 4   | Google Search Console connection + ranking dashboard                | Pro                     | Competitive motivation                    |
+| 5   | Conversational story capture (AI interview → brand profile)         | Both                    | Owner talks; system writes                |
+| 6   | BYOK LLM setup wizard (Anthropic API key)                           | Pro                     | Enables all AI features                   |
+| 7   | Social platform connections — Meta bundle (Facebook + Instagram)    | Starter (1) / Pro (all) | Broadest Australian SMB reach             |
+| 8   | Post creation, scheduling, and one-tap approval queue               | Both                    | Weekly engagement mechanic                |
+| 9   | Business Health Score (0–100, live-updating)                        | Both                    | North star metric + retention lever       |
+| 10  | Action-gated progressive unlock + celebration moments               | Both                    | Gamification retention model              |
+| 11  | CIS Hub page (unified dashboard entry point)                        | Both                    | Single home for all tools                 |
+| 12  | Claude-assisted video pipeline (script → clip → caption → schedule) | Pro                     | Core Pro differentiator                   |
+| 13  | Invite-based delegation (Owner + Delegate roles)                    | Pro                     | Julie persona — Friday 20-minute workflow |
+| 14  | Stalled-setup Monday brief (automated re-engagement email)          | Both                    | Dave persona — recovers near-churners     |
+
+### Post-MVP Features (Phase 2 — Growth)
+
+- TikTok, LinkedIn, YouTube integrations (after Meta bundle proven)
+- 15-Minute Monday brief (weekly summary SMS/push, beyond email)
+- Story Replay at 90 days (auto-generated progress documentary)
+- Referral-as-unlock mechanic (word-of-mouth built into gamification)
+- Admin churn-risk dashboard (Health Score trend monitoring, re-engagement triggers)
+- Competitor Watch — live ongoing tracking (not just onboarding snapshot)
+- Notification Centre slide-out
+- Loyalty Tier Card (Bronze → Platinum based on Health Score milestones)
+
+### Phase 3 — Expansion (Vision)
+
+- Full GMB automated posting (Google Posts via API, no human approval needed)
+- AI auto-drafts weekly content calendar without prompting
+- 100 Remotion educational videos + in-product HelpVideo component
+- Explainer video sales funnel (video-first cold traffic onboarding)
+- Agency/multi-account tier (one login managing multiple business orgs)
+
+### Risk Mitigation Strategy
+
+**Technical risks:**
+
+- Video pipeline complexity (Remotion + Claude + 4 platform upload APIs): mitigated by shipping Meta bundle only at launch; TikTok/YouTube/LinkedIn unlocked in Phase 2 after pipeline is proven
+- GMB API verification requirements: clients guided through Google Cloud Console setup with step-by-step screenshots; "Book a setup call" fallback at each step
+- BYOK wizard completion rate: if <80% completion, introduce a "do it for me" concierge option (Phase 2)
+
+**Market risks:**
+
+- If health check → Pro conversion is below 60%: $49 Starter tier acts as the catch — converts cold visitors who aren't ready for $249, then upgrades them over time
+- If SMB owners find video pipeline too complex: approval-only mode (no video upload required) always available; video is Pro enhancement, not Pro requirement
+
+**Resource risks:**
+
+- If development resources are constrained: cut Phase 1 items 12 (video pipeline) and 13 (delegation) — they are Pro-only and can launch as "coming soon" gates without breaking the core Starter journey
+- Absolute minimum viable release: items 1–11 (health check through CIS Hub) constitute a shippable experience
