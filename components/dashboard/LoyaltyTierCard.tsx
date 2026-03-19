@@ -156,7 +156,6 @@ function AchievementBadge({
 }) {
   return (
     <motion.div
-      key={achievement.id}
       initial={{ scale: 0.5, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{

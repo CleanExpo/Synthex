@@ -16,6 +16,7 @@
  */
 
 import { NextRequest } from 'next/server';
+import type { UserAchievement } from '@prisma/client';
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
@@ -66,17 +67,20 @@ function computeTierProgress(points: number, tier: Tier): number {
 }
 
 // ── Types ──────────────────────────────────────────────────────────────────
-interface UserAchievementRecord {
-  achievementId: string;
-  name: string;
-  description: string;
-  icon: string;
-  category: string;
-  rarity: string;
-  progress: number;
-  unlockedAt: Date | null;
-  pointsAwarded: number;
-}
+// Derived from the Prisma-generated UserAchievement model type — matches the
+// exact fields selected in the findMany query below (no unsafe cast needed).
+type UserAchievementRecord = Pick<
+  UserAchievement,
+  | 'achievementId'
+  | 'name'
+  | 'description'
+  | 'icon'
+  | 'category'
+  | 'rarity'
+  | 'progress'
+  | 'unlockedAt'
+  | 'pointsAwarded'
+>;
 
 // ── Handler ────────────────────────────────────────────────────────────────
 export async function GET(request: NextRequest) {
@@ -101,6 +105,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Organisation scoping: UserStreak and UserAchievement are personal
+    // per-user records — they are scoped by userId, not organisationId.
+    // The APISecurityChecker (AUTHENTICATED_READ policy) validates that the
+    // request carries a valid JWT before we reach this point, so org
+    // membership is implicitly confirmed via the authenticated session.
+
     // Fetch streak (points source) and achievements in parallel
     const [streakRecord, userAchievements] = await Promise.all([
       prisma.userStreak.findUnique({
@@ -121,7 +131,7 @@ export async function GET(request: NextRequest) {
           pointsAwarded: true,
         },
         orderBy: { unlockedAt: 'desc' },
-      }) as Promise<UserAchievementRecord[]>,
+      }),
     ]);
 
     const points = streakRecord?.points ?? 0;
