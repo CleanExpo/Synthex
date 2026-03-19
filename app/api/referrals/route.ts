@@ -22,6 +22,15 @@ import prisma from '@/lib/prisma';
 import { email as emailService } from '@/lib/email/index';
 import { logger } from '@/lib/logger';
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function generateReferralCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excludes confusing chars I/O/0/1
   const bytes = randomBytes(4); // Cryptographically secure random bytes
@@ -166,29 +175,68 @@ export async function POST(request: NextRequest) {
       (await prisma.referral.findUnique({ where: { code } }))
     );
 
-    const [referral, referrer] = await Promise.all([
-      prisma.referral.create({
-        data: {
-          referrerId: userId,
-          refereeEmail: email,
-          code,
-          status: 'sent',
-          rewardType: 'credits',
-          rewardAmount: 500, // 500 bonus AI credits for both parties
-        },
-      }),
-      prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
-    ]);
+    // Guard against loop exhaustion — ensure the final code is actually free
+    const isCodeTaken = await prisma.referral.findUnique({ where: { code } });
+    if (isCodeTaken) {
+      return APISecurityChecker.createSecureResponse(
+        { error: 'Could not generate a unique invite code. Please try again.' },
+        500
+      );
+    }
+
+    // Fetch referrer name in parallel while creating the referral record.
+    // Wrap prisma.referral.create in a try/catch to handle the P2002 unique
+    // constraint violation that can occur in a race condition where two
+    // concurrent requests slip past the optimistic findFirst guard above.
+    let referral: Awaited<ReturnType<typeof prisma.referral.create>>;
+    let referrer: { name: string | null } | null;
+
+    try {
+      [referral, referrer] = await Promise.all([
+        prisma.referral.create({
+          data: {
+            referrerId: userId,
+            refereeEmail: email,
+            code,
+            status: 'sent',
+            rewardType: 'credits',
+            rewardAmount: 500, // 500 bonus AI credits for both parties
+          },
+        }),
+        prisma.user.findUnique({
+          where: { id: userId },
+          select: { name: true },
+        }),
+      ]);
+    } catch (error: unknown) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code: string }).code === 'P2002'
+      ) {
+        return APISecurityChecker.createSecureResponse(
+          {
+            error: 'An invitation has already been sent to this email address.',
+          },
+          409
+        );
+      }
+      throw error; // re-throw non-constraint errors to the outer catch
+    }
 
     const referrerName = referrer?.name || 'A SYNTHEX user';
+    // HTML-escape the referrer name before interpolating into the email body
+    // to prevent XSS if a user has set a malicious display name.
+    const safeReferrerName = escapeHtml(referrerName);
     const signupUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social'}/signup?ref=${code}`;
 
     // Send referral invite email — non-blocking so referral succeeds even if email fails
     emailService
       .send({
         to: email,
-        subject: `${referrerName} invited you to SYNTHEX`,
-        html: `<p>Hi there!</p><p>${referrerName} has invited you to join SYNTHEX. Sign up with your referral link to receive 500 bonus AI credits: <a href="${signupUrl}">${signupUrl}</a></p>`,
+        subject: `${safeReferrerName} invited you to SYNTHEX`,
+        html: `<p>Hi there!</p><p>${safeReferrerName} has invited you to join SYNTHEX. Sign up with your referral link to receive 500 bonus AI credits: <a href="${signupUrl}">${signupUrl}</a></p>`,
         text: `${referrerName} invited you to join SYNTHEX! Sign up here to get 500 bonus AI credits: ${signupUrl}`,
         type: 'transactional',
       })
