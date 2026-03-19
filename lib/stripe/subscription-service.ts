@@ -53,14 +53,56 @@ export interface PlanLimits {
 }
 
 export const PLAN_LIMITS: Record<string, PlanLimits> = {
-  free: { maxSocialAccounts: 2, maxAiPosts: 10, maxPersonas: 1, maxSeoAudits: 0, maxSeoPages: 0 },
-  pro: { maxSocialAccounts: 5, maxAiPosts: 100, maxPersonas: 3, maxSeoAudits: 10, maxSeoPages: 50 },
-  growth: { maxSocialAccounts: 10, maxAiPosts: -1, maxPersonas: 10, maxSeoAudits: -1, maxSeoPages: -1 }, // -1 = unlimited
-  scale: { maxSocialAccounts: -1, maxAiPosts: -1, maxPersonas: -1, maxSeoAudits: -1, maxSeoPages: -1 },
+  free: {
+    maxSocialAccounts: 2,
+    maxAiPosts: 10,
+    maxPersonas: 1,
+    maxSeoAudits: 0,
+    maxSeoPages: 0,
+  },
+  pro: {
+    maxSocialAccounts: 5,
+    maxAiPosts: 100,
+    maxPersonas: 3,
+    maxSeoAudits: 10,
+    maxSeoPages: 50,
+  },
+  growth: {
+    maxSocialAccounts: 10,
+    maxAiPosts: -1,
+    maxPersonas: 10,
+    maxSeoAudits: -1,
+    maxSeoPages: -1,
+  }, // -1 = unlimited
+  scale: {
+    maxSocialAccounts: -1,
+    maxAiPosts: -1,
+    maxPersonas: -1,
+    maxSeoAudits: -1,
+    maxSeoPages: -1,
+  },
   // Backward-compat aliases for any existing DB records with old plan names
-  professional: { maxSocialAccounts: 5, maxAiPosts: 100, maxPersonas: 3, maxSeoAudits: 10, maxSeoPages: 50 },
-  business: { maxSocialAccounts: 10, maxAiPosts: -1, maxPersonas: 10, maxSeoAudits: -1, maxSeoPages: -1 },
-  custom: { maxSocialAccounts: -1, maxAiPosts: -1, maxPersonas: -1, maxSeoAudits: -1, maxSeoPages: -1 },
+  professional: {
+    maxSocialAccounts: 5,
+    maxAiPosts: 100,
+    maxPersonas: 3,
+    maxSeoAudits: 10,
+    maxSeoPages: 50,
+  },
+  business: {
+    maxSocialAccounts: 10,
+    maxAiPosts: -1,
+    maxPersonas: 10,
+    maxSeoAudits: -1,
+    maxSeoPages: -1,
+  },
+  custom: {
+    maxSocialAccounts: -1,
+    maxAiPosts: -1,
+    maxPersonas: -1,
+    maxSeoAudits: -1,
+    maxSeoPages: -1,
+  },
 };
 
 // ============================================================================
@@ -69,7 +111,17 @@ export const PLAN_LIMITS: Record<string, PlanLimits> = {
 
 export class SubscriptionService {
   // Cache for hasAuthorityAddon results — avoid hammering Stripe API on every request
-  private addonCache = new Map<string, { result: boolean; expiresAt: number }>();
+  private addonCache = new Map<
+    string,
+    { result: boolean; expiresAt: number }
+  >();
+
+  // Cache for getSubscription results — 2-minute TTL, invalidated on Stripe webhook
+  private subscriptionCache = new Map<
+    string,
+    { result: SubscriptionInfo | null; expiresAt: number }
+  >();
+  private readonly SUBSCRIPTION_TTL_MS = 2 * 60 * 1000; // 2 minutes
 
   /**
    * Check whether a user has an active Authority Ranking add-on subscription item.
@@ -83,12 +135,18 @@ export class SubscriptionService {
     }
 
     const cacheResult = (result: boolean): boolean => {
-      this.addonCache.set(userId, { result, expiresAt: Date.now() + 5 * 60 * 1000 });
+      this.addonCache.set(userId, {
+        result,
+        expiresAt: Date.now() + 5 * 60 * 1000,
+      });
       return result;
     };
 
     // Owner bypass — platform owners always have all features enabled
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
     if (isOwnerEmail(user?.email)) {
       return cacheResult(true);
     }
@@ -111,14 +169,22 @@ export class SubscriptionService {
     }
 
     try {
-      const stripeSub = await stripe.subscriptions.retrieve(sub.stripeSubscriptionId, {
-        expand: ['items'],
-      });
+      const stripeSub = await stripe.subscriptions.retrieve(
+        sub.stripeSubscriptionId,
+        {
+          expand: ['items'],
+        }
+      );
 
-      const hasAddon = stripeSub.items.data.some(item => item.price.id === addonPriceId);
+      const hasAddon = stripeSub.items.data.some(
+        item => item.price.id === addonPriceId
+      );
       return cacheResult(hasAddon);
     } catch (err) {
-      logger.warn('Failed to retrieve Stripe subscription for addon check', { err, userId });
+      logger.warn('Failed to retrieve Stripe subscription for addon check', {
+        err,
+        userId,
+      });
       return cacheResult(false);
     }
   }
@@ -128,7 +194,10 @@ export class SubscriptionService {
    */
   async getOrCreateSubscription(userId: string): Promise<SubscriptionInfo> {
     // Owner bypass: platform owners get unlimited (custom) plan
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
     const ownerBypass = isOwnerEmail(user?.email);
 
     let subscription = await prisma.subscription.findUnique({
@@ -169,19 +238,37 @@ export class SubscriptionService {
    * Get subscription by user ID
    */
   async getSubscription(userId: string): Promise<SubscriptionInfo | null> {
+    const cached = this.subscriptionCache.get(userId);
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.result;
+    }
+
     const subscription = await prisma.subscription.findUnique({
       where: { userId },
     });
 
-    if (!subscription) return null;
+    const result = subscription
+      ? this.mapToSubscriptionInfo(subscription)
+      : null;
+    this.subscriptionCache.set(userId, {
+      result,
+      expiresAt: Date.now() + this.SUBSCRIPTION_TTL_MS,
+    });
+    return result;
+  }
 
-    return this.mapToSubscriptionInfo(subscription);
+  /** Invalidate cached subscription for a user — call after Stripe webhook updates. */
+  invalidateSubscriptionCache(userId: string): void {
+    this.subscriptionCache.delete(userId);
+    this.addonCache.delete(userId);
   }
 
   /**
    * Get subscription by Stripe customer ID
    */
-  async getByStripeCustomerId(customerId: string): Promise<SubscriptionInfo | null> {
+  async getByStripeCustomerId(
+    customerId: string
+  ): Promise<SubscriptionInfo | null> {
     const subscription = await prisma.subscription.findFirst({
       where: { stripeCustomerId: customerId },
     });
@@ -223,7 +310,10 @@ export class SubscriptionService {
       // an endpoint that calls getOrCreateSubscription().
       const metaUserId = stripeSubscription.metadata?.userId;
       if (metaUserId) {
-        logger.info('Auto-creating subscription record for Stripe customer', { customerId, userId: metaUserId });
+        logger.info('Auto-creating subscription record for Stripe customer', {
+          customerId,
+          userId: metaUserId,
+        });
         subscription = await prisma.subscription.create({
           data: {
             userId: metaUserId,
@@ -236,7 +326,10 @@ export class SubscriptionService {
           },
         });
       } else {
-        logger.warn('No subscription found for Stripe customer and no userId in metadata', { customerId });
+        logger.warn(
+          'No subscription found for Stripe customer and no userId in metadata',
+          { customerId }
+        );
         throw new Error('Subscription not found');
       }
     }
@@ -262,8 +355,12 @@ export class SubscriptionService {
         stripePriceId: priceId,
         plan: planName,
         status,
-        currentPeriodStart: currentPeriodStart ? new Date(currentPeriodStart * 1000) : null,
-        currentPeriodEnd: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : null,
+        currentPeriodStart: currentPeriodStart
+          ? new Date(currentPeriodStart * 1000)
+          : null,
+        currentPeriodEnd: currentPeriodEnd
+          ? new Date(currentPeriodEnd * 1000)
+          : null,
         cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
         cancelledAt: stripeSubscription.canceled_at
           ? new Date(stripeSubscription.canceled_at * 1000)
@@ -285,6 +382,9 @@ export class SubscriptionService {
       plan: planName,
       status,
     });
+
+    // Invalidate cached subscription so the next read picks up the new data
+    this.invalidateSubscriptionCache(updated.userId);
 
     return this.mapToSubscriptionInfo(updated);
   }
@@ -410,7 +510,12 @@ export class SubscriptionService {
     userId: string,
     resource: 'aiPosts' | 'socialAccounts' | 'personas',
     currentCount?: number
-  ): Promise<{ allowed: boolean; limit: number; current: number; remaining: number }> {
+  ): Promise<{
+    allowed: boolean;
+    limit: number;
+    current: number;
+    remaining: number;
+  }> {
     const subscription = await this.getOrCreateSubscription(userId);
 
     let limit: number;
@@ -435,16 +540,20 @@ export class SubscriptionService {
 
       case 'socialAccounts':
         limit = subscription.limits.socialAccounts;
-        current = currentCount ?? await prisma.platformConnection.count({
-          where: { userId, isActive: true },
-        });
+        current =
+          currentCount ??
+          (await prisma.platformConnection.count({
+            where: { userId, isActive: true },
+          }));
         break;
 
       case 'personas':
         limit = subscription.limits.personas;
-        current = currentCount ?? await prisma.persona.count({
-          where: { userId, status: { not: 'archived' } },
-        });
+        current =
+          currentCount ??
+          (await prisma.persona.count({
+            where: { userId, status: { not: 'archived' } },
+          }));
         break;
     }
 
@@ -458,7 +567,11 @@ export class SubscriptionService {
   /**
    * Increment usage counter
    */
-  async incrementUsage(userId: string, resource: 'aiPosts', amount: number = 1): Promise<void> {
+  async incrementUsage(
+    userId: string,
+    resource: 'aiPosts',
+    amount: number = 1
+  ): Promise<void> {
     await prisma.subscription.update({
       where: { userId },
       data: {
