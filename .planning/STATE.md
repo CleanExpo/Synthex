@@ -9,9 +9,9 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 125 (react-next-upgrade) — Plan 02 COMPLETE ✅
-Last activity: 2026-03-20 — Ecosystem packages upgraded: react-day-picker v9, cmdk v1, @testing-library/react v16. calendar.tsx migrated to v9 API. Full quality gate: type-check 0 errors, test 1547 passed 0 failed, lint 0 errors. SYN-407 COMPLETE.
-Linear: SYN-407
+Phase: 126 (marketing-redesign) — ALL PLANS COMPLETE ✅
+Last activity: 2026-03-20 — Marketing site redesigned: warm charcoal (#1a1612), Satoshi font, floating pill nav, 55/45 hero with LiveDemoWidget (AI post generation), 3-tier pricing, body sections + sub-pages amber refresh. type-check 0, test 1547 passed, lint 0. UNI-1604 DONE.
+Linear: UNI-1604
 
 Milestone: v10.0 Full Platform Quality Loop — **PENDING HUMAN GATE**
 Last milestone shipped: v9.0 — 2026-03-17
