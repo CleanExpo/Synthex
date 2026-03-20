@@ -108,6 +108,12 @@ const nextConfig = {
     'bullmq',
     'ioredis',
     'puppeteer',
+    // jspdf uses fflate which uses new Worker({eval:true}) — webpack can't
+    // resolve dynamic workers at build time. Mark as server-external so
+    // Node.js requires them at runtime instead of bundling.
+    'jspdf',
+    'jspdf-autotable',
+    'fflate',
     // Phase 114-02: @sentry/nextjs + OTel packages REMOVED from dependencies.
     // They registered require-in-the-middle / import-in-the-middle hooks that
     // hung ALL Lambda cold starts for 10+ seconds. No longer needed here.
