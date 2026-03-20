@@ -19,7 +19,7 @@ export const metadata: Metadata = PAGE_METADATA.home;
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#050505] text-white overflow-hidden">
+    <div className="min-h-screen bg-charcoal-900 text-white overflow-hidden">
       {/* FAQPage JSON-LD Schema */}
       <script
         type="application/ld+json"

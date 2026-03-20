@@ -127,9 +127,10 @@ html.lenis body {
     /* =========================================================================
        TYPOGRAPHY TOKENS
        ========================================================================= */
-    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-satoshi: 'Satoshi', system-ui, sans-serif;
+    --font-sans: 'Satoshi', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-    --font-display: 'Inter', system-ui, sans-serif;
+    --font-display: 'Satoshi', system-ui, sans-serif;
 
     /* =========================================================================
        ANIMATION TOKENS

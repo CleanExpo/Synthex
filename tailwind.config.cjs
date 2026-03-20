@@ -68,6 +68,15 @@ module.exports = {
         warning: 'rgb(var(--color-warning) / <alpha-value>)',
         error: 'rgb(var(--color-error) / <alpha-value>)',
         info: 'rgb(var(--color-info) / <alpha-value>)',
+        // Warm Charcoal (Phase 126 marketing site)
+        charcoal: {
+          950: '#0d0b09',
+          900: '#1a1612', // page background
+          800: '#241f1a', // card/surface
+          700: '#2e2722',
+          600: '#3d342c',
+          500: '#4a3f36',
+        },
         // App Surface Colors (dark theme backgrounds — tokens prevent inline hex)
         surface: {
           dark: '#050505', // deep navy — primary page background
