@@ -193,6 +193,16 @@ const nextConfig = {
       // Large unused packages
       'node_modules/@next/bundle-analyzer',
       'node_modules/prisma/engines',
+      // Large media/video binaries — must be excluded or functions exceed 250MB.
+      // These are in serverExternalPackages (not webpack-bundled) but NFT still
+      // traces their binary files into the deployment artifact without these exclusions.
+      'node_modules/@ffmpeg-installer/**',
+      'node_modules/@ffprobe-installer/**',
+      'node_modules/puppeteer/**',
+      'node_modules/puppeteer-core/**',
+      // Prisma query engine binaries for other platforms (only need linux-openssl-3.0.x on Vercel)
+      'node_modules/@prisma/engines/**',
+      'node_modules/.prisma/client/libquery_engine-*',
     ],
   },
 
