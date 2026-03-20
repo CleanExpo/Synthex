@@ -112,7 +112,7 @@ function LinkCard({
       className={cn(
         'bg-gray-900/50 border rounded-xl p-5 transition-all cursor-pointer group',
         isSelected
-          ? 'border-orange-500/50 ring-1 ring-orange-500/30'
+          ? 'border-amber-500/50 ring-1 ring-amber-500/30'
           : 'border-white/10 hover:border-white/20'
       )}
       onClick={onSelect}
@@ -127,7 +127,7 @@ function LinkCard({
             className="w-16 h-16 rounded-lg object-cover"
           />
         ) : (
-          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-orange-500/20 to-purple-500/20 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-amber-500/20 to-purple-500/20 flex items-center justify-center">
             <ImageIcon className="h-6 w-6 text-white/40" />
           </div>
         )}

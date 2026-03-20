@@ -334,9 +334,9 @@ export default function DashboardPage() {
           <div className="space-y-4">
             {/* Zero-platform banner — auto-dismisses once a platform is connected */}
             {stats && stats.connectedPlatforms === 0 && (
-              <div className="flex items-center justify-between px-5 py-3.5 border-[0.5px] border-orange-500/20 bg-orange-500/[0.04] rounded-sm">
+              <div className="flex items-center justify-between px-5 py-3.5 border-[0.5px] border-amber-500/20 bg-amber-500/[0.04] rounded-sm">
                 <div className="flex items-center gap-3">
-                  <Link2 className="h-4 w-4 text-orange-400 shrink-0" />
+                  <Link2 className="h-4 w-4 text-amber-400 shrink-0" />
                   <p className="text-sm text-white/70">
                     Connect your first platform to see real data in your
                     dashboard.
@@ -344,7 +344,7 @@ export default function DashboardPage() {
                 </div>
                 <Link
                   href="/dashboard/platforms"
-                  className="shrink-0 ml-4 px-4 py-1.5 bg-orange-500 hover:bg-orange-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors"
+                  className="shrink-0 ml-4 px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors"
                 >
                   Connect now
                 </Link>

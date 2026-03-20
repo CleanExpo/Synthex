@@ -136,9 +136,9 @@ export function AIHashtagGenerator({
 
   // Get hashtag color based on metrics
   const getHashtagColor = (tag: Hashtag) => {
-    if (tag.trending) return 'bg-gradient-to-r from-orange-500 to-red-500';
+    if (tag.trending) return 'bg-gradient-to-r from-amber-500 to-red-500';
     if (tag.popularity === 'high')
-      return 'bg-gradient-to-r from-blue-500 to-orange-500';
+      return 'bg-gradient-to-r from-blue-500 to-amber-500';
     if (tag.competition === 'low')
       return 'bg-gradient-to-r from-green-500 to-teal-500';
     return 'bg-gray-600';
@@ -148,8 +148,8 @@ export function AIHashtagGenerator({
     <Card variant="glass">
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
-            <Hash className="h-5 w-5 text-orange-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20">
+            <Hash className="h-5 w-5 text-amber-400" />
           </div>
           <div>
             <CardTitle>AI Hashtag Generator</CardTitle>
@@ -254,7 +254,7 @@ export function AIHashtagGenerator({
                     p-3 rounded-lg border cursor-pointer transition-all
                     ${
                       selectedTags.has(tag.tag)
-                        ? 'bg-orange-500/20 border-orange-500'
+                        ? 'bg-amber-500/20 border-amber-500'
                         : 'bg-white/5 border-white/10 hover:bg-white/10'
                     }
                   `}
@@ -267,7 +267,7 @@ export function AIHashtagGenerator({
                       />
                       <span className="font-medium text-white">#{tag.tag}</span>
                       {tag.trending && (
-                        <Badge className="bg-orange-500/20 text-orange-400 text-xs">
+                        <Badge className="bg-amber-500/20 text-amber-400 text-xs">
                           <TrendingUp className="h-3 w-3 mr-1" />
                           Trending
                         </Badge>
@@ -294,9 +294,9 @@ export function AIHashtagGenerator({
             </div>
 
             {/* Insights */}
-            <div className="p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+            <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="h-4 w-4 text-orange-400" />
+                <Sparkles className="h-4 w-4 text-amber-400" />
                 <span className="text-sm font-medium text-white">
                   AI Insights
                 </span>

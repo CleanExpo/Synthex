@@ -241,7 +241,7 @@ export function VoiceDashboardClient() {
             className={[
               'flex-1 flex items-centre justify-centre gap-2 text-sm py-2 rounded-lg transition-colors font-medium',
               activeTab === id
-                ? 'bg-orange-500/20 text-orange-300 border border-orange-500/20'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/20'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-white/5',
             ].join(' ')}
           >
@@ -263,7 +263,7 @@ export function VoiceDashboardClient() {
               value={fingerprintText}
               onChange={e => setFingerprintText(e.target.value)}
               placeholder="Paste at least 200 words of your writing here to generate your voice fingerprint…"
-              className="w-full h-64 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50 resize-none"
+              className="w-full h-64 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none"
             />
             {/* Word counter */}
             <div className="flex items-centre justify-between text-xs">
@@ -288,7 +288,7 @@ export function VoiceDashboardClient() {
             <button
               onClick={() => analyzeMutation.mutate(fingerprintText)}
               disabled={!isReadyToAnalyse || analyzeMutation.isLoading}
-              className="w-full flex items-centre justify-centre gap-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/30 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full flex items-centre justify-centre gap-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {analyzeMutation.isLoading ? (
                 <>
@@ -416,7 +416,7 @@ export function VoiceDashboardClient() {
               value={capsuleText}
               onChange={e => setCapsuleText(e.target.value)}
               placeholder="Paste your article or blog post here. Use ## headings for best results…"
-              className="w-full h-64 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50 resize-none"
+              className="w-full h-64 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none"
             />
             <div className="text-xs text-slate-500">
               {countWords(capsuleText).toLocaleString()} words
@@ -433,7 +433,7 @@ export function VoiceDashboardClient() {
               disabled={
                 capsuleText.trim().length < 10 || capsuleMutation.isLoading
               }
-              className="w-full flex items-centre justify-centre gap-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/30 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full flex items-centre justify-centre gap-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {capsuleMutation.isLoading ? (
                 <>
@@ -478,7 +478,7 @@ export function VoiceDashboardClient() {
               value={slopText}
               onChange={e => setSlopText(e.target.value)}
               placeholder="Paste your content here to scan for AI tell-phrases…"
-              className="w-full h-48 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50 resize-none"
+              className="w-full h-48 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none"
             />
             <div className="text-xs text-slate-500">
               {countWords(slopText).toLocaleString()} words
@@ -493,7 +493,7 @@ export function VoiceDashboardClient() {
             <button
               onClick={() => slopMutation.mutate(slopText)}
               disabled={slopText.trim().length < 10 || slopMutation.isLoading}
-              className="flex items-centre gap-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/30 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-centre gap-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {slopMutation.isLoading ? (
                 <>

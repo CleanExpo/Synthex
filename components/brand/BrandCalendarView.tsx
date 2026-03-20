@@ -41,7 +41,7 @@ const EVENT_TYPE_META: Record<
   },
   'social-post': {
     label: 'Social Post',
-    className: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+    className: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
   },
   'credential-refresh': {
     label: 'Credential Refresh',

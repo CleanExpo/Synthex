@@ -117,7 +117,7 @@ export default function UnifiedDashboardPage() {
   if (isLoading && !data) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
       </div>
     );
   }
@@ -182,8 +182,8 @@ export default function UnifiedDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-orange-500/10">
-              <Users className="w-5 h-5 text-orange-400" />
+            <div className="p-2 rounded-lg bg-amber-500/10">
+              <Users className="w-5 h-5 text-amber-400" />
             </div>
             <div>
               <p className="text-sm text-gray-400">Total Followers</p>
@@ -239,10 +239,10 @@ export default function UnifiedDashboardPage() {
         (data.insights.topPlatform || data.insights.fastestGrowing) && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {data.insights.topPlatform && (
-              <div className="bg-gradient-to-r from-orange-500/10 to-transparent border border-orange-500/20 rounded-xl p-4">
+              <div className="bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20 rounded-xl p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-orange-500/20">
-                    <Target className="w-5 h-5 text-orange-400" />
+                  <div className="p-2 rounded-lg bg-amber-500/20">
+                    <Target className="w-5 h-5 text-amber-400" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Top Platform</p>

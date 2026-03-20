@@ -190,7 +190,7 @@ function AnalysisResults({ analysis }: { analysis: PageSpeedAnalysis }) {
       {/* Core Web Vitals */}
       <div>
         <h3 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
-          <Activity className="w-4 h-4 text-orange-400" />
+          <Activity className="w-4 h-4 text-amber-400" />
           Core Web Vitals
           <span className="text-xs text-gray-500">({cwvSource})</span>
         </h3>
@@ -226,7 +226,7 @@ function AnalysisResults({ analysis }: { analysis: PageSpeedAnalysis }) {
       {analysis.opportunities.length > 0 && (
         <div>
           <h3 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-orange-400" />
+            <TrendingUp className="w-4 h-4 text-amber-400" />
             Opportunities ({analysis.opportunities.length})
           </h3>
           <div className="space-y-2">
@@ -242,7 +242,7 @@ function AnalysisResults({ analysis }: { analysis: PageSpeedAnalysis }) {
                   </p>
                 </div>
                 {opp.savings && (
-                  <span className="flex-shrink-0 px-2 py-1 bg-orange-500/10 text-orange-400 rounded text-xs font-medium border border-orange-500/20">
+                  <span className="flex-shrink-0 px-2 py-1 bg-amber-500/10 text-amber-400 rounded text-xs font-medium border border-amber-500/20">
                     {opp.savings}
                   </span>
                 )}
@@ -256,7 +256,7 @@ function AnalysisResults({ analysis }: { analysis: PageSpeedAnalysis }) {
       {analysis.diagnostics.length > 0 && (
         <div>
           <h3 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
-            <Search className="w-4 h-4 text-orange-400" />
+            <Search className="w-4 h-4 text-amber-400" />
             Diagnostics ({analysis.diagnostics.length})
           </h3>
           <div className="space-y-2">
@@ -385,7 +385,7 @@ function PerformanceTrendsChart({
       </ResponsiveContainer>
       <div className="flex items-center justify-center gap-6 text-xs text-gray-400">
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-0.5 bg-orange-500 rounded" /> Performance
+          <span className="w-3 h-0.5 bg-amber-500 rounded" /> Performance
           (0-100)
         </span>
         <span className="flex items-center gap-1.5">
@@ -512,13 +512,13 @@ export default function PageSpeedPage() {
         <div>
           <Link
             href="/dashboard/seo"
-            className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
+            className="text-sm text-gray-400 hover:text-amber-400 flex items-center gap-1 mb-2 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to SEO Tools
           </Link>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Zap className="w-8 h-8 text-orange-400" />
+            <Zap className="w-8 h-8 text-amber-400" />
             PageSpeed Insights
           </h1>
           <p className="text-gray-400 mt-2">
@@ -534,11 +534,11 @@ export default function PageSpeedPage() {
         description="Access real-time page performance analysis with Lighthouse scores, Core Web Vitals, and historical trend tracking."
       >
         {/* Analyze URL Section */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Zap className="w-5 h-5 text-orange-400" />
+                <Zap className="w-5 h-5 text-amber-400" />
                 Analyze URL
               </h2>
               <p className="text-sm text-gray-400 mt-1">
@@ -559,7 +559,7 @@ export default function PageSpeedPage() {
                 <Button
                   type="submit"
                   disabled={analysisLoading || !url.trim()}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
+                  className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white"
                 >
                   {analysisLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -582,7 +582,7 @@ export default function PageSpeedPage() {
                     onClick={() => setStrategy(s)}
                     className={`text-xs capitalize ${
                       strategy === s
-                        ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
+                        ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
                         : 'border-white/10 text-gray-400 hover:bg-white/5'
                     }`}
                   >
@@ -603,7 +603,7 @@ export default function PageSpeedPage() {
             {analysisLoading && (
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
-                  <Loader2 className="w-8 h-8 text-orange-400 animate-spin mx-auto mb-3" />
+                  <Loader2 className="w-8 h-8 text-amber-400 animate-spin mx-auto mb-3" />
                   <p className="text-sm text-gray-400">
                     Running PageSpeed analysis... This may take up to 30
                     seconds.
@@ -622,11 +622,11 @@ export default function PageSpeedPage() {
         </Card>
 
         {/* Performance Trends */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-orange-400" />
+                <TrendingUp className="w-5 h-5 text-amber-400" />
                 Performance Trends
               </h2>
               <p className="text-sm text-gray-400 mt-1">
@@ -636,7 +636,7 @@ export default function PageSpeedPage() {
             </div>
             {trendsLoading && trends.length === 0 ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
+                <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
               </div>
             ) : (
               <PerformanceTrendsChart trends={trends} />
@@ -645,11 +645,11 @@ export default function PageSpeedPage() {
         </Card>
 
         {/* Analysis History */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Activity className="w-5 h-5 text-orange-400" />
+                <Activity className="w-5 h-5 text-amber-400" />
                 Analysis History
               </h2>
               <p className="text-sm text-gray-400 mt-1">
@@ -658,7 +658,7 @@ export default function PageSpeedPage() {
             </div>
             {historyLoading && history.length === 0 ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
+                <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
               </div>
             ) : (
               <AnalysisHistoryTable history={history} />

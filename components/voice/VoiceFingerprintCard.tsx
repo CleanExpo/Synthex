@@ -64,7 +64,7 @@ function MetricBar({
   value,
   subLabel,
   barPct,
-  barColour = 'bg-orange-500',
+  barColour = 'bg-amber-500',
 }: MetricBarProps) {
   return (
     <div className="space-y-1">
@@ -139,7 +139,7 @@ export function VoiceFingerprintCard({
             {fp.sampleSentenceCount} sentences
           </p>
         </div>
-        <span className="text-xs bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-1 rounded-full flex-shrink-0">
+        <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded-full flex-shrink-0">
           {fp.sampleWordCount} words
         </span>
       </div>
@@ -199,7 +199,7 @@ export function VoiceFingerprintCard({
           label="Question Rate"
           value={`${fp.questionRate.toFixed(2)} per 100w`}
           barPct={Math.min(100, fp.questionRate * 20)}
-          barColour="bg-orange-500"
+          barColour="bg-amber-500"
         />
 
         {/* Em Dash Usage */}

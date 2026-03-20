@@ -44,7 +44,7 @@ export function ChatMessage({
         className={cn(
           'max-w-[80%] rounded-2xl px-4 py-3 border',
           isUser
-            ? 'bg-orange-500/20 border-orange-500/30 text-white'
+            ? 'bg-amber-500/20 border-amber-500/30 text-white'
             : 'bg-white/5 border-white/10 text-gray-100'
         )}
       >
@@ -60,7 +60,7 @@ export function ChatMessage({
         {/* Streaming indicator */}
         {isStreaming && isAssistant && (
           <span className="inline-flex items-center ml-1">
-            <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+            <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
           </span>
         )}
 
@@ -68,7 +68,7 @@ export function ChatMessage({
         <div
           className={cn(
             'text-xs mt-2',
-            isUser ? 'text-orange-300/50' : 'text-gray-500'
+            isUser ? 'text-amber-300/50' : 'text-gray-500'
           )}
         >
           {formatRelativeTime(message.createdAt)}

@@ -3,7 +3,7 @@ export function Testimonials() {
   return (
     <section className="relative py-24 md:py-32 z-10">
       <div className="max-w-5xl mx-auto px-6">
-        <div className="bg-charcoal-800/60 border border-white/[0.06] rounded-2xl p-10 md:p-16 relative overflow-hidden">
+        <div className="bg-charcoal-800/60 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-10 md:p-16 relative overflow-hidden shadow-2xl shadow-black/30 ring-1 ring-white/[0.04]">
           {/* Ambient amber glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-500/[0.04] blur-3xl rounded-full pointer-events-none" />
 

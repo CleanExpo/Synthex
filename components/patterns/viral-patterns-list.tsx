@@ -37,7 +37,7 @@ export function ViralPatternsList({
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Top Viral Patterns</span>
-          <TrendingUp className="h-4 w-4 text-orange-500" />
+          <TrendingUp className="h-4 w-4 text-amber-500" />
         </CardTitle>
         <CardDescription className="text-gray-400">
           Highest performing content patterns this week
@@ -53,7 +53,7 @@ export function ViralPatternsList({
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="px-2 py-1 rounded-full bg-orange-500/20 text-orange-400 text-xs font-medium">
+                    <span className="px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-medium">
                       {pattern.platform}
                     </span>
                     <span className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium">
@@ -98,7 +98,7 @@ export function ViralPatternsList({
                   <span className="text-xs text-gray-500">Sentiment:</span>
                   <div className="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-orange-500 to-pink-500"
+                      className="h-full bg-gradient-to-r from-amber-500 to-pink-500"
                       style={{ width: `${pattern.sentiment * 100}%` }}
                     />
                   </div>
@@ -109,7 +109,7 @@ export function ViralPatternsList({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="text-orange-400 hover:text-orange-300"
+                  className="text-amber-400 hover:text-amber-300"
                   onClick={() => onAnalyzePattern(pattern)}
                 >
                   Analyze Pattern

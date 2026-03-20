@@ -46,7 +46,10 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { StepProgressV2 } from '@/components/onboarding';
-import type { PipelineResult, SocialProfile } from '@/lib/ai/onboarding-pipeline';
+import type {
+  PipelineResult,
+  SocialProfile,
+} from '@/lib/ai/onboarding-pipeline';
 
 // ============================================================================
 // CONSTANTS
@@ -85,7 +88,12 @@ const TEAM_SIZES = [
 
 type PostingMode = 'manual' | 'assisted' | 'auto';
 
-const POSTING_MODES: { id: PostingMode; label: string; description: string; icon: string }[] = [
+const POSTING_MODES: {
+  id: PostingMode;
+  label: string;
+  description: string;
+  icon: string;
+}[] = [
   {
     id: 'manual',
     label: 'Manual',
@@ -127,16 +135,33 @@ const SESSION_KEY = 'synthex_pipeline_result';
 
 function HealthBadge({ health }: { health: string }) {
   const config: Record<string, { label: string; colour: string }> = {
-    excellent: { label: 'Excellent', colour: 'bg-green-500/20 text-green-400 border-green-500/30' },
-    good: { label: 'Good', colour: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
-    'needs-work': { label: 'Needs Work', colour: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
-    poor: { label: 'Poor', colour: 'bg-red-500/20 text-red-400 border-red-500/30' },
+    excellent: {
+      label: 'Excellent',
+      colour: 'bg-green-500/20 text-green-400 border-green-500/30',
+    },
+    good: {
+      label: 'Good',
+      colour: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    },
+    'needs-work': {
+      label: 'Needs Work',
+      colour: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    },
+    poor: {
+      label: 'Poor',
+      colour: 'bg-red-500/20 text-red-400 border-red-500/30',
+    },
   };
 
   const c = config[health] ?? config['needs-work']!;
 
   return (
-    <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border', c.colour)}>
+    <span
+      className={cn(
+        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+        c.colour
+      )}
+    >
       {c.label}
     </span>
   );
@@ -146,7 +171,15 @@ function HealthBadge({ health }: { health: string }) {
 // SCORE RING
 // ============================================================================
 
-function ScoreRing({ score, label, size = 64 }: { score: number; label: string; size?: number }) {
+function ScoreRing({
+  score,
+  label,
+  size = 64,
+}: {
+  score: number;
+  label: string;
+  size?: number;
+}) {
   const radius = (size - 8) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = (score / 100) * circumference;
@@ -216,7 +249,7 @@ function ColourSwatch({
         <input
           type="color"
           value={colour || '#333333'}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={e => onChange(e.target.value)}
           className="absolute inset-0 opacity-0 cursor-pointer"
         />
       </label>
@@ -244,10 +277,10 @@ function Section({
   badge?: React.ReactNode;
 }) {
   return (
-    <div className="p-5 rounded-xl bg-surface-base/80 border border-orange-500/10 backdrop-blur-sm space-y-4">
+    <div className="p-5 rounded-xl bg-surface-base/80 border border-amber-500/10 backdrop-blur-sm space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Icon className="w-5 h-5 text-orange-400" />
+          <Icon className="w-5 h-5 text-amber-400" />
           <h2 className="text-base font-semibold text-white">{title}</h2>
         </div>
         {badge}
@@ -353,12 +386,12 @@ export default function ReviewPage() {
   const confidence = result?.confidence ?? 0;
 
   // Count verified vs total social profiles
-  const verifiedCount = socialProfiles.filter((p) => p.verified).length;
+  const verifiedCount = socialProfiles.filter(p => p.verified).length;
   const totalSocials = socialProfiles.length;
 
   // ── Update social URL ───────────────────────────────────────────────
   const updateSocialUrl = useCallback((idx: number, url: string) => {
-    setSocialProfiles((prev) => {
+    setSocialProfiles(prev => {
       const next = [...prev];
       next[idx] = { ...next[idx]!, url, verified: false };
       return next;
@@ -367,7 +400,7 @@ export default function ReviewPage() {
 
   // ── Remove social ───────────────────────────────────────────────────
   const removeSocial = useCallback((idx: number) => {
-    setSocialProfiles((prev) => prev.filter((_, i) => i !== idx));
+    setSocialProfiles(prev => prev.filter((_, i) => i !== idx));
   }, []);
 
   // ── Save & Continue ─────────────────────────────────────────────────
@@ -422,7 +455,9 @@ export default function ReviewPage() {
     } catch (err) {
       console.error('Failed to save review:', err);
       // Show error to user but still navigate (non-blocking by design)
-      toast.error("Some settings couldn't be saved. You can update them in Settings later.");
+      toast.error(
+        "Some settings couldn't be saved. You can update them in Settings later."
+      );
       router.push('/onboarding/connect');
     } finally {
       setSaving(false);
@@ -435,7 +470,7 @@ export default function ReviewPage() {
       <div className="space-y-8">
         <StepProgressV2 currentStep={2} />
         <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <div className="w-12 h-12 border-2 border-orange-500/30 border-t-orange-400 rounded-full animate-spin" />
+          <div className="w-12 h-12 border-2 border-amber-500/30 border-t-amber-400 rounded-full animate-spin" />
           <p className="text-gray-400">Loading your analysis results…</p>
         </div>
       </div>
@@ -448,10 +483,12 @@ export default function ReviewPage() {
         <StepProgressV2 currentStep={2} />
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <AlertCircle className="w-12 h-12 text-amber-400" />
-          <p className="text-gray-400">No analysis data found. Please start from the beginning.</p>
+          <p className="text-gray-400">
+            No analysis data found. Please start from the beginning.
+          </p>
           <Button
             onClick={() => router.replace('/onboarding')}
-            className="bg-orange-500 hover:bg-orange-400 text-white"
+            className="bg-amber-500 hover:bg-amber-400 text-white"
           >
             Start Over
           </Button>
@@ -467,16 +504,15 @@ export default function ReviewPage() {
 
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold text-white">
-          Review Your Profile
-        </h1>
+        <h1 className="text-2xl font-bold text-white">Review Your Profile</h1>
         <p className="text-gray-400 max-w-md mx-auto">
-          Our AI analysed your website. Everything below is pre-filled — review and adjust anything that needs it.
+          Our AI analysed your website. Everything below is pre-filled — review
+          and adjust anything that needs it.
         </p>
         {confidence > 0 && (
           <div className="flex items-center justify-center gap-2 mt-1">
-            <Sparkles className="w-3.5 h-3.5 text-orange-400" />
-            <span className="text-xs text-orange-400">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-xs text-amber-400">
               AI confidence: {Math.round(confidence * 100)}%
             </span>
           </div>
@@ -491,8 +527,8 @@ export default function ReviewPage() {
             <Label className="text-xs text-gray-400">Business Name</Label>
             <Input
               value={businessName}
-              onChange={(e) => setBusinessName(e.target.value)}
-              className="bg-surface-dark/50 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
+              onChange={e => setBusinessName(e.target.value)}
+              className="bg-surface-dark/50 border-amber-500/20 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20"
             />
           </div>
 
@@ -501,12 +537,14 @@ export default function ReviewPage() {
             <Label className="text-xs text-gray-400">Industry</Label>
             <select
               value={industry}
-              onChange={(e) => setIndustry(e.target.value)}
-              className="w-full rounded-md bg-surface-dark/50 border border-orange-500/20 text-white text-sm px-3 py-2 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20"
+              onChange={e => setIndustry(e.target.value)}
+              className="w-full rounded-md bg-surface-dark/50 border border-amber-500/20 text-white text-sm px-3 py-2 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20"
             >
               <option value="">Select industry…</option>
-              {INDUSTRIES.map((ind) => (
-                <option key={ind} value={ind}>{ind}</option>
+              {INDUSTRIES.map(ind => (
+                <option key={ind} value={ind}>
+                  {ind}
+                </option>
               ))}
             </select>
           </div>
@@ -516,12 +554,14 @@ export default function ReviewPage() {
             <Label className="text-xs text-gray-400">Team Size</Label>
             <select
               value={teamSize}
-              onChange={(e) => setTeamSize(e.target.value)}
-              className="w-full rounded-md bg-surface-dark/50 border border-orange-500/20 text-white text-sm px-3 py-2 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20"
+              onChange={e => setTeamSize(e.target.value)}
+              className="w-full rounded-md bg-surface-dark/50 border border-amber-500/20 text-white text-sm px-3 py-2 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20"
             >
               <option value="">Select team size…</option>
-              {TEAM_SIZES.map((ts) => (
-                <option key={ts} value={ts}>{ts}</option>
+              {TEAM_SIZES.map(ts => (
+                <option key={ts} value={ts}>
+                  {ts}
+                </option>
               ))}
             </select>
           </div>
@@ -534,21 +574,25 @@ export default function ReviewPage() {
                 <img
                   src={result.logoUrl}
                   alt="Detected logo"
-                  className="w-12 h-12 rounded-lg border border-orange-500/20 object-contain bg-white/5"
+                  className="w-12 h-12 rounded-lg border border-amber-500/20 object-contain bg-white/5"
                 />
               ) : result.faviconUrl ? (
                 <img
                   src={result.faviconUrl}
                   alt="Favicon"
-                  className="w-12 h-12 rounded-lg border border-orange-500/20 object-contain bg-white/5 p-1"
+                  className="w-12 h-12 rounded-lg border border-amber-500/20 object-contain bg-white/5 p-1"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-lg border border-orange-500/20 bg-white/5 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-lg border border-amber-500/20 bg-white/5 flex items-center justify-center">
                   <Globe className="w-6 h-6 text-gray-500" />
                 </div>
               )}
               <span className="text-xs text-gray-500">
-                {result.logoUrl ? 'Detected from website' : result.faviconUrl ? 'Using favicon' : 'No logo found'}
+                {result.logoUrl
+                  ? 'Detected from website'
+                  : result.faviconUrl
+                    ? 'Using favicon'
+                    : 'No logo found'}
               </span>
             </div>
           </div>
@@ -559,9 +603,9 @@ export default function ReviewPage() {
           <Label className="text-xs text-gray-400">Description</Label>
           <textarea
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={e => setDescription(e.target.value)}
             rows={3}
-            className="w-full rounded-md bg-surface-dark/50 border border-orange-500/20 text-white text-sm px-3 py-2 placeholder:text-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 resize-none"
+            className="w-full rounded-md bg-surface-dark/50 border border-amber-500/20 text-white text-sm px-3 py-2 placeholder:text-gray-500 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 resize-none"
             placeholder="A short description of your business…"
           />
         </div>
@@ -573,17 +617,23 @@ export default function ReviewPage() {
             <ColourSwatch
               colour={brandColours.primary}
               label="Primary"
-              onChange={(val) => setBrandColours((prev) => ({ ...prev, primary: val }))}
+              onChange={val =>
+                setBrandColours(prev => ({ ...prev, primary: val }))
+              }
             />
             <ColourSwatch
               colour={brandColours.secondary ?? ''}
               label="Secondary"
-              onChange={(val) => setBrandColours((prev) => ({ ...prev, secondary: val }))}
+              onChange={val =>
+                setBrandColours(prev => ({ ...prev, secondary: val }))
+              }
             />
             <ColourSwatch
               colour={brandColours.accent ?? ''}
               label="Accent"
-              onChange={(val) => setBrandColours((prev) => ({ ...prev, accent: val }))}
+              onChange={val =>
+                setBrandColours(prev => ({ ...prev, accent: val }))
+              }
             />
           </div>
         </div>
@@ -632,10 +682,15 @@ export default function ReviewPage() {
         {/* Quick wins */}
         {quickWins.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Quick Wins</p>
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+              Quick Wins
+            </p>
             <ul className="space-y-1.5">
               {quickWins.slice(0, 5).map((win, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-sm text-gray-300">
+                <li
+                  key={idx}
+                  className="flex items-start gap-2 text-sm text-gray-300"
+                >
                   <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
                   <span>{win}</span>
                 </li>
@@ -660,28 +715,40 @@ export default function ReviewPage() {
         {socialProfiles.length > 0 ? (
           <div className="space-y-3">
             {socialProfiles.map((profile, idx) => {
-              const meta = PLATFORM_META[profile.platform.toLowerCase()] ??
-                { label: profile.platform, icon: '🔗' };
+              const meta = PLATFORM_META[profile.platform.toLowerCase()] ?? {
+                label: profile.platform,
+                icon: '🔗',
+              };
               return (
                 <div key={idx} className="flex items-center gap-3">
-                  <span className="text-lg w-7 text-center shrink-0">{meta.icon}</span>
+                  <span className="text-lg w-7 text-center shrink-0">
+                    {meta.icon}
+                  </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs text-gray-400 font-medium">{meta.label}</span>
+                      <span className="text-xs text-gray-400 font-medium">
+                        {meta.label}
+                      </span>
                       {profile.verified ? (
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-500/10 text-green-400 border-green-500/20">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-1.5 py-0 bg-green-500/10 text-green-400 border-green-500/20"
+                        >
                           ✓ Verified
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-amber-500/10 text-amber-400 border-amber-500/20">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-1.5 py-0 bg-amber-500/10 text-amber-400 border-amber-500/20"
+                        >
                           Unverified
                         </Badge>
                       )}
                     </div>
                     <Input
                       value={profile.url}
-                      onChange={(e) => updateSocialUrl(idx, e.target.value)}
-                      className="bg-surface-dark/50 border-orange-500/20 text-white text-sm placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 h-8"
+                      onChange={e => updateSocialUrl(idx, e.target.value)}
+                      className="bg-surface-dark/50 border-amber-500/20 text-white text-sm placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20 h-8"
                     />
                   </div>
                   <button
@@ -697,14 +764,15 @@ export default function ReviewPage() {
           </div>
         ) : (
           <p className="text-sm text-gray-500 text-center py-4">
-            No social profiles were detected on your website.
-            You&apos;ll be able to connect platforms in the next step.
+            No social profiles were detected on your website. You&apos;ll be
+            able to connect platforms in the next step.
           </p>
         )}
 
         {/* Hint about OAuth */}
         <p className="text-xs text-gray-500 text-center pt-1">
-          You&apos;ll connect these accounts via OAuth in the next step for full functionality.
+          You&apos;ll connect these accounts via OAuth in the next step for full
+          functionality.
         </p>
       </Section>
 
@@ -714,7 +782,7 @@ export default function ReviewPage() {
           {/* Target Audience */}
           <div className="space-y-1.5">
             <Label className="text-xs text-gray-400">Target Audience</Label>
-            <p className="text-sm text-white bg-surface-dark/50 rounded-md border border-orange-500/10 px-3 py-2">
+            <p className="text-sm text-white bg-surface-dark/50 rounded-md border border-amber-500/10 px-3 py-2">
               {targetAudience || 'Not detected'}
             </p>
           </div>
@@ -722,7 +790,7 @@ export default function ReviewPage() {
           {/* Suggested Tone */}
           <div className="space-y-1.5">
             <Label className="text-xs text-gray-400">Suggested Tone</Label>
-            <p className="text-sm text-white bg-surface-dark/50 rounded-md border border-orange-500/10 px-3 py-2">
+            <p className="text-sm text-white bg-surface-dark/50 rounded-md border border-amber-500/10 px-3 py-2">
               {suggestedTone || 'Not detected'}
             </p>
           </div>
@@ -737,7 +805,7 @@ export default function ReviewPage() {
                 <Badge
                   key={idx}
                   variant="outline"
-                  className="bg-orange-500/5 text-orange-400 border-orange-500/20 text-xs"
+                  className="bg-amber-500/5 text-amber-400 border-amber-500/20 text-xs"
                 >
                   {topic}
                 </Badge>
@@ -750,10 +818,12 @@ export default function ReviewPage() {
         {result.suggestedPersonaName && (
           <div className="pt-2 border-t border-white/5">
             <div className="flex items-center gap-2">
-              <Star className="w-4 h-4 text-orange-400" />
+              <Star className="w-4 h-4 text-amber-400" />
               <span className="text-xs text-gray-400">
                 Suggested AI persona name:{' '}
-                <span className="text-orange-400 font-medium">{result.suggestedPersonaName}</span>
+                <span className="text-amber-400 font-medium">
+                  {result.suggestedPersonaName}
+                </span>
               </span>
             </div>
           </div>
@@ -763,22 +833,24 @@ export default function ReviewPage() {
       {/* ─── Section 5: Posting Mode ──────────────────────────────────── */}
       <Section title="Posting Mode" icon={Zap}>
         <div className="grid grid-cols-3 gap-3">
-          {POSTING_MODES.map((mode) => (
+          {POSTING_MODES.map(mode => (
             <button
               key={mode.id}
               onClick={() => setPostingMode(mode.id)}
               className={cn(
                 'p-3 rounded-lg border text-center transition-all',
                 postingMode === mode.id
-                  ? 'bg-orange-500/10 border-orange-500/30 shadow-sm shadow-orange-500/10'
-                  : 'bg-surface-dark/30 border-white/5 hover:border-white/10',
+                  ? 'bg-amber-500/10 border-amber-500/30 shadow-sm shadow-amber-500/10'
+                  : 'bg-surface-dark/30 border-white/5 hover:border-white/10'
               )}
             >
               <span className="text-xl block mb-1">{mode.icon}</span>
-              <p className={cn(
-                'text-sm font-medium',
-                postingMode === mode.id ? 'text-orange-400' : 'text-white',
-              )}>
+              <p
+                className={cn(
+                  'text-sm font-medium',
+                  postingMode === mode.id ? 'text-amber-400' : 'text-white'
+                )}
+              >
                 {mode.label}
               </p>
               <p className="text-[11px] text-gray-500 mt-0.5">
@@ -802,7 +874,7 @@ export default function ReviewPage() {
           size="lg"
           onClick={handleContinue}
           disabled={saving || !businessName.trim()}
-          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all disabled:opacity-50 px-8"
+          className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all disabled:opacity-50 px-8"
         >
           {saving ? (
             <>

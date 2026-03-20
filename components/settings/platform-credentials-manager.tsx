@@ -143,8 +143,8 @@ const PLATFORMS: PlatformConfig[] = [
     id: 'reddit',
     name: 'Reddit',
     Icon: Reddit as PlatformConfig['Icon'],
-    color: 'text-orange-400',
-    bgColor: 'bg-orange-500/20',
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/20',
     devPortalUrl: 'https://www.reddit.com/prefs/apps',
     devPortalLabel: 'Reddit App Preferences',
   },
@@ -170,8 +170,8 @@ const PLATFORMS: PlatformConfig[] = [
     id: 'googleanalytics',
     name: 'Google Analytics (GA4)',
     Icon: BarChart2 as PlatformConfig['Icon'],
-    color: 'text-orange-400',
-    bgColor: 'bg-orange-500/20',
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/20',
     devPortalUrl: 'https://console.cloud.google.com/apis/credentials',
     devPortalLabel: 'Google Cloud Console (same OAuth client as YouTube)',
   },
@@ -374,7 +374,7 @@ export function PlatformCredentialsManager() {
       <CardHeader>
         <div>
           <CardTitle className="flex items-center gap-2">
-            <Globe className="w-5 h-5 text-orange-400" />
+            <Globe className="w-5 h-5 text-amber-400" />
             Platform OAuth Credentials
           </CardTitle>
           <CardDescription>
@@ -479,7 +479,7 @@ export function PlatformCredentialsManager() {
                           href={platform.devPortalUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:text-orange-400 transition-colors underline underline-offset-2"
+                          className="hover:text-amber-400 transition-colors underline underline-offset-2"
                           onClick={e => e.stopPropagation()}
                         >
                           {platform.devPortalLabel}
@@ -504,7 +504,7 @@ export function PlatformCredentialsManager() {
                               e.stopPropagation();
                               copyCallbackUrl(platform.id);
                             }}
-                            className="text-slate-400 hover:text-orange-400 hover:bg-orange-500/10 flex-shrink-0"
+                            className="text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 flex-shrink-0"
                             aria-label="Copy callback URL"
                           >
                             <Copy className="w-4 h-4" />
@@ -523,7 +523,7 @@ export function PlatformCredentialsManager() {
                             value={clientIdInput}
                             onChange={e => setClientIdInput(e.target.value)}
                             placeholder="Enter Client ID"
-                            className="w-full px-3 py-2 pr-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0 font-mono text-sm"
+                            className="w-full px-3 py-2 pr-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-0 font-mono text-sm"
                             autoComplete="off"
                             onClick={e => e.stopPropagation()}
                             aria-label="Client ID"
@@ -559,7 +559,7 @@ export function PlatformCredentialsManager() {
                             value={clientSecretInput}
                             onChange={e => setClientSecretInput(e.target.value)}
                             placeholder="Enter Client Secret"
-                            className="w-full px-3 py-2 pr-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0 font-mono text-sm"
+                            className="w-full px-3 py-2 pr-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-0 font-mono text-sm"
                             autoComplete="off"
                             onClick={e => e.stopPropagation()}
                             aria-label="Client Secret"

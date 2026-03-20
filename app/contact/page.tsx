@@ -124,7 +124,7 @@ export default function ContactPage() {
           <h1 className="text-6xl font-bold text-white mb-6 heading-serif">
             Get in
             <br />
-            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
               Touch
             </span>
           </h1>
@@ -150,13 +150,13 @@ export default function ContactPage() {
                     ? 'noopener noreferrer'
                     : undefined
                 }
-                className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-8 text-center hover:scale-105 hover:border-orange-500/30 transition-all duration-300"
+                className="bg-[#0d1f35]/80 border border-amber-500/10 backdrop-blur-sm rounded-xl p-8 text-center hover:scale-105 hover:border-amber-500/30 transition-all duration-300"
               >
-                <method.icon className="w-12 h-12 text-orange-400 mx-auto mb-4" />
+                <method.icon className="w-12 h-12 text-amber-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">
                   {method.title}
                 </h3>
-                <p className="text-orange-400 font-medium mb-2">
+                <p className="text-amber-400 font-medium mb-2">
                   {method.value}
                 </p>
                 <p className="text-gray-400 text-sm">{method.description}</p>
@@ -167,9 +167,9 @@ export default function ContactPage() {
           {/* Contact Form */}
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Form */}
-            <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-2xl p-8">
+            <div className="bg-[#0d1f35]/80 border border-amber-500/10 backdrop-blur-sm rounded-2xl p-8">
               <div className="flex items-center gap-3 mb-6">
-                <MessageCircle className="w-8 h-8 text-orange-400" />
+                <MessageCircle className="w-8 h-8 text-amber-400" />
                 <h2 className="text-3xl font-bold text-white heading-serif">
                   Send us a Message
                 </h2>
@@ -191,7 +191,7 @@ export default function ContactPage() {
                     required
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    className="w-full px-4 py-3 bg-surface-dark border border-amber-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all"
                     placeholder="John Doe"
                   />
                 </div>
@@ -211,7 +211,7 @@ export default function ContactPage() {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    className="w-full px-4 py-3 bg-surface-dark border border-amber-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all"
                     placeholder="john@example.com"
                   />
                 </div>
@@ -230,7 +230,7 @@ export default function ContactPage() {
                     required
                     value={formData.subject}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    className="w-full px-4 py-3 bg-surface-dark border border-amber-500/20 rounded-lg text-white focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all"
                   >
                     <option value="general">General Inquiry</option>
                     <option value="sales">Sales</option>
@@ -255,7 +255,7 @@ export default function ContactPage() {
                     value={formData.message}
                     onChange={handleChange}
                     rows={6}
-                    className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all resize-none"
+                    className="w-full px-4 py-3 bg-surface-dark border border-amber-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all resize-none"
                     placeholder="Tell us about your project, questions, or how we can help..."
                   />
                 </div>
@@ -275,7 +275,7 @@ export default function ContactPage() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white py-3 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white py-3 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <>
@@ -295,10 +295,10 @@ export default function ContactPage() {
             {/* Right Column - Additional Info */}
             <div className="space-y-8">
               {/* Social Links */}
-              <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-2xl p-8">
+              <div className="bg-[#0d1f35]/80 border border-amber-500/10 backdrop-blur-sm rounded-2xl p-8">
                 <h3 className="text-2xl font-bold text-white mb-6 heading-serif">
                   Connect with{' '}
-                  <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
                     Us
                   </span>
                 </h3>
@@ -313,10 +313,10 @@ export default function ContactPage() {
                       href={social.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-4 bg-surface-dark border border-orange-500/20 rounded-lg hover:border-orange-500/40 hover:bg-surface-dark/80 transition-all group"
+                      className="flex items-center gap-3 p-4 bg-surface-dark border border-amber-500/20 rounded-lg hover:border-amber-500/40 hover:bg-surface-dark/80 transition-all group"
                     >
-                      <social.icon className="w-6 h-6 text-orange-400 group-hover:scale-110 transition-transform" />
-                      <span className="text-gray-300 group-hover:text-orange-400 transition-colors">
+                      <social.icon className="w-6 h-6 text-amber-400 group-hover:scale-110 transition-transform" />
+                      <span className="text-gray-300 group-hover:text-amber-400 transition-colors">
                         {social.label}
                       </span>
                     </a>
@@ -325,7 +325,7 @@ export default function ContactPage() {
               </div>
 
               {/* Office Hours */}
-              <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-2xl p-8">
+              <div className="bg-[#0d1f35]/80 border border-amber-500/10 backdrop-blur-sm rounded-2xl p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <Clock className="w-8 h-8 text-amber-400" />
                   <h3 className="text-2xl font-bold text-white heading-serif">
@@ -333,15 +333,15 @@ export default function ContactPage() {
                   </h3>
                 </div>
                 <div className="space-y-3 text-gray-300">
-                  <div className="flex justify-between py-2 border-b border-orange-500/10">
+                  <div className="flex justify-between py-2 border-b border-amber-500/10">
                     <span>Monday - Friday</span>
-                    <span className="text-orange-400 font-medium">
+                    <span className="text-amber-400 font-medium">
                       9:00 AM - 6:00 PM
                     </span>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-orange-500/10">
+                  <div className="flex justify-between py-2 border-b border-amber-500/10">
                     <span>Saturday</span>
-                    <span className="text-orange-400 font-medium">
+                    <span className="text-amber-400 font-medium">
                       10:00 AM - 4:00 PM
                     </span>
                   </div>
@@ -364,10 +364,10 @@ export default function ContactPage() {
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <HelpCircle className="w-10 h-10 text-orange-400" />
+              <HelpCircle className="w-10 h-10 text-amber-400" />
               <h2 className="text-4xl font-bold text-white heading-serif">
                 Frequently Asked{' '}
-                <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
                   Questions
                 </span>
               </h2>
@@ -382,10 +382,10 @@ export default function ContactPage() {
             {faqs.map((faq, index) => (
               <div
                 key={index}
-                className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-6 hover:border-orange-500/30 transition-all"
+                className="bg-[#0d1f35]/80 border border-amber-500/10 backdrop-blur-sm rounded-xl p-6 hover:border-amber-500/30 transition-all"
               >
                 <h3 className="text-lg font-semibold text-white mb-3 flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                   {faq.question}
                 </h3>
                 <p className="text-gray-400 text-sm leading-relaxed pl-7">
@@ -400,14 +400,14 @@ export default function ContactPage() {
       {/* CTA Section */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <div className="bg-gradient-to-r from-[#0d1f35] to-[#050505] border border-orange-500/20 backdrop-blur-sm rounded-2xl p-12 text-center relative overflow-hidden">
+          <div className="bg-gradient-to-r from-[#0d1f35] to-[#050505] border border-amber-500/20 backdrop-blur-sm rounded-2xl p-12 text-center relative overflow-hidden">
             {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-orange-400/10 to-orange-500/5 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-amber-400/10 to-amber-500/5 pointer-events-none" />
 
             <div className="relative z-10">
               <h2 className="text-4xl font-bold text-white mb-4">
                 Ready to Get{' '}
-                <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
                   Started?
                 </span>
               </h2>
@@ -417,7 +417,7 @@ export default function ContactPage() {
               </p>
               <div className="flex justify-center gap-4 flex-wrap">
                 <Link href="/signup">
-                  <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-8 py-3 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all">
+                  <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white px-8 py-3 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all">
                     Start Free Trial
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
@@ -425,7 +425,7 @@ export default function ContactPage() {
                 <Link href="/pricing">
                   <Button
                     variant="outline"
-                    className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400 px-8 py-3 transition-all"
+                    className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10 hover:border-amber-400 px-8 py-3 transition-all"
                   >
                     View Pricing
                   </Button>

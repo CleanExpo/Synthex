@@ -34,7 +34,7 @@ export function DashboardHeader({ isNewUser }: DashboardHeaderProps) {
         <button
           onClick={() => router.push('/dashboard/content')}
           className={cn(
-            'flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-400',
+            'flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400',
             'text-[#050505] text-xs font-semibold tracking-wide rounded-sm',
             'transition-colors duration-200 flex-shrink-0'
           )}

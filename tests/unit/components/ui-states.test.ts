@@ -224,7 +224,8 @@ describe('UI State Component Tests', () => {
         base: 'bg-white/[0.02] backdrop-blur-xl border border-white/[0.06]',
         destructive:
           'bg-gradient-to-br from-red-500/10 to-rose-500/10 backdrop-blur-xl border border-red-500/20',
-        button: 'bg-white/[0.05] backdrop-blur-md border border-white/[0.1] hover:bg-white/[0.1]',
+        button:
+          'bg-white/[0.05] backdrop-blur-md border border-white/[0.1] hover:bg-white/[0.1]',
       };
 
       expect(glassStyles.base).toContain('backdrop-blur');
@@ -233,11 +234,12 @@ describe('UI State Component Tests', () => {
     });
 
     it('should use cyan accent for primary elements', () => {
-      const primaryGradient = 'bg-gradient-to-br from-cyan-500/20 to-cyan-600/10';
-      const primaryIcon = 'text-cyan-400';
+      const primaryGradient =
+        'bg-gradient-to-br from-amber-500/20 to-amber-600/10';
+      const primaryIcon = 'text-amber-400';
 
-      expect(primaryGradient).toContain('cyan-500');
-      expect(primaryIcon).toBe('text-cyan-400');
+      expect(primaryGradient).toContain('amber-500');
+      expect(primaryIcon).toBe('text-amber-400');
     });
   });
 
@@ -263,7 +265,9 @@ describe('UI State Component Tests', () => {
 
     it('should generate email report URL', () => {
       const subject = encodeURIComponent('Error Report - Synthex Dashboard');
-      const body = encodeURIComponent('Error occurred at: 2025-01-15\nPage: /dashboard');
+      const body = encodeURIComponent(
+        'Error occurred at: 2025-01-15\nPage: /dashboard'
+      );
 
       const mailtoUrl = `mailto:support@synthex.ai?subject=${subject}&body=${body}`;
 
@@ -296,7 +300,7 @@ describe('UI State Component Tests', () => {
     });
 
     it('should provide focus-visible styles', () => {
-      const focusStyles = 'focus:ring-2 focus:ring-cyan-500/50';
+      const focusStyles = 'focus:ring-2 focus:ring-amber-500/50';
       expect(focusStyles).toContain('focus:ring');
     });
   });
@@ -310,7 +314,7 @@ describe('UI State Component Tests', () => {
         'p-4 sm:p-6',
       ];
 
-      responsiveClasses.forEach((cls) => {
+      responsiveClasses.forEach(cls => {
         expect(cls).toMatch(/sm:|md:|lg:|xl:/);
       });
     });

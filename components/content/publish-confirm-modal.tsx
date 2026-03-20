@@ -237,7 +237,7 @@ export function PublishConfirmModal({
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-orange-400" />
+            <Calendar className="h-5 w-5 text-amber-400" />
             {isMultiPlatform
               ? `Schedule to ${platforms.length} Platforms`
               : 'Schedule Post'}
@@ -257,7 +257,7 @@ export function PublishConfirmModal({
               {platforms.map(p => (
                 <span
                   key={p}
-                  className="text-[10px] font-medium text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full border border-orange-500/20"
+                  className="text-[10px] font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20"
                 >
                   {getPlatformLabel(p)}
                 </span>
@@ -355,7 +355,7 @@ export function PublishConfirmModal({
                       {!conn && !result && (
                         <Link
                           href="/dashboard/platforms"
-                          className="inline-flex items-center gap-1 text-[10px] text-orange-400 hover:text-orange-300 transition-colors mt-1"
+                          className="inline-flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 transition-colors mt-1"
                         >
                           Connect account
                           <ExternalLink className="h-2.5 w-2.5" />
@@ -383,7 +383,7 @@ export function PublishConfirmModal({
                 </div>
                 <Link
                   href="/dashboard/platforms"
-                  className="inline-flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 transition-colors"
+                  className="inline-flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition-colors"
                 >
                   Connect account
                   <ExternalLink className="h-3 w-3" />

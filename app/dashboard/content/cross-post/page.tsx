@@ -107,8 +107,8 @@ const PLATFORMS: Platform[] = [
     id: 'reddit',
     label: 'Reddit',
     charLimit: 40000,
-    color: 'border-orange-500/30 bg-orange-500/5',
-    dotColor: 'bg-orange-400',
+    color: 'border-amber-500/30 bg-amber-500/5',
+    dotColor: 'bg-amber-400',
   },
   {
     id: 'threads',
@@ -119,7 +119,7 @@ const PLATFORMS: Platform[] = [
   },
 ] as const;
 
-const PLATFORM_MAP = new Map<string, Platform>(PLATFORMS.map((p) => [p.id, p]));
+const PLATFORM_MAP = new Map<string, Platform>(PLATFORMS.map(p => [p.id, p]));
 
 // ---------------------------------------------------------------------------
 // CopyButton — isolated copy state per card
@@ -195,7 +195,9 @@ function ScheduleButton({
       });
 
       if (!response.ok) {
-        const body = await response.json().catch(() => ({})) as { error?: string };
+        const body = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
         throw new Error(body.error ?? `HTTP ${response.status}`);
       }
 
@@ -227,11 +229,7 @@ function ScheduleButton({
       className="h-8 px-2.5 text-zinc-400 hover:text-white hover:bg-zinc-700/60 border border-zinc-700/50 rounded-md transition-colors text-xs"
       aria-label={`Schedule post to ${platformId}`}
     >
-      {loading ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-      ) : (
-        'Schedule'
-      )}
+      {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Schedule'}
     </Button>
   );
 }
@@ -436,7 +434,7 @@ export default function CrossPostPage() {
   // -- Input state --
   const [content, setContent] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    new Set(PLATFORMS.map((p) => p.id))
+    new Set(PLATFORMS.map(p => p.id))
   );
   const [options, setOptions] = useState<AdaptOptions>({
     adjustLength: true,
@@ -453,7 +451,7 @@ export default function CrossPostPage() {
   // ------------------------------------------------------------------
 
   const togglePlatform = useCallback((id: string) => {
-    setSelectedIds((prev) => {
+    setSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
@@ -468,20 +466,17 @@ export default function CrossPostPage() {
   // Adaptation option toggle
   // ------------------------------------------------------------------
 
-  const toggleOption = useCallback(
-    (key: keyof AdaptOptions) => {
-      setOptions((prev) => ({ ...prev, [key]: !prev[key] }));
-    },
-    []
-  );
+  const toggleOption = useCallback((key: keyof AdaptOptions) => {
+    setOptions(prev => ({ ...prev, [key]: !prev[key] }));
+  }, []);
 
   // ------------------------------------------------------------------
   // Mark a card as scheduled
   // ------------------------------------------------------------------
 
   const markScheduled = useCallback((platformId: string) => {
-    setResults((prev) =>
-      prev.map((r) =>
+    setResults(prev =>
+      prev.map(r =>
         r.platformId === platformId ? { ...r, scheduled: true } : r
       )
     );
@@ -502,12 +497,12 @@ export default function CrossPostPage() {
       return;
     }
 
-    const platforms = PLATFORMS.filter((p) => selectedIds.has(p.id));
+    const platforms = PLATFORMS.filter(p => selectedIds.has(p.id));
     const originalLength = trimmedContent.length;
 
     // Initialise all cards in loading state
     setResults(
-      platforms.map((p) => ({
+      platforms.map(p => ({
         platformId: p.id,
         content: '',
         charDiff: 0,
@@ -518,7 +513,7 @@ export default function CrossPostPage() {
     setIsAdapting(true);
 
     // Fire all requests concurrently; update individual cards as they settle
-    const promises = platforms.map(async (platform) => {
+    const promises = platforms.map(async platform => {
       try {
         const response = await fetch('/api/content/cross-post', {
           method: 'POST',
@@ -536,9 +531,9 @@ export default function CrossPostPage() {
         });
 
         if (!response.ok) {
-          const body = await response
-            .json()
-            .catch(() => ({})) as { error?: string };
+          const body = (await response.json().catch(() => ({}))) as {
+            error?: string;
+          };
           throw new Error(body.error ?? `HTTP ${response.status}`);
         }
 
@@ -554,19 +549,18 @@ export default function CrossPostPage() {
 
         const charDiff = adapted.length - originalLength;
 
-        setResults((prev) =>
-          prev.map((r) =>
+        setResults(prev =>
+          prev.map(r =>
             r.platformId === platform.id
               ? { ...r, content: adapted, charDiff, status: 'success' }
               : r
           )
         );
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : 'Unexpected error';
+        const message = err instanceof Error ? err.message : 'Unexpected error';
 
-        setResults((prev) =>
-          prev.map((r) =>
+        setResults(prev =>
+          prev.map(r =>
             r.platformId === platform.id
               ? { ...r, status: 'error', error: message }
               : r
@@ -579,11 +573,9 @@ export default function CrossPostPage() {
     setIsAdapting(false);
 
     // Summary toast after all settle
-    setResults((current) => {
-      const successCount = current.filter(
-        (r) => r.status === 'success'
-      ).length;
-      const errorCount = current.filter((r) => r.status === 'error').length;
+    setResults(current => {
+      const successCount = current.filter(r => r.status === 'success').length;
+      const errorCount = current.filter(r => r.status === 'error').length;
 
       if (successCount > 0 && errorCount === 0) {
         toast.success(
@@ -656,7 +648,7 @@ export default function CrossPostPage() {
               id="cross-post-content"
               rows={6}
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={e => setContent(e.target.value)}
               placeholder="Paste or type your existing post here. The AI will adapt it for each platform's character limits, hashtag conventions, and audience norms."
               className="w-full rounded-md px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 bg-zinc-800/50 border border-zinc-700/50 focus:outline-none focus:ring-1 focus:ring-violet-500/60 focus:border-violet-500/40 transition-colors resize-y min-h-[120px]"
             />
@@ -674,7 +666,7 @@ export default function CrossPostPage() {
               </span>
             </p>
             <div className="flex flex-wrap gap-2">
-              {PLATFORMS.map((platform) => {
+              {PLATFORMS.map(platform => {
                 const active = selectedIds.has(platform.id);
                 return (
                   <label
@@ -769,7 +761,7 @@ export default function CrossPostPage() {
             )}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {results.map((result) => (
+            {results.map(result => (
               <PlatformAdaptationCard
                 key={result.platformId}
                 result={result}

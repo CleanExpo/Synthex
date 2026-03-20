@@ -289,7 +289,7 @@ export function AIPersonaManager() {
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-400';
     if (score >= 60) return 'text-yellow-400';
-    if (score >= 40) return 'text-orange-400';
+    if (score >= 40) return 'text-amber-400';
     return 'text-red-400';
   };
 
@@ -298,8 +298,8 @@ export function AIPersonaManager() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
-            <Brain className="h-6 w-6 text-orange-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20">
+            <Brain className="h-6 w-6 text-amber-400" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">
@@ -371,7 +371,7 @@ export function AIPersonaManager() {
                 variant="glass"
                 className={`cursor-pointer transition-all ${
                   selectedPersona?.id === persona.id
-                    ? 'ring-2 ring-orange-500'
+                    ? 'ring-2 ring-amber-500'
                     : ''
                 }`}
                 onClick={() => setSelectedPersona(persona)}
@@ -468,7 +468,7 @@ export function AIPersonaManager() {
                     label="Overall Score"
                     value={`${selectedPersona.performance.overallScore}%`}
                     icon={Target}
-                    color="text-orange-400"
+                    color="text-amber-400"
                   />
                   <MetricCard
                     label="Engagement Rate"
@@ -491,7 +491,7 @@ export function AIPersonaManager() {
                 </div>
 
                 {/* Recommendations */}
-                <div className="p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
                   <h4 className="font-medium text-white mb-3">
                     AI Recommendations
                   </h4>
@@ -501,7 +501,7 @@ export function AIPersonaManager() {
                       .slice(0, 5)
                       .map((suggestion, i) => (
                         <div key={i} className="flex items-start gap-2">
-                          <ChevronRight className="h-4 w-4 text-orange-400 mt-0.5" />
+                          <ChevronRight className="h-4 w-4 text-amber-400 mt-0.5" />
                           <span className="text-sm text-gray-300">
                             {suggestion}
                           </span>

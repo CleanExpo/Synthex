@@ -118,12 +118,12 @@ export function WelcomeCard({
     return (
       <div
         className={cn(
-          'border-[0.5px] border-orange-500/20 bg-orange-500/[0.02] rounded-sm overflow-hidden',
+          'border-[0.5px] border-amber-500/20 bg-amber-500/[0.02] rounded-sm overflow-hidden',
           className
         )}
       >
         {/* Top accent line */}
-        <div className="h-px bg-gradient-to-r from-orange-500/60 via-orange-400/30 to-transparent" />
+        <div className="h-px bg-gradient-to-r from-amber-500/60 via-amber-400/30 to-transparent" />
         <div className="px-6 pt-5 pb-4">
           <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 block mb-1">
             Getting Started
@@ -138,7 +138,7 @@ export function WelcomeCard({
         <div className="border-t-[0.5px] border-white/[0.06] px-6 py-4">
           <Link
             href="/onboarding"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-orange-500/[0.12] border-[0.5px] border-orange-500/30 text-sm text-orange-300 hover:bg-orange-500/[0.2] hover:border-orange-500/50 transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-amber-500/[0.12] border-[0.5px] border-amber-500/30 text-sm text-amber-300 hover:bg-amber-500/[0.2] hover:border-amber-500/50 transition-all"
           >
             <Sparkles className="h-3.5 w-3.5" />
             Complete Setup
@@ -184,12 +184,12 @@ export function WelcomeCard({
   return (
     <div
       className={cn(
-        'border-[0.5px] border-orange-500/20 bg-orange-500/[0.02] rounded-sm overflow-hidden',
+        'border-[0.5px] border-amber-500/20 bg-amber-500/[0.02] rounded-sm overflow-hidden',
         className
       )}
     >
       {/* Top accent line */}
-      <div className="h-px bg-gradient-to-r from-orange-500/60 via-orange-400/30 to-transparent" />
+      <div className="h-px bg-gradient-to-r from-amber-500/60 via-amber-400/30 to-transparent" />
 
       {/* Header */}
       <div className="px-6 pt-5 pb-4">
@@ -261,7 +261,7 @@ export function WelcomeCard({
                 Detected
               </span>
             </div>
-            <p className="font-mono text-2xl font-medium text-orange-400 tabular-nums">
+            <p className="font-mono text-2xl font-medium text-amber-400 tabular-nums">
               {data.detectedPlatforms.length}
             </p>
             <p className="text-[10px] text-white/30 mt-0.5">
@@ -298,7 +298,7 @@ export function WelcomeCard({
             {data.keyTopics.map(topic => (
               <span
                 key={topic}
-                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-orange-500/[0.08] border-[0.5px] border-orange-500/20 text-[10px] text-orange-300"
+                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-amber-500/[0.08] border-[0.5px] border-amber-500/20 text-[10px] text-amber-300"
               >
                 {topic}
               </span>
@@ -342,15 +342,15 @@ export function WelcomeCard({
               <Link
                 key={action.href}
                 href={action.href}
-                className="flex items-center gap-3 p-3 border-[0.5px] border-white/[0.06] rounded-sm bg-white/[0.01] hover:bg-orange-500/[0.05] hover:border-orange-500/20 transition-all group"
+                className="flex items-center gap-3 p-3 border-[0.5px] border-white/[0.06] rounded-sm bg-white/[0.01] hover:bg-amber-500/[0.05] hover:border-amber-500/20 transition-all group"
               >
-                <div className="h-7 w-7 border-[0.5px] border-white/[0.08] bg-white/[0.03] rounded-sm flex items-center justify-center flex-shrink-0 group-hover:border-orange-500/30 group-hover:bg-orange-500/[0.08] transition-colors">
-                  <action.icon className="h-3.5 w-3.5 text-white/40 group-hover:text-orange-400 transition-colors" />
+                <div className="h-7 w-7 border-[0.5px] border-white/[0.08] bg-white/[0.03] rounded-sm flex items-center justify-center flex-shrink-0 group-hover:border-amber-500/30 group-hover:bg-amber-500/[0.08] transition-colors">
+                  <action.icon className="h-3.5 w-3.5 text-white/40 group-hover:text-amber-400 transition-colors" />
                 </div>
                 <p className="text-xs text-white/60 flex-1 group-hover:text-white/80 transition-colors">
                   {action.label}
                 </p>
-                <ArrowRight className="h-3.5 w-3.5 text-white/20 group-hover:text-orange-400 transition-colors flex-shrink-0" />
+                <ArrowRight className="h-3.5 w-3.5 text-white/20 group-hover:text-amber-400 transition-colors flex-shrink-0" />
               </Link>
             ))}
           </div>
@@ -361,12 +361,12 @@ export function WelcomeCard({
       <div className="border-t-[0.5px] border-white/[0.06] px-6 py-3 flex items-center justify-between">
         <div className="flex gap-4">
           <Link href="/dashboard/seo">
-            <span className="text-xs text-white/30 hover:text-orange-400 transition-colors cursor-pointer">
+            <span className="text-xs text-white/30 hover:text-amber-400 transition-colors cursor-pointer">
               Re-run Analysis
             </span>
           </Link>
           <Link href="/dashboard/settings">
-            <span className="text-xs text-white/30 hover:text-orange-400 transition-colors cursor-pointer">
+            <span className="text-xs text-white/30 hover:text-amber-400 transition-colors cursor-pointer">
               Edit Settings
             </span>
           </Link>

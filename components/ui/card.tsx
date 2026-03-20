@@ -12,9 +12,9 @@ const cardVariants = cva('rounded-sm text-card-foreground transition-colors', {
       'glass-solid': 'border-[0.5px] border-white/[0.06] bg-[#0a0a0a]',
       'glass-gradient': 'border-[0.5px] border-white/[0.06] bg-white/[0.02]',
       'glass-primary':
-        'border-[0.5px] border-orange-500/20 bg-orange-500/[0.02] hover:border-orange-500/30',
+        'border-[0.5px] border-amber-500/20 bg-amber-500/[0.02] hover:border-amber-500/30',
       'glass-secondary':
-        'border-[0.5px] border-orange-500/20 bg-orange-500/[0.02] hover:border-orange-500/30',
+        'border-[0.5px] border-amber-500/20 bg-amber-500/[0.02] hover:border-amber-500/30',
       'glass-success':
         'border-[0.5px] border-emerald-500/20 bg-emerald-500/[0.02] hover:border-emerald-500/30',
       'glass-warning':
@@ -22,9 +22,9 @@ const cardVariants = cva('rounded-sm text-card-foreground transition-colors', {
       'glass-destructive':
         'border-[0.5px] border-red-500/20 bg-red-500/[0.02] hover:border-red-500/30',
       'gradient-primary':
-        'border-[0.5px] border-orange-500/20 bg-orange-500/[0.03]',
+        'border-[0.5px] border-amber-500/20 bg-amber-500/[0.03]',
       'gradient-secondary':
-        'border-[0.5px] border-orange-500/20 bg-orange-500/[0.02]',
+        'border-[0.5px] border-amber-500/20 bg-amber-500/[0.02]',
       interactive:
         'border-[0.5px] border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/[0.1] cursor-pointer',
       'glass-interactive':

@@ -20,8 +20,8 @@ function getTier(score: number) {
   if (score >= 60)
     return {
       label: 'Good',
-      color: 'text-orange-400',
-      bg: 'bg-orange-500/10 border-orange-500/20',
+      color: 'text-amber-400',
+      bg: 'bg-amber-500/10 border-amber-500/20',
     };
   if (score >= 40)
     return {

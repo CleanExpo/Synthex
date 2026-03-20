@@ -274,7 +274,7 @@ export function IntelligencePanel({
       {analysis.patterns.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-orange-400" />
+            <TrendingUp className="h-4 w-4 text-amber-400" />
             <h3 className="text-sm font-medium text-white/80">
               Step Performance
             </h3>

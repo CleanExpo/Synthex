@@ -621,7 +621,7 @@ export default function DashboardLayout({
                             alt={user.name || 'User'}
                           />
                         )}
-                        <AvatarFallback className="rounded-sm bg-orange-500/20 text-orange-400 text-xs font-mono">
+                        <AvatarFallback className="rounded-sm bg-amber-500/20 text-amber-400 text-xs font-mono">
                           {user?.name?.[0]?.toUpperCase() ||
                             user?.email?.[0]?.toUpperCase() ||
                             'U'}

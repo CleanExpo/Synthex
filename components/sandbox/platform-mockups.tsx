@@ -35,7 +35,7 @@ function TwitterMockup({
   return (
     <div className="bg-black rounded-lg p-4">
       <div className="flex items-start space-x-3">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-teal-500"></div>
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-teal-500"></div>
         <div className="flex-1">
           <div className="flex items-center space-x-1">
             <span className="font-bold text-white">Your Name</span>
@@ -95,7 +95,7 @@ function InstagramMockup({
     <div className="bg-white rounded-lg overflow-hidden">
       <div className="flex items-center justify-between p-3 border-b">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-teal-500"></div>
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-teal-500"></div>
           <span className="font-semibold text-sm">username</span>
         </div>
         <MoreHorizontal className="h-5 w-5 text-gray-700" />
@@ -110,7 +110,7 @@ function InstagramMockup({
           )}
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-orange-500 to-teal-500 h-96 flex items-center justify-center">
+        <div className="bg-gradient-to-br from-amber-500 to-teal-500 h-96 flex items-center justify-center">
           <p className="text-white text-center px-4">
             {content || 'Your content preview'}
           </p>

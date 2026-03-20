@@ -191,7 +191,7 @@ export function ReverenceSidebar({
     <aside className={cn('sticky top-24 w-full max-w-xs', className)}>
       <Card variant="glass-primary" className="overflow-hidden">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-orange-400">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-amber-400">
             Key Statistics
           </CardTitle>
         </CardHeader>
@@ -229,7 +229,7 @@ export function ReverenceSidebar({
                   variant="outline"
                   size="sm"
                   onClick={() => handleShare(platform)}
-                  className="flex-1 border-white/10 bg-white/5 hover:bg-orange-500/20 hover:border-orange-500/40"
+                  className="flex-1 border-white/10 bg-white/5 hover:bg-amber-500/20 hover:border-amber-500/40"
                 >
                   <ShareIcon platform={platform} />
                 </Button>
@@ -247,7 +247,7 @@ export function ReverenceSidebar({
                 variant="outline"
                 size="sm"
                 onClick={() => handleCopyCitation('apa')}
-                className="w-full justify-start border-white/10 bg-white/5 hover:bg-orange-500/20 hover:border-orange-500/40 text-xs"
+                className="w-full justify-start border-white/10 bg-white/5 hover:bg-amber-500/20 hover:border-amber-500/40 text-xs"
               >
                 {copiedFormat === 'apa' ? '✓ Copied!' : 'Copy APA Citation'}
               </Button>
@@ -255,7 +255,7 @@ export function ReverenceSidebar({
                 variant="outline"
                 size="sm"
                 onClick={() => handleCopyCitation('harvard')}
-                className="w-full justify-start border-white/10 bg-white/5 hover:bg-orange-500/20 hover:border-orange-500/40 text-xs"
+                className="w-full justify-start border-white/10 bg-white/5 hover:bg-amber-500/20 hover:border-amber-500/40 text-xs"
               >
                 {copiedFormat === 'harvard'
                   ? '✓ Copied!'
@@ -276,7 +276,7 @@ export function ReverenceSidebar({
                     variant="outline"
                     size="sm"
                     asChild
-                    className="flex-1 border-white/10 bg-white/5 hover:bg-orange-500/20 hover:border-orange-500/40"
+                    className="flex-1 border-white/10 bg-white/5 hover:bg-amber-500/20 hover:border-amber-500/40"
                   >
                     <a href={pdfUrl} download>
                       PDF
@@ -288,7 +288,7 @@ export function ReverenceSidebar({
                     variant="outline"
                     size="sm"
                     asChild
-                    className="flex-1 border-white/10 bg-white/5 hover:bg-orange-500/20 hover:border-orange-500/40"
+                    className="flex-1 border-white/10 bg-white/5 hover:bg-amber-500/20 hover:border-amber-500/40"
                   >
                     <a href={csvUrl} download>
                       CSV Data

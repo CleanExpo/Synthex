@@ -35,7 +35,7 @@ export default function LoginLoading() {
           </div>
 
           {/* Submit button */}
-          <div className="h-11 w-full bg-orange-500/10 rounded-lg" />
+          <div className="h-11 w-full bg-amber-500/10 rounded-lg" />
 
           {/* Divider */}
           <div className="flex items-center gap-3">

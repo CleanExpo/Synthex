@@ -172,7 +172,7 @@ function TemplateSuggestionCard({
         size="sm"
         variant="ghost"
         onClick={() => onUse(template)}
-        className="flex-shrink-0 text-xs bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 border border-orange-500/20"
+        className="flex-shrink-0 text-xs bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/20"
       >
         Use
       </Button>
@@ -289,7 +289,7 @@ export default function ContentOptimizePage() {
           <Button
             onClick={handleOptimize}
             disabled={!content.trim() || isOptimizing}
-            className="bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 border border-orange-500/30"
+            className="bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30"
           >
             <Sparkles className="w-4 h-4 mr-2" />
             {isOptimizing ? 'Optimizing...' : 'Optimize with AI'}
@@ -303,10 +303,10 @@ export default function ContentOptimizePage() {
             LEFT PANEL — Editor (60%)
         ============================================================ */}
         <div className="w-full lg:w-[60%] space-y-4">
-          <Card className="bg-surface-base/80 border border-orange-500/10">
+          <Card className="bg-surface-base/80 border border-amber-500/10">
             <CardHeader className="pb-4">
               <CardTitle className="text-white text-lg flex items-center gap-2">
-                <FileText className="w-5 h-5 text-orange-400" />
+                <FileText className="w-5 h-5 text-amber-400" />
                 Content Editor
               </CardTitle>
             </CardHeader>
@@ -321,7 +321,7 @@ export default function ContentOptimizePage() {
                   <select
                     value={platform}
                     onChange={e => setPlatform(e.target.value)}
-                    className="w-full h-10 px-3 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-orange-500/50 focus:border-orange-500/30"
+                    className="w-full h-10 px-3 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/30"
                   >
                     {PLATFORMS.map(p => (
                       <option
@@ -343,7 +343,7 @@ export default function ContentOptimizePage() {
                   <select
                     value={goal}
                     onChange={e => setGoal(e.target.value)}
-                    className="w-full h-10 px-3 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-orange-500/50 focus:border-orange-500/30"
+                    className="w-full h-10 px-3 rounded-md bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/30"
                   >
                     {GOALS.map(g => (
                       <option
@@ -368,7 +368,7 @@ export default function ContentOptimizePage() {
                   onChange={e => setContent(e.target.value)}
                   placeholder={`Write your ${platform} content here...`}
                   rows={8}
-                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-slate-500 text-sm resize-y focus:outline-none focus:ring-1 focus:ring-orange-500/50 focus:border-orange-500/30 min-h-[160px]"
+                  className="w-full px-4 py-3 rounded-md bg-white/5 border border-white/10 text-white placeholder:text-slate-500 text-sm resize-y focus:outline-none focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/30 min-h-[160px]"
                 />
               </div>
 
@@ -392,7 +392,7 @@ export default function ContentOptimizePage() {
                 <Button
                   onClick={handleOptimize}
                   disabled={!content.trim() || isOptimizing}
-                  className="w-full bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 border border-orange-500/30"
+                  className="w-full bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
                   {isOptimizing ? 'Optimizing...' : 'Optimize with AI'}
@@ -407,10 +407,10 @@ export default function ContentOptimizePage() {
         ============================================================ */}
         <div className="w-full lg:w-[40%] space-y-4">
           {/* Overall score card */}
-          <Card className="bg-surface-base/80 border border-orange-500/10">
+          <Card className="bg-surface-base/80 border border-amber-500/10">
             <CardHeader className="pb-3">
               <CardTitle className="text-white text-lg flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-orange-400" />
+                <Sparkles className="w-5 h-5 text-amber-400" />
                 Content Score
                 {isScoring && (
                   <span className="text-xs text-slate-400 font-normal ml-2 animate-pulse">
@@ -456,7 +456,7 @@ export default function ContentOptimizePage() {
 
           {/* Top suggestions card */}
           {score && score.topSuggestions.length > 0 && (
-            <Card className="bg-surface-base/80 border border-orange-500/10">
+            <Card className="bg-surface-base/80 border border-amber-500/10">
               <CardHeader className="pb-3">
                 <CardTitle className="text-white text-base flex items-center gap-2">
                   <Lightbulb className="w-4 h-4 text-yellow-400" />
@@ -480,10 +480,10 @@ export default function ContentOptimizePage() {
           )}
 
           {/* Suggested templates card */}
-          <Card className="bg-surface-base/80 border border-orange-500/10">
+          <Card className="bg-surface-base/80 border border-amber-500/10">
             <CardHeader className="pb-3">
               <CardTitle className="text-white text-base flex items-center gap-2">
-                <FileText className="w-4 h-4 text-orange-400" />
+                <FileText className="w-4 h-4 text-amber-400" />
                 Suggested Templates
               </CardTitle>
             </CardHeader>

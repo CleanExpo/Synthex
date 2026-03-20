@@ -39,7 +39,7 @@ export function ReportsList({
       <CardContent>
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-orange-400" />
+            <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
           </div>
         ) : reports.length === 0 ? (
           <div className="text-center py-8">
@@ -64,7 +64,7 @@ export function ReportsList({
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-orange-500/20 rounded-lg">
+                    <div className="p-2 bg-amber-500/20 rounded-lg">
                       {getTypeIcon(report.type)}
                     </div>
                     <div>

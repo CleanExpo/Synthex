@@ -178,7 +178,7 @@ export function BenchmarkOverview({
                     key={i}
                     className="text-sm text-gray-300 flex items-start gap-2"
                   >
-                    <span className="text-orange-400 mt-0.5">•</span>
+                    <span className="text-amber-400 mt-0.5">•</span>
                     {insight}
                   </li>
                 ))}

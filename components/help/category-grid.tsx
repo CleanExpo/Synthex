@@ -42,7 +42,7 @@ export function CategoryGrid({
               key={category.id}
               variant="glass"
               className={`hover:scale-105 transition-transform cursor-pointer ${
-                isSelected ? 'ring-2 ring-orange-500' : ''
+                isSelected ? 'ring-2 ring-amber-500' : ''
               }`}
               onClick={() => onCategorySelect(isSelected ? null : category.id)}
             >

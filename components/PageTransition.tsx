@@ -160,7 +160,7 @@ export function LoadingTransition({
             className="fixed top-0 left-0 right-0 z-50 h-1 bg-white/10"
           >
             <motion.div
-              className="h-full bg-gradient-to-r from-orange-500 to-orange-500"
+              className="h-full bg-gradient-to-r from-amber-500 to-amber-500"
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.3 }}
             />

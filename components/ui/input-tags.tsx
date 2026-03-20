@@ -71,7 +71,7 @@ function InputTags({
       className={cn(
         'flex flex-wrap gap-1 items-center',
         'border-[0.5px] border-white/[0.06] rounded-sm bg-[#0a0a0a] p-1.5',
-        'focus-within:border-orange-500/40 focus-within:ring-[2px] focus-within:ring-orange-500/10',
+        'focus-within:border-amber-500/40 focus-within:ring-[2px] focus-within:ring-amber-500/10',
         'transition-colors duration-200',
         disabled && 'opacity-50 pointer-events-none',
         className
@@ -83,8 +83,8 @@ function InputTags({
           key={`${tag}-${index}`}
           className={cn(
             'h-6 inline-flex items-center gap-1 relative',
-            'bg-orange-500/[0.10] border-[0.5px] border-orange-500/20',
-            'rounded-sm font-medium text-xs text-orange-300',
+            'bg-amber-500/[0.10] border-[0.5px] border-amber-500/20',
+            'rounded-sm font-medium text-xs text-amber-300',
             'ps-2 pe-1 select-none'
           )}
         >
@@ -98,8 +98,8 @@ function InputTags({
               }}
               className={cn(
                 'flex items-center justify-center w-4 h-4 rounded-sm',
-                'text-orange-300/60 hover:text-orange-300 transition-colors duration-150',
-                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500/40'
+                'text-amber-300/60 hover:text-amber-300 transition-colors duration-150',
+                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500/40'
               )}
               aria-label={`Remove ${tag}`}
             >

@@ -65,8 +65,8 @@ const approvalStatusConfig: Record<
     label: 'Rejected',
   },
   revision_requested: {
-    color: 'bg-orange-400',
-    bgColor: 'bg-orange-500/20',
+    color: 'bg-amber-400',
+    bgColor: 'bg-amber-500/20',
     label: 'Revision Requested',
   },
 };
@@ -99,7 +99,7 @@ export function DraggablePostCard({
 
   const statusColors = {
     draft: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
-    scheduled: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+    scheduled: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
     published: 'bg-green-500/20 text-green-300 border-green-500/30',
     failed: 'bg-red-500/20 text-red-300 border-red-500/30',
   };
@@ -128,7 +128,7 @@ export function DraggablePostCard({
           group relative flex items-center gap-1.5 p-1.5 rounded-md text-xs
           transition-all duration-200 border
           ${statusColors[post.status]}
-          ${isDragging ? 'ring-2 ring-orange-500 shadow-lg z-50' : ''}
+          ${isDragging ? 'ring-2 ring-amber-500 shadow-lg z-50' : ''}
           ${post.conflict ? 'ring-1 ring-yellow-500/50' : ''}
           ${!disabled ? 'hover:scale-[1.02] hover:shadow-md' : ''}
         `}
@@ -194,7 +194,7 @@ export function DraggablePostCard({
       className={`
         group relative p-3 rounded-lg border transition-all duration-200
         ${statusColors[post.status]}
-        ${isDragging ? 'ring-2 ring-orange-500 shadow-xl z-50' : ''}
+        ${isDragging ? 'ring-2 ring-amber-500 shadow-xl z-50' : ''}
         ${post.conflict ? 'ring-1 ring-yellow-500/50' : ''}
         ${post.approvalStatus === 'approved' ? 'ring-1 ring-green-500/30 shadow-green-500/10 shadow-md' : ''}
         ${!disabled ? 'hover:scale-[1.01] hover:shadow-lg cursor-pointer' : ''}
@@ -255,7 +255,7 @@ export function DraggablePostCard({
         </span>
 
         {post.engagement && (
-          <span className="text-orange-400">
+          <span className="text-amber-400">
             Est. {post.engagement.estimated || 0}% engagement
           </span>
         )}

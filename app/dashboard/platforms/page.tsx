@@ -354,7 +354,7 @@ function PlatformCard({
             <div className="flex gap-2">
               <Link
                 href="/dashboard/content"
-                className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-sm transition-colors bg-orange-500 hover:bg-orange-400 text-[#050505]"
+                className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-sm transition-colors bg-amber-500 hover:bg-amber-400 text-[#050505]"
               >
                 <Send className="h-3.5 w-3.5" />
                 Create Post
@@ -627,7 +627,7 @@ function PlatformsPageContent() {
               Refresh
             </button>
             <Link href="/dashboard/integrations">
-              <span className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors cursor-pointer">
+              <span className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors cursor-pointer">
                 <Link2 className="h-3.5 w-3.5" />
                 Manage Connections
               </span>

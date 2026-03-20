@@ -67,7 +67,7 @@ const PLATFORM_COLORS: Record<string, { dot: string; label: string }> = {
   facebook: { dot: 'bg-indigo-400', label: 'Facebook' },
   youtube: { dot: 'bg-red-400', label: 'YouTube' },
   pinterest: { dot: 'bg-rose-500', label: 'Pinterest' },
-  reddit: { dot: 'bg-orange-400', label: 'Reddit' },
+  reddit: { dot: 'bg-amber-400', label: 'Reddit' },
   threads: { dot: 'bg-slate-400', label: 'Threads' },
 };
 
@@ -82,7 +82,7 @@ function getPlatformMeta(platform: string) {
 
 const STATUS_BADGES: Record<string, string> = {
   draft: 'bg-amber-500/15 text-amber-300 border-amber-500/20',
-  scheduled: 'bg-orange-500/15 text-orange-300 border-orange-500/20',
+  scheduled: 'bg-amber-500/15 text-amber-300 border-amber-500/20',
   published: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20',
 };
 
@@ -150,8 +150,8 @@ function EmptyState({ filtered }: { filtered: boolean }) {
 
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="rounded-full bg-orange-500/10 p-5 mb-4">
-        <FileText className="h-8 w-8 text-orange-400" />
+      <div className="rounded-full bg-amber-500/10 p-5 mb-4">
+        <FileText className="h-8 w-8 text-amber-400" />
       </div>
       <h3 className="text-lg font-semibold text-white mb-2">
         {filtered ? 'No matching drafts' : 'No drafts yet'}
@@ -288,7 +288,7 @@ function DraftCard({
           <select
             value={editPlatform}
             onChange={e => setEditPlatform(e.target.value)}
-            className="w-full text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+            className="w-full text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
           >
             {ALL_PLATFORMS.map(p => (
               <option key={p} value={p}>
@@ -335,7 +335,7 @@ function DraftCard({
               {draft.hashtags.slice(0, 4).map(tag => (
                 <span
                   key={tag}
-                  className="text-[10px] text-orange-400/70 bg-orange-500/10 px-1.5 py-0.5 rounded"
+                  className="text-[10px] text-amber-400/70 bg-amber-500/10 px-1.5 py-0.5 rounded"
                 >
                   #{tag.replace(/^#/, '')}
                 </span>
@@ -364,7 +364,7 @@ function DraftCard({
               variant="ghost"
               onClick={() => setIsEditing(true)}
               title="Edit draft"
-              className="h-7 w-7 p-0 text-slate-400 hover:text-orange-400 hover:bg-orange-500/10"
+              className="h-7 w-7 p-0 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10"
             >
               <Edit className="h-3.5 w-3.5" />
             </Button>
@@ -375,7 +375,7 @@ function DraftCard({
                 variant="ghost"
                 onClick={() => onSchedule(draft)}
                 title="Schedule draft"
-                className="h-7 w-7 p-0 text-slate-400 hover:text-orange-400 hover:bg-orange-500/10"
+                className="h-7 w-7 p-0 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10"
               >
                 <Calendar className="h-3.5 w-3.5" />
               </Button>
@@ -458,7 +458,7 @@ function FilterBar({
       <select
         value={platform}
         onChange={e => onPlatformChange(e.target.value)}
-        className="text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+        className="text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
       >
         <option value="">All platforms</option>
         {ALL_PLATFORMS.map(p => (
@@ -472,7 +472,7 @@ function FilterBar({
       <select
         value={status}
         onChange={e => onStatusChange(e.target.value)}
-        className="text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+        className="text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
       >
         <option value="">All statuses</option>
         {ALL_STATUSES.map(s => (

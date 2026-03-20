@@ -132,7 +132,7 @@ export function DealForm({
               }
               placeholder="Deal title"
               required
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent"
             />
           </div>
 
@@ -148,7 +148,7 @@ export function DealForm({
               }
               placeholder="Deal description..."
               rows={2}
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent resize-none"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent resize-none"
             />
           </div>
 
@@ -168,7 +168,7 @@ export function DealForm({
                 min="0"
                 step="0.01"
                 required
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent"
               />
             </div>
             <div>
@@ -180,7 +180,7 @@ export function DealForm({
                 onChange={e =>
                   setFormData({ ...formData, currency: e.target.value })
                 }
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent"
               >
                 {CURRENCIES.map(curr => (
                   <option key={curr} value={curr} className="bg-surface-base">
@@ -201,7 +201,7 @@ export function DealForm({
               onChange={e =>
                 setFormData({ ...formData, stage: e.target.value as DealStage })
               }
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent"
             >
               {DEAL_STAGES.map(stage => (
                 <option key={stage} value={stage} className="bg-surface-base">
@@ -223,7 +223,7 @@ export function DealForm({
                 onChange={e =>
                   setFormData({ ...formData, startDate: e.target.value })
                 }
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent"
               />
             </div>
             <div>
@@ -236,7 +236,7 @@ export function DealForm({
                 onChange={e =>
                   setFormData({ ...formData, endDate: e.target.value })
                 }
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent"
               />
             </div>
           </div>
@@ -256,7 +256,7 @@ export function DealForm({
               disabled={isLoading || !formData.title.trim() || !formData.value}
               className={cn(
                 'flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-colors',
-                'bg-orange-600 hover:bg-orange-500 text-white',
+                'bg-amber-600 hover:bg-amber-500 text-white',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
             >

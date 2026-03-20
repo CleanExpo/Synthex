@@ -187,7 +187,7 @@ export function OverviewTab({ stats }: OverviewTabProps) {
                         'h-1.5 w-1.5 rounded-full shrink-0',
                         activity.type === 'milestone'
                           ? 'bg-amber-400'
-                          : 'bg-orange-400'
+                          : 'bg-amber-400'
                       )}
                     />
                     <span className="text-xs text-white/60 line-clamp-1">

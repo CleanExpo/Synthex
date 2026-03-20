@@ -69,7 +69,7 @@ const DialogContent = React.forwardRef<
         {...props}
       >
         {children}
-        <DialogClose className="absolute right-4 top-4 rounded-sm opacity-50 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:ring-offset-2 disabled:pointer-events-none text-white/60">
+        <DialogClose className="absolute right-4 top-4 rounded-sm opacity-50 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:ring-offset-2 disabled:pointer-events-none text-white/60">
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
         </DialogClose>
@@ -193,7 +193,7 @@ const InnerDialogContent = React.forwardRef<
           {...props}
         >
           <div ref={contentRef}>{children}</div>
-          <DialogClose className="absolute right-4 top-4 rounded-sm opacity-50 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:ring-offset-2 disabled:pointer-events-none text-white/60">
+          <DialogClose className="absolute right-4 top-4 rounded-sm opacity-50 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:ring-offset-2 disabled:pointer-events-none text-white/60">
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </DialogClose>

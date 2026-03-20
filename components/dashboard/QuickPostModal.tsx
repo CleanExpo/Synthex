@@ -152,8 +152,8 @@ export function QuickPostModal({
       <DialogContent className="bg-[#0d1829] border-white/[0.08] max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white font-light">
-            <div className="w-7 h-7 flex items-center justify-center bg-orange-500/10 border-[0.5px] border-orange-500/20 rounded-sm">
-              <Zap className="h-3.5 w-3.5 text-orange-400" />
+            <div className="w-7 h-7 flex items-center justify-center bg-amber-500/10 border-[0.5px] border-amber-500/20 rounded-sm">
+              <Zap className="h-3.5 w-3.5 text-amber-400" />
             </div>
             Quick Post
           </DialogTitle>
@@ -233,7 +233,7 @@ export function QuickPostModal({
               Cancel
             </Button>
             <Button
-              className="flex-1 bg-orange-500 hover:bg-orange-400 text-[#050505] font-semibold"
+              className="flex-1 bg-amber-500 hover:bg-amber-400 text-[#050505] font-semibold"
               onClick={handleSubmit}
               disabled={isSubmitting || !content.trim()}
             >

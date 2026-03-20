@@ -87,8 +87,8 @@ function UniteHubIntegrationCard() {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-orange-500/10 shrink-0">
-              <Building2 className="h-5 w-5 text-orange-400" />
+            <div className="p-2 rounded-lg bg-amber-500/10 shrink-0">
+              <Building2 className="h-5 w-5 text-amber-400" />
             </div>
             <div>
               <CardTitle className="text-base">Unite-Group Nexus</CardTitle>
@@ -118,7 +118,7 @@ function UniteHubIntegrationCard() {
                 </span>
               </p>
               <div className="flex items-center gap-2">
-                <code className="flex-1 min-w-0 font-mono text-[11px] text-orange-300 bg-white/[0.04] border border-white/[0.08] rounded-md px-2.5 py-1.5 truncate">
+                <code className="flex-1 min-w-0 font-mono text-[11px] text-amber-300 bg-white/[0.04] border border-white/[0.08] rounded-md px-2.5 py-1.5 truncate">
                   {data?.pullEndpoint ?? '—'}
                 </code>
                 <Button
@@ -136,7 +136,7 @@ function UniteHubIntegrationCard() {
 
             {/* Event count + link row */}
             <div className="flex items-center justify-between">
-              <Badge className="bg-orange-500/10 text-orange-400 border-orange-500/20 text-xs">
+              <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-xs">
                 {data?.eventTypes?.length ?? 8} event types active
               </Badge>
               <Button
@@ -204,7 +204,7 @@ export function IntegrationsTab({
               : 'Manage your social media integrations'}
           </CardDescription>
           {activeBusinessName && (
-            <Badge className="w-fit bg-orange-500/20 text-orange-400 border-orange-500/30 mt-2">
+            <Badge className="w-fit bg-amber-500/20 text-amber-400 border-amber-500/30 mt-2">
               Business: {activeBusinessName}
             </Badge>
           )}
@@ -292,7 +292,7 @@ export function IntegrationsTab({
                 className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10"
               >
                 <div className="flex items-center gap-3">
-                  <Key className="w-5 h-5 text-orange-500" />
+                  <Key className="w-5 h-5 text-amber-500" />
                   <div>
                     <p className="font-medium text-white">{apiKey.name}</p>
                     <p className="text-sm text-slate-400 font-mono">

@@ -177,14 +177,14 @@ export function InvestmentForm({
                   className={cn(
                     'p-3 rounded-lg border text-left transition-colors',
                     type === t.value
-                      ? 'border-orange-500 bg-orange-500/10'
+                      ? 'border-amber-500 bg-amber-500/10'
                       : 'border-white/10 bg-gray-800 hover:border-white/20'
                   )}
                 >
                   <span
                     className={cn(
                       'font-medium',
-                      type === t.value ? 'text-orange-400' : 'text-white'
+                      type === t.value ? 'text-amber-400' : 'text-white'
                     )}
                   >
                     {t.label}

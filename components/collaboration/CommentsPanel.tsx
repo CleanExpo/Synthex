@@ -359,7 +359,7 @@ export function CommentsPanel({
         const match = part.match(/@\[([^\]]+)\]\(([^)]+)\)/);
         if (match) {
           return (
-            <span key={i} className="text-orange-400 font-medium">
+            <span key={i} className="text-amber-400 font-medium">
               @{match[1]}
             </span>
           );
@@ -379,7 +379,7 @@ export function CommentsPanel({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-orange-500" />
+          <MessageSquare className="w-5 h-5 text-amber-500" />
           <h2 className="text-lg font-semibold text-white">Comments</h2>
           {comments.length > 0 && (
             <span className="px-2 py-0.5 text-xs bg-white/10 text-white/60 rounded-full">
@@ -400,7 +400,7 @@ export function CommentsPanel({
         {isLoading && comments.length === 0 ? (
           <div className="flex items-center justify-center py-12">
             <Loader2
-              className="w-6 h-6 text-orange-500 animate-spin"
+              className="w-6 h-6 text-amber-500 animate-spin"
               role="status"
               aria-label="Loading comments"
             />
@@ -420,7 +420,7 @@ export function CommentsPanel({
               {/* Main Comment */}
               <div className="bg-white/5 border border-white/10 rounded-lg p-3">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-orange-500 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
                     {comment.author?.name?.charAt(0) || 'U'}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -480,13 +480,13 @@ export function CommentsPanel({
                           value={editContent}
                           onChange={e => setEditContent(e.target.value)}
                           aria-label="Edit comment"
-                          className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm resize-none focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0"
+                          className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm resize-none focus:outline-none focus:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-0"
                           rows={3}
                         />
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleUpdate(comment.id)}
-                            className="px-3 py-1 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600"
+                            className="px-3 py-1 bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-600"
                           >
                             Save
                           </button>
@@ -513,7 +513,7 @@ export function CommentsPanel({
                           replyingTo === comment.id ? null : comment.id
                         )
                       }
-                      className="mt-2 flex items-center gap-1 text-xs text-white/40 hover:text-orange-400 transition-colors"
+                      className="mt-2 flex items-center gap-1 text-xs text-white/40 hover:text-amber-400 transition-colors"
                     >
                       <Reply className="w-3 h-3" />
                       Reply
@@ -530,13 +530,13 @@ export function CommentsPanel({
                         onChange={e => handleInputChange(e.target.value, true)}
                         placeholder="Write a reply..."
                         aria-label="Write a reply"
-                        className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm resize-none focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0"
+                        className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm resize-none focus:outline-none focus:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-0"
                         rows={2}
                       />
                       <button
                         onClick={() => handleSubmit(comment.id)}
                         disabled={!newComment.trim() || isLoading}
-                        className="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Send className="w-4 h-4" />
                       </button>
@@ -554,7 +554,7 @@ export function CommentsPanel({
                       className="bg-white/5 border border-white/10 rounded-lg p-3"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-500 to-orange-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
                           {reply.author?.name?.charAt(0) || 'U'}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -595,13 +595,13 @@ export function CommentsPanel({
             }}
             placeholder="Write a comment... Use @ to mention"
             aria-label="Write a comment"
-            className="w-full px-4 py-3 pr-12 bg-white/5 border border-white/10 rounded-lg text-white text-sm resize-none focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0"
+            className="w-full px-4 py-3 pr-12 bg-white/5 border border-white/10 rounded-lg text-white text-sm resize-none focus:outline-none focus:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-0"
             rows={3}
           />
           <button
             onClick={() => handleSubmit()}
             disabled={!newComment.trim() || isLoading}
-            className="absolute right-3 bottom-3 p-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="absolute right-3 bottom-3 p-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -619,7 +619,7 @@ export function CommentsPanel({
                   onClick={() => insertMention(member)}
                   className="w-full flex items-center gap-3 p-3 hover:bg-white/10 transition-colors"
                 >
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-500 to-orange-500 flex items-center justify-center text-white text-xs font-medium">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center text-white text-xs font-medium">
                     {member.name?.charAt(0) || member.email.charAt(0)}
                   </div>
                   <div className="flex-1 text-left">

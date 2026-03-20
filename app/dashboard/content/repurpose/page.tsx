@@ -43,25 +43,79 @@ type OutputFormat = 'social_post' | 'thread' | 'caption' | 'summary';
 // ---------------------------------------------------------------------------
 
 const PLATFORMS: Platform[] = [
-  { id: 'twitter',   label: 'Twitter / X',  charLimit: 280,   color: 'border-sky-500/30 bg-sky-500/5',       dotColor: 'bg-sky-400'    },
-  { id: 'linkedin',  label: 'LinkedIn',      charLimit: 3000,  color: 'border-blue-500/30 bg-blue-500/5',     dotColor: 'bg-blue-400'   },
-  { id: 'instagram', label: 'Instagram',     charLimit: 2200,  color: 'border-pink-500/30 bg-pink-500/5',     dotColor: 'bg-pink-400'   },
-  { id: 'tiktok',    label: 'TikTok',        charLimit: 2200,  color: 'border-rose-500/30 bg-rose-500/5',     dotColor: 'bg-rose-400'   },
-  { id: 'facebook',  label: 'Facebook',      charLimit: 63206, color: 'border-indigo-500/30 bg-indigo-500/5', dotColor: 'bg-indigo-400' },
-  { id: 'youtube',   label: 'YouTube',       charLimit: 5000,  color: 'border-red-500/30 bg-red-500/5',       dotColor: 'bg-red-400'    },
-  { id: 'pinterest', label: 'Pinterest',     charLimit: 500,   color: 'border-red-600/30 bg-red-600/5',       dotColor: 'bg-red-500'    },
-  { id: 'reddit',    label: 'Reddit',        charLimit: 40000, color: 'border-orange-500/30 bg-orange-500/5', dotColor: 'bg-orange-400' },
-  { id: 'threads',   label: 'Threads',       charLimit: 500,   color: 'border-gray-400/30 bg-gray-400/5',     dotColor: 'bg-gray-300'   },
+  {
+    id: 'twitter',
+    label: 'Twitter / X',
+    charLimit: 280,
+    color: 'border-sky-500/30 bg-sky-500/5',
+    dotColor: 'bg-sky-400',
+  },
+  {
+    id: 'linkedin',
+    label: 'LinkedIn',
+    charLimit: 3000,
+    color: 'border-blue-500/30 bg-blue-500/5',
+    dotColor: 'bg-blue-400',
+  },
+  {
+    id: 'instagram',
+    label: 'Instagram',
+    charLimit: 2200,
+    color: 'border-pink-500/30 bg-pink-500/5',
+    dotColor: 'bg-pink-400',
+  },
+  {
+    id: 'tiktok',
+    label: 'TikTok',
+    charLimit: 2200,
+    color: 'border-rose-500/30 bg-rose-500/5',
+    dotColor: 'bg-rose-400',
+  },
+  {
+    id: 'facebook',
+    label: 'Facebook',
+    charLimit: 63206,
+    color: 'border-indigo-500/30 bg-indigo-500/5',
+    dotColor: 'bg-indigo-400',
+  },
+  {
+    id: 'youtube',
+    label: 'YouTube',
+    charLimit: 5000,
+    color: 'border-red-500/30 bg-red-500/5',
+    dotColor: 'bg-red-400',
+  },
+  {
+    id: 'pinterest',
+    label: 'Pinterest',
+    charLimit: 500,
+    color: 'border-red-600/30 bg-red-600/5',
+    dotColor: 'bg-red-500',
+  },
+  {
+    id: 'reddit',
+    label: 'Reddit',
+    charLimit: 40000,
+    color: 'border-amber-500/30 bg-amber-500/5',
+    dotColor: 'bg-amber-400',
+  },
+  {
+    id: 'threads',
+    label: 'Threads',
+    charLimit: 500,
+    color: 'border-gray-400/30 bg-gray-400/5',
+    dotColor: 'bg-gray-300',
+  },
 ] as const;
 
 const OUTPUT_FORMATS: { value: OutputFormat; label: string }[] = [
   { value: 'social_post', label: 'Social Post' },
-  { value: 'thread',      label: 'Thread'      },
-  { value: 'caption',     label: 'Caption'     },
-  { value: 'summary',     label: 'Summary'     },
+  { value: 'thread', label: 'Thread' },
+  { value: 'caption', label: 'Caption' },
+  { value: 'summary', label: 'Summary' },
 ];
 
-const PLATFORM_MAP = new Map<string, Platform>(PLATFORMS.map((p) => [p.id, p]));
+const PLATFORM_MAP = new Map<string, Platform>(PLATFORMS.map(p => [p.id, p]));
 
 // ---------------------------------------------------------------------------
 // CopyButton — isolated copy-state per card
@@ -107,15 +161,17 @@ interface PlatformResultCardProps {
 }
 
 function PlatformResultCard({ result }: PlatformResultCardProps) {
-  const platform    = PLATFORM_MAP.get(result.platformId);
-  const charCount   = result.content.length;
-  const charLimit   = platform?.charLimit ?? Infinity;
+  const platform = PLATFORM_MAP.get(result.platformId);
+  const charCount = result.content.length;
+  const charLimit = platform?.charLimit ?? Infinity;
   const isOverLimit = charCount > charLimit;
   const usagePercent =
     charLimit === Infinity ? 0 : Math.min((charCount / charLimit) * 100, 100);
 
   return (
-    <Card className={`border ${platform?.color ?? 'border-zinc-800/50 bg-zinc-900/50'} bg-zinc-900/50`}>
+    <Card
+      className={`border ${platform?.color ?? 'border-zinc-800/50 bg-zinc-900/50'} bg-zinc-900/50`}
+    >
       <CardHeader className="pb-3 pt-4 px-4">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -132,9 +188,7 @@ function PlatformResultCard({ result }: PlatformResultCardProps) {
           {result.status === 'loading' && (
             <Loader2 className="h-4 w-4 animate-spin text-zinc-400 flex-shrink-0" />
           )}
-          {result.status === 'success' && (
-            <CopyButton text={result.content} />
-          )}
+          {result.status === 'success' && <CopyButton text={result.content} />}
         </div>
       </CardHeader>
 
@@ -166,9 +220,12 @@ function PlatformResultCard({ result }: PlatformResultCardProps) {
             {/* Character count bar */}
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className={isOverLimit ? 'text-red-400' : 'text-zinc-500'}>
+                <span
+                  className={isOverLimit ? 'text-red-400' : 'text-zinc-500'}
+                >
                   {charCount.toLocaleString()}
-                  {charLimit !== Infinity && ` / ${charLimit.toLocaleString()} chars`}
+                  {charLimit !== Infinity &&
+                    ` / ${charLimit.toLocaleString()} chars`}
                 </span>
                 {isOverLimit && (
                   <span className="text-red-400 font-medium">
@@ -197,13 +254,13 @@ function PlatformResultCard({ result }: PlatformResultCardProps) {
 // ---------------------------------------------------------------------------
 
 export default function RepurposePage() {
-  const [sourceType, setSourceType]       = useState<SourceType>('text');
+  const [sourceType, setSourceType] = useState<SourceType>('text');
   const [sourceContent, setSourceContent] = useState('');
-  const [outputFormat, setOutputFormat]   = useState<OutputFormat>('social_post');
-  const [selectedIds, setSelectedIds]     = useState<Set<string>>(
-    new Set(PLATFORMS.map((p) => p.id)),
+  const [outputFormat, setOutputFormat] = useState<OutputFormat>('social_post');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(
+    new Set(PLATFORMS.map(p => p.id))
   );
-  const [results, setResults]             = useState<PlatformResult[]>([]);
+  const [results, setResults] = useState<PlatformResult[]>([]);
   const [isRepurposing, setIsRepurposing] = useState(false);
 
   // ------------------------------------------------------------------
@@ -211,7 +268,7 @@ export default function RepurposePage() {
   // ------------------------------------------------------------------
 
   const togglePlatform = useCallback((id: string) => {
-    setSelectedIds((prev) => {
+    setSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
@@ -233,7 +290,7 @@ export default function RepurposePage() {
       toast.error(
         sourceType === 'text'
           ? 'Please paste some content before repurposing'
-          : 'Please enter a URL before repurposing',
+          : 'Please enter a URL before repurposing'
       );
       return;
     }
@@ -243,20 +300,20 @@ export default function RepurposePage() {
       return;
     }
 
-    const platforms = PLATFORMS.filter((p) => selectedIds.has(p.id));
+    const platforms = PLATFORMS.filter(p => selectedIds.has(p.id));
 
     // Initialise all cards in loading state
     setResults(
-      platforms.map((p) => ({
+      platforms.map(p => ({
         platformId: p.id,
         content: '',
         status: 'loading',
-      })),
+      }))
     );
     setIsRepurposing(true);
 
     // Fire all requests concurrently; update individual cards as they settle
-    const promises = platforms.map(async (platform) => {
+    const promises = platforms.map(async platform => {
       try {
         const response = await fetch('/api/content/repurpose', {
           method: 'POST',
@@ -289,22 +346,22 @@ export default function RepurposePage() {
 
         if (!content) throw new Error('No content returned from API');
 
-        setResults((prev) =>
-          prev.map((r) =>
+        setResults(prev =>
+          prev.map(r =>
             r.platformId === platform.id
               ? { ...r, content, status: 'success' }
-              : r,
-          ),
+              : r
+          )
         );
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unexpected error';
 
-        setResults((prev) =>
-          prev.map((r) =>
+        setResults(prev =>
+          prev.map(r =>
             r.platformId === platform.id
               ? { ...r, status: 'error', error: message }
-              : r,
-          ),
+              : r
+          )
         );
       }
     });
@@ -313,17 +370,17 @@ export default function RepurposePage() {
     setIsRepurposing(false);
 
     // Surface summary toast after all settle
-    setResults((current) => {
-      const successCount = current.filter((r) => r.status === 'success').length;
-      const errorCount   = current.filter((r) => r.status === 'error').length;
+    setResults(current => {
+      const successCount = current.filter(r => r.status === 'success').length;
+      const errorCount = current.filter(r => r.status === 'error').length;
 
       if (successCount > 0 && errorCount === 0) {
         toast.success(
-          `Repurposed for ${successCount} platform${successCount !== 1 ? 's' : ''}`,
+          `Repurposed for ${successCount} platform${successCount !== 1 ? 's' : ''}`
         );
       } else if (successCount > 0) {
         toast.success(
-          `Repurposed for ${successCount} platform${successCount !== 1 ? 's' : ''}. ${errorCount} failed.`,
+          `Repurposed for ${successCount} platform${successCount !== 1 ? 's' : ''}. ${errorCount} failed.`
         );
       } else {
         toast.error('All platforms failed to repurpose. Please try again.');
@@ -333,7 +390,7 @@ export default function RepurposePage() {
     });
   }, [sourceContent, sourceType, outputFormat, selectedIds]);
 
-  const hasResults   = results.length > 0;
+  const hasResults = results.length > 0;
   const canRepurpose =
     sourceContent.trim().length > 0 && selectedIds.size > 0 && !isRepurposing;
 
@@ -422,7 +479,7 @@ export default function RepurposePage() {
                 id="source-text"
                 rows={10}
                 value={sourceContent}
-                onChange={(e) => setSourceContent(e.target.value)}
+                onChange={e => setSourceContent(e.target.value)}
                 placeholder="Paste your blog post, article, or existing social content here…"
                 className="w-full rounded-md px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 bg-zinc-800/50 border border-zinc-700/50 focus:outline-none focus:ring-1 focus:ring-violet-500/60 focus:border-violet-500/40 transition-colors resize-none leading-relaxed"
               />
@@ -439,8 +496,8 @@ export default function RepurposePage() {
                 id="source-url"
                 type="url"
                 value={sourceContent}
-                onChange={(e) => setSourceContent(e.target.value)}
-                onKeyDown={(e) => {
+                onChange={e => setSourceContent(e.target.value)}
+                onKeyDown={e => {
                   if (e.key === 'Enter' && canRepurpose) handleRepurpose();
                 }}
                 placeholder="https://example.com/your-article"
@@ -458,7 +515,7 @@ export default function RepurposePage() {
               </span>
             </p>
             <div className="flex flex-wrap gap-2">
-              {PLATFORMS.map((platform) => {
+              {PLATFORMS.map(platform => {
                 const active = selectedIds.has(platform.id);
                 return (
                   <label
@@ -496,10 +553,10 @@ export default function RepurposePage() {
             <select
               id="output-format-select"
               value={outputFormat}
-              onChange={(e) => setOutputFormat(e.target.value as OutputFormat)}
+              onChange={e => setOutputFormat(e.target.value as OutputFormat)}
               className="h-10 rounded-md px-3 text-sm text-white bg-zinc-800/50 border border-zinc-700/50 focus:outline-none focus:ring-1 focus:ring-violet-500/60 focus:border-violet-500/40 transition-colors appearance-none cursor-pointer"
             >
-              {OUTPUT_FORMATS.map((f) => (
+              {OUTPUT_FORMATS.map(f => (
                 <option key={f.value} value={f.value} className="bg-zinc-900">
                   {f.label}
                 </option>
@@ -549,7 +606,7 @@ export default function RepurposePage() {
             )}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {results.map((result) => (
+            {results.map(result => (
               <PlatformResultCard key={result.platformId} result={result} />
             ))}
           </div>

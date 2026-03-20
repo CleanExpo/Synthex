@@ -21,7 +21,7 @@ export function ScheduleStatsGrid({ stats }: ScheduleStatsGridProps) {
           <CardTitle className="text-sm font-medium text-slate-400">
             Scheduled
           </CardTitle>
-          <Clock className="h-4 w-4 text-orange-500" />
+          <Clock className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">{stats.scheduled}</div>
@@ -47,7 +47,7 @@ export function ScheduleStatsGrid({ stats }: ScheduleStatsGridProps) {
           <CardTitle className="text-sm font-medium text-slate-400">
             Avg Engagement
           </CardTitle>
-          <TrendingUp className="h-4 w-4 text-orange-500" />
+          <TrendingUp className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">

@@ -22,7 +22,7 @@ export function HookTypesChart() {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Viral Hook Types</span>
-          <Sparkles className="h-4 w-4 text-orange-500" />
+          <Sparkles className="h-4 w-4 text-amber-500" />
         </CardTitle>
         <CardDescription className="text-gray-400">
           Most effective content hooks

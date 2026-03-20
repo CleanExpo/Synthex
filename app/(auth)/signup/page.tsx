@@ -6,8 +6,28 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Lock, User, Chrome, Loader2, CheckCircle, Eye, EyeOff, Clock, ArrowRight, RefreshCw, Key } from '@/components/icons';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Mail,
+  Lock,
+  User,
+  Chrome,
+  Loader2,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  Clock,
+  ArrowRight,
+  RefreshCw,
+  Key,
+} from '@/components/icons';
 import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 import { toast } from 'sonner';
 
@@ -36,9 +56,13 @@ export default function SignupPage() {
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // UNI-632: Track email verification state to show inline message
-  const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
+  const [verificationEmail, setVerificationEmail] = useState<string | null>(
+    null
+  );
   const [resendLoading, setResendLoading] = useState(false);
-  const [resendStatus, setResendStatus] = useState<'idle' | 'sent' | 'error'>('idle');
+  const [resendStatus, setResendStatus] = useState<'idle' | 'sent' | 'error'>(
+    'idle'
+  );
 
   // Countdown timer for rate limit cooldown
   useEffect(() => {
@@ -51,7 +75,7 @@ export default function SignupPage() {
     }
 
     countdownRef.current = setInterval(() => {
-      setRateLimitSeconds((prev) => {
+      setRateLimitSeconds(prev => {
         if (prev <= 1) {
           if (countdownRef.current) {
             clearInterval(countdownRef.current);
@@ -101,7 +125,10 @@ export default function SignupPage() {
     }
 
     if (passwordStrength < 2) {
-      setFieldErrors({ password: 'Password is too weak. Use uppercase letters, numbers, or symbols.' });
+      setFieldErrors({
+        password:
+          'Password is too weak. Use uppercase letters, numbers, or symbols.',
+      });
       return;
     }
 
@@ -117,7 +144,8 @@ export default function SignupPage() {
           email: formData.email,
           password: formData.password,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          ...(inviteOnly && formData.inviteCode && { inviteCode: formData.inviteCode }),
+          ...(inviteOnly &&
+            formData.inviteCode && { inviteCode: formData.inviteCode }),
         }),
       });
 
@@ -142,7 +170,9 @@ export default function SignupPage() {
         }
 
         setRateLimitSeconds(seconds);
-        toast.error(`Too many attempts. Please wait ${Math.ceil(seconds / 60)} minute${Math.ceil(seconds / 60) !== 1 ? 's' : ''} before trying again.`);
+        toast.error(
+          `Too many attempts. Please wait ${Math.ceil(seconds / 60)} minute${Math.ceil(seconds / 60) !== 1 ? 's' : ''} before trying again.`
+        );
         return;
       }
 
@@ -199,7 +229,9 @@ export default function SignupPage() {
 
       if (!response.ok) {
         if (data.error?.includes('not configured')) {
-          toast.error('Google signup is not configured. Please contact support.');
+          toast.error(
+            'Google signup is not configured. Please contact support.'
+          );
           return;
         }
         throw new Error(data.error || 'Failed to initiate Google signup');
@@ -211,7 +243,8 @@ export default function SignupPage() {
         throw new Error('No authorization URL received');
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'An unknown error occurred';
+      const message =
+        error instanceof Error ? error.message : 'An unknown error occurred';
       toast.error(`Signup error: ${message}`);
     } finally {
       setIsLoading(false);
@@ -242,7 +275,7 @@ export default function SignupPage() {
     if (passwordStrength === 0) return 'bg-gray-600';
     if (passwordStrength === 1) return 'bg-red-500';
     if (passwordStrength === 2) return 'bg-yellow-500';
-    if (passwordStrength === 3) return 'bg-orange-500';
+    if (passwordStrength === 3) return 'bg-amber-500';
     return 'bg-green-500';
   };
 
@@ -266,39 +299,42 @@ export default function SignupPage() {
         <div className="fixed inset-0 bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]" />
 
         {/* Subtle Grid Pattern */}
-        <div className="fixed inset-0 opacity-[0.02]" style={{
-          backgroundImage: `linear-gradient(rgba(255, 184, 123, 0.3) 1px, transparent 1px),
+        <div
+          className="fixed inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255, 184, 123, 0.3) 1px, transparent 1px),
                             linear-gradient(90deg, rgba(255, 184, 123, 0.3) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px'
-        }} />
+            backgroundSize: '50px 50px',
+          }}
+        />
 
         {/* Glow Effects */}
-        <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
-        <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-amber-400/5 rounded-full blur-[150px] pointer-events-none" />
 
-        <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 shadow-2xl shadow-orange-500/5">
+        <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 shadow-2xl shadow-amber-500/5">
           <CardHeader className="space-y-1">
             <div className="flex items-center justify-center mb-4">
               <SynthexLogo className="w-12 h-12" />
             </div>
             <div className="flex items-center justify-center mb-2">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 flex items-center justify-center">
-                <Mail className="w-8 h-8 text-orange-400" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 flex items-center justify-center">
+                <Mail className="w-8 h-8 text-amber-400" />
               </div>
             </div>
-            <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
+            <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300">
               Check your email
             </CardTitle>
             <CardDescription className="text-center text-gray-400 space-y-2">
               <span className="block">
                 Your account has been created. We sent a verification email to:
               </span>
-              <span className="block text-orange-300 font-medium">
+              <span className="block text-amber-300 font-medium">
                 {verificationEmail}
               </span>
               <span className="block text-xs text-gray-500 mt-2">
-                Click the link in the email to verify your account.
-                Check your spam folder if you don&apos;t see it.
+                Click the link in the email to verify your account. Check your
+                spam folder if you don&apos;t see it.
               </span>
             </CardDescription>
           </CardHeader>
@@ -308,7 +344,7 @@ export default function SignupPage() {
                 wired yet). This prevents blocking the user flow. */}
             <Button
               onClick={() => router.push('/onboarding')}
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40"
+              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-medium shadow-lg shadow-amber-500/25 transition-all hover:shadow-amber-500/40"
             >
               Continue to onboarding
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -318,7 +354,7 @@ export default function SignupPage() {
               variant="outline"
               onClick={handleResendVerification}
               disabled={resendLoading || resendStatus === 'sent'}
-              className="w-full border-orange-500/20 text-gray-300 hover:bg-orange-500/10 hover:text-white"
+              className="w-full border-amber-500/20 text-gray-300 hover:bg-amber-500/10 hover:text-white"
             >
               {resendLoading ? (
                 <>
@@ -327,7 +363,7 @@ export default function SignupPage() {
                 </>
               ) : resendStatus === 'sent' ? (
                 <>
-                  <CheckCircle className="mr-2 h-4 w-4 text-orange-400" />
+                  <CheckCircle className="mr-2 h-4 w-4 text-amber-400" />
                   Verification email sent
                 </>
               ) : (
@@ -352,7 +388,7 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={() => setVerificationEmail(null)}
-                className="text-orange-400 hover:text-orange-300 transition-colors"
+                className="text-amber-400 hover:text-amber-300 transition-colors"
               >
                 Go back
               </button>
@@ -369,23 +405,26 @@ export default function SignupPage() {
       <div className="fixed inset-0 bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]" />
 
       {/* Subtle Grid Pattern */}
-      <div className="fixed inset-0 opacity-[0.02]" style={{
-        backgroundImage: `linear-gradient(rgba(255, 184, 123, 0.3) 1px, transparent 1px),
+      <div
+        className="fixed inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255, 184, 123, 0.3) 1px, transparent 1px),
                           linear-gradient(90deg, rgba(255, 184, 123, 0.3) 1px, transparent 1px)`,
-        backgroundSize: '50px 50px'
-      }} />
+          backgroundSize: '50px 50px',
+        }}
+      />
 
       {/* Glow Effects */}
-      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-amber-400/5 rounded-full blur-[150px] pointer-events-none" />
 
       {/* Card Container */}
-      <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 shadow-2xl shadow-orange-500/5">
+      <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 shadow-2xl shadow-amber-500/5">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
             <SynthexLogo className="w-12 h-12" />
           </div>
-          <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
+          <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300">
             Create your account
           </CardTitle>
           <CardDescription className="text-center text-gray-400">
@@ -406,8 +445,8 @@ export default function SignupPage() {
                     Please wait{' '}
                     <span className="font-mono font-semibold text-red-300">
                       {formatCountdown(rateLimitSeconds)}
-                    </span>
-                    {' '}before trying again.
+                    </span>{' '}
+                    before trying again.
                   </p>
                 </div>
               </div>
@@ -419,7 +458,9 @@ export default function SignupPage() {
             {/* Invite code field — shown only during invite-only soft launch */}
             {inviteOnly && (
               <div className="space-y-2">
-                <Label htmlFor="inviteCode" className="text-gray-300">Invite Code</Label>
+                <Label htmlFor="inviteCode" className="text-gray-300">
+                  Invite Code
+                </Label>
                 <div className="relative">
                   <Key className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                   <Input
@@ -427,8 +468,13 @@ export default function SignupPage() {
                     type="text"
                     placeholder="SX-XXXXXX"
                     value={formData.inviteCode}
-                    onChange={(e) => setFormData({ ...formData, inviteCode: e.target.value.toUpperCase() })}
-                    className={`pl-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 uppercase tracking-wider font-mono ${fieldErrors.inviteCode ? 'border-red-500/60' : ''}`}
+                    onChange={e =>
+                      setFormData({
+                        ...formData,
+                        inviteCode: e.target.value.toUpperCase(),
+                      })
+                    }
+                    className={`pl-10 bg-white/5 border-amber-500/20 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20 uppercase tracking-wider font-mono ${fieldErrors.inviteCode ? 'border-red-500/60' : ''}`}
                     required
                     disabled={isSubmitDisabled}
                     maxLength={20}
@@ -436,11 +482,16 @@ export default function SignupPage() {
                   />
                 </div>
                 {fieldErrors.inviteCode && (
-                  <p className="text-xs text-red-400">{fieldErrors.inviteCode}</p>
+                  <p className="text-xs text-red-400">
+                    {fieldErrors.inviteCode}
+                  </p>
                 )}
                 <p className="text-xs text-gray-500">
                   Don&apos;t have an invite code?{' '}
-                  <Link href="/" className="text-orange-400 hover:text-orange-300 transition-colors">
+                  <Link
+                    href="/"
+                    className="text-amber-400 hover:text-amber-300 transition-colors"
+                  >
                     Request access
                   </Link>
                 </p>
@@ -448,7 +499,9 @@ export default function SignupPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-gray-300">Full Name</Label>
+              <Label htmlFor="name" className="text-gray-300">
+                Full Name
+              </Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                 <Input
@@ -456,8 +509,10 @@ export default function SignupPage() {
                   type="text"
                   placeholder="John Doe"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className={`pl-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.name ? 'border-red-500/60' : ''}`}
+                  onChange={e =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  className={`pl-10 bg-white/5 border-amber-500/20 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20 ${fieldErrors.name ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isSubmitDisabled}
                 />
@@ -468,7 +523,9 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-300">Email</Label>
+              <Label htmlFor="email" className="text-gray-300">
+                Email
+              </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                 <Input
@@ -476,8 +533,10 @@ export default function SignupPage() {
                   type="email"
                   placeholder="you@example.com"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className={`pl-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.email ? 'border-red-500/60' : ''}`}
+                  onChange={e =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  className={`pl-10 bg-white/5 border-amber-500/20 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20 ${fieldErrors.email ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isSubmitDisabled}
                 />
@@ -488,7 +547,9 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-300">Password</Label>
+              <Label htmlFor="password" className="text-gray-300">
+                Password
+              </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                 <Input
@@ -496,11 +557,11 @@ export default function SignupPage() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={formData.password}
-                  onChange={(e) => {
+                  onChange={e => {
                     setFormData({ ...formData, password: e.target.value });
                     calculatePasswordStrength(e.target.value);
                   }}
-                  className={`pl-10 pr-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.password ? 'border-red-500/60' : ''}`}
+                  className={`pl-10 pr-10 bg-white/5 border-amber-500/20 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20 ${fieldErrors.password ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isSubmitDisabled}
                 />
@@ -510,23 +571,36 @@ export default function SignupPage() {
                   className="absolute right-3 top-3 text-gray-500 hover:text-gray-300 transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
               {formData.password && (
                 <div className="space-y-1">
                   <div className="flex space-x-1">
-                    {[1, 2, 3, 4].map((level) => (
+                    {[1, 2, 3, 4].map(level => (
                       <div
                         key={level}
                         className={`h-1 flex-1 rounded ${
-                          level <= passwordStrength ? getPasswordStrengthColor() : 'bg-gray-700'
+                          level <= passwordStrength
+                            ? getPasswordStrengthColor()
+                            : 'bg-gray-700'
                         }`}
                       />
                     ))}
                   </div>
                   <p className="text-xs text-gray-400">
-                    Password strength: <span className={passwordStrength >= 3 ? 'text-orange-400' : 'text-yellow-400'}>
+                    Password strength:{' '}
+                    <span
+                      className={
+                        passwordStrength >= 3
+                          ? 'text-amber-400'
+                          : 'text-yellow-400'
+                      }
+                    >
                       {getPasswordStrengthText()}
                     </span>
                   </p>
@@ -538,7 +612,9 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-gray-300">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="text-gray-300">
+                Confirm Password
+              </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                 <Input
@@ -546,39 +622,63 @@ export default function SignupPage() {
                   type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className={`pl-10 pr-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.confirmPassword ? 'border-red-500/60' : ''}`}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      confirmPassword: e.target.value,
+                    })
+                  }
+                  className={`pl-10 pr-10 bg-white/5 border-amber-500/20 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20 ${fieldErrors.confirmPassword ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isSubmitDisabled}
                 />
-                {formData.confirmPassword && formData.password === formData.confirmPassword ? (
-                  <CheckCircle className="absolute right-3 top-3 w-4 h-4 text-orange-500" />
+                {formData.confirmPassword &&
+                formData.password === formData.confirmPassword ? (
+                  <CheckCircle className="absolute right-3 top-3 w-4 h-4 text-amber-500" />
                 ) : (
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-3 text-gray-500 hover:text-gray-300 transition-colors"
-                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    aria-label={
+                      showConfirmPassword ? 'Hide password' : 'Show password'
+                    }
                   >
-                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 )}
               </div>
               {fieldErrors.confirmPassword && (
-                <p className="text-xs text-red-400">{fieldErrors.confirmPassword}</p>
+                <p className="text-xs text-red-400">
+                  {fieldErrors.confirmPassword}
+                </p>
               )}
             </div>
 
             <div className="space-y-2">
               <label className="flex items-center space-x-2 text-sm">
-                <input type="checkbox" className="rounded border-gray-600 bg-white/5 text-orange-500 focus:ring-orange-500/20" required />
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-600 bg-white/5 text-amber-500 focus:ring-amber-500/20"
+                  required
+                />
                 <span className="text-gray-400">
                   I agree to the{' '}
-                  <Link href="/terms" className="text-orange-400 hover:text-orange-300 transition-colors">
+                  <Link
+                    href="/terms"
+                    className="text-amber-400 hover:text-amber-300 transition-colors"
+                  >
                     Terms of Service
                   </Link>{' '}
                   and{' '}
-                  <Link href="/privacy" className="text-orange-400 hover:text-orange-300 transition-colors">
+                  <Link
+                    href="/privacy"
+                    className="text-amber-400 hover:text-amber-300 transition-colors"
+                  >
                     Privacy Policy
                   </Link>
                 </span>
@@ -587,7 +687,7 @@ export default function SignupPage() {
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-medium shadow-lg shadow-amber-500/25 transition-all hover:shadow-amber-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitDisabled}
             >
               {isLoading ? (
@@ -612,10 +712,12 @@ export default function SignupPage() {
             <>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-orange-500/10" />
+                  <span className="w-full border-t border-amber-500/10" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-surface-base px-2 text-gray-500">Or continue with</span>
+                  <span className="bg-surface-base px-2 text-gray-500">
+                    Or continue with
+                  </span>
                 </div>
               </div>
 
@@ -623,7 +725,7 @@ export default function SignupPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full bg-white/5 border-orange-500/20 text-white hover:bg-orange-500/10 hover:border-orange-500/40 transition-all"
+                  className="w-full bg-white/5 border-amber-500/20 text-white hover:bg-amber-500/10 hover:border-amber-500/40 transition-all"
                   onClick={handleGoogleSignup}
                   disabled={isLoading}
                 >
@@ -637,7 +739,10 @@ export default function SignupPage() {
         <CardFooter>
           <p className="text-center text-sm text-gray-400 w-full">
             Already have an account?{' '}
-            <Link href="/login" className="text-orange-400 hover:text-orange-300 transition-colors">
+            <Link
+              href="/login"
+              className="text-amber-400 hover:text-amber-300 transition-colors"
+            >
               Sign in
             </Link>
           </p>

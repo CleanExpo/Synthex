@@ -326,7 +326,7 @@ export function ProductTour() {
         {/* Highlight */}
         {step.target !== 'body' && highlightPosition.width > 0 && (
           <div
-            className="absolute border-2 border-orange-500 rounded-lg transition-all duration-300"
+            className="absolute border-2 border-amber-500 rounded-lg transition-all duration-300"
             style={{
               top: highlightPosition.top,
               left: highlightPosition.left,
@@ -354,7 +354,7 @@ export function ProductTour() {
         {/* Content */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-orange-400" />
+            <Sparkles className="w-5 h-5 text-amber-400" />
             <h3 className="text-lg font-semibold text-white">{step.title}</h3>
           </div>
 
@@ -366,7 +366,7 @@ export function ProductTour() {
               <div
                 key={index}
                 className={`h-1.5 flex-1 rounded-full transition-colors ${
-                  index <= currentStep ? 'bg-orange-500' : 'bg-gray-700'
+                  index <= currentStep ? 'bg-amber-500' : 'bg-gray-700'
                 }`}
               />
             ))}

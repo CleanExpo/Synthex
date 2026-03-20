@@ -20,7 +20,7 @@ export function PersuasionMetricsCard({ metrics }: PersuasionMetricsProps) {
     <Card variant="glass">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <TrendingUp className="w-5 h-5 mr-2 text-orange-400" />
+          <TrendingUp className="w-5 h-5 mr-2 text-amber-400" />
           Persuasion Metrics
         </CardTitle>
       </CardHeader>

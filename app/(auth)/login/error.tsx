@@ -43,7 +43,7 @@ export default function LoginError({
           <div className="flex gap-3">
             <Button
               onClick={reset}
-              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+              className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Try Again

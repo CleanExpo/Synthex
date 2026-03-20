@@ -29,7 +29,7 @@ export function LoadingSpinner({
       )}
     >
       <Loader2
-        className={cn(sizeClasses[size], 'animate-spin text-orange-400')}
+        className={cn(sizeClasses[size], 'animate-spin text-amber-400')}
       />
       {text && <p className="text-sm text-gray-400 animate-pulse">{text}</p>}
     </div>
@@ -42,10 +42,10 @@ interface PageLoadingProps {
 
 export function PageLoading({ message = 'Loading...' }: PageLoadingProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-orange-900/20 to-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-amber-900/20 to-gray-900">
       <div className="text-center space-y-4">
         <div className="relative">
-          <Sparkles className="w-16 h-16 text-orange-400 animate-pulse mx-auto" />
+          <Sparkles className="w-16 h-16 text-amber-400 animate-pulse mx-auto" />
           <Loader2 className="w-8 h-8 animate-spin text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
         </div>
         <h2 className="text-2xl font-semibold text-white">{message}</h2>

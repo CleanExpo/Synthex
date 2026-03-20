@@ -169,7 +169,7 @@ export function PostStatusTracker({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm flex items-center gap-2">
-            <Clock className="h-4 w-4 text-orange-400" />
+            <Clock className="h-4 w-4 text-amber-400" />
             Post Status
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -205,7 +205,7 @@ export function PostStatusTracker({
             </div>
             <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-orange-500 to-emerald-500 transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-emerald-500 transition-all duration-500"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -258,7 +258,7 @@ export function PostStatusTracker({
                     href={platformPostUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-orange-400 hover:text-orange-300 transition-colors"
+                    className="text-amber-400 hover:text-amber-300 transition-colors"
                   >
                     <ExternalLink className="h-3 w-3" />
                   </a>

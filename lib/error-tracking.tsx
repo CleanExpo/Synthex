@@ -28,21 +28,28 @@ class ErrorTracker {
   /**
    * Track an error
    */
-  trackError(error: Error | string, context?: ErrorContext, level: 'error' | 'warning' | 'info' = 'error') {
+  trackError(
+    error: Error | string,
+    context?: ErrorContext,
+    level: 'error' | 'warning' | 'info' = 'error'
+  ) {
     const trackedError: TrackedError = {
-      id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
+      id: crypto.randomUUID
+        ? crypto.randomUUID()
+        : Math.random().toString(36).substr(2, 9),
       timestamp: new Date(),
       message: typeof error === 'string' ? error : error.message,
       stack: typeof error === 'object' ? error.stack : undefined,
       level,
       context,
-      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
-      url: typeof window !== 'undefined' ? window.location.href : undefined
+      userAgent:
+        typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+      url: typeof window !== 'undefined' ? window.location.href : undefined,
     };
 
     // Add to local storage
     this.errors.push(trackedError);
-    
+
     // Keep only recent errors
     if (this.errors.length > this.maxErrors) {
       this.errors = this.errors.slice(-this.maxErrors);
@@ -70,7 +77,7 @@ class ErrorTracker {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(error)
+        body: JSON.stringify(error),
       });
     } catch (err) {
       console.error('Failed to send error to monitoring:', err);
@@ -97,17 +104,17 @@ class ErrorTracker {
   getStats() {
     const now = new Date();
     const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    
+
     const recent = this.errors.filter(e => e.timestamp > last24Hours);
-    
+
     return {
       total: this.errors.length,
       last24Hours: recent.length,
       byLevel: {
         error: recent.filter(e => e.level === 'error').length,
         warning: recent.filter(e => e.level === 'warning').length,
-        info: recent.filter(e => e.level === 'info').length
-      }
+        info: recent.filter(e => e.level === 'info').length,
+      },
     };
   }
 }
@@ -129,7 +136,10 @@ export class ErrorBoundary extends React.Component<
   { children: React.ReactNode; fallback?: React.ReactNode },
   ErrorBoundaryState
 > {
-  constructor(props: { children: React.ReactNode; fallback?: React.ReactNode }) {
+  constructor(props: {
+    children: React.ReactNode;
+    fallback?: React.ReactNode;
+  }) {
     super(props);
     this.state = { hasError: false };
   }
@@ -141,7 +151,7 @@ export class ErrorBoundary extends React.Component<
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     errorTracker.trackError(error, {
       component: errorInfo.componentStack || 'Unknown',
-      action: 'React Error Boundary'
+      action: 'React Error Boundary',
     });
   }
 
@@ -151,13 +161,16 @@ export class ErrorBoundary extends React.Component<
         this.props.fallback || (
           <div className="min-h-screen flex items-center justify-center p-4">
             <div className="glass-card max-w-md w-full p-8 text-center">
-              <h2 className="text-2xl font-bold text-white mb-4">Something went wrong</h2>
+              <h2 className="text-2xl font-bold text-white mb-4">
+                Something went wrong
+              </h2>
               <p className="text-gray-400 mb-6">
-                We encountered an unexpected error. Please try refreshing the page.
+                We encountered an unexpected error. Please try refreshing the
+                page.
               </p>
               <button
                 onClick={() => window.location.reload()}
-                className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors"
+                className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
               >
                 Refresh Page
               </button>
@@ -177,26 +190,22 @@ export class ErrorBoundary extends React.Component<
 export function setupGlobalErrorHandlers() {
   // Handle unhandled promise rejections
   if (typeof window !== 'undefined') {
-    window.addEventListener('unhandledrejection', (event) => {
-      errorTracker.trackError(
-        event.reason || 'Unhandled Promise Rejection',
-        { action: 'unhandledrejection' }
-      );
+    window.addEventListener('unhandledrejection', event => {
+      errorTracker.trackError(event.reason || 'Unhandled Promise Rejection', {
+        action: 'unhandledrejection',
+      });
     });
 
     // Handle global errors
-    window.addEventListener('error', (event) => {
-      errorTracker.trackError(
-        event.error || event.message,
-        { 
-          action: 'global-error',
-          metadata: {
-            filename: event.filename,
-            lineno: event.lineno,
-            colno: event.colno
-          }
-        }
-      );
+    window.addEventListener('error', event => {
+      errorTracker.trackError(event.error || event.message, {
+        action: 'global-error',
+        metadata: {
+          filename: event.filename,
+          lineno: event.lineno,
+          colno: event.colno,
+        },
+      });
     });
   }
 }

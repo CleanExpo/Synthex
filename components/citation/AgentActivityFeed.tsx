@@ -25,7 +25,7 @@ interface AgentMeta {
 const AGENT_META: Record<AgentType, AgentMeta> = {
   sentinel: {
     Icon: Shield,
-    colour: 'text-orange-400 bg-orange-500/10',
+    colour: 'text-amber-400 bg-amber-500/10',
     label: 'Sentinel',
   },
   healing: {

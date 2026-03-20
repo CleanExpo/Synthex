@@ -107,7 +107,7 @@ const logoVariants = {
 const chevronVariants = {
   hover: {
     scale: 1.1,
-    backgroundColor: 'rgba(34, 211, 238, 0.15)',
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
     transition: { type: 'spring' as const, stiffness: 400, damping: 25 },
   },
   tap: { scale: 0.95 },
@@ -124,7 +124,7 @@ function ProjectCard({ project }: { project: Project }) {
       whileHover="hover"
       className={cn(
         'border-b border-[0.5px] border-white/[0.06] py-4 cursor-pointer',
-        'hover:bg-cyan-500/[0.02] transition-colors duration-200'
+        'hover:bg-amber-500/[0.02] transition-colors duration-200'
       )}
       onClick={() => setIsExpanded(!isExpanded)}
     >
@@ -146,8 +146,13 @@ function ProjectCard({ project }: { project: Project }) {
           {/* Content */}
           <div className="flex-1 min-w-0">
             {/* Title and Status Row */}
-            <motion.div className="flex items-center gap-3 mb-2" variants={childVariants}>
-              <h3 className="font-semibold text-white text-sm">{project.title}</h3>
+            <motion.div
+              className="flex items-center gap-3 mb-2"
+              variants={childVariants}
+            >
+              <h3 className="font-semibold text-white text-sm">
+                {project.title}
+              </h3>
               <div className="w-px h-3 bg-white/20" />
               <motion.span
                 whileHover={{ scale: 1.05 }}
@@ -155,7 +160,7 @@ function ProjectCard({ project }: { project: Project }) {
                 className={cn(
                   'px-2 py-0.5 rounded-sm text-xs font-medium transition-all duration-200',
                   project.status === 'Paid'
-                    ? 'text-cyan-400 bg-cyan-500/[0.08] border-[0.5px] border-cyan-500/20'
+                    ? 'text-amber-400 bg-amber-500/[0.08] border-[0.5px] border-amber-500/20'
                     : 'text-white/60 bg-white/[0.04] border-[0.5px] border-white/[0.06]'
                 )}
               >
@@ -164,7 +169,10 @@ function ProjectCard({ project }: { project: Project }) {
             </motion.div>
 
             {/* Price */}
-            <motion.p className="text-white/60 text-sm mb-4 font-medium" variants={childVariants}>
+            <motion.p
+              className="text-white/60 text-sm mb-4 font-medium"
+              variants={childVariants}
+            >
               {project.pricePerHour}
             </motion.p>
 
@@ -179,7 +187,10 @@ function ProjectCard({ project }: { project: Project }) {
                   className="overflow-hidden"
                 >
                   {/* Category Pills */}
-                  <motion.div className="flex gap-2 mb-4 flex-wrap" variants={childVariants}>
+                  <motion.div
+                    className="flex gap-2 mb-4 flex-wrap"
+                    variants={childVariants}
+                  >
                     {project.categories.map((category, index) => (
                       <motion.span
                         key={index}
@@ -190,7 +201,7 @@ function ProjectCard({ project }: { project: Project }) {
                         className={cn(
                           'px-4 py-2 text-white/60 rounded-sm text-sm font-medium cursor-pointer select-none',
                           'border-[0.5px] border-white/[0.06] bg-white/[0.03]',
-                          'hover:border-cyan-500/20 hover:text-cyan-400 transition-colors duration-200'
+                          'hover:border-amber-500/20 hover:text-amber-400 transition-colors duration-200'
                         )}
                       >
                         {category}
@@ -213,11 +224,17 @@ function ProjectCard({ project }: { project: Project }) {
                   >
                     <motion.div
                       whileHover={{ scale: 1.1, rotate: 5 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 400,
+                        damping: 25,
+                      }}
                     >
-                      <MapPin className="w-4 h-4 text-cyan-400/60" />
+                      <MapPin className="w-4 h-4 text-amber-400/60" />
                     </motion.div>
-                    <span className="text-xs font-medium">{project.location}</span>
+                    <span className="text-xs font-medium">
+                      {project.location}
+                    </span>
                     <div className="w-px h-3 bg-white/20 mx-1" />
                     <span className="text-xs">{project.timeAgo}</span>
                   </motion.div>
@@ -232,14 +249,14 @@ function ProjectCard({ project }: { project: Project }) {
           variants={chevronVariants}
           whileHover="hover"
           whileTap="tap"
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             setIsExpanded(!isExpanded);
           }}
           className={cn(
             'w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ml-3',
             'text-white/60 bg-white/[0.04] border-[0.5px] border-white/[0.06]',
-            'hover:border-cyan-500/20 transition-colors duration-200'
+            'hover:border-amber-500/20 transition-colors duration-200'
           )}
         >
           <motion.div
@@ -257,7 +274,11 @@ function ProjectCard({ project }: { project: Project }) {
 export function ProjectCards({ projects }: ProjectCardsProps) {
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
         {projects.map((project, index) => (
           <motion.div
             key={project.id}

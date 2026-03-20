@@ -48,14 +48,14 @@ export function BillingTab({
     starter: {
       label: 'Starter',
       price: '$99 AUD/mo',
-      colour: 'text-orange-300',
-      borderColour: 'border-orange-500/20',
+      colour: 'text-amber-300',
+      borderColour: 'border-amber-500/20',
     },
     pro: {
       label: 'Pro',
       price: '$249 AUD/mo',
-      colour: 'text-orange-300',
-      borderColour: 'border-orange-500/20',
+      colour: 'text-amber-300',
+      borderColour: 'border-amber-500/20',
     },
     growth: {
       label: 'Growth',
@@ -102,7 +102,7 @@ export function BillingTab({
                     <h3 className="text-base font-light text-white">
                       Free Plan
                     </h3>
-                    <Badge className="bg-orange-500/10 text-orange-400 border-[0.5px] border-orange-500/20 text-[10px]">
+                    <Badge className="bg-amber-500/10 text-amber-400 border-[0.5px] border-amber-500/20 text-[10px]">
                       Active
                     </Badge>
                   </div>
@@ -139,15 +139,15 @@ export function BillingTab({
             </div>
           ) : isStarterPlan ? (
             /* Starter Plan display */
-            <div className="p-5 border-[0.5px] border-orange-500/20 bg-orange-500/[0.03] rounded-sm">
+            <div className="p-5 border-[0.5px] border-amber-500/20 bg-amber-500/[0.03] rounded-sm">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-1.5">
-                    <Sparkles className="w-4 h-4 text-orange-400" />
+                    <Sparkles className="w-4 h-4 text-amber-400" />
                     <h3 className="text-base font-light text-white">
                       Starter Plan
                     </h3>
-                    <Badge className="bg-orange-500/10 text-orange-400 border-[0.5px] border-orange-500/20 text-[10px]">
+                    <Badge className="bg-amber-500/10 text-amber-400 border-[0.5px] border-amber-500/20 text-[10px]">
                       Active
                     </Badge>
                   </div>
@@ -180,7 +180,7 @@ export function BillingTab({
                       key={f}
                       className="flex items-center gap-1.5 text-xs text-white/50"
                     >
-                      <span className="w-1 h-1 rounded-full bg-orange-400/50 flex-shrink-0" />
+                      <span className="w-1 h-1 rounded-full bg-amber-400/50 flex-shrink-0" />
                       {f}
                     </div>
                   ))}
@@ -195,7 +195,7 @@ export function BillingTab({
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
                   <Sparkles
-                    className={`w-4 h-4 ${planMeta?.colour ?? 'text-orange-400'}`}
+                    className={`w-4 h-4 ${planMeta?.colour ?? 'text-amber-400'}`}
                   />
                   <h3
                     className={`text-base font-light ${planMeta?.colour ?? 'text-white'}`}
@@ -230,7 +230,7 @@ export function BillingTab({
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4 p-4 border-[0.5px] border-white/[0.06] bg-white/[0.02] rounded-sm">
-              <CreditCard className="w-6 h-6 text-orange-400/60" />
+              <CreditCard className="w-6 h-6 text-amber-400/60" />
               <div>
                 <p className="text-sm text-white">
                   {billing.paymentMethod} •••• {billing.cardLast4}

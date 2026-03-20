@@ -213,7 +213,7 @@ export function DistributionPanel({
   return (
     <div className="mt-4 rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 space-y-5">
       <div className="flex items-center gap-2">
-        <Share2 className="h-4 w-4 text-orange-400" />
+        <Share2 className="h-4 w-4 text-amber-400" />
         <h3 className="text-sm font-semibold text-white">
           Distribute Press Release
         </h3>
@@ -235,7 +235,7 @@ export function DistributionPanel({
                 className={cn(
                   'flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors',
                   isChecked
-                    ? 'border-orange-500/40 bg-orange-500/[0.06]'
+                    ? 'border-amber-500/40 bg-amber-500/[0.06]'
                     : 'border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12]'
                 )}
               >
@@ -243,7 +243,7 @@ export function DistributionPanel({
                   type="checkbox"
                   checked={isChecked}
                   onChange={() => toggleChannel(channel.id)}
-                  className="mt-0.5 accent-orange-500"
+                  className="mt-0.5 accent-amber-500"
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
@@ -273,7 +273,7 @@ export function DistributionPanel({
         type="button"
         onClick={handleDistribute}
         disabled={isDistributing || selectedChannels.length === 0}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold text-black transition-colors"
+        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold text-black transition-colors"
       >
         {isDistributing ? (
           <>
@@ -339,7 +339,7 @@ export function DistributionPanel({
                               href={channelMeta.submissionUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 text-xs text-orange-400 hover:text-orange-300 transition-colors"
+                              className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors"
                             >
                               <ExternalLink className="h-3 w-3" />
                               Open submission page
@@ -368,7 +368,7 @@ export function DistributionPanel({
                       href={dist.channelUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs text-orange-400 hover:text-orange-300 transition-colors"
+                      className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors"
                     >
                       <ExternalLink className="h-3 w-3" />
                       View published release

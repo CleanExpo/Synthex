@@ -49,7 +49,7 @@ export function FAQList({
               className="border-b border-white/10 pb-4 last:border-0"
             >
               <h4 className="font-medium text-white mb-2 flex items-start gap-2">
-                <HelpCircle className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
+                <HelpCircle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
                 {faq.question}
               </h4>
               <p className="text-sm text-gray-400 ml-6">{faq.answer}</p>

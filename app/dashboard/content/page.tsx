@@ -498,7 +498,7 @@ export default function ContentPage() {
       {isOwner && businesses.length > 0 && (
         <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Building className="h-4 w-4 text-orange-400" />
+            <Building className="h-4 w-4 text-amber-400" />
             <span className="text-sm text-white/40">Creating for:</span>
             <select
               value={activeBusiness?.organizationId ?? ''}
@@ -512,7 +512,7 @@ export default function ContentPage() {
                   toast.error('Failed to switch business');
                 }
               }}
-              className="bg-white/[0.02] border-[0.5px] border-orange-500/20 rounded-sm px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-orange-500/30 focus:outline-none appearance-none cursor-pointer"
+              className="bg-white/[0.02] border-[0.5px] border-amber-500/20 rounded-sm px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-amber-500/30 focus:outline-none appearance-none cursor-pointer"
             >
               {businesses.map(b => (
                 <option key={b.organizationId} value={b.organizationId}>
@@ -597,7 +597,7 @@ export default function ContentPage() {
         <div className="flex justify-end">
           <button
             onClick={() => setBulkWizardOpen(true)}
-            className="flex items-center gap-1.5 text-sm text-orange-400 hover:text-orange-300 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-amber-400 hover:text-amber-300 transition-colors"
           >
             <Layers className="h-4 w-4" />
             Schedule More Posts
@@ -628,7 +628,7 @@ export default function ContentPage() {
                 Platform Previews ({Object.keys(platformAdaptations).length}{' '}
                 platforms)
                 {isAdapting && (
-                  <span className="ml-2 text-orange-400 animate-pulse">
+                  <span className="ml-2 text-amber-400 animate-pulse">
                     Adapting...
                   </span>
                 )}
@@ -677,7 +677,7 @@ export default function ContentPage() {
             </h3>
             <Link
               href="/dashboard/psychology"
-              className="text-xs text-orange-400 hover:text-orange-300"
+              className="text-xs text-amber-400 hover:text-amber-300"
             >
               Full Analysis →
             </Link>
@@ -712,7 +712,7 @@ export default function ContentPage() {
                 psychologyScore.predictedEngagement.level === 'viral'
                   ? 'bg-green-500/20 text-green-400'
                   : psychologyScore.predictedEngagement.level === 'high'
-                    ? 'bg-orange-500/20 text-orange-400'
+                    ? 'bg-amber-500/20 text-amber-400'
                     : psychologyScore.predictedEngagement.level === 'medium'
                       ? 'bg-yellow-500/20 text-yellow-400'
                       : 'bg-red-500/20 text-red-400'

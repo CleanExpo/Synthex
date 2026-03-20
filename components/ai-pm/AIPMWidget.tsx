@@ -23,8 +23,8 @@ export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500/20 to-purple-500/20">
-            <Sparkles className="h-4 w-4 text-orange-400" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500/20 to-purple-500/20">
+            <Sparkles className="h-4 w-4 text-amber-400" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-white">
@@ -36,7 +36,7 @@ export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
         <Button
           variant="ghost"
           size="sm"
-          className="text-xs text-orange-400 hover:text-orange-300"
+          className="text-xs text-amber-400 hover:text-amber-300"
           onClick={onOpenChat}
         >
           Chat
@@ -62,7 +62,7 @@ export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
                   onOpenChat();
                 }
               }}
-              className="flex w-full items-start gap-3 rounded-lg border border-white/5 bg-white/[0.02] p-3 text-left transition-colors hover:border-orange-500/20 hover:bg-orange-500/5"
+              className="flex w-full items-start gap-3 rounded-lg border border-white/5 bg-white/[0.02] p-3 text-left transition-colors hover:border-amber-500/20 hover:bg-amber-500/5"
             >
               <Zap
                 className={cn(
@@ -73,7 +73,7 @@ export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
                       ? 'text-green-400'
                       : suggestion.type === 'optimization'
                         ? 'text-yellow-400'
-                        : 'text-orange-400'
+                        : 'text-amber-400'
                 )}
               />
               <div className="min-w-0">
@@ -98,7 +98,7 @@ export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="mt-2 text-xs text-orange-400 hover:text-orange-300"
+            className="mt-2 text-xs text-amber-400 hover:text-amber-300"
             onClick={onOpenChat}
           >
             Start a conversation

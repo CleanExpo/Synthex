@@ -804,7 +804,7 @@ export function VaultImportDialog({
           <>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-white">
-                <FileText className="w-5 h-5 text-orange-400" />
+                <FileText className="w-5 h-5 text-amber-400" />
                 Import Credentials from Document
               </DialogTitle>
               <DialogDescription className="text-zinc-400">
@@ -826,12 +826,12 @@ export function VaultImportDialog({
               className={`
                 mt-2 border-2 border-dashed rounded-xl p-10 flex flex-col items-center gap-3
                 cursor-pointer transition-colors
-                ${isDragging ? 'border-orange-400 bg-orange-400/10' : 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10'}
+                ${isDragging ? 'border-amber-400 bg-amber-400/10' : 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10'}
               `}
             >
               {isParsing ? (
                 <>
-                  <Loader2 className="w-10 h-10 text-orange-400 animate-spin" />
+                  <Loader2 className="w-10 h-10 text-amber-400 animate-spin" />
                   <p className="text-zinc-300 text-sm font-medium">
                     Reading and extracting credentials…
                   </p>
@@ -879,7 +879,7 @@ export function VaultImportDialog({
                   <button
                     type="button"
                     onClick={selectAllOrgs}
-                    className="text-orange-400 text-xs hover:text-orange-300"
+                    className="text-amber-400 text-xs hover:text-amber-300"
                   >
                     Select all
                   </button>
@@ -897,13 +897,13 @@ export function VaultImportDialog({
                           flex items-center gap-2 rounded-lg px-3 py-2 text-sm border transition-colors text-left
                           ${
                             selected
-                              ? 'border-orange-500 bg-orange-500/10 text-orange-300'
+                              ? 'border-amber-500 bg-amber-500/10 text-amber-300'
                               : 'border-white/10 bg-white/5 text-zinc-400 hover:border-white/30'
                           }
                         `}
                       >
                         <div
-                          className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0 ${selected ? 'bg-orange-500 border-orange-500' : 'border-white/30'}`}
+                          className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0 ${selected ? 'bg-amber-500 border-amber-500' : 'border-white/30'}`}
                         >
                           {selected && (
                             <span className="text-white text-[9px] leading-none">
@@ -953,9 +953,9 @@ export function VaultImportDialog({
             <DialogHeader>
               <div className="flex items-center justify-between">
                 <DialogTitle className="flex items-center gap-2 text-white">
-                  <CheckCircle className="w-5 h-5 text-orange-400" />
+                  <CheckCircle className="w-5 h-5 text-amber-400" />
                   Review Credentials
-                  <Badge className="ml-1 bg-orange-500/20 text-orange-300 border-orange-500/30">
+                  <Badge className="ml-1 bg-amber-500/20 text-amber-300 border-amber-500/30">
                     {entries.length} found
                   </Badge>
                   {lowConfidenceCount > 0 && (
@@ -1154,7 +1154,7 @@ export function VaultImportDialog({
                         type="checkbox"
                         checked={allVisibleChecked}
                         onChange={toggleCheckAll}
-                        className="rounded border-white/20 bg-white/5 accent-orange-500 cursor-pointer"
+                        className="rounded border-white/20 bg-white/5 accent-amber-500 cursor-pointer"
                         title="Select all visible"
                       />
                     </th>
@@ -1193,7 +1193,7 @@ export function VaultImportDialog({
                             type="checkbox"
                             checked={checkedIds.has(entry.id)}
                             onChange={() => toggleCheck(entry.id)}
-                            className="rounded border-white/20 bg-white/5 accent-orange-500 cursor-pointer"
+                            className="rounded border-white/20 bg-white/5 accent-amber-500 cursor-pointer"
                           />
                         </td>
                         {/* Service */}
@@ -1330,7 +1330,7 @@ export function VaultImportDialog({
               <Button
                 onClick={confirmImport}
                 disabled={isImporting || validCount === 0}
-                className="bg-orange-600 hover:bg-orange-500 text-white gap-2 text-xs"
+                className="bg-amber-600 hover:bg-amber-500 text-white gap-2 text-xs"
               >
                 {isImporting ? (
                   <>
@@ -1404,7 +1404,7 @@ export function VaultImportDialog({
             <DialogFooter>
               <Button
                 onClick={() => handleOpenChange(false)}
-                className="bg-orange-600 hover:bg-orange-500 text-white"
+                className="bg-amber-600 hover:bg-amber-500 text-white"
               >
                 Done
               </Button>

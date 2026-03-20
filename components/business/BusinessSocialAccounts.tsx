@@ -83,9 +83,9 @@ const PLATFORM_META: Record<
   reddit: {
     name: 'Reddit',
     icon: Link2,
-    color: 'text-orange-400',
-    bgColor: 'bg-orange-500/10',
-    borderColor: 'border-orange-500/20',
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/20',
   },
   threads: {
     name: 'Threads',
@@ -279,7 +279,7 @@ export function BusinessSocialAccounts({
       )}
 
       {/* Quick connect CTA */}
-      <div className="pt-2 border-t border-orange-500/10">
+      <div className="pt-2 border-t border-amber-500/10">
         <Button
           variant="outline"
           size="sm"

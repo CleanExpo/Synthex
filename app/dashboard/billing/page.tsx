@@ -203,7 +203,7 @@ export default function BillingPage() {
             {unlimited ? (
               <>
                 {currentUsage} /{' '}
-                <span className="text-orange-400">Unlimited</span>
+                <span className="text-amber-400">Unlimited</span>
               </>
             ) : (
               <>
@@ -213,13 +213,13 @@ export default function BillingPage() {
           </span>
         </div>
         {unlimited ? (
-          <span className="text-[10px] text-orange-400 uppercase tracking-[0.15em]">
+          <span className="text-[10px] text-amber-400 uppercase tracking-[0.15em]">
             Unlimited
           </span>
         ) : (
           <div className="h-px bg-white/[0.06] overflow-hidden">
             <div
-              className="h-full bg-orange-500 transition-all duration-300"
+              className="h-full bg-amber-500 transition-all duration-300"
               style={{ width: `${percentage}%` }}
             />
           </div>
@@ -291,7 +291,7 @@ export default function BillingPage() {
             </span>
           </div>
           {isFreePlan ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-[9px] uppercase tracking-[0.15em] bg-orange-500/[0.08] text-orange-400 border-[0.5px] border-orange-500/20">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-[9px] uppercase tracking-[0.15em] bg-amber-500/[0.08] text-amber-400 border-[0.5px] border-amber-500/20">
               Free Plan
             </span>
           ) : (
@@ -313,7 +313,7 @@ export default function BillingPage() {
             <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mb-1">
               Plan Type
             </p>
-            <p className="font-mono text-2xl font-medium text-orange-400 tabular-nums capitalize">
+            <p className="font-mono text-2xl font-medium text-amber-400 tabular-nums capitalize">
               {subscription?.plan || 'Free'}
             </p>
           </div>
@@ -343,17 +343,17 @@ export default function BillingPage() {
 
         {/* Free plan upgrade prompt */}
         {isFreePlan && (
-          <div className="mx-6 mb-6 flex items-center justify-between gap-3 p-4 bg-orange-500/[0.05] border-[0.5px] border-orange-500/20 rounded-sm">
+          <div className="mx-6 mb-6 flex items-center justify-between gap-3 p-4 bg-amber-500/[0.05] border-[0.5px] border-amber-500/20 rounded-sm">
             <div className="flex items-center gap-3">
-              <Zap className="w-3.5 h-3.5 text-orange-400 shrink-0" />
-              <p className="text-xs text-orange-200/70">
+              <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <p className="text-xs text-amber-200/70">
                 Upgrade to unlock more social accounts, unlimited AI posts, and
                 advanced analytics.
               </p>
             </div>
             <button
               onClick={() => router.push('/pricing')}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-400 text-[#050505] text-xs font-semibold rounded-sm transition-colors"
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-[#050505] text-xs font-semibold rounded-sm transition-colors"
             >
               View Plans
             </button>
@@ -390,7 +390,7 @@ export default function BillingPage() {
               </p>
               <button
                 onClick={() => router.push('/pricing')}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-orange-500 hover:bg-orange-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-amber-500 hover:bg-amber-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors"
               >
                 <Zap className="w-3.5 h-3.5" />
                 Explore Plans &amp; Pricing
@@ -407,7 +407,7 @@ export default function BillingPage() {
                 <button
                   onClick={openBillingPortal}
                   disabled={portalLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-orange-500 hover:bg-orange-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors disabled:opacity-60"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-amber-500 hover:bg-amber-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors disabled:opacity-60"
                 >
                   {portalLoading ? (
                     'Opening Portal…'
@@ -454,15 +454,12 @@ export default function BillingPage() {
           {renderUsageRow('Social Accounts', 'socialAccounts', 2)}
           {renderUsageRow('AI Personas', 'personas', 1)}
 
-          <div className="pt-2 px-4 py-3 bg-orange-500/[0.05] border-[0.5px] border-orange-500/20 rounded-sm">
-            <p className="text-xs text-orange-200/70">
+          <div className="pt-2 px-4 py-3 bg-amber-500/[0.05] border-[0.5px] border-amber-500/20 rounded-sm">
+            <p className="text-xs text-amber-200/70">
               {isFreePlan ? (
                 <>
                   Want more?{' '}
-                  <a
-                    href="/pricing"
-                    className="underline hover:text-orange-100"
-                  >
+                  <a href="/pricing" className="underline hover:text-amber-100">
                     Upgrade your plan
                   </a>{' '}
                   to unlock higher limits and advanced features.
@@ -475,10 +472,7 @@ export default function BillingPage() {
               ) : (
                 <>
                   Need more?{' '}
-                  <a
-                    href="/pricing"
-                    className="underline hover:text-orange-100"
-                  >
+                  <a href="/pricing" className="underline hover:text-amber-100">
                     Upgrade your plan
                   </a>{' '}
                   to unlock higher limits and advanced features.

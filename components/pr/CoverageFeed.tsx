@@ -154,7 +154,7 @@ export function CoverageFeed() {
     <div>
       {/* Poll controls */}
       <div className="flex items-center gap-3 mb-6 p-4 bg-white/5 border border-white/10 rounded-xl">
-        <Globe className="h-5 w-5 text-orange-400 flex-shrink-0" />
+        <Globe className="h-5 w-5 text-amber-400 flex-shrink-0" />
         <div className="flex-1">
           <p className="text-sm font-medium text-white mb-2">
             Poll for New Coverage
@@ -165,13 +165,13 @@ export function CoverageFeed() {
               value={brandName}
               onChange={e => setBrandName(e.target.value)}
               placeholder="Your brand name (e.g. Acme Corp)"
-              className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+              className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
               onKeyDown={e => e.key === 'Enter' && handlePoll()}
             />
             <button
               onClick={handlePoll}
               disabled={polling || !brandName.trim()}
-              className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
             >
               {polling ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -217,7 +217,7 @@ export function CoverageFeed() {
                       href={item.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm font-medium text-white hover:text-orange-300 transition-colors line-clamp-2"
+                      className="text-sm font-medium text-white hover:text-amber-300 transition-colors line-clamp-2"
                     >
                       {item.title}
                     </a>
@@ -228,7 +228,7 @@ export function CoverageFeed() {
                       {item.journalist && (
                         <>
                           <span className="text-gray-600">·</span>
-                          <span className="text-xs text-orange-300">
+                          <span className="text-xs text-amber-300">
                             {item.journalist.name}
                           </span>
                         </>

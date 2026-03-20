@@ -94,7 +94,7 @@ export function VideoProgress({ status, errorMessage }: VideoProgressProps) {
         animated
       />
       <div className="flex items-center gap-2">
-        <Loader2 className="w-3.5 h-3.5 text-orange-400 animate-spin" />
+        <Loader2 className="w-3.5 h-3.5 text-amber-400 animate-spin" />
         <span className="text-sm text-gray-400">
           {currentStep < PROGRESS_STEPS.length
             ? PROGRESS_STEPS[currentStep].label

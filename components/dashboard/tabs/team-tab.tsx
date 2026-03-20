@@ -13,7 +13,7 @@ export function TeamTab() {
         {/* Header */}
         <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06]">
           <div className="flex items-center gap-2 mb-0.5">
-            <Users className="h-3.5 w-3.5 text-orange-400" />
+            <Users className="h-3.5 w-3.5 text-amber-400" />
             <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
               Team Collaboration
             </span>

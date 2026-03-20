@@ -73,7 +73,7 @@ export function FeatureCard({
     >
       {/* Badge */}
       {feature.badge && (
-        <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-300 text-xs font-medium">
+        <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-medium">
           {feature.badge}
         </div>
       )}
@@ -83,7 +83,7 @@ export function FeatureCard({
         <div
           className={cn(
             'absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full blur-3xl',
-            feature.iconColor || 'bg-orange-500/20'
+            feature.iconColor || 'bg-amber-500/20'
           )}
         />
       </div>
@@ -102,7 +102,7 @@ export function FeatureCard({
               isCompact ? 'w-10 h-10 mb-2' : 'w-12 h-12 mb-4',
               feature.iconColor
                 ? `bg-gradient-to-br ${feature.iconColor}`
-                : 'bg-gradient-to-br from-orange-500/20 to-orange-500/20 border border-orange-500/20'
+                : 'bg-gradient-to-br from-amber-500/20 to-amber-500/20 border border-amber-500/20'
             )}
           >
             <Icon
@@ -136,7 +136,7 @@ export function FeatureCard({
         {feature.stats && isDetailed && (
           <div className="mt-4 pt-4 border-t border-white/10">
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-400 bg-clip-text text-transparent">
+              <span className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-amber-400 bg-clip-text text-transparent">
                 {feature.stats.value}
               </span>
               <span className="text-sm text-slate-500">
@@ -148,7 +148,7 @@ export function FeatureCard({
 
         {/* Arrow link indicator */}
         {feature.href && (
-          <div className="mt-4 flex items-center gap-2 text-orange-400 text-sm font-medium group-hover:gap-3 transition-all">
+          <div className="mt-4 flex items-center gap-2 text-amber-400 text-sm font-medium group-hover:gap-3 transition-all">
             Learn more
             <ArrowRight className="w-4 h-4" />
           </div>
@@ -227,7 +227,7 @@ export function FeatureSection({
     <section className={cn('py-20', className)}>
       <div className="text-center mb-16">
         {subtitle && (
-          <span className="inline-block px-4 py-1.5 mb-4 text-sm font-medium text-orange-300 bg-orange-500/10 border border-orange-500/20 rounded-full">
+          <span className="inline-block px-4 py-1.5 mb-4 text-sm font-medium text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-full">
             {subtitle}
           </span>
         )}

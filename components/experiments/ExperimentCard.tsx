@@ -64,7 +64,7 @@ interface ExperimentCardProps {
 const TYPE_COLOURS: Record<string, string> = {
   'title-tag': 'bg-blue-500/20 text-blue-300',
   'meta-description': 'bg-purple-500/20 text-purple-300',
-  h1: 'bg-orange-500/20 text-orange-300',
+  h1: 'bg-amber-500/20 text-amber-300',
   schema: 'bg-green-500/20 text-green-300',
   'content-structure': 'bg-amber-500/20 text-amber-300',
   'internal-links': 'bg-rose-500/20 text-rose-300',
@@ -203,8 +203,8 @@ export function ExperimentCard({ experiment, onRefresh }: ExperimentCardProps) {
               {experiment.originalValue}
             </p>
           </div>
-          <div className="p-3 bg-orange-500/5 border border-orange-500/20 rounded-lg">
-            <p className="text-xs font-medium text-orange-400 mb-1">Variant</p>
+          <div className="p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg">
+            <p className="text-xs font-medium text-amber-400 mb-1">Variant</p>
             <p className="text-sm text-white break-words line-clamp-3">
               {experiment.variantValue}
             </p>

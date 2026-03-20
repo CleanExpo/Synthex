@@ -495,7 +495,7 @@ export default function SchemaMarkupManagerPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Code className="w-8 h-8 text-orange-400" />
+            <Code className="w-8 h-8 text-amber-400" />
             Schema Markup Manager
           </h1>
           <p className="text-gray-400 mt-1">
@@ -511,14 +511,14 @@ export default function SchemaMarkupManagerPage() {
         description="Generate and validate JSON-LD structured data for enhanced search visibility and rich snippets."
       >
         {/* Tab Bar */}
-        <div className="flex items-center gap-2 border-b border-orange-500/10 pb-0">
+        <div className="flex items-center gap-2 border-b border-amber-500/10 pb-0">
           {TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
               className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30 border-b-transparent'
+                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 border-b-transparent'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -533,7 +533,7 @@ export default function SchemaMarkupManagerPage() {
         {activeTab === 'editor' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Form */}
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
               <CardHeader>
                 <CardTitle className="text-white">
                   Schema Configuration
@@ -561,7 +561,7 @@ export default function SchemaMarkupManagerPage() {
                   <Button
                     onClick={handleGenerate}
                     disabled={isGenerating}
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25"
+                    className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25"
                   >
                     {isGenerating ? (
                       <>
@@ -580,7 +580,7 @@ export default function SchemaMarkupManagerPage() {
                       onClick={handleValidateGenerated}
                       disabled={hook.isValidating}
                       variant="outline"
-                      className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                      className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
                     >
                       {hook.isValidating ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -624,10 +624,10 @@ export default function SchemaMarkupManagerPage() {
         {activeTab === 'validator' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Input */}
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
-                  <FileCode className="w-5 h-5 text-orange-400" />
+                  <FileCode className="w-5 h-5 text-amber-400" />
                   Paste JSON-LD
                 </CardTitle>
               </CardHeader>
@@ -638,12 +638,12 @@ export default function SchemaMarkupManagerPage() {
                   placeholder={
                     '{\n  "@context": "https://schema.org",\n  "@type": "Organization",\n  "name": "Your Company"\n}'
                   }
-                  className="w-full h-72 px-4 py-3 rounded-lg bg-black/30 border border-orange-500/20 text-gray-200 font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-orange-500/50 focus:border-orange-500/50 placeholder-gray-600"
+                  className="w-full h-72 px-4 py-3 rounded-lg bg-black/30 border border-amber-500/20 text-gray-200 font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 placeholder-gray-600"
                 />
                 <Button
                   onClick={handleValidatorSubmit}
                   disabled={hook.isValidating || !validatorInput.trim()}
-                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
+                  className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white"
                 >
                   {hook.isValidating ? (
                     <>
@@ -661,10 +661,10 @@ export default function SchemaMarkupManagerPage() {
             </Card>
 
             {/* Results */}
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
-                  <Search className="w-5 h-5 text-orange-400" />
+                  <Search className="w-5 h-5 text-amber-400" />
                   Validation Results
                 </CardTitle>
               </CardHeader>
@@ -758,8 +758,8 @@ export default function SchemaMarkupManagerPage() {
 
                     {/* Fix suggestions */}
                     {hook.validationResult.errors.length > 0 && (
-                      <div className="p-3 rounded-lg bg-orange-500/5 border border-orange-500/20">
-                        <p className="text-xs text-orange-400 font-medium mb-1">
+                      <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                        <p className="text-xs text-amber-400 font-medium mb-1">
                           Fix Issues
                         </p>
                         <p className="text-xs text-gray-400">
@@ -782,10 +782,10 @@ export default function SchemaMarkupManagerPage() {
         {activeTab === 'extractor' && (
           <div className="space-y-6">
             {/* URL Input */}
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
-                  <Globe className="w-5 h-5 text-orange-400" />
+                  <Globe className="w-5 h-5 text-amber-400" />
                   Extract Schema from URL
                 </CardTitle>
               </CardHeader>
@@ -796,12 +796,12 @@ export default function SchemaMarkupManagerPage() {
                     onChange={e => setExtractUrl(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleExtract()}
                     placeholder="https://example.com/page"
-                    className="flex-1 bg-black/30 border-orange-500/20 text-white placeholder-gray-600 focus:border-orange-500/50"
+                    className="flex-1 bg-black/30 border-amber-500/20 text-white placeholder-gray-600 focus:border-amber-500/50"
                   />
                   <Button
                     onClick={handleExtract}
                     disabled={hook.isExtracting || !extractUrl.trim()}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
+                    className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white"
                   >
                     {hook.isExtracting ? (
                       <>
@@ -829,7 +829,7 @@ export default function SchemaMarkupManagerPage() {
                       {hook.extractionResult.totalFound}
                     </span>{' '}
                     schema(s) at{' '}
-                    <span className="text-orange-400">
+                    <span className="text-amber-400">
                       {hook.extractionResult.url}
                     </span>
                   </p>
@@ -843,12 +843,12 @@ export default function SchemaMarkupManagerPage() {
                 {hook.extractionResult.schemas.map((s, i) => (
                   <Card
                     key={i}
-                    className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10"
+                    className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10"
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <span className="px-2 py-0.5 text-xs font-semibold bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-full">
+                          <span className="px-2 py-0.5 text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full">
                             {s.type}
                           </span>
                           <ScoreBadge score={s.validationResult.score} />
@@ -879,7 +879,7 @@ export default function SchemaMarkupManagerPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleEditExtracted(s.data)}
-                            className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 h-8 text-xs"
+                            className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10 h-8 text-xs"
                           >
                             Edit in Editor
                           </Button>
@@ -933,7 +933,7 @@ export default function SchemaMarkupManagerPage() {
                   onClick={() => setTemplateCategory(cat.id)}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                     templateCategory === cat.id
-                      ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                       : 'text-gray-400 hover:text-white bg-white/5 hover:bg-white/10'
                   }`}
                 >
@@ -955,7 +955,7 @@ export default function SchemaMarkupManagerPage() {
                 <p>No templates loaded yet</p>
                 <Button
                   onClick={handleLoadTemplates}
-                  className="mt-4 bg-orange-500/20 text-orange-400 border border-orange-500/30 hover:bg-orange-500/30"
+                  className="mt-4 bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30"
                 >
                   Load Templates
                 </Button>
@@ -967,11 +967,11 @@ export default function SchemaMarkupManagerPage() {
                 {filteredTemplates.map(template => (
                   <Card
                     key={template.id}
-                    className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 hover:border-orange-500/30 transition-all duration-200"
+                    className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 hover:border-amber-500/30 transition-all duration-200"
                   >
                     <CardContent className="p-5">
                       <div className="flex items-start justify-between mb-3">
-                        <span className="px-2 py-0.5 text-xs font-semibold bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-full">
+                        <span className="px-2 py-0.5 text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full">
                           {template.type}
                         </span>
                         <StarRating count={template.popularity} />
@@ -989,7 +989,7 @@ export default function SchemaMarkupManagerPage() {
                             template.fields as Record<string, unknown>
                           )
                         }
-                        className="w-full bg-orange-500/20 text-orange-400 border border-orange-500/30 hover:bg-orange-500/30 text-xs"
+                        className="w-full bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 text-xs"
                       >
                         Use Template
                       </Button>
@@ -1015,7 +1015,7 @@ export default function SchemaMarkupManagerPage() {
                 </p>
                 <Button
                   onClick={() => setActiveTab('editor')}
-                  className="mt-4 bg-orange-500/20 text-orange-400 border border-orange-500/30 hover:bg-orange-500/30"
+                  className="mt-4 bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30"
                 >
                   Go to Editor
                 </Button>
@@ -1036,7 +1036,7 @@ export default function SchemaMarkupManagerPage() {
                       onClick={() => hook.generatePreview(generatedSchema)}
                       variant="outline"
                       size="sm"
-                      className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                      className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
                     >
                       <Sparkles className="w-4 h-4 mr-1" />
                       Refresh Preview
@@ -1051,13 +1051,13 @@ export default function SchemaMarkupManagerPage() {
                       <span className="text-sm text-gray-400">
                         Preview type:
                       </span>
-                      <span className="px-2 py-0.5 text-xs font-semibold bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-full capitalize">
+                      <span className="px-2 py-0.5 text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full capitalize">
                         {hook.richPreview.previewType.replace('-', ' ')}
                       </span>
                     </div>
 
                     {/* Google-like container */}
-                    <div className="p-6 rounded-xl bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+                    <div className="p-6 rounded-xl bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
                       <div className="flex items-center gap-2 mb-4">
                         <Search className="w-4 h-4 text-gray-500" />
                         <div className="flex-1 h-8 rounded-full bg-white/10 border border-white/20 flex items-center px-3">
@@ -1080,7 +1080,7 @@ export default function SchemaMarkupManagerPage() {
                     <div className="text-center py-12 text-gray-500">
                       <Button
                         onClick={() => hook.generatePreview(generatedSchema)}
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
+                        className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white"
                       >
                         <Sparkles className="w-4 h-4 mr-2" />
                         Generate SERP Preview

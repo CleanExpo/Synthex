@@ -61,7 +61,7 @@ export default function AIPMPanel({ open, onOpenChange }: AIPMPanelProps) {
           className="w-full border-white/[0.08] bg-gray-950/95 backdrop-blur-xl sm:max-w-lg p-0"
         >
           <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500/20 to-purple-500/20 ring-1 ring-white/10">
+            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/20 to-purple-500/20 ring-1 ring-white/10">
               <Lock className="h-10 w-10 text-gray-400" />
             </div>
             <h3 className="text-xl font-bold text-white">AI Project Manager</h3>
@@ -72,13 +72,13 @@ export default function AIPMPanel({ open, onOpenChange }: AIPMPanelProps) {
             </p>
             <p className="mt-4 text-sm text-gray-300">
               Available on the{' '}
-              <span className="font-semibold text-orange-400">
+              <span className="font-semibold text-amber-400">
                 Business plan
               </span>{' '}
               ($399/month)
             </p>
             <Button
-              className="mt-6 bg-gradient-to-r from-orange-500 to-purple-500 text-white hover:from-orange-400 hover:to-purple-400"
+              className="mt-6 bg-gradient-to-r from-amber-500 to-purple-500 text-white hover:from-amber-400 hover:to-purple-400"
               onClick={() => {
                 onOpenChange(false);
                 // Navigate to settings/subscription
@@ -114,7 +114,7 @@ export default function AIPMPanel({ open, onOpenChange }: AIPMPanelProps) {
               </Button>
             )}
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-orange-400" />
+              <Sparkles className="h-5 w-5 text-amber-400" />
               <SheetTitle className="text-white">
                 {activeConversation
                   ? activeConversation.title.substring(0, 40) +
@@ -141,20 +141,20 @@ export default function AIPMPanel({ open, onOpenChange }: AIPMPanelProps) {
             {isLoading ? (
               <div className="flex h-40 items-center justify-center">
                 <Loader2
-                  className="h-6 w-6 animate-spin text-orange-400"
+                  className="h-6 w-6 animate-spin text-amber-400"
                   role="status"
                   aria-label="Loading conversations"
                 />
               </div>
             ) : conversations.length === 0 ? (
               <div className="flex flex-col items-center justify-center px-8 py-12 text-center">
-                <Sparkles className="mb-4 h-12 w-12 text-orange-400/50" />
+                <Sparkles className="mb-4 h-12 w-12 text-amber-400/50" />
                 <p className="text-sm text-gray-400">
                   No conversations yet. Start a new chat with your AI Project
                   Manager.
                 </p>
                 <Button
-                  className="mt-4 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30"
+                  className="mt-4 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
                   onClick={handleNewConversation}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -214,8 +214,8 @@ function ConversationItem({
       onClick={onClick}
       className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/5"
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-500/10">
-        <Sparkles className="h-4 w-4 text-orange-400" />
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+        <Sparkles className="h-4 w-4 text-amber-400" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-white">

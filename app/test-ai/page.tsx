@@ -299,7 +299,7 @@ The future is here, and it's powered by AI. 💡
                       <Label className="text-sm text-gray-600">
                         Viral Score
                       </Label>
-                      <div className="text-2xl font-bold text-orange-600">
+                      <div className="text-2xl font-bold text-amber-600">
                         {generatedContent.viralScore || 'N/A'}/10
                       </div>
                     </div>

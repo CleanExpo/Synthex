@@ -99,7 +99,7 @@ const OUTCOMES = [
 const SEVERITY_COLOURS: Record<string, string> = {
   low: 'bg-gray-500/20 text-gray-300',
   medium: 'bg-yellow-500/20 text-yellow-400',
-  high: 'bg-orange-500/20 text-orange-400',
+  high: 'bg-amber-500/20 text-amber-400',
   critical: 'bg-red-500/20 text-red-400',
 };
 
@@ -350,7 +350,7 @@ export function AuditLogViewer() {
                     role="button"
                     tabIndex={0}
                     aria-label={`View audit log: ${entry.action} — ${entry.user?.email ?? entry.userId.slice(0, 8)}`}
-                    className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-orange-500"
+                    className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-amber-500"
                     onClick={() => setSelectedEntry(entry)}
                     onKeyDown={e => {
                       if (e.key === 'Enter' || e.key === ' ') {

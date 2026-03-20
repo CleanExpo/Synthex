@@ -21,7 +21,7 @@ export function PersonaStatsGrid({ stats }: PersonaStatsGridProps) {
           <CardTitle className="text-sm font-medium text-slate-400">
             Active Personas
           </CardTitle>
-          <User className="h-4 w-4 text-orange-500" />
+          <User className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">
@@ -36,7 +36,7 @@ export function PersonaStatsGrid({ stats }: PersonaStatsGridProps) {
           <CardTitle className="text-sm font-medium text-slate-400">
             Training Data
           </CardTitle>
-          <Brain className="h-4 w-4 text-orange-500" />
+          <Brain className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">
@@ -51,7 +51,7 @@ export function PersonaStatsGrid({ stats }: PersonaStatsGridProps) {
           <CardTitle className="text-sm font-medium text-slate-400">
             Avg Accuracy
           </CardTitle>
-          <BarChart3 className="h-4 w-4 text-orange-500" />
+          <BarChart3 className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">
@@ -66,7 +66,7 @@ export function PersonaStatsGrid({ stats }: PersonaStatsGridProps) {
           <CardTitle className="text-sm font-medium text-slate-400">
             Content Sources
           </CardTitle>
-          <FileText className="h-4 w-4 text-orange-500" />
+          <FileText className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">

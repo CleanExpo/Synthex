@@ -151,7 +151,7 @@ export function DeliverableForm({
               }
               placeholder="Deliverable title"
               required
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent"
             />
           </div>
 
@@ -167,7 +167,7 @@ export function DeliverableForm({
               }
               placeholder="Requirements or notes..."
               rows={2}
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent resize-none"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent resize-none"
             />
           </div>
 
@@ -185,7 +185,7 @@ export function DeliverableForm({
                     type: e.target.value as DeliverableType,
                   })
                 }
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent"
               >
                 {DELIVERABLE_TYPES.map(type => (
                   <option key={type} value={type} className="bg-surface-base">
@@ -203,7 +203,7 @@ export function DeliverableForm({
                 onChange={e =>
                   setFormData({ ...formData, platform: e.target.value })
                 }
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent"
               >
                 <option value="" className="bg-surface-base">
                   Select platform
@@ -235,7 +235,7 @@ export function DeliverableForm({
                     status: e.target.value as DeliverableStatus,
                   })
                 }
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent"
               >
                 {DELIVERABLE_STATUSES.map(status => (
                   <option
@@ -258,7 +258,7 @@ export function DeliverableForm({
                 onChange={e =>
                   setFormData({ ...formData, dueDate: e.target.value })
                 }
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent"
               />
             </div>
           </div>
@@ -275,7 +275,7 @@ export function DeliverableForm({
                 setFormData({ ...formData, contentUrl: e.target.value })
               }
               placeholder="https://..."
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent"
             />
           </div>
 
@@ -294,7 +294,7 @@ export function DeliverableForm({
               disabled={isLoading || !formData.title.trim()}
               className={cn(
                 'flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-colors',
-                'bg-orange-600 hover:bg-orange-500 text-white',
+                'bg-amber-600 hover:bg-amber-500 text-white',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
             >

@@ -28,7 +28,7 @@ export function PassageHighlighter({ passages }: PassageHighlighterProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-white text-lg flex items-center gap-2">
-            <Eye className="h-5 w-5 text-orange-400" />
+            <Eye className="h-5 w-5 text-amber-400" />
             Citable Passages
           </CardTitle>
           <span className="text-sm text-gray-400">
@@ -76,7 +76,7 @@ export function PassageHighlighter({ passages }: PassageHighlighterProps) {
                   </p>
                   <div className="flex gap-2 mt-2">
                     {passage.answerFirst && (
-                      <Badge className="bg-orange-500/20 text-orange-400 text-xs">
+                      <Badge className="bg-amber-500/20 text-amber-400 text-xs">
                         Answer-First
                       </Badge>
                     )}

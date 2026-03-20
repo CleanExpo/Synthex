@@ -48,13 +48,13 @@ const CATEGORY_STYLES: Record<
     label: 'Creation',
   },
   equipment: {
-    bg: 'bg-orange-500/10',
-    text: 'text-orange-400',
+    bg: 'bg-amber-500/10',
+    text: 'text-amber-400',
     label: 'Equipment',
   },
   software: {
-    bg: 'bg-orange-500/10',
-    text: 'text-orange-400',
+    bg: 'bg-amber-500/10',
+    text: 'text-amber-400',
     label: 'Software',
   },
   promotion: {

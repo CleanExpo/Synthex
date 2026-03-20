@@ -245,7 +245,7 @@ export default function SponsorCRMPage() {
             setEditingSponsor(null);
             setShowSponsorForm(true);
           }}
-          className="flex items-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-medium transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-medium transition-colors"
         >
           <Plus className="h-4 w-4" />
           Add Sponsor
@@ -349,7 +349,7 @@ export default function SponsorCRMPage() {
                     setEditingDeal(null);
                     setShowDealForm(true);
                   }}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 rounded-lg text-sm transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 rounded-lg text-sm transition-colors"
                 >
                   <Plus className="h-4 w-4" />
                   Add Deal

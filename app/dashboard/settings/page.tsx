@@ -115,7 +115,7 @@ function SettingsPageContent() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors disabled:opacity-60"
+              className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors disabled:opacity-60"
             >
               <Save className="h-3.5 w-3.5" />
               {isSaving ? 'Saving…' : 'Save Changes'}
@@ -158,7 +158,7 @@ function SettingsPageContent() {
             <Link href="/dashboard/settings/brand-profile">
               <div className="flex items-center justify-between py-4 px-5 border-[0.5px] border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/[0.12] rounded-sm transition-colors cursor-pointer">
                 <div className="flex items-center gap-3">
-                  <Building className="w-4 h-4 text-orange-400" />
+                  <Building className="w-4 h-4 text-amber-400" />
                   <div>
                     <p className="text-sm font-light text-white">
                       Brand Profile
@@ -237,7 +237,7 @@ function SettingsPageContent() {
                 </div>
                 <button
                   onClick={handleUpgrade}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors"
                 >
                   <Zap className="w-3.5 h-3.5" />
                   Upgrade to Enterprise

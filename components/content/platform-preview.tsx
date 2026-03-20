@@ -309,7 +309,7 @@ export function PlatformPreview({
           </button>
           <button
             type="button"
-            className="flex items-center gap-1.5 text-slate-500 hover:text-orange-400 transition-colors"
+            className="flex items-center gap-1.5 text-slate-500 hover:text-amber-400 transition-colors"
             disabled
           >
             <MessageCircle className="h-4 w-4" />

@@ -142,22 +142,22 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: BillingCycle }) {
   return (
     <Card
       variant={plan.popular ? 'glass-primary' : 'glass'}
-      className={`p-8 relative bg-surface-base/80 backdrop-blur-sm border border-orange-500/10 hover:border-orange-500/30 transition-all duration-300 ${
+      className={`p-8 relative bg-surface-base/80 backdrop-blur-sm border border-amber-500/10 hover:border-amber-500/30 transition-all duration-300 ${
         plan.popular
-          ? 'scale-105 border-orange-500/30 shadow-lg shadow-orange-500/10'
+          ? 'scale-105 border-amber-500/30 shadow-lg shadow-amber-500/10'
           : ''
       }`}
     >
       {plan.isIntroductory && (
         <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-          <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-lg shadow-amber-500/25">
+          <span className="bg-gradient-to-r from-amber-500 to-amber-500 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-lg shadow-amber-500/25">
             Launch Offer
           </span>
         </div>
       )}
       {plan.popular && !plan.isIntroductory && (
         <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-          <span className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-lg shadow-orange-500/25">
+          <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-lg shadow-amber-500/25">
             Most Popular
           </span>
         </div>
@@ -168,7 +168,7 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: BillingCycle }) {
           {plan.displayName ?? plan.name}
         </h3>
         <div className="mb-2 flex items-baseline justify-center gap-1">
-          <span className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
+          <span className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300">
             {displayPrice}
           </span>
           {!plan.isFree && !plan.isCustom && (
@@ -191,7 +191,7 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: BillingCycle }) {
       <div className="space-y-4 mb-8">
         {plan.features.map(feature => (
           <div key={feature} className="flex items-start space-x-3">
-            <Check className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
+            <Check className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
             <span className="text-gray-300 text-sm">{feature}</span>
           </div>
         ))}
@@ -206,7 +206,7 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: BillingCycle }) {
       {plan.isFree && plan.ctaHref ? (
         <Link href={plan.ctaHref} className="block">
           <Button
-            className="w-full bg-surface-dark border border-orange-500/20 text-gray-300 hover:bg-orange-500/10 hover:text-orange-400 hover:border-orange-500/40 transition-all duration-300"
+            className="w-full bg-surface-dark border border-amber-500/20 text-gray-300 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/40 transition-all duration-300"
             size="lg"
           >
             {plan.ctaLabel}
@@ -215,7 +215,7 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: BillingCycle }) {
       ) : plan.isCustom && plan.ctaHref ? (
         <Link href={plan.ctaHref} className="block">
           <Button
-            className="w-full bg-surface-dark border border-orange-500/20 text-gray-300 hover:bg-orange-500/10 hover:text-orange-400 hover:border-orange-500/40 transition-all duration-300"
+            className="w-full bg-surface-dark border border-amber-500/20 text-gray-300 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/40 transition-all duration-300"
             size="lg"
           >
             Contact Sales
@@ -226,8 +226,8 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: BillingCycle }) {
           planName={plan.name}
           className={`w-full ${
             plan.popular
-              ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40'
-              : 'bg-surface-dark border border-orange-500/20 text-gray-300 hover:bg-orange-500/10 hover:text-orange-400 hover:border-orange-500/40'
+              ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40'
+              : 'bg-surface-dark border border-amber-500/20 text-gray-300 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/40'
           } transition-all duration-300`}
         >
           {plan.ctaLabel}
@@ -256,8 +256,8 @@ export function PricingGrid() {
           onClick={() =>
             setBilling(billing === 'monthly' ? 'annual' : 'monthly')
           }
-          className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colours duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] ${
-            billing === 'annual' ? 'bg-orange-500' : 'bg-gray-700'
+          className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colours duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] ${
+            billing === 'annual' ? 'bg-amber-500' : 'bg-gray-700'
           }`}
           aria-label="Toggle billing cycle"
           aria-pressed={billing === 'annual'}

@@ -353,7 +353,7 @@ function ReviewPostCard({
 
       {post.content.length > 180 && (
         <button
-          className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1"
+          className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1"
           onClick={() => setExpanded(v => !v)}
         >
           <Eye className="h-3 w-3" />
@@ -385,7 +385,7 @@ function ReviewPostCard({
         <Button
           size="sm"
           variant="ghost"
-          className="text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 text-xs h-7 px-3"
+          className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 text-xs h-7 px-3"
           onClick={onEdit}
           disabled={isApproving || isRejecting}
         >

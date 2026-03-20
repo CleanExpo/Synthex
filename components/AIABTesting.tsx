@@ -386,8 +386,8 @@ export function AIABTesting() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
-            <FlaskConical className="h-6 w-6 text-orange-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20">
+            <FlaskConical className="h-6 w-6 text-amber-400" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">A/B Testing</h2>
@@ -736,15 +736,15 @@ export function AIABTesting() {
 
             {/* AI Recommendations */}
             {selectedTest.recommendations.length > 0 && (
-              <div className="p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+              <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
                 <div className="flex items-center gap-2 mb-3">
-                  <Sparkles className="h-5 w-5 text-orange-400" />
+                  <Sparkles className="h-5 w-5 text-amber-400" />
                   <h4 className="font-medium text-white">AI Recommendations</h4>
                 </div>
                 <div className="space-y-2">
                   {selectedTest.recommendations.map((rec, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <ChevronRight className="h-4 w-4 text-orange-400 mt-0.5" />
+                      <ChevronRight className="h-4 w-4 text-amber-400 mt-0.5" />
                       <span className="text-sm text-gray-300">{rec}</span>
                     </div>
                   ))}

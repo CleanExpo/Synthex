@@ -56,7 +56,7 @@ interface AuditLogDrawerProps {
 const SEVERITY_COLOURS: Record<string, string> = {
   low: 'bg-gray-500/20 text-gray-300',
   medium: 'bg-yellow-500/20 text-yellow-400',
-  high: 'bg-orange-500/20 text-orange-400',
+  high: 'bg-amber-500/20 text-amber-400',
   critical: 'bg-red-500/20 text-red-400',
 };
 
@@ -122,11 +122,11 @@ function DetailRow({ label, value }: { label: string; value: unknown }) {
   // Render reason / error in a callout box
   if (isReason && typeof value === 'string') {
     return (
-      <div className="rounded-md bg-orange-500/10 border border-orange-500/20 p-3">
-        <span className="text-xs text-orange-400 uppercase tracking-wider font-medium">
+      <div className="rounded-md bg-amber-500/10 border border-amber-500/20 p-3">
+        <span className="text-xs text-amber-400 uppercase tracking-wider font-medium">
           {formatLabel(label)}
         </span>
-        <p className="text-sm text-orange-200 mt-1">{value}</p>
+        <p className="text-sm text-amber-200 mt-1">{value}</p>
       </div>
     );
   }
@@ -136,7 +136,7 @@ function DetailRow({ label, value }: { label: string; value: unknown }) {
     return (
       <div className="flex justify-between items-center p-2 bg-white/5 rounded">
         <span className="text-xs text-gray-400">{formatLabel(label)}</span>
-        <span className="text-sm text-orange-400 font-mono">{value}</span>
+        <span className="text-sm text-amber-400 font-mono">{value}</span>
       </div>
     );
   }

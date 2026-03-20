@@ -46,7 +46,7 @@ export function ExtractedElements({
             {mentions.map((mention, i) => (
               <span
                 key={i}
-                className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded"
+                className="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded"
               >
                 {mention}
               </span>

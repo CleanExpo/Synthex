@@ -22,7 +22,7 @@ const CATEGORY_BAR_COLOURS: Record<PromptCategory, string> = {
   'competitor-comparison': 'bg-amber-500',
   'local-discovery': 'bg-green-500',
   'use-case': 'bg-blue-500',
-  'how-to': 'bg-orange-500',
+  'how-to': 'bg-amber-500',
   'product-feature': 'bg-slate-500',
 };
 
@@ -86,7 +86,7 @@ function DonutRing({
       {/* Legend */}
       <div className="flex gap-4 text-xs text-slate-400">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-orange-400 inline-block" />
+          <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
           {mentionedCount} mentioned
         </span>
         <span className="flex items-center gap-1">
@@ -198,7 +198,7 @@ export function PromptGapChart({ analysis, className }: PromptGapChartProps) {
           </p>
           <p className="text-xs text-slate-400">
             Brand mentioned in{' '}
-            <strong className="text-orange-400">
+            <strong className="text-amber-400">
               {analysis.mentionedCount}
             </strong>{' '}
             of them ({Math.round(analysis.coverageRate)}% coverage)

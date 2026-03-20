@@ -25,7 +25,7 @@ const dimensions = [
     label: 'Experience',
     icon: Eye,
     weight: '20%',
-    color: 'text-orange-400',
+    color: 'text-amber-400',
   },
   {
     key: 'expertise',
@@ -54,9 +54,9 @@ const tierConfig: Record<string, { color: string }> = {
   exceptional: {
     color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
   },
-  strong: { color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
+  strong: { color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
   moderate: { color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
-  weak: { color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
+  weak: { color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
   very_low: { color: 'bg-red-500/20 text-red-400 border-red-500/30' },
 };
 

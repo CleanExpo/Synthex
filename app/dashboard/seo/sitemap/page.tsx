@@ -109,7 +109,7 @@ export default function SitemapAnalyzerPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Map className="w-8 h-8 text-orange-400" />
+            <Map className="w-8 h-8 text-amber-400" />
             Sitemap Analyzer
           </h1>
           <p className="text-gray-400 mt-1">
@@ -124,7 +124,7 @@ export default function SitemapAnalyzerPage() {
         description="Validate XML sitemaps, check URL structure, detect issues, and ensure search engines can crawl your site effectively."
       >
         {/* URL Input */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
@@ -141,7 +141,7 @@ export default function SitemapAnalyzerPage() {
               <Button
                 onClick={handleAnalyze}
                 disabled={isLoading}
-                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25"
+                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25"
               >
                 {isLoading ? (
                   <>
@@ -164,7 +164,7 @@ export default function SitemapAnalyzerPage() {
           <div className="space-y-6">
             {/* Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
                 <CardContent className="p-6 text-center">
                   {result.valid ? (
                     <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
@@ -177,7 +177,7 @@ export default function SitemapAnalyzerPage() {
                   <p className="text-gray-400 text-sm">XML Structure</p>
                 </CardContent>
               </Card>
-              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
                 <CardContent className="p-6 text-center">
                   <div className="text-2xl font-bold text-white mb-1">
                     {result.urlCount}
@@ -185,7 +185,7 @@ export default function SitemapAnalyzerPage() {
                   <p className="text-gray-400 text-sm">Total URLs</p>
                 </CardContent>
               </Card>
-              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
                 <CardContent className="p-6 text-center">
                   <div
                     className={`text-2xl font-bold mb-1 ${result.stats.duplicates > 0 ? 'text-red-400' : 'text-green-400'}`}
@@ -195,7 +195,7 @@ export default function SitemapAnalyzerPage() {
                   <p className="text-gray-400 text-sm">Duplicates</p>
                 </CardContent>
               </Card>
-              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
                 <CardContent className="p-6 text-center">
                   <div
                     className={`text-2xl font-bold mb-1 ${result.stats.staleUrls > 0 ? 'text-yellow-400' : 'text-green-400'}`}
@@ -209,7 +209,7 @@ export default function SitemapAnalyzerPage() {
 
             {/* Issues */}
             {result.issues.length > 0 && (
-              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">
                     <AlertTriangle className="w-5 h-5 text-yellow-400" />
@@ -237,10 +237,10 @@ export default function SitemapAnalyzerPage() {
             )}
 
             {/* Completeness Stats */}
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-orange-400" />
+                  <FileText className="w-5 h-5 text-amber-400" />
                   Completeness
                 </CardTitle>
               </CardHeader>
@@ -270,7 +270,7 @@ export default function SitemapAnalyzerPage() {
                       <Icon className="w-4 h-4 text-gray-400" />
                       <span className="text-gray-300 text-sm">
                         URLs with{' '}
-                        <code className="text-orange-400">&lt;{label}&gt;</code>
+                        <code className="text-amber-400">&lt;{label}&gt;</code>
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -293,10 +293,10 @@ export default function SitemapAnalyzerPage() {
             </Card>
 
             {/* URL List */}
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
-                  <LinkIcon className="w-5 h-5 text-orange-400" />
+                  <LinkIcon className="w-5 h-5 text-amber-400" />
                   URLs ({result.urlCount})
                 </CardTitle>
               </CardHeader>

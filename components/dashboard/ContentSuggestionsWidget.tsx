@@ -51,7 +51,7 @@ export function ContentSuggestionsWidget({
         className={`border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-5 space-y-4 ${className ?? ''}`}
       >
         <div className="flex items-center gap-2">
-          <Sparkles className="h-3.5 w-3.5 text-orange-400" />
+          <Sparkles className="h-3.5 w-3.5 text-amber-400" />
           <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
             Content Suggestions
           </span>
@@ -63,7 +63,7 @@ export function ContentSuggestionsWidget({
           </p>
           <a
             href="/dashboard/settings/connections"
-            className="inline-block mt-1 text-[10px] uppercase tracking-[0.15em] px-2.5 py-1 rounded-sm border-[0.5px] border-orange-500/30 bg-orange-500/[0.08] text-orange-400 hover:bg-orange-500/[0.12] transition-colors"
+            className="inline-block mt-1 text-[10px] uppercase tracking-[0.15em] px-2.5 py-1 rounded-sm border-[0.5px] border-amber-500/30 bg-amber-500/[0.08] text-amber-400 hover:bg-amber-500/[0.12] transition-colors"
           >
             Connect Platform
           </a>
@@ -89,7 +89,7 @@ export function ContentSuggestionsWidget({
     >
       {/* Header */}
       <div className="flex items-center gap-2">
-        <Sparkles className="h-3.5 w-3.5 text-orange-400" />
+        <Sparkles className="h-3.5 w-3.5 text-amber-400" />
         <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
           Content Suggestions
         </span>
@@ -109,7 +109,7 @@ export function ContentSuggestionsWidget({
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   {rec.platform && (
-                    <span className="inline-block text-[9px] uppercase tracking-[0.15em] px-1.5 py-0.5 rounded-sm bg-orange-500/[0.08] text-orange-400 border-[0.5px] border-orange-500/20 mb-1.5">
+                    <span className="inline-block text-[9px] uppercase tracking-[0.15em] px-1.5 py-0.5 rounded-sm bg-amber-500/[0.08] text-amber-400 border-[0.5px] border-amber-500/20 mb-1.5">
                       {rec.platform}
                     </span>
                   )}

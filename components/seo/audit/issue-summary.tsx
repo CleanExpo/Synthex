@@ -26,7 +26,7 @@ interface IssueSummaryProps {
 
 export function IssueSummary({ issues, crawledPages }: IssueSummaryProps) {
   return (
-    <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 lg:col-span-2">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 lg:col-span-2">
       <CardHeader>
         <CardTitle className="text-white">Issues Found</CardTitle>
         <CardDescription>Across {crawledPages} pages analyzed</CardDescription>
@@ -37,9 +37,9 @@ export function IssueSummary({ issues, crawledPages }: IssueSummaryProps) {
           <p className="text-2xl font-bold text-red-400">{issues.critical}</p>
           <p className="text-sm text-gray-400">Critical</p>
         </div>
-        <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4 text-center">
-          <AlertTriangle className="w-6 h-6 text-orange-400 mx-auto mb-2" />
-          <p className="text-2xl font-bold text-orange-400">{issues.major}</p>
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 text-center">
+          <AlertTriangle className="w-6 h-6 text-amber-400 mx-auto mb-2" />
+          <p className="text-2xl font-bold text-amber-400">{issues.major}</p>
           <p className="text-sm text-gray-400">Major</p>
         </div>
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 text-center">

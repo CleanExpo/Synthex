@@ -80,7 +80,7 @@ function StatusBadge({ status }: { status: string }) {
   }
   if (status === 'running') {
     return (
-      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30">
+      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
         <Loader2 className="h-3 w-3 animate-spin" />
         Running
       </span>
@@ -222,7 +222,7 @@ export function InsightsPageClient() {
                       <div className="text-white/40">drafted</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm font-bold text-orange-400">
+                      <div className="text-sm font-bold text-amber-400">
                         {run.outputData.queued ?? 0}
                       </div>
                       <div className="text-white/40">queued</div>

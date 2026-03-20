@@ -98,7 +98,7 @@ export function StatCard({
         <div
           className={cn(
             'absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl opacity-20',
-            stat.iconColor || 'bg-orange-500'
+            stat.iconColor || 'bg-amber-500'
           )}
         />
       )}
@@ -152,7 +152,7 @@ export function StatCard({
                 isCompact ? 'w-10 h-10' : 'w-12 h-12',
                 stat.iconColor
                   ? `bg-gradient-to-br ${stat.iconColor}`
-                  : 'bg-gradient-to-br from-orange-500/20 to-orange-500/20 border border-orange-500/20'
+                  : 'bg-gradient-to-br from-amber-500/20 to-amber-500/20 border border-amber-500/20'
               )}
             >
               <Icon
@@ -167,7 +167,7 @@ export function StatCard({
                 'w-16 h-16 flex items-center justify-center rounded-2xl mb-4',
                 stat.iconColor
                   ? `bg-gradient-to-br ${stat.iconColor}`
-                  : 'bg-gradient-to-br from-orange-500/20 to-orange-500/20 border border-orange-500/20'
+                  : 'bg-gradient-to-br from-amber-500/20 to-amber-500/20 border border-amber-500/20'
               )}
             >
               <Icon className="w-8 h-8 text-white" />

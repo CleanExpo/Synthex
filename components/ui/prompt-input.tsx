@@ -113,7 +113,7 @@ export function PromptInput({
       className={cn(
         'relative flex flex-col w-full rounded-sm border-[0.5px] border-white/[0.08] bg-[#050505]',
         'shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset] transition-colors',
-        'focus-within:border-orange-500/30',
+        'focus-within:border-amber-500/30',
         disabled && 'opacity-60 pointer-events-none',
         className
       )}
@@ -190,7 +190,7 @@ export function PromptInput({
               className={cn(
                 'h-7 w-7 rounded-sm transition-all',
                 canSend
-                  ? 'bg-orange-500 text-[#050505] hover:bg-orange-400'
+                  ? 'bg-amber-500 text-[#050505] hover:bg-amber-400'
                   : 'bg-white/[0.04] text-white/20 border-[0.5px] border-white/[0.06] cursor-not-allowed'
               )}
             >

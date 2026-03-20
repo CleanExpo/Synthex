@@ -70,7 +70,7 @@ export function RichTextEditor({
           'prose-headings:text-white prose-p:text-gray-300',
           'prose-strong:text-white prose-em:text-gray-300',
           'prose-ul:text-gray-300 prose-ol:text-gray-300',
-          'prose-blockquote:text-gray-400 prose-code:text-orange-400',
+          'prose-blockquote:text-gray-400 prose-code:text-amber-400',
           'min-h-[200px] p-4',
           className
         ),
@@ -105,7 +105,7 @@ export function RichTextEditor({
       disabled={disabled}
       variant="ghost"
       size="sm"
-      className={cn('h-8 w-8 p-0', active && 'bg-white/10 text-orange-400')}
+      className={cn('h-8 w-8 p-0', active && 'bg-white/10 text-amber-400')}
       title={tooltip}
     >
       {children}
@@ -391,7 +391,7 @@ export function SimpleEditor({
           size="sm"
           className={cn(
             'h-6 w-6 p-0',
-            editor.isActive('bold') && 'text-orange-400'
+            editor.isActive('bold') && 'text-amber-400'
           )}
         >
           <Bold className="h-3 w-3" />
@@ -403,7 +403,7 @@ export function SimpleEditor({
           size="sm"
           className={cn(
             'h-6 w-6 p-0',
-            editor.isActive('italic') && 'text-orange-400'
+            editor.isActive('italic') && 'text-amber-400'
           )}
         >
           <Italic className="h-3 w-3" />

@@ -25,8 +25,8 @@ interface AgeDistributionChartProps {
 
 // Age gradient colors (young cyan → older purple)
 const AGE_COLORS: Record<string, string> = {
-  '13-17': '#ffb87b', // cyan-500
-  '18-24': '#ffdcc2', // cyan-400
+  '13-17': '#ffb87b', // amber-500
+  '18-24': '#ffdcc2', // amber-400
   '25-34': '#8b5cf6', // violet-500
   '35-44': '#a78bfa', // violet-400
   '45-54': '#c084fc', // purple-400

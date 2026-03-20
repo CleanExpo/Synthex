@@ -69,7 +69,7 @@ export default function AIPMInput({
               }
             }}
             disabled={isSending || disabled}
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-400 transition-colors hover:border-orange-500/30 hover:bg-orange-500/10 hover:text-orange-300 disabled:opacity-50"
+            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-400 transition-colors hover:border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-300 disabled:opacity-50"
           >
             {action.label}
           </button>
@@ -87,7 +87,7 @@ export default function AIPMInput({
             placeholder="Ask your AI PM anything..."
             disabled={isSending || disabled}
             rows={1}
-            className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white placeholder:text-gray-500 focus:border-orange-500/30 focus:outline-none focus:ring-1 focus:ring-orange-500/20 disabled:opacity-50"
+            className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white placeholder:text-gray-500 focus:border-amber-500/30 focus:outline-none focus:ring-1 focus:ring-amber-500/20 disabled:opacity-50"
             maxLength={5000}
           />
           {value.length > 4000 && (
@@ -102,7 +102,7 @@ export default function AIPMInput({
           disabled={!value.trim() || isSending || disabled}
           size="icon"
           aria-label="Send message"
-          className="h-10 w-10 shrink-0 rounded-xl bg-orange-500 text-white hover:bg-orange-400 disabled:opacity-50"
+          className="h-10 w-10 shrink-0 rounded-xl bg-amber-500 text-white hover:bg-amber-400 disabled:opacity-50"
         >
           {isSending ? (
             <Loader2 className="h-4 w-4 animate-spin" />

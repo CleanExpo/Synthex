@@ -132,7 +132,7 @@ export function UniteHubWidget({ className }: { className?: string }) {
       <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06] flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 border-[0.5px] border-white/[0.08] bg-white/[0.02] rounded-sm flex items-center justify-center flex-shrink-0">
-            <Building2 className="h-4 w-4 text-orange-400" />
+            <Building2 className="h-4 w-4 text-amber-400" />
           </div>
           <div>
             <p className="text-sm font-light text-white tracking-tight">
@@ -156,7 +156,7 @@ export function UniteHubWidget({ className }: { className?: string }) {
             </span>
           </p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 min-w-0 font-mono text-[11px] text-orange-300 bg-white/[0.02] border-[0.5px] border-white/[0.06] rounded-sm px-3 py-2 truncate">
+            <code className="flex-1 min-w-0 font-mono text-[11px] text-amber-300 bg-white/[0.02] border-[0.5px] border-white/[0.06] rounded-sm px-3 py-2 truncate">
               {data?.pullEndpoint ?? '—'}
             </code>
             <button
@@ -191,7 +191,7 @@ export function UniteHubWidget({ className }: { className?: string }) {
           <button
             onClick={handleTest}
             disabled={isTesting || !data?.configured}
-            className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-medium tracking-wide rounded-sm transition-colors bg-orange-500/[0.08] hover:bg-orange-500/[0.15] text-orange-300 border-[0.5px] border-orange-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-medium tracking-wide rounded-sm transition-colors bg-amber-500/[0.08] hover:bg-amber-500/[0.15] text-amber-300 border-[0.5px] border-amber-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isTesting ? (
               <>

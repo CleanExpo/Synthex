@@ -61,7 +61,7 @@ export function MemberCard({
       <div className="flex items-center space-x-4">
         <Avatar className="h-10 w-10">
           <AvatarImage src={member.avatar} alt={member.name} />
-          <AvatarFallback className="bg-gradient-to-r from-orange-500 to-pink-500 text-white">
+          <AvatarFallback className="bg-gradient-to-r from-amber-500 to-pink-500 text-white">
             {member.name.charAt(0)}
           </AvatarFallback>
         </Avatar>

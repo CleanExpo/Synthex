@@ -1,6 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Button } from '@/components/ui/button';
-import { Mail, Download, Trash2, Plus, Sparkles, Zap, Shield, Check } from '@/components/icons';
+import {
+  Mail,
+  Download,
+  Trash2,
+  Plus,
+  Sparkles,
+  Zap,
+  Shield,
+  Check,
+} from '@/components/icons';
 
 const meta = {
   title: 'UI/Button',
@@ -9,7 +18,8 @@ const meta = {
     layout: 'centered',
     docs: {
       description: {
-        component: 'A versatile button component with multiple variants and sizes, including premium glassmorphism styles.',
+        component:
+          'A versatile button component with multiple variants and sizes, including premium glassmorphism styles.',
       },
     },
   },
@@ -248,8 +258,8 @@ export const Glass: Story = {
     },
   },
   decorators: [
-    (Story) => (
-      <div className="bg-gradient-to-br from-slate-900 via-cyan-900 to-slate-900 p-8 rounded-lg">
+    Story => (
+      <div className="bg-gradient-to-br from-slate-900 via-amber-900 to-slate-900 p-8 rounded-lg">
         <Story />
       </div>
     ),
@@ -270,13 +280,14 @@ export const GlassPrimary: Story = {
     backgrounds: { default: 'dark' },
     docs: {
       description: {
-        story: 'Primary glass button with cyan gradient and glow effect on hover.',
+        story:
+          'Primary glass button with cyan gradient and glow effect on hover.',
       },
     },
   },
   decorators: [
-    (Story) => (
-      <div className="bg-gradient-to-br from-slate-900 via-cyan-900 to-slate-900 p-8 rounded-lg">
+    Story => (
+      <div className="bg-gradient-to-br from-slate-900 via-amber-900 to-slate-900 p-8 rounded-lg">
         <Story />
       </div>
     ),
@@ -297,12 +308,13 @@ export const GlassSecondary: Story = {
     backgrounds: { default: 'dark' },
     docs: {
       description: {
-        story: 'Secondary glass button with cyan/blue gradient for alternative actions.',
+        story:
+          'Secondary glass button with cyan/blue gradient for alternative actions.',
       },
     },
   },
   decorators: [
-    (Story) => (
+    Story => (
       <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-8 rounded-lg">
         <Story />
       </div>
@@ -329,7 +341,7 @@ export const GlassDestructive: Story = {
     },
   },
   decorators: [
-    (Story) => (
+    Story => (
       <div className="bg-gradient-to-br from-slate-900 via-red-900/30 to-slate-900 p-8 rounded-lg">
         <Story />
       </div>
@@ -351,12 +363,13 @@ export const GlassSuccess: Story = {
     backgrounds: { default: 'dark' },
     docs: {
       description: {
-        story: 'Success glass button with emerald tint for positive confirmations.',
+        story:
+          'Success glass button with emerald tint for positive confirmations.',
       },
     },
   },
   decorators: [
-    (Story) => (
+    Story => (
       <div className="bg-gradient-to-br from-slate-900 via-emerald-900/30 to-slate-900 p-8 rounded-lg">
         <Story />
       </div>
@@ -378,7 +391,8 @@ export const PremiumPrimary: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Premium solid gradient button for primary CTAs with lift effect on hover.',
+        story:
+          'Premium solid gradient button for primary CTAs with lift effect on hover.',
       },
     },
   },
@@ -406,8 +420,10 @@ export const PremiumSecondary: Story = {
 
 export const GlassButtonShowcase: Story = {
   render: () => (
-    <div className="bg-gradient-to-br from-slate-900 via-cyan-900 to-slate-900 p-8 rounded-xl space-y-6">
-      <div className="text-white text-lg font-semibold mb-4">Premium Glass Buttons</div>
+    <div className="bg-gradient-to-br from-slate-900 via-amber-900 to-slate-900 p-8 rounded-xl space-y-6">
+      <div className="text-white text-lg font-semibold mb-4">
+        Premium Glass Buttons
+      </div>
 
       <div className="flex flex-wrap gap-3">
         <Button variant="glass">Glass</Button>
@@ -429,7 +445,9 @@ export const GlassButtonShowcase: Story = {
         </Button>
       </div>
 
-      <div className="text-white text-lg font-semibold mb-4 mt-8">Premium Solid Buttons</div>
+      <div className="text-white text-lg font-semibold mb-4 mt-8">
+        Premium Solid Buttons
+      </div>
 
       <div className="flex flex-wrap gap-3">
         <Button variant="premium-primary" size="lg">
@@ -442,13 +460,21 @@ export const GlassButtonShowcase: Story = {
         </Button>
       </div>
 
-      <div className="text-white text-lg font-semibold mb-4 mt-8">Size Variations</div>
+      <div className="text-white text-lg font-semibold mb-4 mt-8">
+        Size Variations
+      </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button variant="glass-primary" size="sm">Small</Button>
+        <Button variant="glass-primary" size="sm">
+          Small
+        </Button>
         <Button variant="glass-primary">Default</Button>
-        <Button variant="glass-primary" size="lg">Large</Button>
-        <Button variant="glass-primary" size="xl">Extra Large</Button>
+        <Button variant="glass-primary" size="lg">
+          Large
+        </Button>
+        <Button variant="glass-primary" size="xl">
+          Extra Large
+        </Button>
         <Button variant="glass-primary" size="icon">
           <Sparkles className="h-4 w-4" />
         </Button>
@@ -459,7 +485,8 @@ export const GlassButtonShowcase: Story = {
     layout: 'padded',
     docs: {
       description: {
-        story: 'Complete showcase of all premium glassmorphism button variants.',
+        story:
+          'Complete showcase of all premium glassmorphism button variants.',
       },
     },
   },

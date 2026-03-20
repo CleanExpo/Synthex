@@ -197,7 +197,7 @@ export function CreateTaskDialog({
                   }}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${
                     assignees.includes(member.id)
-                      ? 'bg-orange-500/20 border-orange-500/50 text-orange-300'
+                      ? 'bg-amber-500/20 border-amber-500/50 text-amber-300'
                       : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
                   }`}
                 >

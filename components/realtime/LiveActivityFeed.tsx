@@ -79,16 +79,16 @@ interface LiveActivityFeedProps {
 const activityIcons: Record<ActivityType, React.ReactNode> = {
   post_created: <Edit className="h-4 w-4 text-blue-400" />,
   post_published: <Send className="h-4 w-4 text-green-400" />,
-  post_scheduled: <Calendar className="h-4 w-4 text-orange-400" />,
+  post_scheduled: <Calendar className="h-4 w-4 text-amber-400" />,
   post_edited: <Edit className="h-4 w-4 text-yellow-400" />,
   post_deleted: <Trash2 className="h-4 w-4 text-red-400" />,
   engagement_spike: <TrendingUp className="h-4 w-4 text-green-400" />,
   new_follower: <User className="h-4 w-4 text-blue-400" />,
-  comment_received: <MessageSquare className="h-4 w-4 text-orange-400" />,
+  comment_received: <MessageSquare className="h-4 w-4 text-amber-400" />,
   mention: <Bell className="h-4 w-4 text-yellow-400" />,
   team_member_joined: <Users className="h-4 w-4 text-green-400" />,
   team_member_action: <Activity className="h-4 w-4 text-blue-400" />,
-  system_alert: <AlertTriangle className="h-4 w-4 text-orange-400" />,
+  system_alert: <AlertTriangle className="h-4 w-4 text-amber-400" />,
   campaign_started: <CheckCircle className="h-4 w-4 text-green-400" />,
   campaign_ended: <CheckCircle className="h-4 w-4 text-gray-400" />,
   milestone_reached: <TrendingUp className="h-4 w-4 text-yellow-400" />,
@@ -97,16 +97,16 @@ const activityIcons: Record<ActivityType, React.ReactNode> = {
 const activityColors: Record<ActivityType, string> = {
   post_created: 'border-blue-500/30 bg-blue-500/10',
   post_published: 'border-green-500/30 bg-green-500/10',
-  post_scheduled: 'border-orange-500/30 bg-orange-500/10',
+  post_scheduled: 'border-amber-500/30 bg-amber-500/10',
   post_edited: 'border-yellow-500/30 bg-yellow-500/10',
   post_deleted: 'border-red-500/30 bg-red-500/10',
   engagement_spike: 'border-green-500/30 bg-green-500/10',
   new_follower: 'border-blue-500/30 bg-blue-500/10',
-  comment_received: 'border-orange-500/30 bg-orange-500/10',
+  comment_received: 'border-amber-500/30 bg-amber-500/10',
   mention: 'border-yellow-500/30 bg-yellow-500/10',
   team_member_joined: 'border-green-500/30 bg-green-500/10',
   team_member_action: 'border-blue-500/30 bg-blue-500/10',
-  system_alert: 'border-orange-500/30 bg-orange-500/10',
+  system_alert: 'border-amber-500/30 bg-amber-500/10',
   campaign_started: 'border-green-500/30 bg-green-500/10',
   campaign_ended: 'border-gray-500/30 bg-gray-500/10',
   milestone_reached: 'border-yellow-500/30 bg-yellow-500/10',
@@ -302,7 +302,7 @@ export function LiveActivityFeed({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <Activity className="h-5 w-5 text-orange-400" />
+          <Activity className="h-5 w-5 text-amber-400" />
           <h3 className="font-semibold text-white">Live Activity</h3>
         </div>
         <div className="flex items-center gap-2">
@@ -393,7 +393,7 @@ export function LiveActivityFeed({
 
       {/* Footer */}
       <div className="px-4 py-2 border-t border-white/10 text-center">
-        <button className="text-xs text-orange-400 hover:text-orange-300 transition-colors">
+        <button className="text-xs text-amber-400 hover:text-amber-300 transition-colors">
           View all activity
         </button>
       </div>

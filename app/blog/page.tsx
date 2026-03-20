@@ -160,7 +160,7 @@ export default function BlogPage() {
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold text-white mb-4">
               Synthex{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300">
                 Blog
               </span>
             </h1>
@@ -178,7 +178,7 @@ export default function BlogPage() {
                 placeholder="Search articles..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full px-6 py-4 bg-surface-base/80 backdrop-blur-md border border-orange-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-400/50 transition-colors"
+                className="w-full px-6 py-4 bg-surface-base/80 backdrop-blur-md border border-amber-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-amber-400/50 transition-colors"
               />
               <button className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2">
                 <svg
@@ -206,8 +206,8 @@ export default function BlogPage() {
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 rounded-full transition-all ${
                   selectedCategory === category
-                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25'
-                    : 'bg-surface-base/60 text-gray-400 hover:bg-surface-base hover:text-orange-400 border border-orange-500/10'
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/25'
+                    : 'bg-surface-base/60 text-gray-400 hover:bg-surface-base hover:text-amber-400 border border-amber-500/10'
                 }`}
               >
                 {category}
@@ -221,17 +221,17 @@ export default function BlogPage() {
       {featuredPost && selectedCategory === 'All' && !searchTerm && (
         <section className="px-6 pb-12">
           <div className="container mx-auto">
-            <Card className="bg-surface-base/80 backdrop-blur-md border border-orange-500/20 p-8 hover:border-orange-400/40 hover:shadow-xl hover:shadow-orange-500/10 transition-all">
+            <Card className="bg-surface-base/80 backdrop-blur-md border border-amber-500/20 p-8 hover:border-amber-400/40 hover:shadow-xl hover:shadow-amber-500/10 transition-all">
               <div className="grid md:grid-cols-2 gap-8">
-                <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-xl h-64 md:h-full flex items-center justify-center border border-orange-500/10">
-                  <Brain className="w-24 h-24 text-orange-400/50" />
+                <div className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 rounded-xl h-64 md:h-full flex items-center justify-center border border-amber-500/10">
+                  <Brain className="w-24 h-24 text-amber-400/50" />
                 </div>
                 <div className="flex flex-col justify-center">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="px-3 py-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs rounded-full shadow-lg shadow-orange-500/25">
+                    <span className="px-3 py-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs rounded-full shadow-lg shadow-amber-500/25">
                       Featured
                     </span>
-                    <span className="text-orange-400 text-sm">
+                    <span className="text-amber-400 text-sm">
                       {featuredPost.category}
                     </span>
                   </div>
@@ -254,7 +254,7 @@ export default function BlogPage() {
                     </span>
                   </div>
                   <Link href={`/blog/${featuredPost.id}`}>
-                    <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40">
+                    <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25 transition-all hover:shadow-amber-500/40">
                       Read Article
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
@@ -280,32 +280,32 @@ export default function BlogPage() {
               {filteredPosts.map(post => (
                 <Card
                   key={post.id}
-                  className="bg-surface-base/80 backdrop-blur-md border border-orange-500/20 p-6 hover:border-orange-400/40 hover:shadow-xl hover:shadow-orange-500/10 hover:transform hover:scale-[1.02] transition-all"
+                  className="bg-surface-base/80 backdrop-blur-md border border-amber-500/20 p-6 hover:border-amber-400/40 hover:shadow-xl hover:shadow-amber-500/10 hover:transform hover:scale-[1.02] transition-all"
                 >
-                  <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 rounded-lg h-48 mb-4 flex items-center justify-center border border-orange-500/10">
+                  <div className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 rounded-lg h-48 mb-4 flex items-center justify-center border border-amber-500/10">
                     {post.category === 'Developer Tools' && (
-                      <Code className="w-16 h-16 text-orange-400/50" />
+                      <Code className="w-16 h-16 text-amber-400/50" />
                     )}
                     {post.category === 'AI Trends' && (
-                      <Brain className="w-16 h-16 text-orange-400/50" />
+                      <Brain className="w-16 h-16 text-amber-400/50" />
                     )}
                     {post.category === 'Strategy' && (
-                      <TrendingUp className="w-16 h-16 text-orange-300/50" />
+                      <TrendingUp className="w-16 h-16 text-amber-300/50" />
                     )}
                     {post.category === 'Optimization' && (
-                      <Zap className="w-16 h-16 text-orange-500/50" />
+                      <Zap className="w-16 h-16 text-amber-500/50" />
                     )}
                     {post.category === 'Psychology' && (
-                      <User className="w-16 h-16 text-orange-400/50" />
+                      <User className="w-16 h-16 text-amber-400/50" />
                     )}
                     {post.category === 'Case Study' && (
-                      <Calendar className="w-16 h-16 text-orange-300/50" />
+                      <Calendar className="w-16 h-16 text-amber-300/50" />
                     )}
                     {post.category === 'Planning' && (
-                      <Clock className="w-16 h-16 text-orange-500/50" />
+                      <Clock className="w-16 h-16 text-amber-500/50" />
                     )}
                   </div>
-                  <span className="text-orange-400 text-sm">
+                  <span className="text-amber-400 text-sm">
                     {post.category}
                   </span>
                   <h3 className="text-xl font-bold text-white mt-2 mb-3">
@@ -321,7 +321,7 @@ export default function BlogPage() {
                   <Link href={`/blog/${post.id}`}>
                     <Button
                       variant="ghost"
-                      className="w-full text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 border border-orange-500/20 hover:border-orange-400/40"
+                      className="w-full text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 border border-amber-500/20 hover:border-amber-400/40"
                     >
                       Read More
                       <ArrowRight className="ml-2 w-4 h-4" />
@@ -337,7 +337,7 @@ export default function BlogPage() {
       {/* Newsletter Section */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="bg-surface-base/80 backdrop-blur-md border border-orange-500/20 p-12 text-center">
+          <Card className="bg-surface-base/80 backdrop-blur-md border border-amber-500/20 p-12 text-center">
             <h2 className="text-3xl font-bold text-white mb-4">
               Stay Updated with AI Marketing Insights
             </h2>
@@ -349,9 +349,9 @@ export default function BlogPage() {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-3 bg-surface-dark/80 border border-orange-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-400/50 transition-colors"
+                className="flex-1 px-4 py-3 bg-surface-dark/80 border border-amber-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-amber-400/50 transition-colors"
               />
-              <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-6 shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40">
+              <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white px-6 shadow-lg shadow-amber-500/25 transition-all hover:shadow-amber-500/40">
                 Subscribe
               </Button>
             </form>

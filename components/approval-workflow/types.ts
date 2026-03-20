@@ -57,20 +57,30 @@ export interface ApprovalStage {
 
 export function getStatusColor(status: string) {
   switch (status) {
-    case 'approved': return 'text-green-400';
-    case 'rejected': return 'text-red-400';
-    case 'pending': return 'text-yellow-400';
-    case 'revision': return 'text-orange-400';
-    default: return 'text-gray-400';
+    case 'approved':
+      return 'text-green-400';
+    case 'rejected':
+      return 'text-red-400';
+    case 'pending':
+      return 'text-yellow-400';
+    case 'revision':
+      return 'text-amber-400';
+    default:
+      return 'text-gray-400';
   }
 }
 
 export function getPriorityColor(priority: string) {
   switch (priority) {
-    case 'urgent': return 'bg-red-500';
-    case 'high': return 'bg-orange-500';
-    case 'medium': return 'bg-yellow-500';
-    case 'low': return 'bg-green-500';
-    default: return 'bg-gray-500';
+    case 'urgent':
+      return 'bg-red-500';
+    case 'high':
+      return 'bg-amber-500';
+    case 'medium':
+      return 'bg-yellow-500';
+    case 'low':
+      return 'bg-green-500';
+    default:
+      return 'bg-gray-500';
   }
 }

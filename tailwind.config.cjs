@@ -136,7 +136,6 @@ module.exports = {
         'glass-inset': 'var(--glass-inset)',
         'glow-primary': 'var(--glow-primary)',
         'glow-primary-lg': 'var(--glow-primary-lg)',
-        'glow-cyan': 'var(--glow-cyan)',
         'glow-amber': 'var(--glow-amber)',
       },
       fontFamily: {

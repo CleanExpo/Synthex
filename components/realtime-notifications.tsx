@@ -292,7 +292,7 @@ export default function RealtimeNotifications() {
                           <Button
                             size="sm"
                             variant="link"
-                            className="p-0 h-auto text-orange-400 text-xs mt-2"
+                            className="p-0 h-auto text-amber-400 text-xs mt-2"
                           >
                             View details →
                           </Button>

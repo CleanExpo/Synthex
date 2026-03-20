@@ -108,7 +108,7 @@ export default function SupportPage() {
         <div className="container mx-auto text-center">
           <h1 className="text-5xl font-bold text-white mb-4 heading-serif">
             How Can We{' '}
-            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
               Help You?
             </span>
           </h1>
@@ -126,7 +126,7 @@ export default function SupportPage() {
                 placeholder="Search for help..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-6 py-4 bg-surface-base/80 backdrop-blur-md border border-orange-500/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-orange-400/50"
+                className="w-full pl-12 pr-6 py-4 bg-surface-base/80 backdrop-blur-md border border-amber-500/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-amber-400/50"
               />
             </div>
           </div>
@@ -137,29 +137,29 @@ export default function SupportPage() {
       <section className="px-6 pb-12">
         <div className="container mx-auto">
           <div className="grid md:grid-cols-4 gap-4">
-            <Card className="bg-surface-base/80 border-orange-500/10 p-6 hover:scale-105 transition-transform cursor-pointer">
-              <Book className="w-8 h-8 text-orange-400 mb-3" />
+            <Card className="bg-surface-base/80 border-amber-500/10 p-6 hover:scale-105 transition-transform cursor-pointer">
+              <Book className="w-8 h-8 text-amber-400 mb-3" />
               <h3 className="text-white font-semibold mb-1">Documentation</h3>
               <p className="text-gray-400 text-sm">
                 Comprehensive guides and tutorials
               </p>
             </Card>
-            <Card className="bg-surface-base/80 border-orange-500/10 p-6 hover:scale-105 transition-transform cursor-pointer">
-              <Video className="w-8 h-8 text-orange-400 mb-3" />
+            <Card className="bg-surface-base/80 border-amber-500/10 p-6 hover:scale-105 transition-transform cursor-pointer">
+              <Video className="w-8 h-8 text-amber-400 mb-3" />
               <h3 className="text-white font-semibold mb-1">Video Tutorials</h3>
               <p className="text-gray-400 text-sm">
                 Step-by-step video walkthroughs
               </p>
             </Card>
-            <Card className="bg-surface-base/80 border-orange-500/10 p-6 hover:scale-105 transition-transform cursor-pointer">
-              <MessageCircle className="w-8 h-8 text-orange-400 mb-3" />
+            <Card className="bg-surface-base/80 border-amber-500/10 p-6 hover:scale-105 transition-transform cursor-pointer">
+              <MessageCircle className="w-8 h-8 text-amber-400 mb-3" />
               <h3 className="text-white font-semibold mb-1">Live Chat</h3>
               <p className="text-gray-400 text-sm">
                 Chat with our support team
               </p>
             </Card>
-            <Card className="bg-surface-base/80 border-orange-500/10 p-6 hover:scale-105 transition-transform cursor-pointer">
-              <Mail className="w-8 h-8 text-orange-400 mb-3" />
+            <Card className="bg-surface-base/80 border-amber-500/10 p-6 hover:scale-105 transition-transform cursor-pointer">
+              <Mail className="w-8 h-8 text-amber-400 mb-3" />
               <h3 className="text-white font-semibold mb-1">Email Support</h3>
               <p className="text-gray-400 text-sm">support@synthex.social</p>
             </Card>
@@ -182,8 +182,8 @@ export default function SupportPage() {
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 rounded-full transition-all ${
                   selectedCategory === category
-                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white'
-                    : 'bg-surface-base/80 text-gray-300 hover:bg-surface-base border border-orange-500/10'
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white'
+                    : 'bg-surface-base/80 text-gray-300 hover:bg-surface-base border border-amber-500/10'
                 }`}
               >
                 {category}
@@ -196,13 +196,13 @@ export default function SupportPage() {
             {filteredFAQs.map((faq, index) => (
               <Card
                 key={index}
-                className="bg-surface-base/80 border-orange-500/10 overflow-hidden"
+                className="bg-surface-base/80 border-amber-500/10 overflow-hidden"
               >
                 <button
                   onClick={() =>
                     setExpandedFAQ(expandedFAQ === index ? null : index)
                   }
-                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-orange-500/5 transition-colors"
+                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-amber-500/5 transition-colors"
                 >
                   <span className="text-white font-medium">{faq.question}</span>
                   <ChevronRight
@@ -212,7 +212,7 @@ export default function SupportPage() {
                   />
                 </button>
                 {expandedFAQ === index && (
-                  <div className="px-6 py-4 border-t border-orange-500/10">
+                  <div className="px-6 py-4 border-t border-amber-500/10">
                     <p className="text-gray-300">{faq.answer}</p>
                   </div>
                 )}
@@ -229,8 +229,8 @@ export default function SupportPage() {
             Browse Help Topics
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
-            <Card className="bg-surface-base/80 border-orange-500/10 p-6">
-              <Zap className="w-10 h-10 text-orange-400 mb-4" />
+            <Card className="bg-surface-base/80 border-amber-500/10 p-6">
+              <Zap className="w-10 h-10 text-amber-400 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-3">
                 Getting Started
               </h3>
@@ -238,7 +238,7 @@ export default function SupportPage() {
                 <li>
                   <Link
                     href="/onboarding"
-                    className="text-gray-400 hover:text-orange-400 flex items-center gap-2"
+                    className="text-gray-400 hover:text-amber-400 flex items-center gap-2"
                   >
                     <ChevronRight className="w-4 h-4" /> Account setup guide
                   </Link>
@@ -246,7 +246,7 @@ export default function SupportPage() {
                 <li>
                   <Link
                     href="/dashboard/integrations"
-                    className="text-gray-400 hover:text-orange-400 flex items-center gap-2"
+                    className="text-gray-400 hover:text-amber-400 flex items-center gap-2"
                   >
                     <ChevronRight className="w-4 h-4" /> Connect social accounts
                   </Link>
@@ -254,7 +254,7 @@ export default function SupportPage() {
                 <li>
                   <Link
                     href="/dashboard/content"
-                    className="text-gray-400 hover:text-orange-400 flex items-center gap-2"
+                    className="text-gray-400 hover:text-amber-400 flex items-center gap-2"
                   >
                     <ChevronRight className="w-4 h-4" /> Create your first
                     campaign
@@ -263,8 +263,8 @@ export default function SupportPage() {
               </ul>
             </Card>
 
-            <Card className="bg-surface-base/80 border-orange-500/10 p-6">
-              <Settings className="w-10 h-10 text-orange-400 mb-4" />
+            <Card className="bg-surface-base/80 border-amber-500/10 p-6">
+              <Settings className="w-10 h-10 text-amber-400 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-3">
                 Features & Tools
               </h3>
@@ -272,7 +272,7 @@ export default function SupportPage() {
                 <li>
                   <Link
                     href="/dashboard/content"
-                    className="text-gray-400 hover:text-orange-400 flex items-center gap-2"
+                    className="text-gray-400 hover:text-amber-400 flex items-center gap-2"
                   >
                     <ChevronRight className="w-4 h-4" /> AI content generation
                   </Link>
@@ -280,7 +280,7 @@ export default function SupportPage() {
                 <li>
                   <Link
                     href="/dashboard/analytics"
-                    className="text-gray-400 hover:text-orange-400 flex items-center gap-2"
+                    className="text-gray-400 hover:text-amber-400 flex items-center gap-2"
                   >
                     <ChevronRight className="w-4 h-4" /> Analytics dashboard
                   </Link>
@@ -288,7 +288,7 @@ export default function SupportPage() {
                 <li>
                   <Link
                     href="/dashboard/schedule"
-                    className="text-gray-400 hover:text-orange-400 flex items-center gap-2"
+                    className="text-gray-400 hover:text-amber-400 flex items-center gap-2"
                   >
                     <ChevronRight className="w-4 h-4" /> Scheduling tools
                   </Link>
@@ -296,8 +296,8 @@ export default function SupportPage() {
               </ul>
             </Card>
 
-            <Card className="bg-surface-base/80 border-orange-500/10 p-6">
-              <CreditCard className="w-10 h-10 text-orange-400 mb-4" />
+            <Card className="bg-surface-base/80 border-amber-500/10 p-6">
+              <CreditCard className="w-10 h-10 text-amber-400 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-3">
                 Billing & Plans
               </h3>
@@ -305,7 +305,7 @@ export default function SupportPage() {
                 <li>
                   <Link
                     href="/pricing"
-                    className="text-gray-400 hover:text-orange-400 flex items-center gap-2"
+                    className="text-gray-400 hover:text-amber-400 flex items-center gap-2"
                   >
                     <ChevronRight className="w-4 h-4" /> Pricing comparison
                   </Link>
@@ -313,7 +313,7 @@ export default function SupportPage() {
                 <li>
                   <Link
                     href="/dashboard/settings"
-                    className="text-gray-400 hover:text-orange-400 flex items-center gap-2"
+                    className="text-gray-400 hover:text-amber-400 flex items-center gap-2"
                   >
                     <ChevronRight className="w-4 h-4" /> Upgrade or downgrade
                   </Link>
@@ -321,7 +321,7 @@ export default function SupportPage() {
                 <li>
                   <Link
                     href="/dashboard/settings"
-                    className="text-gray-400 hover:text-orange-400 flex items-center gap-2"
+                    className="text-gray-400 hover:text-amber-400 flex items-center gap-2"
                   >
                     <ChevronRight className="w-4 h-4" /> Payment methods
                   </Link>
@@ -335,7 +335,7 @@ export default function SupportPage() {
       {/* Contact Section */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="bg-surface-base/80 border-orange-500/10 p-12">
+          <Card className="bg-surface-base/80 border-amber-500/10 p-12">
             <div className="grid md:grid-cols-2 gap-8">
               <div>
                 <h2 className="text-3xl font-bold text-white mb-4">
@@ -347,19 +347,19 @@ export default function SupportPage() {
                 </p>
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-orange-400" />
+                    <Mail className="w-5 h-5 text-amber-400" />
                     <span className="text-gray-300">
                       support@synthex.social
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <MessageCircle className="w-5 h-5 text-orange-400" />
+                    <MessageCircle className="w-5 h-5 text-amber-400" />
                     <span className="text-gray-300">
                       Live chat available 24/7
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Clock className="w-5 h-5 text-orange-400" />
+                    <Clock className="w-5 h-5 text-amber-400" />
                     <span className="text-gray-300">
                       Average response time: 2 hours
                     </span>
@@ -371,19 +371,19 @@ export default function SupportPage() {
                   <input
                     type="text"
                     placeholder="Your name"
-                    className="w-full px-4 py-3 bg-surface-base/80 border border-orange-500/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-orange-400"
+                    className="w-full px-4 py-3 bg-surface-base/80 border border-amber-500/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-amber-400"
                   />
                   <input
                     type="email"
                     placeholder="Your email"
-                    className="w-full px-4 py-3 bg-surface-base/80 border border-orange-500/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-orange-400"
+                    className="w-full px-4 py-3 bg-surface-base/80 border border-amber-500/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-amber-400"
                   />
                   <textarea
                     placeholder="How can we help?"
                     rows={4}
-                    className="w-full px-4 py-3 bg-surface-base/80 border border-orange-500/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-orange-400 resize-none"
+                    className="w-full px-4 py-3 bg-surface-base/80 border border-amber-500/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-amber-400 resize-none"
                   />
-                  <Button className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                  <Button className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white">
                     Send Message
                   </Button>
                 </form>

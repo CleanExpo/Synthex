@@ -75,11 +75,11 @@ function gradeColour(grade: string): string {
     case 'A':
       return 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30';
     case 'B':
-      return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
+      return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
     case 'C':
       return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
     case 'D':
-      return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
+      return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
     case 'F':
       return 'text-red-400 bg-red-500/20 border-red-500/30';
     default:

@@ -147,8 +147,8 @@ export default function AIConversationPage({ params }: PageProps) {
     return (
       <div className="p-6 max-w-4xl mx-auto">
         <div className="flex items-start gap-3 mb-8">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
-            <MessageSquare className="h-6 w-6 text-orange-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20">
+            <MessageSquare className="h-6 w-6 text-amber-400" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-white">AI Chat Assistant</h1>
@@ -158,7 +158,7 @@ export default function AIConversationPage({ params }: PageProps) {
           </div>
         </div>
 
-        <Card className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30">
+        <Card className="bg-gradient-to-br from-amber-500/10 to-amber-500/10 border-amber-500/30">
           <CardContent className="py-12">
             <div className="text-center max-w-md mx-auto">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/20 mb-4">
@@ -174,7 +174,7 @@ export default function AIConversationPage({ params }: PageProps) {
               </p>
               <Button
                 asChild
-                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                className="bg-gradient-to-r from-amber-500 to-amber-500 hover:from-amber-600 hover:to-amber-600"
               >
                 <Link href="/dashboard/billing">
                   <Sparkles className="w-4 h-4 mr-2" />
@@ -193,7 +193,7 @@ export default function AIConversationPage({ params }: PageProps) {
     return (
       <div className="h-[calc(100vh-8rem)] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-gray-400">
-          <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-amber-400" />
           <span>Loading conversations...</span>
         </div>
       </div>
@@ -235,8 +235,8 @@ export default function AIConversationPage({ params }: PageProps) {
       {/* Page Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
-            <MessageSquare className="h-5 w-5 text-orange-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20">
+            <MessageSquare className="h-5 w-5 text-amber-400" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">AI Chat Assistant</h1>
@@ -247,7 +247,7 @@ export default function AIConversationPage({ params }: PageProps) {
         </div>
         <Badge
           variant="outline"
-          className="bg-orange-500/10 border-orange-500/30 text-orange-300"
+          className="bg-amber-500/10 border-amber-500/30 text-amber-300"
         >
           Professional
         </Badge>
@@ -262,7 +262,7 @@ export default function AIConversationPage({ params }: PageProps) {
             <Button
               onClick={handleCreateConversation}
               disabled={isCreating}
-              className="w-full bg-orange-500/20 border border-orange-500/30 hover:bg-orange-500/30 text-orange-300"
+              className="w-full bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/30 text-amber-300"
             >
               {isCreating ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -279,7 +279,7 @@ export default function AIConversationPage({ params }: PageProps) {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full px-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg
-                         text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50"
+                         text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50"
             />
           </div>
 
@@ -309,7 +309,7 @@ export default function AIConversationPage({ params }: PageProps) {
                       className={cn(
                         'w-full text-left px-3 py-3 rounded-lg transition-colors group flex',
                         isActive
-                          ? 'bg-orange-500/20 border border-orange-500/30'
+                          ? 'bg-amber-500/20 border border-amber-500/30'
                           : 'bg-white/5 border border-transparent hover:bg-white/10'
                       )}
                     >

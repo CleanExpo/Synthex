@@ -152,7 +152,7 @@ export function CompetitorDetailView({
                   <p className="text-xs text-gray-400">Avg Shares</p>
                 </div>
                 <div className="p-3 bg-white/5 rounded-lg text-center">
-                  <TrendingUp className="h-5 w-5 text-orange-400 mx-auto mb-2" />
+                  <TrendingUp className="h-5 w-5 text-amber-400 mx-auto mb-2" />
                   <p className="text-lg font-bold text-white">
                     {competitor.metrics.contentPerformance.viralPosts}
                   </p>
@@ -216,7 +216,7 @@ export function CompetitorDetailView({
               <h4 className="font-medium text-white mb-3">Top Hashtags</h4>
               <div className="flex flex-wrap gap-2">
                 {competitor.contentStrategy.hashtagStrategy.map(tag => (
-                  <Badge key={tag} className="bg-orange-500/20 text-orange-400">
+                  <Badge key={tag} className="bg-amber-500/20 text-amber-400">
                     {tag}
                   </Badge>
                 ))}
@@ -276,9 +276,9 @@ export function CompetitorDetailView({
 
           {/* Insights Tab */}
           <TabsContent value="insights" className="space-y-6">
-            <div className="p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+            <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
               <div className="flex items-center gap-2 mb-3">
-                <Zap className="h-5 w-5 text-orange-400" />
+                <Zap className="h-5 w-5 text-amber-400" />
                 <h4 className="font-medium text-white">AI Insights</h4>
               </div>
               <div className="space-y-3">

@@ -61,7 +61,7 @@ export function VisualGallery({ initialAssets }: VisualGalleryProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-white flex items-center gap-2">
-            <ImageIcon className="h-5 w-5 text-orange-400" />
+            <ImageIcon className="h-5 w-5 text-amber-400" />
             Visual Library
           </CardTitle>
           <Button

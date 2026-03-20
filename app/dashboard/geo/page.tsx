@@ -83,7 +83,7 @@ export default function GEOPage() {
       label: 'Citability',
       icon: Eye,
       weight: '25%',
-      color: 'text-orange-400',
+      color: 'text-amber-400',
     },
     {
       key: 'structure',
@@ -129,7 +129,7 @@ export default function GEOPage() {
         color: 'bg-emerald-500/20 text-emerald-400',
       };
     if (score >= 60)
-      return { label: 'Good', color: 'bg-orange-500/20 text-orange-400' };
+      return { label: 'Good', color: 'bg-amber-500/20 text-amber-400' };
     if (score >= 40)
       return { label: 'Needs Work', color: 'bg-amber-500/20 text-amber-400' };
     return { label: 'Poor', color: 'bg-red-500/20 text-red-400' };
@@ -151,7 +151,7 @@ export default function GEOPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-              <Globe className="h-7 w-7 text-orange-400" />
+              <Globe className="h-7 w-7 text-amber-400" />
               GEO Analysis
             </h1>
             <p className="text-gray-400 mt-1">
@@ -161,7 +161,7 @@ export default function GEOPage() {
           </div>
           <Link
             href="/dashboard/geo/optimiser"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-600/20 text-orange-400 hover:bg-orange-600/30 text-sm font-medium transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600/20 text-amber-400 hover:bg-amber-600/30 text-sm font-medium transition-colors"
           >
             <Zap className="h-4 w-4" />
             GEO Optimiser
@@ -181,10 +181,10 @@ export default function GEOPage() {
           </TabsList>
 
           <TabsContent value="analyze" className="space-y-4 mt-4">
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
-                  <Search className="h-5 w-5 text-orange-400" />
+                  <Search className="h-5 w-5 text-amber-400" />
                   Content Analyzer
                 </CardTitle>
               </CardHeader>
@@ -193,7 +193,7 @@ export default function GEOPage() {
                   value={content}
                   onChange={e => setContent(e.target.value)}
                   placeholder="Paste your content here for GEO analysis. Minimum 50 characters. The analyzer will score your content across 5 dimensions: Citability, Structure, Multi-Modal, Authority, and Technical..."
-                  className="w-full h-64 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-gray-500 p-4 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                  className="w-full h-64 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-gray-500 p-4 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                 />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -215,7 +215,7 @@ export default function GEOPage() {
                   <Button
                     onClick={analyze}
                     disabled={loading || content.length < 50}
-                    className="bg-orange-600 hover:bg-orange-700"
+                    className="bg-amber-600 hover:bg-amber-700"
                   >
                     {loading ? (
                       <RefreshCw className="h-4 w-4 animate-spin mr-2" />
@@ -250,10 +250,10 @@ export default function GEOPage() {
               ].map(({ icon: Icon, title, desc }) => (
                 <Card
                   key={title}
-                  className="bg-surface-base/80 border border-orange-500/10"
+                  className="bg-surface-base/80 border border-amber-500/10"
                 >
                   <CardContent className="p-4">
-                    <Icon className="h-8 w-8 text-orange-400 mb-3" />
+                    <Icon className="h-8 w-8 text-amber-400 mb-3" />
                     <h3 className="text-white font-medium text-sm">{title}</h3>
                     <p className="text-gray-400 text-xs mt-1">{desc}</p>
                   </CardContent>
@@ -267,7 +267,7 @@ export default function GEOPage() {
               <div className="space-y-6">
                 {/* Score Overview */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <Card className="bg-surface-base/80 border border-orange-500/10">
+                  <Card className="bg-surface-base/80 border border-amber-500/10">
                     <CardContent className="p-6 text-center">
                       <div className="text-6xl font-bold text-white mb-2">
                         {result.score.overall}
@@ -292,7 +292,7 @@ export default function GEOPage() {
                     </CardContent>
                   </Card>
                   <div className="lg:col-span-2">
-                    <Card className="bg-surface-base/80 border border-orange-500/10 h-full">
+                    <Card className="bg-surface-base/80 border border-amber-500/10 h-full">
                       <CardContent className="p-6 space-y-3">
                         {scoreDimensions.map(
                           ({ key, label, icon: Icon, weight, color }) => (
@@ -303,7 +303,7 @@ export default function GEOPage() {
                               </span>
                               <div className="flex-1 bg-white/5 rounded-full h-2">
                                 <div
-                                  className="bg-orange-500 h-2 rounded-full transition-all"
+                                  className="bg-amber-500 h-2 rounded-full transition-all"
                                   style={{
                                     width: `${result.score[key as keyof GEOScore]}%`,
                                   }}
@@ -325,7 +325,7 @@ export default function GEOPage() {
 
                 {/* Passages */}
                 {result.citablePassages?.length > 0 && (
-                  <Card className="bg-surface-base/80 border border-orange-500/10">
+                  <Card className="bg-surface-base/80 border border-amber-500/10">
                     <CardHeader>
                       <CardTitle className="text-white text-lg">
                         Citable Passages (
@@ -351,7 +351,7 @@ export default function GEOPage() {
                                   </Badge>
                                 )}
                                 {p.answerFirst && (
-                                  <Badge className="bg-orange-500/20 text-orange-400 text-xs">
+                                  <Badge className="bg-amber-500/20 text-amber-400 text-xs">
                                     Answer-First
                                   </Badge>
                                 )}
@@ -377,7 +377,7 @@ export default function GEOPage() {
 
                 {/* Recommendations */}
                 {result.recommendations?.length > 0 && (
-                  <Card className="bg-surface-base/80 border border-orange-500/10">
+                  <Card className="bg-surface-base/80 border border-amber-500/10">
                     <CardHeader>
                       <CardTitle className="text-white text-lg">
                         Recommendations
@@ -612,7 +612,7 @@ export default function GEOPage() {
           </TabsContent>
 
           <TabsContent value="history" className="mt-4">
-            <Card className="bg-surface-base/80 border border-orange-500/10">
+            <Card className="bg-surface-base/80 border border-amber-500/10">
               <CardContent className="p-12 text-center text-gray-400">
                 <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 <p>Analysis history coming soon</p>

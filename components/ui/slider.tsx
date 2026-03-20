@@ -14,8 +14,8 @@ const sliderTrackVariants = cva(
         // Premium Glassmorphism variants
         glass: 'bg-white/[0.08] backdrop-blur-md',
         'glass-solid': 'bg-slate-800/80 backdrop-blur-md',
-        'glass-primary': 'bg-orange-500/20 backdrop-blur-md',
-        'glass-secondary': 'bg-orange-500/20 backdrop-blur-md',
+        'glass-primary': 'bg-amber-500/20 backdrop-blur-md',
+        'glass-secondary': 'bg-amber-500/20 backdrop-blur-md',
         'glass-success': 'bg-emerald-500/20 backdrop-blur-md',
       },
       size: {
@@ -37,12 +37,12 @@ const sliderRangeVariants = cva('absolute h-full transition-all', {
       default: 'bg-primary',
       glass: 'bg-white/40',
       'glass-solid': 'bg-slate-500',
-      'glass-primary': 'bg-orange-500/70',
-      'glass-secondary': 'bg-orange-500/70',
+      'glass-primary': 'bg-amber-500/70',
+      'glass-secondary': 'bg-amber-500/70',
       'glass-success': 'bg-emerald-500/70',
       // Gradient variants
-      'gradient-primary': 'bg-gradient-to-r from-orange-500 to-orange-500',
-      'gradient-secondary': 'bg-gradient-to-r from-orange-500 to-blue-500',
+      'gradient-primary': 'bg-gradient-to-r from-amber-500 to-amber-500',
+      'gradient-secondary': 'bg-gradient-to-r from-amber-500 to-blue-500',
     },
   },
   defaultVariants: {
@@ -61,16 +61,16 @@ const sliderThumbVariants = cva(
           'border-2 border-white/30 bg-white shadow-[0_0_10px_rgba(255,255,255,0.3)]',
         'glass-solid': 'border-2 border-white/20 bg-white shadow-lg',
         'glass-primary':
-          'border-2 border-orange-500/50 bg-white shadow-[0_0_10px_rgba(6,182,212,0.4)]',
+          'border-2 border-amber-500/50 bg-white shadow-[0_0_10px_rgba(6,182,212,0.4)]',
         'glass-secondary':
-          'border-2 border-orange-500/50 bg-white shadow-[0_0_10px_rgba(6,182,212,0.4)]',
+          'border-2 border-amber-500/50 bg-white shadow-[0_0_10px_rgba(6,182,212,0.4)]',
         'glass-success':
           'border-2 border-emerald-500/50 bg-white shadow-[0_0_10px_rgba(16,185,129,0.4)]',
         // Gradient variants
         'gradient-primary':
-          'border-0 bg-gradient-to-br from-orange-400 to-orange-400 shadow-[0_0_12px_rgba(6,182,212,0.5)]',
+          'border-0 bg-gradient-to-br from-amber-400 to-amber-400 shadow-[0_0_12px_rgba(6,182,212,0.5)]',
         'gradient-secondary':
-          'border-0 bg-gradient-to-br from-orange-400 to-blue-400 shadow-[0_0_12px_rgba(6,182,212,0.5)]',
+          'border-0 bg-gradient-to-br from-amber-400 to-blue-400 shadow-[0_0_12px_rgba(6,182,212,0.5)]',
       },
       size: {
         default: 'h-5 w-5',

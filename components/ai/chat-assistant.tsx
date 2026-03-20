@@ -58,7 +58,7 @@ export function ChatAssistant({
           role="status"
         >
           <Loader2
-            className="h-8 w-8 animate-spin text-orange-400"
+            className="h-8 w-8 animate-spin text-amber-400"
             aria-hidden="true"
           />
           <span>Loading conversation...</span>
@@ -106,8 +106,8 @@ export function ChatAssistant({
         {messages.length === 0 && !isStreaming && (
           <div className="h-full flex items-center justify-center">
             <div className="flex flex-col items-center gap-4 text-center max-w-md">
-              <div className="p-4 rounded-full bg-orange-500/10 border border-orange-500/20">
-                <MessageSquare className="h-8 w-8 text-orange-400" />
+              <div className="p-4 rounded-full bg-amber-500/10 border border-amber-500/20">
+                <MessageSquare className="h-8 w-8 text-amber-400" />
               </div>
               <div>
                 <h3 className="text-lg font-medium text-white mb-2">

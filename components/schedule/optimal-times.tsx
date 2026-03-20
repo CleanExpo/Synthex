@@ -81,7 +81,7 @@ export function OptimalTimes() {
             </CardDescription>
           </div>
           {!usingFallback && predictions && (
-            <span className="flex items-center gap-1 text-xs bg-orange-500/10 text-orange-400 px-2 py-1 rounded-full border border-orange-500/20">
+            <span className="flex items-center gap-1 text-xs bg-amber-500/10 text-amber-400 px-2 py-1 rounded-full border border-amber-500/20">
               <Zap className="h-3 w-3" />
               ML Predicted
             </span>

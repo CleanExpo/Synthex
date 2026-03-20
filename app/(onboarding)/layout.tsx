@@ -38,7 +38,7 @@ function OnboardingParticles() {
       {positions.map((pos, i) => (
         <div
           key={i}
-          className="absolute w-1 h-1 bg-orange-400/20 rounded-full animate-float"
+          className="absolute w-1 h-1 bg-amber-400/20 rounded-full animate-float"
           style={{
             left: `${pos.left}%`,
             top: `${pos.top}%`,
@@ -75,11 +75,11 @@ export default function OnboardingLayout({
       <OnboardingParticles />
 
       {/* Glow Effects */}
-      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-amber-400/5 rounded-full blur-[150px] pointer-events-none" />
 
       {/* Header with Logo */}
-      <header className="relative z-20 border-b border-orange-500/10 bg-surface-dark/80 backdrop-blur-md">
+      <header className="relative z-20 border-b border-amber-500/10 bg-surface-dark/80 backdrop-blur-md">
         <div className="container max-w-4xl mx-auto px-4 py-4">
           <Link href="/" className="flex items-center space-x-3 w-fit group">
             <SynthexLogo className="w-8 h-8 transition-transform group-hover:scale-110" />

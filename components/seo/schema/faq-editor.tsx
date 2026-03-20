@@ -64,7 +64,7 @@ export function FAQEditor({
       <Button
         variant="outline"
         onClick={onAddItem}
-        className="w-full border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+        className="w-full border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
       >
         Add Another Question
       </Button>

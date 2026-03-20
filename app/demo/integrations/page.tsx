@@ -168,7 +168,7 @@ export default function DemoIntegrationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-orange-950/20 to-gray-950">
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-amber-950/20 to-gray-950">
       {/* Demo Mode Banner */}
       <div className="bg-amber-500/10 border border-amber-500/20 p-3">
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
@@ -194,28 +194,28 @@ export default function DemoIntegrationsPage() {
         <Card variant="glass" className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-orange-400" />
+              <Shield className="w-5 h-5 text-amber-400" />
               How Synthex Integrations Work
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3 text-sm text-gray-300">
               <p className="flex items-start gap-2">
-                <span className="text-orange-400 font-bold">1.</span>
+                <span className="text-amber-400 font-bold">1.</span>
                 Each user connects their own social media accounts using their
                 own API credentials
               </p>
               <p className="flex items-start gap-2">
-                <span className="text-orange-400 font-bold">2.</span>
+                <span className="text-amber-400 font-bold">2.</span>
                 Click "Connect" on any platform below to enter your API keys
               </p>
               <p className="flex items-start gap-2">
-                <span className="text-orange-400 font-bold">3.</span>
+                <span className="text-amber-400 font-bold">3.</span>
                 Your credentials are encrypted and stored securely in your
                 account
               </p>
               <p className="flex items-start gap-2">
-                <span className="text-orange-400 font-bold">4.</span>
+                <span className="text-amber-400 font-bold">4.</span>
                 Posts go directly from Synthex to your social media accounts
               </p>
             </div>

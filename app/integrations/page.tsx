@@ -57,7 +57,7 @@ const PLATFORMS = [
     icon: TikTokIcon,
     description:
       'Create and publish TikTok content with trending audio suggestions.',
-    color: 'text-orange-300',
+    color: 'text-amber-300',
   },
   {
     name: 'X (Twitter)',
@@ -97,7 +97,7 @@ const PLATFORMS = [
     icon: RedditIcon,
     description:
       'Community engagement, subreddit targeting, and discussion tracking.',
-    color: 'text-orange-400',
+    color: 'text-amber-400',
   },
 ];
 
@@ -164,7 +164,7 @@ export default function IntegrationsPage() {
         <div className="container mx-auto text-center">
           <h1 className="text-5xl font-bold text-white mb-6">
             Connect{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300">
               Everything
             </span>
           </h1>
@@ -173,7 +173,7 @@ export default function IntegrationsPage() {
             tools your business already uses — all from one dashboard.
           </p>
           <Link href="/signup">
-            <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white text-lg px-8 py-6 rounded-xl shadow-lg shadow-orange-500/25">
+            <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white text-lg px-8 py-6 rounded-xl shadow-lg shadow-amber-500/25">
               Get Started Free
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
@@ -185,7 +185,7 @@ export default function IntegrationsPage() {
       <section className="pb-20 px-6">
         <div className="container mx-auto">
           <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-sm mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm mb-4">
               <Globe className="h-4 w-4" /> 9 Platforms
             </div>
             <h2 className="text-3xl font-bold text-white mb-3">
@@ -201,7 +201,7 @@ export default function IntegrationsPage() {
             {PLATFORMS.map(p => (
               <Card
                 key={p.name}
-                className="bg-[#0d1f35]/60 border-orange-500/10 hover:border-orange-500/30 transition-all p-6 flex items-start gap-4"
+                className="bg-[#0d1f35]/60 border-amber-500/10 hover:border-amber-500/30 transition-all p-6 flex items-start gap-4"
               >
                 <div className="h-10 w-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
                   <p.icon className={`h-5 w-5 ${p.color}`} />
@@ -282,7 +282,7 @@ export default function IntegrationsPage() {
       {/* CTA */}
       <section className="pb-20 px-6">
         <div className="container mx-auto text-center">
-          <div className="p-10 rounded-2xl bg-gradient-to-br from-orange-500/10 to-purple-500/10 border border-orange-500/20 max-w-3xl mx-auto">
+          <div className="p-10 rounded-2xl bg-gradient-to-br from-amber-500/10 to-purple-500/10 border border-amber-500/20 max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold text-white mb-4">
               Ready to connect everything?
             </h2>
@@ -292,7 +292,7 @@ export default function IntegrationsPage() {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link href="/signup">
-                <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-8 py-3 rounded-xl shadow-lg shadow-orange-500/25">
+                <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white px-8 py-3 rounded-xl shadow-lg shadow-amber-500/25">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -300,7 +300,7 @@ export default function IntegrationsPage() {
               <Link href="/features">
                 <Button
                   variant="outline"
-                  className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 px-8 py-3 rounded-xl"
+                  className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10 px-8 py-3 rounded-xl"
                 >
                   View All Features
                 </Button>

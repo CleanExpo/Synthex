@@ -111,7 +111,7 @@ export function InsightsWidget({ className }: { className?: string }) {
               <div className="text-xs text-white/40">auto-drafted</div>
             </div>
             <div className="rounded-lg bg-white/5 border border-white/10 p-2 text-center">
-              <div className="text-base font-bold tabular-nums text-orange-400">
+              <div className="text-base font-bold tabular-nums text-amber-400">
                 {latestRun.outputData.queued ?? 0}
               </div>
               <div className="text-xs text-white/40">for review</div>

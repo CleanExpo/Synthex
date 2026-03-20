@@ -12,14 +12,14 @@ const separatorVariants = cva('shrink-0', {
       // Premium Glassmorphism variants
       glass: 'bg-white/[0.08]',
       'glass-solid': 'bg-white/[0.15]',
-      'glass-primary': 'bg-orange-500/30',
-      'glass-secondary': 'bg-orange-500/30',
+      'glass-primary': 'bg-amber-500/30',
+      'glass-secondary': 'bg-amber-500/30',
       'glass-success': 'bg-emerald-500/30',
       // Gradient variants
       'gradient-primary':
-        'bg-gradient-to-r from-transparent via-orange-500/50 to-transparent',
+        'bg-gradient-to-r from-transparent via-amber-500/50 to-transparent',
       'gradient-secondary':
-        'bg-gradient-to-r from-transparent via-orange-500/50 to-transparent',
+        'bg-gradient-to-r from-transparent via-amber-500/50 to-transparent',
       'gradient-fade':
         'bg-gradient-to-r from-transparent via-white/20 to-transparent',
     },
@@ -37,13 +37,13 @@ const separatorVariants = cva('shrink-0', {
       variant: 'gradient-primary',
       orientation: 'vertical',
       className:
-        'bg-gradient-to-b from-transparent via-orange-500/50 to-transparent',
+        'bg-gradient-to-b from-transparent via-amber-500/50 to-transparent',
     },
     {
       variant: 'gradient-secondary',
       orientation: 'vertical',
       className:
-        'bg-gradient-to-b from-transparent via-orange-500/50 to-transparent',
+        'bg-gradient-to-b from-transparent via-amber-500/50 to-transparent',
     },
     {
       variant: 'gradient-fade',

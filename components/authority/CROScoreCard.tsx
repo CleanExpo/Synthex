@@ -43,7 +43,7 @@ export function CROScoreCard({ score, issues }: CROScoreCardProps) {
       <CardHeader>
         <CardTitle className="text-white text-sm font-medium flex items-center justify-between">
           CRO Readiness
-          <span className="text-2xl font-bold text-orange-400">
+          <span className="text-2xl font-bold text-amber-400">
             {score.total}
           </span>
         </CardTitle>

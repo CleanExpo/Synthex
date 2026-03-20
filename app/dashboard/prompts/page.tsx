@@ -117,7 +117,7 @@ function TrackingTab({ orgId }: { orgId: string }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -145,7 +145,7 @@ function TrackingTab({ orgId }: { orgId: string }) {
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
-          className="h-8 rounded-md border border-white/20 bg-white/5 text-slate-300 text-xs px-2 focus:outline-none focus:ring-1 focus:ring-orange-500"
+          className="h-8 rounded-md border border-white/20 bg-white/5 text-slate-300 text-xs px-2 focus:outline-none focus:ring-1 focus:ring-amber-500"
         >
           <option value="">All statuses</option>
           <option value="pending">Not tested</option>
@@ -154,7 +154,7 @@ function TrackingTab({ orgId }: { orgId: string }) {
         <select
           value={categoryFilter}
           onChange={e => setCategoryFilter(e.target.value)}
-          className="h-8 rounded-md border border-white/20 bg-white/5 text-slate-300 text-xs px-2 focus:outline-none focus:ring-1 focus:ring-orange-500"
+          className="h-8 rounded-md border border-white/20 bg-white/5 text-slate-300 text-xs px-2 focus:outline-none focus:ring-1 focus:ring-amber-500"
         >
           <option value="">All categories</option>
           <option value="brand-awareness">Brand Awareness</option>
@@ -169,7 +169,7 @@ function TrackingTab({ orgId }: { orgId: string }) {
           <button
             onClick={handleTestAll}
             disabled={testingAll}
-            className="px-3 py-1.5 text-xs rounded-md border border-orange-500/30 bg-orange-500/10 text-orange-300 hover:bg-orange-500/20 transition-colors disabled:opacity-50"
+            className="px-3 py-1.5 text-xs rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-colors disabled:opacity-50"
           >
             {testingAll ? 'Testing…' : `Test Untested (max 5)`}
           </button>
@@ -215,7 +215,7 @@ function GapsTab({ orgId }: { orgId: string }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -293,7 +293,7 @@ function PromptsPageContent() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-orange-400" />
+            <Sparkles className="w-6 h-6 text-amber-400" />
             Prompt Intelligence
           </h1>
           <p className="text-sm text-slate-400 mt-1">

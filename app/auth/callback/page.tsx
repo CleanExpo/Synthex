@@ -33,7 +33,9 @@ function OAuthCallbackContent() {
       if (error) {
         const errorDescription = searchParams.get('error_description');
         console.error('[OAuth Callback] Error:', error, errorDescription);
-        router.replace(`/login?error=${encodeURIComponent(errorDescription || error)}`);
+        router.replace(
+          `/login?error=${encodeURIComponent(errorDescription || error)}`
+        );
         return;
       }
 
@@ -77,8 +79,10 @@ function OAuthCallbackContent() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]">
       <Card className="liquid-glass p-8 max-w-md w-full mx-4">
         <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="w-12 h-12 text-orange-400 animate-spin" />
-          <h2 className="text-2xl font-semibold text-white">Completing sign-in, please wait...</h2>
+          <Loader2 className="w-12 h-12 text-amber-400 animate-spin" />
+          <h2 className="text-2xl font-semibold text-white">
+            Completing sign-in, please wait...
+          </h2>
           <p className="text-gray-400 text-center">
             We're verifying your credentials and setting up your session.
           </p>
@@ -90,16 +94,18 @@ function OAuthCallbackContent() {
 
 export default function OAuthCallbackPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]">
-        <Card className="liquid-glass p-8 max-w-md w-full mx-4">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="w-12 h-12 text-orange-400 animate-spin" />
-            <h2 className="text-2xl font-semibold text-white">Loading...</h2>
-          </div>
-        </Card>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]">
+          <Card className="liquid-glass p-8 max-w-md w-full mx-4">
+            <div className="flex flex-col items-center space-y-4">
+              <Loader2 className="w-12 h-12 text-amber-400 animate-spin" />
+              <h2 className="text-2xl font-semibold text-white">Loading...</h2>
+            </div>
+          </Card>
+        </div>
+      }
+    >
       <OAuthCallbackContent />
     </Suspense>
   );

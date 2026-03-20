@@ -182,7 +182,7 @@ export function GetStartedChecklist({
   return (
     <div
       className={cn(
-        'border-[0.5px] border-orange-500/20 bg-orange-500/[0.02] rounded-sm overflow-hidden',
+        'border-[0.5px] border-amber-500/20 bg-amber-500/[0.02] rounded-sm overflow-hidden',
         className
       )}
     >
@@ -190,8 +190,8 @@ export function GetStartedChecklist({
       <div className="px-6 pt-5 pb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 border-[0.5px] border-orange-500/30 bg-orange-500/10 rounded-sm flex items-center justify-center flex-shrink-0">
-              <Rocket className="h-4 w-4 text-orange-400" />
+            <div className="h-9 w-9 border-[0.5px] border-amber-500/30 bg-amber-500/10 rounded-sm flex items-center justify-center flex-shrink-0">
+              <Rocket className="h-4 w-4 text-amber-400" />
             </div>
             <div>
               <h3 className="text-base font-light text-white tracking-tight">
@@ -220,13 +220,13 @@ export function GetStartedChecklist({
             <span className="text-[10px] text-white/30">
               {completedCount} of {steps.length} complete
             </span>
-            <span className="font-mono text-[10px] text-orange-400 tabular-nums">
+            <span className="font-mono text-[10px] text-amber-400 tabular-nums">
               {progressPercent}%
             </span>
           </div>
           <div className="h-px bg-white/[0.06] rounded-full overflow-hidden">
             <div
-              className="h-full bg-orange-500 transition-all duration-500"
+              className="h-full bg-amber-500 transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -260,13 +260,13 @@ export function GetStartedChecklist({
                 'h-8 w-8 border-[0.5px] rounded-sm flex items-center justify-center flex-shrink-0 transition-colors',
                 step.completed
                   ? 'border-emerald-500/30 bg-emerald-500/[0.08]'
-                  : 'border-white/[0.08] bg-white/[0.02] group-hover:border-orange-500/30 group-hover:bg-orange-500/[0.08]'
+                  : 'border-white/[0.08] bg-white/[0.02] group-hover:border-amber-500/30 group-hover:bg-amber-500/[0.08]'
               )}
             >
               {step.completed ? (
                 <CheckCircle className="h-4 w-4 text-emerald-400" />
               ) : (
-                <step.icon className="h-3.5 w-3.5 text-white/40 group-hover:text-orange-400 transition-colors" />
+                <step.icon className="h-3.5 w-3.5 text-white/40 group-hover:text-amber-400 transition-colors" />
               )}
             </div>
 
@@ -288,7 +288,7 @@ export function GetStartedChecklist({
             </div>
 
             {!step.completed && (
-              <ChevronRight className="h-3.5 w-3.5 text-white/20 group-hover:text-orange-400 transition-colors flex-shrink-0" />
+              <ChevronRight className="h-3.5 w-3.5 text-white/20 group-hover:text-amber-400 transition-colors flex-shrink-0" />
             )}
           </Link>
         ))}

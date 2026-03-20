@@ -184,7 +184,7 @@ export function PostDetailModal({
                 : editedPost.status === 'failed'
                   ? 'bg-red-500/20 text-red-300'
                   : editedPost.status === 'scheduled'
-                    ? 'bg-orange-500/20 text-orange-300'
+                    ? 'bg-amber-500/20 text-amber-300'
                     : 'bg-gray-500/20 text-gray-300'
             }
           `}
@@ -488,7 +488,7 @@ const EVENT_CONFIG: Record<
   },
   scheduled: {
     label: 'Scheduled',
-    dotClass: 'bg-orange-500',
+    dotClass: 'bg-amber-500',
     icon: Clock,
   },
   created: {

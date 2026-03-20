@@ -37,7 +37,7 @@ export function KeyboardHints() {
       <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-xl p-4 shadow-xl max-w-xs">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 text-white">
-            <Command className="w-4 h-4 text-orange-400" />
+            <Command className="w-4 h-4 text-amber-400" />
             <span className="font-medium text-sm">Keyboard Shortcuts</span>
           </div>
           <button

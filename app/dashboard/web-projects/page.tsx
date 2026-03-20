@@ -129,7 +129,7 @@ export default function WebProjectsPage() {
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-orange-600 hover:bg-orange-500 text-white gap-2">
+            <Button className="bg-amber-600 hover:bg-amber-500 text-white gap-2">
               <Plus className="w-4 h-4" />
               New Project
             </Button>
@@ -188,7 +188,7 @@ export default function WebProjectsPage() {
                 <Button
                   type="submit"
                   disabled={creating || !form.name.trim()}
-                  className="bg-orange-600 hover:bg-orange-500 text-white"
+                  className="bg-amber-600 hover:bg-amber-500 text-white"
                 >
                   {creating && (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -217,14 +217,14 @@ export default function WebProjectsPage() {
               setLoading(true);
               fetchProjects();
             }}
-            className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white text-sm rounded-lg"
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg"
           >
             Retry
           </button>
         </div>
       ) : loading ? (
         <div className="flex items-center justify-center py-24">
-          <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
         </div>
       ) : projects.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -238,7 +238,7 @@ export default function WebProjectsPage() {
           </p>
           <Button
             onClick={() => setDialogOpen(true)}
-            className="bg-orange-600 hover:bg-orange-500 text-white gap-2"
+            className="bg-amber-600 hover:bg-amber-500 text-white gap-2"
           >
             <Plus className="w-4 h-4" />
             Create First Project
@@ -254,7 +254,7 @@ export default function WebProjectsPage() {
             return (
               <div
                 key={project.id}
-                className="group relative bg-white/[0.03] border border-white/[0.08] rounded-xl p-5 hover:border-orange-500/30 hover:bg-white/[0.05] transition-all"
+                className="group relative bg-white/[0.03] border border-white/[0.08] rounded-xl p-5 hover:border-amber-500/30 hover:bg-white/[0.05] transition-all"
               >
                 {/* Status badge */}
                 <div className="flex items-start justify-between mb-3">
@@ -286,7 +286,7 @@ export default function WebProjectsPage() {
 
                 {/* Project name */}
                 <Link href={`/dashboard/web-projects/${project.id}`}>
-                  <h3 className="font-semibold text-white hover:text-orange-400 transition-colors line-clamp-1 mb-1">
+                  <h3 className="font-semibold text-white hover:text-amber-400 transition-colors line-clamp-1 mb-1">
                     {project.name}
                   </h3>
                 </Link>
@@ -308,7 +308,7 @@ export default function WebProjectsPage() {
                       href={websiteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 hover:text-orange-400 transition-colors"
+                      className="flex items-center gap-1 hover:text-amber-400 transition-colors"
                       onClick={e => e.stopPropagation()}
                     >
                       <ExternalLink className="w-3 h-3" />

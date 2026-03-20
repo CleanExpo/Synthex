@@ -36,19 +36,20 @@ const MediaItem = ({
       threshold: 0.1,
     };
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
         setIsInView(entry.isIntersecting);
       });
     }, options);
 
-    if (videoRef.current) {
-      observer.observe(videoRef.current);
+    const node = videoRef.current;
+    if (node) {
+      observer.observe(node);
     }
 
     return () => {
-      if (videoRef.current) {
-        observer.unobserve(videoRef.current);
+      if (node) {
+        observer.unobserve(node);
       }
     };
   }, []);
@@ -65,7 +66,7 @@ const MediaItem = ({
           await videoRef.current.play();
         } else {
           setIsBuffering(true);
-          await new Promise((resolve) => {
+          await new Promise(resolve => {
             if (videoRef.current) {
               videoRef.current.oncanplay = resolve;
             }
@@ -86,12 +87,13 @@ const MediaItem = ({
       videoRef.current.pause();
     }
 
+    const node = videoRef.current;
     return () => {
       mounted = false;
-      if (videoRef.current) {
-        videoRef.current.pause();
-        videoRef.current.removeAttribute('src');
-        videoRef.current.load();
+      if (node) {
+        node.pause();
+        node.removeAttribute('src');
+        node.load();
       }
     };
   }, [isInView]);
@@ -205,8 +207,10 @@ const GalleryModal = ({
                   className="w-full h-full object-contain bg-[#0a1628]/20"
                   onClick={onClose}
                 />
-                <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 md:p-4
-                                bg-gradient-to-t from-black/70 to-transparent">
+                <div
+                  className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 md:p-4
+                                bg-gradient-to-t from-black/70 to-transparent"
+                >
                   <h3 className="text-white text-base sm:text-lg md:text-xl font-semibold">
                     {selectedItem.title}
                   </h3>
@@ -240,7 +244,7 @@ const GalleryModal = ({
         initial={false}
         animate={{ x: dockPosition.x, y: dockPosition.y }}
         onDragEnd={(_, info) => {
-          setDockPosition((prev) => ({
+          setDockPosition(prev => ({
             x: prev.x + info.offset.x,
             y: prev.y + info.offset.y,
           }));
@@ -248,27 +252,29 @@ const GalleryModal = ({
         className="fixed z-50 left-1/2 bottom-4 -translate-x-1/2 touch-none"
       >
         <motion.div
-          className="relative rounded-sm bg-cyan-500/[0.08] backdrop-blur-xl
-                     border-[0.5px] border-cyan-500/20 shadow-lg
+          className="relative rounded-sm bg-amber-500/[0.08] backdrop-blur-xl
+                     border-[0.5px] border-amber-500/20 shadow-lg
                      cursor-grab active:cursor-grabbing"
         >
           <div className="flex items-center -space-x-2 px-3 py-2">
             {mediaItems.map((item, index) => (
               <motion.div
                 key={item.id}
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   setSelectedItem(item);
                 }}
                 style={{
                   zIndex:
-                    selectedItem.id === item.id ? 30 : mediaItems.length - index,
+                    selectedItem.id === item.id
+                      ? 30
+                      : mediaItems.length - index,
                 }}
                 className={cn(
                   'relative group w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex-shrink-0',
                   'rounded-sm overflow-hidden cursor-pointer hover:z-20',
                   selectedItem.id === item.id
-                    ? 'ring-2 ring-cyan-400/70 shadow-lg'
+                    ? 'ring-2 ring-amber-400/70 shadow-lg'
                     : 'hover:ring-2 hover:ring-white/30'
                 )}
                 initial={{ rotate: index % 2 === 0 ? -15 : 15 }}
@@ -278,8 +284,8 @@ const GalleryModal = ({
                     selectedItem.id === item.id
                       ? 0
                       : index % 2 === 0
-                      ? -15
-                      : 15,
+                        ? -15
+                        : 15,
                   y: selectedItem.id === item.id ? -8 : 0,
                 }}
                 whileHover={{
@@ -298,7 +304,7 @@ const GalleryModal = ({
                 {selectedItem.id === item.id && (
                   <motion.div
                     layoutId="activeGlow"
-                    className="absolute -inset-2 bg-cyan-400/20 blur-xl"
+                    className="absolute -inset-2 bg-amber-400/20 blur-xl"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.2 }}
@@ -333,7 +339,7 @@ const InteractiveBentoGallery: React.FC<InteractiveBentoGalleryProps> = ({
       <div className="mb-8 text-center">
         <motion.h1
           className="text-2xl sm:text-3xl md:text-4xl font-bold bg-clip-text text-transparent
-                     bg-gradient-to-r from-white via-cyan-400 to-white"
+                     bg-gradient-to-r from-white via-amber-400 to-white"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}

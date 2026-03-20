@@ -156,7 +156,7 @@ function SearchPerformanceSection({
         <Button
           onClick={handleFetch}
           disabled={loading || !siteUrl.trim()}
-          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
+          className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white"
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -178,7 +178,7 @@ function SearchPerformanceSection({
             onClick={() => handleDateRangeChange(range)}
             className={`text-xs ${
               dateRange === range
-                ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
+                ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
                 : 'border-white/10 text-gray-400 hover:bg-white/5'
             }`}
           >
@@ -230,7 +230,7 @@ function SearchPerformanceSection({
                   onClick={() => handleDimensionChange(dim)}
                   className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                     dimension === dim
-                      ? 'bg-orange-500/20 text-orange-400'
+                      ? 'bg-amber-500/20 text-amber-400'
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -271,7 +271,7 @@ function SearchPerformanceSection({
                     <td className="py-2.5 px-2 text-white font-mono text-xs truncate max-w-[300px]">
                       {row.keys.join(', ')}
                     </td>
-                    <td className="py-2.5 px-2 text-right text-orange-400 font-medium">
+                    <td className="py-2.5 px-2 text-right text-amber-400 font-medium">
                       {row.clicks.toLocaleString()}
                     </td>
                     <td className="py-2.5 px-2 text-right text-gray-300">
@@ -412,7 +412,7 @@ function IndexingStatusSection({
           <Button
             type="submit"
             disabled={loading || !siteUrl.trim() || !inspectionUrl.trim()}
-            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
+            className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -535,7 +535,7 @@ function SitemapHealthSection({
         <Button
           onClick={handleFetch}
           disabled={loading || !siteUrl.trim()}
-          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
+          className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white"
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -586,7 +586,7 @@ function SitemapHealthSection({
                   <td className="py-2.5 px-2 text-white font-mono text-xs truncate max-w-[300px]">
                     {sitemap.path}
                     {sitemap.isSitemapsIndex && (
-                      <span className="ml-2 px-1.5 py-0.5 bg-orange-500/10 text-orange-400 rounded text-[10px] font-medium">
+                      <span className="ml-2 px-1.5 py-0.5 bg-amber-500/10 text-amber-400 rounded text-[10px] font-medium">
                         INDEX
                       </span>
                     )}
@@ -665,13 +665,13 @@ export default function SearchConsolePage() {
         <div>
           <Link
             href="/dashboard/seo"
-            className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
+            className="text-sm text-gray-400 hover:text-amber-400 flex items-center gap-1 mb-2 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to SEO Tools
           </Link>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <BarChart3 className="w-8 h-8 text-orange-400" />
+            <BarChart3 className="w-8 h-8 text-amber-400" />
             Search Console
           </h1>
           <p className="text-gray-400 mt-2">
@@ -686,11 +686,11 @@ export default function SearchConsolePage() {
         description="Access Google Search Console data including search analytics, URL indexing inspection, and sitemap health monitoring."
       >
         {/* Search Performance */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-orange-400" />
+                <BarChart3 className="w-5 h-5 text-amber-400" />
                 Search Performance
               </h2>
               <p className="text-sm text-gray-400 mt-1">
@@ -708,11 +708,11 @@ export default function SearchConsolePage() {
         </Card>
 
         {/* Indexing Status */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Search className="w-5 h-5 text-orange-400" />
+                <Search className="w-5 h-5 text-amber-400" />
                 Indexing Status
               </h2>
               <p className="text-sm text-gray-400 mt-1">
@@ -730,11 +730,11 @@ export default function SearchConsolePage() {
         </Card>
 
         {/* Sitemap Health */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Globe className="w-5 h-5 text-orange-400" />
+                <Globe className="w-5 h-5 text-amber-400" />
                 Sitemap Health
               </h2>
               <p className="text-sm text-gray-400 mt-1">

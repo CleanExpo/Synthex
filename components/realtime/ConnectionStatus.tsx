@@ -10,7 +10,11 @@
 import React from 'react';
 import { Wifi, WifiOff, Loader2, RefreshCw } from '@/components/icons';
 
-export type ConnectionState = 'connected' | 'connecting' | 'disconnected' | 'reconnecting';
+export type ConnectionState =
+  | 'connected'
+  | 'connecting'
+  | 'disconnected'
+  | 'reconnecting';
 export type ConnectionMethod = 'websocket' | 'sse' | 'polling' | 'none';
 
 interface ConnectionStatusProps {
@@ -43,8 +47,8 @@ const stateConfig = {
     pulse: false,
   },
   reconnecting: {
-    color: 'text-orange-400',
-    bgColor: 'bg-orange-400',
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-400',
     label: 'Reconnecting...',
     pulse: false,
   },
@@ -230,8 +234,8 @@ export function ConnectionStatusBadge({
           ? method === 'websocket'
             ? 'Real-time'
             : method === 'sse'
-            ? 'Live'
-            : 'Connected'
+              ? 'Live'
+              : 'Connected'
           : stateConfig[state].label}
       </span>
     </div>

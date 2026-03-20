@@ -14,7 +14,14 @@ const INTEGRATIONS = [
     icon: (
       <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
         <rect width="24" height="24" rx="6" fill="url(#ig-grad)" />
-        <circle cx="12" cy="12" r="4.5" stroke="white" strokeWidth="1.5" fill="none" />
+        <circle
+          cx="12"
+          cy="12"
+          r="4.5"
+          stroke="white"
+          strokeWidth="1.5"
+          fill="none"
+        />
         <circle cx="17" cy="7" r="1.2" fill="white" />
         <defs>
           <radialGradient id="ig-grad" cx="30%" cy="107%" r="130%">
@@ -140,7 +147,10 @@ const INTEGRATIONS = [
     icon: (
       <svg viewBox="0 0 24 24" className="w-full h-full">
         <rect width="24" height="24" rx="6" fill="#FF4A00" />
-        <path d="M14.5 9.5l-1 2.5H16l-3 5-1-2.5H9.5l2.5-5L14.5 9.5z" fill="white" />
+        <path
+          d="M14.5 9.5l-1 2.5H16l-3 5-1-2.5H9.5l2.5-5L14.5 9.5z"
+          fill="white"
+        />
       </svg>
     ),
   },
@@ -152,7 +162,12 @@ const INTEGRATIONS = [
 
 function SynthexLogo() {
   return (
-    <svg viewBox="0 0 40 40" fill="none" className="w-full h-full" aria-label="Synthex">
+    <svg
+      viewBox="0 0 40 40"
+      fill="none"
+      className="w-full h-full"
+      aria-label="Synthex"
+    >
       <rect width="40" height="40" rx="10" fill="url(#synth-grad)" />
       <path
         d="M12 20l4-6h8l4 6-4 6h-8l-4-6z"
@@ -260,7 +275,7 @@ function OrbitRing({
                 className={cn(
                   'w-full h-full rounded-sm border-[0.5px] border-white/[0.06] bg-[#0a1628] overflow-hidden',
                   'cursor-pointer transition-all duration-200',
-                  'hover:border-cyan-500/20 hover:shadow-[0_0_16px_rgba(34,211,238,0.15)]'
+                  'hover:border-amber-500/20 hover:shadow-[0_0_16px_rgba(245,158,11,0.15)]'
                 )}
                 style={{ padding: iconSize * 0.14 }}
               >
@@ -291,9 +306,24 @@ function OrbitRing({
 // ---------------------------------------------------------------------------
 
 const ORBIT_CONFIG = [
-  { slice: [0, 4] as [number, number], radiusRatio: 0.22, duration: 20, initialRotation: 0 },
-  { slice: [0, 7] as [number, number], radiusRatio: 0.36, duration: 32, initialRotation: 45 },
-  { slice: [0, 10] as [number, number], radiusRatio: 0.5, duration: 48, initialRotation: 20 },
+  {
+    slice: [0, 4] as [number, number],
+    radiusRatio: 0.22,
+    duration: 20,
+    initialRotation: 0,
+  },
+  {
+    slice: [0, 7] as [number, number],
+    radiusRatio: 0.36,
+    duration: 32,
+    initialRotation: 45,
+  },
+  {
+    slice: [0, 10] as [number, number],
+    radiusRatio: 0.5,
+    duration: 48,
+    initialRotation: 20,
+  },
 ];
 
 export function OrbitIntegrations() {
@@ -318,8 +348,8 @@ export function OrbitIntegrations() {
     containerWidth < 480
       ? Math.max(24, baseSize * 0.055)
       : containerWidth < 768
-      ? Math.max(28, baseSize * 0.065)
-      : Math.max(32, baseSize * 0.075);
+        ? Math.max(28, baseSize * 0.065)
+        : Math.max(32, baseSize * 0.075);
 
   return (
     <section className="py-16 relative w-full overflow-hidden bg-[#080e1a]">
@@ -331,7 +361,7 @@ export function OrbitIntegrations() {
             width: baseSize * 0.9,
             height: baseSize * 0.9,
             background:
-              'radial-gradient(circle, rgba(34,211,238,0.18) 0%, transparent 70%)',
+              'radial-gradient(circle, rgba(245,158,11,0.18) 0%, transparent 70%)',
           }}
         />
       </div>
@@ -341,7 +371,8 @@ export function OrbitIntegrations() {
           Integrations
         </h2>
         <p className="mb-12 max-w-xl text-white/60 text-base lg:text-lg">
-          Connect your favourite social platforms and tools to your Synthex workflow.
+          Connect your favourite social platforms and tools to your Synthex
+          workflow.
         </p>
 
         {/* Orbit stage */}
@@ -365,8 +396,8 @@ export function OrbitIntegrations() {
           {/* Centre Synthex logo */}
           <div
             className={cn(
-              'absolute z-20 rounded-sm border-[0.5px] border-cyan-500/20',
-              'bg-[#0a1628] shadow-[0_0_32px_rgba(34,211,238,0.15)]',
+              'absolute z-20 rounded-sm border-[0.5px] border-amber-500/20',
+              'bg-[#0a1628] shadow-[0_0_32px_rgba(245,158,11,0.15)]',
               'overflow-hidden'
             )}
             style={{

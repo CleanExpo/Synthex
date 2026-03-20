@@ -62,8 +62,8 @@ export default function AIChatPage() {
       <div className="p-6 max-w-4xl mx-auto">
         <div className="flex items-start justify-between gap-3 mb-8">
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20">
-              <MessageSquare className="h-6 w-6 text-orange-400" />
+            <div className="p-2 rounded-sm bg-amber-500/10 border-[0.5px] border-amber-500/20">
+              <MessageSquare className="h-6 w-6 text-amber-400" />
             </div>
             <div>
               <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-1 block">
@@ -113,7 +113,7 @@ export default function AIChatPage() {
     return (
       <div className="h-[calc(100vh-8rem)] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-white/40">
-          <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-amber-400" />
           <span>Loading conversations...</span>
         </div>
       </div>
@@ -153,8 +153,8 @@ export default function AIChatPage() {
   return (
     <div className="h-[calc(100vh-8rem)] flex items-center justify-center">
       <div className="text-center max-w-md">
-        <div className="p-4 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20 inline-block mb-4">
-          <MessageSquare className="h-8 w-8 text-orange-400" />
+        <div className="p-4 rounded-sm bg-amber-500/10 border-[0.5px] border-amber-500/20 inline-block mb-4">
+          <MessageSquare className="h-8 w-8 text-amber-400" />
         </div>
         <h3 className="text-xl font-light text-white mb-2">
           Start your first conversation
@@ -169,7 +169,7 @@ export default function AIChatPage() {
         <Button
           onClick={handleCreateConversation}
           disabled={isCreating}
-          className="bg-orange-500/20 border-[0.5px] border-orange-500/30 hover:bg-orange-500/30 text-orange-400"
+          className="bg-amber-500/20 border-[0.5px] border-amber-500/30 hover:bg-amber-500/30 text-amber-400"
         >
           {isCreating ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />

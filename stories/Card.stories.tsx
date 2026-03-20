@@ -1,9 +1,26 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, Users, TrendingUp, Sparkles, Zap, Brain, Target, BarChart, Shield } from '@/components/icons';
+import {
+  Calendar,
+  Users,
+  TrendingUp,
+  Sparkles,
+  Zap,
+  Brain,
+  Target,
+  BarChart,
+  Shield,
+} from '@/components/icons';
 
 const meta = {
   title: 'UI/Card',
@@ -12,7 +29,8 @@ const meta = {
     layout: 'centered',
     docs: {
       description: {
-        component: 'A card container with header, content, and footer sections. Includes premium glassmorphism variants.',
+        component:
+          'A card container with header, content, and footer sections. Includes premium glassmorphism variants.',
       },
     },
   },
@@ -68,7 +86,10 @@ export const WithoutFooter: Story = {
         <CardDescription>A card without a footer section.</CardDescription>
       </CardHeader>
       <CardContent>
-        <p>This card only has a header and content section. The footer has been omitted for a cleaner look when actions aren't needed.</p>
+        <p>
+          This card only has a header and content section. The footer has been
+          omitted for a cleaner look when actions aren't needed.
+        </p>
       </CardContent>
     </Card>
   ),
@@ -103,7 +124,10 @@ export const CampaignCard: Story = {
             <span>$2,450 / $3,000</span>
           </div>
           <div className="w-full bg-secondary rounded-full h-2">
-            <div className="bg-primary h-2 rounded-full" style={{ width: '82%' }}></div>
+            <div
+              className="bg-primary h-2 rounded-full"
+              style={{ width: '82%' }}
+            ></div>
           </div>
         </div>
       </CardContent>
@@ -115,7 +139,8 @@ export const CampaignCard: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'A campaign card showing campaign details, progress, and actions.',
+        story:
+          'A campaign card showing campaign details, progress, and actions.',
       },
     },
   },
@@ -151,7 +176,9 @@ export const UserCard: Story = {
         </div>
       </CardContent>
       <CardFooter className="pt-4">
-        <Button variant="outline" className="w-full">View Profile</Button>
+        <Button variant="outline" className="w-full">
+          View Profile
+        </Button>
       </CardFooter>
     </Card>
   ),
@@ -188,7 +215,7 @@ export const MetricsCard: Story = {
 
 export const GlassmorphicCard: Story = {
   render: () => (
-    <div className="bg-gradient-to-br from-cyan-400 to-blue-500 p-8 rounded-lg">
+    <div className="bg-gradient-to-br from-amber-400 to-blue-500 p-8 rounded-lg">
       <Card className="w-[350px] bg-white/10 backdrop-blur-xl border-white/20">
         <CardHeader>
           <CardTitle className="text-white">Glassmorphic Card</CardTitle>
@@ -198,11 +225,15 @@ export const GlassmorphicCard: Story = {
         </CardHeader>
         <CardContent>
           <p className="text-white/90">
-            This card uses a glassmorphic design with backdrop blur and transparency effects.
+            This card uses a glassmorphic design with backdrop blur and
+            transparency effects.
           </p>
         </CardContent>
         <CardFooter>
-          <Button variant="secondary" className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30">
+          <Button
+            variant="secondary"
+            className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30"
+          >
             Learn More
           </Button>
         </CardFooter>
@@ -212,7 +243,8 @@ export const GlassmorphicCard: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'A card with glassmorphic design effects matching the SYNTHEX aesthetic.',
+        story:
+          'A card with glassmorphic design effects matching the SYNTHEX aesthetic.',
       },
     },
   },
@@ -286,11 +318,14 @@ export const GlassCard: Story = {
       </CardHeader>
       <CardContent>
         <p className="text-white/90">
-          This card uses a refined glass effect with backdrop blur and subtle borders.
+          This card uses a refined glass effect with backdrop blur and subtle
+          borders.
         </p>
       </CardContent>
       <CardFooter>
-        <Button variant="glass" className="w-full">Learn More</Button>
+        <Button variant="glass" className="w-full">
+          Learn More
+        </Button>
       </CardFooter>
     </Card>
   ),
@@ -303,8 +338,8 @@ export const GlassCard: Story = {
     },
   },
   decorators: [
-    (Story) => (
-      <div className="bg-gradient-to-br from-slate-900 via-cyan-900 to-slate-900 p-8 rounded-xl">
+    Story => (
+      <div className="bg-gradient-to-br from-slate-900 via-amber-900 to-slate-900 p-8 rounded-xl">
         <Story />
       </div>
     ),
@@ -316,12 +351,12 @@ export const GlassPrimaryCard: Story = {
     <Card variant="glass-primary" className="w-[350px]">
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-cyan-500/20">
-            <Sparkles className="h-5 w-5 text-cyan-400" />
+          <div className="p-2 rounded-lg bg-amber-500/20">
+            <Sparkles className="h-5 w-5 text-amber-400" />
           </div>
           <div>
             <CardTitle className="text-white text-lg">AI Strategy</CardTitle>
-            <CardDescription className="text-cyan-200/70">
+            <CardDescription className="text-amber-200/70">
               Powered by machine learning
             </CardDescription>
           </div>
@@ -329,11 +364,12 @@ export const GlassPrimaryCard: Story = {
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-white/80 text-sm">
-          Advanced AI algorithms analyze millions of data points to optimize your marketing strategy.
+          Advanced AI algorithms analyze millions of data points to optimize
+          your marketing strategy.
         </p>
         <div className="flex items-center gap-4 text-sm">
-          <span className="text-cyan-300">✓ Viral detection</span>
-          <span className="text-cyan-300">✓ Trend analysis</span>
+          <span className="text-amber-300">✓ Viral detection</span>
+          <span className="text-amber-300">✓ Trend analysis</span>
         </div>
       </CardContent>
       <CardFooter>
@@ -353,8 +389,8 @@ export const GlassPrimaryCard: Story = {
     },
   },
   decorators: [
-    (Story) => (
-      <div className="bg-gradient-to-br from-slate-900 via-cyan-900/50 to-slate-900 p-8 rounded-xl">
+    Story => (
+      <div className="bg-gradient-to-br from-slate-900 via-amber-900/50 to-slate-900 p-8 rounded-xl">
         <Story />
       </div>
     ),
@@ -366,12 +402,12 @@ export const GlassSecondaryCard: Story = {
     <Card variant="glass-secondary" className="w-[350px]">
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-cyan-500/20">
-            <Zap className="h-5 w-5 text-cyan-400" />
+          <div className="p-2 rounded-lg bg-amber-500/20">
+            <Zap className="h-5 w-5 text-amber-400" />
           </div>
           <div>
             <CardTitle className="text-white text-lg">Performance</CardTitle>
-            <CardDescription className="text-cyan-200/70">
+            <CardDescription className="text-amber-200/70">
               Real-time analytics
             </CardDescription>
           </div>
@@ -382,10 +418,13 @@ export const GlassSecondaryCard: Story = {
           <div>
             <div className="flex justify-between text-sm mb-1">
               <span className="text-white/70">Engagement Rate</span>
-              <span className="text-cyan-400">87%</span>
+              <span className="text-amber-400">87%</span>
             </div>
             <div className="w-full bg-white/10 rounded-full h-2">
-              <div className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full" style={{ width: '87%' }}></div>
+              <div
+                className="bg-gradient-to-r from-amber-500 to-blue-500 h-2 rounded-full"
+                style={{ width: '87%' }}
+              ></div>
             </div>
           </div>
         </div>
@@ -407,7 +446,7 @@ export const GlassSecondaryCard: Story = {
     },
   },
   decorators: [
-    (Story) => (
+    Story => (
       <div className="bg-gradient-to-br from-slate-900 via-blue-900/50 to-slate-900 p-8 rounded-xl">
         <Story />
       </div>
@@ -449,7 +488,7 @@ export const GlassInteractiveCard: Story = {
     },
   },
   decorators: [
-    (Story) => (
+    Story => (
       <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 rounded-xl">
         <Story />
       </div>
@@ -459,8 +498,10 @@ export const GlassInteractiveCard: Story = {
 
 export const GlassCardShowcase: Story = {
   render: () => (
-    <div className="bg-gradient-to-br from-slate-900 via-cyan-900/30 to-slate-900 p-8 rounded-xl">
-      <h2 className="text-white text-xl font-semibold mb-6">Glass Card Variants</h2>
+    <div className="bg-gradient-to-br from-slate-900 via-amber-900/30 to-slate-900 p-8 rounded-xl">
+      <h2 className="text-white text-xl font-semibold mb-6">
+        Glass Card Variants
+      </h2>
 
       <div className="grid grid-cols-3 gap-6">
         <Card variant="glass" className="w-full">
@@ -483,7 +524,9 @@ export const GlassCardShowcase: Story = {
 
         <Card variant="glass-gradient" className="w-full">
           <CardHeader className="pb-3">
-            <CardTitle className="text-white text-base">Glass Gradient</CardTitle>
+            <CardTitle className="text-white text-base">
+              Glass Gradient
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-white/70 text-sm">Subtle gradient</p>
@@ -493,24 +536,28 @@ export const GlassCardShowcase: Story = {
         <Card variant="glass-primary" className="w-full">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-cyan-400" />
-              <CardTitle className="text-white text-base">Glass Primary</CardTitle>
+              <Sparkles className="h-4 w-4 text-amber-400" />
+              <CardTitle className="text-white text-base">
+                Glass Primary
+              </CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-cyan-200/70 text-sm">Violet accent</p>
+            <p className="text-amber-200/70 text-sm">Violet accent</p>
           </CardContent>
         </Card>
 
         <Card variant="glass-secondary" className="w-full">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-cyan-400" />
-              <CardTitle className="text-white text-base">Glass Secondary</CardTitle>
+              <Zap className="h-4 w-4 text-amber-400" />
+              <CardTitle className="text-white text-base">
+                Glass Secondary
+              </CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-cyan-200/70 text-sm">Cyan accent</p>
+            <p className="text-amber-200/70 text-sm">Cyan accent</p>
           </CardContent>
         </Card>
 
@@ -537,17 +584,21 @@ export const GlassCardShowcase: Story = {
 
 export const GlassFeatureGrid: Story = {
   render: () => (
-    <div className="bg-gradient-to-br from-slate-900 via-cyan-900/20 to-slate-900 p-8 rounded-xl">
+    <div className="bg-gradient-to-br from-slate-900 via-amber-900/20 to-slate-900 p-8 rounded-xl">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-white mb-2">AI-Powered Features</h2>
-        <p className="text-white/60">Everything you need to dominate social media</p>
+        <h2 className="text-2xl font-bold text-white mb-2">
+          AI-Powered Features
+        </h2>
+        <p className="text-white/60">
+          Everything you need to dominate social media
+        </p>
       </div>
 
       <div className="grid grid-cols-3 gap-4 w-[900px]">
         <Card variant="glass-interactive">
           <CardHeader className="pb-3">
-            <div className="p-2 rounded-lg bg-cyan-500/20 w-fit mb-2">
-              <Brain className="h-5 w-5 text-cyan-400" />
+            <div className="p-2 rounded-lg bg-amber-500/20 w-fit mb-2">
+              <Brain className="h-5 w-5 text-amber-400" />
             </div>
             <CardTitle className="text-white text-base">AI Strategy</CardTitle>
           </CardHeader>
@@ -560,10 +611,12 @@ export const GlassFeatureGrid: Story = {
 
         <Card variant="glass-interactive">
           <CardHeader className="pb-3">
-            <div className="p-2 rounded-lg bg-cyan-500/20 w-fit mb-2">
-              <Sparkles className="h-5 w-5 text-cyan-400" />
+            <div className="p-2 rounded-lg bg-amber-500/20 w-fit mb-2">
+              <Sparkles className="h-5 w-5 text-amber-400" />
             </div>
-            <CardTitle className="text-white text-base">Content Creator</CardTitle>
+            <CardTitle className="text-white text-base">
+              Content Creator
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-white/60 text-sm">
@@ -574,8 +627,8 @@ export const GlassFeatureGrid: Story = {
 
         <Card variant="glass-interactive">
           <CardHeader className="pb-3">
-            <div className="p-2 rounded-lg bg-cyan-500/20 w-fit mb-2">
-              <BarChart className="h-5 w-5 text-cyan-400" />
+            <div className="p-2 rounded-lg bg-amber-500/20 w-fit mb-2">
+              <BarChart className="h-5 w-5 text-amber-400" />
             </div>
             <CardTitle className="text-white text-base">Analytics</CardTitle>
           </CardHeader>
@@ -591,7 +644,9 @@ export const GlassFeatureGrid: Story = {
             <div className="p-2 rounded-lg bg-emerald-500/20 w-fit mb-2">
               <Target className="h-5 w-5 text-emerald-400" />
             </div>
-            <CardTitle className="text-white text-base">Growth Hacker</CardTitle>
+            <CardTitle className="text-white text-base">
+              Growth Hacker
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-white/60 text-sm">
@@ -634,7 +689,8 @@ export const GlassFeatureGrid: Story = {
     layout: 'padded',
     docs: {
       description: {
-        story: 'Feature grid using interactive glass cards - matches SYNTHEX landing page design.',
+        story:
+          'Feature grid using interactive glass cards - matches SYNTHEX landing page design.',
       },
     },
   },

@@ -228,7 +228,7 @@ export default function WebProjectDetailPage({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
       </div>
     );
   }
@@ -275,7 +275,7 @@ export default function WebProjectDetailPage({
               href={project.websiteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-orange-400 hover:text-orange-300 text-sm mt-1"
+              className="inline-flex items-center gap-1.5 text-amber-400 hover:text-amber-300 text-sm mt-1"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               {project.websiteUrl}
@@ -292,7 +292,7 @@ export default function WebProjectDetailPage({
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
               activeTab === tab.id
-                ? 'text-orange-400 border-orange-400'
+                ? 'text-amber-400 border-amber-400'
                 : 'text-gray-400 border-transparent hover:text-gray-200'
             }`}
           >
@@ -392,7 +392,7 @@ export default function WebProjectDetailPage({
               <Button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-orange-600 hover:bg-orange-500 text-white gap-2"
+                className="bg-amber-600 hover:bg-amber-500 text-white gap-2"
               >
                 {saving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -423,7 +423,7 @@ export default function WebProjectDetailPage({
           <p className="text-sm text-gray-400">
             Copy these GSAP presets directly into your project. Each template
             uses GSAP 3 with ScrollTrigger — install with{' '}
-            <code className="bg-white/10 px-1.5 py-0.5 rounded text-orange-300 text-xs">
+            <code className="bg-white/10 px-1.5 py-0.5 rounded text-amber-300 text-xs">
               npm install gsap
             </code>
             .
@@ -486,7 +486,7 @@ export default function WebProjectDetailPage({
               <Button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-orange-600 hover:bg-orange-500 text-white gap-2"
+                className="bg-amber-600 hover:bg-amber-500 text-white gap-2"
               >
                 {saving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

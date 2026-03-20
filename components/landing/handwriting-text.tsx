@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
 
 interface HandWrittenTitleProps {
   title?: string;
@@ -8,8 +8,8 @@ interface HandWrittenTitleProps {
 }
 
 function HandWrittenTitle({
-  title = "Synthex",
-  subtitle = "AI-powered marketing automation",
+  title = 'Synthex',
+  subtitle = 'AI-powered marketing automation',
 }: HandWrittenTitleProps) {
   const draw = {
     hidden: { pathLength: 0, opacity: 0 },
@@ -47,7 +47,7 @@ function HandWrittenTitle({
             strokeLinecap="round"
             strokeLinejoin="round"
             variants={draw}
-            className="text-cyan-400 opacity-60"
+            className="text-amber-400 opacity-60"
           />
         </motion.svg>
       </div>

@@ -58,7 +58,7 @@ export function AnalyticsStats({ data, growth }: AnalyticsStatsProps) {
           <CardTitle className="text-sm font-medium text-slate-400">
             Total Reach
           </CardTitle>
-          <Eye className="h-4 w-4 text-orange-500" />
+          <Eye className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">
@@ -73,7 +73,7 @@ export function AnalyticsStats({ data, growth }: AnalyticsStatsProps) {
           <CardTitle className="text-sm font-medium text-slate-400">
             Total Engagement
           </CardTitle>
-          <Heart className="h-4 w-4 text-orange-500" />
+          <Heart className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">
@@ -88,7 +88,7 @@ export function AnalyticsStats({ data, growth }: AnalyticsStatsProps) {
           <CardTitle className="text-sm font-medium text-slate-400">
             Engagement Rate
           </CardTitle>
-          <Activity className="h-4 w-4 text-orange-500" />
+          <Activity className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">
@@ -115,7 +115,7 @@ export function AnalyticsStats({ data, growth }: AnalyticsStatsProps) {
           <CardTitle className="text-sm font-medium text-slate-400">
             Follower Growth
           </CardTitle>
-          <Users className="h-4 w-4 text-orange-500" />
+          <Users className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">

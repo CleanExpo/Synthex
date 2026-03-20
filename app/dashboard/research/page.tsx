@@ -130,7 +130,7 @@ function AutoResearchSection() {
       );
     if (status === 'running')
       return (
-        <Badge className="bg-orange-500/20 text-orange-400 border-0 flex items-center gap-1">
+        <Badge className="bg-amber-500/20 text-amber-400 border-0 flex items-center gap-1">
           <Loader2 className="h-3 w-3 animate-spin" />
           running
         </Badge>
@@ -145,7 +145,7 @@ function AutoResearchSection() {
       hook: 'bg-purple-500/20 text-purple-400',
       visual_style: 'bg-pink-500/20 text-pink-400',
       hashtag: 'bg-blue-500/20 text-blue-400',
-      topic: 'bg-orange-500/20 text-orange-400',
+      topic: 'bg-amber-500/20 text-amber-400',
       format: 'bg-amber-500/20 text-amber-400',
       cta: 'bg-emerald-500/20 text-emerald-400',
     };
@@ -168,7 +168,7 @@ function AutoResearchSection() {
       {/* Section header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-orange-400" />
+          <Brain className="h-5 w-5 text-amber-400" />
           <h2 className="text-lg font-semibold text-white">Auto-Research</h2>
           <span className="text-xs text-white/30 ml-1">
             Self-learning trend intelligence
@@ -177,7 +177,7 @@ function AutoResearchSection() {
         <Button
           onClick={handleTrigger}
           disabled={triggering || isLatestRunning}
-          className="bg-orange-600 hover:bg-orange-700 text-white text-xs"
+          className="bg-amber-600 hover:bg-amber-700 text-white text-xs"
           size="sm"
         >
           <Zap className="h-3.5 w-3.5 mr-1.5" />
@@ -187,10 +187,10 @@ function AutoResearchSection() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Research Runs card */}
-        <Card className="bg-surface-base/80 border border-orange-500/10">
+        <Card className="bg-surface-base/80 border border-amber-500/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-white/70 flex items-center gap-2">
-              <RefreshCw className="h-4 w-4 text-orange-400/60" />
+              <RefreshCw className="h-4 w-4 text-amber-400/60" />
               Research Runs
             </CardTitle>
           </CardHeader>
@@ -240,14 +240,14 @@ function AutoResearchSection() {
         </Card>
 
         {/* Live Insights card */}
-        <Card className="bg-surface-base/80 border border-orange-500/10">
+        <Card className="bg-surface-base/80 border border-amber-500/10">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-white/70 flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-orange-400/60" />
+                <TrendingUp className="h-4 w-4 text-amber-400/60" />
                 Live Insights
                 {insights.length > 0 && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-orange-500/10 text-orange-400/70 ml-1">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-amber-500/10 text-amber-400/70 ml-1">
                     {insights.length}
                   </span>
                 )}
@@ -258,7 +258,7 @@ function AutoResearchSection() {
                   <select
                     value={platformFilter}
                     onChange={e => setPlatformFilter(e.target.value)}
-                    className="text-xs bg-white/[0.04] border border-white/[0.08] text-white/50 rounded-sm px-2 py-0.5 focus:outline-none focus:border-orange-500/30"
+                    className="text-xs bg-white/[0.04] border border-white/[0.08] text-white/50 rounded-sm px-2 py-0.5 focus:outline-none focus:border-amber-500/30"
                   >
                     <option value="all">All platforms</option>
                     {availablePlatforms.map(p => (
@@ -292,7 +292,7 @@ function AutoResearchSection() {
                     key={insight.id}
                     className="flex gap-2 items-start px-3 py-2 border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm"
                   >
-                    <Globe className="h-3 w-3 text-orange-400/40 shrink-0 mt-0.5" />
+                    <Globe className="h-3 w-3 text-amber-400/40 shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-white/70 leading-relaxed">
                         {insight.insight}
@@ -398,7 +398,7 @@ export default function ResearchPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                <Database className="h-7 w-7 text-orange-400" />
+                <Database className="h-7 w-7 text-amber-400" />
                 Research Reports
               </h1>
               <p className="text-gray-400 mt-1">
@@ -409,7 +409,7 @@ export default function ResearchPage() {
               <HelpVideo videoId="feature-tour-research" />
               <Button
                 onClick={() => setShowCreate(!showCreate)}
-                className="bg-orange-600 hover:bg-orange-700"
+                className="bg-amber-600 hover:bg-amber-700"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 New Report
@@ -418,7 +418,7 @@ export default function ResearchPage() {
           </div>
 
           {showCreate && (
-            <Card className="bg-surface-base/80 border border-orange-500/10">
+            <Card className="bg-surface-base/80 border border-amber-500/10">
               <CardContent className="p-6 space-y-4">
                 <input
                   value={newReport.title}
@@ -446,7 +446,7 @@ export default function ResearchPage() {
                   <Button
                     onClick={createReport}
                     disabled={creating || newReport.title.length < 5}
-                    className="bg-orange-600 hover:bg-orange-700"
+                    className="bg-amber-600 hover:bg-amber-700"
                   >
                     {creating ? 'Creating...' : 'Create Report'}
                   </Button>
@@ -460,7 +460,7 @@ export default function ResearchPage() {
               {[1, 2].map(i => (
                 <Card
                   key={i}
-                  className="bg-surface-base/80 border border-orange-500/10"
+                  className="bg-surface-base/80 border border-amber-500/10"
                 >
                   <CardContent className="p-6 animate-pulse">
                     <div className="h-6 bg-white/10 rounded w-1/2" />
@@ -469,7 +469,7 @@ export default function ResearchPage() {
               ))}
             </div>
           ) : reports.length === 0 ? (
-            <Card className="bg-surface-base/80 border border-orange-500/10">
+            <Card className="bg-surface-base/80 border border-amber-500/10">
               <CardContent className="p-12 text-center text-gray-400">
                 <Database className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 <p>No research reports yet</p>
@@ -483,7 +483,7 @@ export default function ResearchPage() {
               {reports.map(report => (
                 <Card
                   key={report.id}
-                  className="bg-surface-base/80 border border-orange-500/10 hover:border-orange-500/30 transition-all"
+                  className="bg-surface-base/80 border border-amber-500/10 hover:border-amber-500/30 transition-all"
                 >
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
@@ -518,7 +518,7 @@ export default function ResearchPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-orange-400"
+                        className="text-amber-400"
                       >
                         <Eye className="h-4 w-4 mr-1" /> View
                       </Button>

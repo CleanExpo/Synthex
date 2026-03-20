@@ -71,7 +71,7 @@ export function PreviewPanel({
                     onClick={() => onDeviceChange(key as Device)}
                     className={`p-2 rounded transition-all ${
                       device === key
-                        ? 'bg-orange-500/20 text-orange-400'
+                        ? 'bg-amber-500/20 text-amber-400'
                         : 'text-gray-400 hover:text-white'
                     }`}
                     title={preset.label}

@@ -65,7 +65,7 @@ export function MentionsTab({ sentimentData }: MentionsTabProps) {
                 {item.topics.map(topic => (
                   <Badge
                     key={topic}
-                    className="bg-orange-500/20 text-orange-400 text-xs"
+                    className="bg-amber-500/20 text-amber-400 text-xs"
                   >
                     {topic}
                   </Badge>

@@ -71,8 +71,7 @@ function getTrendConfig(trend: EngagementForecast['trend']) {
     case 'volatile':
       return {
         label: 'Volatile',
-        className:
-          'bg-orange-500/20 text-orange-400 border border-orange-500/30',
+        className: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
       };
     default:
       return {
@@ -109,7 +108,7 @@ function ForecastTooltip({ active, payload, label }: CustomTooltipProps) {
   return (
     <div className="rounded-lg bg-surface-base/90 border border-white/10 px-3 py-2 shadow-xl text-xs">
       <p className="text-slate-400 mb-1">{label}</p>
-      <p className="text-orange-400 font-medium">
+      <p className="text-amber-400 font-medium">
         Predicted:{' '}
         <span className="text-white">{predicted.toLocaleString()}</span>
       </p>

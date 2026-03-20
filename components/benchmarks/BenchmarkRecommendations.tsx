@@ -20,7 +20,7 @@ interface BenchmarkRecommendationsProps {
 function InsightItem({ text }: { text: string }) {
   return (
     <li className="flex items-start gap-3 text-sm">
-      <Info className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
+      <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
       <span className="text-gray-300">{text}</span>
     </li>
   );
@@ -45,7 +45,7 @@ function RecommendationItem({ text, index }: { text: string; index: number }) {
             className={cn(
               'text-xs px-2 py-0.5 rounded',
               isHighImpact
-                ? 'bg-orange-500/10 text-orange-400'
+                ? 'bg-amber-500/10 text-amber-400'
                 : 'bg-blue-500/10 text-blue-400'
             )}
           >
@@ -64,7 +64,7 @@ function LoadingSkeleton() {
       {/* Insights skeleton */}
       <div className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 bg-orange-500/10 rounded-lg animate-pulse" />
+          <div className="w-8 h-8 bg-amber-500/10 rounded-lg animate-pulse" />
           <div className="w-24 h-5 bg-white/5 rounded animate-pulse" />
         </div>
         <div className="space-y-3">
@@ -140,8 +140,8 @@ export function BenchmarkRecommendations({
       {/* Key Insights */}
       <div className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 bg-orange-500/10 rounded-lg">
-            <Lightbulb className="w-4 h-4 text-orange-400" />
+          <div className="p-2 bg-amber-500/10 rounded-lg">
+            <Lightbulb className="w-4 h-4 text-amber-400" />
           </div>
           <h3 className="font-medium text-white">Key Insights</h3>
         </div>

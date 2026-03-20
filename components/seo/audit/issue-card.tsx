@@ -30,9 +30,9 @@ const severityConfigs: Record<string, SeverityConfig> = {
   },
   major: {
     icon: AlertTriangle,
-    color: 'text-orange-400',
-    bg: 'bg-orange-500/10',
-    border: 'border-orange-500/30',
+    color: 'text-amber-400',
+    bg: 'bg-amber-500/10',
+    border: 'border-amber-500/30',
   },
   minor: {
     icon: Info,
@@ -74,7 +74,7 @@ export function IssueCard({ issue, isExpanded, onToggle }: IssueCardProps) {
         <div className="px-4 pb-4 space-y-3">
           <p className="text-gray-400 text-sm">{issue.description}</p>
           <div className="bg-surface-base/50 p-3 rounded-lg">
-            <p className="text-orange-400 text-sm font-medium mb-1">
+            <p className="text-amber-400 text-sm font-medium mb-1">
               Recommendation
             </p>
             <p className="text-gray-300 text-sm">{issue.recommendation}</p>
@@ -89,7 +89,7 @@ export function IssueCard({ issue, isExpanded, onToggle }: IssueCardProps) {
                     href={page}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1"
+                    className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1"
                   >
                     {page}
                     <ExternalLink className="w-3 h-3" />

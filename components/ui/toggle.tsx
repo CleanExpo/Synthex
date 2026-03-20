@@ -12,11 +12,11 @@ const toggleVariants = cva(
     variants: {
       variant: {
         default:
-          'text-white/40 hover:bg-white/[0.04] hover:text-white/60 data-[state=on]:bg-orange-500/[0.10] data-[state=on]:text-orange-400',
+          'text-white/40 hover:bg-white/[0.04] hover:text-white/60 data-[state=on]:bg-amber-500/[0.10] data-[state=on]:text-amber-400',
         outline:
-          'border-[0.5px] border-white/[0.06] bg-transparent text-white/40 hover:bg-white/[0.04] hover:text-white/60 data-[state=on]:border-orange-500/20 data-[state=on]:bg-orange-500/[0.10] data-[state=on]:text-orange-400',
+          'border-[0.5px] border-white/[0.06] bg-transparent text-white/40 hover:bg-white/[0.04] hover:text-white/60 data-[state=on]:border-amber-500/20 data-[state=on]:bg-amber-500/[0.10] data-[state=on]:text-amber-400',
         ghost:
-          'text-white/40 hover:bg-white/[0.04] hover:text-white/60 data-[state=on]:bg-orange-500/[0.10] data-[state=on]:text-orange-400',
+          'text-white/40 hover:bg-white/[0.04] hover:text-white/60 data-[state=on]:bg-amber-500/[0.10] data-[state=on]:text-amber-400',
       },
       size: {
         default: 'h-9 px-3',

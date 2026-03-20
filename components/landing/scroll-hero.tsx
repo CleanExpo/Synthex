@@ -57,7 +57,10 @@ const ScrollExpandMedia = ({
       } else if (!mediaFullyExpanded) {
         e.preventDefault();
         const scrollDelta = e.deltaY * 0.0009;
-        const newProgress = Math.min(Math.max(scrollProgress + scrollDelta, 0), 1);
+        const newProgress = Math.min(
+          Math.max(scrollProgress + scrollDelta, 0),
+          1
+        );
         setScrollProgress(newProgress);
         if (newProgress >= 1) {
           setMediaFullyExpanded(true);
@@ -84,7 +87,10 @@ const ScrollExpandMedia = ({
         e.preventDefault();
         const scrollFactor = deltaY < 0 ? 0.008 : 0.005;
         const scrollDelta = deltaY * scrollFactor;
-        const newProgress = Math.min(Math.max(scrollProgress + scrollDelta, 0), 1);
+        const newProgress = Math.min(
+          Math.max(scrollProgress + scrollDelta, 0),
+          1
+        );
         setScrollProgress(newProgress);
         if (newProgress >= 1) {
           setMediaFullyExpanded(true);
@@ -106,16 +112,25 @@ const ScrollExpandMedia = ({
       }
     };
 
-    window.addEventListener('wheel', handleWheel as EventListener, { passive: false });
+    window.addEventListener('wheel', handleWheel as EventListener, {
+      passive: false,
+    });
     window.addEventListener('scroll', handleScroll as EventListener);
-    window.addEventListener('touchstart', handleTouchStart as EventListener, { passive: false });
-    window.addEventListener('touchmove', handleTouchMove as EventListener, { passive: false });
+    window.addEventListener('touchstart', handleTouchStart as EventListener, {
+      passive: false,
+    });
+    window.addEventListener('touchmove', handleTouchMove as EventListener, {
+      passive: false,
+    });
     window.addEventListener('touchend', handleTouchEnd as EventListener);
 
     return () => {
       window.removeEventListener('wheel', handleWheel as EventListener);
       window.removeEventListener('scroll', handleScroll as EventListener);
-      window.removeEventListener('touchstart', handleTouchStart as EventListener);
+      window.removeEventListener(
+        'touchstart',
+        handleTouchStart as EventListener
+      );
       window.removeEventListener('touchmove', handleTouchMove as EventListener);
       window.removeEventListener('touchend', handleTouchEnd as EventListener);
     };
@@ -195,7 +210,10 @@ const ScrollExpandMedia = ({
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       />
-                      <div className="absolute inset-0 z-10" style={{ pointerEvents: 'none' }} />
+                      <div
+                        className="absolute inset-0 z-10"
+                        style={{ pointerEvents: 'none' }}
+                      />
                       <motion.div
                         className="absolute inset-0 bg-black/30 rounded-sm"
                         initial={{ opacity: 0.7 }}
@@ -218,7 +236,10 @@ const ScrollExpandMedia = ({
                         disablePictureInPicture
                         disableRemotePlayback
                       />
-                      <div className="absolute inset-0 z-10" style={{ pointerEvents: 'none' }} />
+                      <div
+                        className="absolute inset-0 z-10"
+                        style={{ pointerEvents: 'none' }}
+                      />
                       <motion.div
                         className="absolute inset-0 bg-black/30 rounded-sm"
                         initial={{ opacity: 0.7 }}
@@ -248,7 +269,7 @@ const ScrollExpandMedia = ({
                 <div className="flex flex-col items-center text-center relative z-10 mt-4 transition-none">
                   {date && (
                     <p
-                      className="text-2xl text-cyan-400"
+                      className="text-2xl text-amber-400"
                       style={{ transform: `translateX(-${textTranslateX}vw)` }}
                     >
                       {date}
@@ -256,7 +277,7 @@ const ScrollExpandMedia = ({
                   )}
                   {scrollToExpand && (
                     <p
-                      className="text-cyan-400/70 font-medium text-center"
+                      className="text-amber-400/70 font-medium text-center"
                       style={{ transform: `translateX(${textTranslateX}vw)` }}
                     >
                       {scrollToExpand}
@@ -273,13 +294,13 @@ const ScrollExpandMedia = ({
                 )}
               >
                 <motion.h2
-                  className="text-4xl md:text-5xl lg:text-6xl font-bold text-cyan-400 transition-none"
+                  className="text-4xl md:text-5xl lg:text-6xl font-bold text-amber-400 transition-none"
                   style={{ transform: `translateX(-${textTranslateX}vw)` }}
                 >
                   {firstWord}
                 </motion.h2>
                 <motion.h2
-                  className="text-4xl md:text-5xl lg:text-6xl font-bold text-center text-cyan-400 transition-none"
+                  className="text-4xl md:text-5xl lg:text-6xl font-bold text-center text-amber-400 transition-none"
                   style={{ transform: `translateX(${textTranslateX}vw)` }}
                 >
                   {restOfTitle}

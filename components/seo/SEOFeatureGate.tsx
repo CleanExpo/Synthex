@@ -40,17 +40,17 @@ export function SEOFeatureGate({
 
   if (!userHasAccess) {
     return (
-      <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/20 overflow-hidden">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/20 overflow-hidden">
         <CardContent className="p-8 relative">
           {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-orange-500/10 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-amber-500/10 pointer-events-none" />
 
           <div className="relative z-10 text-center max-w-md mx-auto">
             {/* Lock icon with glow */}
             <div className="relative inline-flex mb-6">
-              <div className="absolute inset-0 bg-orange-500/20 blur-xl rounded-full" />
-              <div className="relative bg-gradient-to-br from-orange-500/20 to-orange-600/20 p-4 rounded-2xl border border-orange-500/30">
-                <Lock className="w-10 h-10 text-orange-400" />
+              <div className="absolute inset-0 bg-amber-500/20 blur-xl rounded-full" />
+              <div className="relative bg-gradient-to-br from-amber-500/20 to-amber-600/20 p-4 rounded-2xl border border-amber-500/30">
+                <Lock className="w-10 h-10 text-amber-400" />
               </div>
             </div>
 
@@ -58,7 +58,7 @@ export function SEOFeatureGate({
             <h3 className="text-2xl font-bold text-white mb-2">{feature}</h3>
 
             {/* Plan badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-500/10 border border-orange-500/30 rounded-full text-orange-400 text-sm font-medium mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-full text-amber-400 text-sm font-medium mb-4">
               <Sparkles className="w-3.5 h-3.5" />
               {requiredPlan.charAt(0).toUpperCase() +
                 requiredPlan.slice(1)}{' '}
@@ -74,22 +74,22 @@ export function SEOFeatureGate({
             {/* Benefits list */}
             <div className="text-left bg-white/5 rounded-lg p-4 mb-6 space-y-2">
               <div className="flex items-center gap-2 text-sm text-gray-300">
-                <TrendingUp className="w-4 h-4 text-orange-400" />
+                <TrendingUp className="w-4 h-4 text-amber-400" />
                 <span>Comprehensive SEO analysis</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-300">
-                <TrendingUp className="w-4 h-4 text-orange-400" />
+                <TrendingUp className="w-4 h-4 text-amber-400" />
                 <span>AI-powered optimization suggestions</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-300">
-                <TrendingUp className="w-4 h-4 text-orange-400" />
+                <TrendingUp className="w-4 h-4 text-amber-400" />
                 <span>Schema markup generation</span>
               </div>
             </div>
 
             {/* Upgrade button */}
             <Link href="/dashboard/settings/billing">
-              <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all px-8">
+              <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all px-8">
                 <Sparkles className="w-4 h-4 mr-2" />
                 Upgrade to{' '}
                 {requiredPlan.charAt(0).toUpperCase() + requiredPlan.slice(1)}

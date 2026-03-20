@@ -40,7 +40,7 @@ const TYPE_COLOURS: Record<BacklinkOpportunityType, string> = {
   'guest-post': 'bg-emerald-500',
   'broken-link': 'bg-amber-500',
   'competitor-link': 'bg-purple-500',
-  'journalist-mention': 'bg-orange-500',
+  'journalist-mention': 'bg-amber-500',
 };
 
 const TYPE_SHORT: Record<BacklinkOpportunityType, string> = {

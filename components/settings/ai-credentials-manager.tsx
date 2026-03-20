@@ -235,7 +235,7 @@ export function AICredentialsManager() {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="flex items-center gap-2">
-            <Key className="w-5 h-5 text-orange-400" />
+            <Key className="w-5 h-5 text-amber-400" />
             AI Provider Keys
           </CardTitle>
           <CardDescription>
@@ -272,7 +272,7 @@ export function AICredentialsManager() {
                     onClick={() => setSelectedProvider(provider.id)}
                     className={`p-3 rounded-lg border text-left transition-all ${
                       selectedProvider === provider.id
-                        ? 'border-orange-500/50 bg-orange-500/10'
+                        ? 'border-amber-500/50 bg-amber-500/10'
                         : provider.required &&
                             !existingProviders.has(provider.id)
                           ? 'border-purple-500/30 bg-purple-500/5 hover:border-purple-500/50'
@@ -316,7 +316,7 @@ export function AICredentialsManager() {
                       'Enter your API key'
                     }
                     aria-label="API key"
-                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0 font-mono text-sm"
+                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-0 font-mono text-sm"
                     autoComplete="off"
                   />
                   <p className="text-xs text-slate-500 mt-1">
@@ -335,7 +335,7 @@ export function AICredentialsManager() {
                       value={selectedModel}
                       onChange={e => setSelectedModel(e.target.value)}
                       aria-label="Default model"
-                      className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0 text-sm"
+                      className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-0 text-sm"
                     >
                       <optgroup label="Premium">
                         {OPENROUTER_MODELS.filter(
@@ -432,7 +432,7 @@ export function AICredentialsManager() {
                     className={`w-10 h-10 rounded-lg ${config?.bgColor || 'bg-white/10'} flex items-center justify-center`}
                   >
                     <Key
-                      className={`w-5 h-5 ${config?.color || 'text-orange-500'}`}
+                      className={`w-5 h-5 ${config?.color || 'text-amber-500'}`}
                     />
                   </div>
                   <div>

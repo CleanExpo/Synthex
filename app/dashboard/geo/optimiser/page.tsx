@@ -100,7 +100,7 @@ export default function GEOOptimiserPage() {
               {isScoring ? (
                 <span className="flex flex-col items-centre gap-2">
                   <svg
-                    className="h-5 w-5 animate-spin text-orange-400"
+                    className="h-5 w-5 animate-spin text-amber-400"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"

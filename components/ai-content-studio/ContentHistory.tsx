@@ -38,7 +38,7 @@ export function ContentHistory({
     <Card variant="glass">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-orange-500" />
+          <Calendar className="w-5 h-5 text-amber-500" />
           Recent Generations
         </CardTitle>
         <CardDescription>Your content generation history</CardDescription>

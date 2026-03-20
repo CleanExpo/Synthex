@@ -112,7 +112,7 @@ export function OpportunityPipeline({
             {/* Go link */}
             <Link
               href={item.href}
-              className="flex-shrink-0 text-xs text-orange-400 hover:text-orange-300 font-medium transition-colors whitespace-nowrap"
+              className="flex-shrink-0 text-xs text-amber-400 hover:text-amber-300 font-medium transition-colors whitespace-nowrap"
               aria-label={`Go to ${item.title}`}
             >
               Go →

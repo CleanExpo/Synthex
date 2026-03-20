@@ -66,7 +66,7 @@ const TYPE_CONFIG: Record<
   },
   'journalist-mention': {
     label: 'Journalist Mention',
-    className: 'bg-orange-900/60 text-orange-300 border border-orange-700/40',
+    className: 'bg-amber-900/60 text-amber-300 border border-amber-700/40',
   },
 };
 

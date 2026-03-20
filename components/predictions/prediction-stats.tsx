@@ -60,7 +60,7 @@ export function PredictionStats({ stats }: PredictionStatsProps) {
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm text-slate-400">{item.label}</span>
                 <div className="p-2 rounded-lg bg-white/5">
-                  <Icon className="h-4 w-4 text-orange-400" />
+                  <Icon className="h-4 w-4 text-amber-400" />
                 </div>
               </div>
               <p className={`text-2xl font-bold ${valueColor}`}>

@@ -160,7 +160,7 @@ export default function PageAnalysisPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Search className="w-8 h-8 text-orange-400" />
+            <Search className="w-8 h-8 text-amber-400" />
             Page Analysis
           </h1>
           <p className="text-gray-400 mt-1">
@@ -175,7 +175,7 @@ export default function PageAnalysisPage() {
         description="Analyze individual pages for meta tags, content quality, schema markup, and optimization opportunities."
       >
         {/* URL Input */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
@@ -192,7 +192,7 @@ export default function PageAnalysisPage() {
               <Button
                 onClick={handleAnalyze}
                 disabled={isLoading}
-                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25"
+                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25"
               >
                 {isLoading ? (
                   <>
@@ -215,7 +215,7 @@ export default function PageAnalysisPage() {
           <div className="space-y-6">
             {/* Score Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
                 <CardContent className="p-6 text-center">
                   <div
                     className={`text-4xl font-bold mb-1 ${
@@ -231,7 +231,7 @@ export default function PageAnalysisPage() {
                   <p className="text-gray-400 text-sm">Overall Score</p>
                 </CardContent>
               </Card>
-              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
                 <CardContent className="p-6 text-center">
                   <div className="text-2xl font-bold text-white mb-1">
                     {result.content.wordCount}
@@ -239,7 +239,7 @@ export default function PageAnalysisPage() {
                   <p className="text-gray-400 text-sm">Words</p>
                 </CardContent>
               </Card>
-              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
                 <CardContent className="p-6 text-center">
                   <div className="text-2xl font-bold text-white mb-1">
                     {result.images.total}
@@ -247,7 +247,7 @@ export default function PageAnalysisPage() {
                   <p className="text-gray-400 text-sm">Images</p>
                 </CardContent>
               </Card>
-              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
                 <CardContent className="p-6 text-center">
                   <div className="text-2xl font-bold text-white mb-1">
                     {result.links.internal + result.links.external}
@@ -258,10 +258,10 @@ export default function PageAnalysisPage() {
             </div>
 
             {/* Meta Tags */}
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-orange-400" />
+                  <FileText className="w-5 h-5 text-amber-400" />
                   Meta Tags
                 </CardTitle>
               </CardHeader>
@@ -324,10 +324,10 @@ export default function PageAnalysisPage() {
             </Card>
 
             {/* Heading Structure */}
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
-                  <Type className="w-5 h-5 text-orange-400" />
+                  <Type className="w-5 h-5 text-amber-400" />
                   Heading Structure
                 </CardTitle>
               </CardHeader>
@@ -346,7 +346,7 @@ export default function PageAnalysisPage() {
                     if (headings.length === 0) return null;
                     return (
                       <div key={tag} className="space-y-1">
-                        <p className="text-orange-400 text-xs font-mono uppercase">
+                        <p className="text-amber-400 text-xs font-mono uppercase">
                           {tag} ({headings.length})
                         </p>
                         {headings.slice(0, 5).map((h, i) => (
@@ -371,10 +371,10 @@ export default function PageAnalysisPage() {
 
             {/* Images & Links */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">
-                    <ImageIcon className="w-5 h-5 text-orange-400" />
+                    <ImageIcon className="w-5 h-5 text-amber-400" />
                     Images
                   </CardTitle>
                 </CardHeader>
@@ -398,10 +398,10 @@ export default function PageAnalysisPage() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">
-                    <LinkIcon className="w-5 h-5 text-orange-400" />
+                    <LinkIcon className="w-5 h-5 text-amber-400" />
                     Links
                   </CardTitle>
                 </CardHeader>
@@ -427,10 +427,10 @@ export default function PageAnalysisPage() {
             </div>
 
             {/* Schema Detection */}
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
-                  <Code className="w-5 h-5 text-orange-400" />
+                  <Code className="w-5 h-5 text-amber-400" />
                   Schema Markup
                 </CardTitle>
               </CardHeader>
@@ -441,7 +441,7 @@ export default function PageAnalysisPage() {
                     {result.schema.types.map((type, i) => (
                       <span
                         key={i}
-                        className="px-3 py-1 bg-orange-500/10 text-orange-400 rounded-full text-sm border border-orange-500/20"
+                        className="px-3 py-1 bg-amber-500/10 text-amber-400 rounded-full text-sm border border-amber-500/20"
                       >
                         {type}
                       </span>

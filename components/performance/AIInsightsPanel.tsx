@@ -42,10 +42,10 @@ const IMPACT_STYLES: Record<
   { bg: string; border: string; text: string; glow?: string }
 > = {
   high: {
-    bg: 'bg-orange-500/10',
-    border: 'border-orange-500/30',
-    text: 'text-orange-400',
-    glow: 'shadow-orange-500/20',
+    bg: 'bg-amber-500/10',
+    border: 'border-amber-500/30',
+    text: 'text-amber-400',
+    glow: 'shadow-amber-500/20',
   },
   medium: {
     bg: 'bg-violet-500/10',
@@ -183,7 +183,7 @@ export function AIInsightsPanel({
         )}
       >
         <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="w-5 h-5 text-orange-400" />
+          <Sparkles className="w-5 h-5 text-amber-400" />
           <h3 className="text-lg font-semibold text-white">AI Insights</h3>
         </div>
         <LoadingSkeleton />
@@ -200,7 +200,7 @@ export function AIInsightsPanel({
         )}
       >
         <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="w-5 h-5 text-orange-400" />
+          <Sparkles className="w-5 h-5 text-amber-400" />
           <h3 className="text-lg font-semibold text-white">AI Insights</h3>
         </div>
         <div className="text-center py-8">
@@ -228,7 +228,7 @@ export function AIInsightsPanel({
       )}
     >
       <div className="flex items-center gap-2 mb-4">
-        <Sparkles className="w-5 h-5 text-orange-400" />
+        <Sparkles className="w-5 h-5 text-amber-400" />
         <h3 className="text-lg font-semibold text-white">AI Insights</h3>
         <span className="text-xs text-gray-500">
           ({insights.length} recommendations)

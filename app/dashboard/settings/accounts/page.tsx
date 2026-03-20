@@ -58,7 +58,7 @@ const providerConfig = {
   demo: {
     name: 'Demo Mode',
     icon: Key,
-    color: 'text-orange-400',
+    color: 'text-amber-400',
     description: 'Demo authentication',
   },
 };
@@ -226,7 +226,7 @@ function AccountsSettingsPageContent() {
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Shield className="h-5 w-5 mr-2 text-orange-400" />
+            <Shield className="h-5 w-5 mr-2 text-amber-400" />
             Your Authentication Methods
           </CardTitle>
           <CardDescription className="text-white/40">
@@ -236,7 +236,7 @@ function AccountsSettingsPageContent() {
         <CardContent className="space-y-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-orange-400" />
+              <Loader2 className="h-6 w-6 animate-spin text-amber-400" />
               <span className="ml-2 text-white/40">Loading accounts...</span>
             </div>
           ) : accounts.length === 0 ? (
@@ -264,7 +264,7 @@ function AccountsSettingsPageContent() {
                       <p className="text-white font-medium flex items-center">
                         {config?.name || account.provider}
                         {account.isPrimary && (
-                          <span className="ml-2 text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-sm">
+                          <span className="ml-2 text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-sm">
                             Primary
                           </span>
                         )}
@@ -322,7 +322,7 @@ function AccountsSettingsPageContent() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Link2 className="h-5 w-5 mr-2 text-orange-400" />
+              <Link2 className="h-5 w-5 mr-2 text-amber-400" />
               Link Additional Accounts
             </CardTitle>
             <CardDescription className="text-white/40">

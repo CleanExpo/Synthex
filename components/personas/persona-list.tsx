@@ -52,7 +52,7 @@ export function PersonaList({
             onClick={() => onSelect(persona)}
             className={`p-4 rounded-lg border cursor-pointer transition-all ${
               selectedId === persona.id
-                ? 'bg-orange-500/20 border-orange-500'
+                ? 'bg-amber-500/20 border-amber-500'
                 : 'bg-white/5 border-white/10 hover:bg-white/10'
             }`}
           >
@@ -78,7 +78,7 @@ export function PersonaList({
             <div className="mt-2">
               <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-orange-500 to-teal-500"
+                  className="h-full bg-gradient-to-r from-amber-500 to-teal-500"
                   style={{ width: `${persona.accuracy}%` }}
                 />
               </div>

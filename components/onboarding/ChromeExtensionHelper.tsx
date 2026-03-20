@@ -110,8 +110,8 @@ export function ExtensionInstallPrompt({
     <div
       className={`flex items-center gap-3 p-3 rounded-lg bg-white/3 border border-white/5 ${className ?? ''}`}
     >
-      <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
-        <Chrome className="w-4 h-4 text-orange-400/60" />
+      <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
+        <Chrome className="w-4 h-4 text-amber-400/60" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs text-gray-500">
@@ -120,7 +120,7 @@ export function ExtensionInstallPrompt({
             href="https://chrome.google.com/webstore/detail/synthex"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-orange-400/70 hover:text-orange-400 underline decoration-dotted transition-colors"
+            className="text-amber-400/70 hover:text-amber-400 underline decoration-dotted transition-colors"
           >
             Synthex Chrome Extension
           </a>{' '}
@@ -156,8 +156,8 @@ export function ExtensionSocialHint({
 
   return (
     <div className="flex items-center gap-1.5 mt-1.5">
-      <Zap className="w-3 h-3 text-orange-400 shrink-0" />
-      <p className="text-[11px] text-orange-400">
+      <Zap className="w-3 h-3 text-amber-400 shrink-0" />
+      <p className="text-[11px] text-amber-400">
         {match.username
           ? `Logged in as @${match.username} — one click!`
           : 'Already logged in — one click!'}
@@ -194,12 +194,12 @@ export function ExtensionStatusBanner({ state }: ExtensionStatusBannerProps) {
     .join(', ');
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-500/5 border border-orange-500/20 max-w-2xl mx-auto">
-      <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
-        <Zap className="w-4 h-4 text-orange-400" />
+    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500/5 border border-amber-500/20 max-w-2xl mx-auto">
+      <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
+        <Zap className="w-4 h-4 text-amber-400" />
       </div>
       <div>
-        <p className="text-sm text-orange-400 font-medium">
+        <p className="text-sm text-amber-400 font-medium">
           Extension detected {count} active session{count !== 1 ? 's' : ''}
         </p>
         <p className="text-xs text-gray-400">

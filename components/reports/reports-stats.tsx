@@ -33,7 +33,7 @@ export function ReportsStats({ reports }: ReportsStatsProps) {
       value: reports.length,
       description: 'All time',
       Icon: FileText,
-      iconColor: 'text-orange-400',
+      iconColor: 'text-amber-400',
     },
     {
       title: 'Completed',

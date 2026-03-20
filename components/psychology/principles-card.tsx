@@ -24,7 +24,7 @@ export function PrinciplesCard({ principles }: PrinciplesCardProps) {
     <Card variant="glass">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Brain className="w-5 h-5 mr-2 text-orange-400" />
+          <Brain className="w-5 h-5 mr-2 text-amber-400" />
           Psychology Principles
         </CardTitle>
       </CardHeader>
@@ -36,7 +36,7 @@ export function PrinciplesCard({ principles }: PrinciplesCardProps) {
             <div key={index} className="p-3 bg-white/5 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <Icon className="w-4 h-4 text-orange-400" />
+                  <Icon className="w-4 h-4 text-amber-400" />
                   <span className="font-medium text-white">
                     {principle.name}
                   </span>
@@ -47,7 +47,7 @@ export function PrinciplesCard({ principles }: PrinciplesCardProps) {
               </div>
               <Progress value={principle.score} className="h-2 mb-2" />
               <p className="text-xs text-gray-400">{principle.description}</p>
-              <p className="text-xs text-orange-300 mt-1">
+              <p className="text-xs text-amber-300 mt-1">
                 <Lightbulb className="w-3 h-3 inline mr-1" />
                 {principle.recommendation}
               </p>

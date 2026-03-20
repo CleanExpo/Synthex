@@ -50,7 +50,7 @@ export function HowItWorks() {
           {STEPS.map(({ number, icon: Icon, title, description }) => (
             <div
               key={number}
-              className="group relative bg-charcoal-800 border border-white/[0.06] rounded-2xl p-8 overflow-hidden hover:-translate-y-1 hover:border-white/[0.10] transition-all duration-300"
+              className="group relative bg-charcoal-800/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-8 overflow-hidden shadow-2xl shadow-black/30 ring-1 ring-white/[0.04] hover:-translate-y-1 hover:border-white/[0.10] transition-all duration-300"
             >
               {/* Step number — amber, prominent */}
               <div className="text-amber-500 font-black text-5xl leading-none mb-6 select-none">

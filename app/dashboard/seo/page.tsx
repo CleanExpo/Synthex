@@ -52,14 +52,14 @@ function SEOToolCard({
   const { toast } = useToast();
 
   const cardContent = (
-    <div className="group border-[0.5px] border-white/[0.06] hover:border-orange-500/30 bg-white/[0.01] rounded-sm transition-all duration-300 h-full">
+    <div className="group border-[0.5px] border-white/[0.06] hover:border-amber-500/30 bg-white/[0.01] rounded-sm transition-all duration-300 h-full">
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
-          <div className="p-3 rounded-sm bg-orange-500/10 group-hover:bg-orange-500/20 transition-colors">
-            <Icon className="w-6 h-6 text-orange-400" />
+          <div className="p-3 rounded-sm bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors">
+            <Icon className="w-6 h-6 text-amber-400" />
           </div>
           {status === 'beta' && (
-            <span className="px-2 py-1 text-xs bg-orange-500/10 text-orange-400 rounded-sm border-[0.5px] border-orange-500/20">
+            <span className="px-2 py-1 text-xs bg-amber-500/10 text-amber-400 rounded-sm border-[0.5px] border-amber-500/20">
               Beta
             </span>
           )}
@@ -74,12 +74,12 @@ function SEOToolCard({
             </span>
           )}
         </div>
-        <h3 className="text-base font-light text-white mb-2 group-hover:text-orange-400 transition-colors">
+        <h3 className="text-base font-light text-white mb-2 group-hover:text-amber-400 transition-colors">
           {title}
         </h3>
         <p className="text-white/40 text-sm leading-relaxed">{description}</p>
         {!comingSoon && (
-          <div className="mt-4 flex items-center text-orange-400 text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="mt-4 flex items-center text-amber-400 text-sm opacity-0 group-hover:opacity-100 transition-opacity">
             Open Tool
             <ArrowRight className="w-4 h-4 ml-1" />
           </div>
@@ -134,8 +134,8 @@ function QuickStatCard({
     <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="p-2 rounded-sm bg-orange-500/10">
-            <Icon className="w-5 h-5 text-orange-400" />
+          <div className="p-2 rounded-sm bg-amber-500/10">
+            <Icon className="w-5 h-5 text-amber-400" />
           </div>
           <span
             className={`text-sm font-medium flex items-center gap-1 ${
@@ -175,7 +175,7 @@ export default function SEODashboardPage() {
             Optimisation
           </span>
           <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white flex items-center gap-3">
-            <Search className="w-7 h-7 text-orange-400" />
+            <Search className="w-7 h-7 text-amber-400" />
             SEO Tools
           </h1>
           <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
@@ -185,13 +185,13 @@ export default function SEODashboardPage() {
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
-            className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+            className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
           >
             <BarChart3 className="w-4 h-4 mr-2" />
             View Reports
           </Button>
           <Link href="/dashboard/seo/audit">
-            <Button className="bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30">
+            <Button className="bg-amber-500/20 border-[0.5px] border-amber-500/30 text-amber-400 hover:bg-amber-500/30">
               <Zap className="w-4 h-4 mr-2" />
               New Audit
             </Button>
@@ -240,7 +240,7 @@ export default function SEODashboardPage() {
         {/* SEO Tools Grid */}
         <div>
           <h2 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-orange-400" />
+            <Sparkles className="w-5 h-5 text-amber-400" />
             Available Tools
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -338,7 +338,7 @@ export default function SEODashboardPage() {
         {/* Recent Activity */}
         <div>
           <h2 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4 flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-orange-400" />
+            <BarChart3 className="w-5 h-5 text-amber-400" />
             Recent Audits
           </h2>
           <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
@@ -408,7 +408,7 @@ export default function SEODashboardPage() {
                     Run your first SEO audit to see results here
                   </p>
                   <Link href="/dashboard/seo/audit">
-                    <Button className="bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30">
+                    <Button className="bg-amber-500/20 border-[0.5px] border-amber-500/30 text-amber-400 hover:bg-amber-500/30">
                       Start First Audit
                     </Button>
                   </Link>

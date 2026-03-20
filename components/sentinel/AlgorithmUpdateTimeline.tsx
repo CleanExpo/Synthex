@@ -214,7 +214,7 @@ export function AlgorithmUpdateTimeline({
                     href={update.sourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-2 block text-xs text-orange-400 hover:text-orange-300 transition-colors"
+                    className="mt-2 block text-xs text-amber-400 hover:text-amber-300 transition-colors"
                   >
                     Google Search Central →
                   </a>

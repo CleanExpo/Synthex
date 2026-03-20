@@ -68,7 +68,7 @@ function PostCard({ post, type }: PostCardProps) {
         'bg-gray-900/30 border rounded-lg p-3 cursor-pointer transition-all hover:bg-gray-900/50',
         type === 'top'
           ? 'border-emerald-500/20 hover:border-emerald-500/40'
-          : 'border-orange-500/20 hover:border-orange-500/40'
+          : 'border-amber-500/20 hover:border-amber-500/40'
       )}
       onClick={() => setExpanded(!expanded)}
     >
@@ -114,7 +114,7 @@ function PostCard({ post, type }: PostCardProps) {
         <div
           className={cn(
             'ml-auto font-medium',
-            type === 'top' ? 'text-emerald-400' : 'text-orange-400'
+            type === 'top' ? 'text-emerald-400' : 'text-amber-400'
           )}
         >
           {post.metrics.engagementRate.toFixed(1)}%
@@ -125,7 +125,7 @@ function PostCard({ post, type }: PostCardProps) {
       {expanded && post.hashtags.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-white/5">
           {post.hashtags.map(tag => (
-            <span key={tag} className="text-xs text-orange-400">
+            <span key={tag} className="text-xs text-amber-400">
               #{tag}
             </span>
           ))}
@@ -217,7 +217,7 @@ export function TopPostsGrid({
       {/* Needs Improvement */}
       <div className="bg-gray-900/30 border border-white/10 rounded-xl p-4">
         <div className="flex items-center gap-2 mb-4">
-          <TrendingDown className="w-4 h-4 text-orange-400" />
+          <TrendingDown className="w-4 h-4 text-amber-400" />
           <h4 className="text-sm font-medium text-white">Needs Improvement</h4>
           <span className="text-xs text-gray-500">
             ({lowPerforming.length})

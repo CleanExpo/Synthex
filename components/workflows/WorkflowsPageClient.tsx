@@ -307,7 +307,7 @@ export function WorkflowsPageClient() {
                       className={cn(
                         'text-xs px-3 py-1.5 rounded-full border transition-colours',
                         t.id === selectedTemplateId
-                          ? 'bg-orange-500/20 text-orange-300 border-orange-500/30'
+                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
                           : 'bg-white/5 text-white/50 border-white/10 hover:border-white/20'
                       )}
                     >

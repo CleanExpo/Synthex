@@ -113,7 +113,9 @@ export function PricingInteraction({
           >
             {label}
             {label === 'Yearly' && period === 0 && (
-              <span className="ml-1.5 text-[10px] text-cyan-400/70 font-normal">Save 25%</span>
+              <span className="ml-1.5 text-[10px] text-amber-400/70 font-normal">
+                Save 25%
+              </span>
             )}
           </button>
         ))}
@@ -139,7 +141,7 @@ export function PricingInteraction({
               'w-full flex justify-between cursor-pointer border-[0.5px] p-4 rounded-sm',
               'transition-colors duration-200',
               active === index
-                ? 'border-cyan-500/20 bg-cyan-500/[0.04]'
+                ? 'border-amber-500/20 bg-amber-500/[0.04]'
                 : 'border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.02]'
             )}
             onClick={() => handleChangePlan(index)}
@@ -152,7 +154,7 @@ export function PricingInteraction({
                   <span
                     className={cn(
                       'py-0.5 px-2 rounded-sm text-xs',
-                      'bg-cyan-500/[0.08] border-[0.5px] border-cyan-500/20 text-cyan-400'
+                      'bg-amber-500/[0.08] border-[0.5px] border-amber-500/20 text-amber-400'
                     )}
                   >
                     {plan.badge}
@@ -176,12 +178,12 @@ export function PricingInteraction({
             <div
               className="size-5 rounded-full mt-0.5 p-1 flex items-center justify-center flex-shrink-0"
               style={{
-                border: `1.5px solid ${active === index ? 'rgba(34,211,238,0.6)' : 'rgba(255,255,255,0.2)'}`,
+                border: `1.5px solid ${active === index ? 'rgba(251,191,36,0.6)' : 'rgba(255,255,255,0.2)'}`,
                 transition: 'border-color 0.3s',
               }}
             >
               <div
-                className="size-2.5 rounded-full bg-cyan-400"
+                className="size-2.5 rounded-full bg-amber-400"
                 style={{
                   opacity: active === index ? 1 : 0,
                   transition: 'opacity 0.3s',
@@ -196,8 +198,8 @@ export function PricingInteraction({
       <button
         className={cn(
           'rounded-sm text-sm font-semibold text-white w-full p-3',
-          'bg-cyan-500/[0.08] border-[0.5px] border-cyan-500/20',
-          'hover:bg-cyan-500/[0.14] hover:border-cyan-500/40',
+          'bg-amber-500/[0.08] border-[0.5px] border-amber-500/20',
+          'hover:bg-amber-500/[0.14] hover:border-amber-500/40',
           'active:scale-[0.98] transition-all duration-200'
         )}
       >

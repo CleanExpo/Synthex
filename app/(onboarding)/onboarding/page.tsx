@@ -264,7 +264,7 @@ export default function OnboardingPage() {
 
       {/* Header */}
       <div className="text-center space-y-3">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center mx-auto shadow-lg shadow-orange-500/30">
+        <div className="w-20 h-20 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/30">
           <Globe className="w-10 h-10 text-white" />
         </div>
 
@@ -278,7 +278,7 @@ export default function OnboardingPage() {
       {/* Form or Pipeline Progress */}
       {!running ? (
         <div className="max-w-lg mx-auto space-y-5">
-          <div className="p-6 rounded-xl bg-surface-base/80 border border-orange-500/10 backdrop-blur-sm space-y-5">
+          <div className="p-6 rounded-xl bg-surface-base/80 border border-amber-500/10 backdrop-blur-sm space-y-5">
             {/* Business Name */}
             <div className="space-y-2">
               <Label htmlFor="businessName" className="text-gray-300">
@@ -289,7 +289,7 @@ export default function OnboardingPage() {
                 value={businessName}
                 onChange={e => setBusinessName(e.target.value)}
                 placeholder="e.g. Acme Marketing Co"
-                className="bg-surface-dark/50 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
+                className="bg-surface-dark/50 border-amber-500/20 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20"
                 autoFocus
               />
             </div>
@@ -306,7 +306,7 @@ export default function OnboardingPage() {
                 onChange={e => setWebsiteUrl(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && isValid && runPipeline()}
                 placeholder="https://yoursite.com.au"
-                className="bg-surface-dark/50 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
+                className="bg-surface-dark/50 border-amber-500/20 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20"
               />
             </div>
 
@@ -314,13 +314,13 @@ export default function OnboardingPage() {
             {extensionDetected && extensionUrl && (
               <button
                 onClick={useExtensionUrl}
-                className="w-full p-3 rounded-lg bg-orange-500/5 border border-orange-500/20 text-left flex items-center gap-3 hover:bg-orange-500/10 transition-colors"
+                className="w-full p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 text-left flex items-center gap-3 hover:bg-amber-500/10 transition-colors"
               >
-                <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
-                  <Zap className="w-4 h-4 text-orange-400" />
+                <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
+                  <Zap className="w-4 h-4 text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-orange-400 font-medium">
+                  <p className="text-sm text-amber-400 font-medium">
                     Chrome Extension detected
                   </p>
                   <p className="text-xs text-gray-500 truncate max-w-[300px]">
@@ -366,7 +366,7 @@ export default function OnboardingPage() {
               size="lg"
               onClick={runPipeline}
               disabled={!isValid}
-              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed px-8"
+              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed px-8"
             >
               <Sparkles className="w-4 h-4 mr-2" />
               Analyse My Business
@@ -380,13 +380,11 @@ export default function OnboardingPage() {
       ) : (
         /* Pipeline Progress */
         <div className="max-w-lg mx-auto">
-          <div className="p-6 rounded-xl bg-surface-base/80 border border-orange-500/10 backdrop-blur-sm space-y-4">
+          <div className="p-6 rounded-xl bg-surface-base/80 border border-amber-500/10 backdrop-blur-sm space-y-4">
             <div className="text-center mb-2">
               <p className="text-sm text-gray-400">
                 Analysing{' '}
-                <span className="text-orange-400 font-medium">
-                  {websiteUrl}
-                </span>
+                <span className="text-amber-400 font-medium">{websiteUrl}</span>
               </p>
             </div>
 
@@ -403,17 +401,17 @@ export default function OnboardingPage() {
                     className={cn(
                       'flex items-center gap-3 p-3 rounded-lg transition-all duration-500',
                       isCompleted
-                        ? 'bg-orange-500/5'
+                        ? 'bg-amber-500/5'
                         : isCurrent
-                          ? 'bg-orange-500/10 border border-orange-500/20'
+                          ? 'bg-amber-500/10 border border-amber-500/20'
                           : 'opacity-40'
                     )}
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0">
                       {isCompleted ? (
-                        <CheckCircle className="w-5 h-5 text-orange-400" />
+                        <CheckCircle className="w-5 h-5 text-amber-400" />
                       ) : isCurrent ? (
-                        <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
+                        <Loader2 className="w-5 h-5 text-amber-400 animate-spin" />
                       ) : (
                         <Icon
                           className={cn(
@@ -428,7 +426,7 @@ export default function OnboardingPage() {
                         className={cn(
                           'text-sm font-medium',
                           isCompleted
-                            ? 'text-orange-400'
+                            ? 'text-amber-400'
                             : isCurrent
                               ? 'text-white'
                               : 'text-gray-500'
@@ -452,7 +450,7 @@ export default function OnboardingPage() {
             {/* Pulsing progress bar */}
             <div className="mt-4 h-1 bg-white/5 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full transition-all duration-1000 ease-out"
+                className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-1000 ease-out"
                 style={{
                   width: `${Math.min(((currentStage + 1) / PIPELINE_STAGES.length) * 100, 100)}%`,
                 }}

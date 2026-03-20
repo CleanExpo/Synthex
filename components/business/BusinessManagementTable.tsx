@@ -149,7 +149,7 @@ export function BusinessManagementTable({
           variant="outline"
           size="sm"
           onClick={onRefresh}
-          className="bg-surface-base/80 border-orange-500/10 text-white hover:bg-orange-500/10 hover:border-orange-500/20"
+          className="bg-surface-base/80 border-amber-500/10 text-white hover:bg-amber-500/10 hover:border-amber-500/20"
         >
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
@@ -158,10 +158,10 @@ export function BusinessManagementTable({
 
       {/* Desktop Table View */}
       <div className="hidden lg:block">
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 overflow-hidden">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="border-b border-orange-500/10">
+              <thead className="border-b border-amber-500/10">
                 <tr className="text-left">
                   <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Business
@@ -183,10 +183,10 @@ export function BusinessManagementTable({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-orange-500/10">
+              <tbody className="divide-y divide-amber-500/10">
                 {businesses.map(business => (
                   <React.Fragment key={business.organizationId}>
-                    <tr className="hover:bg-orange-500/5 transition-colors">
+                    <tr className="hover:bg-amber-500/5 transition-colors">
                       <td className="px-6 py-4">
                         <div>
                           {renamingId === business.id ? (
@@ -201,7 +201,7 @@ export function BusinessManagementTable({
                                   if (e.key === 'Escape') cancelRename();
                                 }}
                                 autoFocus
-                                className="px-2 py-1 text-sm bg-surface-base border border-orange-500/30 rounded text-white focus:outline-none focus:border-orange-500/60 w-40"
+                                className="px-2 py-1 text-sm bg-surface-base border border-amber-500/30 rounded text-white focus:outline-none focus:border-amber-500/60 w-40"
                                 disabled={renameSaving}
                               />
                               <Button
@@ -286,7 +286,7 @@ export function BusinessManagementTable({
                                   : business.organizationId
                               )
                             }
-                            className="text-gray-400 hover:text-white hover:bg-orange-500/10"
+                            className="text-gray-400 hover:text-white hover:bg-amber-500/10"
                           >
                             {expandedId === business.organizationId ? (
                               <ChevronUp className="h-4 w-4" />
@@ -316,11 +316,11 @@ export function BusinessManagementTable({
                               handleSwitch(business.organizationId)
                             }
                             disabled={switchingId === business.organizationId}
-                            className="bg-orange-500/10 border-orange-500/20 text-orange-400 hover:bg-orange-500/20 hover:border-orange-500/30"
+                            className="bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20 hover:border-amber-500/30"
                           >
                             {switchingId === business.organizationId ? (
                               <>
-                                <div className="h-3 w-3 border-2 border-orange-400/20 border-t-orange-400 rounded-full animate-spin mr-2" />
+                                <div className="h-3 w-3 border-2 border-amber-400/20 border-t-amber-400 rounded-full animate-spin mr-2" />
                                 Switching...
                               </>
                             ) : (
@@ -370,7 +370,7 @@ export function BusinessManagementTable({
         {businesses.map(business => (
           <Card
             key={business.organizationId}
-            className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10"
+            className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10"
           >
             <CardContent className="pt-6">
               <div className="space-y-4">
@@ -388,7 +388,7 @@ export function BusinessManagementTable({
                             if (e.key === 'Escape') cancelRename();
                           }}
                           autoFocus
-                          className="px-2 py-1 text-sm bg-surface-base border border-orange-500/30 rounded text-white focus:outline-none focus:border-orange-500/60 w-full"
+                          className="px-2 py-1 text-sm bg-surface-base border border-amber-500/30 rounded text-white focus:outline-none focus:border-amber-500/60 w-full"
                           disabled={renameSaving}
                         />
                         <Button
@@ -450,7 +450,7 @@ export function BusinessManagementTable({
                 </div>
 
                 {/* Monthly Rate */}
-                <div className="pt-2 border-t border-orange-500/10">
+                <div className="pt-2 border-t border-amber-500/10">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-400">Monthly Rate</span>
                     <span className="text-lg font-semibold text-white">
@@ -461,7 +461,7 @@ export function BusinessManagementTable({
                 </div>
 
                 {/* Social Accounts */}
-                <div className="pt-2 border-t border-orange-500/10">
+                <div className="pt-2 border-t border-amber-500/10">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-400">
                       {business.stats?.activePlatforms ?? 0} social accounts
@@ -478,7 +478,7 @@ export function BusinessManagementTable({
                               : business.organizationId
                           )
                         }
-                        className="text-gray-400 hover:text-white hover:bg-orange-500/10"
+                        className="text-gray-400 hover:text-white hover:bg-amber-500/10"
                       >
                         {expandedId === business.organizationId ? (
                           <ChevronUp className="h-4 w-4" />
@@ -517,11 +517,11 @@ export function BusinessManagementTable({
                     size="sm"
                     onClick={() => handleSwitch(business.organizationId)}
                     disabled={switchingId === business.organizationId}
-                    className="flex-1 bg-orange-500/10 border-orange-500/20 text-orange-400 hover:bg-orange-500/20 hover:border-orange-500/30"
+                    className="flex-1 bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20 hover:border-amber-500/30"
                   >
                     {switchingId === business.organizationId ? (
                       <>
-                        <div className="h-3 w-3 border-2 border-orange-400/20 border-t-orange-400 rounded-full animate-spin mr-2" />
+                        <div className="h-3 w-3 border-2 border-amber-400/20 border-t-amber-400 rounded-full animate-spin mr-2" />
                         Switching...
                       </>
                     ) : (
@@ -552,7 +552,7 @@ export function BusinessManagementTable({
       </div>
 
       {businesses.length === 0 && (
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
           <CardContent className="py-12 text-center">
             <p className="text-gray-400">No businesses found</p>
           </CardContent>

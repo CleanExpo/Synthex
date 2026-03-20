@@ -251,7 +251,7 @@ function MetricCard({
   label,
   value,
   subtext,
-  iconColour = 'text-orange-400',
+  iconColour = 'text-amber-400',
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
@@ -260,7 +260,7 @@ function MetricCard({
   iconColour?: string;
 }) {
   return (
-    <Card className="bg-surface-base/80 border border-orange-500/10">
+    <Card className="bg-surface-base/80 border border-amber-500/10">
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div>
@@ -359,7 +359,7 @@ export default function LocalPage() {
         {/* Page Header */}
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <MapPin className="h-7 w-7 text-orange-400" />
+            <MapPin className="h-7 w-7 text-amber-400" />
             Local SEO Dashboard
           </h1>
           <p className="text-gray-400 mt-1">
@@ -369,16 +369,16 @@ export default function LocalPage() {
         </div>
 
         {/* Connect GBP Banner */}
-        <Card className="bg-gradient-to-r from-orange-500/10 to-blue-500/10 border border-orange-500/20">
+        <Card className="bg-gradient-to-r from-amber-500/10 to-blue-500/10 border border-amber-500/20">
           <CardContent className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Info className="h-5 w-5 text-orange-400 flex-shrink-0" />
+              <Info className="h-5 w-5 text-amber-400 flex-shrink-0" />
               <p className="text-sm text-gray-300">
                 Connect your Google Business Profile to see live data and manage
                 your listing directly.
               </p>
             </div>
-            <Button className="bg-orange-600 hover:bg-orange-700 text-white flex-shrink-0">
+            <Button className="bg-amber-600 hover:bg-amber-700 text-white flex-shrink-0">
               <Globe className="h-4 w-4 mr-2" />
               Connect GBP
             </Button>
@@ -420,7 +420,7 @@ export default function LocalPage() {
           {/* ========== OVERVIEW TAB ========== */}
           <TabsContent value="overview" className="space-y-6 mt-6">
             {/* Rating highlight */}
-            <Card className="bg-surface-base/80 border border-orange-500/10">
+            <Card className="bg-surface-base/80 border border-amber-500/10">
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <div className="text-4xl font-bold text-white">
@@ -499,7 +499,7 @@ export default function LocalPage() {
                   onClick={() => setRatingFilter(rating)}
                   className={`text-sm ${
                     ratingFilter === rating
-                      ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
@@ -513,7 +513,7 @@ export default function LocalPage() {
               {filteredReviews.map(review => (
                 <Card
                   key={review.id}
-                  className="bg-surface-base/80 border border-orange-500/10"
+                  className="bg-surface-base/80 border border-amber-500/10"
                 >
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between mb-3">
@@ -531,7 +531,7 @@ export default function LocalPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-orange-400 hover:text-orange-300"
+                        className="text-amber-400 hover:text-amber-300"
                         onClick={() => {
                           setReplyingTo(
                             replyingTo === review.id ? null : review.id
@@ -572,7 +572,7 @@ export default function LocalPage() {
                           </Button>
                           <Button
                             size="sm"
-                            className="bg-orange-600 hover:bg-orange-700 text-white"
+                            className="bg-amber-600 hover:bg-amber-700 text-white"
                             disabled={!replyText.trim()}
                           >
                             <Send className="h-3.5 w-3.5 mr-1.5" />
@@ -586,7 +586,7 @@ export default function LocalPage() {
               ))}
 
               {filteredReviews.length === 0 && (
-                <Card className="bg-surface-base/80 border border-orange-500/10">
+                <Card className="bg-surface-base/80 border border-amber-500/10">
                   <CardContent className="p-12 text-center text-gray-400">
                     <Star className="h-10 w-10 mx-auto mb-3 opacity-30" />
                     <p>No reviews match this filter</p>
@@ -599,10 +599,10 @@ export default function LocalPage() {
           {/* ========== INSIGHTS TAB ========== */}
           <TabsContent value="insights" className="space-y-6 mt-6">
             {/* Views line chart */}
-            <Card className="bg-surface-base/80 border border-orange-500/10">
+            <Card className="bg-surface-base/80 border border-amber-500/10">
               <CardHeader>
                 <CardTitle className="text-lg text-white flex items-center gap-2">
-                  <Eye className="h-5 w-5 text-orange-400" />
+                  <Eye className="h-5 w-5 text-amber-400" />
                   Profile Views — Last 30 Days
                 </CardTitle>
               </CardHeader>
@@ -647,10 +647,10 @@ export default function LocalPage() {
             </Card>
 
             {/* Actions bar chart */}
-            <Card className="bg-surface-base/80 border border-orange-500/10">
+            <Card className="bg-surface-base/80 border border-amber-500/10">
               <CardHeader>
                 <CardTitle className="text-lg text-white flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-orange-400" />
+                  <BarChart3 className="h-5 w-5 text-amber-400" />
                   Actions Breakdown — February 2026
                 </CardTitle>
               </CardHeader>
@@ -703,7 +703,7 @@ export default function LocalPage() {
                 {/* Legend */}
                 <div className="flex items-center gap-6 mt-4 justify-center">
                   <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <div className="w-3 h-3 rounded-sm bg-orange-400" />
+                    <div className="w-3 h-3 rounded-sm bg-amber-400" />
                     Website Clicks
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-400">
@@ -721,10 +721,10 @@ export default function LocalPage() {
 
           {/* ========== RANKINGS TAB ========== */}
           <TabsContent value="rankings" className="space-y-6 mt-6">
-            <Card className="bg-surface-base/80 border border-orange-500/10">
+            <Card className="bg-surface-base/80 border border-amber-500/10">
               <CardHeader>
                 <CardTitle className="text-lg text-white flex items-center gap-2">
-                  <Search className="h-5 w-5 text-orange-400" />
+                  <Search className="h-5 w-5 text-amber-400" />
                   Local Keyword Rankings
                 </CardTitle>
               </CardHeader>
@@ -765,7 +765,7 @@ export default function LocalPage() {
                                 row.rank <= 3
                                   ? 'bg-emerald-500/20 text-emerald-400'
                                   : row.rank <= 5
-                                    ? 'bg-orange-500/20 text-orange-400'
+                                    ? 'bg-amber-500/20 text-amber-400'
                                     : 'bg-gray-500/20 text-gray-400'
                               }
                             >
@@ -798,7 +798,7 @@ export default function LocalPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-white">GBP Posts</h2>
               <Button
-                className="bg-orange-600 hover:bg-orange-700 text-white"
+                className="bg-amber-600 hover:bg-amber-700 text-white"
                 onClick={() => {
                   // Placeholder — toast coming soon
                   if (typeof window !== 'undefined') {
@@ -815,7 +815,7 @@ export default function LocalPage() {
               {MOCK_POSTS.map(post => (
                 <Card
                   key={post.id}
-                  className="bg-surface-base/80 border border-orange-500/10 hover:border-orange-500/20 transition-all"
+                  className="bg-surface-base/80 border border-amber-500/10 hover:border-amber-500/20 transition-all"
                 >
                   <CardContent className="p-5">
                     {/* Image placeholder */}
@@ -823,7 +823,7 @@ export default function LocalPage() {
                       <Globe className="h-8 w-8 text-gray-600" />
                     </div>
                     <div className="flex items-center justify-between mb-2">
-                      <Badge className="bg-orange-500/20 text-orange-400 text-xs">
+                      <Badge className="bg-amber-500/20 text-amber-400 text-xs">
                         {post.type}
                       </Badge>
                       <Badge
@@ -863,7 +863,7 @@ export default function LocalPage() {
                   schema
                 </p>
               </div>
-              <Button className="bg-orange-600 hover:bg-orange-700">
+              <Button className="bg-amber-600 hover:bg-amber-700">
                 <Plus className="h-4 w-4 mr-2" />
                 New Case Study
               </Button>
@@ -874,7 +874,7 @@ export default function LocalPage() {
                 {[1, 2].map(i => (
                   <Card
                     key={i}
-                    className="bg-surface-base/80 border border-orange-500/10"
+                    className="bg-surface-base/80 border border-amber-500/10"
                   >
                     <CardContent className="p-6 animate-pulse space-y-3">
                       <div className="h-6 bg-white/10 rounded w-2/3" />
@@ -884,7 +884,7 @@ export default function LocalPage() {
                 ))}
               </div>
             ) : caseStudies.length === 0 ? (
-              <Card className="bg-surface-base/80 border border-orange-500/10">
+              <Card className="bg-surface-base/80 border border-amber-500/10">
                 <CardContent className="p-12 text-center text-gray-400">
                   <Map className="h-12 w-12 mx-auto mb-3 opacity-30" />
                   <p>No case studies yet</p>
@@ -898,7 +898,7 @@ export default function LocalPage() {
                 {caseStudies.map(cs => (
                   <Card
                     key={cs.id}
-                    className="bg-surface-base/80 border border-orange-500/10 hover:border-orange-500/30 transition-all"
+                    className="bg-surface-base/80 border border-amber-500/10 hover:border-amber-500/30 transition-all"
                   >
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-3">
@@ -916,7 +916,7 @@ export default function LocalPage() {
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
-                        <MapPin className="h-4 w-4 text-orange-400" />
+                        <MapPin className="h-4 w-4 text-amber-400" />
                         <span>
                           {cs.suburb}, {cs.city}, {cs.state} {cs.postcode}
                         </span>
@@ -928,7 +928,7 @@ export default function LocalPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-orange-400"
+                          className="text-amber-400"
                         >
                           <Eye className="h-4 w-4 mr-1" /> View
                         </Button>

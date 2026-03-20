@@ -60,7 +60,7 @@ export function QueueFilters({
       <select
         value={platform}
         onChange={e => onPlatformChange(e.target.value)}
-        className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500 appearance-none cursor-pointer"
+        className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500 appearance-none cursor-pointer"
       >
         {platformOptions.map(opt => (
           <option key={opt.value} value={opt.value} className="bg-gray-900">
@@ -73,7 +73,7 @@ export function QueueFilters({
       <select
         value={status}
         onChange={e => onStatusChange(e.target.value)}
-        className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500 appearance-none cursor-pointer"
+        className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500 appearance-none cursor-pointer"
       >
         {queueStatusOptions.map(opt => (
           <option key={opt.value} value={opt.value} className="bg-gray-900">
@@ -89,7 +89,7 @@ export function QueueFilters({
           value={startDate}
           onChange={e => onStartDateChange(e.target.value)}
           placeholder="From"
-          className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+          className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
         />
         <span className="text-gray-500 text-xs">to</span>
         <input
@@ -97,7 +97,7 @@ export function QueueFilters({
           value={endDate}
           onChange={e => onEndDateChange(e.target.value)}
           placeholder="To"
-          className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+          className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
         />
       </div>
 
@@ -109,7 +109,7 @@ export function QueueFilters({
           value={searchQuery}
           onChange={e => onSearchChange(e.target.value)}
           placeholder="Search content..."
-          className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+          className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
         />
       </div>
 

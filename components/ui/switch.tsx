@@ -11,23 +11,23 @@ const switchVariants = cva(
     variants: {
       variant: {
         default:
-          'data-[state=checked]:bg-primary data-[state=unchecked]:bg-input dark:data-[state=checked]:bg-orange-600 dark:data-[state=unchecked]:bg-slate-700',
+          'data-[state=checked]:bg-primary data-[state=unchecked]:bg-input dark:data-[state=checked]:bg-amber-600 dark:data-[state=unchecked]:bg-slate-700',
         // Premium Glassmorphism variants
         glass:
           'data-[state=checked]:bg-white/30 data-[state=unchecked]:bg-white/[0.08] backdrop-blur-md border-white/[0.1]',
         'glass-solid':
           'data-[state=checked]:bg-slate-600 data-[state=unchecked]:bg-slate-800/80 backdrop-blur-md border-white/[0.08]',
         'glass-primary':
-          'data-[state=checked]:bg-orange-500/60 data-[state=unchecked]:bg-orange-500/20 backdrop-blur-md border-orange-500/30',
+          'data-[state=checked]:bg-amber-500/60 data-[state=unchecked]:bg-amber-500/20 backdrop-blur-md border-amber-500/30',
         'glass-secondary':
-          'data-[state=checked]:bg-orange-500/60 data-[state=unchecked]:bg-orange-500/20 backdrop-blur-md border-orange-500/30',
+          'data-[state=checked]:bg-amber-500/60 data-[state=unchecked]:bg-amber-500/20 backdrop-blur-md border-amber-500/30',
         'glass-success':
           'data-[state=checked]:bg-emerald-500/60 data-[state=unchecked]:bg-emerald-500/20 backdrop-blur-md border-emerald-500/30',
         // Gradient variants
         'gradient-primary':
-          'data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-orange-500 data-[state=unchecked]:bg-white/[0.08] backdrop-blur-md',
+          'data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-amber-500 data-[state=checked]:to-amber-500 data-[state=unchecked]:bg-white/[0.08] backdrop-blur-md',
         'gradient-secondary':
-          'data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-blue-500 data-[state=unchecked]:bg-white/[0.08] backdrop-blur-md',
+          'data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-amber-500 data-[state=checked]:to-blue-500 data-[state=unchecked]:bg-white/[0.08] backdrop-blur-md',
       },
       size: {
         default: 'h-6 w-11',

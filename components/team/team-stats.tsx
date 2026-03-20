@@ -25,7 +25,7 @@ export function TeamStatsGrid({ stats }: TeamStatsGridProps) {
               </p>
               <p className="text-2xl font-bold text-white">{stats.total}</p>
             </div>
-            <Users className="h-8 w-8 text-orange-400" />
+            <Users className="h-8 w-8 text-amber-400" />
           </div>
         </CardContent>
       </Card>

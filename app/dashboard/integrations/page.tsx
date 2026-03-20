@@ -138,7 +138,7 @@ const DEFAULT_INTEGRATIONS: Integration[] = [
     description: 'Post content and engage with Reddit communities',
     icon: Reddit,
     connected: false,
-    color: 'text-orange-500',
+    color: 'text-amber-500',
     permissions: ['Submit posts', 'Read content', 'Manage profile'],
   },
   {
@@ -175,7 +175,7 @@ const DEFAULT_ANALYTICS_INTEGRATIONS: Integration[] = [
       'Web analytics: sessions, users, conversions, and campaign attribution',
     icon: BarChart2,
     connected: false,
-    color: 'text-orange-400',
+    color: 'text-amber-400',
     permissions: [
       'Read analytics data',
       'View conversions',

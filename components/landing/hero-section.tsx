@@ -67,7 +67,7 @@ export function HeroSection() {
                 Start free
               </Link>
               <Link
-                href="/platform"
+                href="/features"
                 className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white/[0.04] border border-white/10 text-white/80 hover:text-white hover:bg-white/[0.08] rounded-full transition-all duration-200 text-sm font-medium"
               >
                 See it work

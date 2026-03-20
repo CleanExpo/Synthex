@@ -80,7 +80,7 @@ export const priorityConfig: Record<TaskPriority, PriorityConfig> = {
   },
   high: {
     label: 'High',
-    color: 'bg-orange-500/20 text-orange-300',
+    color: 'bg-amber-500/20 text-amber-300',
     icon: ArrowUp,
   },
   urgent: {
@@ -93,7 +93,7 @@ export const priorityConfig: Record<TaskPriority, PriorityConfig> = {
 export const typeConfig: Record<TaskType, TypeConfig> = {
   content: {
     label: 'Content',
-    color: 'bg-orange-500/20 text-orange-300',
+    color: 'bg-amber-500/20 text-amber-300',
     icon: FileText,
   },
   campaign: {
@@ -103,17 +103,17 @@ export const typeConfig: Record<TaskType, TypeConfig> = {
   },
   analytics: {
     label: 'Analytics',
-    color: 'bg-orange-500/20 text-orange-300',
+    color: 'bg-amber-500/20 text-amber-300',
     icon: TrendingUp,
   },
   social: {
     label: 'Social',
-    color: 'bg-orange-500/20 text-orange-300',
+    color: 'bg-amber-500/20 text-amber-300',
     icon: MessageSquare,
   },
   design: {
     label: 'Design',
-    color: 'bg-orange-500/20 text-orange-300',
+    color: 'bg-amber-500/20 text-amber-300',
     icon: Sparkles,
   },
   other: {

@@ -62,9 +62,9 @@ function getROIColor(roi: number): {
       border: 'border-emerald-500/30',
     };
   return {
-    bg: 'bg-orange-500/10',
-    text: 'text-orange-400',
-    border: 'border-orange-500/30',
+    bg: 'bg-amber-500/10',
+    text: 'text-amber-400',
+    border: 'border-amber-500/30',
   };
 }
 

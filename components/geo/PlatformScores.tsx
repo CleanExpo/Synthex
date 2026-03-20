@@ -21,7 +21,7 @@ const platformLabels: Record<string, { name: string; color: string }> = {
   google_aio: { name: 'Google AI Overviews', color: 'text-blue-400' },
   chatgpt: { name: 'ChatGPT', color: 'text-emerald-400' },
   perplexity: { name: 'Perplexity', color: 'text-purple-400' },
-  bing_copilot: { name: 'Bing Copilot', color: 'text-orange-400' },
+  bing_copilot: { name: 'Bing Copilot', color: 'text-amber-400' },
 };
 
 export function PlatformScores({ platformScores }: PlatformScoresProps) {
@@ -31,7 +31,7 @@ export function PlatformScores({ platformScores }: PlatformScoresProps) {
     <Card className="bg-white/[0.02] border-white/[0.08]">
       <CardHeader>
         <CardTitle className="text-white text-lg flex items-center gap-2">
-          <Globe className="h-5 w-5 text-orange-400" />
+          <Globe className="h-5 w-5 text-amber-400" />
           Platform Scores
         </CardTitle>
       </CardHeader>

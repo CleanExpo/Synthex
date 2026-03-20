@@ -100,7 +100,10 @@ export const CampaignStatus: Story = {
       </div>
       <div className="flex items-center gap-2">
         <span className="text-sm">Paused:</span>
-        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+        <Badge
+          variant="outline"
+          className="bg-yellow-50 text-yellow-700 border-yellow-200"
+        >
           Paused
         </Badge>
       </div>
@@ -131,19 +134,28 @@ export const NumberBadges: Story = {
     <div className="flex flex-wrap gap-4">
       <div className="relative">
         <span className="text-sm">Notifications</span>
-        <Badge variant="destructive" className="ml-2 text-xs px-1 py-0 min-w-[20px] h-5 rounded-full flex items-center justify-center">
+        <Badge
+          variant="destructive"
+          className="ml-2 text-xs px-1 py-0 min-w-[20px] h-5 rounded-full flex items-center justify-center"
+        >
           3
         </Badge>
       </div>
       <div className="relative">
         <span className="text-sm">Messages</span>
-        <Badge variant="default" className="ml-2 text-xs px-1 py-0 min-w-[20px] h-5 rounded-full flex items-center justify-center">
+        <Badge
+          variant="default"
+          className="ml-2 text-xs px-1 py-0 min-w-[20px] h-5 rounded-full flex items-center justify-center"
+        >
           12
         </Badge>
       </div>
       <div className="relative">
         <span className="text-sm">Tasks</span>
-        <Badge variant="secondary" className="ml-2 text-xs px-1 py-0 min-w-[20px] h-5 rounded-full flex items-center justify-center">
+        <Badge
+          variant="secondary"
+          className="ml-2 text-xs px-1 py-0 min-w-[20px] h-5 rounded-full flex items-center justify-center"
+        >
           99+
         </Badge>
       </div>
@@ -164,7 +176,9 @@ export const SocialPlatforms: Story = {
     <div className="flex flex-wrap gap-2">
       <Badge className="bg-blue-500 hover:bg-blue-600">Facebook</Badge>
       <Badge className="bg-sky-500 hover:bg-sky-600">Twitter</Badge>
-      <Badge className="bg-gradient-to-r from-cyan-500 to-pink-500">Instagram</Badge>
+      <Badge className="bg-gradient-to-r from-amber-500 to-pink-500">
+        Instagram
+      </Badge>
       <Badge className="bg-blue-700 hover:bg-blue-800">LinkedIn</Badge>
       <Badge className="bg-red-500 hover:bg-red-600">YouTube</Badge>
       <Badge className="bg-green-500 hover:bg-green-600">WhatsApp</Badge>
@@ -202,18 +216,20 @@ export const SizeVariations: Story = {
 export const InteractiveBadges: Story = {
   render: () => (
     <div className="flex flex-wrap gap-2">
-      <Badge 
-        variant="outline" 
+      <Badge
+        variant="outline"
         className="cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
       >
         Clickable Badge
       </Badge>
-      <Badge 
+      <Badge
         variant="secondary"
         className="cursor-pointer hover:bg-secondary/80 transition-colors group"
       >
         Hover Effect
-        <span className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity">✕</span>
+        <span className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          ✕
+        </span>
       </Badge>
     </div>
   ),

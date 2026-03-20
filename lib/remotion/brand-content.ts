@@ -5,7 +5,11 @@
  * Used by the render pipeline to generate BrandShowcase, BrandReel, and BrandSquare videos.
  */
 
-import type { BrandShowcaseProps, BrandReelProps, BrandSquareProps } from './types';
+import type {
+  BrandShowcaseProps,
+  BrandReelProps,
+  BrandSquareProps,
+} from './types';
 
 // ── Brand Content Type ───────────────────────────────────────────────────────
 
@@ -118,9 +122,12 @@ export const BRAND_CONTENT: BrandContent[] = [
       'IICRC-Certified Restoration Technicians',
     ],
     hookText: 'Disaster just struck. Who do you call?',
-    benefit: '24/7 emergency response with certified technicians on-site within hours',
-    problem: 'When flood, fire, or storm damage hits, every hour of delay costs thousands',
-    solution: 'Disaster Recovery provides immediate 24/7 response with IICRC-certified technicians and direct insurance liaison',
+    benefit:
+      '24/7 emergency response with certified technicians on-site within hours',
+    problem:
+      'When flood, fire, or storm damage hits, every hour of delay costs thousands',
+    solution:
+      'Disaster Recovery provides immediate 24/7 response with IICRC-certified technicians and direct insurance liaison',
     logoUrl: '/brands/disaster-recovery/logo.jpg',
     ctaText: 'Call Now — 24/7 Response',
     youtubeDescription: `Disaster Recovery — Australia's trusted emergency restoration service. When flood, fire, storm, or mould damage strikes your property, our IICRC-certified technicians respond 24/7 to minimise damage and restore your home or business.
@@ -143,14 +150,31 @@ Contact us today for immediate assistance.
 
 #DisasterRecovery #EmergencyRestoration #WaterDamage #FireRestoration #MouldRemediation #Australia #IICRC #PropertyRestoration #24HourService #InsuranceClaims`,
     youtubeTags: [
-      'disaster recovery', 'emergency restoration', 'water damage restoration',
-      'fire damage cleanup', 'mould remediation', 'storm damage repair',
-      'IICRC certified', 'property restoration Australia', 'flood cleanup',
-      'insurance restoration', '24 hour emergency service', 'water extraction',
-      'structural drying', 'smoke damage', 'restoration company Australia',
-      'commercial restoration', 'residential restoration',
+      'disaster recovery',
+      'emergency restoration',
+      'water damage restoration',
+      'fire damage cleanup',
+      'mould remediation',
+      'storm damage repair',
+      'IICRC certified',
+      'property restoration Australia',
+      'flood cleanup',
+      'insurance restoration',
+      '24 hour emergency service',
+      'water extraction',
+      'structural drying',
+      'smoke damage',
+      'restoration company Australia',
+      'commercial restoration',
+      'residential restoration',
     ],
-    hashtags: ['#DisasterRecovery', '#EmergencyRestoration', '#WaterDamage', '#IICRC', '#Australia'],
+    hashtags: [
+      '#DisasterRecovery',
+      '#EmergencyRestoration',
+      '#WaterDamage',
+      '#IICRC',
+      '#Australia',
+    ],
     youtubeCategory: '27', // Education
     twitterText: `When disaster strikes, every minute counts. Our IICRC-certified team responds 24/7 with rapid water, fire & storm restoration across Australia. #DisasterRecovery #EmergencyRestoration #Australia`,
     linkedinText: `When property damage strikes, the speed of response determines the outcome.
@@ -177,9 +201,12 @@ Our IICRC-certified technicians handle everything, including direct insurance li
       'Professional Training & Industry Development',
     ],
     hookText: 'The science behind restoration excellence',
-    benefit: 'Industry-leading training and standards that set the benchmark for restoration in Australia',
-    problem: 'The restoration industry lacks standardised training and scientific methodology',
-    solution: 'CARSI delivers 40+ years of restoration science expertise through IICRC-aligned training and professional development',
+    benefit:
+      'Industry-leading training and standards that set the benchmark for restoration in Australia',
+    problem:
+      'The restoration industry lacks standardised training and scientific methodology',
+    solution:
+      'CARSI delivers 40+ years of restoration science expertise through IICRC-aligned training and professional development',
     ctaText: 'Explore Our Programs',
     youtubeDescription: `CARSI — The Cleaning & Restoration Science Institute. For over 40 years, CARSI has been at the forefront of restoration science in Australia, delivering professional training, industry standards, and scientific methodology to the cleaning and restoration sector.
 
@@ -203,13 +230,30 @@ Visit carsi.com.au to explore our training programs and industry resources.
 
 #CARSI #RestorationScience #IICRC #ProfessionalTraining #CleaningIndustry #Australia #Certification #RestorationProfessionals`,
     youtubeTags: [
-      'CARSI', 'restoration science', 'cleaning institute', 'IICRC certification',
-      'restoration training', 'professional development', 'cleaning industry Australia',
-      'restoration standards', 'water damage training', 'mould remediation course',
-      'restoration certification', 'cleaning science', 'industry training',
-      'restoration professionals', 'CARSI Australia', 'restoration education',
+      'CARSI',
+      'restoration science',
+      'cleaning institute',
+      'IICRC certification',
+      'restoration training',
+      'professional development',
+      'cleaning industry Australia',
+      'restoration standards',
+      'water damage training',
+      'mould remediation course',
+      'restoration certification',
+      'cleaning science',
+      'industry training',
+      'restoration professionals',
+      'CARSI Australia',
+      'restoration education',
     ],
-    hashtags: ['#CARSI', '#RestorationScience', '#IICRC', '#ProfessionalTraining', '#Australia'],
+    hashtags: [
+      '#CARSI',
+      '#RestorationScience',
+      '#IICRC',
+      '#ProfessionalTraining',
+      '#Australia',
+    ],
     youtubeCategory: '27', // Education
     twitterText: `40+ years advancing restoration science in Australia. CARSI delivers IICRC-aligned training, certification & industry standards for cleaning and restoration professionals. #CARSI #RestorationScience #IICRC`,
     linkedinText: `The restoration industry demands scientific rigour and professional excellence.
@@ -236,9 +280,12 @@ Whether you're seeking certification or looking to elevate your team's capabilit
       'Peer Support & Professional Development',
     ],
     hookText: "Australia's restoration professionals, united",
-    benefit: 'A national network connecting certified restoration professionals for standards, support, and growth',
-    problem: 'Restoration professionals work in isolation without consistent standards or peer networks',
-    solution: 'NRPG unites restoration professionals across Australia with shared standards, peer support, and professional development',
+    benefit:
+      'A national network connecting certified restoration professionals for standards, support, and growth',
+    problem:
+      'Restoration professionals work in isolation without consistent standards or peer networks',
+    solution:
+      'NRPG unites restoration professionals across Australia with shared standards, peer support, and professional development',
     ctaText: 'Join the Network',
     youtubeDescription: `NRPG — National Restoration Professional Group. Australia's premier network connecting certified restoration professionals with industry standards, peer support, and professional development opportunities.
 
@@ -260,13 +307,28 @@ Visit nrpg.com.au to learn more about membership and upcoming events.
 
 #NRPG #RestorationProfessionals #Australia #IndustryNetwork #ProfessionalDevelopment #RestorationIndustry #Standards`,
     youtubeTags: [
-      'NRPG', 'restoration professionals', 'professional network Australia',
-      'restoration industry', 'industry standards', 'professional development',
-      'restoration network', 'peer support', 'restoration advocacy',
-      'cleaning and restoration', 'national restoration group', 'NRPG Australia',
-      'restoration events', 'industry association', 'restoration certification',
+      'NRPG',
+      'restoration professionals',
+      'professional network Australia',
+      'restoration industry',
+      'industry standards',
+      'professional development',
+      'restoration network',
+      'peer support',
+      'restoration advocacy',
+      'cleaning and restoration',
+      'national restoration group',
+      'NRPG Australia',
+      'restoration events',
+      'industry association',
+      'restoration certification',
     ],
-    hashtags: ['#NRPG', '#RestorationProfessionals', '#IndustryNetwork', '#Australia'],
+    hashtags: [
+      '#NRPG',
+      '#RestorationProfessionals',
+      '#IndustryNetwork',
+      '#Australia',
+    ],
     youtubeCategory: '27', // Education
     twitterText: `Australia's restoration professionals, united. NRPG connects certified professionals with industry standards, peer support & development opportunities. #NRPG #RestorationProfessionals #Australia`,
     linkedinText: `The strength of the restoration industry lies in its professionals.
@@ -293,9 +355,12 @@ Join the national network building a stronger restoration industry.
       'Analytics-Driven Campaign Optimisation',
     ],
     hookText: 'Your marketing team just got an AI upgrade',
-    benefit: 'Generate, schedule, and optimise content across 9 social platforms — all from one dashboard',
-    problem: 'Managing content across multiple social platforms is time-consuming and inconsistent',
-    solution: 'Synthex automates content generation, scheduling, and optimisation across 9 platforms with AI-powered intelligence',
+    benefit:
+      'Generate, schedule, and optimise content across 9 social platforms — all from one dashboard',
+    problem:
+      'Managing content across multiple social platforms is time-consuming and inconsistent',
+    solution:
+      'Synthex automates content generation, scheduling, and optimisation across 9 platforms with AI-powered intelligence',
     ctaText: 'Automate Your Marketing',
     youtubeDescription: `Synthex — AI-Powered Marketing Automation. Generate, schedule, and optimise content across 9 social media platforms from a single intelligent dashboard.
 
@@ -320,13 +385,31 @@ Visit synthex.social to see AI marketing in action — trusted by Australian bus
 
 #Synthex #AIMarketing #MarketingAutomation #SocialMedia #ContentGeneration #Analytics #MarTech #AI`,
     youtubeTags: [
-      'Synthex', 'AI marketing', 'marketing automation', 'social media management',
-      'content generation AI', 'social media scheduling', 'marketing platform',
-      'AI content creation', 'multi-platform publishing', 'marketing analytics',
-      'campaign optimisation', 'social media tool', 'MarTech', 'AI social media',
-      'content marketing AI', 'automated marketing', 'social media automation',
+      'Synthex',
+      'AI marketing',
+      'marketing automation',
+      'social media management',
+      'content generation AI',
+      'social media scheduling',
+      'marketing platform',
+      'AI content creation',
+      'multi-platform publishing',
+      'marketing analytics',
+      'campaign optimisation',
+      'social media tool',
+      'MarTech',
+      'AI social media',
+      'content marketing AI',
+      'automated marketing',
+      'social media automation',
     ],
-    hashtags: ['#Synthex', '#AIMarketing', '#MarketingAutomation', '#SocialMedia', '#MarTech'],
+    hashtags: [
+      '#Synthex',
+      '#AIMarketing',
+      '#MarketingAutomation',
+      '#SocialMedia',
+      '#MarTech',
+    ],
     youtubeCategory: '28', // Science & Technology
     twitterText: `Your marketing team just got an AI upgrade. Synthex generates, schedules & optimises content across 9 platforms from one dashboard. #AIMarketing #MarketingAutomation #Synthex`,
     linkedinText: `Managing content across multiple social platforms shouldn't require a full team.
@@ -345,7 +428,7 @@ Built for businesses and agencies ready to scale their social presence intellige
     brandName: 'RestoreAssist',
     tagline: 'AI-Powered Restoration Intelligence',
     industry: 'Restoration Technology',
-    brandColour: '#0891B2', // cyan-600
+    brandColour: '#0891B2', // amber-600
     websiteUrl: 'restoreassist.com.au',
     valueProps: [
       'AI-Powered Job Estimation & Scoping',
@@ -353,9 +436,12 @@ Built for businesses and agencies ready to scale their social presence intellige
       'Real-Time Project Intelligence',
     ],
     hookText: 'Restoration just got smarter',
-    benefit: 'AI that handles estimation, documentation, and compliance so you can focus on the restoration work',
-    problem: 'Restoration job estimation, documentation, and compliance reporting consume hours of productive time',
-    solution: 'RestoreAssist uses AI to automate job scoping, generate documentation, and ensure compliance — saving hours per job',
+    benefit:
+      'AI that handles estimation, documentation, and compliance so you can focus on the restoration work',
+    problem:
+      'Restoration job estimation, documentation, and compliance reporting consume hours of productive time',
+    solution:
+      'RestoreAssist uses AI to automate job scoping, generate documentation, and ensure compliance — saving hours per job',
     ctaText: 'Try RestoreAssist',
     youtubeDescription: `RestoreAssist — AI-Powered Restoration Intelligence. Automate job estimation, documentation, and compliance reporting with AI designed specifically for the restoration industry.
 
@@ -370,12 +456,27 @@ RestoreAssist is purpose-built for restoration professionals who want to spend l
 
 #RestoreAssist #RestorationTech #AI #Automation #IICRC #PropertyRestoration`,
     youtubeTags: [
-      'RestoreAssist', 'restoration AI', 'job estimation', 'restoration technology',
-      'compliance automation', 'documentation AI', 'restoration software',
-      'moisture mapping', 'IICRC compliance', 'restoration management',
-      'AI restoration', 'property restoration tech', 'restoration intelligence',
+      'RestoreAssist',
+      'restoration AI',
+      'job estimation',
+      'restoration technology',
+      'compliance automation',
+      'documentation AI',
+      'restoration software',
+      'moisture mapping',
+      'IICRC compliance',
+      'restoration management',
+      'AI restoration',
+      'property restoration tech',
+      'restoration intelligence',
     ],
-    hashtags: ['#RestoreAssist', '#RestorationTech', '#AI', '#Automation', '#IICRC'],
+    hashtags: [
+      '#RestoreAssist',
+      '#RestorationTech',
+      '#AI',
+      '#Automation',
+      '#IICRC',
+    ],
     youtubeCategory: '28', // Science & Technology
     twitterText: `Restoration just got smarter. RestoreAssist automates job estimation, documentation & compliance with purpose-built AI for restoration professionals. #RestoreAssist #RestorationTech #AI`,
     linkedinText: `Restoration professionals spend too many hours on estimation, documentation, and compliance paperwork.
@@ -402,9 +503,12 @@ Purpose-built for the restoration industry. Less paperwork, more restoration.
       'Cross-Industry Expertise & Integration',
     ],
     hookText: 'Innovation starts with unity',
-    benefit: 'A technology holding group driving innovation across industries — 100% Australian-owned',
-    problem: 'Australian businesses need homegrown technology solutions that understand local markets',
-    solution: 'Unite Group builds and invests in technology companies that solve real problems for Australian industries',
+    benefit:
+      'A technology holding group driving innovation across industries — 100% Australian-owned',
+    problem:
+      'Australian businesses need homegrown technology solutions that understand local markets',
+    solution:
+      'Unite Group builds and invests in technology companies that solve real problems for Australian industries',
     ctaText: 'Discover Our Portfolio',
     youtubeDescription: `Unite Group — Building Tomorrow's Technology Solutions. An Australian-owned technology holding group driving innovation across multiple industries.
 
@@ -429,13 +533,30 @@ Visit unite-group.in to learn more about our portfolio and vision.
 
 #UniteGroup #AustralianTech #Innovation #TechHolding #AI #Australia #Technology`,
     youtubeTags: [
-      'Unite Group', 'Australian technology', 'tech holding group', 'innovation portfolio',
-      'Australian owned', 'technology company', 'AI technology', 'startup portfolio',
-      'tech investment', 'Australian innovation', 'cross-industry tech',
-      'Unite Group Australia', 'technology solutions', 'digital transformation',
-      'Australian business', 'tech portfolio',
+      'Unite Group',
+      'Australian technology',
+      'tech holding group',
+      'innovation portfolio',
+      'Australian owned',
+      'technology company',
+      'AI technology',
+      'startup portfolio',
+      'tech investment',
+      'Australian innovation',
+      'cross-industry tech',
+      'Unite Group Australia',
+      'technology solutions',
+      'digital transformation',
+      'Australian business',
+      'tech portfolio',
     ],
-    hashtags: ['#UniteGroup', '#AustralianTech', '#Innovation', '#Technology', '#Australia'],
+    hashtags: [
+      '#UniteGroup',
+      '#AustralianTech',
+      '#Innovation',
+      '#Technology',
+      '#Australia',
+    ],
     youtubeCategory: '28', // Science & Technology
     twitterText: `Innovation starts with unity. Unite Group is an Australian-owned tech holding company building solutions across AI, marketing, and restoration industries. #UniteGroup #AustralianTech #Innovation`,
     linkedinText: `Great technology comes from understanding real problems.
@@ -451,10 +572,10 @@ Our portfolio represents a unified vision: build technology that serves Australi
 
 /** Get only active brands (those with YouTube/X accounts ready) */
 export function getActiveBrands(): BrandContent[] {
-  return BRAND_CONTENT.filter((b) => b.active);
+  return BRAND_CONTENT.filter(b => b.active);
 }
 
 /** Get a brand by ID */
 export function getBrandById(id: string): BrandContent | undefined {
-  return BRAND_CONTENT.find((b) => b.id === id);
+  return BRAND_CONTENT.find(b => b.id === id);
 }

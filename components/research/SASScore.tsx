@@ -68,9 +68,9 @@ const getBadgeInfo = (
   if (score >= 7.0) {
     return {
       label: 'Reliable',
-      color: 'text-orange-400',
+      color: 'text-amber-400',
       bgColor:
-        'bg-gradient-to-r from-orange-600/20 to-orange-700/20 border-orange-500/40',
+        'bg-gradient-to-r from-amber-600/20 to-amber-700/20 border-amber-500/40',
     };
   }
   return null; // No badge for scores below 7.0
@@ -79,7 +79,7 @@ const getBadgeInfo = (
 const getScoreColor = (score: number, maxScore: number): string => {
   const percentage = (score / maxScore) * 100;
   if (percentage >= 90) return 'bg-emerald-500';
-  if (percentage >= 75) return 'bg-orange-500';
+  if (percentage >= 75) return 'bg-amber-500';
   if (percentage >= 60) return 'bg-amber-500';
   return 'bg-red-500';
 };
@@ -106,7 +106,7 @@ export function SASScore({
   return (
     <Card variant="glass" className={cn('overflow-hidden', className)}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold uppercase tracking-wider text-orange-400 flex items-center justify-between">
+        <CardTitle className="text-sm font-semibold uppercase tracking-wider text-amber-400 flex items-center justify-between">
           <span>Synthex Authority Score</span>
           <span className="text-xs text-gray-500 font-normal">
             {methodologyVersion}
@@ -268,7 +268,7 @@ export function SASScoreInline({
     <div className={cn('inline-flex items-center gap-2', className)}>
       <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20">
         <span className="text-xs font-medium text-gray-400">SAS</span>
-        <span className="text-sm font-bold text-orange-400">
+        <span className="text-sm font-bold text-amber-400">
           {score.toFixed(1)}
         </span>
       </div>

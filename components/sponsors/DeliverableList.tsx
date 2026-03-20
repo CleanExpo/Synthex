@@ -38,8 +38,8 @@ const TYPE_COLORS: Record<DeliverableType, string> = {
   story: 'bg-pink-500/10 text-pink-400 border-pink-500/30',
   reel: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
   video: 'bg-red-500/10 text-red-400 border-red-500/30',
-  mention: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
-  review: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
+  mention: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
+  review: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
   other: 'bg-gray-500/10 text-gray-400 border-gray-500/30',
 };
 
@@ -141,7 +141,7 @@ function DeliverableRow({
           target="_blank"
           rel="noopener noreferrer"
           onClick={e => e.stopPropagation()}
-          className="p-1.5 text-white/40 hover:text-orange-400 transition-colors"
+          className="p-1.5 text-white/40 hover:text-amber-400 transition-colors"
         >
           <ExternalLink className="h-4 w-4" />
         </a>

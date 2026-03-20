@@ -66,10 +66,10 @@ export default function TermsPage() {
       {/* Hero Section */}
       <section className="pt-12 pb-12 px-6">
         <div className="container mx-auto text-center">
-          <FileText className="w-16 h-16 text-orange-400 mx-auto mb-6" />
+          <FileText className="w-16 h-16 text-amber-400 mx-auto mb-6" />
           <h1 className="text-5xl font-bold text-white mb-4">
             Terms of{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-500">
               Service
             </span>
           </h1>
@@ -84,7 +84,7 @@ export default function TermsPage() {
       {/* Agreement Overview */}
       <section className="px-6 pb-12">
         <div className="container mx-auto">
-          <Card className="bg-surface-base/80 border border-orange-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
+          <Card className="bg-surface-base/80 border border-amber-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-white mb-6">
               Agreement Overview
             </h2>
@@ -115,10 +115,10 @@ export default function TermsPage() {
             {sections.map((section, index) => (
               <Card
                 key={index}
-                className="bg-surface-base/80 border border-orange-500/20 backdrop-blur-sm p-6"
+                className="bg-surface-base/80 border border-amber-500/20 backdrop-blur-sm p-6"
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <section.icon className="w-8 h-8 text-orange-400" />
+                  <section.icon className="w-8 h-8 text-amber-400" />
                   <h3 className="text-xl font-semibold text-white">
                     {section.title}
                   </h3>
@@ -129,7 +129,7 @@ export default function TermsPage() {
                       key={idx}
                       className="text-gray-300 flex items-start gap-2"
                     >
-                      <span className="text-orange-400 mt-1">•</span>
+                      <span className="text-amber-400 mt-1">•</span>
                       <span>{item}</span>
                     </li>
                   ))}
@@ -143,14 +143,14 @@ export default function TermsPage() {
       {/* Detailed Terms */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="bg-surface-base/80 border border-orange-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
+          <Card className="bg-surface-base/80 border border-amber-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-white mb-6">
               Service Terms
             </h2>
 
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-orange-400 mb-2">
+                <h3 className="text-lg font-semibold text-amber-400 mb-2">
                   1. Account Registration
                 </h3>
                 <p className="text-gray-300">
@@ -163,7 +163,7 @@ export default function TermsPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-orange-400 mb-2">
+                <h3 className="text-lg font-semibold text-amber-400 mb-2">
                   2. Subscription and Billing
                 </h3>
                 <p className="text-gray-300">
@@ -176,7 +176,7 @@ export default function TermsPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-orange-400 mb-2">
+                <h3 className="text-lg font-semibold text-amber-400 mb-2">
                   3. Content and Intellectual Property
                 </h3>
                 <p className="text-gray-300">
@@ -189,7 +189,7 @@ export default function TermsPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-orange-400 mb-2">
+                <h3 className="text-lg font-semibold text-amber-400 mb-2">
                   4. Service Availability
                 </h3>
                 <p className="text-gray-300">
@@ -202,7 +202,7 @@ export default function TermsPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-orange-400 mb-2">
+                <h3 className="text-lg font-semibold text-amber-400 mb-2">
                   5. Limitation of Liability
                 </h3>
                 <p className="text-gray-300">
@@ -215,7 +215,7 @@ export default function TermsPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-orange-400 mb-2">
+                <h3 className="text-lg font-semibold text-amber-400 mb-2">
                   6. Termination
                 </h3>
                 <p className="text-gray-300">
@@ -227,7 +227,7 @@ export default function TermsPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-orange-400 mb-2">
+                <h3 className="text-lg font-semibold text-amber-400 mb-2">
                   7. Dispute Resolution
                 </h3>
                 <p className="text-gray-300">
@@ -240,7 +240,7 @@ export default function TermsPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-orange-400 mb-2">
+                <h3 className="text-lg font-semibold text-amber-400 mb-2">
                   8. Modifications
                 </h3>
                 <p className="text-gray-300">
@@ -258,14 +258,14 @@ export default function TermsPage() {
       {/* SLA for Pro/Enterprise */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="bg-surface-base/80 border border-orange-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
+          <Card className="bg-surface-base/80 border border-amber-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
             <DollarSign className="w-10 h-10 text-amber-400 mb-4" />
             <h2 className="text-2xl font-bold text-white mb-6">
               Service Level Agreement (Pro & Enterprise)
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h3 className="text-lg font-semibold text-orange-400 mb-3">
+                <h3 className="text-lg font-semibold text-amber-400 mb-3">
                   Uptime Guarantee
                 </h3>
                 <ul className="space-y-2 text-gray-300">
@@ -276,7 +276,7 @@ export default function TermsPage() {
                 </ul>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-orange-400 mb-3">
+                <h3 className="text-lg font-semibold text-amber-400 mb-3">
                   Support Response Times
                 </h3>
                 <ul className="space-y-2 text-gray-300">
@@ -294,8 +294,8 @@ export default function TermsPage() {
       {/* Contact Section */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="bg-gradient-to-br from-[#111111] to-[#1e293b] border border-orange-500/30 p-12 text-center max-w-3xl mx-auto">
-            <Scale className="w-12 h-12 text-orange-400 mx-auto mb-4" />
+          <Card className="bg-gradient-to-br from-[#111111] to-[#1e293b] border border-amber-500/30 p-12 text-center max-w-3xl mx-auto">
+            <Scale className="w-12 h-12 text-amber-400 mx-auto mb-4" />
             <h2 className="text-3xl font-bold text-white mb-4">
               Questions About Our Terms?
             </h2>
@@ -308,7 +308,7 @@ export default function TermsPage() {
               <p>Support: support@synthex.social</p>
               <p>Address: 100 Market St, San Francisco, CA 94105</p>
             </div>
-            <Button className="mt-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25">
+            <Button className="mt-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25">
               Contact Legal Team
             </Button>
           </Card>

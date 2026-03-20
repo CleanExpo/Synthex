@@ -43,7 +43,7 @@ export function OverviewMetrics({ overview }: OverviewMetricsProps) {
             <p className="text-2xl font-bold">
               {formatNumber(overview.totalReach)}
             </p>
-            <Eye className="w-5 h-5 text-orange-500" />
+            <Eye className="w-5 h-5 text-amber-500" />
           </div>
           <div className="flex items-center gap-1 mt-2">
             {getChangeIcon(12.5)}

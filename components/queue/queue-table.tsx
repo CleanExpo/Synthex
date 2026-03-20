@@ -49,7 +49,7 @@ interface QueueTableProps {
 // ============================================================================
 
 const STATUS_COLOURS: Record<string, string> = {
-  scheduled: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+  scheduled: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
   published: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
   failed: 'bg-red-500/20 text-red-300 border-red-500/30',
   draft: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
@@ -257,7 +257,7 @@ export function QueueTable({
           <div key={post.id} className="group">
             <div
               className={`grid grid-cols-[40px_100px_1fr_100px_170px_100px] gap-2 px-4 py-3 border-b border-white/5 hover:bg-white/[0.03] transition-colors cursor-pointer ${
-                selectedIds.has(post.id) ? 'bg-orange-500/[0.05]' : ''
+                selectedIds.has(post.id) ? 'bg-amber-500/[0.05]' : ''
               }`}
             >
               {/* Checkbox */}
@@ -318,7 +318,7 @@ export function QueueTable({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-7 w-7 p-0 text-orange-400 hover:text-orange-300 hover:bg-white/10"
+                    className="h-7 w-7 p-0 text-amber-400 hover:text-amber-300 hover:bg-white/10"
                     onClick={() => onRetryPost(post.id)}
                     aria-label="Retry post"
                   >

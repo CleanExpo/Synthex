@@ -96,7 +96,7 @@ function PostListItem({
   return (
     <Card
       variant="glass"
-      className="cursor-pointer hover:border-orange-500/50 transition-colors"
+      className="cursor-pointer hover:border-amber-500/50 transition-colors"
       onClick={onClick}
     >
       <CardContent className="pt-6">
@@ -133,7 +133,7 @@ function PostListItem({
                   post.status === 'published'
                     ? 'bg-green-500/20 text-green-300'
                     : post.status === 'scheduled'
-                      ? 'bg-orange-500/20 text-orange-300'
+                      ? 'bg-amber-500/20 text-amber-300'
                       : 'bg-slate-500/20 text-slate-300'
                 }`}
               >
@@ -159,7 +159,7 @@ function PostListItem({
                   </span>
                 </>
               ) : post.engagement?.estimated ? (
-                <span className="text-orange-400">
+                <span className="text-amber-400">
                   Est. {post.engagement.estimated}% engagement
                 </span>
               ) : null}

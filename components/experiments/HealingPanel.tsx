@@ -218,7 +218,7 @@ export function HealingPanel() {
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Search className="w-4 h-4 text-orange-400" />
+            <Search className="w-4 h-4 text-amber-400" />
             Analyse URL for Healing Opportunities
           </CardTitle>
         </CardHeader>

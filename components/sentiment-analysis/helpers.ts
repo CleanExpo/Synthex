@@ -3,9 +3,14 @@ import React from 'react';
 
 export function getSentimentIcon(sentiment: string) {
   switch (sentiment) {
-    case 'positive': return React.createElement(Smile, { className: 'h-5 w-5 text-green-400' });
-    case 'negative': return React.createElement(Frown, { className: 'h-5 w-5 text-red-400' });
-    default: return React.createElement(Meh, { className: 'h-5 w-5 text-yellow-400' });
+    case 'positive':
+      return React.createElement(Smile, {
+        className: 'h-5 w-5 text-green-400',
+      });
+    case 'negative':
+      return React.createElement(Frown, { className: 'h-5 w-5 text-red-400' });
+    default:
+      return React.createElement(Meh, { className: 'h-5 w-5 text-yellow-400' });
   }
 }
 
@@ -17,10 +22,14 @@ export function getSentimentColor(score: number) {
 
 export function getPriorityColor(priority: string) {
   switch (priority) {
-    case 'urgent': return 'bg-red-500';
-    case 'high': return 'bg-orange-500';
-    case 'medium': return 'bg-yellow-500';
-    default: return 'bg-green-500';
+    case 'urgent':
+      return 'bg-red-500';
+    case 'high':
+      return 'bg-amber-500';
+    case 'medium':
+      return 'bg-yellow-500';
+    default:
+      return 'bg-green-500';
   }
 }
 

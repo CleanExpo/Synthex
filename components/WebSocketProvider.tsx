@@ -24,11 +24,11 @@ interface WebSocketProviderProps {
 }
 
 // Connection Status Component
-function ConnectionStatus({ 
-  isConnected, 
-  connectionState, 
-  reconnectCount, 
-  onReconnect 
+function ConnectionStatus({
+  isConnected,
+  connectionState,
+  reconnectCount,
+  onReconnect,
 }: {
   isConnected: boolean;
   connectionState: string;
@@ -42,7 +42,7 @@ function ConnectionStatus({
       case 'CONNECTING':
         return 'bg-yellow-500';
       case 'CLOSING':
-        return 'bg-orange-500';
+        return 'bg-amber-500';
       case 'CLOSED':
       default:
         return 'bg-red-500';
@@ -61,8 +61,8 @@ function ConnectionStatus({
 
   return (
     <div className="fixed top-4 right-4 z-50 flex items-center space-x-2">
-      <Badge 
-        variant="outline" 
+      <Badge
+        variant="outline"
         className={`flex items-center space-x-2 ${isConnected ? 'border-green-500' : 'border-red-500'}`}
       >
         {getStatusIcon()}
@@ -75,9 +75,9 @@ function ConnectionStatus({
           </span>
         )}
       </Badge>
-      
+
       <div className={`w-2 h-2 rounded-full ${getStatusColor()}`} />
-      
+
       {!isConnected && (
         <Button
           size="sm"
@@ -85,7 +85,9 @@ function ConnectionStatus({
           onClick={onReconnect}
           disabled={connectionState === 'CONNECTING'}
         >
-          <RefreshCw className={`h-4 w-4 ${connectionState === 'CONNECTING' ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`h-4 w-4 ${connectionState === 'CONNECTING' ? 'animate-spin' : ''}`}
+          />
         </Button>
       )}
     </div>
@@ -107,22 +109,27 @@ export function WebSocketProvider({
     token,
     onConnect: () => {
       if (connectionLost) {
-        toast.success('Connection Restored', 'Real-time notifications are now active');
+        toast.success(
+          'Connection Restored',
+          'Real-time notifications are now active'
+        );
         setConnectionLost(false);
       }
     },
-    onDisconnect: (event) => {
+    onDisconnect: event => {
       if (event.code !== 1000) {
         setConnectionLost(true);
         toast.warning('Connection Lost', 'Attempting to reconnect...');
       }
     },
-    onError: (error) => {
+    onError: error => {
       console.error('WebSocket error:', error);
-      toast.error('Connection Error', 'Failed to connect to real-time services');
+      toast.error(
+        'Connection Error',
+        'Failed to connect to real-time services'
+      );
     },
-    onNotification: (notification) => {
-      
+    onNotification: notification => {
       // Request browser notification permission if not granted
       if (notification.persistent && 'Notification' in window) {
         if (Notification.permission === 'default') {
@@ -135,8 +142,7 @@ export function WebSocketProvider({
   // Request notification permission on mount
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission().then(permission => {
-      });
+      Notification.requestPermission().then(permission => {});
     }
   }, []);
 
@@ -147,7 +153,7 @@ export function WebSocketProvider({
         // Extract user ID from token (simple decode, not secure)
         const payload = JSON.parse(atob(token.split('.')[1]));
         const userId = payload.userId || payload.id;
-        
+
         if (userId) {
           webSocketReturn.subscribe(`user:${userId}`);
           webSocketReturn.subscribe('global');
@@ -178,19 +184,23 @@ export function WebSocketProvider({
 // Hook to use WebSocket context
 export function useWebSocketContext(): UseWebSocketReturn {
   const context = useContext(WebSocketContext);
-  
+
   if (!context) {
-    throw new Error('useWebSocketContext must be used within a WebSocketProvider');
+    throw new Error(
+      'useWebSocketContext must be used within a WebSocketProvider'
+    );
   }
-  
+
   return context;
 }
 
 // Notification sender hook (for admin/testing)
 export function useNotificationSender() {
   const ws = useWebSocketContext();
-  
-  const sendTestNotification = (type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+
+  const sendTestNotification = (
+    type: 'info' | 'success' | 'warning' | 'error' = 'info'
+  ) => {
     const notifications = {
       info: {
         title: 'Info Notification',
@@ -213,10 +223,10 @@ export function useNotificationSender() {
         type: 'error' as const,
       },
     };
-    
+
     ws.sendNotification(notifications[type]);
   };
-  
+
   const sendCustomNotification = (
     title: string,
     message: string,
@@ -234,7 +244,7 @@ export function useNotificationSender() {
       ...options,
     });
   };
-  
+
   return {
     sendTestNotification,
     sendCustomNotification,

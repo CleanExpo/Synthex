@@ -177,10 +177,10 @@ export function Pagination({
   };
 
   const activeClasses = {
-    default: 'bg-orange-500/20 text-orange-400 border border-orange-500/30',
-    outline: 'border-orange-500/50 bg-orange-500/10 text-orange-400',
-    ghost: 'bg-orange-500/20 text-orange-400',
-    glass: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    default: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+    outline: 'border-amber-500/50 bg-amber-500/10 text-amber-400',
+    ghost: 'bg-amber-500/20 text-amber-400',
+    glass: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
   };
 
   const buttonClass = cn(

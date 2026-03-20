@@ -425,7 +425,7 @@ export default function AnalyticsDashboard() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <MousePointer className="h-4 w-4 text-orange-500" />
+                        <MousePointer className="h-4 w-4 text-amber-500" />
                         <span>Clicks</span>
                       </div>
                       <span className="font-bold">12,456</span>
@@ -605,7 +605,7 @@ export default function AnalyticsDashboard() {
                         the highest engagement
                       </p>
                     </div>
-                    <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded">
+                    <div className="p-3 bg-amber-900/20 border border-amber-500/20 rounded">
                       <p className="text-sm">
                         <strong>Optimal Time:</strong> Posts at 9 AM get 45%
                         more engagement

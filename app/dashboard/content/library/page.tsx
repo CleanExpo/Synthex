@@ -56,13 +56,18 @@ const PLATFORM_COLORS: Record<string, { dot: string; label: string }> = {
   facebook: { dot: 'bg-indigo-400', label: 'Facebook' },
   youtube: { dot: 'bg-red-400', label: 'YouTube' },
   pinterest: { dot: 'bg-rose-500', label: 'Pinterest' },
-  reddit: { dot: 'bg-orange-400', label: 'Reddit' },
+  reddit: { dot: 'bg-amber-400', label: 'Reddit' },
   threads: { dot: 'bg-slate-400', label: 'Threads' },
 };
 
 function getPlatformMeta(platform: string | null) {
   if (!platform) return { dot: 'bg-violet-400', label: 'General' };
-  return PLATFORM_COLORS[platform.toLowerCase()] ?? { dot: 'bg-violet-400', label: platform };
+  return (
+    PLATFORM_COLORS[platform.toLowerCase()] ?? {
+      dot: 'bg-violet-400',
+      label: platform,
+    }
+  );
 }
 
 const CONTENT_TYPE_BADGES: Record<string, string> = {
@@ -153,8 +158,12 @@ interface ContentCardProps {
 function ContentCard({ item, onCopy, onDelete, isDeleting }: ContentCardProps) {
   const [copied, setCopied] = useState(false);
   const platform = getPlatformMeta(item.platform);
-  const badgeClass = CONTENT_TYPE_BADGES[item.contentType] ?? CONTENT_TYPE_BADGES.snippet;
-  const preview = item.content.length > 150 ? item.content.slice(0, 150) + '...' : item.content;
+  const badgeClass =
+    CONTENT_TYPE_BADGES[item.contentType] ?? CONTENT_TYPE_BADGES.snippet;
+  const preview =
+    item.content.length > 150
+      ? item.content.slice(0, 150) + '...'
+      : item.content;
 
   const handleCopy = useCallback(() => {
     onCopy(item.content);
@@ -167,10 +176,16 @@ function ContentCard({ item, onCopy, onDelete, isDeleting }: ContentCardProps) {
       {/* Header row: platform dot + label, content-type badge */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <span className={`flex-shrink-0 h-2.5 w-2.5 rounded-full ${platform.dot}`} />
-          <span className="text-xs font-medium text-slate-400 truncate">{platform.label}</span>
+          <span
+            className={`flex-shrink-0 h-2.5 w-2.5 rounded-full ${platform.dot}`}
+          />
+          <span className="text-xs font-medium text-slate-400 truncate">
+            {platform.label}
+          </span>
         </div>
-        <span className={`flex-shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border ${badgeClass}`}>
+        <span
+          className={`flex-shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border ${badgeClass}`}
+        >
           {item.contentType}
         </span>
       </div>
@@ -181,13 +196,13 @@ function ContentCard({ item, onCopy, onDelete, isDeleting }: ContentCardProps) {
       </h3>
 
       {/* Content preview */}
-      <p className="text-xs text-slate-400 leading-relaxed flex-1">
-        {preview}
-      </p>
+      <p className="text-xs text-slate-400 leading-relaxed flex-1">{preview}</p>
 
       {/* Footer: date + actions */}
       <div className="flex items-center justify-between pt-1 gap-2">
-        <span className="text-xs text-slate-500">{formatDate(item.createdAt)}</span>
+        <span className="text-xs text-slate-500">
+          {formatDate(item.createdAt)}
+        </span>
         <div className="flex gap-2">
           <Button
             size="sm"
@@ -238,7 +253,14 @@ const ALL_PLATFORMS = [
   'threads',
 ];
 
-const ALL_CONTENT_TYPES = ['post', 'caption', 'story', 'thread', 'template', 'snippet'];
+const ALL_CONTENT_TYPES = [
+  'post',
+  'caption',
+  'story',
+  'thread',
+  'template',
+  'snippet',
+];
 
 interface FilterBarProps {
   platform: string;
@@ -247,7 +269,12 @@ interface FilterBarProps {
   onContentTypeChange: (v: string) => void;
 }
 
-function FilterBar({ platform, contentType, onPlatformChange, onContentTypeChange }: FilterBarProps) {
+function FilterBar({
+  platform,
+  contentType,
+  onPlatformChange,
+  onContentTypeChange,
+}: FilterBarProps) {
   return (
     <div className="flex flex-wrap gap-3 items-center">
       <div className="flex items-center gap-1.5 text-xs text-slate-400">
@@ -258,11 +285,11 @@ function FilterBar({ platform, contentType, onPlatformChange, onContentTypeChang
       {/* Platform selector */}
       <select
         value={platform}
-        onChange={(e) => onPlatformChange(e.target.value)}
+        onChange={e => onPlatformChange(e.target.value)}
         className="text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500/50"
       >
         <option value="">All platforms</option>
-        {ALL_PLATFORMS.map((p) => (
+        {ALL_PLATFORMS.map(p => (
           <option key={p} value={p}>
             {getPlatformMeta(p).label}
           </option>
@@ -272,11 +299,11 @@ function FilterBar({ platform, contentType, onPlatformChange, onContentTypeChang
       {/* Content type selector */}
       <select
         value={contentType}
-        onChange={(e) => onContentTypeChange(e.target.value)}
+        onChange={e => onContentTypeChange(e.target.value)}
         className="text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500/50"
       >
         <option value="">All types</option>
-        {ALL_CONTENT_TYPES.map((t) => (
+        {ALL_CONTENT_TYPES.map(t => (
           <option key={t} value={t}>
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </option>
@@ -308,9 +335,12 @@ export default function ContentLibraryPage() {
       if (platformFilter) params.set('platform', platformFilter);
       if (contentTypeFilter) params.set('contentType', contentTypeFilter);
 
-      const response = await fetch(`/api/content-library?${params.toString()}`, {
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `/api/content-library?${params.toString()}`,
+        {
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to load library');
@@ -338,31 +368,30 @@ export default function ContentLibraryPage() {
     toast.success('Copied to clipboard!');
   }, []);
 
-  const handleDelete = useCallback(
-    async (id: string) => {
-      setDeletingId(id);
-      try {
-        const response = await fetch(`/api/content-library/${id}`, {
-          method: 'DELETE',
-          credentials: 'include',
-        });
+  const handleDelete = useCallback(async (id: string) => {
+    setDeletingId(id);
+    try {
+      const response = await fetch(`/api/content-library/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
 
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
-          throw new Error((data as { message?: string }).message || 'Failed to delete');
-        }
-
-        // Remove from local state immediately (optimistic)
-        setItems((prev) => prev.filter((item) => item.id !== id));
-        toast.success('Item deleted');
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Failed to delete item');
-      } finally {
-        setDeletingId(null);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(
+          (data as { message?: string }).message || 'Failed to delete'
+        );
       }
-    },
-    []
-  );
+
+      // Remove from local state immediately (optimistic)
+      setItems(prev => prev.filter(item => item.id !== id));
+      toast.success('Item deleted');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete item');
+    } finally {
+      setDeletingId(null);
+    }
+  }, []);
 
   // ---------------------------------------------------------------------------
   // Render
@@ -409,7 +438,7 @@ export default function ContentLibraryPage() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {items.map((item) => (
+          {items.map(item => (
             <ContentCard
               key={item.id}
               item={item}

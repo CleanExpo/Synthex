@@ -1,7 +1,13 @@
 ﻿'use client';
 
 import { useState, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,12 +15,12 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { 
-  User, 
-  Mail, 
-  Lock, 
-  Bell, 
-  Shield, 
+import {
+  User,
+  Mail,
+  Lock,
+  Bell,
+  Shield,
   Palette,
   Globe,
   Camera,
@@ -30,7 +36,7 @@ import {
   Smartphone,
   Monitor,
   Moon,
-  Sun
+  Sun,
 } from '@/components/icons';
 import { toast } from 'sonner';
 
@@ -38,8 +44,10 @@ export default function DemoSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState('/api/placeholder/150/150');
-  
+  const [avatarPreview, setAvatarPreview] = useState(
+    '/api/placeholder/150/150'
+  );
+
   // Profile state
   const [profile, setProfile] = useState({
     name: 'John Doe',
@@ -49,7 +57,7 @@ export default function DemoSettingsPage() {
     website: 'https://johndoe.com',
     company: 'Acme Corp',
     location: 'San Francisco, CA',
-    phone: '+1 (555) 123-4567'
+    phone: '+1 (555) 123-4567',
   });
 
   // Notification settings
@@ -61,7 +69,7 @@ export default function DemoSettingsPage() {
     securityAlerts: true,
     postSuccess: true,
     postFailure: true,
-    integrationStatus: true
+    integrationStatus: true,
   });
 
   // Security settings
@@ -69,7 +77,7 @@ export default function DemoSettingsPage() {
     twoFactor: false,
     sessionTimeout: '30',
     ipRestriction: false,
-    apiAccess: true
+    apiAccess: true,
   });
 
   // Appearance settings
@@ -77,7 +85,7 @@ export default function DemoSettingsPage() {
     theme: 'dark',
     accentColor: 'orange',
     compactMode: false,
-    animations: true
+    animations: true,
   });
 
   const handleAvatarClick = () => {
@@ -91,7 +99,7 @@ export default function DemoSettingsPage() {
         toast.error('Image size must be less than 5MB');
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatarPreview(reader.result as string);
@@ -103,45 +111,44 @@ export default function DemoSettingsPage() {
 
   const handleProfileSave = async () => {
     setIsLoading(true);
-    
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     toast.success('Profile updated successfully! (Demo mode)');
     setIsLoading(false);
   };
 
   const handlePasswordChange = async () => {
     setIsLoading(true);
-    
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     toast.success('Password changed successfully! (Demo mode)');
     setIsLoading(false);
   };
 
   const handleNotificationSave = async () => {
     setIsLoading(true);
-    
+
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     toast.success('Notification preferences saved! (Demo mode)');
     setIsLoading(false);
   };
 
   const handleSecuritySave = async () => {
     setIsLoading(true);
-    
+
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     toast.success('Security settings updated! (Demo mode)');
     setIsLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-orange-950/20 to-gray-950">
-      
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-amber-950/20 to-gray-950">
       {/* Demo Mode Banner */}
       <div className="bg-amber-500/10 border border-amber-500/20 p-3">
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
@@ -181,7 +188,7 @@ export default function DemoSettingsPage() {
               <CardContent>
                 <div className="flex items-center gap-6">
                   <div className="relative">
-                    <Avatar className="w-24 h-24 border-2 border-orange-500/20">
+                    <Avatar className="w-24 h-24 border-2 border-amber-500/20">
                       <AvatarImage src={avatarPreview} alt="Profile" />
                       <AvatarFallback>JD</AvatarFallback>
                     </Avatar>
@@ -201,7 +208,11 @@ export default function DemoSettingsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Button onClick={handleAvatarClick} variant="outline" size="sm">
+                    <Button
+                      onClick={handleAvatarClick}
+                      variant="outline"
+                      size="sm"
+                    >
                       <Upload className="w-4 h-4 mr-2" />
                       Upload New Picture
                     </Button>
@@ -228,7 +239,9 @@ export default function DemoSettingsPage() {
                     <Input
                       id="name"
                       value={profile.name}
-                      onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                      onChange={e =>
+                        setProfile({ ...profile, name: e.target.value })
+                      }
                       className="bg-white/5 border-white/10"
                     />
                   </div>
@@ -237,7 +250,9 @@ export default function DemoSettingsPage() {
                     <Input
                       id="username"
                       value={profile.username}
-                      onChange={(e) => setProfile({ ...profile, username: e.target.value })}
+                      onChange={e =>
+                        setProfile({ ...profile, username: e.target.value })
+                      }
                       className="bg-white/5 border-white/10"
                     />
                   </div>
@@ -247,7 +262,9 @@ export default function DemoSettingsPage() {
                       id="email"
                       type="email"
                       value={profile.email}
-                      onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                      onChange={e =>
+                        setProfile({ ...profile, email: e.target.value })
+                      }
                       className="bg-white/5 border-white/10"
                     />
                   </div>
@@ -256,7 +273,9 @@ export default function DemoSettingsPage() {
                     <Input
                       id="phone"
                       value={profile.phone}
-                      onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                      onChange={e =>
+                        setProfile({ ...profile, phone: e.target.value })
+                      }
                       className="bg-white/5 border-white/10"
                     />
                   </div>
@@ -265,7 +284,9 @@ export default function DemoSettingsPage() {
                     <Input
                       id="company"
                       value={profile.company}
-                      onChange={(e) => setProfile({ ...profile, company: e.target.value })}
+                      onChange={e =>
+                        setProfile({ ...profile, company: e.target.value })
+                      }
                       className="bg-white/5 border-white/10"
                     />
                   </div>
@@ -274,7 +295,9 @@ export default function DemoSettingsPage() {
                     <Input
                       id="location"
                       value={profile.location}
-                      onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+                      onChange={e =>
+                        setProfile({ ...profile, location: e.target.value })
+                      }
                       className="bg-white/5 border-white/10"
                     />
                   </div>
@@ -284,7 +307,9 @@ export default function DemoSettingsPage() {
                   <textarea
                     id="bio"
                     value={profile.bio}
-                    onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                    onChange={e =>
+                      setProfile({ ...profile, bio: e.target.value })
+                    }
                     className="w-full min-h-[100px] px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white"
                     placeholder="Tell us about yourself..."
                   />
@@ -295,11 +320,13 @@ export default function DemoSettingsPage() {
                     id="website"
                     type="url"
                     value={profile.website}
-                    onChange={(e) => setProfile({ ...profile, website: e.target.value })}
+                    onChange={e =>
+                      setProfile({ ...profile, website: e.target.value })
+                    }
                     className="bg-white/5 border-white/10"
                   />
                 </div>
-                <Button 
+                <Button
                   onClick={handleProfileSave}
                   disabled={isLoading}
                   className="gradient-primary text-white"
@@ -334,7 +361,7 @@ export default function DemoSettingsPage() {
                   <div className="relative">
                     <Input
                       id="current-password"
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       className="bg-white/5 border-white/10 pr-10"
                     />
                     <Button
@@ -344,7 +371,11 @@ export default function DemoSettingsPage() {
                       className="absolute right-0 top-0 h-full px-3"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -364,7 +395,7 @@ export default function DemoSettingsPage() {
                     className="bg-white/5 border-white/10"
                   />
                 </div>
-                <Button 
+                <Button
                   onClick={handlePasswordChange}
                   disabled={isLoading}
                   className="gradient-primary text-white"
@@ -401,7 +432,9 @@ export default function DemoSettingsPage() {
                   </div>
                   <Switch
                     checked={security.twoFactor}
-                    onCheckedChange={(checked) => setSecurity({ ...security, twoFactor: checked })}
+                    onCheckedChange={checked =>
+                      setSecurity({ ...security, twoFactor: checked })
+                    }
                   />
                 </div>
                 <Separator />
@@ -414,7 +447,9 @@ export default function DemoSettingsPage() {
                   </div>
                   <Switch
                     checked={security.apiAccess}
-                    onCheckedChange={(checked) => setSecurity({ ...security, apiAccess: checked })}
+                    onCheckedChange={checked =>
+                      setSecurity({ ...security, apiAccess: checked })
+                    }
                   />
                 </div>
                 <Separator />
@@ -427,21 +462,30 @@ export default function DemoSettingsPage() {
                   </div>
                   <Switch
                     checked={security.ipRestriction}
-                    onCheckedChange={(checked) => setSecurity({ ...security, ipRestriction: checked })}
+                    onCheckedChange={checked =>
+                      setSecurity({ ...security, ipRestriction: checked })
+                    }
                   />
                 </div>
                 <Separator />
                 <div className="space-y-2">
-                  <Label htmlFor="session-timeout">Session Timeout (minutes)</Label>
+                  <Label htmlFor="session-timeout">
+                    Session Timeout (minutes)
+                  </Label>
                   <Input
                     id="session-timeout"
                     type="number"
                     value={security.sessionTimeout}
-                    onChange={(e) => setSecurity({ ...security, sessionTimeout: e.target.value })}
+                    onChange={e =>
+                      setSecurity({
+                        ...security,
+                        sessionTimeout: e.target.value,
+                      })
+                    }
                     className="bg-white/5 border-white/10 max-w-[200px]"
                   />
                 </div>
-                <Button 
+                <Button
                   onClick={handleSecuritySave}
                   disabled={isLoading}
                   className="gradient-primary text-white"
@@ -480,7 +524,12 @@ export default function DemoSettingsPage() {
                   </div>
                   <Switch
                     checked={notifications.emailAlerts}
-                    onCheckedChange={(checked) => setNotifications({ ...notifications, emailAlerts: checked })}
+                    onCheckedChange={checked =>
+                      setNotifications({
+                        ...notifications,
+                        emailAlerts: checked,
+                      })
+                    }
                   />
                 </div>
                 <Separator />
@@ -493,7 +542,12 @@ export default function DemoSettingsPage() {
                   </div>
                   <Switch
                     checked={notifications.weeklyDigest}
-                    onCheckedChange={(checked) => setNotifications({ ...notifications, weeklyDigest: checked })}
+                    onCheckedChange={checked =>
+                      setNotifications({
+                        ...notifications,
+                        weeklyDigest: checked,
+                      })
+                    }
                   />
                 </div>
                 <Separator />
@@ -506,7 +560,12 @@ export default function DemoSettingsPage() {
                   </div>
                   <Switch
                     checked={notifications.marketingEmails}
-                    onCheckedChange={(checked) => setNotifications({ ...notifications, marketingEmails: checked })}
+                    onCheckedChange={checked =>
+                      setNotifications({
+                        ...notifications,
+                        marketingEmails: checked,
+                      })
+                    }
                   />
                 </div>
               </CardContent>
@@ -529,7 +588,12 @@ export default function DemoSettingsPage() {
                   </div>
                   <Switch
                     checked={notifications.postSuccess}
-                    onCheckedChange={(checked) => setNotifications({ ...notifications, postSuccess: checked })}
+                    onCheckedChange={checked =>
+                      setNotifications({
+                        ...notifications,
+                        postSuccess: checked,
+                      })
+                    }
                   />
                 </div>
                 <Separator />
@@ -542,7 +606,12 @@ export default function DemoSettingsPage() {
                   </div>
                   <Switch
                     checked={notifications.postFailure}
-                    onCheckedChange={(checked) => setNotifications({ ...notifications, postFailure: checked })}
+                    onCheckedChange={checked =>
+                      setNotifications({
+                        ...notifications,
+                        postFailure: checked,
+                      })
+                    }
                   />
                 </div>
                 <Separator />
@@ -555,10 +624,15 @@ export default function DemoSettingsPage() {
                   </div>
                   <Switch
                     checked={notifications.integrationStatus}
-                    onCheckedChange={(checked) => setNotifications({ ...notifications, integrationStatus: checked })}
+                    onCheckedChange={checked =>
+                      setNotifications({
+                        ...notifications,
+                        integrationStatus: checked,
+                      })
+                    }
                   />
                 </div>
-                <Button 
+                <Button
                   onClick={handleNotificationSave}
                   disabled={isLoading}
                   className="gradient-primary text-white mt-4"
@@ -592,24 +666,36 @@ export default function DemoSettingsPage() {
                   <Label>Color Theme</Label>
                   <div className="grid grid-cols-3 gap-2">
                     <Button
-                      variant={appearance.theme === 'light' ? 'default' : 'outline'}
-                      onClick={() => setAppearance({ ...appearance, theme: 'light' })}
+                      variant={
+                        appearance.theme === 'light' ? 'default' : 'outline'
+                      }
+                      onClick={() =>
+                        setAppearance({ ...appearance, theme: 'light' })
+                      }
                       className="justify-start"
                     >
                       <Sun className="w-4 h-4 mr-2" />
                       Light
                     </Button>
                     <Button
-                      variant={appearance.theme === 'dark' ? 'default' : 'outline'}
-                      onClick={() => setAppearance({ ...appearance, theme: 'dark' })}
+                      variant={
+                        appearance.theme === 'dark' ? 'default' : 'outline'
+                      }
+                      onClick={() =>
+                        setAppearance({ ...appearance, theme: 'dark' })
+                      }
                       className="justify-start"
                     >
                       <Moon className="w-4 h-4 mr-2" />
                       Dark
                     </Button>
                     <Button
-                      variant={appearance.theme === 'system' ? 'default' : 'outline'}
-                      onClick={() => setAppearance({ ...appearance, theme: 'system' })}
+                      variant={
+                        appearance.theme === 'system' ? 'default' : 'outline'
+                      }
+                      onClick={() =>
+                        setAppearance({ ...appearance, theme: 'system' })
+                      }
                       className="justify-start"
                     >
                       <Monitor className="w-4 h-4 mr-2" />
@@ -621,12 +707,16 @@ export default function DemoSettingsPage() {
                 <div className="space-y-2">
                   <Label>Accent Color</Label>
                   <div className="flex gap-2">
-                    {['orange', 'amber', 'green', 'red', 'blue'].map((color) => (
+                    {['orange', 'amber', 'green', 'red', 'blue'].map(color => (
                       <button
                         key={color}
-                        onClick={() => setAppearance({ ...appearance, accentColor: color })}
+                        onClick={() =>
+                          setAppearance({ ...appearance, accentColor: color })
+                        }
                         className={`w-10 h-10 rounded-full border-2 ${
-                          appearance.accentColor === color ? 'border-white' : 'border-transparent'
+                          appearance.accentColor === color
+                            ? 'border-white'
+                            : 'border-transparent'
                         }`}
                         style={{ backgroundColor: color }}
                       />
@@ -643,7 +733,9 @@ export default function DemoSettingsPage() {
                   </div>
                   <Switch
                     checked={appearance.compactMode}
-                    onCheckedChange={(checked) => setAppearance({ ...appearance, compactMode: checked })}
+                    onCheckedChange={checked =>
+                      setAppearance({ ...appearance, compactMode: checked })
+                    }
                   />
                 </div>
                 <Separator />
@@ -656,7 +748,9 @@ export default function DemoSettingsPage() {
                   </div>
                   <Switch
                     checked={appearance.animations}
-                    onCheckedChange={(checked) => setAppearance({ ...appearance, animations: checked })}
+                    onCheckedChange={checked =>
+                      setAppearance({ ...appearance, animations: checked })
+                    }
                   />
                 </div>
               </CardContent>
@@ -673,11 +767,15 @@ export default function DemoSettingsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                  <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-white">Pro Plan</h3>
-                        <p className="text-sm text-gray-400">Perfect for growing businesses</p>
+                        <h3 className="text-lg font-semibold text-white">
+                          Pro Plan
+                        </h3>
+                        <p className="text-sm text-gray-400">
+                          Perfect for growing businesses
+                        </p>
                       </div>
                       <div className="text-right">
                         <p className="text-2xl font-bold text-white">$249</p>
@@ -687,15 +785,21 @@ export default function DemoSettingsPage() {
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-green-400" />
-                        <span className="text-sm text-gray-300">Unlimited social accounts</span>
+                        <span className="text-sm text-gray-300">
+                          Unlimited social accounts
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-green-400" />
-                        <span className="text-sm text-gray-300">Advanced analytics</span>
+                        <span className="text-sm text-gray-300">
+                          Advanced analytics
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-green-400" />
-                        <span className="text-sm text-gray-300">Priority support</span>
+                        <span className="text-sm text-gray-300">
+                          Priority support
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -727,7 +831,9 @@ export default function DemoSettingsPage() {
                           <Monitor className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="font-medium text-white">•••• •••• •••• 4242</p>
+                          <p className="font-medium text-white">
+                            •••• •••• •••• 4242
+                          </p>
                           <p className="text-sm text-gray-400">Expires 12/25</p>
                         </div>
                       </div>

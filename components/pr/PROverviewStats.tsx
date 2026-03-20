@@ -105,8 +105,8 @@ export function PROverviewStats() {
       sub: isLoading
         ? ''
         : `${tierBreakdown.hot} hot · ${tierBreakdown.warm} warm · ${tierBreakdown.advocate} advocate`,
-      colour: 'text-orange-400',
-      bg: 'bg-orange-500/10 border-orange-500/20',
+      colour: 'text-amber-400',
+      bg: 'bg-amber-500/10 border-amber-500/20',
     },
     {
       icon: Send,
