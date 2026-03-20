@@ -23,11 +23,11 @@ export class OpenRouterProvider implements AIProvider {
   readonly name = 'OpenRouter';
 
   readonly models: ModelPresets = {
-    fast: 'openai/gpt-3.5-turbo',
-    balanced: 'anthropic/claude-3-haiku',
-    creative: 'anthropic/claude-3-sonnet',
-    premium: 'openai/gpt-4-turbo',
-    code: 'deepseek/deepseek-coder',
+    fast: 'anthropic/claude-haiku-4-5',
+    balanced: 'anthropic/claude-sonnet-4-6',
+    creative: 'anthropic/claude-sonnet-4-6',
+    premium: 'anthropic/claude-opus-4-6',
+    code: 'anthropic/claude-sonnet-4-6',
     free: 'google/gemini-flash-1.5-8b',
   };
 
@@ -37,7 +37,9 @@ export class OpenRouterProvider implements AIProvider {
   constructor(apiKeyOverride?: string) {
     this.apiKey = apiKeyOverride || process.env.OPENROUTER_API_KEY || '';
     if (!this.apiKey) {
-      logger.warn('OpenRouter API key not configured. AI features will be limited.');
+      logger.warn(
+        'OpenRouter API key not configured. AI features will be limited.'
+      );
     }
   }
 
@@ -68,7 +70,8 @@ export class OpenRouterProvider implements AIProvider {
             data: error.response.data,
           });
           throw new Error(
-            error.response.data?.error?.message || 'OpenRouter API request failed'
+            error.response.data?.error?.message ||
+              'OpenRouter API request failed'
           );
         } else if (error.request) {
           logger.error('OpenRouter network error', { error: error.message });

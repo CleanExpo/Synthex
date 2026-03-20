@@ -23,6 +23,16 @@ export interface AICompletionRequest {
   frequency_penalty?: number;
   presence_penalty?: number;
   stream?: boolean;
+  /** Extended thinking budget tokens (Anthropic only). 0 = disabled. */
+  thinking?: number;
+  /** Enable prompt caching on system prompt (Anthropic only). */
+  cache?: boolean;
+  /** Tool definitions for tool-use requests. */
+  tools?: Array<{
+    name: string;
+    description: string;
+    input_schema: Record<string, unknown>;
+  }>;
 }
 
 export interface AICompletionResponse {

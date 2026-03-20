@@ -4,10 +4,13 @@
  * Uses the Anthropic SDK directly, bypassing OpenRouter.
  * Useful when you want a direct connection to Claude models.
  *
+ * Supports extended thinking (budget_tokens) and prompt caching.
+ *
  * ENVIRONMENT VARIABLES:
  * - ANTHROPIC_API_KEY: Anthropic API key (SECRET)
  */
 
+import Anthropic from '@anthropic-ai/sdk';
 import { logger } from '@/lib/logger';
 import type {
   AIProvider,
@@ -20,72 +23,101 @@ export class AnthropicProvider implements AIProvider {
   readonly name = 'Anthropic';
 
   readonly models: ModelPresets = {
-    fast: 'claude-3-haiku-20240307',
-    balanced: 'claude-3-5-sonnet-20241022',
-    creative: 'claude-3-5-sonnet-20241022',
-    premium: 'claude-3-opus-20240229',
-    code: 'claude-3-5-sonnet-20241022',
-    free: 'claude-3-haiku-20240307',
+    fast: 'claude-haiku-4-5-20251001',
+    balanced: 'claude-sonnet-4-6',
+    creative: 'claude-sonnet-4-6',
+    premium: 'claude-opus-4-6',
+    code: 'claude-sonnet-4-6',
+    free: 'claude-haiku-4-5-20251001',
   };
 
-  private apiKey: string;
-  private baseURL = 'https://api.anthropic.com/v1';
+  private client: Anthropic;
 
   constructor(apiKeyOverride?: string) {
-    this.apiKey = apiKeyOverride || process.env.ANTHROPIC_API_KEY || '';
-    if (!this.apiKey) {
+    const apiKey = apiKeyOverride || process.env.ANTHROPIC_API_KEY || '';
+    if (!apiKey) {
       logger.warn('Anthropic API key not configured.');
     }
+    this.client = new Anthropic({ apiKey });
   }
 
   async complete(request: AICompletionRequest): Promise<AICompletionResponse> {
-    if (!this.apiKey) {
+    if (!this.client.apiKey) {
       throw new Error('Anthropic API key not configured');
     }
 
     // Separate system message from conversation messages
-    const systemMsg = request.messages.find((m) => m.role === 'system');
-    const conversationMsgs = request.messages.filter((m) => m.role !== 'system');
+    const systemMsg = request.messages.find(m => m.role === 'system');
+    const conversationMsgs = request.messages.filter(m => m.role !== 'system');
 
     try {
-      const body: Record<string, unknown> = {
-        model: request.model,
-        max_tokens: request.max_tokens || 1024,
-        messages: conversationMsgs.map((m) => ({
-          role: m.role,
-          content: m.content,
-        })),
-      };
-      if (systemMsg) body.system = systemMsg.content;
-      if (request.temperature !== undefined)
-        body.temperature = request.temperature;
-      if (request.top_p !== undefined) body.top_p = request.top_p;
+      // Build system parameter — supports prompt caching when request.cache is true
+      let systemParam: string | Anthropic.TextBlockParam[] | undefined =
+        undefined;
 
-      const res = await fetch(`${this.baseURL}/messages`, {
-        method: 'POST',
-        headers: {
-          'x-api-key': this.apiKey,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        logger.error('Anthropic API error', { status: res.status, body: errBody });
-        throw new Error(
-          (errBody as any)?.error?.message || `Anthropic API error ${res.status}`
-        );
+      if (systemMsg) {
+        if (request.cache) {
+          systemParam = [
+            {
+              type: 'text',
+              text: systemMsg.content,
+              cache_control: { type: 'ephemeral' },
+            },
+          ];
+        } else {
+          systemParam = systemMsg.content;
+        }
       }
 
-      const data = await res.json();
+      // Build base params without temperature (may be omitted for thinking)
+      const baseParams = {
+        model: request.model,
+        max_tokens: request.max_tokens ?? 1024,
+        messages: conversationMsgs.map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        })),
+        ...(systemParam !== undefined ? { system: systemParam } : {}),
+        ...(request.top_p !== undefined ? { top_p: request.top_p } : {}),
+        ...(request.tools && request.tools.length > 0
+          ? {
+              tools: request.tools.map(t => ({
+                name: t.name,
+                description: t.description,
+                input_schema: t.input_schema as Anthropic.Tool['input_schema'],
+              })),
+            }
+          : {}),
+      } satisfies Omit<
+        Anthropic.MessageCreateParamsNonStreaming,
+        'temperature'
+      >;
 
-      // Map Anthropic response to our unified format
+      // Extended thinking — temperature must be omitted when thinking is enabled
+      const useThinking = request.thinking && request.thinking > 0;
+
+      const params: Anthropic.MessageCreateParamsNonStreaming = useThinking
+        ? {
+            ...baseParams,
+            thinking: {
+              type: 'enabled',
+              budget_tokens: request.thinking!,
+            },
+          }
+        : {
+            ...baseParams,
+            ...(request.temperature !== undefined
+              ? { temperature: request.temperature }
+              : {}),
+          };
+
+      const data = await this.client.messages.create(params);
+
+      // Map Anthropic response to the unified format — extract only text blocks
       const content =
         data.content
-          ?.filter((c: { type: string }) => c.type === 'text')
-          .map((c: { type: string; text?: string }) => c.text)
+          .filter((c): c is Anthropic.TextBlock => c.type === 'text')
+          .map(c => c.text)
           .join('') || '';
 
       return {
@@ -94,21 +126,24 @@ export class AnthropicProvider implements AIProvider {
         choices: [
           {
             message: { role: 'assistant', content },
-            finish_reason: data.stop_reason || 'stop',
+            finish_reason: data.stop_reason ?? 'stop',
           },
         ],
         usage: data.usage
           ? {
               prompt_tokens: data.usage.input_tokens,
               completion_tokens: data.usage.output_tokens,
-              total_tokens:
-                data.usage.input_tokens + data.usage.output_tokens,
+              total_tokens: data.usage.input_tokens + data.usage.output_tokens,
             }
           : undefined,
       };
     } catch (error) {
-      if (error instanceof Error && error instanceof Error ? error.message : String(error).includes('Anthropic API')) {
-        throw error;
+      if (error instanceof Anthropic.APIError) {
+        logger.error('Anthropic API error', {
+          status: error.status,
+          message: error.message,
+        });
+        throw new Error(error.message || `Anthropic API error ${error.status}`);
       }
       logger.error('Anthropic provider error', { error });
       throw new Error('Failed to connect to Anthropic API');
@@ -118,67 +153,67 @@ export class AnthropicProvider implements AIProvider {
   async *stream(
     request: AICompletionRequest
   ): AsyncGenerator<string, void, unknown> {
-    if (!this.apiKey) {
+    if (!this.client.apiKey) {
       throw new Error('Anthropic API key not configured');
     }
 
-    const systemMsg = request.messages.find((m) => m.role === 'system');
-    const conversationMsgs = request.messages.filter((m) => m.role !== 'system');
+    const systemMsg = request.messages.find(m => m.role === 'system');
+    const conversationMsgs = request.messages.filter(m => m.role !== 'system');
 
-    const body: Record<string, unknown> = {
-      model: request.model,
-      max_tokens: request.max_tokens || 1024,
-      stream: true,
-      messages: conversationMsgs.map((m) => ({
-        role: m.role,
-        content: m.content,
-      })),
-    };
-    if (systemMsg) body.system = systemMsg.content;
-    if (request.temperature !== undefined)
-      body.temperature = request.temperature;
+    let systemParam: string | Anthropic.TextBlockParam[] | undefined =
+      undefined;
 
-    const res = await fetch(`${this.baseURL}/messages`, {
-      method: 'POST',
-      headers: {
-        'x-api-key': this.apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok || !res.body) {
-      throw new Error(`Anthropic streaming error: ${res.status}`);
+    if (systemMsg) {
+      if (request.cache) {
+        systemParam = [
+          {
+            type: 'text',
+            text: systemMsg.content,
+            cache_control: { type: 'ephemeral' },
+          },
+        ];
+      } else {
+        systemParam = systemMsg.content;
+      }
     }
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
+    const params: Anthropic.MessageStreamParams = {
+      model: request.model,
+      max_tokens: request.max_tokens ?? 1024,
+      messages: conversationMsgs.map(m => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      })),
+      ...(systemParam !== undefined ? { system: systemParam } : {}),
+      ...(request.temperature !== undefined
+        ? { temperature: request.temperature }
+        : {}),
+      ...(request.top_p !== undefined ? { top_p: request.top_p } : {}),
+    };
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    try {
+      const streamObj = this.client.messages.stream(params);
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            const event = JSON.parse(line.slice(6));
-            if (
-              event.type === 'content_block_delta' &&
-              event.delta?.type === 'text_delta'
-            ) {
-              yield event.delta.text;
-            }
-          } catch {
-            // Malformed SSE frame, skip to next
-          }
+      for await (const event of streamObj) {
+        if (
+          event.type === 'content_block_delta' &&
+          event.delta.type === 'text_delta'
+        ) {
+          yield event.delta.text;
         }
       }
+    } catch (error) {
+      if (error instanceof Anthropic.APIError) {
+        logger.error('Anthropic streaming error', {
+          status: error.status,
+          message: error.message,
+        });
+        throw new Error(
+          error.message || `Anthropic streaming error ${error.status}`
+        );
+      }
+      logger.error('Anthropic provider stream error', { error });
+      throw new Error('Failed to stream from Anthropic API');
     }
   }
 }
