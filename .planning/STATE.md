@@ -9,8 +9,8 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 125 (react-next-upgrade) — Plan 01 COMPLETE ✅
-Last activity: 2026-03-20 — React 18→19.2.4, Next.js 15→16.2.0 bumped. @types/react ^19, @types/react-dom ^19, eslint-config-next ^16.2.0, @next/bundle-analyzer ^16.2.0. type-check 0 errors. npm test: 1547 passed, 0 failed, 150 skipped — @testing-library compat fix in Plan 02.
+Phase: 125 (react-next-upgrade) — Plan 02 COMPLETE ✅
+Last activity: 2026-03-20 — Ecosystem packages upgraded: react-day-picker v9, cmdk v1, @testing-library/react v16. calendar.tsx migrated to v9 API. Full quality gate: type-check 0 errors, test 1547 passed 0 failed, lint 0 errors. SYN-407 COMPLETE.
 Linear: SYN-407
 
 Milestone: v10.0 Full Platform Quality Loop — **PENDING HUMAN GATE**
