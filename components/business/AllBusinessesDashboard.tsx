@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
+import { fetchJson } from '@/lib/fetcher';
 import { toast } from 'sonner';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -55,14 +56,6 @@ interface BusinessesResponse {
   businesses: OwnedBusiness[];
   activeBusiness: string | null;
 }
-
-// ── Fetcher ───────────────────────────────────────────────────────────────────
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => {
-    if (!r.ok) throw new Error('Failed to fetch businesses');
-    return r.json();
-  });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

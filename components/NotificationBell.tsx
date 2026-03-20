@@ -5,6 +5,7 @@ import useSWR from 'swr';
 import { Bell } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { fetchWithCSRF } from '@/lib/csrf';
+import { fetchJson } from '@/lib/fetcher';
 import { cn } from '@/lib/utils';
 import { NotificationCentre } from '@/components/ui/NotificationCentre';
 import { logger } from '@/lib/logger';
@@ -21,9 +22,6 @@ interface Notification {
     url: string;
   };
 }
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => r.json());
 
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);

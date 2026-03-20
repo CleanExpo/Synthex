@@ -3,14 +3,12 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import { RefreshCw } from 'lucide-react';
+import { fetchJson } from '@/lib/fetcher';
 import { SpatiotemporalFeatureGate } from './SpatiotemporalFeatureGate';
 import { SpatiotemporalCard } from './SpatiotemporalCard';
 import { PlatformHeatmap } from './PlatformHeatmap';
 import { FORECAST_METRICS } from '@/lib/forecasting/metrics';
 import type { SpatiotemporalPredictionResult } from '@/lib/forecasting/types';
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => r.json());
 
 const SPATIAL_METRICS = [
   'engagement_rate',
@@ -29,11 +27,13 @@ type SpatialMetric = (typeof SPATIAL_METRICS)[number];
  * Wrapped in SpatiotemporalFeatureGate (Scale-only).
  */
 export function CrossPlatformTab() {
-  const [activeMetric, setActiveMetric] = useState<SpatialMetric>('engagement_rate');
+  const [activeMetric, setActiveMetric] =
+    useState<SpatialMetric>('engagement_rate');
   const [isTraining, setIsTraining] = useState(false);
   const [isPredicting, setIsPredicting] = useState(false);
-  const [activePredictions, setActivePredictions] =
-    useState<SpatiotemporalPredictionResult[] | null>(null);
+  const [activePredictions, setActivePredictions] = useState<
+    SpatiotemporalPredictionResult[] | null
+  >(null);
 
   const {
     data: modelsData,
@@ -85,10 +85,10 @@ export function CrossPlatformTab() {
         <div className="flex items-center gap-3 flex-wrap">
           <select
             value={activeMetric}
-            onChange={(e) => setActiveMetric(e.target.value as SpatialMetric)}
+            onChange={e => setActiveMetric(e.target.value as SpatialMetric)}
             className="bg-white/[0.05] border border-white/10 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
           >
-            {SPATIAL_METRICS.map((m) => (
+            {SPATIAL_METRICS.map(m => (
               <option key={m} value={m}>
                 {FORECAST_METRICS[m]?.label ?? m}
               </option>
@@ -113,9 +113,13 @@ export function CrossPlatformTab() {
             </h3>
             <p className="text-xs text-gray-500">
               Colour intensity = predicted{' '}
-              {FORECAST_METRICS[activeMetric]?.label ?? activeMetric}. Hover for exact values.
+              {FORECAST_METRICS[activeMetric]?.label ?? activeMetric}. Hover for
+              exact values.
             </p>
-            <PlatformHeatmap predictions={activePredictions} metric={activeMetric} />
+            <PlatformHeatmap
+              predictions={activePredictions}
+              metric={activeMetric}
+            />
           </div>
         )}
 
@@ -125,7 +129,7 @@ export function CrossPlatformTab() {
 
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[1, 2].map((i) => (
+              {[1, 2].map(i => (
                 <div
                   key={i}
                   className="h-40 animate-pulse bg-white/5 rounded-xl border border-white/[0.05]"
@@ -134,14 +138,17 @@ export function CrossPlatformTab() {
             </div>
           ) : models.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-500 bg-white/[0.02] rounded-xl border border-white/[0.05]">
-              <p className="text-sm font-medium">No spatiotemporal models yet</p>
+              <p className="text-sm font-medium">
+                No spatiotemporal models yet
+              </p>
               <p className="text-xs mt-2 max-w-sm text-center">
-                Select a metric and click Train to build your first cross-platform BayesNF model.
+                Select a metric and click Train to build your first
+                cross-platform BayesNF model.
               </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {models.map((model) => (
+              {models.map(model => (
                 <SpatiotemporalCard
                   key={model.id as string}
                   model={

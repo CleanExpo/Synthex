@@ -1,9 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => r.json());
+import { fetchJson } from '@/lib/fetcher';
 
 interface ConnectionStatus {
   platform: string;
@@ -39,7 +37,9 @@ interface UseConnectionsResult {
  *   changes when the user switches business, triggering an automatic refetch.
  *   When omitted the API falls back to `getEffectiveOrganizationId()` server-side.
  */
-export function useSocialConnections(organizationId?: string | null): UseConnectionsResult {
+export function useSocialConnections(
+  organizationId?: string | null
+): UseConnectionsResult {
   // Build org-scoped SWR key so cache is per-business
   const key = organizationId
     ? `/api/auth/connections?organizationId=${organizationId}`
@@ -61,12 +61,17 @@ export function useSocialConnections(organizationId?: string | null): UseConnect
     if (organizationId) {
       params.set('organizationId', organizationId);
     }
-    const res = await fetch(`/api/auth/oauth/${platform}?${params.toString()}`, {
-      credentials: 'include',
-    });
+    const res = await fetch(
+      `/api/auth/oauth/${platform}?${params.toString()}`,
+      {
+        credentials: 'include',
+      }
+    );
     const json = await res.json();
     if (!res.ok) {
-      throw new Error(json.error || json.message || `Failed to initiate ${platform} OAuth`);
+      throw new Error(
+        json.error || json.message || `Failed to initiate ${platform} OAuth`
+      );
     }
     if (json.authorizationUrl) {
       window.location.href = json.authorizationUrl;

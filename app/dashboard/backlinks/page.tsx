@@ -13,36 +13,43 @@
  * @module app/dashboard/backlinks/page
  */
 
-import { useState , Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import useSWR, { mutate } from 'swr';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Link as LinkIcon, Search, TrendingUp, Mail, BarChart3 } from '@/components/icons';
-import { BacklinkProspectCard }       from '@/components/backlinks/BacklinkProspectCard';
-import { OpportunityMatrix }          from '@/components/backlinks/OpportunityMatrix';
-import { OutreachPanel }              from '@/components/backlinks/OutreachPanel';
-import { BacklinkAnalysisSummary }    from '@/components/backlinks/BacklinkAnalysisSummary';
-import { useUser }                    from '@/hooks/use-user';
-import type { MatrixFilter }          from '@/lib/backlinks/types';
-import type { ProspectCardData }      from '@/components/backlinks/BacklinkProspectCard';
-import type { AnalysisSummaryData }   from '@/components/backlinks/BacklinkAnalysisSummary';
+import {
+  Link as LinkIcon,
+  Search,
+  TrendingUp,
+  Mail,
+  BarChart3,
+} from '@/components/icons';
+import { BacklinkProspectCard } from '@/components/backlinks/BacklinkProspectCard';
+import { OpportunityMatrix } from '@/components/backlinks/OpportunityMatrix';
+import { OutreachPanel } from '@/components/backlinks/OutreachPanel';
+import { BacklinkAnalysisSummary } from '@/components/backlinks/BacklinkAnalysisSummary';
+import { useUser } from '@/hooks/use-user';
+import type { MatrixFilter } from '@/lib/backlinks/types';
+import type { ProspectCardData } from '@/components/backlinks/BacklinkProspectCard';
+import type { AnalysisSummaryData } from '@/components/backlinks/BacklinkAnalysisSummary';
+import { fetchJson } from '@/lib/fetcher';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type BacklinksTab = 'prospects' | 'outreach' | 'analysis';
 const VALID_TABS: BacklinksTab[] = ['prospects', 'outreach', 'analysis'];
 
-// ─── SWR fetcher ──────────────────────────────────────────────────────────────
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => {
-    if (!r.ok) throw new Error('Fetch failed');
-    return r.json();
-  });
-
 // ─── Stat card ────────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, sub }: { label: string; value: number; sub?: string }) {
+function StatCard({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: number;
+  sub?: string;
+}) {
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-4">
       <p className="text-2xl font-bold text-white tabular-nums">{value}</p>
@@ -55,12 +62,12 @@ function StatCard({ label, value, sub }: { label: string; value: number; sub?: s
 // ─── Page Component ───────────────────────────────────────────────────────────
 
 function BacklinksPageContent() {
-  const router       = useRouter();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const { user }     = useUser();
+  const { user } = useUser();
 
   // Tab state (URL-driven)
-  const rawTab  = searchParams.get('tab') ?? 'prospects';
+  const rawTab = searchParams.get('tab') ?? 'prospects';
   const activeTab: BacklinksTab = VALID_TABS.includes(rawTab as BacklinksTab)
     ? (rawTab as BacklinksTab)
     : 'prospects';
@@ -70,18 +77,20 @@ function BacklinksPageContent() {
   }
 
   // ── Prospects tab state ──
-  const [topic,      setTopic]      = useState('');
+  const [topic, setTopic] = useState('');
   const [userDomain, setUserDomain] = useState('');
   const [compDomains, setCompDomains] = useState('');
-  const [analyzing,  setAnalyzing]  = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [matrixFilter, setMatrixFilter] = useState<MatrixFilter | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [typeFilter,   setTypeFilter]   = useState<string>('');
+  const [typeFilter, setTypeFilter] = useState<string>('');
   const [prospectPage, setProspectPage] = useState(0);
 
   // ── Outreach tab state ──
-  const [selectedProspectId, setSelectedProspectId] = useState<string | null>(null);
+  const [selectedProspectId, setSelectedProspectId] = useState<string | null>(
+    null
+  );
 
   // ── Fetch prospects ──
   const orgId = user?.organizationId ?? 'default';
@@ -105,21 +114,31 @@ function BacklinksPageContent() {
         const da = p.domainAuthority ?? 0;
         const tier = da >= 70 ? 'high' : da >= 40 ? 'medium' : 'low';
         return (
-          (!matrixFilter.opportunityType || p.opportunityType === matrixFilter.opportunityType) &&
+          (!matrixFilter.opportunityType ||
+            p.opportunityType === matrixFilter.opportunityType) &&
           (!matrixFilter.tier || tier === matrixFilter.tier)
         );
       })
     : allProspects;
 
-  const selectedProspect = allProspects.find(p => p.id === selectedProspectId) ?? null;
-  const contactedProspects = allProspects.filter(p => p.status === 'contacted' || p.pitchSent);
+  const selectedProspect =
+    allProspects.find(p => p.id === selectedProspectId) ?? null;
+  const contactedProspects = allProspects.filter(
+    p => p.status === 'contacted' || p.pitchSent
+  );
 
   // ─── Stats ─────────────────────────────────────────────────────────────────
 
   const totalProspects = prospectsData?.total ?? 0;
-  const publishedCount = allProspects.filter(p => p.status === 'published').length;
-  const highValueCount = allProspects.filter(p => (p.domainAuthority ?? 0) >= 40).length;
-  const contactedCount = allProspects.filter(p => p.status === 'contacted').length;
+  const publishedCount = allProspects.filter(
+    p => p.status === 'published'
+  ).length;
+  const highValueCount = allProspects.filter(
+    p => (p.domainAuthority ?? 0) >= 40
+  ).length;
+  const contactedCount = allProspects.filter(
+    p => p.status === 'contacted'
+  ).length;
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
 
@@ -160,7 +179,9 @@ function BacklinksPageContent() {
       await mutate(prospectsKey);
       await mutate(analysisKey);
     } catch {
-      setAnalyzeError('Network error — please check your connection and try again');
+      setAnalyzeError(
+        'Network error — please check your connection and try again'
+      );
     } finally {
       setAnalyzing(false);
     }
@@ -200,24 +221,37 @@ function BacklinksPageContent() {
 
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <StatCard label="Total Prospects"  value={totalProspects} />
-        <StatCard label="High Value (DA 40+)" value={highValueCount} sub="domain authority ≥ 40" />
-        <StatCard label="Outreach Sent"    value={contactedCount} />
-        <StatCard label="Published Links"  value={publishedCount} />
+        <StatCard label="Total Prospects" value={totalProspects} />
+        <StatCard
+          label="High Value (DA 40+)"
+          value={highValueCount}
+          sub="domain authority ≥ 40"
+        />
+        <StatCard label="Outreach Sent" value={contactedCount} />
+        <StatCard label="Published Links" value={publishedCount} />
       </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={v => setTab(v as BacklinksTab)}>
         <TabsList className="mb-6 bg-white/5 border border-white/10">
-          <TabsTrigger value="prospects" className="flex items-center gap-1.5 data-[state=active]:bg-white/10">
+          <TabsTrigger
+            value="prospects"
+            className="flex items-center gap-1.5 data-[state=active]:bg-white/10"
+          >
             <Search className="h-3.5 w-3.5" />
             Prospects
           </TabsTrigger>
-          <TabsTrigger value="outreach" className="flex items-center gap-1.5 data-[state=active]:bg-white/10">
+          <TabsTrigger
+            value="outreach"
+            className="flex items-center gap-1.5 data-[state=active]:bg-white/10"
+          >
             <Mail className="h-3.5 w-3.5" />
             Outreach
           </TabsTrigger>
-          <TabsTrigger value="analysis" className="flex items-center gap-1.5 data-[state=active]:bg-white/10">
+          <TabsTrigger
+            value="analysis"
+            className="flex items-center gap-1.5 data-[state=active]:bg-white/10"
+          >
             <BarChart3 className="h-3.5 w-3.5" />
             Analysis
           </TabsTrigger>
@@ -227,10 +261,14 @@ function BacklinksPageContent() {
         <TabsContent value="prospects" className="space-y-5">
           {/* Analysis form */}
           <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-            <h2 className="text-sm font-semibold text-white mb-3">Find Link Opportunities</h2>
+            <h2 className="text-sm font-semibold text-white mb-3">
+              Find Link Opportunities
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Topic / Keyword *</label>
+                <label className="block text-xs text-slate-400 mb-1">
+                  Topic / Keyword *
+                </label>
                 <input
                   type="text"
                   value={topic}
@@ -240,7 +278,9 @@ function BacklinksPageContent() {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Your domain</label>
+                <label className="block text-xs text-slate-400 mb-1">
+                  Your domain
+                </label>
                 <input
                   type="text"
                   value={userDomain}
@@ -250,7 +290,9 @@ function BacklinksPageContent() {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Competitor domains (comma-separated)</label>
+                <label className="block text-xs text-slate-400 mb-1">
+                  Competitor domains (comma-separated)
+                </label>
                 <input
                   type="text"
                   value={compDomains}
@@ -271,7 +313,9 @@ function BacklinksPageContent() {
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <TrendingUp className="h-4 w-4" />
-              {analyzing ? 'Analysing… (this may take 15–30s)' : 'Find Opportunities'}
+              {analyzing
+                ? 'Analysing… (this may take 15–30s)'
+                : 'Find Opportunities'}
             </button>
           </div>
 
@@ -280,7 +324,10 @@ function BacklinksPageContent() {
             <div className="flex flex-wrap items-center gap-3">
               <select
                 value={statusFilter}
-                onChange={e => { setStatusFilter(e.target.value); setProspectPage(0); }}
+                onChange={e => {
+                  setStatusFilter(e.target.value);
+                  setProspectPage(0);
+                }}
                 className="rounded-lg bg-white/8 border border-white/10 text-sm text-slate-300 px-3 py-1.5 focus:outline-none"
               >
                 <option value="">All statuses</option>
@@ -291,7 +338,10 @@ function BacklinksPageContent() {
               </select>
               <select
                 value={typeFilter}
-                onChange={e => { setTypeFilter(e.target.value); setProspectPage(0); }}
+                onChange={e => {
+                  setTypeFilter(e.target.value);
+                  setProspectPage(0);
+                }}
                 className="rounded-lg bg-white/8 border border-white/10 text-sm text-slate-300 px-3 py-1.5 focus:outline-none"
               >
                 <option value="">All types</option>
@@ -323,13 +373,18 @@ function BacklinksPageContent() {
 
           {/* Prospect grid */}
           {prospectsLoading ? (
-            <div className="text-center text-slate-500 py-10">Loading prospects…</div>
+            <div className="text-center text-slate-500 py-10">
+              Loading prospects…
+            </div>
           ) : filteredProspects.length === 0 ? (
             <div className="rounded-xl border border-dashed border-white/10 py-14 text-center">
               <LinkIcon className="mx-auto h-10 w-10 text-slate-600 mb-3" />
-              <p className="text-slate-400 text-sm font-medium">No prospects yet</p>
+              <p className="text-slate-400 text-sm font-medium">
+                No prospects yet
+              </p>
               <p className="text-slate-600 text-xs mt-1">
-                Enter a topic above and click "Find Opportunities" to start discovering link targets.
+                Enter a topic above and click "Find Opportunities" to start
+                discovering link targets.
               </p>
             </div>
           ) : (
@@ -359,10 +414,13 @@ function BacklinksPageContent() {
                     Previous
                   </button>
                   <span className="text-xs text-slate-500">
-                    Page {prospectPage + 1} of {Math.ceil((prospectsData?.total ?? 0) / 20)}
+                    Page {prospectPage + 1} of{' '}
+                    {Math.ceil((prospectsData?.total ?? 0) / 20)}
                   </span>
                   <button
-                    disabled={(prospectPage + 1) * 20 >= (prospectsData?.total ?? 0)}
+                    disabled={
+                      (prospectPage + 1) * 20 >= (prospectsData?.total ?? 0)
+                    }
                     onClick={() => setProspectPage(p => p + 1)}
                     className="px-3 py-1.5 text-xs rounded-lg bg-white/8 border border-white/10 text-slate-300 disabled:opacity-40"
                   >
@@ -379,16 +437,21 @@ function BacklinksPageContent() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {/* Prospect selector */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2">Select a prospect</label>
+              <label className="block text-xs text-slate-400 mb-2">
+                Select a prospect
+              </label>
               <select
                 value={selectedProspectId ?? ''}
                 onChange={e => setSelectedProspectId(e.target.value || null)}
                 className="w-full rounded-lg bg-white/8 border border-white/10 text-white text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 mb-4"
               >
-                <option value="" className="bg-slate-900">— choose prospect —</option>
+                <option value="" className="bg-slate-900">
+                  — choose prospect —
+                </option>
                 {allProspects.map(p => (
                   <option key={p.id} value={p.id} className="bg-slate-900">
-                    {p.targetDomain} ({p.opportunityType}) — DA {p.domainAuthority ?? '?'}
+                    {p.targetDomain} ({p.opportunityType}) — DA{' '}
+                    {p.domainAuthority ?? '?'}
                   </option>
                 ))}
               </select>
@@ -407,13 +470,17 @@ function BacklinksPageContent() {
               <h3 className="text-sm font-semibold text-white mb-3">
                 Outreach History
                 {contactedProspects.length > 0 && (
-                  <span className="ml-2 text-xs text-slate-500">({contactedProspects.length})</span>
+                  <span className="ml-2 text-xs text-slate-500">
+                    ({contactedProspects.length})
+                  </span>
                 )}
               </h3>
               {contactedProspects.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-white/10 py-10 text-center">
                   <Mail className="mx-auto h-8 w-8 text-slate-600 mb-2" />
-                  <p className="text-slate-500 text-sm">No outreach recorded yet.</p>
+                  <p className="text-slate-500 text-sm">
+                    No outreach recorded yet.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -423,7 +490,9 @@ function BacklinksPageContent() {
                       className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 flex items-center justify-between"
                     >
                       <div>
-                        <div className="text-sm font-medium text-white">{p.targetDomain}</div>
+                        <div className="text-sm font-medium text-white">
+                          {p.targetDomain}
+                        </div>
                         <div className="text-xs text-slate-500">
                           {p.opportunityType} ·{' '}
                           {p.contactedAt
@@ -445,11 +514,15 @@ function BacklinksPageContent() {
         {/* ── Analysis tab ──────────────────────────────────────────────── */}
         <TabsContent value="analysis" className="space-y-4">
           {analysisLoading ? (
-            <div className="text-center text-slate-500 py-10">Loading analyses…</div>
+            <div className="text-center text-slate-500 py-10">
+              Loading analyses…
+            </div>
           ) : (analysisData?.analyses ?? []).length === 0 ? (
             <div className="rounded-xl border border-dashed border-white/10 py-14 text-center">
               <BarChart3 className="mx-auto h-10 w-10 text-slate-600 mb-3" />
-              <p className="text-slate-400 text-sm font-medium">No analyses run yet</p>
+              <p className="text-slate-400 text-sm font-medium">
+                No analyses run yet
+              </p>
               <p className="text-slate-600 text-xs mt-1">
                 Go to the Prospects tab and run your first opportunity analysis.
               </p>

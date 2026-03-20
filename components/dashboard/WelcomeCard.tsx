@@ -23,6 +23,7 @@ import {
   Users,
   BarChart,
 } from '@/components/icons';
+import { fetchJson } from '@/lib/fetcher';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -55,11 +56,6 @@ interface WelcomeCardProps {
 const STORAGE_KEY = 'synthex_welcome_dismissed';
 const VIEW_COUNT_KEY = 'synthex_welcome_view_count';
 const MIN_VIEWS_BEFORE_DISMISS = 3;
-
-// ── Fetcher ──────────────────────────────────────────────────────────────────
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => r.json());
 
 // ── SEO Score helpers ─────────────────────────────────────────────────────────
 

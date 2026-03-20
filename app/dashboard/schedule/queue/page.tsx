@@ -33,16 +33,7 @@ import {
   Layers,
 } from '@/components/icons';
 import { BulkScheduleWizard } from '@/components/scheduling';
-
-// =============================================================================
-// SWR Fetcher
-// =============================================================================
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => {
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.json();
-  });
+import { fetchJson } from '@/lib/fetcher';
 
 // =============================================================================
 // Page Component

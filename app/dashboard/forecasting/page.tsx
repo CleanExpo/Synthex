@@ -9,15 +9,13 @@ import { ForecastCard } from '@/components/forecasting/ForecastCard';
 import { CrossPlatformTab } from '@/components/forecasting/CrossPlatformTab';
 import { TrendingUp } from '@/components/icons';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { fetchJson } from '@/lib/fetcher';
 import type {
   ForecastMetric,
   ForecastPlatform,
   ForecastHorizon,
   ForecastPredictResponse,
 } from '@/lib/forecasting/types';
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => r.json());
 
 /**
  * Forecasting Dashboard
@@ -40,8 +38,10 @@ export default function ForecastingPage() {
   } = useSWR('/api/forecast/models', fetchJson, { refreshInterval: 15_000 });
 
   // ─── State ───────────────────────────────────────────────────────────────────
-  const [selectedMetric, setSelectedMetric] = useState<ForecastMetric>('engagement_rate');
-  const [selectedPlatform, setSelectedPlatform] = useState<ForecastPlatform | null>(null);
+  const [selectedMetric, setSelectedMetric] =
+    useState<ForecastMetric>('engagement_rate');
+  const [selectedPlatform, setSelectedPlatform] =
+    useState<ForecastPlatform | null>(null);
   const [selectedHorizon, setSelectedHorizon] = useState<ForecastHorizon>(7);
   const [isTraining, setIsTraining] = useState(false);
   const [isPredicting, setIsPredicting] = useState(false);
@@ -105,14 +105,17 @@ export default function ForecastingPage() {
             Forecasting
           </h1>
           <p className="text-gray-400 mt-1">
-            Prophet time-series forecasting and BayesNF cross-platform predictions
+            Prophet time-series forecasting and BayesNF cross-platform
+            predictions
           </p>
         </div>
 
         <Tabs defaultValue="prophet" className="w-full">
           <TabsList variant="glass">
             <TabsTrigger value="prophet">Time-Series Forecasting</TabsTrigger>
-            <TabsTrigger value="spatiotemporal">Cross-Platform Intelligence</TabsTrigger>
+            <TabsTrigger value="spatiotemporal">
+              Cross-Platform Intelligence
+            </TabsTrigger>
           </TabsList>
 
           {/* ── Prophet tab ── */}
@@ -133,7 +136,9 @@ export default function ForecastingPage() {
             {activeForecast && (
               <ForecastChart
                 predictions={activeForecast.predictions}
-                metric={activeForecast.modelId ? selectedMetric : selectedMetric}
+                metric={
+                  activeForecast.modelId ? selectedMetric : selectedMetric
+                }
                 horizonDays={selectedHorizon}
                 accuracy={activeForecast.accuracy}
               />
@@ -142,15 +147,18 @@ export default function ForecastingPage() {
             {/* Trained models section */}
             <section className="space-y-4">
               <div>
-                <h2 className="text-lg font-semibold text-white">Trained Models</h2>
+                <h2 className="text-lg font-semibold text-white">
+                  Trained Models
+                </h2>
                 <p className="text-sm text-gray-500 mt-0.5">
-                  Select a model and generate a forecast for your chosen horizon.
+                  Select a model and generate a forecast for your chosen
+                  horizon.
                 </p>
               </div>
 
               {modelsLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[1, 2].map((i) => (
+                  {[1, 2].map(i => (
                     <div
                       key={i}
                       className="h-48 animate-pulse bg-white/5 rounded-xl border border-white/[0.05]"
@@ -162,8 +170,9 @@ export default function ForecastingPage() {
                   <TrendingUp className="h-10 w-10 mb-3 opacity-30 text-emerald-400" />
                   <p className="text-sm font-medium">No forecast models yet</p>
                   <p className="text-xs mt-2 max-w-sm text-center">
-                    Select a metric above and click &quot;Train Model&quot; to build your first
-                    Prophet model. You need at least 30 days of data for most metrics.
+                    Select a metric above and click &quot;Train Model&quot; to
+                    build your first Prophet model. You need at least 30 days of
+                    data for most metrics.
                   </p>
                 </div>
               ) : (
@@ -186,19 +195,25 @@ export default function ForecastingPage() {
                           orgId: '',
                           metric: model.metric,
                           platform: model.platform,
-                          status: model.status as 'pending' | 'training' | 'ready' | 'failed',
+                          status: model.status as
+                            | 'pending'
+                            | 'training'
+                            | 'ready'
+                            | 'failed',
                           trainingPoints: model.trainingPoints,
                           lastTrainedAt: model.lastTrainedAt,
-                          accuracy:
-                            model.accuracy as import('@/lib/forecasting/types').ForecastAccuracy | null,
-                          seasonality:
-                            model.seasonality as import('@/lib/forecasting/types').DetectedSeasonality | null,
+                          accuracy: model.accuracy as
+                            | import('@/lib/forecasting/types').ForecastAccuracy
+                            | null,
+                          seasonality: model.seasonality as
+                            | import('@/lib/forecasting/types').DetectedSeasonality
+                            | null,
                         }}
                         onPredict={handlePredict}
                         isPredicting={isPredicting}
                         horizon={selectedHorizon}
                       />
-                    ),
+                    )
                   )}
                 </div>
               )}

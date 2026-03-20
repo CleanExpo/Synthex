@@ -26,6 +26,7 @@ import {
   Send,
 } from '@/components/icons';
 import { cn } from '@/lib/utils';
+import { fetchJson } from '@/lib/fetcher';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -58,16 +59,6 @@ export interface DistributionPanelProps {
   /** Used to display the self-hosted newsroom public URL */
   orgSlug?: string;
 }
-
-// ---------------------------------------------------------------------------
-// Fetcher
-// ---------------------------------------------------------------------------
-
-const fetchJson = async (url: string) => {
-  const res = await fetch(url, { credentials: 'include' });
-  if (!res.ok) throw new Error('Failed to fetch');
-  return res.json();
-};
 
 // ---------------------------------------------------------------------------
 // Status badge

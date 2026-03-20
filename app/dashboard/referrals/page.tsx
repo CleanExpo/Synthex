@@ -12,6 +12,7 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import { Gift, Users, TrendingUp, Award, Loader2 } from '@/components/icons';
+import { fetchJson } from '@/lib/fetcher';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -42,14 +43,6 @@ interface ReferralData {
   referrals: ReferralEntry[];
   stats: ReferralStats;
 }
-
-// ─── SWR fetcher ─────────────────────────────────────────────────────────────
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => {
-    if (!r.ok) throw new Error('Fetch failed');
-    return r.json();
-  });
 
 // ─── Stat Card ───────────────────────────────────────────────────────────────
 

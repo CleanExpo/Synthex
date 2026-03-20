@@ -14,21 +14,22 @@ import useSWR from 'swr';
 import { Plus, Sparkles } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import type { DirectoryTemplate } from '@/lib/awards/directory-database';
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => r.json());
+import { fetchJson } from '@/lib/fetcher';
 
 export interface DirectoryTemplateGridProps {
-  addedIds?: Set<string>;       // directoryUrls already added
+  addedIds?: Set<string>; // directoryUrls already added
   onAdd: (template: DirectoryTemplate) => void;
 }
 
-export function DirectoryTemplateGrid({ addedIds = new Set(), onAdd }: DirectoryTemplateGridProps) {
-  const [aiOnly, setAiOnly]   = useState(false);
+export function DirectoryTemplateGrid({
+  addedIds = new Set(),
+  onAdd,
+}: DirectoryTemplateGridProps) {
+  const [aiOnly, setAiOnly] = useState(false);
   const [freeOnly, setFreeOnly] = useState(false);
 
   const params = new URLSearchParams();
-  if (aiOnly)   params.set('isAiIndexed', 'true');
+  if (aiOnly) params.set('isAiIndexed', 'true');
   if (freeOnly) params.set('isFree', 'true');
 
   const { data, isLoading } = useSWR<{ templates: DirectoryTemplate[] }>(
@@ -71,12 +72,14 @@ export function DirectoryTemplateGrid({ addedIds = new Set(), onAdd }: Directory
       {/* Grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4].map(i => (
             <div key={i} className="h-28 rounded-xl bg-white/5 animate-pulse" />
           ))}
         </div>
       ) : templates.length === 0 ? (
-        <div className="text-center py-12 text-slate-500 text-sm">No directories found.</div>
+        <div className="text-center py-12 text-slate-500 text-sm">
+          No directories found.
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {templates.map((t, i) => {
@@ -94,24 +97,38 @@ export function DirectoryTemplateGrid({ addedIds = new Set(), onAdd }: Directory
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium text-white truncate">{t.directoryName}</h4>
-                    <p className="text-xs text-slate-400 truncate">{t.category}</p>
+                    <h4 className="text-sm font-medium text-white truncate">
+                      {t.directoryName}
+                    </h4>
+                    <p className="text-xs text-slate-400 truncate">
+                      {t.category}
+                    </p>
                   </div>
                   {alreadyAdded ? (
-                    <span className="text-xs text-emerald-400 flex-shrink-0">Added</span>
+                    <span className="text-xs text-emerald-400 flex-shrink-0">
+                      Added
+                    </span>
                   ) : (
                     <Plus className="h-4 w-4 text-slate-500 group-hover:text-emerald-400 transition-colors flex-shrink-0 mt-0.5" />
                   )}
                 </div>
 
-                <p className="text-xs text-slate-500 line-clamp-2 mb-2">{t.description}</p>
+                <p className="text-xs text-slate-500 line-clamp-2 mb-2">
+                  {t.description}
+                </p>
 
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-400 font-mono">DA {t.domainAuthority}</span>
-                  <span className={cn(
-                    'text-xs px-2 py-0.5 rounded-full',
-                    t.isFree ? 'bg-emerald-900/40 text-emerald-400' : 'bg-slate-700/60 text-slate-400'
-                  )}>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-400 font-mono">
+                    DA {t.domainAuthority}
+                  </span>
+                  <span
+                    className={cn(
+                      'text-xs px-2 py-0.5 rounded-full',
+                      t.isFree
+                        ? 'bg-emerald-900/40 text-emerald-400'
+                        : 'bg-slate-700/60 text-slate-400'
+                    )}
+                  >
                     {t.isFree ? 'Free' : 'Paid'}
                   </span>
                   {t.isAiIndexed && (

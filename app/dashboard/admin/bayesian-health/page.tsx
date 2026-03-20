@@ -1,9 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => r.json());
+import { fetchJson } from '@/lib/fetcher';
 
 /**
  * BayesNF Service Health Dashboard
@@ -15,11 +13,11 @@ const fetchJson = (url: string) =>
  * Data refreshes every 30 seconds.
  */
 export default function BayesianHealthPage() {
-  const {
-    data,
-    isLoading,
-    mutate,
-  } = useSWR('/api/admin/bayesian-health', fetchJson, { refreshInterval: 30_000 });
+  const { data, isLoading, mutate } = useSWR(
+    '/api/admin/bayesian-health',
+    fetchJson,
+    { refreshInterval: 30_000 }
+  );
 
   const { data: modelsData } = useSWR('/api/predict/models', fetchJson);
   const models: Array<{
@@ -34,7 +32,9 @@ export default function BayesianHealthPage() {
     <div className="p-6 space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">BayesNF Service Health</h1>
+        <h1 className="text-2xl font-bold text-white">
+          BayesNF Service Health
+        </h1>
         <p className="text-gray-400 mt-1">
           Real-time status of the Python AI service (Prophet + BayesNF engines).
         </p>
@@ -67,11 +67,15 @@ export default function BayesianHealthPage() {
                       : 'bg-red-400'
                 }`}
               />
-              <span className="text-sm text-white capitalize">{data?.status ?? 'unknown'}</span>
+              <span className="text-sm text-white capitalize">
+                {data?.status ?? 'unknown'}
+              </span>
             </div>
 
             {data?.message && (
-              <p className="text-xs text-yellow-400">{data.message as string}</p>
+              <p className="text-xs text-yellow-400">
+                {data.message as string}
+              </p>
             )}
 
             {data?.data && (
@@ -89,14 +93,17 @@ export default function BayesianHealthPage() {
 
       {/* Spatiotemporal models overview */}
       <div className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-5">
-        <h2 className="text-lg font-semibold text-white mb-4">Spatiotemporal Models</h2>
+        <h2 className="text-lg font-semibold text-white mb-4">
+          Spatiotemporal Models
+        </h2>
         <p className="text-sm text-gray-400">
-          {models.length} model{models.length !== 1 ? 's' : ''} across all organisations
+          {models.length} model{models.length !== 1 ? 's' : ''} across all
+          organisations
         </p>
 
         {models.length > 0 && (
           <div className="mt-3 space-y-2">
-            {models.slice(0, 10).map((m) => (
+            {models.slice(0, 10).map(m => (
               <div
                 key={m.id}
                 className="flex items-center justify-between text-xs text-gray-400"

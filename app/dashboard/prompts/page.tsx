@@ -28,19 +28,12 @@ import type {
   PromptGapAnalysis,
   CompetitorVisibility,
 } from '@/lib/prompts/types';
+import { fetchJson } from '@/lib/fetcher';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type PromptsTab = 'discovery' | 'tracking' | 'gaps';
 const VALID_TABS: PromptsTab[] = ['discovery', 'tracking', 'gaps'];
-
-// ─── SWR fetcher ──────────────────────────────────────────────────────────────
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => {
-    if (!r.ok) throw new Error('Fetch failed');
-    return r.json();
-  });
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
 

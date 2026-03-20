@@ -23,6 +23,7 @@ import {
 } from '@/components/realtime/ConnectionStatus';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
+import { fetchJson } from '@/lib/fetcher';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -39,11 +40,6 @@ interface TestResult {
   latencyMs?: number;
   error?: string;
 }
-
-// ── Fetcher ───────────────────────────────────────────────────────────────────
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => r.json());
 
 // ── Component ─────────────────────────────────────────────────────────────────
 

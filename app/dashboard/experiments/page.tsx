@@ -39,6 +39,7 @@ import { HealingPanel } from '@/components/experiments/HealingPanel';
 import { DogfoodScorecard } from '@/components/experiments/DogfoodScorecard';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { cn } from '@/lib/utils';
+import { fetchJson } from '@/lib/fetcher';
 
 // ============================================================================
 // Types
@@ -69,13 +70,6 @@ interface Experiment {
     recordedAt: string;
   }>;
 }
-
-// ============================================================================
-// SWR Fetcher
-// ============================================================================
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => r.json());
 
 // ============================================================================
 // Tabs config

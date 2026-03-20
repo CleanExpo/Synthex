@@ -35,6 +35,7 @@ import {
   Loader2,
 } from '@/components/icons';
 import { fetchWithCSRF } from '@/lib/csrf';
+import { fetchJson } from '@/lib/fetcher';
 import { toast } from 'sonner';
 
 // ---------------------------------------------------------------------------
@@ -59,16 +60,6 @@ interface ReviewQueueProps {
   /** Called after a post is approved, rejected, or edited (triggers parent refresh) */
   onMutate?: () => void;
 }
-
-// ---------------------------------------------------------------------------
-// Fetcher
-// ---------------------------------------------------------------------------
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => {
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.json();
-  });
 
 // ---------------------------------------------------------------------------
 // Platform display helpers

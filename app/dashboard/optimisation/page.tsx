@@ -3,13 +3,11 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import { BOFeatureGate } from '@/components/bayesian/BOFeatureGate';
+import { fetchJson } from '@/lib/fetcher';
 import { OptimisationSpaceCard } from '@/components/bayesian/OptimisationSpaceCard';
 import type { BOSpaceData } from '@/components/bayesian/OptimisationSpaceCard';
 import { RunHistoryTable } from '@/components/bayesian/RunHistoryTable';
 import { Brain } from '@/components/icons';
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => r.json());
 
 /**
  * AI Optimisation Dashboard — Bayesian Optimisation client-facing page.
@@ -73,15 +71,18 @@ export default function OptimisationPage() {
         {/* Active Optimisation Spaces */}
         <section className="space-y-4">
           <div>
-            <h2 className="text-lg font-semibold text-white">Active Optimisation Spaces</h2>
+            <h2 className="text-lg font-semibold text-white">
+              Active Optimisation Spaces
+            </h2>
             <p className="text-sm text-gray-500 mt-0.5">
-              Spaces are provisioned automatically when your organisation uses GEO analysis.
+              Spaces are provisioned automatically when your organisation uses
+              GEO analysis.
             </p>
           </div>
 
           {spacesLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2].map((i) => (
+              {[1, 2].map(i => (
                 <div
                   key={i}
                   className="h-48 animate-pulse bg-white/5 rounded-xl border border-white/[0.05]"
@@ -93,14 +94,14 @@ export default function OptimisationPage() {
               <Brain className="h-10 w-10 mb-3 opacity-30 text-violet-400" />
               <p className="text-sm font-medium">No optimisation spaces yet</p>
               <p className="text-xs mt-2 max-w-sm text-center">
-                Optimisation spaces are created automatically as your organisation runs GEO
-                analyses, A/B experiments, and prompt tests. Run a GEO analysis to start
-                the AI learning process.
+                Optimisation spaces are created automatically as your
+                organisation runs GEO analyses, A/B experiments, and prompt
+                tests. Run a GEO analysis to start the AI learning process.
               </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {spaces.map((space) => (
+              {spaces.map(space => (
                 <OptimisationSpaceCard
                   key={space.id}
                   space={space}

@@ -23,6 +23,7 @@ import {
   ChevronDown,
 } from '@/components/icons';
 import { cn } from '@/lib/utils';
+import { fetchJson } from '@/lib/fetcher';
 import { toast } from 'sonner';
 
 // ============================================================================
@@ -57,9 +58,6 @@ interface HealingAction {
   fixApplied: boolean;
   createdAt: string;
 }
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => r.json());
 
 const ISSUE_TYPE_LABELS: Record<string, string> = {
   'missing-meta': 'Missing Meta',

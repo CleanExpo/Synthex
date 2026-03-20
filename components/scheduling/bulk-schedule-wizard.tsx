@@ -48,6 +48,7 @@ import {
 } from '@/lib/scheduling/csv-parser';
 import { useOptimalTimes } from '@/hooks/use-optimal-times';
 import { useScheduleConflicts } from '@/hooks/use-schedule-conflicts';
+import { fetchJson } from '@/lib/fetcher';
 import type {
   ContentItem,
   ScheduleSlot,
@@ -126,16 +127,6 @@ const STEP_LABELS: Record<WizardStep, string> = {
   3: 'Preview',
   4: 'Confirm',
 };
-
-// =============================================================================
-// SWR fetcher
-// =============================================================================
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => {
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.json();
-  });
 
 // =============================================================================
 // Helpers

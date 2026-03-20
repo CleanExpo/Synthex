@@ -9,19 +9,20 @@
  */
 
 import useSWR from 'swr';
-import type { BrandProfileResponse, BrandProfileUpdatePayload } from '@/app/api/brand-profile/types';
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => r.json());
+import type {
+  BrandProfileResponse,
+  BrandProfileUpdatePayload,
+} from '@/app/api/brand-profile/types';
+import { fetchJson } from '@/lib/fetcher';
 
 export function useBrandProfile() {
-  const { data, error, isLoading, mutate } = useSWR<{ data: BrandProfileResponse }>(
-    '/api/brand-profile',
-    fetchJson,
-    { revalidateOnFocus: false }
-  );
+  const { data, error, isLoading, mutate } = useSWR<{
+    data: BrandProfileResponse;
+  }>('/api/brand-profile', fetchJson, { revalidateOnFocus: false });
 
-  const updateBrandProfile = async (payload: BrandProfileUpdatePayload): Promise<BrandProfileResponse> => {
+  const updateBrandProfile = async (
+    payload: BrandProfileUpdatePayload
+  ): Promise<BrandProfileResponse> => {
     const res = await fetch('/api/brand-profile', {
       method: 'PATCH',
       credentials: 'include',
@@ -29,7 +30,8 @@ export function useBrandProfile() {
       body: JSON.stringify(payload),
     });
     const json = await res.json();
-    if (!res.ok) throw new Error(json.error || 'Failed to update brand profile');
+    if (!res.ok)
+      throw new Error(json.error || 'Failed to update brand profile');
     await mutate();
     return json.data as BrandProfileResponse;
   };

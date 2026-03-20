@@ -34,6 +34,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AICredentialsManager } from './ai-credentials-manager';
 import { PlatformCredentialsManager } from './platform-credentials-manager';
 import type { PlatformConnection, ApiKey } from './types';
+import { fetchJson } from '@/lib/fetcher';
 
 // ── Unite-Hub Integration Card ─────────────────────────────────────────────────
 // Self-contained, owner-only card. Self-gates: returns null for non-owners
@@ -47,9 +48,6 @@ interface UniteHubStatus {
   eventTypes: string[];
   error?: string;
 }
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => r.json());
 
 function UniteHubIntegrationCard() {
   const [copying, setCopying] = useState(false);

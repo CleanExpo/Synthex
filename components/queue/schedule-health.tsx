@@ -21,6 +21,7 @@ import {
   RotateCcw,
   TrendingUp,
 } from '@/components/icons';
+import { fetchJson } from '@/lib/fetcher';
 
 // =============================================================================
 // Types
@@ -44,16 +45,6 @@ interface ScheduleHealthStats {
     count: number;
   };
 }
-
-// =============================================================================
-// SWR Fetcher
-// =============================================================================
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => {
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.json();
-  });
 
 // =============================================================================
 // Helpers

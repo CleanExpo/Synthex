@@ -27,6 +27,7 @@ import { PressReleaseEditor } from '@/components/pr/PressReleaseEditor';
 import { PRGeneratorForm } from '@/components/pr/PRGeneratorForm';
 import { DistributionPanel } from '@/components/pr/DistributionPanel';
 import { PRAnalyticsSummary } from '@/components/pr/PRAnalyticsSummary';
+import { fetchJson } from '@/lib/fetcher';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -50,16 +51,6 @@ interface SelectedRelease {
   slug: string;
   headline: string;
 }
-
-// ---------------------------------------------------------------------------
-// SWR fetcher (for analytics summary list)
-// ---------------------------------------------------------------------------
-
-const fetchJson = async (url: string) => {
-  const res = await fetch(url, { credentials: 'include' });
-  if (!res.ok) throw new Error('Failed to fetch');
-  return res.json();
-};
 
 // ---------------------------------------------------------------------------
 // Page component

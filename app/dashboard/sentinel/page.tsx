@@ -23,19 +23,12 @@ import { AlertFeed } from '@/components/sentinel/AlertFeed';
 import { AlgorithmUpdateTimeline } from '@/components/sentinel/AlgorithmUpdateTimeline';
 import { MetricTrendChart } from '@/components/sentinel/MetricTrendChart';
 import { useUser } from '@/hooks/use-user';
+import { fetchJson } from '@/lib/fetcher';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type SentinelTab = 'health' | 'alerts' | 'algorithm';
 const VALID_TABS: SentinelTab[] = ['health', 'alerts', 'algorithm'];
-
-// ─── SWR fetcher ──────────────────────────────────────────────────────────────
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => {
-    if (!r.ok) throw new Error('Fetch failed');
-    return r.json();
-  });
 
 // ─── Severity filter options ──────────────────────────────────────────────────
 

@@ -19,6 +19,7 @@ import {
   Loader2,
 } from '@/components/icons';
 import { cn } from '@/lib/utils';
+import { fetchJson } from '@/lib/fetcher';
 import { toast } from 'sonner';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -53,11 +54,6 @@ const PLATFORM_LABELS: Record<string, string> = {
   reddit: 'RD',
   threads: 'TH',
 };
-
-// ── Fetcher ───────────────────────────────────────────────────────────────────
-
-const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => r.json());
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
