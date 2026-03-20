@@ -5,7 +5,7 @@ export function CTASection() {
   return (
     <section className="relative py-24 z-10">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="relative overflow-hidden rounded-2xl px-12 py-20 text-center bg-charcoal-800 border border-white/[0.06]">
+        <div className="relative overflow-hidden rounded-2xl px-12 py-20 text-center bg-charcoal-800/80 backdrop-blur-xl border border-white/[0.08] shadow-2xl shadow-black/50 ring-1 ring-white/[0.04]">
           {/* Warm amber radial glow */}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-amber-500/[0.08] blur-[100px] rounded-full" />

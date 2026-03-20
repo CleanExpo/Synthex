@@ -180,8 +180,8 @@ export function PricingSection({
             className={cn(
               'rounded-2xl border p-6 text-center flex flex-col relative',
               plan.isPopular
-                ? 'border-amber-500/40 bg-amber-500/[0.04]'
-                : 'border-white/[0.08] bg-charcoal-800/60',
+                ? 'border-amber-500/40 bg-amber-500/[0.04] shadow-2xl shadow-amber-500/10 ring-1 ring-amber-500/20'
+                : 'border-white/[0.08] bg-charcoal-800/60 shadow-lg shadow-black/30',
               !plan.isPopular && 'mt-5'
             )}
           >

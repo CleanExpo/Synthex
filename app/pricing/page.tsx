@@ -97,7 +97,7 @@ export default function PricingPage() {
               <Card
                 key={faq.question}
                 variant="glass"
-                className="p-6 bg-surface-base/80 backdrop-blur-sm border border-orange-500/10 hover:border-orange-500/20 transition-all duration-300"
+                className="p-6 bg-surface-base/80 backdrop-blur-sm border border-amber-500/10 hover:border-amber-500/20 transition-all duration-300"
               >
                 <h3 className="text-lg font-semibold text-white mb-2">
                   {faq.question}
@@ -114,7 +114,7 @@ export default function PricingPage() {
         <div className="container mx-auto">
           <Card
             variant="glass-primary"
-            className="p-12 text-center bg-gradient-to-r from-orange-500/10 to-orange-600/10 backdrop-blur-sm border border-orange-500/20"
+            className="p-12 text-center bg-gradient-to-r from-amber-500/10 to-amber-600/10 backdrop-blur-sm border border-amber-500/20"
           >
             <h2 className="text-3xl font-bold text-white mb-4">
               Start Your 14-Day Free Trial
@@ -125,7 +125,7 @@ export default function PricingPage() {
             <Link href="/signup">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-10 py-6 text-lg font-medium shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300"
+                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-500 text-white px-10 py-6 text-lg font-medium shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all duration-300"
               >
                 Get Started Now
               </Button>
