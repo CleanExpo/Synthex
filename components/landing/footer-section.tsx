@@ -7,16 +7,18 @@ const FOOTER_LINKS = [
   { label: 'Contact', href: '/contact' },
 ];
 
-/** Simple dark footer — logo, 4 links, copyright */
+/** Simple footer — warm charcoal bg, amber link hovers */
 export function FooterSection() {
   return (
-    <footer className="bg-zinc-950 border-t border-zinc-900">
+    <footer className="bg-charcoal-950 border-t border-white/[0.04]">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-            <div className="w-6 h-6 bg-gradient-to-br from-[#ffb87b] to-[#ff8f00] rounded-sm flex items-center justify-center">
-              <span className="text-[#2e1500] font-black text-[10px]">S</span>
+            <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
+              <span className="text-charcoal-900 font-black text-[10px]">
+                S
+              </span>
             </div>
             <span className="text-white font-black tracking-[0.2em] text-xs uppercase">
               SYNTHEX
@@ -29,7 +31,7 @@ export function FooterSection() {
               <Link
                 key={href}
                 href={href}
-                className="font-mono text-[10px] font-black uppercase tracking-[0.2em] text-white/30 hover:text-white/60 transition-colors"
+                className="text-[11px] font-medium text-white/30 hover:text-amber-400 transition-colors"
               >
                 {label}
               </Link>
@@ -37,8 +39,8 @@ export function FooterSection() {
           </nav>
 
           {/* Copyright */}
-          <p className="font-mono text-[10px] text-white/20 uppercase tracking-wider text-right flex-shrink-0">
-            © 2026 Synthex. High-Depth Intelligence.
+          <p className="text-[11px] text-white/20 flex-shrink-0">
+            © 2026 Synthex. AI-native social media.
           </p>
         </div>
       </div>

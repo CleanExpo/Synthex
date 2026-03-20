@@ -4,45 +4,44 @@ const STEPS = [
   {
     number: '01',
     icon: Network,
-    title: 'Connect Socials',
+    title: 'Enter your URL',
     description:
-      'Securely link your profiles with high-grade encrypted API gateways designed for industrial scale.',
+      'Paste your website URL. Our AI extracts your brand voice, colours, and tone automatically.',
   },
   {
     number: '02',
     icon: Sparkles,
-    title: 'Define Voice',
+    title: 'AI extracts your brand',
     description:
-      "Train our neural engine on your brand's unique editorial authority and specific aesthetic parameters.",
+      'Within seconds, Synthex builds a Brand DNA profile — your unique voice, values, and visual identity.',
   },
   {
     number: '03',
     icon: Rocket,
-    title: 'Automate',
+    title: 'Approve your first post',
     description:
-      'Execute the sequence. Watch Synthex curate, post, and intelligently engage across the web.',
+      'Review and approve your first AI-generated post. Go live in under 60 seconds.',
   },
 ];
 
-/** Deployment Pipeline — 3-card industrial process section */
+/** How It Works — sticky scroll 3-step with amber step numbers */
 export function HowItWorks() {
   return (
     <section className="relative py-24 md:py-32 z-10">
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm bg-[#ffb87b]/10 border border-[#ffb87b]/20 mb-6">
-            <span className="font-mono text-[10px] font-black tracking-[0.3em] uppercase text-[#ffb87b]">
-              Process
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 mb-6">
+            <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-amber-400">
+              How it works
             </span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-white mb-4">
-            Deployment Pipeline
+          <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-4">
+            Up and running in minutes
           </h2>
-          {/* Orange underline divider */}
-          <div className="w-16 h-0.5 bg-gradient-to-r from-[#ffb87b] to-[#ff8f00] mb-4" />
-          <p className="text-white/40 font-mono text-sm">
-            Standardised automation in &lt; 600 seconds.
+          <p className="text-white/40 text-base max-w-lg">
+            No setup required. No manual configuration. Just your URL and you're
+            live.
           </p>
         </div>
 
@@ -51,30 +50,25 @@ export function HowItWorks() {
           {STEPS.map(({ number, icon: Icon, title, description }) => (
             <div
               key={number}
-              className="group relative bg-[rgba(28,27,27,0.9)] backdrop-blur-xl border border-[rgba(255,220,194,0.08)] rounded-sm p-8 overflow-hidden hover:-translate-y-1 hover:border-[rgba(255,184,123,0.2)] transition-all duration-300"
+              className="group relative bg-charcoal-800 border border-white/[0.06] rounded-2xl p-8 overflow-hidden hover:-translate-y-1 hover:border-white/[0.10] transition-all duration-300"
             >
-              {/* Large watermark number */}
-              <span className="absolute top-4 right-6 font-black text-7xl text-white/[0.04] select-none pointer-events-none">
+              {/* Step number — amber, prominent */}
+              <div className="text-amber-500 font-black text-5xl leading-none mb-6 select-none">
                 {number}
-              </span>
-
-              {/* Icon */}
-              <div className="w-10 h-10 rounded-sm bg-[#ffb87b]/10 border border-[#ffb87b]/20 flex items-center justify-center mb-6 relative z-10">
-                <Icon className="w-5 h-5 text-[#ffb87b]" />
               </div>
 
-              {/* Step number badge */}
-              <div className="font-mono text-[10px] font-black tracking-[0.3em] uppercase text-[#ffb87b]/60 mb-2 relative z-10">
-                {number}
+              {/* Icon */}
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-5">
+                <Icon className="w-5 h-5 text-amber-400" />
               </div>
 
               {/* Title */}
-              <h3 className="text-lg font-black uppercase tracking-tight text-white mb-3 relative z-10">
+              <h3 className="text-lg font-bold tracking-tight text-white mb-3">
                 {title}
               </h3>
 
               {/* Description */}
-              <p className="text-sm text-white/40 leading-relaxed relative z-10">
+              <p className="text-sm text-white/40 leading-relaxed">
                 {description}
               </p>
             </div>
