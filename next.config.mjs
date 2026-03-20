@@ -39,6 +39,14 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
 
+  // Redirects for renamed/removed routes
+  async redirects() {
+    return [
+      { source: '/platform', destination: '/features', permanent: true },
+      { source: '/solutions', destination: '/about', permanent: true },
+    ];
+  },
+
   // HTTP headers for performance and security
   async headers() {
     return [
