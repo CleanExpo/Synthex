@@ -1,3 +1,7 @@
+---
+effort: low
+---
+
 # Development Workflow Rules
 
 ## Project Commands
@@ -25,11 +29,13 @@ npm run release:check               # Full pre-release validation
 ## Conventions
 
 ### Naming
+
 - React: `PascalCase.tsx`
 - Utils: `kebab-case.ts`
 - Skills: `SCREAMING-KEBAB.md`
 
 ### Commits
+
 ```bash
 # Format: <type>(<scope>): <description>
 feat(dashboard): add dark mode toggle
@@ -38,6 +44,7 @@ docs(planning): update roadmap
 ```
 
 ### Branching
+
 - `main` - Production ready
 - `feature/<name>` - New features
 - `fix/<name>` - Bug fixes

@@ -233,6 +233,16 @@
           }
         ]
       }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\stop-failure.ps1\""
+          }
+        ]
+      }
     ]
   }
 }

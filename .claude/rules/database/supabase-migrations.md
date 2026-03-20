@@ -1,5 +1,6 @@
 ---
 paths: prisma/**/*.{prisma,sql}, lib/db/**/*.ts
+effort: high
 ---
 
 # Database Rules (Prisma + Supabase PostgreSQL)

@@ -7,11 +7,13 @@
  * - STABILITY_API_KEY: Stability AI API key (SECRET)
  * - OPENAI_API_KEY: OpenAI API key for DALL-E (SECRET)
  * - GEMINI_API_KEY: Google Gemini API key (SECRET)
+ * - ANTHROPIC_API_KEY: Required for refineImagePromptWithThinking (SECRET)
  *
  * FAILURE MODE: Falls back to alternative providers, returns error if all fail
  */
 
 import { logger } from '@/lib/logger';
+import { THINKING_BUDGETS } from '@/lib/ai/constants';
 
 // Provider types
 export type ImageProvider = 'stability' | 'dalle' | 'gemini';
@@ -347,6 +349,49 @@ async function generateWithGemini(
       provider: 'gemini',
       error: error instanceof Error ? error.message : String(error),
     };
+  }
+}
+
+/**
+ * Refine an image prompt using Claude extended thinking.
+ * Gives the model space to reason about brand coherence before outputting a final prompt.
+ * Returns the original prompt unchanged if ANTHROPIC_API_KEY is not set.
+ *
+ * @param rawPrompt - Initial image description
+ * @param brandContext - Optional brand DNA / style context for coherence reasoning
+ */
+export async function refineImagePromptWithThinking(
+  rawPrompt: string,
+  brandContext?: string
+): Promise<string> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return rawPrompt;
+
+  try {
+    const { getAIProvider } = await import('@/lib/ai/providers');
+    const provider = getAIProvider({ provider: 'anthropic', apiKey });
+
+    const systemPrompt = brandContext
+      ? `You are a visual creative director. Use the brand context below to refine image prompts for maximum brand coherence.\n\nBrand Context:\n${brandContext}`
+      : 'You are a visual creative director. Refine image generation prompts for maximum visual quality and specificity.';
+
+    const response = await provider.complete({
+      model: provider.models.balanced,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content: `Refine this image prompt to be more specific, visually rich, and brand-coherent. Return ONLY the refined prompt, nothing else.\n\nOriginal prompt: ${rawPrompt}`,
+        },
+      ],
+      max_tokens: 300,
+      thinking: THINKING_BUDGETS.standard,
+    });
+
+    const refined = response.choices[0]?.message?.content?.trim();
+    return refined || rawPrompt;
+  } catch {
+    return rawPrompt;
   }
 }
 

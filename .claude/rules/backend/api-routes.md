@@ -1,5 +1,6 @@
 ---
 paths: app/api/**/*.ts, lib/**/*.ts
+effort: medium
 ---
 
 # API Route Rules (Next.js App Router)

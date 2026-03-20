@@ -8,6 +8,8 @@ import { getAIProvider } from '@/lib/ai/providers';
 import type { AIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
+import { buildContextForGeneration } from '@/lib/obsidian/client-knowledge-base';
+import { THINKING_BUDGETS } from '@/lib/ai/constants';
 
 /** Optional user-supplied API credentials that override the platform key. */
 export interface UserProviderCredentials {
@@ -54,6 +56,10 @@ export interface ContentRequest {
   includeCTA?: boolean;
   // Persona integration
   personaId?: string; // Use trained persona for voice/style
+  /** Organisation ID — enables Obsidian context injection when set. */
+  orgId?: string;
+  /** Enable extended thinking (Anthropic direct only). Defaults to false. */
+  thinkingEnabled?: boolean;
 }
 
 export interface GeneratedContent {
@@ -140,16 +146,30 @@ export class AIContentGenerator {
       }
     }
 
+    // Build Obsidian context for this client (no-op when disabled or orgId absent)
+    const obsidianContext = request.orgId
+      ? await buildContextForGeneration(request.orgId)
+      : '';
+
     // Build the prompt based on request and persona, enriched with research insights
     const researchContext = await this.fetchResearchContext(
       request.platform,
-      // orgId is not in ContentRequest — pass undefined (global insights only)
-      undefined
+      request.orgId ?? undefined
     );
-    const prompt = this.buildPrompt(request, persona) + researchContext;
+    const prompt =
+      (obsidianContext ? `${obsidianContext}\n\n---\n\n` : '') +
+      this.buildPrompt(request, persona) +
+      researchContext;
 
     // Select appropriate model based on content type
     const model = this.selectModel(request);
+
+    // Determine thinking budget (Anthropic direct only; ignored on other providers)
+    const thinkingBudget = request.thinkingEnabled
+      ? model.includes('opus')
+        ? THINKING_BUDGETS.opus
+        : THINKING_BUDGETS.standard
+      : THINKING_BUDGETS.quick;
 
     // Resolve which AI provider to use for this request.
     // User credentials take priority over the platform singleton.
@@ -165,7 +185,12 @@ export class AIContentGenerator {
 
     try {
       // Generate main content
-      const mainContent = await this.callAI(prompt, model, aiClient);
+      const mainContent = await this.callAI(
+        prompt,
+        model,
+        aiClient,
+        thinkingBudget
+      );
 
       // Generate variations for A/B testing
       const variations = await this.generateVariations(
@@ -344,11 +369,13 @@ Generate content that will maximize engagement and shares.
    * @param prompt - Fully-built prompt string
    * @param model - Model identifier to use
    * @param client - Resolved AIProvider instance (platform or user key)
+   * @param thinking - Extended thinking budget tokens (0 = disabled; Anthropic only)
    */
   private async callAI(
     prompt: string,
     model: string,
-    client: AIProvider
+    client: AIProvider,
+    thinking: number = 0
   ): Promise<string> {
     try {
       const response = await client.complete({
@@ -366,6 +393,7 @@ Generate content that will maximize engagement and shares.
         ],
         temperature: 0.8,
         max_tokens: 1000,
+        ...(thinking > 0 ? { thinking, cache: true } : {}),
       });
 
       const content = response.choices[0]?.message?.content;
