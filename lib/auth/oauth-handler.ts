@@ -3,11 +3,12 @@
  * Provides a unified interface for OAuth authentication
  */
 
+import type { ReactElement } from 'react';
 import { toast } from 'sonner';
 
 interface OAuthProvider {
   name: string;
-  icon?: (props: { className?: string }) => JSX.Element;
+  icon?: (props: { className?: string }) => ReactElement;
   platform: string;
 }
 
@@ -25,26 +26,33 @@ export const oauthProviders: OAuthProvider[] = [
 export async function signInWithOAuth(provider: string) {
   try {
     // Check if we're in demo mode
-    const isDemoMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || 
-                       process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co';
-    
+    const isDemoMode =
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL ===
+        'https://placeholder.supabase.co';
+
     if (isDemoMode) {
-      toast.error(`${provider} login is not configured. Please contact support.`);
+      toast.error(
+        `${provider} login is not configured. Please contact support.`
+      );
       return;
     }
 
     // Get current user email if logged in (for linking accounts)
     const userStr = localStorage.getItem('user');
     const user = userStr ? JSON.parse(userStr) : null;
-    
+
     // Call our OAuth API endpoint
     // Authentication is handled via httpOnly cookies (credentials: 'include')
-    const response = await fetch(`/api/auth/oauth/${provider.toLowerCase()}${user?.email ? `?email=${user.email}` : ''}`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // Send httpOnly auth cookies automatically
-    });
+    const response = await fetch(
+      `/api/auth/oauth/${provider.toLowerCase()}${user?.email ? `?email=${user.email}` : ''}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Send httpOnly auth cookies automatically
+      }
+    );
 
     if (!response.ok) {
       const error = await response.json();
@@ -52,7 +60,7 @@ export async function signInWithOAuth(provider: string) {
     }
 
     const data = await response.json();
-    
+
     if (data.authorizationUrl) {
       // Redirect to OAuth provider
       window.location.href = data.authorizationUrl;
@@ -61,14 +69,30 @@ export async function signInWithOAuth(provider: string) {
     }
   } catch (error) {
     console.error(`OAuth ${provider} error:`, error);
-    
+
     // Provide helpful error messages
-    if (error instanceof Error ? error.message : String(error)?.includes('not configured')) {
-      toast.error(`${provider} login is not set up yet. Please use email/password or demo login.`);
-    } else if (error instanceof Error ? error.message : String(error)?.includes('CLIENT_ID')) {
-      toast.error(`${provider} OAuth is not configured. Contact support for assistance.`);
+    if (
+      error instanceof Error
+        ? error.message
+        : String(error)?.includes('not configured')
+    ) {
+      toast.error(
+        `${provider} login is not set up yet. Please use email/password or demo login.`
+      );
+    } else if (
+      error instanceof Error
+        ? error.message
+        : String(error)?.includes('CLIENT_ID')
+    ) {
+      toast.error(
+        `${provider} OAuth is not configured. Contact support for assistance.`
+      );
     } else {
-      toast.error(error instanceof Error ? error.message : String(error) || `Failed to connect with ${provider}`);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : String(error) || `Failed to connect with ${provider}`
+      );
     }
   }
 }
@@ -76,13 +100,17 @@ export async function signInWithOAuth(provider: string) {
 /**
  * Handles OAuth callback after redirect
  */
-export async function handleOAuthCallback(platform: string, code: string, state: string) {
+export async function handleOAuthCallback(
+  platform: string,
+  code: string,
+  state: string
+) {
   try {
     const response = await fetch(`/api/auth/oauth/${platform}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include', // Receive httpOnly auth cookies from server
-      body: JSON.stringify({ code, state })
+      body: JSON.stringify({ code, state }),
     });
 
     if (!response.ok) {
@@ -91,10 +119,10 @@ export async function handleOAuthCallback(platform: string, code: string, state:
     }
 
     const data = await response.json();
-    
+
     if (data.success) {
       toast.success(`Successfully connected to ${platform}!`);
-      
+
       // Redirect to dashboard or integrations page
       window.location.href = '/dashboard/integrations';
     } else {
@@ -102,8 +130,12 @@ export async function handleOAuthCallback(platform: string, code: string, state:
     }
   } catch (error) {
     console.error('OAuth callback error:', error);
-    toast.error(error instanceof Error ? error.message : String(error) || 'Failed to complete OAuth connection');
-    
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : String(error) || 'Failed to complete OAuth connection'
+    );
+
     // Redirect to login on error
     window.location.href = '/login';
   }
@@ -147,7 +179,7 @@ export async function isProviderConnected(platform: string): Promise<boolean> {
     });
 
     if (!response.ok) return false;
-    
+
     const data = await response.json();
     return data.connected === true;
   } catch {

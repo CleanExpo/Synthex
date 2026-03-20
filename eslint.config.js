@@ -1,13 +1,5 @@
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { FlatCompat } from '@eslint/eslintrc';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+import coreWebVitals from 'eslint-config-next/core-web-vitals';
+import nextTypescript from 'eslint-config-next/typescript';
 
 const eslintConfig = [
   {
@@ -59,7 +51,8 @@ const eslintConfig = [
       'test-server.js',
     ],
   },
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  ...coreWebVitals,
+  ...nextTypescript,
   {
     rules: {
       'react/no-unescaped-entities': 'off',
@@ -77,6 +70,14 @@ const eslintConfig = [
       '@typescript-eslint/prefer-as-const': 'off',
       '@typescript-eslint/no-namespace': 'off',
       '@typescript-eslint/triple-slash-reference': 'off',
+      // React Compiler rules (new in eslint-config-next v16) — suppressed until Plan 02
+      // These fire widely across pre-existing codebase; fixing requires dedicated refactor plan
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/set-state-in-render': 'off',
+      'react-hooks/purity': 'off',
+      'react-hooks/static-components': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
+      'react-hooks/immutability': 'off',
     },
   },
   // Allow console, require(), and module assignment in utility/test files

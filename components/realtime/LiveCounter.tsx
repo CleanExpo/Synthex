@@ -40,7 +40,7 @@ export function LiveCounter({
   const [displayValue, setDisplayValue] = useState(value);
   const [isAnimating, setIsAnimating] = useState(false);
   const previousValueRef = useRef(value);
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number | undefined>(undefined);
 
   const sizeClasses = {
     sm: 'text-lg',
