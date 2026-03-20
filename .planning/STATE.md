@@ -9,9 +9,9 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 124 (openai-v6) — **COMPLETE** ✅
-Last activity: 2026-03-20 — openai SDK upgraded ^4.104.0 → ^6.0.0 (6.32.0). Zero breaking changes in src/services/openrouter.ts. type-check 0 errors, 1547 tests passing.
-Linear: SYN-400 (Phase 124, Done)
+Phase: 125 (react-next-upgrade) — Plan 01 COMPLETE ✅
+Last activity: 2026-03-20 — React 18→19.2.4, Next.js 15→16.2.0 bumped. @types/react ^19, @types/react-dom ^19, eslint-config-next ^16.2.0, @next/bundle-analyzer ^16.2.0. type-check 0 errors. npm test: 1547 passed, 0 failed, 150 skipped — @testing-library compat fix in Plan 02.
+Linear: SYN-407
 
 Milestone: v10.0 Full Platform Quality Loop — **PENDING HUMAN GATE**
 Last milestone shipped: v9.0 — 2026-03-17
