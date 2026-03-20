@@ -10,17 +10,21 @@ import path from 'path';
 const API_CONFIG = {
   title: 'Synthex Marketing API',
   version: '1.0.0',
-  description: 'Comprehensive API for AI-powered social media marketing automation',
-  baseUrl: process.env.NODE_ENV === 'production' ? 'https://synthex.social' : 'http://localhost:3000',
+  description:
+    'Comprehensive API for AI-powered social media marketing automation',
+  baseUrl:
+    process.env.NODE_ENV === 'production'
+      ? 'https://synthex.social'
+      : 'http://localhost:3000',
   contact: {
     name: 'Synthex Support',
     email: 'support@synthex.social',
-    url: 'https://synthex.social/support'
+    url: 'https://synthex.social/support',
   },
   license: {
     name: 'MIT',
-    url: 'https://opensource.org/licenses/MIT'
-  }
+    url: 'https://opensource.org/licenses/MIT',
+  },
 };
 
 // API Endpoints Documentation
@@ -28,7 +32,8 @@ const API_ENDPOINTS = {
   '/api/ai': {
     methods: ['POST'],
     summary: 'AI Content Generation and Optimization',
-    description: 'Handles AI-powered content generation, optimization, and analysis',
+    description:
+      'Handles AI-powered content generation, optimization, and analysis',
     authentication: 'Bearer Token Required',
     rateLimit: '50 requests per minute',
     parameters: {
@@ -36,29 +41,47 @@ const API_ENDPOINTS = {
         type: 'string',
         required: true,
         enum: ['optimize', 'generate-hashtags', 'generate-ideas', 'analyze'],
-        description: 'Type of AI operation to perform'
+        description: 'Type of AI operation to perform',
       },
       platform: {
         type: 'string',
         required: true,
-        enum: ['instagram', 'facebook', 'twitter', 'linkedin', 'tiktok', 'pinterest', 'youtube', 'reddit'],
-        description: 'Target social media platform'
+        enum: [
+          'instagram',
+          'facebook',
+          'twitter',
+          'linkedin',
+          'tiktok',
+          'pinterest',
+          'youtube',
+          'reddit',
+        ],
+        description: 'Target social media platform',
       },
       content: {
         type: 'string',
         required: true,
         maxLength: 10000,
-        description: 'Content to optimize or analyze'
+        description: 'Content to optimize or analyze',
       },
       options: {
         type: 'object',
         required: false,
         properties: {
-          save: { type: 'boolean', description: 'Save optimized content to database' },
-          tone: { type: 'string', enum: ['casual', 'professional', 'humorous', 'serious'] },
-          audience: { type: 'string', description: 'Target audience description' }
-        }
-      }
+          save: {
+            type: 'boolean',
+            description: 'Save optimized content to database',
+          },
+          tone: {
+            type: 'string',
+            enum: ['casual', 'professional', 'humorous', 'serious'],
+          },
+          audience: {
+            type: 'string',
+            description: 'Target audience description',
+          },
+        },
+      },
     },
     responses: {
       200: {
@@ -69,15 +92,15 @@ const API_ENDPOINTS = {
             optimizedContent: 'Your optimized content here...',
             hashtags: ['#marketing', '#ai', '#socialmedia'],
             suggestions: ['Add more emojis', 'Include call-to-action'],
-            score: 85
+            score: 85,
           },
-          creditsRemaining: 95
-        }
+          creditsRemaining: 95,
+        },
       },
       401: { description: 'Authentication required' },
       429: { description: 'Rate limit exceeded' },
-      500: { description: 'AI processing failed' }
-    }
+      500: { description: 'AI processing failed' },
+    },
   },
 
   '/api/email': {
@@ -91,29 +114,29 @@ const API_ENDPOINTS = {
         type: 'string',
         required: true,
         enum: ['welcome', 'password-reset', 'notification', 'custom'],
-        description: 'Type of email to send'
+        description: 'Type of email to send',
       },
       userEmail: {
         type: 'string',
         format: 'email',
         required: true,
-        description: 'Recipient email address'
+        description: 'Recipient email address',
       },
       userName: {
         type: 'string',
         required: true,
-        description: 'Recipient name'
+        description: 'Recipient name',
       },
       title: {
         type: 'string',
         required: false,
-        description: 'Email title (for notifications)'
+        description: 'Email title (for notifications)',
       },
       content: {
         type: 'string',
         required: false,
-        description: 'Email content (for notifications and custom emails)'
-      }
+        description: 'Email content (for notifications and custom emails)',
+      },
     },
     responses: {
       200: {
@@ -121,12 +144,12 @@ const API_ENDPOINTS = {
         example: {
           success: true,
           messageId: '<20231215123456.1.abc@synthex.social>',
-          message: 'Email sent successfully'
-        }
+          message: 'Email sent successfully',
+        },
       },
       400: { description: 'Invalid email type or missing parameters' },
-      500: { description: 'Email service failed' }
-    }
+      500: { description: 'Email service failed' },
+    },
   },
 
   '/api/metrics': {
@@ -141,15 +164,15 @@ const API_ENDPOINTS = {
         required: false,
         enum: ['all', 'system', 'users', 'content', 'performance'],
         default: 'all',
-        description: 'Type of metrics to retrieve'
+        description: 'Type of metrics to retrieve',
       },
       timeframe: {
         type: 'string',
         required: false,
         enum: ['1h', '6h', '24h', '7d', '30d'],
         default: '24h',
-        description: 'Time range for metrics'
-      }
+        description: 'Time range for metrics',
+      },
     },
     responses: {
       200: {
@@ -159,24 +182,24 @@ const API_ENDPOINTS = {
             uptime: 86400,
             requestCount: 1234,
             errorRate: 0.12,
-            activeUsers: 45
+            activeUsers: 45,
           },
           users: {
             total: 1234,
             active: 567,
             new: 89,
-            growth: 15.2
+            growth: 15.2,
           },
           performance: {
             avgResponseTime: 245,
             errorRates: { rate: 0.12, total: 15 },
-            throughput: { requestsPerSecond: 12.5 }
+            throughput: { requestsPerSecond: 12.5 },
           },
-          timestamp: 1671123456789
-        }
+          timestamp: 1671123456789,
+        },
       },
-      500: { description: 'Failed to fetch metrics' }
-    }
+      500: { description: 'Failed to fetch metrics' },
+    },
   },
 
   '/api/auth/login': {
@@ -190,20 +213,20 @@ const API_ENDPOINTS = {
         type: 'string',
         format: 'email',
         required: true,
-        description: 'User email address'
+        description: 'User email address',
       },
       password: {
         type: 'string',
         required: true,
         minLength: 6,
-        description: 'User password'
+        description: 'User password',
       },
       rememberMe: {
         type: 'boolean',
         required: false,
         default: false,
-        description: 'Extend session duration'
-      }
+        description: 'Extend session duration',
+      },
     },
     responses: {
       200: {
@@ -214,15 +237,15 @@ const API_ENDPOINTS = {
             id: 'user_123',
             email: 'user@example.com',
             name: 'John Doe',
-            plan: 'pro'
+            plan: 'pro',
           },
           token: 'eyJhbGciOiJIUzI1NiIs...',
-          expiresAt: '2023-12-16T12:34:56Z'
-        }
+          expiresAt: '2023-12-16T12:34:56Z',
+        },
       },
       401: { description: 'Invalid credentials' },
-      429: { description: 'Too many login attempts' }
-    }
+      429: { description: 'Too many login attempts' },
+    },
   },
 
   '/api/optimize/:platform': {
@@ -237,13 +260,13 @@ const API_ENDPOINTS = {
         required: true,
         in: 'path',
         enum: ['instagram', 'facebook', 'twitter', 'linkedin'],
-        description: 'Social media platform'
+        description: 'Social media platform',
       },
       content: {
         type: 'string',
         required: true,
         maxLength: 5000,
-        description: 'Content to optimize'
+        description: 'Content to optimize',
       },
       options: {
         type: 'object',
@@ -251,9 +274,9 @@ const API_ENDPOINTS = {
         properties: {
           includeHashtags: { type: 'boolean', default: true },
           tone: { type: 'string', enum: ['casual', 'professional'] },
-          maxLength: { type: 'number', description: 'Maximum content length' }
-        }
-      }
+          maxLength: { type: 'number', description: 'Maximum content length' },
+        },
+      },
     },
     responses: {
       200: {
@@ -265,17 +288,17 @@ const API_ENDPOINTS = {
           metrics: {
             engagementScore: 8.5,
             readabilityScore: 7.2,
-            sentimentScore: 0.8
+            sentimentScore: 0.8,
           },
           suggestions: [
             'Consider adding more visual elements',
-            'Include a call-to-action'
-          ]
-        }
+            'Include a call-to-action',
+          ],
+        },
       },
       400: { description: 'Invalid platform or content' },
-      401: { description: 'Authentication required' }
-    }
+      401: { description: 'Authentication required' },
+    },
   },
 
   '/api/health': {
@@ -295,33 +318,33 @@ const API_ENDPOINTS = {
             database: { status: 'healthy', responseTime: 45 },
             redis: { status: 'healthy', responseTime: 12 },
             ai: { status: 'healthy', responseTime: 234 },
-            email: { status: 'healthy', queue: 3 }
+            email: { status: 'healthy', queue: 3 },
           },
           uptime: 86400,
-          version: '1.0.0'
-        }
+          version: '1.0.0',
+        },
       },
-      503: { description: 'Service unhealthy' }
-    }
-  }
+      503: { description: 'Service unhealthy' },
+    },
+  },
 };
 
 // Error Codes Documentation
 const ERROR_CODES = {
-  'AUTH_001': 'Invalid authentication token',
-  'AUTH_002': 'Token expired',
-  'AUTH_003': 'Insufficient permissions',
-  'RATE_001': 'Rate limit exceeded',
-  'RATE_002': 'Daily quota exceeded',
-  'AI_001': 'AI service unavailable',
-  'AI_002': 'Content too long for processing',
-  'AI_003': 'Unsupported platform',
-  'EMAIL_001': 'Invalid email address',
-  'EMAIL_002': 'Email service unavailable',
-  'DB_001': 'Database connection error',
-  'DB_002': 'Query timeout',
-  'SYS_001': 'Internal server error',
-  'SYS_002': 'Service temporarily unavailable'
+  AUTH_001: 'Invalid authentication token',
+  AUTH_002: 'Token expired',
+  AUTH_003: 'Insufficient permissions',
+  RATE_001: 'Rate limit exceeded',
+  RATE_002: 'Daily quota exceeded',
+  AI_001: 'AI service unavailable',
+  AI_002: 'Content too long for processing',
+  AI_003: 'Unsupported platform',
+  EMAIL_001: 'Invalid email address',
+  EMAIL_002: 'Email service unavailable',
+  DB_001: 'Database connection error',
+  DB_002: 'Query timeout',
+  SYS_001: 'Internal server error',
+  SYS_002: 'Service temporarily unavailable',
 };
 
 // Rate Limiting Documentation
@@ -330,20 +353,20 @@ const RATE_LIMITS = {
     '/api/ai': '10 requests per hour',
     '/api/optimize/*': '20 requests per hour',
     '/api/email': '5 requests per day',
-    '/api/metrics': '100 requests per hour'
+    '/api/metrics': '100 requests per hour',
   },
   'Pro Plan': {
     '/api/ai': '100 requests per hour',
     '/api/optimize/*': '200 requests per hour',
     '/api/email': '50 requests per day',
-    '/api/metrics': '1000 requests per hour'
+    '/api/metrics': '1000 requests per hour',
   },
   'Enterprise Plan': {
     '/api/ai': '1000 requests per hour',
     '/api/optimize/*': '2000 requests per hour',
     '/api/email': '500 requests per day',
-    '/api/metrics': 'Unlimited'
-  }
+    '/api/metrics': 'Unlimited',
+  },
 };
 
 // Generate HTML documentation
@@ -376,7 +399,7 @@ export function generateHTMLDocs() {
         }
         
         .header {
-            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            background: linear-gradient(135deg, #f59e0b 0%, #0891b2 100%);
             color: white;
             padding: 40px;
             border-radius: 15px;
@@ -459,7 +482,7 @@ export function generateHTMLDocs() {
         }
         
         .method.post { background-color: #10b981; color: white; }
-        .method.get { background-color: #06b6d4; color: white; }
+        .method.get { background-color: #f59e0b; color: white; }
         .method.put { background-color: #f59e0b; color: white; }
         .method.delete { background-color: #ef4444; color: white; }
         
@@ -573,7 +596,9 @@ export function generateHTMLDocs() {
         
         <section id="endpoints" class="section">
             <h2>API Endpoints</h2>
-            ${Object.entries(API_ENDPOINTS).map(([path, config]) => `
+            ${Object.entries(API_ENDPOINTS)
+              .map(
+                ([path, config]) => `
                 <div class="endpoint">
                     <h3>
                         ${config.methods.map(method => `<span class="method ${method.toLowerCase()}">${method}</span>`).join('')}
@@ -584,10 +609,14 @@ export function generateHTMLDocs() {
                     <p><strong>Authentication:</strong> ${config.authentication}</p>
                     <p><strong>Rate Limit:</strong> ${config.rateLimit}</p>
                     
-                    ${Object.keys(config.parameters).length > 0 ? `
+                    ${
+                      Object.keys(config.parameters).length > 0
+                        ? `
                         <div class="params">
                             <h4>Parameters</h4>
-                            ${Object.entries(config.parameters).map(([name, param]) => `
+                            ${Object.entries(config.parameters)
+                              .map(
+                                ([name, param]) => `
                                 <div class="param">
                                     <span class="param-name">${name}</span>
                                     ${param.required ? '<span class="required">*required</span>' : ''}
@@ -595,22 +624,32 @@ export function generateHTMLDocs() {
                                     <p>${param.description}</p>
                                     ${param.enum ? `<p><strong>Values:</strong> ${param.enum.join(', ')}</p>` : ''}
                                 </div>
-                            `).join('')}
+                            `
+                              )
+                              .join('')}
                         </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
                     
                     <div class="responses">
                         <h4>Responses</h4>
-                        ${Object.entries(config.responses).map(([code, response]) => `
+                        ${Object.entries(config.responses)
+                          .map(
+                            ([code, response]) => `
                             <div class="response">
                                 <span class="response-code">${code}</span>
                                 <p>${response.description}</p>
                                 ${response.example ? `<pre>${JSON.stringify(response.example, null, 2)}</pre>` : ''}
                             </div>
-                        `).join('')}
+                        `
+                          )
+                          .join('')}
                     </div>
                 </div>
-            `).join('')}
+            `
+              )
+              .join('')}
         </section>
         
         <section id="rate-limits" class="section">
@@ -626,14 +665,18 @@ export function generateHTMLDocs() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${Object.keys(RATE_LIMITS['Free Plan']).map(endpoint => `
+                    ${Object.keys(RATE_LIMITS['Free Plan'])
+                      .map(
+                        endpoint => `
                         <tr>
                             <td><code>${endpoint}</code></td>
                             <td>${RATE_LIMITS['Free Plan'][endpoint]}</td>
                             <td>${RATE_LIMITS['Pro Plan'][endpoint]}</td>
                             <td>${RATE_LIMITS['Enterprise Plan'][endpoint]}</td>
                         </tr>
-                    `).join('')}
+                    `
+                      )
+                      .join('')}
                 </tbody>
             </table>
         </section>
@@ -641,12 +684,16 @@ export function generateHTMLDocs() {
         <section id="error-codes" class="section">
             <h2>Error Codes</h2>
             <p>Standard HTTP status codes are used, along with specific error codes:</p>
-            ${Object.entries(ERROR_CODES).map(([code, description]) => `
+            ${Object.entries(ERROR_CODES)
+              .map(
+                ([code, description]) => `
                 <div class="error-code">
                     <strong>${code}</strong>
                     <span>${description}</span>
                 </div>
-            `).join('')}
+            `
+              )
+              .join('')}
         </section>
         
         <section id="examples" class="section">
@@ -721,13 +768,16 @@ export function generateOpenAPISpec() {
       version: API_CONFIG.version,
       description: API_CONFIG.description,
       contact: API_CONFIG.contact,
-      license: API_CONFIG.license
+      license: API_CONFIG.license,
     },
     servers: [
       {
         url: API_CONFIG.baseUrl,
-        description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server'
-      }
+        description:
+          process.env.NODE_ENV === 'production'
+            ? 'Production server'
+            : 'Development server',
+      },
     ],
     paths: {},
     components: {
@@ -735,8 +785,8 @@ export function generateOpenAPISpec() {
         bearerAuth: {
           type: 'http',
           scheme: 'bearer',
-          bearerFormat: 'JWT'
-        }
+          bearerFormat: 'JWT',
+        },
       },
       schemas: {
         Error: {
@@ -744,30 +794,32 @@ export function generateOpenAPISpec() {
           properties: {
             error: { type: 'string' },
             message: { type: 'string' },
-            code: { type: 'string' }
-          }
+            code: { type: 'string' },
+          },
         },
         SuccessResponse: {
           type: 'object',
           properties: {
             success: { type: 'boolean' },
             data: { type: 'object' },
-            message: { type: 'string' }
-          }
-        }
-      }
-    }
+            message: { type: 'string' },
+          },
+        },
+      },
+    },
   };
 
   // Convert our endpoint documentation to OpenAPI format
   Object.entries(API_ENDPOINTS).forEach(([path, config]) => {
     spec.paths[path] = {};
-    
+
     config.methods.forEach(method => {
       spec.paths[path][method.toLowerCase()] = {
         summary: config.summary,
         description: config.description,
-        security: config.authentication.includes('Required') ? [{ bearerAuth: [] }] : [],
+        security: config.authentication.includes('Required')
+          ? [{ bearerAuth: [] }]
+          : [],
         parameters: Object.entries(config.parameters).map(([name, param]) => ({
           name,
           in: param.in || 'body',
@@ -776,23 +828,25 @@ export function generateOpenAPISpec() {
             type: param.type,
             enum: param.enum,
             maxLength: param.maxLength,
-            minLength: param.minLength
+            minLength: param.minLength,
           },
-          description: param.description
+          description: param.description,
         })),
         responses: Object.fromEntries(
           Object.entries(config.responses).map(([code, response]) => [
             code,
             {
               description: response.description,
-              content: response.example ? {
-                'application/json': {
-                  example: response.example
-                }
-              } : undefined
-            }
+              content: response.example
+                ? {
+                    'application/json': {
+                      example: response.example,
+                    },
+                  }
+                : undefined,
+            },
           ])
-        )
+        ),
       };
     });
   });
@@ -810,18 +864,18 @@ export default async function handler(req, res) {
         res.setHeader('Content-Type', 'text/html');
         res.send(generateHTMLDocs());
         break;
-        
+
       case 'json':
       case 'openapi':
         res.setHeader('Content-Type', 'application/json');
         res.json(generateOpenAPISpec());
         break;
-        
+
       case 'markdown':
         res.setHeader('Content-Type', 'text/plain');
         res.send(generateMarkdownDocs());
         break;
-        
+
       default:
         res.status(400).json({ error: 'Unsupported format' });
     }
@@ -851,7 +905,9 @@ Authorization: Bearer YOUR_API_TOKEN
 
 ## API Endpoints
 
-${Object.entries(API_ENDPOINTS).map(([path, config]) => `
+${Object.entries(API_ENDPOINTS)
+  .map(
+    ([path, config]) => `
 ### ${config.methods.join(', ')} ${path}
 
 **${config.summary}**
@@ -863,40 +919,45 @@ ${config.description}
 
 #### Parameters
 
-${Object.entries(config.parameters).map(([name, param]) => 
-  `- **${name}** (${param.type})${param.required ? ' *required*' : ''}: ${param.description}`
-).join('\n')}
+${Object.entries(config.parameters)
+  .map(
+    ([name, param]) =>
+      `- **${name}** (${param.type})${param.required ? ' *required*' : ''}: ${param.description}`
+  )
+  .join('\n')}
 
 #### Responses
 
-${Object.entries(config.responses).map(([code, response]) => 
-  `- **${code}**: ${response.description}`
-).join('\n')}
+${Object.entries(config.responses)
+  .map(([code, response]) => `- **${code}**: ${response.description}`)
+  .join('\n')}
 
-`).join('')}
+`
+  )
+  .join('')}
 
 ## Error Codes
 
-${Object.entries(ERROR_CODES).map(([code, description]) => 
-  `- **${code}**: ${description}`
-).join('\n')}
+${Object.entries(ERROR_CODES)
+  .map(([code, description]) => `- **${code}**: ${description}`)
+  .join('\n')}
 
 ## Rate Limits
 
 ### Free Plan
-${Object.entries(RATE_LIMITS['Free Plan']).map(([endpoint, limit]) => 
-  `- ${endpoint}: ${limit}`
-).join('\n')}
+${Object.entries(RATE_LIMITS['Free Plan'])
+  .map(([endpoint, limit]) => `- ${endpoint}: ${limit}`)
+  .join('\n')}
 
 ### Pro Plan
-${Object.entries(RATE_LIMITS['Pro Plan']).map(([endpoint, limit]) => 
-  `- ${endpoint}: ${limit}`
-).join('\n')}
+${Object.entries(RATE_LIMITS['Pro Plan'])
+  .map(([endpoint, limit]) => `- ${endpoint}: ${limit}`)
+  .join('\n')}
 
 ### Enterprise Plan
-${Object.entries(RATE_LIMITS['Enterprise Plan']).map(([endpoint, limit]) => 
-  `- ${endpoint}: ${limit}`
-).join('\n')}
+${Object.entries(RATE_LIMITS['Enterprise Plan'])
+  .map(([endpoint, limit]) => `- ${endpoint}: ${limit}`)
+  .join('\n')}
 
 ## Support
 

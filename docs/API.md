@@ -1,13 +1,16 @@
 # 📚 SYNTHEX API Documentation
 
 ## Base URL
+
 ```
 Production: https://synthex.vercel.app/api
 Development: http://localhost:3000/api
 ```
 
 ## Authentication
+
 All authenticated endpoints require a Bearer token in the Authorization header:
+
 ```
 Authorization: Bearer <your-token>
 ```
@@ -17,9 +20,11 @@ Authorization: Bearer <your-token>
 ### 🔐 Authentication
 
 #### POST /api/auth/signup
+
 Create a new user account.
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -29,6 +34,7 @@ Create a new user account.
 ```
 
 **Response:** `201 Created`
+
 ```json
 {
   "user": {
@@ -41,9 +47,11 @@ Create a new user account.
 ```
 
 #### POST /api/auth/login
+
 Authenticate user and receive token.
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -52,6 +60,7 @@ Authenticate user and receive token.
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "user": {
@@ -66,15 +75,18 @@ Authenticate user and receive token.
 ### 🤖 Content Generation
 
 #### POST /api/content/generate
+
 Generate AI-powered content for social media.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
 
 **Request Body:**
+
 ```json
 {
   "prompt": "Create a viral tweet about AI technology",
@@ -87,6 +99,7 @@ Content-Type: application/json
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "content": "🚀 AI is revolutionizing how we work, create, and innovate...",
@@ -104,15 +117,18 @@ Content-Type: application/json
 ### 📊 Pattern Analysis
 
 #### POST /api/patterns/analyze
+
 Analyze content patterns for optimization.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
 
 **Request Body:**
+
 ```json
 {
   "content": "Your content to analyze",
@@ -122,16 +138,14 @@ Content-Type: application/json
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "analysis": {
     "sentiment": "positive",
     "readability": 7.8,
     "keywords": ["technology", "innovation"],
-    "suggestions": [
-      "Add more emotional triggers",
-      "Include a call-to-action"
-    ],
+    "suggestions": ["Add more emotional triggers", "Include a call-to-action"],
     "predictedEngagement": 0.72,
     "bestPostingTime": "2024-01-15T14:00:00Z"
   }
@@ -141,20 +155,24 @@ Content-Type: application/json
 ### 📈 Analytics
 
 #### GET /api/analytics/performance
+
 Get performance metrics for your content.
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Query Parameters:**
+
 - `startDate` (ISO 8601): Start date for analytics
 - `endDate` (ISO 8601): End date for analytics
 - `platform` (string): Filter by platform
 - `metric` (string): Specific metric to retrieve
 
 **Response:** `200 OK`
+
 ```json
 {
   "metrics": {
@@ -181,9 +199,11 @@ Authorization: Bearer <token>
 ### 🔍 Monitoring
 
 #### GET /api/monitoring/events
+
 Get monitoring events (Development only).
 
 **Response:** `200 OK`
+
 ```json
 {
   "totalEvents": 100,
@@ -199,9 +219,11 @@ Get monitoring events (Development only).
 ```
 
 #### POST /api/monitoring/events
+
 Send monitoring events.
 
 **Request Body:**
+
 ```json
 {
   "sessionId": "session_123",
@@ -224,6 +246,7 @@ Send monitoring events.
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true
@@ -233,9 +256,11 @@ Send monitoring events.
 ### ❤️ Health Check
 
 #### GET /api/health
+
 Check API health status.
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "ok",
@@ -249,14 +274,17 @@ Check API health status.
 ### 🔄 Cron Jobs
 
 #### GET /api/cron/analyze-patterns
+
 Trigger pattern analysis cron job (Internal use).
 
 **Headers:**
+
 ```
 Authorization: Bearer <cron-secret>
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -270,6 +298,7 @@ Authorization: Bearer <cron-secret>
 All endpoints follow a consistent error response format:
 
 ### 400 Bad Request
+
 ```json
 {
   "error": "Bad Request",
@@ -282,6 +311,7 @@ All endpoints follow a consistent error response format:
 ```
 
 ### 401 Unauthorized
+
 ```json
 {
   "error": "Unauthorized",
@@ -290,6 +320,7 @@ All endpoints follow a consistent error response format:
 ```
 
 ### 403 Forbidden
+
 ```json
 {
   "error": "Forbidden",
@@ -298,6 +329,7 @@ All endpoints follow a consistent error response format:
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "error": "Not Found",
@@ -306,6 +338,7 @@ All endpoints follow a consistent error response format:
 ```
 
 ### 429 Too Many Requests
+
 ```json
 {
   "error": "Too Many Requests",
@@ -315,6 +348,7 @@ All endpoints follow a consistent error response format:
 ```
 
 ### 500 Internal Server Error
+
 ```json
 {
   "error": "Internal Server Error",
@@ -332,6 +366,7 @@ API endpoints are rate limited to prevent abuse:
 - **Premium:** 1000 requests per minute
 
 Rate limit information is included in response headers:
+
 ```
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95
@@ -343,6 +378,7 @@ X-RateLimit-Reset: 1642252800
 Configure webhooks to receive real-time updates:
 
 ### Webhook Events
+
 - `content.generated` - New content generated
 - `pattern.analyzed` - Pattern analysis complete
 - `post.scheduled` - Post scheduled for publishing
@@ -350,6 +386,7 @@ Configure webhooks to receive real-time updates:
 - `engagement.threshold` - Engagement threshold reached
 
 ### Webhook Payload
+
 ```json
 {
   "event": "content.generated",
@@ -363,6 +400,7 @@ Configure webhooks to receive real-time updates:
 ## SDKs and Libraries
 
 ### JavaScript/TypeScript
+
 ```bash
 npm install @synthex/sdk
 ```
@@ -372,17 +410,18 @@ import { SynthexClient } from '@synthex/sdk';
 
 const client = new SynthexClient({
   apiKey: 'your-api-key',
-  environment: 'production'
+  environment: 'production',
 });
 
 // Generate content
 const content = await client.content.generate({
   prompt: 'Create a viral tweet',
-  platform: 'twitter'
+  platform: 'twitter',
 });
 ```
 
 ### Python
+
 ```bash
 pip install synthex-sdk
 ```
@@ -415,9 +454,9 @@ content = client.content.generate(
 
 ## Support
 
-- **Documentation:** https://docs.synthex.ai
-- **Status Page:** https://status.synthex.ai
-- **Support Email:** api-support@synthex.ai
+- **Documentation:** https://docs.synthex.social
+- **Status Page:** https://status.synthex.social
+- **Support Email:** api-support@synthex.social
 - **GitHub Issues:** https://github.com/unite-group/synthex/issues
 
 ---

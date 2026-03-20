@@ -1,34 +1,35 @@
 /** @type {import('next').NextConfig} */
 
 // Bundle analyzer setup
-const withBundleAnalyzer = process.env.ANALYZE === 'true' 
-  ? require('@next/bundle-analyzer')({ enabled: true })
-  : (config) => config;
+const withBundleAnalyzer =
+  process.env.ANALYZE === 'true'
+    ? require('@next/bundle-analyzer')({ enabled: true })
+    : config => config;
 
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  
+
   // Performance optimizations
   compress: true,
   poweredByHeader: false,
   generateEtags: true,
-  
+
   // Optimize production builds
   productionBrowserSourceMaps: false,
-  
+
   // Experimental performance features
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
     optimizeCss: true,
     scrollRestoration: true,
   },
-  
+
   // Image optimization
   images: {
     domains: [
       'localhost',
-      'synthex.ai',
+      'synthex.social',
       'images.unsplash.com',
       'avatars.githubusercontent.com',
       'lh3.googleusercontent.com',
@@ -42,7 +43,7 @@ const nextConfig = {
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  
+
   // Security headers
   async headers() {
     return [
@@ -51,31 +52,31 @@ const nextConfig = {
         headers: [
           {
             key: 'X-DNS-Prefetch-Control',
-            value: 'on'
+            value: 'on',
           },
           {
             key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload'
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
           {
             key: 'X-Content-Type-Options',
-            value: 'nosniff'
+            value: 'nosniff',
           },
           {
             key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
+            value: 'SAMEORIGIN',
           },
           {
             key: 'X-XSS-Protection',
-            value: '1; mode=block'
+            value: '1; mode=block',
           },
           {
             key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin'
+            value: 'origin-when-cross-origin',
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()'
+            value: 'camera=(), microphone=(), geolocation=()',
           },
         ],
       },
@@ -84,8 +85,15 @@ const nextConfig = {
         headers: [
           { key: 'Access-Control-Allow-Credentials', value: 'true' },
           { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
-          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value:
+              'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version',
+          },
           { key: 'Cache-Control', value: 'no-store, max-age=0' },
         ],
       },
@@ -111,7 +119,7 @@ const nextConfig = {
       },
     ];
   },
-  
+
   async rewrites() {
     return [
       {
@@ -120,7 +128,7 @@ const nextConfig = {
       },
     ];
   },
-  
+
   // Webpack optimizations
   webpack: (config, { dev, isServer, webpack }) => {
     // Production optimizations
@@ -131,7 +139,7 @@ const nextConfig = {
       //   'react': 'preact/compat',
       //   'react-dom': 'preact/compat',
       // });
-      
+
       // Optimize moment.js
       config.plugins.push(
         new webpack.IgnorePlugin({
@@ -139,11 +147,11 @@ const nextConfig = {
           contextRegExp: /moment$/,
         })
       );
-      
+
       // Tree shaking for lodash
       config.resolve.alias['lodash'] = 'lodash-es';
     }
-    
+
     // Fix for server-side packages
     if (!isServer) {
       config.resolve.fallback = {
@@ -155,7 +163,7 @@ const nextConfig = {
         child_process: false,
       };
     }
-    
+
     // Module federation for micro-frontends (optional)
     // Uncomment if you need to split the app into multiple deployments
     // if (!isServer) {
@@ -171,22 +179,23 @@ const nextConfig = {
     //     })
     //   );
     // }
-    
+
     return config;
   },
-  
+
   env: {
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    NEXT_PUBLIC_APP_URL:
+      process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
-  
+
   // Output configuration
   output: 'standalone',
-  
+
   // Disable x-powered-by header
   poweredByHeader: false,
-  
+
   // Enable ISR (Incremental Static Regeneration)
   staticPageGenerationTimeout: 60,
 };

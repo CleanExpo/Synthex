@@ -27,7 +27,8 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
     }
 
     const requestModule = await import('supertest');
-    request = (requestModule.default || requestModule) as typeof import('supertest');
+    request = (requestModule.default ||
+      requestModule) as typeof import('supertest');
 
     const appModule = await import('../index-legacy');
     app = (appModule.default || appModule) as any;
@@ -55,7 +56,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
         .query({
           startDate: '2024-01-01',
           endDate: '2024-01-31',
-          metrics: ['views', 'engagement']
+          metrics: ['views', 'engagement'],
         })
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
@@ -71,7 +72,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
         .send({
           eventType: 'content_view',
           eventData: { contentId: 'test-123', platform: 'tiktok' },
-          metadata: { source: 'mobile' }
+          metadata: { source: 'mobile' },
         })
         .expect(201);
 
@@ -90,9 +91,9 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
           type: 'simple',
           variants: [
             { id: 'control', name: 'Control', allocation: 50 },
-            { id: 'variant', name: 'Variant', allocation: 50 }
+            { id: 'variant', name: 'Variant', allocation: 50 },
           ],
-          successMetrics: ['conversion_rate']
+          successMetrics: ['conversion_rate'],
         })
         .expect(201);
 
@@ -118,7 +119,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
           baselineConversion: 0.1,
           minimumDetectableEffect: 0.02,
           statisticalPower: 0.8,
-          significanceLevel: 0.05
+          significanceLevel: 0.05,
         })
         .expect(200);
 
@@ -137,7 +138,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
           type: 'caption',
           platform: 'tiktok',
           tone: 'friendly',
-          length: 'short'
+          length: 'short',
         })
         .expect(200);
 
@@ -153,7 +154,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
         .send({
           originalContent: 'Save the planet, one post at a time!',
           count: 3,
-          variationType: 'tone'
+          variationType: 'tone',
         })
         .expect(200);
 
@@ -171,7 +172,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
           platform: 'instagram',
           count: 10,
           includeNiche: true,
-          includeTrending: true
+          includeTrending: true,
         })
         .expect(200);
 
@@ -188,7 +189,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
         .send({
           name: 'Test Team',
           description: 'Test team for integration testing',
-          type: 'marketing'
+          type: 'marketing',
         })
         .expect(201);
 
@@ -213,7 +214,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
         .send({
           email: 'newmember@test.com',
           role: 'editor',
-          permissions: ['read', 'write']
+          permissions: ['read', 'write'],
         })
         .expect(201);
 
@@ -231,7 +232,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
           contentId: testContentId,
           publishAt: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
           platform: 'tiktok',
-          timezone: 'America/New_York'
+          timezone: 'America/New_York',
         })
         .expect(201);
 
@@ -244,7 +245,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
         .get('/api/v2/scheduler/optimal-times')
         .query({
           platform: 'instagram',
-          timezone: 'America/Los_Angeles'
+          timezone: 'America/Los_Angeles',
         })
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
@@ -264,7 +265,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
           content: { text: 'Sample content for testing' },
           type: 'post',
           tags: ['test', 'sample'],
-          metadata: { category: 'testing' }
+          metadata: { category: 'testing' },
         })
         .expect(201);
 
@@ -280,7 +281,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
           name: 'Test Collection',
           description: 'Collection for testing',
           type: 'manual',
-          visibility: 'private'
+          visibility: 'private',
         })
         .expect(201);
 
@@ -299,7 +300,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
           deviceModel: 'iPhone 14',
           osVersion: '16.0',
           appVersion: '2.0.0',
-          pushToken: 'test-push-token-123'
+          pushToken: 'test-push-token-123',
         })
         .expect(201);
 
@@ -316,7 +317,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
           title: 'Test Notification',
           body: 'This is a test notification',
           priority: 'normal',
-          category: 'test'
+          category: 'test',
         })
         .expect(200);
 
@@ -336,7 +337,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
           subdomain: 'test',
           tier: 'enterprise',
           config: { maxUsers: 100 },
-          adminEmail: 'admin@testcompany.com'
+          adminEmail: 'admin@testcompany.com',
         })
         .expect(201);
 
@@ -350,10 +351,10 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           logoUrl: 'https://example.com/logo.png',
-          primaryColor: '#06b6d4',
+          primaryColor: '#f59e0b',
           secondaryColor: '#0891b2',
           fontHeading: 'Inter',
-          fontBody: 'Inter'
+          fontBody: 'Inter',
         })
         .expect(200);
 
@@ -371,8 +372,8 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
           domain: 'competitor.com',
           platforms: [
             { platform: 'tiktok', handle: '@competitor' },
-            { platform: 'instagram', handle: '@competitor' }
-          ]
+            { platform: 'instagram', handle: '@competitor' },
+          ],
         })
         .expect(201);
 
@@ -385,7 +386,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
         .query({
           platform: 'tiktok',
           timeframe: 'week',
-          limit: 10
+          limit: 10,
         })
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
@@ -405,7 +406,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
           type: 'monthly',
           config: { includeAllPlatforms: true },
           metrics: ['views', 'engagement', 'conversions'],
-          formats: ['pdf', 'excel']
+          formats: ['pdf', 'excel'],
         })
         .expect(201);
 
@@ -419,7 +420,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
         .query({
           type: 'performance',
           actionable: true,
-          minImpact: 5
+          minImpact: 5,
         })
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
@@ -432,7 +433,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
   describe('Rate Limiting', () => {
     test('Should enforce rate limits on API endpoints', async () => {
       const requests = [];
-      
+
       // Make 101 requests (limit is 100 per 15 minutes)
       for (let i = 0; i < 101; i++) {
         requests.push(
@@ -444,7 +445,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
 
       const responses = await Promise.all(requests);
       const tooManyRequests = responses.filter(r => r.status === 429);
-      
+
       expect(tooManyRequests.length).toBeGreaterThan(0);
     });
   });
@@ -473,7 +474,7 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           // Missing required fields
-          type: 'post'
+          type: 'post',
         })
         .expect(400);
 

@@ -7,17 +7,18 @@
 
 ## A01:2021 - Broken Access Control ✅
 
-| Control | Status | Implementation |
-|---------|--------|----------------|
-| Deny by default | ✅ | `api-security-checker.ts` - All endpoints require explicit policy |
-| Role-based access | ✅ | RBAC system in `prisma/schema.prisma` (Role, UserRole models) |
-| JWT validation | ✅ | `lib/auth/jwt-utils.ts` with expiry checks |
-| Resource ownership | ✅ | User ID verification on all data endpoints |
-| Rate limiting | ✅ | `rate-limiter-redis.ts` - Distributed with Redis |
-| CORS policy | ✅ | `cors-config.ts` - Whitelist-based origin validation |
-| Audit logging | ✅ | `audit-logger.ts` - All access logged to database |
+| Control            | Status | Implementation                                                    |
+| ------------------ | ------ | ----------------------------------------------------------------- |
+| Deny by default    | ✅     | `api-security-checker.ts` - All endpoints require explicit policy |
+| Role-based access  | ✅     | RBAC system in `prisma/schema.prisma` (Role, UserRole models)     |
+| JWT validation     | ✅     | `lib/auth/jwt-utils.ts` with expiry checks                        |
+| Resource ownership | ✅     | User ID verification on all data endpoints                        |
+| Rate limiting      | ✅     | `rate-limiter-redis.ts` - Distributed with Redis                  |
+| CORS policy        | ✅     | `cors-config.ts` - Whitelist-based origin validation              |
+| Audit logging      | ✅     | `audit-logger.ts` - All access logged to database                 |
 
 **Files:**
+
 - `lib/security/api-security-checker.ts`
 - `lib/security/rate-limiter-redis.ts`
 - `lib/security/cors-config.ts`
@@ -27,16 +28,17 @@
 
 ## A02:2021 - Cryptographic Failures ✅
 
-| Control | Status | Implementation |
-|---------|--------|----------------|
-| HTTPS enforcement | ✅ | HSTS header in `middleware.ts` |
-| Sensitive data encryption | ✅ | API keys encrypted in database |
-| Secure password hashing | ✅ | bcrypt with salt rounds |
-| JWT signing | ✅ | HMAC-SHA256 with secret key |
-| Token storage | ✅ | httpOnly cookies for session |
-| Environment secrets | ✅ | `env-validator.ts` - Classification & validation |
+| Control                   | Status | Implementation                                   |
+| ------------------------- | ------ | ------------------------------------------------ |
+| HTTPS enforcement         | ✅     | HSTS header in `middleware.ts`                   |
+| Sensitive data encryption | ✅     | API keys encrypted in database                   |
+| Secure password hashing   | ✅     | bcrypt with salt rounds                          |
+| JWT signing               | ✅     | HMAC-SHA256 with secret key                      |
+| Token storage             | ✅     | httpOnly cookies for session                     |
+| Environment secrets       | ✅     | `env-validator.ts` - Classification & validation |
 
 **Files:**
+
 - `middleware.ts` - Security headers
 - `lib/security/env-validator.ts`
 - `lib/auth/signInFlow.ts`
@@ -45,20 +47,22 @@
 
 ## A03:2021 - Injection ✅
 
-| Control | Status | Implementation |
-|---------|--------|----------------|
-| SQL Injection | ✅ | Prisma ORM with parameterized queries |
-| NoSQL Injection | ✅ | Prisma ORM abstracts database access |
-| Command Injection | N/A | No shell execution |
-| XSS Prevention | ✅ | React auto-escaping + CSP headers |
-| LDAP Injection | N/A | No LDAP integration |
+| Control           | Status | Implementation                        |
+| ----------------- | ------ | ------------------------------------- |
+| SQL Injection     | ✅     | Prisma ORM with parameterized queries |
+| NoSQL Injection   | ✅     | Prisma ORM abstracts database access  |
+| Command Injection | N/A    | No shell execution                    |
+| XSS Prevention    | ✅     | React auto-escaping + CSP headers     |
+| LDAP Injection    | N/A    | No LDAP integration                   |
 
 **Notes:**
+
 - Prisma prevents SQL injection by design
 - All user input is validated with Zod schemas
 - CSP headers prevent inline script execution
 
 **Files:**
+
 - `prisma/schema.prisma`
 - `middleware.ts` - CSP headers
 
@@ -66,15 +70,16 @@
 
 ## A04:2021 - Insecure Design ✅
 
-| Control | Status | Implementation |
-|---------|--------|----------------|
-| Threat modeling | ✅ | Security-first architecture documented |
-| Security requirements | ✅ | Defined in `CLAUDE.md` |
-| Reference architecture | ✅ | Layered security approach |
-| Security testing | ⚠️ | Partial - needs E2E security tests |
-| Design patterns | ✅ | Defense in depth implemented |
+| Control                | Status | Implementation                         |
+| ---------------------- | ------ | -------------------------------------- |
+| Threat modeling        | ✅     | Security-first architecture documented |
+| Security requirements  | ✅     | Defined in `CLAUDE.md`                 |
+| Reference architecture | ✅     | Layered security approach              |
+| Security testing       | ⚠️     | Partial - needs E2E security tests     |
+| Design patterns        | ✅     | Defense in depth implemented           |
 
 **Notes:**
+
 - Multi-layer security (middleware → API → service → database)
 - Fail-secure defaults throughout
 
@@ -82,18 +87,19 @@
 
 ## A05:2021 - Security Misconfiguration ✅
 
-| Control | Status | Implementation |
-|---------|--------|----------------|
-| Security headers | ✅ | Full suite in `middleware.ts` |
-| Default credentials | ✅ | None - all secrets via env vars |
-| Error handling | ✅ | Generic errors to users, detailed logs |
-| Framework hardening | ✅ | Next.js production build |
-| Dependencies | ✅ | Regular `npm audit` |
-| Feature flags | ✅ | Environment-based feature control |
-| Dead security config | ✅ | `src/config/security.config.ts` archived 2026-03-12 — superseded by middleware.ts (Phase 73) |
-| NextAuth stubs | ✅ | Removed from `env-validator.ts` 2026-03-12 — Synthex uses Supabase Auth exclusively |
+| Control              | Status | Implementation                                                                               |
+| -------------------- | ------ | -------------------------------------------------------------------------------------------- |
+| Security headers     | ✅     | Full suite in `middleware.ts`                                                                |
+| Default credentials  | ✅     | None - all secrets via env vars                                                              |
+| Error handling       | ✅     | Generic errors to users, detailed logs                                                       |
+| Framework hardening  | ✅     | Next.js production build                                                                     |
+| Dependencies         | ✅     | Regular `npm audit`                                                                          |
+| Feature flags        | ✅     | Environment-based feature control                                                            |
+| Dead security config | ✅     | `src/config/security.config.ts` archived 2026-03-12 — superseded by middleware.ts (Phase 73) |
+| NextAuth stubs       | ✅     | Removed from `env-validator.ts` 2026-03-12 — Synthex uses Supabase Auth exclusively          |
 
 **Security Headers (verified 2026-03-12):**
+
 - Content-Security-Policy
   - script-src: 'self' 'unsafe-inline' (see A05 note below) + allowlist of CDN/Stripe/Tailwind origins
   - frame-ancestors: 'none' ✅
@@ -114,6 +120,7 @@ CSP is the recommended hardening path. Tracking as future improvement (not block
 `'unsafe-eval'` is NOT present — only `'unsafe-inline'`.
 
 **Files:**
+
 - `middleware.ts`
 - `.env.example` (no real secrets)
 
@@ -121,14 +128,14 @@ CSP is the recommended hardening path. Tracking as future improvement (not block
 
 ## A06:2021 - Vulnerable Components ⚠️
 
-| Control | Status | Implementation |
-|---------|--------|----------------|
-| Dependency audit | ✅ | `npm audit` in CI/CD |
-| Version pinning | ✅ | `pnpm-lock.yaml` |
-| License compliance | ✅ | All dependencies MIT/Apache |
-| Unused dependencies | ⚠️ | Regular cleanup needed |
-| Update policy | ✅ | Monthly security updates |
-| Known vulnerabilities | ⚠️ | 3 vulnerabilities found (see audit output below) |
+| Control               | Status | Implementation                                   |
+| --------------------- | ------ | ------------------------------------------------ |
+| Dependency audit      | ✅     | `npm audit` in CI/CD                             |
+| Version pinning       | ✅     | `pnpm-lock.yaml`                                 |
+| License compliance    | ✅     | All dependencies MIT/Apache                      |
+| Unused dependencies   | ⚠️     | Regular cleanup needed                           |
+| Update policy         | ✅     | Monthly security updates                         |
+| Known vulnerabilities | ⚠️     | 3 vulnerabilities found (see audit output below) |
 
 **npm audit --production output (2026-03-12):**
 
@@ -150,6 +157,7 @@ Total: 3 vulnerabilities (1 moderate, 2 high)
 ```
 
 **Assessment:**
+
 - `dompurify` moderate: Low risk — DOMPurify is used for sanitising user HTML in templates.
   Fix available without breaking changes. Addressed in next dependency update cycle.
 - `rollup` high (via @sentry/nextjs): rollup is a build-time dependency used during Sentry
@@ -157,6 +165,7 @@ Total: 3 vulnerabilities (1 moderate, 2 high)
   (v8→v10) — deferred to a dedicated dependency upgrade phase (not part of v7.0 scope).
 
 **Commands:**
+
 ```bash
 npm audit --production        # Check vulnerabilities
 npm outdated                  # Check updates
@@ -166,21 +175,23 @@ npm outdated                  # Check updates
 
 ## A07:2021 - Identification and Authentication Failures ✅
 
-| Control | Status | Implementation |
-|---------|--------|----------------|
-| Multi-factor auth | ⚠️ | Deferred — Supabase Auth handles MFA when enabled on Supabase project dashboard |
-| Password policy | ✅ | Minimum 8 chars, complexity rules |
-| Brute force protection | ✅ | Rate limiting on auth endpoints |
-| Session management | ✅ | JWT with refresh tokens |
-| Account lockout | ✅ | 5 failed attempts → 15 min lockout |
-| Password reset | ✅ | Time-limited tokens |
+| Control                | Status | Implementation                                                                  |
+| ---------------------- | ------ | ------------------------------------------------------------------------------- |
+| Multi-factor auth      | ⚠️     | Deferred — Supabase Auth handles MFA when enabled on Supabase project dashboard |
+| Password policy        | ✅     | Minimum 8 chars, complexity rules                                               |
+| Brute force protection | ✅     | Rate limiting on auth endpoints                                                 |
+| Session management     | ✅     | JWT with refresh tokens                                                         |
+| Account lockout        | ✅     | 5 failed attempts → 15 min lockout                                              |
+| Password reset         | ✅     | Time-limited tokens                                                             |
 
 **Rate Limits:**
+
 - `/api/auth/login`: 5 requests / 5 minutes
 - `/api/auth/register`: 3 requests / hour
 - `/api/auth/forgot-password`: 3 requests / hour
 
 **Files:**
+
 - `lib/security/rate-limiter-redis.ts`
 - `lib/auth/signInFlow.ts`
 - `app/api/auth/*/route.ts`
@@ -189,20 +200,22 @@ npm outdated                  # Check updates
 
 ## A08:2021 - Software and Data Integrity Failures ✅
 
-| Control | Status | Implementation |
-|---------|--------|----------------|
-| CI/CD security | ✅ | GitHub Actions with secrets |
-| Code signing | ⚠️ | Vercel deployment verification |
-| Webhook validation | ✅ | Signature verification for all webhooks |
-| Dependency integrity | ✅ | pnpm lockfile integrity |
-| Update verification | ✅ | Checksum validation in pnpm |
+| Control              | Status | Implementation                          |
+| -------------------- | ------ | --------------------------------------- |
+| CI/CD security       | ✅     | GitHub Actions with secrets             |
+| Code signing         | ⚠️     | Vercel deployment verification          |
+| Webhook validation   | ✅     | Signature verification for all webhooks |
+| Dependency integrity | ✅     | pnpm lockfile integrity                 |
+| Update verification  | ✅     | Checksum validation in pnpm             |
 
 **Webhook Signature Verification:**
+
 - Stripe: SHA256 HMAC
 - SendGrid: SHA256 HMAC
 - Platform webhooks: Platform-specific
 
 **Files:**
+
 - `lib/webhooks/signature-verifier.ts`
 - `app/api/webhooks/*/route.ts`
 
@@ -210,16 +223,17 @@ npm outdated                  # Check updates
 
 ## A09:2021 - Security Logging and Monitoring ✅
 
-| Control | Status | Implementation |
-|---------|--------|----------------|
-| Audit logging | ✅ | All security events logged |
-| Centralized logging | ✅ | Database + Sentry integration |
-| Alert system | ✅ | Sentry alerts on errors |
-| Log integrity | ✅ | Database-backed, immutable |
-| Retention policy | ✅ | 90-day retention |
-| Log analysis | ⚠️ | Basic stats, needs dashboard |
+| Control             | Status | Implementation                |
+| ------------------- | ------ | ----------------------------- |
+| Audit logging       | ✅     | All security events logged    |
+| Centralized logging | ✅     | Database + Sentry integration |
+| Alert system        | ✅     | Sentry alerts on errors       |
+| Log integrity       | ✅     | Database-backed, immutable    |
+| Retention policy    | ✅     | 90-day retention              |
+| Log analysis        | ⚠️     | Basic stats, needs dashboard  |
 
 **Logged Events:**
+
 - Authentication (login, logout, failed attempts)
 - Authorization (access denied)
 - Rate limiting (blocked requests)
@@ -228,6 +242,7 @@ npm outdated                  # Check updates
 
 **Error detail exposure audit (2026-03-12):**
 Grep for raw `error.message` in API route catch blocks returning client responses.
+
 - Most routes use `error instanceof Error ? error.message : String(error)` in logger calls only — safe.
 - One route exposes raw error.message to clients:
   - `app/api/auth/resend-verification/route.ts:60` — returns `error.message` directly in 500 JSON.
@@ -237,6 +252,7 @@ Grep for raw `error.message` in API route catch blocks returning client response
   admin-only or internal-use. Acceptable for diagnostic purposes.
 
 **Files:**
+
 - `lib/security/audit-logger.ts`
 - `sentry.*.config.ts`
 
@@ -244,14 +260,15 @@ Grep for raw `error.message` in API route catch blocks returning client response
 
 ## A10:2021 - Server-Side Request Forgery (SSRF) ✅
 
-| Control | Status | Implementation |
-|---------|--------|----------------|
-| URL validation | ✅ | Whitelist for external requests |
-| Internal network | ✅ | Vercel serverless (isolated) |
-| DNS rebinding | ✅ | URL validation before fetch |
-| Redirect following | ✅ | Limited redirect following |
+| Control            | Status | Implementation                  |
+| ------------------ | ------ | ------------------------------- |
+| URL validation     | ✅     | Whitelist for external requests |
+| Internal network   | ✅     | Vercel serverless (isolated)    |
+| DNS rebinding      | ✅     | URL validation before fetch     |
+| Redirect following | ✅     | Limited redirect following      |
 
 **Protected Endpoints:**
+
 - OAuth callback validation
 - Webhook URL validation
 - External API calls use whitelist
@@ -261,6 +278,7 @@ Grep for raw `error.message` in API route catch blocks returning client response
 ## Additional Security Measures
 
 ### Pre-commit Hooks
+
 ```bash
 # .husky/pre-commit
 pnpm run lint
@@ -269,42 +287,44 @@ pnpm run type-check
 ```
 
 ### Environment Variable Security
+
 - Classification: PUBLIC / INTERNAL / SECRET / CRITICAL
 - Validation at startup
 - No secrets in code
 - `.env.example` for documentation
 
 ### API Security Policies
+
 ```typescript
 // Default policies available:
-- PUBLIC_READ      // No auth, rate limited
-- AUTHENTICATED_READ  // Auth required
-- AUTHENTICATED_WRITE // Auth + CSRF
-- ADMIN_ONLY       // Admin role required
-- WEBHOOK          // Signature validation
-- INTERNAL_ONLY    // Localhost only
+-PUBLIC_READ - // No auth, rate limited
+  AUTHENTICATED_READ - // Auth required
+  AUTHENTICATED_WRITE - // Auth + CSRF
+  ADMIN_ONLY - // Admin role required
+  WEBHOOK - // Signature validation
+  INTERNAL_ONLY; // Localhost only
 ```
 
 ---
 
 ## Compliance Checklist
 
-| Standard | Status | Notes |
-|----------|--------|-------|
-| GDPR | ✅ | Data deletion, export support |
-| SOC 2 | ⚠️ | Audit logging complete |
-| PCI DSS | N/A | Stripe handles payments |
-| HIPAA | N/A | No health data |
+| Standard | Status | Notes                         |
+| -------- | ------ | ----------------------------- |
+| GDPR     | ✅     | Data deletion, export support |
+| SOC 2    | ⚠️     | Audit logging complete        |
+| PCI DSS  | N/A    | Stripe handles payments       |
+| HIPAA    | N/A    | No health data                |
 
 ---
 
 ## Security Contacts
 
-- **Security Issues:** security@synthex.ai
+- **Security Issues:** security@synthex.social
 - **Bug Bounty:** Coming soon
 - **Disclosure Policy:** Responsible disclosure preferred
 
 ---
 
-*Last security audit: 12 March 2026 (Phase 113 — v7.0 pre-launch sweep)*
-*Next scheduled review: 12 April 2026*
+_Last security audit: 12 March 2026 (Phase 113 — v7.0 pre-launch sweep)_
+_Next scheduled review: 12 April 2026_

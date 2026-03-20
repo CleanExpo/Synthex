@@ -160,7 +160,7 @@
   height: 4px;
   background: #f59e0b;
   border-radius: 50%;
-  box-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
 }
 
 /* =================================
@@ -203,7 +203,7 @@
 }
 
 .calendar-event.event-reminder {
-  background: rgba(6, 182, 212, 0.2);
+  background: rgba(245, 158, 11, 0.2);
   border-left-color: #f59e0b;
 }
 

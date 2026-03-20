@@ -176,13 +176,13 @@ export const SocialPlatforms: Story = {
     <div className="flex flex-wrap gap-2">
       <Badge className="bg-blue-500 hover:bg-blue-600">Facebook</Badge>
       <Badge className="bg-sky-500 hover:bg-sky-600">Twitter</Badge>
-      <Badge className="bg-gradient-to-r from-amber-500 to-pink-500">
+      <Badge className="bg-gradient-to-r from-amber-500 to-amber-500">
         Instagram
       </Badge>
       <Badge className="bg-blue-700 hover:bg-blue-800">LinkedIn</Badge>
       <Badge className="bg-red-500 hover:bg-red-600">YouTube</Badge>
       <Badge className="bg-green-500 hover:bg-green-600">WhatsApp</Badge>
-      <Badge className="bg-pink-500 hover:bg-pink-600">TikTok</Badge>
+      <Badge className="bg-amber-500 hover:bg-amber-600">TikTok</Badge>
     </div>
   ),
   parameters: {

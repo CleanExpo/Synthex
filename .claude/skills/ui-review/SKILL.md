@@ -8,7 +8,7 @@ description: >-
   correctly end-to-end from the browser's perspective.
 metadata:
   author: synthex
-  version: "1.0"
+  version: '1.0'
   engine: synthex-ai-agency
   type: testing-skill
   triggers:
@@ -38,6 +38,7 @@ would experience it.
 ## When to Use
 
 Activate this skill when:
+
 - Validating a new feature works end-to-end in the browser
 - Running UI regression checks before a release
 - Verifying auth flows (login, signup, password reset) behave correctly
@@ -106,17 +107,20 @@ priority: high
 ---
 
 ## Preconditions
+
 - Application running on localhost:3000
-- Test user exists (test@synthex.app / <password from .env.test>)
+- Test user exists (test@synthex.social / <password from .env.test>)
 
 ## Steps
+
 1. Navigate to /login
-2. Enter email "test@synthex.app"
+2. Enter email "test@synthex.social"
 3. Enter password from environment
 4. Click "Sign In" button
 5. Wait for page load
 
 ## Expected
+
 - Redirect to /dashboard within 3 seconds
 - Dashboard heading is visible
 - No console errors
@@ -126,35 +130,35 @@ Priority values: `high`, `medium`, `low`
 
 ## Input Specification
 
-| Parameter  | Type   | Required | Description                                              |
-|------------|--------|----------|----------------------------------------------------------|
-| command    | string | yes      | `init`, `run`, or `report`                               |
-| story      | string | no       | Story file name to run a single story (omit for all)     |
-| parallel   | number | no       | Number of concurrent stories (default: 1)                |
-| screenshots| bool   | no       | Capture screenshots on success as well as failure        |
-| url        | string | no       | Override base URL (default: from story frontmatter)      |
+| Parameter   | Type   | Required | Description                                          |
+| ----------- | ------ | -------- | ---------------------------------------------------- |
+| command     | string | yes      | `init`, `run`, or `report`                           |
+| story       | string | no       | Story file name to run a single story (omit for all) |
+| parallel    | number | no       | Number of concurrent stories (default: 1)            |
+| screenshots | bool   | no       | Capture screenshots on success as well as failure    |
+| url         | string | no       | Override base URL (default: from story frontmatter)  |
 
 ## Output Specification
 
-| Field       | Type        | Description                                          |
-|-------------|-------------|------------------------------------------------------|
-| story       | string      | Story name from frontmatter                          |
-| status      | pass/fail   | Overall story result                                 |
-| failed_step | string/null | First step that failed, or null on pass              |
-| screenshots | string[]    | Paths to captured screenshots                        |
-| duration_ms | number      | Execution time in milliseconds                       |
-| report_path | string      | Path to full JSON report                             |
+| Field       | Type        | Description                             |
+| ----------- | ----------- | --------------------------------------- |
+| story       | string      | Story name from frontmatter             |
+| status      | pass/fail   | Overall story result                    |
+| failed_step | string/null | First step that failed, or null on pass |
+| screenshots | string[]    | Paths to captured screenshots           |
+| duration_ms | number      | Execution time in milliseconds          |
+| report_path | string      | Path to full JSON report                |
 
 ## Error Handling
 
-| Error                        | Action                                                      |
-|------------------------------|-------------------------------------------------------------|
-| App not running              | Abort with `ERROR: app not reachable at <url>` — start dev server first |
-| Story file malformed         | Skip story, log parse error, continue with remaining        |
-| Step timeout (>10s)          | Mark step as failed, capture screenshot, move to next story |
-| Selector not found           | Mark step as failed with selector detail                    |
-| Console error detected       | Flag as warning unless story explicitly expects errors      |
-| Playwright not installed     | Emit `npx playwright install chromium` fix command          |
+| Error                    | Action                                                                  |
+| ------------------------ | ----------------------------------------------------------------------- |
+| App not running          | Abort with `ERROR: app not reachable at <url>` — start dev server first |
+| Story file malformed     | Skip story, log parse error, continue with remaining                    |
+| Step timeout (>10s)      | Mark step as failed, capture screenshot, move to next story             |
+| Selector not found       | Mark step as failed with selector detail                                |
+| Console error detected   | Flag as warning unless story explicitly expects errors                  |
+| Playwright not installed | Emit `npx playwright install chromium` fix command                      |
 
 ## Synthex-Specific Story Guidance
 
@@ -166,7 +170,7 @@ Priority values: `high`, `medium`, `low`
 - **Org scoping**: Stories that test organisation-specific pages must include
   org setup in preconditions.
 - **No production runs**: Never point stories at the production URL
-  (`synthex.app`) — use staging or local only.
+  (`synthex.social`) — use staging or local only.
 
 ## Key Directories
 

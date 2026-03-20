@@ -38,6 +38,7 @@ Authorization: Bearer <your-jwt-token>
 ```
 
 ### Obtain Token
+
 ```http
 POST /api/v1/auth/login
 Content-Type: application/json
@@ -49,6 +50,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -72,11 +74,13 @@ Content-Type: application/json
 Health check endpoints for monitoring and load balancer integration.
 
 ### Comprehensive Health Check
+
 ```http
 GET /api/health
 ```
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -103,6 +107,7 @@ GET /api/health
 ```
 
 ### Liveness Probe
+
 ```http
 GET /api/health/live
 ```
@@ -110,6 +115,7 @@ GET /api/health/live
 Lightweight check for load balancer liveness probes. Returns 200 if process is alive.
 
 **Response:**
+
 ```json
 {
   "status": "alive",
@@ -119,6 +125,7 @@ Lightweight check for load balancer liveness probes. Returns 200 if process is a
 ```
 
 ### Readiness Probe
+
 ```http
 GET /api/health/ready
 ```
@@ -126,6 +133,7 @@ GET /api/health/ready
 Checks if service can accept traffic (database, cache connections).
 
 **Response:**
+
 ```json
 {
   "status": "ready",
@@ -145,16 +153,19 @@ Checks if service can accept traffic (database, cache connections).
 ```
 
 ### Database Health
+
 ```http
 GET /api/health/db
 ```
 
 ### Redis/Cache Health
+
 ```http
 GET /api/health/redis
 ```
 
 ### Authentication Health
+
 ```http
 GET /api/health/auth
 ```
@@ -164,16 +175,19 @@ GET /api/health/auth
 ## 📊 Analytics & Reporting
 
 ### Get Analytics Overview
+
 ```http
 GET /api/v1/analytics/overview
 ```
 
 **Query Parameters:**
+
 - `startDate` (optional): Start date (ISO format)
 - `endDate` (optional): End date (ISO format)
 - `platform` (optional): Filter by platform
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -193,11 +207,13 @@ GET /api/v1/analytics/overview
 ```
 
 ### Get Content Performance
+
 ```http
 GET /api/v1/analytics/content-performance
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -224,6 +240,7 @@ GET /api/v1/analytics/content-performance
 ## ✍️ Content Generation
 
 ### Generate Content
+
 ```http
 POST /api/v1/content/generate
 Content-Type: application/json
@@ -237,6 +254,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -257,11 +275,13 @@ Content-Type: application/json
 ```
 
 ### Get Content Drafts
+
 ```http
 GET /api/v1/content/drafts
 ```
 
 **Query Parameters:**
+
 - `page` (optional): Page number (default: 1)
 - `limit` (optional): Items per page (default: 20)
 - `platform` (optional): Filter by platform
@@ -271,6 +291,7 @@ GET /api/v1/content/drafts
 ## 📅 Campaign Management
 
 ### Create Campaign
+
 ```http
 POST /api/v1/campaigns
 Content-Type: application/json
@@ -287,11 +308,13 @@ Content-Type: application/json
 ```
 
 ### Get Campaigns
+
 ```http
 GET /api/v1/campaigns
 ```
 
 **Query Parameters:**
+
 - `status` (optional): `draft`, `active`, `paused`, `completed`
 - `platform` (optional): Filter by platform
 - `page`, `limit`: Pagination
@@ -301,6 +324,7 @@ GET /api/v1/campaigns
 ## 📝 Post Scheduling
 
 ### Schedule Post
+
 ```http
 POST /api/v1/posts
 Content-Type: application/json
@@ -315,11 +339,13 @@ Content-Type: application/json
 ```
 
 ### Get Scheduled Posts
+
 ```http
 GET /api/v1/posts
 ```
 
 **Query Parameters:**
+
 - `status`: `scheduled`, `published`, `failed`
 - `platform`: Filter by platform
 - `startDate`, `endDate`: Date range filter
@@ -331,6 +357,7 @@ GET /api/v1/posts
 Manage inspirational quotes for content generation.
 
 ### List Quotes
+
 ```http
 GET /api/quotes
 Authorization: Bearer <token>
@@ -346,6 +373,7 @@ Authorization: Bearer <token>
 | limit | number | Items per page (default: 20, max: 100) |
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -372,12 +400,14 @@ Authorization: Bearer <token>
 ```
 
 ### Get Quote
+
 ```http
 GET /api/quotes/[id]
 Authorization: Bearer <token>
 ```
 
 ### Create Quote
+
 ```http
 POST /api/quotes
 Authorization: Bearer <token>
@@ -394,6 +424,7 @@ Content-Type: application/json
 ```
 
 **Response (201):**
+
 ```json
 {
   "success": true,
@@ -411,6 +442,7 @@ Content-Type: application/json
 ```
 
 ### Update Quote
+
 ```http
 PUT /api/quotes/[id]
 Authorization: Bearer <token>
@@ -423,12 +455,14 @@ Content-Type: application/json
 ```
 
 ### Delete Quote
+
 ```http
 DELETE /api/quotes/[id]
 Authorization: Bearer <token>
 ```
 
 ### Track Engagement
+
 ```http
 PATCH /api/quotes/[id]
 Authorization: Bearer <token>
@@ -442,6 +476,7 @@ Content-Type: application/json
 **Actions:** `like`, `use`, `share`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -455,6 +490,7 @@ Content-Type: application/json
 ```
 
 ### Bulk Delete Quotes
+
 ```http
 DELETE /api/quotes
 Authorization: Bearer <token>
@@ -470,11 +506,13 @@ Content-Type: application/json
 ## 👥 Team Management
 
 ### Get Team Members
+
 ```http
 GET /api/v1/team
 ```
 
 ### Add Team Member
+
 ```http
 POST /api/v1/team
 Content-Type: application/json
@@ -487,6 +525,7 @@ Content-Type: application/json
 ```
 
 **Roles:**
+
 - `admin`: Full access
 - `editor`: Content management
 - `viewer`: Read-only access
@@ -496,16 +535,19 @@ Content-Type: application/json
 ## 🔔 Notifications
 
 ### Get Notifications
+
 ```http
 GET /api/v1/notifications
 ```
 
 **Query Parameters:**
+
 - `status`: `unread`, `read`, `all`
 - `type`: `system`, `campaign`, `publishing`
 - `page`, `limit`: Pagination
 
 ### Mark as Read
+
 ```http
 PUT /api/v1/notifications/:id/read
 ```
@@ -517,16 +559,19 @@ PUT /api/v1/notifications/:id/read
 ### Two-Factor Authentication
 
 #### Get 2FA Status
+
 ```http
 GET /api/v1/2fa/status
 ```
 
 #### Setup 2FA
+
 ```http
 POST /api/v1/2fa/setup
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -539,6 +584,7 @@ POST /api/v1/2fa/setup
 ```
 
 #### Verify 2FA Token
+
 ```http
 POST /api/v1/2fa/verify
 Content-Type: application/json
@@ -551,17 +597,20 @@ Content-Type: application/json
 ### User Management
 
 #### List Users
+
 ```http
 GET /api/v1/users
 ```
 
 **Query Parameters:**
+
 - `role`: Filter by role
 - `status`: `active`, `inactive`
 - `search`: Search by name/email
 - `page`, `limit`: Pagination
 
 #### Create User
+
 ```http
 POST /api/v1/users
 Content-Type: application/json
@@ -576,6 +625,7 @@ Content-Type: application/json
 ```
 
 #### Update User
+
 ```http
 PUT /api/v1/users/:id
 Content-Type: application/json
@@ -590,11 +640,13 @@ Content-Type: application/json
 ### Audit Logging
 
 #### Get Audit Logs
+
 ```http
 GET /api/v1/audit/logs
 ```
 
 **Query Parameters:**
+
 - `userId`: Filter by user
 - `action`: Filter by action type
 - `resource`: Filter by resource
@@ -602,6 +654,7 @@ GET /api/v1/audit/logs
 - `severity`: `low`, `medium`, `high`, `critical`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -633,11 +686,13 @@ GET /api/v1/audit/logs
 ## ⚡ Performance Monitoring
 
 ### System Health
+
 ```http
 GET /api/v1/performance/health
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -657,14 +712,17 @@ GET /api/v1/performance/health
 ```
 
 ### Performance Statistics
+
 ```http
 GET /api/v1/performance/stats
 ```
 
 **Query Parameters:**
+
 - `timeRange`: Time range in milliseconds (default: 3600000 = 1 hour)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -689,6 +747,7 @@ GET /api/v1/performance/stats
 ```
 
 ### Cache Management
+
 ```http
 POST /api/v1/performance/cache/clear
 Content-Type: application/json
@@ -704,6 +763,7 @@ Content-Type: application/json
 ## 📁 Content Library
 
 ### Upload File
+
 ```http
 POST /api/v1/library/upload
 Content-Type: multipart/form-data
@@ -714,11 +774,13 @@ tags: "marketing,social"
 ```
 
 ### Get Library Items
+
 ```http
 GET /api/v1/library
 ```
 
 **Query Parameters:**
+
 - `type`: `image`, `video`, `document`, `template`
 - `tags`: Filter by tags (comma-separated)
 - `search`: Search by name/description
@@ -728,6 +790,7 @@ GET /api/v1/library
 ## 🔄 Workflows
 
 ### Create Workflow
+
 ```http
 POST /api/v1/workflows
 Content-Type: application/json
@@ -762,11 +825,13 @@ Content-Type: application/json
 ```
 
 ### Get Workflows
+
 ```http
 GET /api/v1/workflows
 ```
 
 ### Execute Workflow
+
 ```http
 POST /api/v1/workflows/:id/execute
 ```
@@ -776,6 +841,7 @@ POST /api/v1/workflows/:id/execute
 ## 🚀 Platform Integrations
 
 ### Connect Platform
+
 ```http
 POST /api/v1/platforms/connect
 Content-Type: application/json
@@ -792,6 +858,7 @@ Content-Type: application/json
 ```
 
 ### Publish to Platform
+
 ```http
 POST /api/v1/platforms/publish
 Content-Type: application/json
@@ -807,6 +874,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -869,6 +937,7 @@ API endpoints are rate limited to ensure fair usage:
 - **Platform publishing:** 10 requests/minute
 
 Rate limit headers are included in responses:
+
 ```
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95
@@ -882,6 +951,7 @@ X-RateLimit-Reset: 1642678800
 SYNTHEX supports webhooks for real-time notifications:
 
 ### Configure Webhook
+
 ```http
 POST /api/v1/webhooks
 Content-Type: application/json
@@ -903,6 +973,7 @@ Content-Type: application/json
 - `audit.alert` - When a security alert occurs
 
 ### Webhook Payload Example
+
 ```json
 {
   "event": "post.published",
@@ -931,20 +1002,20 @@ import { SynthexAPI } from '@synthex/sdk';
 
 const synthex = new SynthexAPI({
   apiKey: 'your-api-key',
-  baseUrl: 'https://synthex-a3f0o7y9q-unite-group.vercel.app'
+  baseUrl: 'https://synthex-a3f0o7y9q-unite-group.vercel.app',
 });
 
 // Generate content
 const content = await synthex.content.generate({
   prompt: 'Write a marketing post',
-  platform: 'linkedin'
+  platform: 'linkedin',
 });
 
 // Schedule post
 const post = await synthex.posts.create({
   content: content.data.content,
   platforms: ['linkedin'],
-  scheduledTime: new Date(Date.now() + 3600000)
+  scheduledTime: new Date(Date.now() + 3600000),
 });
 ```
 
@@ -976,10 +1047,10 @@ analytics = client.analytics.overview(
 
 ## 📚 Additional Resources
 
-- **Status Page:** https://status.synthex.ai
-- **Developer Portal:** https://developers.synthex.ai
-- **Community:** https://community.synthex.ai
-- **Support:** support@synthex.ai
+- **Status Page:** https://status.synthex.social
+- **Developer Portal:** https://developers.synthex.social
+- **Community:** https://community.synthex.social
+- **Support:** support@synthex.social
 
 ---
 
@@ -992,4 +1063,4 @@ analytics = client.analytics.overview(
 
 ---
 
-*Last updated: February 2026 | Version 2.0.1*
+_Last updated: February 2026 | Version 2.0.1_
