@@ -59,8 +59,8 @@ const BottomMenu = ({
         'fixed bottom-0 left-0 right-0 z-50',
         'flex items-center justify-around',
         'h-16 px-2',
-        'bg-[#050505]/90 backdrop-blur-md',
-        'border-t border-[0.5px] border-white/[0.06]',
+        'bg-charcoal-800/90 backdrop-blur-md',
+        'border-t border-white/[0.06]',
         className
       )}
     >
@@ -77,8 +77,8 @@ const BottomMenu = ({
               'relative flex flex-col items-center justify-center gap-1',
               'h-12 w-14 rounded-sm',
               'transition-all duration-200',
-              'focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50',
-              isActive ? 'text-orange-400' : 'text-white/40 hover:text-white/70'
+              'focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50',
+              isActive ? 'text-amber-400' : 'text-white/40 hover:text-white/70'
             )}
           >
             {/* Active background glow */}
@@ -86,7 +86,7 @@ const BottomMenu = ({
               <span
                 className={cn(
                   'absolute inset-0 rounded-sm',
-                  'bg-orange-500/[0.08] border-[0.5px] border-orange-500/20'
+                  'bg-amber-500/[0.08] border-[0.5px] border-amber-500/20'
                 )}
               />
             )}
@@ -101,7 +101,7 @@ const BottomMenu = ({
                     'flex items-center justify-center',
                     'min-w-[14px] h-[14px] px-0.5',
                     'rounded-full text-[9px] font-bold leading-none',
-                    'bg-orange-500 text-[#050505]'
+                    'bg-amber-500 text-charcoal-900'
                   )}
                 >
                   {item.badge > 99 ? '99+' : item.badge}
@@ -122,7 +122,7 @@ const BottomMenu = ({
 
             {/* Active dot indicator */}
             {isActive && (
-              <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-orange-400" />
+              <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-amber-400" />
             )}
           </button>
         );
