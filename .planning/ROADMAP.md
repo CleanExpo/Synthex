@@ -158,7 +158,7 @@ None (internal platform work)
 ### 🚧 v11.0 Tech Foundation Upgrades (SYN-407)
 
 - [x] **Phase 124: openai SDK 4.x → 6.x** — Package bump ^4.104.0→^6.0.0; 0 breaking changes (src/services/openrouter.ts uses local types) — DONE 2026-03-20
-- [ ] **Phase 125: React 18 → 19 + Next.js 15 → 16** — Major upgrade; requires dedicated planning session (large blast radius)
+- [ ] **Phase 125: React 18 → 19 + Next.js 15 → 16** — 2 plans: core bumps + ecosystem (react-day-picker@9, cmdk@1, testing-library@16); calendar.tsx API migration required
 
 ## Phase Details
 
