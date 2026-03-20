@@ -171,7 +171,7 @@
     "next-themes": "^0.2.1",
     "nodemailer": "^7.0.12",
     "number-flow": "^0.6.0",
-    "openai": "^4.104.0",
+    "openai": "^6.0.0",
     "pg": "^8.18.0",
     "postcss": "^8.4.33",
     "react": "^18.2.0",
