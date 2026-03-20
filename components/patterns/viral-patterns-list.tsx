@@ -98,7 +98,7 @@ export function ViralPatternsList({
                   <span className="text-xs text-gray-500">Sentiment:</span>
                   <div className="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-amber-500 to-pink-500"
+                      className="h-full bg-gradient-to-r from-amber-500 to-amber-500"
                       style={{ width: `${pattern.sentiment * 100}%` }}
                     />
                   </div>

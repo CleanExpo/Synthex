@@ -26,7 +26,7 @@ export function CountdownCTA({
   headline,
   cta,
   url,
-  brandColour = '#06B6D4',
+  brandColour = '#f59e0b',
 }: CountdownCTAProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();

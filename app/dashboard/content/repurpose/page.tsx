@@ -61,8 +61,8 @@ const PLATFORMS: Platform[] = [
     id: 'instagram',
     label: 'Instagram',
     charLimit: 2200,
-    color: 'border-pink-500/30 bg-pink-500/5',
-    dotColor: 'bg-pink-400',
+    color: 'border-amber-500/30 bg-amber-500/5',
+    dotColor: 'bg-amber-400',
   },
   {
     id: 'tiktok',

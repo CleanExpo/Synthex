@@ -18,7 +18,7 @@ export const platformIcons = {
 
 export const platformColors = {
   twitter: 'bg-blue-500',
-  instagram: 'bg-gradient-to-br from-amber-600 to-pink-500',
+  instagram: 'bg-gradient-to-br from-amber-600 to-amber-500',
   linkedin: 'bg-blue-700',
   youtube: 'bg-red-600',
   facebook: 'bg-blue-600',

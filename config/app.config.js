@@ -93,7 +93,7 @@ module.exports = {
     password: process.env.MAIL_PASSWORD || '',
     encryption: process.env.MAIL_ENCRYPTION || 'tls',
     from: {
-      address: process.env.MAIL_FROM_ADDRESS || 'noreply@synthex.app',
+      address: process.env.MAIL_FROM_ADDRESS || 'noreply@synthex.social',
       name: process.env.MAIL_FROM_NAME || 'SYNTHEX',
     },
     providers: {

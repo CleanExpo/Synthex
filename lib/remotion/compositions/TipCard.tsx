@@ -20,7 +20,7 @@ export function TipCard({
   tipNumber,
   tip,
   explanation,
-  brandColour = '#06B6D4',
+  brandColour = '#f59e0b',
 }: TipCardProps) {
   const frame = useCurrentFrame();
 

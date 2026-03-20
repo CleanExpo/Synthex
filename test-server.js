@@ -226,7 +226,7 @@ const server = http.createServer((req, res) => {
       fs.createReadStream(supportPath).pipe(res);
     } else {
       res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end('<h1>Support</h1><p>Contact support@synthex.ai</p>');
+      res.end('<h1>Support</h1><p>Contact support@synthex.social</p>');
     }
   } else if (req.url === '/blog') {
     const blogPath = path.join(__dirname, 'public', 'blog.html');

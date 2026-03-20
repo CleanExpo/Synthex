@@ -50,7 +50,7 @@ const AGENT_META: Record<AgentType, AgentMeta> = {
   },
   experiment: {
     Icon: Beaker,
-    colour: 'text-pink-400 bg-pink-500/10',
+    colour: 'text-amber-400 bg-amber-500/10',
     label: 'Experiment',
   },
 };

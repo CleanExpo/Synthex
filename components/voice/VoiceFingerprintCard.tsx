@@ -210,7 +210,7 @@ export function VoiceFingerprintCard({
             fp.emDashRate > 1.0 ? 'High editorial style' : 'Low editorial style'
           }
           barPct={Math.min(100, fp.emDashRate * 20)}
-          barColour="bg-pink-500"
+          barColour="bg-amber-500"
         />
 
         {/* Adverb Density */}

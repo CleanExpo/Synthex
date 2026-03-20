@@ -50,7 +50,7 @@ const PLATFORMS = [
     icon: InstagramIcon,
     description:
       'Schedule feed posts, Stories, and Reels with AI-optimised captions.',
-    color: 'text-pink-400',
+    color: 'text-amber-400',
   },
   {
     name: 'TikTok',

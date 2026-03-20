@@ -84,7 +84,7 @@ export const engagementData: EngagementDataPoint[] = [
 
 export const hookTypes: HookType[] = [
   { name: 'Question', value: 30, color: '#ffb87b' },
-  { name: 'Story', value: 25, color: '#ec4899' },
+  { name: 'Story', value: 25, color: '#fbbf24' },
   { name: 'Controversy', value: 20, color: '#f59e0b' },
   { name: 'Data', value: 15, color: '#10b981' },
   { name: 'Humor', value: 10, color: '#3b82f6' },

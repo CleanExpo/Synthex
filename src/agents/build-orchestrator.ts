@@ -10,7 +10,12 @@ import { MasterOrchestrator } from './master-orchestrator';
 
 interface BuildTask {
   id: string;
-  type: 'ux-research' | 'content-creation' | 'visual-design' | 'platform-optimization' | 'performance-analysis';
+  type:
+    | 'ux-research'
+    | 'content-creation'
+    | 'visual-design'
+    | 'platform-optimization'
+    | 'performance-analysis';
   phase: 'research' | 'design' | 'implementation' | 'testing' | 'deployment';
   priority: 'low' | 'medium' | 'high' | 'critical';
   dependencies: string[];
@@ -37,7 +42,12 @@ interface BuildPhase {
 interface SubAgent {
   id: string;
   name: string;
-  type: 'ux-researcher' | 'content-creator' | 'visual-designer' | 'platform-specialist' | 'performance-optimizer';
+  type:
+    | 'ux-researcher'
+    | 'content-creator'
+    | 'visual-designer'
+    | 'platform-specialist'
+    | 'performance-optimizer';
   capabilities: string[];
   status: 'idle' | 'busy' | 'error' | 'offline';
   currentTask?: BuildTask;
@@ -80,11 +90,11 @@ export class BuildOrchestrator extends EventEmitter {
           'usability-testing',
           'market-analysis',
           'competitive-analysis',
-          'requirements-gathering'
+          'requirements-gathering',
         ],
         status: 'idle',
         completedTasks: 0,
-        successRate: 100
+        successRate: 100,
       },
       {
         id: 'content-creator-1',
@@ -97,11 +107,11 @@ export class BuildOrchestrator extends EventEmitter {
           'content-strategy',
           'viral-formula-creation',
           'engagement-optimization',
-          'multi-format-content'
+          'multi-format-content',
         ],
         status: 'idle',
         completedTasks: 0,
-        successRate: 100
+        successRate: 100,
       },
       {
         id: 'visual-designer-1',
@@ -114,11 +124,11 @@ export class BuildOrchestrator extends EventEmitter {
           'prototype-creation',
           'visual-workspace-setup',
           'component-design',
-          'responsive-design'
+          'responsive-design',
         ],
         status: 'idle',
         completedTasks: 0,
-        successRate: 100
+        successRate: 100,
       },
       {
         id: 'platform-specialist-1',
@@ -131,11 +141,11 @@ export class BuildOrchestrator extends EventEmitter {
           'platform-specific-features',
           'posting-strategy',
           'engagement-tactics',
-          'growth-hacking'
+          'growth-hacking',
         ],
         status: 'idle',
         completedTasks: 0,
-        successRate: 100
+        successRate: 100,
       },
       {
         id: 'performance-optimizer-1',
@@ -148,19 +158,21 @@ export class BuildOrchestrator extends EventEmitter {
           'conversion-optimization',
           'roi-analysis',
           'dashboard-creation',
-          'reporting-automation'
+          'reporting-automation',
         ],
         status: 'idle',
         completedTasks: 0,
-        successRate: 100
-      }
+        successRate: 100,
+      },
     ];
 
     subAgentConfigs.forEach(config => {
       this.subAgents.set(config.id, config);
     });
 
-    console.log(`🏗️ Build Orchestrator initialized with ${this.subAgents.size} specialized sub-agents`);
+    console.log(
+      `🏗️ Build Orchestrator initialized with ${this.subAgents.size} specialized sub-agents`
+    );
   }
 
   /**
@@ -174,7 +186,7 @@ export class BuildOrchestrator extends EventEmitter {
         tasks: [],
         dependencies: [],
         status: 'pending',
-        progress: 0
+        progress: 0,
       },
       {
         name: 'Content Strategy',
@@ -182,7 +194,7 @@ export class BuildOrchestrator extends EventEmitter {
         tasks: [],
         dependencies: ['Research & Discovery'],
         status: 'pending',
-        progress: 0
+        progress: 0,
       },
       {
         name: 'Visual Design',
@@ -190,7 +202,7 @@ export class BuildOrchestrator extends EventEmitter {
         tasks: [],
         dependencies: ['Content Strategy'],
         status: 'pending',
-        progress: 0
+        progress: 0,
       },
       {
         name: 'Platform Integration',
@@ -198,7 +210,7 @@ export class BuildOrchestrator extends EventEmitter {
         tasks: [],
         dependencies: ['Visual Design'],
         status: 'pending',
-        progress: 0
+        progress: 0,
       },
       {
         name: 'Performance Optimization',
@@ -206,8 +218,8 @@ export class BuildOrchestrator extends EventEmitter {
         tasks: [],
         dependencies: ['Platform Integration'],
         status: 'pending',
-        progress: 0
-      }
+        progress: 0,
+      },
     ];
 
     phases.forEach(phase => {
@@ -241,7 +253,7 @@ export class BuildOrchestrator extends EventEmitter {
     this.emit('build:completed', {
       totalTasks: this.completedTasks.length,
       successRate: this.calculateSuccessRate(),
-      duration: this.calculateBuildDuration()
+      duration: this.calculateBuildDuration(),
     });
   }
 
@@ -282,22 +294,22 @@ export class BuildOrchestrator extends EventEmitter {
           this.createTask('ux-research', 'research', {
             action: 'analyze-target-audience',
             description: 'Analyze target demographics and psychographics',
-            estimatedDuration: 30
+            estimatedDuration: 30,
           }),
           this.createTask('ux-research', 'research', {
             action: 'create-user-personas',
             description: 'Develop detailed user personas',
-            estimatedDuration: 45
+            estimatedDuration: 45,
           }),
           this.createTask('ux-research', 'research', {
             action: 'map-customer-journey',
             description: 'Create customer journey maps',
-            estimatedDuration: 60
+            estimatedDuration: 60,
           }),
           this.createTask('ux-research', 'research', {
             action: 'competitive-analysis',
             description: 'Analyze competitor strategies',
-            estimatedDuration: 40
+            estimatedDuration: 40,
           })
         );
         break;
@@ -307,17 +319,17 @@ export class BuildOrchestrator extends EventEmitter {
           this.createTask('content-creation', 'design', {
             action: 'generate-hooks',
             description: 'Create viral content hooks',
-            estimatedDuration: 35
+            estimatedDuration: 35,
           }),
           this.createTask('content-creation', 'design', {
             action: 'develop-storyboards',
             description: 'Design content storyboards',
-            estimatedDuration: 50
+            estimatedDuration: 50,
           }),
           this.createTask('content-creation', 'design', {
             action: 'create-content-calendar',
             description: 'Build content calendar',
-            estimatedDuration: 30
+            estimatedDuration: 30,
           })
         );
         break;
@@ -327,17 +339,17 @@ export class BuildOrchestrator extends EventEmitter {
           this.createTask('visual-design', 'implementation', {
             action: 'create-design-system',
             description: 'Develop comprehensive design system',
-            estimatedDuration: 90
+            estimatedDuration: 90,
           }),
           this.createTask('visual-design', 'implementation', {
             action: 'design-ui-components',
             description: 'Create UI component library',
-            estimatedDuration: 120
+            estimatedDuration: 120,
           }),
           this.createTask('visual-design', 'implementation', {
             action: 'setup-workspace',
             description: 'Configure visual workspace',
-            estimatedDuration: 45
+            estimatedDuration: 45,
           })
         );
         break;
@@ -347,13 +359,22 @@ export class BuildOrchestrator extends EventEmitter {
           this.createTask('platform-optimization', 'implementation', {
             action: 'optimize-for-platforms',
             description: 'Optimize content for all 8 platforms',
-            platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok', 'youtube', 'pinterest', 'reddit'],
-            estimatedDuration: 180
+            platforms: [
+              'facebook',
+              'instagram',
+              'twitter',
+              'linkedin',
+              'tiktok',
+              'youtube',
+              'pinterest',
+              'reddit',
+            ],
+            estimatedDuration: 180,
           }),
           this.createTask('platform-optimization', 'implementation', {
             action: 'implement-posting-strategy',
             description: 'Setup automated posting strategies',
-            estimatedDuration: 60
+            estimatedDuration: 60,
           })
         );
         break;
@@ -363,17 +384,17 @@ export class BuildOrchestrator extends EventEmitter {
           this.createTask('performance-analysis', 'testing', {
             action: 'setup-analytics',
             description: 'Implement analytics tracking',
-            estimatedDuration: 45
+            estimatedDuration: 45,
           }),
           this.createTask('performance-analysis', 'testing', {
             action: 'create-dashboards',
             description: 'Build performance dashboards',
-            estimatedDuration: 75
+            estimatedDuration: 75,
           }),
           this.createTask('performance-analysis', 'testing', {
             action: 'optimize-performance',
             description: 'Optimize application performance',
-            estimatedDuration: 90
+            estimatedDuration: 90,
           })
         );
         break;
@@ -391,7 +412,7 @@ export class BuildOrchestrator extends EventEmitter {
     data: any
   ): BuildTask {
     const taskId = `task_${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     return {
       id: taskId,
       type,
@@ -402,7 +423,7 @@ export class BuildOrchestrator extends EventEmitter {
       status: 'pending',
       data,
       createdAt: new Date(),
-      estimatedDuration: data.estimatedDuration || 60
+      estimatedDuration: data.estimatedDuration || 60,
     };
   }
 
@@ -414,23 +435,23 @@ export class BuildOrchestrator extends EventEmitter {
     let completedCount = 0;
 
     // Process tasks in parallel where possible
-    const taskPromises = phase.tasks.map(async (task) => {
+    const taskPromises = phase.tasks.map(async task => {
       // Wait for dependencies
       await this.waitForDependencies(task);
-      
+
       // Assign to agent and process
       const result = await this.executeTask(task);
-      
+
       completedCount++;
       phase.progress = Math.round((completedCount / totalTasks) * 100);
-      
+
       this.emit('phase:progress', {
         phase: phase.name,
         progress: phase.progress,
         completed: completedCount,
-        total: totalTasks
+        total: totalTasks,
       });
-      
+
       return result;
     });
 
@@ -459,36 +480,37 @@ export class BuildOrchestrator extends EventEmitter {
     try {
       // Delegate to specific agent implementation
       const result = await this.executeAgentTask(agent, task);
-      
+
       // Mark task as completed
       task.status = 'completed';
       task.result = result;
       task.completedAt = new Date();
       this.completedTasks.push(task);
-      
+
       // Update agent stats
       agent.completedTasks++;
       agent.status = 'idle';
       agent.currentTask = undefined;
-      
+
       console.log(`✅ Task completed: ${task.data.description}`);
       this.emit('task:completed', { task, agent, result });
-      
+
       return result;
     } catch (error: any) {
       // Handle task failure
       task.status = 'failed';
       task.error = error.message;
       task.completedAt = new Date();
-      
+
       // Update agent stats
-      agent.successRate = (agent.completedTasks / (agent.completedTasks + 1)) * 100;
+      agent.successRate =
+        (agent.completedTasks / (agent.completedTasks + 1)) * 100;
       agent.status = 'idle';
       agent.currentTask = undefined;
-      
+
       console.error(`❌ Task failed: ${task.data.description}`, error);
       this.emit('task:failed', { task, agent, error });
-      
+
       throw error;
     } finally {
       this.activeTasks.delete(task.id);
@@ -498,7 +520,10 @@ export class BuildOrchestrator extends EventEmitter {
   /**
    * Execute task based on agent type
    */
-  private async executeAgentTask(agent: SubAgent, task: BuildTask): Promise<any> {
+  private async executeAgentTask(
+    agent: SubAgent,
+    task: BuildTask
+  ): Promise<any> {
     // Simulate task execution with actual agent logic
     switch (agent.type) {
       case 'ux-researcher':
@@ -521,57 +546,110 @@ export class BuildOrchestrator extends EventEmitter {
    */
   private async executeUXResearchTask(task: BuildTask): Promise<any> {
     const action = task.data.action;
-    
+
     switch (action) {
       case 'analyze-target-audience':
         return {
           demographics: {
             primary: { age: '25-44', gender: 'all', location: 'US/UK/CA' },
-            secondary: { age: '18-24', gender: 'all', location: 'Global' }
+            secondary: { age: '18-24', gender: 'all', location: 'Global' },
           },
           psychographics: {
-            interests: ['marketing', 'business', 'entrepreneurship', 'social media'],
+            interests: [
+              'marketing',
+              'business',
+              'entrepreneurship',
+              'social media',
+            ],
             values: ['efficiency', 'innovation', 'growth', 'automation'],
-            painPoints: ['time management', 'content creation', 'engagement', 'ROI tracking']
-          }
+            painPoints: [
+              'time management',
+              'content creation',
+              'engagement',
+              'ROI tracking',
+            ],
+          },
         };
-        
+
       case 'create-user-personas':
         return [
           {
             name: 'Marketing Manager Maria',
             role: 'Marketing Manager',
-            goals: ['Increase brand awareness', 'Improve engagement', 'Save time'],
-            challenges: ['Limited resources', 'Multiple platforms', 'Content consistency']
+            goals: [
+              'Increase brand awareness',
+              'Improve engagement',
+              'Save time',
+            ],
+            challenges: [
+              'Limited resources',
+              'Multiple platforms',
+              'Content consistency',
+            ],
           },
           {
             name: 'Startup Steve',
             role: 'Founder/CEO',
             goals: ['Grow business', 'Build audience', 'Automate marketing'],
-            challenges: ['Limited budget', 'No marketing team', 'Learning curve']
+            challenges: [
+              'Limited budget',
+              'No marketing team',
+              'Learning curve',
+            ],
           },
           {
             name: 'Agency Anna',
             role: 'Agency Owner',
-            goals: ['Manage multiple clients', 'Scale operations', 'Deliver results'],
-            challenges: ['Client management', 'Team coordination', 'Reporting']
-          }
+            goals: [
+              'Manage multiple clients',
+              'Scale operations',
+              'Deliver results',
+            ],
+            challenges: ['Client management', 'Team coordination', 'Reporting'],
+          },
         ];
-        
+
       case 'map-customer-journey':
         return {
-          stages: ['Awareness', 'Consideration', 'Decision', 'Onboarding', 'Activation', 'Retention'],
-          touchpoints: ['Social media', 'Website', 'Email', 'Dashboard', 'Support'],
-          opportunities: ['Personalization', 'Automation', 'Education', 'Community']
+          stages: [
+            'Awareness',
+            'Consideration',
+            'Decision',
+            'Onboarding',
+            'Activation',
+            'Retention',
+          ],
+          touchpoints: [
+            'Social media',
+            'Website',
+            'Email',
+            'Dashboard',
+            'Support',
+          ],
+          opportunities: [
+            'Personalization',
+            'Automation',
+            'Education',
+            'Community',
+          ],
         };
-        
+
       case 'competitive-analysis':
         return {
           competitors: ['Hootsuite', 'Buffer', 'Sprout Social', 'Later'],
-          strengths: ['AI-powered', 'All-in-one', 'Affordable', 'User-friendly'],
-          differentiators: ['AI content generation', 'Predictive analytics', 'Automated optimization']
+          strengths: [
+            'AI-powered',
+            'All-in-one',
+            'Affordable',
+            'User-friendly',
+          ],
+          differentiators: [
+            'AI content generation',
+            'Predictive analytics',
+            'Automated optimization',
+          ],
         };
-        
+
       default:
         return { completed: true };
     }
@@ -582,56 +660,80 @@ export class BuildOrchestrator extends EventEmitter {
    */
   private async executeContentCreationTask(task: BuildTask): Promise<any> {
     const action = task.data.action;
-    
+
     switch (action) {
       case 'generate-hooks':
         return {
           hooks: [
             '🚀 Transform your marketing with AI in 30 seconds',
-            '⚡ The secret tool top marketers don\'t want you to know',
+            "⚡ The secret tool top marketers don't want you to know",
             '📈 10x your engagement with this one simple trick',
-            '🎯 Stop wasting time on content that doesn\'t convert',
-            '💡 AI just changed the marketing game forever'
+            "🎯 Stop wasting time on content that doesn't convert",
+            '💡 AI just changed the marketing game forever',
           ],
           formulas: [
             'Problem + Solution + Benefit',
             'Question + Curiosity + Promise',
             'Statistics + Shock + Solution',
-            'Story + Transformation + CTA'
-          ]
+            'Story + Transformation + CTA',
+          ],
         };
-        
+
       case 'develop-storyboards':
         return {
           templates: [
             {
               name: 'Success Story',
-              structure: ['Hook', 'Problem', 'Discovery', 'Implementation', 'Results', 'CTA']
+              structure: [
+                'Hook',
+                'Problem',
+                'Discovery',
+                'Implementation',
+                'Results',
+                'CTA',
+              ],
             },
             {
               name: 'Educational',
-              structure: ['Question', 'Explanation', 'Examples', 'Application', 'Summary', 'Next Steps']
+              structure: [
+                'Question',
+                'Explanation',
+                'Examples',
+                'Application',
+                'Summary',
+                'Next Steps',
+              ],
             },
             {
               name: 'Transformation',
-              structure: ['Before', 'Challenge', 'Solution', 'Process', 'After', 'How-to']
-            }
-          ]
+              structure: [
+                'Before',
+                'Challenge',
+                'Solution',
+                'Process',
+                'After',
+                'How-to',
+              ],
+            },
+          ],
         };
-        
+
       case 'create-content-calendar':
         return {
           schedule: {
             monday: { theme: 'Motivation', formats: ['quote', 'video'] },
             tuesday: { theme: 'Tips', formats: ['carousel', 'thread'] },
-            wednesday: { theme: 'Case Study', formats: ['article', 'infographic'] },
+            wednesday: {
+              theme: 'Case Study',
+              formats: ['article', 'infographic'],
+            },
             thursday: { theme: 'Tutorial', formats: ['video', 'guide'] },
             friday: { theme: 'Community', formats: ['poll', 'discussion'] },
             saturday: { theme: 'Inspiration', formats: ['story', 'reel'] },
-            sunday: { theme: 'Planning', formats: ['template', 'checklist'] }
-          }
+            sunday: { theme: 'Planning', formats: ['template', 'checklist'] },
+          },
         };
-        
+
       default:
         return { completed: true };
     }
@@ -642,49 +744,82 @@ export class BuildOrchestrator extends EventEmitter {
    */
   private async executeVisualDesignTask(task: BuildTask): Promise<any> {
     const action = task.data.action;
-    
+
     switch (action) {
       case 'create-design-system':
         return {
           colors: {
             primary: '#6366F1',
-            secondary: '#8B5CF6',
-            accent: '#EC4899',
+            secondary: '#f59e0b',
+            accent: '#fbbf24',
             success: '#10B981',
             warning: '#F59E0B',
-            error: '#EF4444'
+            error: '#EF4444',
           },
           typography: {
             headings: 'Inter',
             body: 'Inter',
-            sizes: ['3rem', '2.25rem', '1.875rem', '1.5rem', '1.25rem', '1rem', '0.875rem']
+            sizes: [
+              '3rem',
+              '2.25rem',
+              '1.875rem',
+              '1.5rem',
+              '1.25rem',
+              '1rem',
+              '0.875rem',
+            ],
           },
           spacing: [0, 4, 8, 12, 16, 24, 32, 48, 64, 96, 128],
-          components: ['Button', 'Card', 'Modal', 'Form', 'Table', 'Chart', 'Navigation']
+          components: [
+            'Button',
+            'Card',
+            'Modal',
+            'Form',
+            'Table',
+            'Chart',
+            'Navigation',
+          ],
         };
-        
+
       case 'design-ui-components':
         return {
           components: [
-            { name: 'CampaignCard', variants: ['default', 'compact', 'detailed'] },
-            { name: 'MetricsDashboard', variants: ['overview', 'detailed', 'comparison'] },
-            { name: 'ContentEditor', variants: ['simple', 'advanced', 'ai-assisted'] },
-            { name: 'PlatformSelector', variants: ['grid', 'list', 'carousel'] },
-            { name: 'ScheduleCalendar', variants: ['month', 'week', 'day'] }
+            {
+              name: 'CampaignCard',
+              variants: ['default', 'compact', 'detailed'],
+            },
+            {
+              name: 'MetricsDashboard',
+              variants: ['overview', 'detailed', 'comparison'],
+            },
+            {
+              name: 'ContentEditor',
+              variants: ['simple', 'advanced', 'ai-assisted'],
+            },
+            {
+              name: 'PlatformSelector',
+              variants: ['grid', 'list', 'carousel'],
+            },
+            { name: 'ScheduleCalendar', variants: ['month', 'week', 'day'] },
           ],
-          patterns: ['Loading states', 'Empty states', 'Error states', 'Success states']
+          patterns: [
+            'Loading states',
+            'Empty states',
+            'Error states',
+            'Success states',
+          ],
         };
-        
+
       case 'setup-workspace':
         return {
           workspace: {
             layout: 'flexible-grid',
             panels: ['sidebar', 'main', 'details', 'toolbar'],
             features: ['drag-drop', 'resize', 'collapse', 'fullscreen'],
-            themes: ['light', 'dark', 'auto']
-          }
+            themes: ['light', 'dark', 'auto'],
+          },
         };
-        
+
       default:
         return { completed: true };
     }
@@ -695,43 +830,46 @@ export class BuildOrchestrator extends EventEmitter {
    */
   private async executePlatformOptimizationTask(task: BuildTask): Promise<any> {
     const action = task.data.action;
-    
+
     switch (action) {
       case 'optimize-for-platforms':
         const platforms = task.data.platforms || [];
         const optimizations: any = {};
-        
+
         for (const platform of platforms) {
           optimizations[platform] = {
             contentFormats: this.getPlatformFormats(platform),
             bestPractices: this.getPlatformBestPractices(platform),
             algorithm: this.getPlatformAlgorithm(platform),
-            features: this.getPlatformFeatures(platform)
+            features: this.getPlatformFeatures(platform),
           };
         }
-        
+
         return optimizations;
-        
+
       case 'implement-posting-strategy':
         return {
           strategies: {
             facebook: { times: ['9am', '1pm', '7pm'], frequency: 'daily' },
             instagram: { times: ['8am', '5pm'], frequency: 'daily' },
-            twitter: { times: ['9am', '12pm', '3pm', '6pm'], frequency: 'multiple daily' },
+            twitter: {
+              times: ['9am', '12pm', '3pm', '6pm'],
+              frequency: 'multiple daily',
+            },
             linkedin: { times: ['8am', '12pm'], frequency: '3-4 per week' },
             tiktok: { times: ['6am', '3pm', '7pm'], frequency: '1-3 daily' },
             youtube: { times: ['2pm', '4pm'], frequency: 'weekly' },
             pinterest: { times: ['2pm', '9pm'], frequency: '5-10 daily' },
-            reddit: { times: ['9am', '8pm'], frequency: 'weekly' }
+            reddit: { times: ['9am', '8pm'], frequency: 'weekly' },
           },
           automation: {
             scheduling: true,
             crossPosting: true,
             adaptation: true,
-            optimization: true
-          }
+            optimization: true,
+          },
         };
-        
+
       default:
         return { completed: true };
     }
@@ -740,40 +878,72 @@ export class BuildOrchestrator extends EventEmitter {
   /**
    * Performance Optimizer Agent task execution
    */
-  private async executePerformanceOptimizationTask(task: BuildTask): Promise<any> {
+  private async executePerformanceOptimizationTask(
+    task: BuildTask
+  ): Promise<any> {
     const action = task.data.action;
-    
+
     switch (action) {
       case 'setup-analytics':
         return {
           tracking: {
-            events: ['page_view', 'campaign_created', 'content_published', 'engagement'],
-            metrics: ['impressions', 'reach', 'engagement', 'clicks', 'conversions'],
+            events: [
+              'page_view',
+              'campaign_created',
+              'content_published',
+              'engagement',
+            ],
+            metrics: [
+              'impressions',
+              'reach',
+              'engagement',
+              'clicks',
+              'conversions',
+            ],
             attribution: ['first_touch', 'last_touch', 'multi_touch'],
-            integrations: ['Google Analytics', 'Facebook Pixel', 'Custom Events']
-          }
+            integrations: [
+              'Google Analytics',
+              'Facebook Pixel',
+              'Custom Events',
+            ],
+          },
         };
-        
+
       case 'create-dashboards':
         return {
           dashboards: [
             {
               name: 'Executive Overview',
-              widgets: ['KPI Summary', 'Revenue Chart', 'Campaign Performance', 'ROI Analysis']
+              widgets: [
+                'KPI Summary',
+                'Revenue Chart',
+                'Campaign Performance',
+                'ROI Analysis',
+              ],
             },
             {
               name: 'Campaign Analytics',
-              widgets: ['Campaign Metrics', 'A/B Testing', 'Audience Insights', 'Content Performance']
+              widgets: [
+                'Campaign Metrics',
+                'A/B Testing',
+                'Audience Insights',
+                'Content Performance',
+              ],
             },
             {
               name: 'Social Media',
-              widgets: ['Platform Breakdown', 'Engagement Trends', 'Follower Growth', 'Top Content']
-            }
+              widgets: [
+                'Platform Breakdown',
+                'Engagement Trends',
+                'Follower Growth',
+                'Top Content',
+              ],
+            },
           ],
           reports: ['Daily', 'Weekly', 'Monthly', 'Custom'],
-          exports: ['PDF', 'Excel', 'API']
+          exports: ['PDF', 'Excel', 'API'],
         };
-        
+
       case 'optimize-performance':
         return {
           optimizations: {
@@ -781,16 +951,16 @@ export class BuildOrchestrator extends EventEmitter {
             cdn: 'Configured CloudFlare CDN',
             database: 'Optimized queries and indices',
             api: 'Implemented rate limiting and pagination',
-            frontend: 'Code splitting and lazy loading'
+            frontend: 'Code splitting and lazy loading',
           },
           improvements: {
             loadTime: '65% faster',
             apiResponse: '80% faster',
             userExperience: '90% satisfaction',
-            serverCost: '40% reduction'
-          }
+            serverCost: '40% reduction',
+          },
         };
-        
+
       default:
         return { completed: true };
     }
@@ -808,21 +978,61 @@ export class BuildOrchestrator extends EventEmitter {
       tiktok: ['video', 'live', 'story'],
       youtube: ['video', 'short', 'live', 'community', 'story'],
       pinterest: ['pin', 'story', 'idea', 'video'],
-      reddit: ['post', 'link', 'image', 'video', 'poll']
+      reddit: ['post', 'link', 'image', 'video', 'poll'],
     };
     return formats[platform] || [];
   }
 
   private getPlatformBestPractices(platform: string): string[] {
     const practices: Record<string, string[]> = {
-      facebook: ['Use eye-catching visuals', 'Keep text concise', 'Include CTA', 'Engage with comments'],
-      instagram: ['High-quality images', 'Use hashtags', 'Stories for engagement', 'Consistent aesthetic'],
-      twitter: ['Be concise', 'Use threads', 'Engage quickly', 'Use relevant hashtags'],
-      linkedin: ['Professional tone', 'Value-driven content', 'Industry insights', 'Network actively'],
-      tiktok: ['Trendy content', 'Quick hooks', 'Authentic style', 'Use sounds'],
-      youtube: ['SEO optimization', 'Compelling thumbnails', 'Consistent schedule', 'Engage with comments'],
-      pinterest: ['Vertical images', 'SEO-rich descriptions', 'Fresh pins', 'Rich Pins'],
-      reddit: ['Community first', 'No self-promotion', 'Add value', 'Follow rules']
+      facebook: [
+        'Use eye-catching visuals',
+        'Keep text concise',
+        'Include CTA',
+        'Engage with comments',
+      ],
+      instagram: [
+        'High-quality images',
+        'Use hashtags',
+        'Stories for engagement',
+        'Consistent aesthetic',
+      ],
+      twitter: [
+        'Be concise',
+        'Use threads',
+        'Engage quickly',
+        'Use relevant hashtags',
+      ],
+      linkedin: [
+        'Professional tone',
+        'Value-driven content',
+        'Industry insights',
+        'Network actively',
+      ],
+      tiktok: [
+        'Trendy content',
+        'Quick hooks',
+        'Authentic style',
+        'Use sounds',
+      ],
+      youtube: [
+        'SEO optimization',
+        'Compelling thumbnails',
+        'Consistent schedule',
+        'Engage with comments',
+      ],
+      pinterest: [
+        'Vertical images',
+        'SEO-rich descriptions',
+        'Fresh pins',
+        'Rich Pins',
+      ],
+      reddit: [
+        'Community first',
+        'No self-promotion',
+        'Add value',
+        'Follow rules',
+      ],
     };
     return practices[platform] || [];
   }
@@ -830,7 +1040,7 @@ export class BuildOrchestrator extends EventEmitter {
   private getPlatformAlgorithm(platform: string): any {
     return {
       signals: ['engagement', 'relevance', 'timeliness', 'relationships'],
-      optimization: ['timing', 'format', 'audience', 'frequency']
+      optimization: ['timing', 'format', 'audience', 'frequency'],
     };
   }
 
@@ -843,12 +1053,15 @@ export class BuildOrchestrator extends EventEmitter {
       tiktok: ['Effects', 'Sounds', 'Challenges', 'Live', 'Ads'],
       youtube: ['Playlists', 'Premieres', 'Memberships', 'Super Chat', 'Ads'],
       pinterest: ['Boards', 'Shopping', 'Story Pins', 'Ads'],
-      reddit: ['Subreddits', 'Awards', 'Chat', 'Ads']
+      reddit: ['Subreddits', 'Awards', 'Chat', 'Ads'],
     };
     return features[platform] || [];
   }
 
-  private calculateTaskPriority(type: BuildTask['type'], phase: BuildTask['phase']): BuildTask['priority'] {
+  private calculateTaskPriority(
+    type: BuildTask['type'],
+    phase: BuildTask['phase']
+  ): BuildTask['priority'] {
     if (phase === 'research') return 'critical';
     if (phase === 'design') return 'high';
     if (phase === 'implementation') return 'medium';
@@ -861,7 +1074,7 @@ export class BuildOrchestrator extends EventEmitter {
       'content-creation': 'content-creator-1',
       'visual-design': 'visual-designer-1',
       'platform-optimization': 'platform-specialist-1',
-      'performance-analysis': 'performance-optimizer-1'
+      'performance-analysis': 'performance-optimizer-1',
     };
     return agentMap[type];
   }
@@ -884,18 +1097,20 @@ export class BuildOrchestrator extends EventEmitter {
 
   private calculateSuccessRate(): number {
     const total = this.completedTasks.length;
-    const successful = this.completedTasks.filter(t => t.status === 'completed').length;
+    const successful = this.completedTasks.filter(
+      t => t.status === 'completed'
+    ).length;
     return total > 0 ? (successful / total) * 100 : 0;
   }
 
   private calculateBuildDuration(): number {
     if (this.completedTasks.length === 0) return 0;
-    
+
     const firstTask = this.completedTasks[0];
     const lastTask = this.completedTasks[this.completedTasks.length - 1];
-    
+
     if (!firstTask.startedAt || !lastTask.completedAt) return 0;
-    
+
     return lastTask.completedAt.getTime() - firstTask.startedAt.getTime();
   }
 
@@ -905,7 +1120,7 @@ export class BuildOrchestrator extends EventEmitter {
   public getBuildStatus(): any {
     const phases = Array.from(this.buildPhases.values());
     const agents = Array.from(this.subAgents.values());
-    
+
     return {
       isBuilding: this.isBuilding,
       progress: this.buildProgress,
@@ -917,14 +1132,14 @@ export class BuildOrchestrator extends EventEmitter {
           name: p.name,
           status: p.status,
           progress: p.progress,
-          tasks: p.tasks.length
-        }))
+          tasks: p.tasks.length,
+        })),
       },
       tasks: {
         queued: this.taskQueue.length,
         active: this.activeTasks.size,
         completed: this.completedTasks.length,
-        successRate: this.calculateSuccessRate()
+        successRate: this.calculateSuccessRate(),
       },
       agents: {
         total: agents.length,
@@ -936,9 +1151,9 @@ export class BuildOrchestrator extends EventEmitter {
           status: a.status,
           completedTasks: a.completedTasks,
           successRate: a.successRate,
-          currentTask: a.currentTask?.data.description || null
-        }))
-      }
+          currentTask: a.currentTask?.data.description || null,
+        })),
+      },
     };
   }
 
@@ -956,18 +1171,18 @@ export class BuildOrchestrator extends EventEmitter {
    */
   public async resumeBuild(): Promise<void> {
     if (this.isBuilding) return;
-    
+
     this.isBuilding = true;
     console.log('▶️ Build process resumed');
     this.emit('build:resumed');
-    
+
     // Continue processing remaining phases
     for (const [phaseName, phase] of this.buildPhases) {
       if (phase.status !== 'completed') {
         await this.executeBuildPhase(phase);
       }
     }
-    
+
     this.isBuilding = false;
   }
 
@@ -977,31 +1192,36 @@ export class BuildOrchestrator extends EventEmitter {
   public getAgentInsights(agentId: string): any {
     const agent = this.subAgents.get(agentId);
     if (!agent) return null;
-    
-    const agentTasks = this.completedTasks.filter(t => t.assignedAgent === agentId);
-    const avgDuration = agentTasks.reduce((sum, t) => {
-      if (t.startedAt && t.completedAt) {
-        return sum + (t.completedAt.getTime() - t.startedAt.getTime());
-      }
-      return sum;
-    }, 0) / agentTasks.length;
-    
+
+    const agentTasks = this.completedTasks.filter(
+      t => t.assignedAgent === agentId
+    );
+    const avgDuration =
+      agentTasks.reduce((sum, t) => {
+        if (t.startedAt && t.completedAt) {
+          return sum + (t.completedAt.getTime() - t.startedAt.getTime());
+        }
+        return sum;
+      }, 0) / agentTasks.length;
+
     return {
       agent,
       performance: {
         totalTasks: agent.completedTasks,
         successRate: agent.successRate,
         averageDuration: avgDuration,
-        taskTypes: [...new Set(agentTasks.map(t => t.type))]
+        taskTypes: [...new Set(agentTasks.map(t => t.type))],
       },
       capabilities: agent.capabilities,
       recentTasks: agentTasks.slice(-5).map(t => ({
         id: t.id,
         description: t.data.description,
         status: t.status,
-        duration: t.startedAt && t.completedAt ? 
-          t.completedAt.getTime() - t.startedAt.getTime() : null
-      }))
+        duration:
+          t.startedAt && t.completedAt
+            ? t.completedAt.getTime() - t.startedAt.getTime()
+            : null,
+      })),
     };
   }
 }

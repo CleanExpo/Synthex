@@ -208,13 +208,13 @@ export default function RemotionStudioPage() {
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
-                    value={editProps.brandColour || '#06B6D4'}
+                    value={editProps.brandColour || '#f59e0b'}
                     onChange={e => handleBrandColourChange(e.target.value)}
                     className="w-8 h-8 rounded border border-white/10 bg-transparent cursor-pointer"
                   />
                   <input
                     type="text"
-                    value={editProps.brandColour || '#06B6D4'}
+                    value={editProps.brandColour || '#f59e0b'}
                     onChange={e => handleBrandColourChange(e.target.value)}
                     className="flex-1 bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-amber-500/50"
                   />

@@ -51,7 +51,7 @@ const PLATFORMS = [
     id: 'instagram',
     name: 'Instagram',
     icon: Instagram,
-    color: 'bg-pink-500',
+    color: 'bg-amber-500',
     maxLength: 2200,
   },
   {

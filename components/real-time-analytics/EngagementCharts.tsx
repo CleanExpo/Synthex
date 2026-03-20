@@ -65,8 +65,8 @@ export function EngagementCharts({
               <Area
                 type="monotone"
                 dataKey="reach"
-                stroke="#ec4899"
-                fill="#ec4899"
+                stroke="#fbbf24"
+                fill="#fbbf24"
                 fillOpacity={0.3}
                 name="Reach"
               />

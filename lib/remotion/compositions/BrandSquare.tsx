@@ -274,7 +274,7 @@ function SquareCTA({
 export function BrandSquare({
   title,
   scenes: _scenes,
-  brandColour = '#06B6D4',
+  brandColour = '#f59e0b',
   logoUrl,
   problem,
   solution,
@@ -282,10 +282,10 @@ export function BrandSquare({
   audioConfig,
 }: BrandSquareProps) {
   // Scene timing (30fps): total ~20s = 600 frames
-  const problemFrames = 150;   // 5s
-  const solutionFrames = 165;  // 5.5s
-  const brandFrames = 150;     // 5s
-  const ctaFrames = 135;       // 4.5s
+  const problemFrames = 150; // 5s
+  const solutionFrames = 165; // 5.5s
+  const brandFrames = 150; // 5s
+  const ctaFrames = 135; // 4.5s
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#0F172A' }}>
@@ -314,7 +314,10 @@ export function BrandSquare({
       </Sequence>
 
       {/* Scene 3: Brand intro */}
-      <Sequence from={problemFrames + solutionFrames} durationInFrames={brandFrames}>
+      <Sequence
+        from={problemFrames + solutionFrames}
+        durationInFrames={brandFrames}
+      >
         <BrandIntro
           brandName={title}
           brandColour={brandColour}
@@ -323,7 +326,10 @@ export function BrandSquare({
       </Sequence>
 
       {/* Scene 4: CTA */}
-      <Sequence from={problemFrames + solutionFrames + brandFrames} durationInFrames={ctaFrames}>
+      <Sequence
+        from={problemFrames + solutionFrames + brandFrames}
+        durationInFrames={ctaFrames}
+      >
         <SquareCTA ctaText={ctaText} brandColour={brandColour} />
       </Sequence>
     </AbsoluteFill>

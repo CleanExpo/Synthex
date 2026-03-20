@@ -35,7 +35,7 @@ interface DeliverableListProps {
 
 const TYPE_COLORS: Record<DeliverableType, string> = {
   post: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
-  story: 'bg-pink-500/10 text-pink-400 border-pink-500/30',
+  story: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
   reel: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
   video: 'bg-red-500/10 text-red-400 border-red-500/30',
   mention: 'bg-amber-500/10 text-amber-400 border-amber-500/30',

@@ -48,9 +48,9 @@ const PLATFORM_META: Record<
   instagram: {
     name: 'Instagram',
     icon: Instagram,
-    color: 'text-pink-400',
-    bgColor: 'bg-pink-500/10',
-    borderColor: 'border-pink-500/20',
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/20',
   },
   facebook: {
     name: 'Facebook',

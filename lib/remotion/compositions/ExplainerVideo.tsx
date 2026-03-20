@@ -63,11 +63,7 @@ function TransitionWrapper({
     transform = `scale(${scale})`;
   }
 
-  return (
-    <AbsoluteFill style={{ opacity, transform }}>
-      {children}
-    </AbsoluteFill>
-  );
+  return <AbsoluteFill style={{ opacity, transform }}>{children}</AbsoluteFill>;
 }
 
 // ── Explainer Scene ──────────────────────────────────────────────────────────
@@ -85,7 +81,8 @@ function ExplainerScene({
   brandColour: string;
   transition: 'fade' | 'slide' | 'zoom';
 }) {
-  const bg = scene.backgroundColour || (sceneIndex % 2 === 0 ? '#0F172A' : '#1E293B');
+  const bg =
+    scene.backgroundColour || (sceneIndex % 2 === 0 ? '#0F172A' : '#1E293B');
 
   return (
     <TransitionWrapper transition={transition} durationFrames={scene.duration}>
@@ -193,7 +190,7 @@ function ExplainerScene({
 export function ExplainerVideo({
   title,
   scenes,
-  brandColour = '#06B6D4',
+  brandColour = '#f59e0b',
   transition = 'fade',
   voiceoverScript,
 }: ExplainerVideoProps) {

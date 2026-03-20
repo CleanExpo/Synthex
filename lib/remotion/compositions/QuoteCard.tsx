@@ -24,7 +24,7 @@ import type { QuoteCardProps } from '../types';
 export function QuoteCard({
   quote,
   attribution,
-  brandColour = '#06B6D4',
+  brandColour = '#f59e0b',
 }: QuoteCardProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();

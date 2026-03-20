@@ -183,7 +183,7 @@ export function CompetitorDetailView({
                           <Cell
                             key={index}
                             fill={
-                              ['#ffb87b', '#ec4899', '#3b82f6', '#10b981'][
+                              ['#ffb87b', '#fbbf24', '#3b82f6', '#10b981'][
                                 index
                               ]
                             }

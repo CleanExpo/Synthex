@@ -652,7 +652,7 @@ export function AIABTesting() {
                       <Line
                         type="monotone"
                         dataKey="variantB"
-                        stroke="#ec4899"
+                        stroke="#fbbf24"
                         name="Variant B"
                       />
                     </LineChart>

@@ -40,7 +40,7 @@ const posts: Post[] = [
     comments: '189',
     shares: '567',
     verified: false,
-    gradient: 'from-pink-500 to-rose-600',
+    gradient: 'from-amber-500 to-rose-600',
     offset: 1.5,
   },
   {

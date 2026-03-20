@@ -128,9 +128,9 @@ export const colors = {
     100: '#F3E8FF',
     200: '#E9D5FF',
     300: '#D8B4FE',
-    400: '#C084FC',
+    400: '#fbbf24',
     500: '#A855F7',
-    600: '#9333EA', // AA compliant on white
+    600: '#d97706', // AA compliant on white
     700: '#d97706', // AAA compliant on white
     800: '#6B21A8',
     900: '#581C87',

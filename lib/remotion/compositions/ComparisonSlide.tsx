@@ -112,7 +112,7 @@ export function ComparisonSlide({
   newWay,
   oldLabel = 'The Old Way',
   newLabel = 'The New Way',
-  brandColour = '#06B6D4',
+  brandColour = '#f59e0b',
 }: ComparisonSlideProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();

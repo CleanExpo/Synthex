@@ -23,7 +23,7 @@ const SOURCE_COLORS: Record<RevenueSource, string> = {
   affiliate: '#10b981', // emerald
   ads: '#f59e0b', // violet
   tips: '#f97316', // orange
-  merchandise: '#ec4899', // pink
+  merchandise: '#fbbf24', // pink
   other: '#6b7280', // gray
 };
 

@@ -58,7 +58,9 @@ function LogoReveal({
         alignItems: 'center',
       }}
     >
-      <div style={{ transform: `scale(${scale})`, opacity, textAlign: 'center' }}>
+      <div
+        style={{ transform: `scale(${scale})`, opacity, textAlign: 'center' }}
+      >
         {logoUrl && (
           <img
             src={logoUrl}
@@ -360,7 +362,7 @@ function CTAScene({
 export function BrandShowcase({
   title,
   scenes: _scenes,
-  brandColour = '#06B6D4',
+  brandColour = '#f59e0b',
   logoUrl,
   tagline,
   valueProps,
@@ -369,10 +371,10 @@ export function BrandShowcase({
   audioConfig,
 }: BrandShowcaseProps) {
   // Scene timing (30fps): total ~45s = 1350 frames
-  const logoFrames = 150;      // 5s
-  const taglineFrames = 270;   // 9s
-  const valueFrames = 450;     // 15s
-  const ctaFrames = 480;       // 16s (fills remainder)
+  const logoFrames = 150; // 5s
+  const taglineFrames = 270; // 9s
+  const valueFrames = 450; // 15s
+  const ctaFrames = 480; // 16s (fills remainder)
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#0F172A' }}>
@@ -409,15 +411,18 @@ export function BrandShowcase({
       </Sequence>
 
       {/* Scene 3: Value propositions */}
-      <Sequence from={logoFrames + taglineFrames} durationInFrames={valueFrames}>
-        <ValuePropScene
-          valueProps={valueProps}
-          brandColour={brandColour}
-        />
+      <Sequence
+        from={logoFrames + taglineFrames}
+        durationInFrames={valueFrames}
+      >
+        <ValuePropScene valueProps={valueProps} brandColour={brandColour} />
       </Sequence>
 
       {/* Scene 4: CTA + end card */}
-      <Sequence from={logoFrames + taglineFrames + valueFrames} durationInFrames={ctaFrames}>
+      <Sequence
+        from={logoFrames + taglineFrames + valueFrames}
+        durationInFrames={ctaFrames}
+      >
         <CTAScene
           brandName={title}
           websiteUrl={websiteUrl}

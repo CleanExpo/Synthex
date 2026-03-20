@@ -58,8 +58,8 @@ const CATEGORY_STYLES: Record<
     label: 'Software',
   },
   promotion: {
-    bg: 'bg-pink-500/10',
-    text: 'text-pink-400',
+    bg: 'bg-amber-500/10',
+    text: 'text-amber-400',
     label: 'Promotion',
   },
   other: { bg: 'bg-gray-500/10', text: 'text-gray-400', label: 'Other' },

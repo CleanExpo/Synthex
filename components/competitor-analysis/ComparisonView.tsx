@@ -126,8 +126,8 @@ export function ComparisonView({
                     key={index}
                     name={selected[index]?.name || ''}
                     dataKey="followers"
-                    stroke={['#ffb87b', '#ec4899', '#3b82f6'][index]}
-                    fill={['#ffb87b', '#ec4899', '#3b82f6'][index]}
+                    stroke={['#ffb87b', '#fbbf24', '#3b82f6'][index]}
+                    fill={['#ffb87b', '#fbbf24', '#3b82f6'][index]}
                     fillOpacity={0.3}
                   />
                 ))}

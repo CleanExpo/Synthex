@@ -83,7 +83,7 @@ export function FloatingActionButton() {
       id: 'ai-generate',
       label: 'AI Generate',
       icon: Sparkles,
-      color: 'bg-pink-500',
+      color: 'bg-amber-500',
       onClick: () => {
         router.push('/dashboard/content?ai=true');
         setIsOpen(false);

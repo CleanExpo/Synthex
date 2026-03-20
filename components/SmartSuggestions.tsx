@@ -97,7 +97,7 @@ export function SmartSuggestions({
       seasonal: 'text-green-400',
       performance: 'text-blue-400',
       gap: 'text-yellow-400',
-      viral: 'text-pink-400',
+      viral: 'text-amber-400',
       evergreen: 'text-amber-400',
     };
     return colors[type] || 'text-gray-400';

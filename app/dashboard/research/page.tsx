@@ -143,7 +143,7 @@ function AutoResearchSection() {
   const categoryColour = (cat: string) => {
     const map: Record<string, string> = {
       hook: 'bg-amber-500/20 text-amber-400',
-      visual_style: 'bg-pink-500/20 text-pink-400',
+      visual_style: 'bg-amber-500/20 text-amber-400',
       hashtag: 'bg-blue-500/20 text-blue-400',
       topic: 'bg-amber-500/20 text-amber-400',
       format: 'bg-amber-500/20 text-amber-400',

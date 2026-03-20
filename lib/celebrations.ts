@@ -27,7 +27,7 @@ export const confetti = () => {
 };
 
 function createConfettiParticles(count: number) {
-  const colors = ['#9333EA', '#EC4899', '#f59e0b', '#3B82F6', '#10B981'];
+  const colors = ['#d97706', '#fbbf24', '#f59e0b', '#3B82F6', '#10B981'];
   const container = document.body;
 
   for (let i = 0; i < count; i++) {

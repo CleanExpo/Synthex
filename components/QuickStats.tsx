@@ -54,7 +54,7 @@ const defaultStats: Stat[] = [
     change: 0.3,
     changeType: 'increase',
     icon: Heart,
-    color: 'text-pink-400',
+    color: 'text-amber-400',
     sparkline: [30, 35, 40, 38, 42, 45, 43, 47, 45, 48],
   },
   {

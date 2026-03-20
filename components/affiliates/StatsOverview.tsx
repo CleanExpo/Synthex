@@ -242,7 +242,7 @@ export function StatsOverview({
           icon={MousePointer}
           label="Total Clicks"
           value={formatNumber(stats.totalClicks)}
-          color="#06B6D4"
+          color="#f59e0b"
           isLoading={isLoading}
         />
         <StatCard

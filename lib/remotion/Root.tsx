@@ -30,31 +30,51 @@ import type {
 const DEFAULT_SOCIAL_REEL_PROPS: SocialReelProps = {
   title: 'Your Brand Story',
   scenes: [
-    { text: 'Engage your audience', subtitle: 'With powerful visuals', duration: 60 },
+    {
+      text: 'Engage your audience',
+      subtitle: 'With powerful visuals',
+      duration: 60,
+    },
     { text: 'Tell your story', subtitle: 'In seconds', duration: 60 },
     { text: 'Drive action', subtitle: 'With every post', duration: 60 },
   ],
-  brandColour: '#06B6D4',
+  brandColour: '#f59e0b',
   showProgress: true,
 };
 
 const DEFAULT_EXPLAINER_PROPS: ExplainerVideoProps = {
   title: 'How It Works',
   scenes: [
-    { text: 'Step 1: Create your content', subtitle: 'AI generates platform-optimised posts', duration: 90 },
-    { text: 'Step 2: Schedule & publish', subtitle: 'Automated cross-platform distribution', duration: 90 },
-    { text: 'Step 3: Analyse results', subtitle: 'Real-time engagement analytics', duration: 90 },
+    {
+      text: 'Step 1: Create your content',
+      subtitle: 'AI generates platform-optimised posts',
+      duration: 90,
+    },
+    {
+      text: 'Step 2: Schedule & publish',
+      subtitle: 'Automated cross-platform distribution',
+      duration: 90,
+    },
+    {
+      text: 'Step 3: Analyse results',
+      subtitle: 'Real-time engagement analytics',
+      duration: 90,
+    },
   ],
-  brandColour: '#06B6D4',
+  brandColour: '#f59e0b',
   transition: 'fade',
 };
 
 const DEFAULT_BRAND_SHOWCASE_PROPS: BrandShowcaseProps = {
   title: 'Your Brand',
   tagline: 'Your tagline goes here',
-  valueProps: ['Value proposition 1', 'Value proposition 2', 'Value proposition 3'],
+  valueProps: [
+    'Value proposition 1',
+    'Value proposition 2',
+    'Value proposition 3',
+  ],
   scenes: [],
-  brandColour: '#06B6D4',
+  brandColour: '#f59e0b',
   websiteUrl: 'yourbrand.com',
   industry: 'Your Industry',
 };
@@ -64,7 +84,7 @@ const DEFAULT_BRAND_REEL_PROPS: BrandReelProps = {
   hookText: 'Did you know?',
   benefit: 'We solve your biggest challenge',
   scenes: [],
-  brandColour: '#06B6D4',
+  brandColour: '#f59e0b',
   ctaText: 'Learn More',
 };
 
@@ -73,7 +93,7 @@ const DEFAULT_BRAND_SQUARE_PROPS: BrandSquareProps = {
   problem: 'The challenge your audience faces',
   solution: 'How your brand solves it',
   scenes: [],
-  brandColour: '#06B6D4',
+  brandColour: '#f59e0b',
   ctaText: 'Get Started',
 };
 
@@ -83,7 +103,8 @@ export const COMPOSITION_REGISTRY: CompositionMeta[] = [
   {
     id: 'SocialReel',
     name: 'Social Reel',
-    description: 'Portrait reel for Instagram, TikTok, and YouTube Shorts (9:16)',
+    description:
+      'Portrait reel for Instagram, TikTok, and YouTube Shorts (9:16)',
     defaultProps: DEFAULT_SOCIAL_REEL_PROPS,
     width: 720,
     height: 1280,
@@ -144,7 +165,9 @@ export function RemotionRoot() {
         fps={30}
         width={720}
         height={1280}
-        defaultProps={DEFAULT_SOCIAL_REEL_PROPS as unknown as Record<string, unknown>}
+        defaultProps={
+          DEFAULT_SOCIAL_REEL_PROPS as unknown as Record<string, unknown>
+        }
       />
       <Composition
         id="ExplainerVideo"
@@ -153,7 +176,9 @@ export function RemotionRoot() {
         fps={30}
         width={1920}
         height={1080}
-        defaultProps={DEFAULT_EXPLAINER_PROPS as unknown as Record<string, unknown>}
+        defaultProps={
+          DEFAULT_EXPLAINER_PROPS as unknown as Record<string, unknown>
+        }
       />
       <Composition
         id="BrandShowcase"
@@ -162,7 +187,9 @@ export function RemotionRoot() {
         fps={30}
         width={1920}
         height={1080}
-        defaultProps={DEFAULT_BRAND_SHOWCASE_PROPS as unknown as Record<string, unknown>}
+        defaultProps={
+          DEFAULT_BRAND_SHOWCASE_PROPS as unknown as Record<string, unknown>
+        }
       />
       <Composition
         id="BrandReel"
@@ -171,7 +198,9 @@ export function RemotionRoot() {
         fps={30}
         width={1080}
         height={1920}
-        defaultProps={DEFAULT_BRAND_REEL_PROPS as unknown as Record<string, unknown>}
+        defaultProps={
+          DEFAULT_BRAND_REEL_PROPS as unknown as Record<string, unknown>
+        }
       />
       <Composition
         id="BrandSquare"
@@ -180,7 +209,9 @@ export function RemotionRoot() {
         fps={30}
         width={1080}
         height={1080}
-        defaultProps={DEFAULT_BRAND_SQUARE_PROPS as unknown as Record<string, unknown>}
+        defaultProps={
+          DEFAULT_BRAND_SQUARE_PROPS as unknown as Record<string, unknown>
+        }
       />
     </>
   );

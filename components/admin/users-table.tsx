@@ -122,7 +122,7 @@ export function UsersTable({
                 </td>
                 <td className="py-3 px-4">
                   <div className="flex items-center">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-amber-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold mr-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-amber-500 to-amber-500 flex items-center justify-center text-white text-sm font-bold mr-3">
                       {user.email?.[0]?.toUpperCase()}
                     </div>
                     <div>

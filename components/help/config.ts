@@ -85,7 +85,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     description: 'Manage your subscription',
     icon: CreditCard,
     articles: 6,
-    color: 'text-pink-400',
+    color: 'text-amber-400',
     links: [
       { title: 'View plans', href: '/pricing' },
       { title: 'Update payment method', href: '/dashboard/settings' },

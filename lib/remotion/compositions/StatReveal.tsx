@@ -26,7 +26,7 @@ export function StatReveal({
   stat,
   statLabel,
   context,
-  brandColour = '#06B6D4',
+  brandColour = '#f59e0b',
 }: StatRevealProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();

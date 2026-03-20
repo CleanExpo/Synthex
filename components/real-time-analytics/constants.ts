@@ -22,7 +22,7 @@ export const platformColors = {
   facebook: '#1877F2',
 };
 
-export const COLORS = ['#ffb87b', '#ec4899', '#3b82f6', '#10b981', '#f59e0b'];
+export const COLORS = ['#ffb87b', '#fbbf24', '#3b82f6', '#10b981', '#f59e0b'];
 
 export function formatNumber(num: number) {
   if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;

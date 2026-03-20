@@ -142,7 +142,7 @@
 
 .notification-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
+  background: linear-gradient(90deg, #6366f1 0%, #f59e0b 100%);
   transition: width linear;
   transform-origin: left;
 }
@@ -282,7 +282,8 @@
 }
 
 @keyframes badge-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
   }
@@ -327,9 +328,16 @@
 }
 
 @keyframes bell-ring {
-  0%, 100% { transform: rotate(0); }
-  25% { transform: rotate(-10deg); }
-  75% { transform: rotate(10deg); }
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(10deg);
+  }
 }
 
 .notification-bell svg {
@@ -395,7 +403,7 @@
 }
 
 .notification-panel-clear:hover {
-  color: #06b6d4;
+  color: #f59e0b;
 }
 
 /* Panel Body */
@@ -510,7 +518,7 @@
 }
 
 .notification-action.primary {
-  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #f59e0b 100%);
   border-color: transparent;
 }
 
@@ -528,16 +536,16 @@
     left: 16px;
     max-width: none;
   }
-  
+
   .notification {
     min-width: auto;
   }
-  
+
   .notification-panel {
     width: calc(100vw - 32px);
     right: -8px;
   }
-  
+
   .toast-container {
     bottom: 16px;
     left: 16px;

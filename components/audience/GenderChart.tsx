@@ -18,7 +18,7 @@ interface GenderChartProps {
 
 const GENDER_COLORS: Record<string, string> = {
   Male: '#3B82F6', // blue-500
-  Female: '#EC4899', // pink-500
+  Female: '#fbbf24', // amber-500
   Other: '#f59e0b', // amber-500
 };
 

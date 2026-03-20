@@ -61,7 +61,7 @@ interface ContentDraft {
 
 const PLATFORM_COLORS: Record<string, { dot: string; label: string }> = {
   twitter: { dot: 'bg-sky-400', label: 'Twitter / X' },
-  instagram: { dot: 'bg-pink-400', label: 'Instagram' },
+  instagram: { dot: 'bg-amber-400', label: 'Instagram' },
   linkedin: { dot: 'bg-blue-400', label: 'LinkedIn' },
   tiktok: { dot: 'bg-rose-400', label: 'TikTok' },
   facebook: { dot: 'bg-indigo-400', label: 'Facebook' },

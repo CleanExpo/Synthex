@@ -282,7 +282,7 @@ function ProgressBar({ brandColour }: { brandColour: string }) {
 export function BrandReel({
   title,
   scenes: _scenes,
-  brandColour = '#06B6D4',
+  brandColour = '#f59e0b',
   logoUrl,
   hookText,
   benefit,
@@ -290,10 +290,10 @@ export function BrandReel({
   audioConfig,
 }: BrandReelProps) {
   // Scene timing (30fps): total ~15s = 450 frames
-  const hookFrames = 105;     // 3.5s
-  const brandFrames = 120;    // 4s
-  const benefitFrames = 120;  // 4s
-  const ctaFrames = 105;      // 3.5s
+  const hookFrames = 105; // 3.5s
+  const brandFrames = 120; // 4s
+  const benefitFrames = 120; // 4s
+  const ctaFrames = 105; // 3.5s
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#000000' }}>
@@ -326,12 +326,18 @@ export function BrandReel({
       </Sequence>
 
       {/* Scene 3: Key benefit */}
-      <Sequence from={hookFrames + brandFrames} durationInFrames={benefitFrames}>
+      <Sequence
+        from={hookFrames + brandFrames}
+        durationInFrames={benefitFrames}
+      >
         <BenefitScene benefit={benefit} brandColour={brandColour} />
       </Sequence>
 
       {/* Scene 4: CTA */}
-      <Sequence from={hookFrames + brandFrames + benefitFrames} durationInFrames={ctaFrames}>
+      <Sequence
+        from={hookFrames + brandFrames + benefitFrames}
+        durationInFrames={ctaFrames}
+      >
         <ReelCTA ctaText={ctaText} brandColour={brandColour} />
       </Sequence>
 

@@ -50,7 +50,7 @@ interface ContentLibraryItem {
 
 const PLATFORM_COLORS: Record<string, { dot: string; label: string }> = {
   twitter: { dot: 'bg-sky-400', label: 'Twitter / X' },
-  instagram: { dot: 'bg-pink-400', label: 'Instagram' },
+  instagram: { dot: 'bg-amber-400', label: 'Instagram' },
   linkedin: { dot: 'bg-blue-400', label: 'LinkedIn' },
   tiktok: { dot: 'bg-rose-400', label: 'TikTok' },
   facebook: { dot: 'bg-indigo-400', label: 'Facebook' },
@@ -72,7 +72,7 @@ function getPlatformMeta(platform: string | null) {
 
 const CONTENT_TYPE_BADGES: Record<string, string> = {
   post: 'bg-amber-500/15 text-amber-300 border-amber-500/20',
-  caption: 'bg-pink-500/15 text-pink-300 border-pink-500/20',
+  caption: 'bg-amber-500/15 text-amber-300 border-amber-500/20',
   story: 'bg-amber-500/15 text-amber-300 border-amber-500/20',
   thread: 'bg-sky-500/15 text-sky-300 border-sky-500/20',
   template: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20',

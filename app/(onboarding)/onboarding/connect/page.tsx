@@ -65,7 +65,7 @@ const PLATFORM_LIST: PlatformConfig[] = [
     label: 'Instagram',
     icon: '📸',
     description: 'Photos, Reels, Stories',
-    colour: 'from-pink-500 to-amber-600',
+    colour: 'from-amber-500 to-amber-600',
   },
   {
     id: 'facebook',

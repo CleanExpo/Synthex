@@ -31,7 +31,9 @@ import emailRoutes from './email';
 // Import middleware
 import { authenticateToken } from '../middleware/auth';
 import cacheMiddleware, { CacheProfiles } from '../middleware/caching';
-import compressionMiddleware, { CompressionProfiles } from '../middleware/compression';
+import compressionMiddleware, {
+  CompressionProfiles,
+} from '../middleware/compression';
 
 const router = express.Router();
 
@@ -48,8 +50,8 @@ router.get('/health', (req, res) => {
     services: {
       database: 'connected',
       cache: 'connected',
-      queue: 'connected'
-    }
+      queue: 'connected',
+    },
   });
 });
 
@@ -62,7 +64,7 @@ router.get('/docs', (req, res) => {
     authentication: {
       type: 'Bearer Token',
       header: 'Authorization',
-      format: 'Bearer <token>'
+      format: 'Bearer <token>',
     },
     endpoints: {
       // Analytics
@@ -73,8 +75,8 @@ router.get('/docs', (req, res) => {
           'GET /metrics/historical',
           'GET /metrics/platform/:platform',
           'POST /track',
-          'GET /insights'
-        ]
+          'GET /insights',
+        ],
       },
       // A/B Testing
       abTesting: {
@@ -85,8 +87,8 @@ router.get('/docs', (req, res) => {
           'POST /experiments',
           'PUT /experiments/:id',
           'DELETE /experiments/:id',
-          'GET /experiments/:id/results'
-        ]
+          'GET /experiments/:id/results',
+        ],
       },
       // AI Content
       aiContent: {
@@ -96,8 +98,8 @@ router.get('/docs', (req, res) => {
           'POST /optimize',
           'POST /variations',
           'POST /translate',
-          'GET /templates'
-        ]
+          'GET /templates',
+        ],
       },
       // Teams
       teams: {
@@ -110,8 +112,8 @@ router.get('/docs', (req, res) => {
           'DELETE /:id',
           'GET /:id/members',
           'POST /:id/members',
-          'DELETE /:id/members/:memberId'
-        ]
+          'DELETE /:id/members/:memberId',
+        ],
       },
       // Scheduler
       scheduler: {
@@ -122,8 +124,8 @@ router.get('/docs', (req, res) => {
           'POST /posts',
           'PUT /posts/:id',
           'DELETE /posts/:id',
-          'POST /bulk'
-        ]
+          'POST /bulk',
+        ],
       },
       // Content Library
       library: {
@@ -133,8 +135,8 @@ router.get('/docs', (req, res) => {
           'GET /assets',
           'POST /upload',
           'GET /search',
-          'DELETE /assets/:id'
-        ]
+          'DELETE /assets/:id',
+        ],
       },
       // Mobile API
       mobile: {
@@ -143,8 +145,8 @@ router.get('/docs', (req, res) => {
           'GET /sync',
           'GET /notifications',
           'POST /devices/register',
-          'POST /push/send'
-        ]
+          'POST /push/send',
+        ],
       },
       // White Label
       whiteLabel: {
@@ -154,8 +156,8 @@ router.get('/docs', (req, res) => {
           'GET /branding',
           'PUT /branding',
           'GET /sso',
-          'POST /sso/configure'
-        ]
+          'POST /sso/configure',
+        ],
       },
       // Reporting
       reporting: {
@@ -165,8 +167,8 @@ router.get('/docs', (req, res) => {
           'GET /reports',
           'GET /reports/:id',
           'GET /export',
-          'DELETE /reports/:id'
-        ]
+          'DELETE /reports/:id',
+        ],
       },
       // Competitors
       competitors: {
@@ -176,8 +178,8 @@ router.get('/docs', (req, res) => {
           'GET /:id',
           'POST /',
           'GET /:id/metrics',
-          'GET /analysis'
-        ]
+          'GET /analysis',
+        ],
       },
       // Authentication
       auth: {
@@ -190,8 +192,8 @@ router.get('/docs', (req, res) => {
           'GET /profile',
           'PUT /profile',
           'POST /password/reset',
-          'POST /password/change'
-        ]
+          'POST /password/change',
+        ],
       },
       // Posts
       posts: {
@@ -203,8 +205,8 @@ router.get('/docs', (req, res) => {
           'PUT /:id',
           'DELETE /:id',
           'POST /:id/publish',
-          'POST /:id/schedule'
-        ]
+          'POST /:id/schedule',
+        ],
       },
       // User Management
       users: {
@@ -216,21 +218,17 @@ router.get('/docs', (req, res) => {
           'PUT /:id',
           'DELETE /:id',
           'GET /:id/permissions',
-          'PUT /:id/permissions'
-        ]
+          'PUT /:id/permissions',
+        ],
       },
       // Performance
       performance: {
         base: '/api/v2/performance',
-        endpoints: [
-          'GET /metrics',
-          'GET /trends',
-          'GET /recommendations'
-        ]
-      }
+        endpoints: ['GET /metrics', 'GET /trends', 'GET /recommendations'],
+      },
     },
-    documentation: 'https://docs.synthex.app/api',
-    support: 'support@synthex.app'
+    documentation: 'https://docs.synthex.social/api',
+    support: 'support@synthex.social',
   });
 });
 
@@ -242,7 +240,7 @@ router.get('/docs', (req, res) => {
 router.get('/status', (req, res) => {
   res.json({
     status: 'operational',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -313,8 +311,9 @@ router.use('/email', authenticateToken, emailRoutes);
 // ============================================
 
 // Cached analytics endpoint
-router.get('/analytics/summary', 
-  authenticateToken, 
+router.get(
+  '/analytics/summary',
+  authenticateToken,
   cacheMiddleware({ ttl: 300, keyPrefix: 'analytics-summary' }), // Cache for 5 minutes
   async (req, res) => {
     // This will use the actual analytics service when integrated
@@ -325,17 +324,18 @@ router.get('/analytics/summary',
           totalPosts: 1234,
           totalEngagement: 45678,
           averageReach: 23456,
-          growthRate: 12.5
+          growthRate: 12.5,
         },
         cached: true,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 );
 
 // Cached trending content endpoint
-router.get('/content/trending',
+router.get(
+  '/content/trending',
   authenticateToken,
   cacheMiddleware({ ttl: 600, keyPrefix: 'trending' }), // Cache for 10 minutes
   async (req, res) => {
@@ -344,8 +344,8 @@ router.get('/content/trending',
       data: {
         trending: [],
         cached: true,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 );
@@ -367,8 +367,8 @@ router.get('/features', authenticateToken, (req, res) => {
       competitorAnalysis: true,
       automatedReporting: true,
       contentLibrary: true,
-      advancedScheduler: true
-    }
+      advancedScheduler: true,
+    },
   });
 });
 
@@ -383,24 +383,24 @@ router.use('*', (req, res) => {
     error: 'Not Found',
     message: 'The requested endpoint does not exist',
     path: req.originalUrl,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
 // Error handling middleware
 router.use((err, req, res, next) => {
   console.error('API Error:', err);
-  
+
   const status = err.status || err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
-  
+
   res.status(status).json({
     success: false,
     error: {
       message,
       status,
-      timestamp: new Date().toISOString()
-    }
+      timestamp: new Date().toISOString(),
+    },
   });
 });
 

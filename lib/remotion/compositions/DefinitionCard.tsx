@@ -27,7 +27,7 @@ export function DefinitionCard({
   term,
   definition,
   example,
-  brandColour = '#06B6D4',
+  brandColour = '#f59e0b',
 }: DefinitionCardProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();

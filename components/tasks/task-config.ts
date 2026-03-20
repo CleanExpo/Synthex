@@ -98,7 +98,7 @@ export const typeConfig: Record<TaskType, TypeConfig> = {
   },
   campaign: {
     label: 'Campaign',
-    color: 'bg-pink-500/20 text-pink-300',
+    color: 'bg-amber-500/20 text-amber-300',
     icon: Target,
   },
   analytics: {

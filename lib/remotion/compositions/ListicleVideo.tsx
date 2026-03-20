@@ -105,7 +105,7 @@ function ListItem({
 export function ListicleVideo({
   title,
   items,
-  brandColour = '#06B6D4',
+  brandColour = '#f59e0b',
 }: ListicleVideoProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();

@@ -1,11 +1,11 @@
 // Unified Footer Component for Synthex
 class SynthexFooter {
-    constructor() {
-        this.currentYear = new Date().getFullYear();
-    }
+  constructor() {
+    this.currentYear = new Date().getFullYear();
+  }
 
-    createFooterHTML() {
-        return `
+  createFooterHTML() {
+    return `
             <footer class="synthex-footer">
                 <div class="footer-container">
                     <div class="footer-content">
@@ -44,7 +44,7 @@ class SynthexFooter {
                                 <li><a href="/support">Help Center</a></li>
                                 <li><a href="/docs">Documentation</a></li>
                                 <li><a href="/status">API Status</a></li>
-                                <li><a href="mailto:support@synthex.ai">Contact Support</a></li>
+                                <li><a href="mailto:support@synthex.social">Contact Support</a></li>
                             </ul>
                         </div>
                         
@@ -83,12 +83,12 @@ class SynthexFooter {
                 </div>
             </footer>
         `;
-    }
+  }
 
-    createFooterStyles() {
-        if (document.getElementById('footer-styles')) return;
-        
-        const styles = `
+  createFooterStyles() {
+    if (document.getElementById('footer-styles')) return;
+
+    const styles = `
             <style id="footer-styles">
                 .synthex-footer {
                     background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 1) 100%);
@@ -319,57 +319,59 @@ class SynthexFooter {
                 }
             </style>
         `;
-        
-        document.head.insertAdjacentHTML('beforeend', styles);
+
+    document.head.insertAdjacentHTML('beforeend', styles);
+  }
+
+  insertFooter() {
+    this.createFooterStyles();
+    const footerHTML = this.createFooterHTML();
+
+    // Check if footer already exists
+    const existingFooter = document.querySelector('.synthex-footer');
+    if (existingFooter) {
+      existingFooter.remove();
     }
 
-    insertFooter() {
-        this.createFooterStyles();
-        const footerHTML = this.createFooterHTML();
-        
-        // Check if footer already exists
-        const existingFooter = document.querySelector('.synthex-footer');
-        if (existingFooter) {
-            existingFooter.remove();
-        }
-        
-        // Insert before closing body tag
-        document.body.insertAdjacentHTML('beforeend', footerHTML);
-    }
+    // Insert before closing body tag
+    document.body.insertAdjacentHTML('beforeend', footerHTML);
+  }
 }
 
 // Global functions for footer links
-window.showHelp = function() {
-    alert('Help Center coming soon! For now, please email support@synthex.ai');
+window.showHelp = function () {
+  alert(
+    'Help Center coming soon! For now, please email support@synthex.social'
+  );
 };
 
-window.showDocs = function() {
-    alert('Documentation is being prepared. Check back soon!');
+window.showDocs = function () {
+  alert('Documentation is being prepared. Check back soon!');
 };
 
-window.showAPIStatus = function() {
-    window.location.href = '/api/openrouter/status';
+window.showAPIStatus = function () {
+  window.location.href = '/api/openrouter/status';
 };
 
-window.showPrivacy = function() {
-    alert('Privacy Policy will be available soon.');
+window.showPrivacy = function () {
+  alert('Privacy Policy will be available soon.');
 };
 
-window.showTerms = function() {
-    alert('Terms of Service will be available soon.');
+window.showTerms = function () {
+  alert('Terms of Service will be available soon.');
 };
 
-window.showCookies = function() {
-    alert('Cookie Policy will be available soon.');
+window.showCookies = function () {
+  alert('Cookie Policy will be available soon.');
 };
 
 // Auto-initialize footer when DOM is ready
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        window.synthexFooter = new SynthexFooter();
-        window.synthexFooter.insertFooter();
-    });
-} else {
+  document.addEventListener('DOMContentLoaded', () => {
     window.synthexFooter = new SynthexFooter();
     window.synthexFooter.insertFooter();
+  });
+} else {
+  window.synthexFooter = new SynthexFooter();
+  window.synthexFooter.insertFooter();
 }

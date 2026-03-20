@@ -498,7 +498,7 @@ export class CollaborationManager {
       '#f59e0b', // violet
       '#a855f7', // purple
       '#f59e0b', // fuchsia
-      '#ec4899', // pink
+      '#fbbf24', // pink
     ];
 
     return colors[Math.floor(Math.random() * colors.length)];

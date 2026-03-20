@@ -192,7 +192,7 @@ export function SearchBar({
       user: 'bg-green-500/20 text-green-400',
       campaign: 'bg-amber-500/20 text-amber-400',
       template: 'bg-yellow-500/20 text-yellow-400',
-      analytics: 'bg-pink-500/20 text-pink-400',
+      analytics: 'bg-amber-500/20 text-amber-400',
     };
     return (
       colors[type as keyof typeof colors] || 'bg-gray-500/20 text-gray-400'

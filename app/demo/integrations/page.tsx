@@ -70,7 +70,7 @@ export default function DemoIntegrationsPage() {
       description: 'Post photos, stories, and reels to Instagram',
       icon: Instagram,
       connected: false,
-      color: 'text-pink-500',
+      color: 'text-amber-500',
       permissions: ['Post content', 'View insights', 'Manage comments'],
     },
     {

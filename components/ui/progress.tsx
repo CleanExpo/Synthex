@@ -47,7 +47,7 @@ const progressIndicatorVariants = cva('h-full w-full flex-1 transition-all', {
       'gradient-secondary': 'bg-gradient-to-r from-amber-500 to-blue-500',
       'gradient-success': 'bg-gradient-to-r from-emerald-500 to-amber-500',
       'gradient-rainbow':
-        'bg-gradient-to-r from-amber-500 via-amber-500 via-pink-500 via-amber-500 to-amber-500',
+        'bg-gradient-to-r from-amber-500 via-amber-500 via-amber-500 via-amber-500 to-amber-500',
     },
     animated: {
       true: 'animate-pulse',
