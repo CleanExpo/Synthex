@@ -16,24 +16,9 @@ if (process.env.ANALYZE === 'true') {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Turbopack fix: heroicons ESM uses .js extension imports that Turbopack can't resolve natively
+  // heroicons ESM uses .js extension imports that Turbopack can't resolve natively.
+  // transpilePackages handles this for webpack; resolveAlias below handles Turbopack dev.
   transpilePackages: ['@heroicons/react'],
-
-  // Turbopack config (top-level in Next.js 15 — NOT inside experimental)
-  // Force heroicons to CJS paths so Turbopack doesn't try to resolve ESM
-  // sibling .js extension imports (known Turbopack limitation with ESM packages)
-  turbopack: {
-    resolveAlias: {
-      '@heroicons/react/24/outline':
-        './node_modules/@heroicons/react/24/outline/index.js',
-      '@heroicons/react/24/solid':
-        './node_modules/@heroicons/react/24/solid/index.js',
-      '@heroicons/react/20/solid':
-        './node_modules/@heroicons/react/20/solid/index.js',
-      '@heroicons/react/16/solid':
-        './node_modules/@heroicons/react/16/solid/index.js',
-    },
-  },
 
   // Use alternate build dir when NEXT_ALT_BUILD is set (avoids .next/trace lock conflicts)
   distDir: process.env.NEXT_ALT_BUILD || '.next',
@@ -52,13 +37,6 @@ const nextConfig = {
   // TypeScript configuration — type errors will fail Vercel builds (SYN-402)
   typescript: {
     ignoreBuildErrors: false,
-  },
-
-  // ESLint configuration — lint errors will fail Vercel builds (SYN-402)
-  // Note: .next-turbo/** and .next_alt /** are now in eslint.config.js ignores so
-  // the flat-config runner no longer picks up build artefacts.
-  eslint: {
-    ignoreDuringBuilds: false,
   },
 
   // HTTP headers for performance and security
@@ -114,6 +92,10 @@ const nextConfig = {
     'jspdf',
     'jspdf-autotable',
     'fflate',
+    // googleapis has broken internal module refs (missing beta API files)
+    // that cause webpack to fail. Must be required at runtime by Node.js.
+    'googleapis',
+    'google-auth-library',
     // Phase 114-02: @sentry/nextjs + OTel packages REMOVED from dependencies.
     // They registered require-in-the-middle / import-in-the-middle hooks that
     // hung ALL Lambda cold starts for 10+ seconds. No longer needed here.
@@ -300,6 +282,14 @@ const nextConfig = {
         child_process: false,
         pg: false,
         'pg-native': false,
+      };
+
+      // canvg (used by jspdf for SVG-in-PDF) depends on core-js internals that
+      // were removed in core-js 3.x. Stub it out with an empty module so jspdf
+      // loads in the browser bundle. SVG embedding in PDFs is not used here.
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        canvg: new URL('./lib/empty-module.cjs', import.meta.url).pathname,
       };
     }
 
