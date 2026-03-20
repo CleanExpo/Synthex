@@ -1,4 +1,4 @@
-{
+﻿{
   "permissions": {
     "allow": [
       "Bash(git *)",
@@ -164,14 +164,14 @@
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["linear"],
+  "enabledMcpjsonServers": ["linear", "obsidian"],
   "hooks": {
     "PreCompact": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-compact-save.ps1\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-compact-save.ps1\""
           }
         ]
       }
@@ -181,7 +181,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\session-start-protocol.ps1\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\session-start-protocol.ps1\""
           }
         ]
       }
@@ -192,7 +192,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-agent-dispatch.ps1\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-agent-dispatch.ps1\""
           }
         ]
       },
@@ -201,11 +201,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\guard-destructive.ps1\" -ToolInput \"$TOOL_INPUT\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\guard-destructive.ps1\" -ToolInput \"$TOOL_INPUT\""
           },
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-build-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-build-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
           }
         ]
       },
@@ -214,7 +214,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-write-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-write-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
           }
         ]
       }
@@ -225,11 +225,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\post-write-quality.ps1\" -ToolInput \"$TOOL_INPUT\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\post-write-quality.ps1\" -ToolInput \"$TOOL_INPUT\""
           },
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\post-research-capture.ps1\" -ToolInput \"$TOOL_INPUT\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\post-research-capture.ps1\" -ToolInput \"$TOOL_INPUT\""
           }
         ]
       }
@@ -239,7 +239,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\stop-failure.ps1\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\stop-failure.ps1\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\auto-compact-threshold.ps1\"",
+            "statusMessage": "Checking context window..."
           }
         ]
       }
