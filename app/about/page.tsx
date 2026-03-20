@@ -146,7 +146,7 @@ export default function AboutPage() {
       {/* Our Story */}
       <section className="py-20 md:py-28 px-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-2xl p-12">
+          <div className="bg-charcoal-800/60 border border-white/[0.06] backdrop-blur-sm rounded-2xl p-12">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <p className="text-orange-400 text-sm font-semibold uppercase tracking-wider mb-4">
@@ -228,7 +228,7 @@ export default function AboutPage() {
             </h2>
           </div>
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-8">
+            <div className="bg-charcoal-800/60 border border-white/[0.06] backdrop-blur-sm rounded-xl p-8">
               <Target className="w-12 h-12 text-orange-400 mb-4" />
               <h3 className="text-2xl font-bold text-white mb-4">
                 Our Mission
@@ -239,7 +239,7 @@ export default function AboutPage() {
                 it feel effortless.
               </p>
             </div>
-            <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-8">
+            <div className="bg-charcoal-800/60 border border-white/[0.06] backdrop-blur-sm rounded-xl p-8">
               <Rocket className="w-12 h-12 text-orange-400 mb-4" />
               <h3 className="text-2xl font-bold text-white mb-4">Our Vision</h3>
               <p className="text-gray-300">
@@ -269,7 +269,7 @@ export default function AboutPage() {
             {values.map((value, index) => (
               <div
                 key={index}
-                className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-6 text-center hover:scale-105 hover:border-orange-500/30 transition-all duration-300"
+                className="bg-charcoal-800/60 border border-white/[0.06] backdrop-blur-sm rounded-xl p-6 text-center hover:scale-105 hover:border-amber-500/30 transition-all duration-300"
               >
                 <value.icon className="w-10 h-10 text-orange-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-3">
@@ -350,7 +350,7 @@ export default function AboutPage() {
                   )}
                 </div>
                 <div className="flex-grow">
-                  <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm p-4 rounded-lg hover:border-orange-500/30 transition-colors">
+                  <div className="bg-charcoal-800/60 border border-white/[0.06] backdrop-blur-sm p-4 rounded-lg hover:border-amber-500/30 transition-colors">
                     <div className="text-orange-400 font-semibold mb-1">
                       {milestone.period}
                     </div>
@@ -366,7 +366,7 @@ export default function AboutPage() {
       {/* CTA Section */}
       <section className="py-20 md:py-28 px-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-r from-[#0d1f35] to-[#050505] border border-orange-500/20 backdrop-blur-sm rounded-2xl p-12 text-center relative overflow-hidden">
+          <div className="bg-charcoal-800 border border-orange-500/20 backdrop-blur-sm rounded-2xl p-12 text-center relative overflow-hidden">
             {/* Glow effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-orange-400/10 to-orange-500/5 pointer-events-none" />
             <div className="relative z-10">
