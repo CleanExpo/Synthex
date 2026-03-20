@@ -22,6 +22,7 @@ import {
   Crown,
   RefreshCw,
 } from '@/components/icons';
+import { HelpVideo } from '@/components/ui/HelpVideo';
 
 export default function AIChatPage() {
   const router = useRouter();
@@ -59,21 +60,24 @@ export default function AIChatPage() {
   if (upgradeRequired) {
     return (
       <div className="p-6 max-w-4xl mx-auto">
-        <div className="flex items-start gap-3 mb-8">
-          <div className="p-2 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20">
-            <MessageSquare className="h-6 w-6 text-orange-400" />
+        <div className="flex items-start justify-between gap-3 mb-8">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20">
+              <MessageSquare className="h-6 w-6 text-orange-400" />
+            </div>
+            <div>
+              <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-1 block">
+                AI Tools
+              </span>
+              <h1 className="text-3xl font-extralight tracking-tight text-white">
+                AI Chat Assistant
+              </h1>
+              <p className="text-white/40 text-sm">
+                Get AI-powered help with your content strategy
+              </p>
+            </div>
           </div>
-          <div>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-1 block">
-              AI Tools
-            </span>
-            <h1 className="text-3xl font-extralight tracking-tight text-white">
-              AI Chat Assistant
-            </h1>
-            <p className="text-white/40 text-sm">
-              Get AI-powered help with your content strategy
-            </p>
-          </div>
+          <HelpVideo videoId="ai-capability-chat" />
         </div>
 
         <div className="border-[0.5px] border-amber-500/20 bg-amber-500/[0.04] rounded-sm py-12 px-6">
@@ -155,6 +159,9 @@ export default function AIChatPage() {
         <h3 className="text-xl font-light text-white mb-2">
           Start your first conversation
         </h3>
+        <div className="mb-4">
+          <HelpVideo videoId="ai-capability-chat" />
+        </div>
         <p className="text-white/40 mb-6">
           Ask about content strategy, get ideas for posts, or optimise your
           social media presence.

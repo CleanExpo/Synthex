@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
+import { HelpVideo } from '@/components/ui/HelpVideo';
 import {
   Card,
   CardContent,
@@ -367,7 +368,10 @@ export default function IntegrationsPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Integrations</h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-3xl font-bold text-white mb-2">Integrations</h1>
+          <HelpVideo videoId="platform-guide-instagram" />
+        </div>
         <p className="text-gray-400">
           Connect your social media accounts to start creating and scheduling
           content

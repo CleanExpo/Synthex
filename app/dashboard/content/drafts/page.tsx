@@ -33,6 +33,7 @@ import {
 import { toast } from 'sonner';
 import { fetchWithCSRF } from '@/lib/csrf';
 import { PublishConfirmModal, type PublishOptions } from '@/components/content';
+import { HelpVideo } from '@/components/ui/HelpVideo';
 
 // =============================================================================
 // Types
@@ -668,6 +669,7 @@ export default function DraftsLibraryPage() {
                 {total} {total === 1 ? 'draft' : 'drafts'}
               </span>
             )}
+            <HelpVideo videoId="how-to-create-content" />
             <Button
               onClick={() => router.push('/dashboard/content')}
               className="gradient-primary text-white"

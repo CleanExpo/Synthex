@@ -8,6 +8,7 @@
 import { PageHeader } from '@/components/dashboard/page-header';
 import { ReviewQueuePanel } from './ReviewQueuePanel';
 import { Shield } from '@/components/icons';
+import { HelpVideo } from '@/components/ui/HelpVideo';
 
 export function BrandVoicePageClient() {
   return (
@@ -16,9 +17,12 @@ export function BrandVoicePageClient() {
         title="Brand Voice"
         description="AI content quality review queue. High-confidence content is auto-approved; low-confidence items appear here for human review."
         actions={
-          <div className="flex items-center gap-2 text-xs text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-1.5">
-            <Shield className="h-3.5 w-3.5" />
-            Auto-approve threshold: 85%
+          <div className="flex items-center gap-3">
+            <HelpVideo videoId="feature-tour-brand-voice" />
+            <div className="flex items-center gap-2 text-xs text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-1.5">
+              <Shield className="h-3.5 w-3.5" />
+              Auto-approve threshold: 85%
+            </div>
           </div>
         }
       />

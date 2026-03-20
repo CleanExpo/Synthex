@@ -6,6 +6,7 @@ import type { DateRange } from 'react-day-picker';
 import { AnalyticsSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import { usePerformanceAnalytics } from '@/hooks/use-dashboard';
+import { HelpVideo } from '@/components/ui/HelpVideo';
 
 import {
   type DisplayData,
@@ -260,15 +261,18 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <AnalyticsHeader
-        timeRange={timeRange}
-        onTimeRangeChange={handleTimeRangeChange}
-        onExport={handleExport}
-        platform={platform}
-        onPlatformChange={setPlatform}
-        dateRange={dateRange}
-        onDateRangeChange={setDateRange}
-      />
+      <div className="flex items-start justify-between gap-3">
+        <AnalyticsHeader
+          timeRange={timeRange}
+          onTimeRangeChange={handleTimeRangeChange}
+          onExport={handleExport}
+          platform={platform}
+          onPlatformChange={setPlatform}
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+        />
+        <HelpVideo videoId="feature-tour-analytics" />
+      </div>
 
       <AnalyticsStats data={displayData} growth={performanceData?.growth} />
 

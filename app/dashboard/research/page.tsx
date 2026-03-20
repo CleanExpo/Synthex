@@ -20,6 +20,7 @@ import {
   Filter,
 } from '@/components/icons';
 import { GEOFeatureGate } from '@/components/geo/GEOFeatureGate';
+import { HelpVideo } from '@/components/ui/HelpVideo';
 
 interface ResearchReport {
   id: number;
@@ -404,13 +405,16 @@ export default function ResearchPage() {
                 Create first-party data citation magnets for AI search engines
               </p>
             </div>
-            <Button
-              onClick={() => setShowCreate(!showCreate)}
-              className="bg-orange-600 hover:bg-orange-700"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Report
-            </Button>
+            <div className="flex items-center gap-3">
+              <HelpVideo videoId="feature-tour-research" />
+              <Button
+                onClick={() => setShowCreate(!showCreate)}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Report
+              </Button>
+            </div>
           </div>
 
           {showCreate && (

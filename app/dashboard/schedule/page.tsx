@@ -14,9 +14,14 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
-import { WeekView, PostDetailModal, OPTIMAL_TIMES } from '@/components/calendar';
+import {
+  WeekView,
+  PostDetailModal,
+  OPTIMAL_TIMES,
+} from '@/components/calendar';
 import { toast } from 'sonner';
 import { fetchWithCSRF } from '@/lib/csrf';
+import { HelpVideo } from '@/components/ui/HelpVideo';
 
 import {
   type ViewMode,
@@ -39,21 +44,30 @@ function mapApiPost(p: Record<string, unknown>): ScheduledPost {
   const metadata = (p.metadata as Record<string, unknown>) || {};
   const metaHashtags = (metadata.hashtags as string[]) || [];
   // scheduledAt may be null for draft posts — fall back to createdAt or now
-  const rawScheduledAt = p.scheduledAt ?? p.createdAt ?? new Date().toISOString();
+  const rawScheduledAt =
+    p.scheduledAt ?? p.createdAt ?? new Date().toISOString();
   return {
     id: String(p.id),
     content: (p.content as string) || '',
-    platforms: (p.platforms as string[]) || [(p.platform as string) || 'twitter'],
+    platforms: (p.platforms as string[]) || [
+      (p.platform as string) || 'twitter',
+    ],
     scheduledFor: new Date(rawScheduledAt as string),
     status: (p.status as ScheduledPost['status']) || 'scheduled',
     engagement: {
       estimated: (metadata.estimatedEngagement as number) || 5,
-      ...(p.status === 'published' ? {
-        actual: (metadata.engagement as Record<string, unknown>)?.actual as number,
-        likes: (metadata.engagement as Record<string, unknown>)?.likes as number,
-        comments: (metadata.engagement as Record<string, unknown>)?.comments as number,
-        shares: (metadata.engagement as Record<string, unknown>)?.shares as number,
-      } : {}),
+      ...(p.status === 'published'
+        ? {
+            actual: (metadata.engagement as Record<string, unknown>)
+              ?.actual as number,
+            likes: (metadata.engagement as Record<string, unknown>)
+              ?.likes as number,
+            comments: (metadata.engagement as Record<string, unknown>)
+              ?.comments as number,
+            shares: (metadata.engagement as Record<string, unknown>)
+              ?.shares as number,
+          }
+        : {}),
     },
     persona: (metadata.persona as string) || 'Default',
     hashtags: metaHashtags,
@@ -124,170 +138,199 @@ export default function SchedulePage() {
 
     load();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [fetchPosts]);
 
   // Cleanup ref
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   // ── Filter posts ──────────────────────────────────────────────────────────
   const filteredPosts = useMemo(() => {
     return posts.filter(post => {
-      if (filterPlatform !== 'all' && !post.platforms.includes(filterPlatform)) return false;
+      if (filterPlatform !== 'all' && !post.platforms.includes(filterPlatform))
+        return false;
       if (filterStatus !== 'all' && post.status !== filterStatus) return false;
       return true;
     });
   }, [posts, filterPlatform, filterStatus]);
 
   // ── Calculate stats ───────────────────────────────────────────────────────
-  const stats: ScheduleStats = useMemo(() => ({
-    scheduled: posts.filter(p => p.status === 'scheduled').length,
-    published: posts.filter(p => p.status === 'published').length,
-    draft: posts.filter(p => p.status === 'draft').length,
-    avgEngagement: posts.reduce((sum, p) => sum + (p.engagement?.actual || p.engagement?.estimated || 0), 0) / Math.max(posts.length, 1),
-  }), [posts]);
+  const stats: ScheduleStats = useMemo(
+    () => ({
+      scheduled: posts.filter(p => p.status === 'scheduled').length,
+      published: posts.filter(p => p.status === 'published').length,
+      draft: posts.filter(p => p.status === 'draft').length,
+      avgEngagement:
+        posts.reduce(
+          (sum, p) =>
+            sum + (p.engagement?.actual || p.engagement?.estimated || 0),
+          0
+        ) / Math.max(posts.length, 1),
+    }),
+    [posts]
+  );
 
   // ── Reschedule via drag-and-drop ──────────────────────────────────────────
-  const handlePostReschedule = useCallback(async (postId: string, newTime: Date) => {
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
+  const handlePostReschedule = useCallback(
+    async (postId: string, newTime: Date) => {
+      const post = posts.find(p => p.id === postId);
+      if (!post) return;
 
-    // Optimistic update
-    setPosts(prev => prev.map(p =>
-      p.id === postId ? { ...p, scheduledFor: newTime } : p
-    ));
+      // Optimistic update
+      setPosts(prev =>
+        prev.map(p => (p.id === postId ? { ...p, scheduledFor: newTime } : p))
+      );
 
-    try {
-      const response = await fetchWithCSRF('/api/scheduler/posts', {
-        method: 'PATCH',
-        body: JSON.stringify({
-          id: postId,
-          scheduledAt: newTime.toISOString(),
-        }),
-      });
+      try {
+        const response = await fetchWithCSRF('/api/scheduler/posts', {
+          method: 'PATCH',
+          body: JSON.stringify({
+            id: postId,
+            scheduledAt: newTime.toISOString(),
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error(`Failed to reschedule (${response.status})`);
+        if (!response.ok) {
+          throw new Error(`Failed to reschedule (${response.status})`);
+        }
+
+        toast.success(`Rescheduled to ${newTime.toLocaleString()}`);
+      } catch {
+        // Rollback on failure
+        setPosts(prev => prev.map(p => (p.id === postId ? post : p)));
+        toast.error('Failed to reschedule. Please try again.');
       }
-
-      toast.success(`Rescheduled to ${newTime.toLocaleString()}`);
-    } catch {
-      // Rollback on failure
-      setPosts(prev => prev.map(p =>
-        p.id === postId ? post : p
-      ));
-      toast.error('Failed to reschedule. Please try again.');
-    }
-  }, [posts]);
+    },
+    [posts]
+  );
 
   const handlePostClick = useCallback((post: ScheduledPost) => {
     setSelectedPost(post);
   }, []);
 
-  const handlePostCreate = useCallback((_date?: Date, _hour?: number) => {
-    router.push('/dashboard/content');
-  }, [router]);
+  const handlePostCreate = useCallback(
+    (_date?: Date, _hour?: number) => {
+      router.push('/dashboard/content');
+    },
+    [router]
+  );
 
   // ── Save (update) post ────────────────────────────────────────────────────
-  const handleSavePost = useCallback(async (updatedPost: ScheduledPost) => {
-    const originalPost = posts.find(p => p.id === updatedPost.id);
+  const handleSavePost = useCallback(
+    async (updatedPost: ScheduledPost) => {
+      const originalPost = posts.find(p => p.id === updatedPost.id);
 
-    // Optimistic update
-    setPosts(prev => prev.map(p =>
-      p.id === updatedPost.id ? updatedPost : p
-    ));
+      // Optimistic update
+      setPosts(prev =>
+        prev.map(p => (p.id === updatedPost.id ? updatedPost : p))
+      );
 
-    try {
-      const response = await fetchWithCSRF('/api/scheduler/posts', {
-        method: 'PATCH',
-        body: JSON.stringify({
-          id: updatedPost.id,
-          content: updatedPost.content,
-          platform: updatedPost.platforms[0] || 'twitter',
-          status: updatedPost.status,
-          scheduledAt: new Date(updatedPost.scheduledFor).toISOString(),
-        }),
-      });
+      try {
+        const response = await fetchWithCSRF('/api/scheduler/posts', {
+          method: 'PATCH',
+          body: JSON.stringify({
+            id: updatedPost.id,
+            content: updatedPost.content,
+            platform: updatedPost.platforms[0] || 'twitter',
+            status: updatedPost.status,
+            scheduledAt: new Date(updatedPost.scheduledFor).toISOString(),
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error(`Failed to save (${response.status})`);
+        if (!response.ok) {
+          throw new Error(`Failed to save (${response.status})`);
+        }
+
+        toast.success('Post updated successfully!');
+      } catch {
+        // Rollback on failure
+        if (originalPost) {
+          setPosts(prev =>
+            prev.map(p => (p.id === updatedPost.id ? originalPost : p))
+          );
+        }
+        toast.error('Failed to save post. Please try again.');
       }
-
-      toast.success('Post updated successfully!');
-    } catch {
-      // Rollback on failure
-      if (originalPost) {
-        setPosts(prev => prev.map(p =>
-          p.id === updatedPost.id ? originalPost : p
-        ));
-      }
-      toast.error('Failed to save post. Please try again.');
-    }
-  }, [posts]);
+    },
+    [posts]
+  );
 
   // ── Delete post ───────────────────────────────────────────────────────────
-  const handleDeletePost = useCallback(async (postId: string) => {
-    const originalPost = posts.find(p => p.id === postId);
+  const handleDeletePost = useCallback(
+    async (postId: string) => {
+      const originalPost = posts.find(p => p.id === postId);
 
-    // Optimistic update
-    setPosts(prev => prev.filter(p => p.id !== postId));
-    setSelectedPost(null);
+      // Optimistic update
+      setPosts(prev => prev.filter(p => p.id !== postId));
+      setSelectedPost(null);
 
-    try {
-      const response = await fetchWithCSRF(`/api/scheduler/posts?id=${postId}`, {
-        method: 'DELETE',
-      });
+      try {
+        const response = await fetchWithCSRF(
+          `/api/scheduler/posts?id=${postId}`,
+          {
+            method: 'DELETE',
+          }
+        );
 
-      if (!response.ok) {
-        throw new Error(`Failed to delete (${response.status})`);
+        if (!response.ok) {
+          throw new Error(`Failed to delete (${response.status})`);
+        }
+
+        toast.success('Post deleted');
+      } catch {
+        // Rollback on failure
+        if (originalPost) {
+          setPosts(prev => [...prev, originalPost]);
+        }
+        toast.error('Failed to delete post. Please try again.');
       }
-
-      toast.success('Post deleted');
-    } catch {
-      // Rollback on failure
-      if (originalPost) {
-        setPosts(prev => [...prev, originalPost]);
-      }
-      toast.error('Failed to delete post. Please try again.');
-    }
-  }, [posts]);
+    },
+    [posts]
+  );
 
   // ── Publish now ───────────────────────────────────────────────────────────
-  const handlePublishNow = useCallback(async (postId: string) => {
-    const originalPost = posts.find(p => p.id === postId);
+  const handlePublishNow = useCallback(
+    async (postId: string) => {
+      const originalPost = posts.find(p => p.id === postId);
 
-    // Optimistic update
-    setPosts(prev => prev.map(p =>
-      p.id === postId ? { ...p, status: 'published' as const } : p
-    ));
+      // Optimistic update
+      setPosts(prev =>
+        prev.map(p =>
+          p.id === postId ? { ...p, status: 'published' as const } : p
+        )
+      );
 
-    try {
-      const response = await fetchWithCSRF('/api/scheduler/posts', {
-        method: 'PATCH',
-        body: JSON.stringify({
-          id: postId,
-          status: 'published',
-        }),
-      });
+      try {
+        const response = await fetchWithCSRF('/api/scheduler/posts', {
+          method: 'PATCH',
+          body: JSON.stringify({
+            id: postId,
+            status: 'published',
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error(`Failed to publish (${response.status})`);
+        if (!response.ok) {
+          throw new Error(`Failed to publish (${response.status})`);
+        }
+
+        toast.success('Post published successfully!');
+      } catch {
+        // Rollback on failure
+        if (originalPost) {
+          setPosts(prev => prev.map(p => (p.id === postId ? originalPost : p)));
+        }
+        toast.error('Failed to publish post. Please try again.');
       }
-
-      toast.success('Post published successfully!');
-    } catch {
-      // Rollback on failure
-      if (originalPost) {
-        setPosts(prev => prev.map(p =>
-          p.id === postId ? originalPost : p
-        ));
-      }
-      toast.error('Failed to publish post. Please try again.');
-    }
-  }, [posts]);
+    },
+    [posts]
+  );
 
   // ── Duplicate post ────────────────────────────────────────────────────────
   const handleDuplicatePost = useCallback(async (post: ScheduledPost) => {
@@ -341,7 +384,9 @@ export default function SchedulePage() {
       })),
     };
 
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: 'application/json',
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -358,20 +403,22 @@ export default function SchedulePage() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
-    input.onchange = (e) => {
+    input.onchange = e => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = event => {
         try {
           const data = JSON.parse(event.target?.result as string);
           if (data.posts && Array.isArray(data.posts)) {
-            const importedPosts: ScheduledPost[] = data.posts.map((post: ScheduledPost, index: number) => ({
-              ...post,
-              id: `${Date.now()}-${index}`,
-              scheduledFor: new Date(post.scheduledFor),
-            }));
+            const importedPosts: ScheduledPost[] = data.posts.map(
+              (post: ScheduledPost, index: number) => ({
+                ...post,
+                id: `${Date.now()}-${index}`,
+                scheduledFor: new Date(post.scheduledFor),
+              })
+            );
             setPosts(prev => [...prev, ...importedPosts]);
             toast.success(`Imported ${importedPosts.length} posts!`);
           } else {
@@ -412,7 +459,9 @@ export default function SchedulePage() {
       id: reviewPost.id,
       content: reviewPost.content,
       platforms: [reviewPost.platform],
-      scheduledFor: reviewPost.scheduledAt ? new Date(reviewPost.scheduledAt) : new Date(),
+      scheduledFor: reviewPost.scheduledAt
+        ? new Date(reviewPost.scheduledAt)
+        : new Date(),
       status: 'draft' as const,
       engagement: { estimated: 5 },
       persona: 'Default',
@@ -437,7 +486,13 @@ export default function SchedulePage() {
   }
 
   if (error) {
-    return <APIErrorCard title="Schedule Error" message={error} onRetry={handleRetry} />;
+    return (
+      <APIErrorCard
+        title="Schedule Error"
+        message={error}
+        onRetry={handleRetry}
+      />
+    );
   }
 
   if (posts.length === 0) {
@@ -467,13 +522,16 @@ export default function SchedulePage() {
     <div className="space-y-6">
       <ReviewQueue onEdit={handleReviewEdit} onMutate={handleReviewMutate} />
 
-      <ScheduleHeader
-        isCreating={isCreating}
-        onImport={handleImportSchedule}
-        onExport={handleExportSchedule}
-        onCreate={() => handlePostCreate(new Date(), new Date().getHours())}
-        onBulkSchedule={() => setBulkWizardOpen(true)}
-      />
+      <div className="flex items-center justify-between gap-3">
+        <ScheduleHeader
+          isCreating={isCreating}
+          onImport={handleImportSchedule}
+          onExport={handleExportSchedule}
+          onCreate={() => handlePostCreate(new Date(), new Date().getHours())}
+          onBulkSchedule={() => setBulkWizardOpen(true)}
+        />
+        <HelpVideo videoId="how-to-schedule-posts" />
+      </div>
 
       <BulkScheduleWizard
         open={bulkWizardOpen}
@@ -520,7 +578,9 @@ export default function SchedulePage() {
           posts={filteredPosts}
           hasFilters={filterPlatform !== 'all' || filterStatus !== 'all'}
           onPostClick={handlePostClick}
-          onCreatePost={() => handlePostCreate(new Date(), new Date().getHours())}
+          onCreatePost={() =>
+            handlePostCreate(new Date(), new Date().getHours())
+          }
           onPublishNow={handlePublishNow}
           onDeletePost={handleDeletePost}
         />

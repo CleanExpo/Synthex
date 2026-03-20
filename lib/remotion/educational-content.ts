@@ -23,6 +23,7 @@ export interface EducationalVideo {
   fps: number;
   width: number;
   height: number;
+  youtubeVideoId?: string;
 }
 
 export const EDUCATIONAL_VIDEOS: EducationalVideo[] = [
@@ -2908,6 +2909,193 @@ Claim now: https://synthex.social
       'Example: Synthex automatically generating, scheduling, and optimising your social media content. ' +
       'Experience it at synthex dot social.',
     durationInFrames: 600,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
+
+  // ── HelpVideo placements (SYN-431) ────────────────────────────────────────
+
+  {
+    id: 'how-to-schedule-posts',
+    title: 'How to Schedule Posts | Synthex Tutorial',
+    description:
+      'Learn how to schedule social media posts across all platforms using the Synthex content calendar.\n\n#SocialMedia #ContentScheduling #Synthex',
+    tags: [
+      'scheduling',
+      'content calendar',
+      'social media',
+      'Synthex',
+      'tutorial',
+    ],
+    compositionId: 'HowToVideo',
+    voiceoverScript:
+      'Welcome to Synthex. In this tutorial, we cover how to schedule posts across all your connected platforms. ' +
+      'Open the Schedule page and you will see your content calendar. ' +
+      'Click any time slot to create a new post, or drag an existing draft onto the calendar. ' +
+      'Choose your platforms, set your preferred time, and Synthex will handle the rest. ' +
+      'You can also use our optimal-times feature to let AI suggest the best publishing windows for each platform. ' +
+      'Your audience gets the right content at the right time, every time.',
+    durationInFrames: 1200,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
+  {
+    id: 'how-to-create-content',
+    title: 'How to Create AI Content | Synthex Tutorial',
+    description:
+      'See how to generate on-brand social media content with Synthex AI in seconds.\n\n#ContentCreation #AIMarketing #Synthex',
+    tags: [
+      'content creation',
+      'AI writing',
+      'social media',
+      'Synthex',
+      'tutorial',
+    ],
+    compositionId: 'HowToVideo',
+    voiceoverScript:
+      'Creating content with Synthex takes seconds, not hours. ' +
+      'Navigate to Content Drafts and click New Draft. ' +
+      'Enter a topic or let AI suggest one based on your content calendar. ' +
+      'Synthex generates platform-optimised copy for every connected channel simultaneously. ' +
+      'Review, tweak, and approve — or enable auto-publish to go live immediately. ' +
+      'Your brand voice is learned from your existing content, so every post sounds like you.',
+    durationInFrames: 1200,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
+  {
+    id: 'feature-tour-analytics',
+    title: 'Analytics Feature Tour | Synthex',
+    description:
+      'Explore the Synthex analytics dashboard — track engagement, reach, and growth across all platforms.\n\n#Analytics #SocialMediaMetrics #Synthex',
+    tags: ['analytics', 'metrics', 'engagement', 'social media', 'Synthex'],
+    compositionId: 'ExplainerVideo',
+    voiceoverScript:
+      'The Synthex analytics dashboard gives you a unified view of performance across every platform. ' +
+      'Track engagement rate, follower growth, reach, and top-performing content from one screen. ' +
+      'Use the campaign selector to compare performance across different time periods. ' +
+      'The AI insights panel surfaces actionable recommendations — like the best time to post or which content format resonates most. ' +
+      'Data updates every thirty minutes so you always have a current picture of your social presence.',
+    durationInFrames: 900,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
+  {
+    id: 'feature-tour-brand-voice',
+    title: 'Brand Voice Feature Tour | Synthex',
+    description:
+      'Learn how Synthex captures and maintains your unique brand voice across all AI-generated content.\n\n#BrandVoice #ContentStrategy #Synthex',
+    tags: ['brand voice', 'tone of voice', 'content strategy', 'AI', 'Synthex'],
+    compositionId: 'ExplainerVideo',
+    voiceoverScript:
+      'Your brand voice is what makes your content recognisable. ' +
+      'Synthex learns it from your existing posts, website copy, and the tone guidelines you provide. ' +
+      "In the Brand Voice page, you can review and refine the AI's understanding of your style. " +
+      'Set vocabulary preferences, tone sliders, and content themes. ' +
+      'Every piece of AI-generated content will match this profile — consistent across platforms and over time.',
+    durationInFrames: 900,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
+  {
+    id: 'platform-guide-instagram',
+    title: 'Connecting Instagram | Synthex Platform Guide',
+    description:
+      'Step-by-step guide to connecting your Instagram account to Synthex for automated posting.\n\n#Instagram #SocialMediaIntegration #Synthex',
+    tags: [
+      'Instagram',
+      'platform connection',
+      'OAuth',
+      'social media',
+      'Synthex',
+    ],
+    compositionId: 'HowToVideo',
+    voiceoverScript:
+      'Connecting Instagram to Synthex takes under a minute. ' +
+      'Go to Integrations, find Instagram in the platform list, and click Connect. ' +
+      "You will be redirected to Instagram's authorisation page. " +
+      'Log in with your business account and approve the Synthex permissions. ' +
+      'Once connected, Synthex can publish posts, reels, and stories on your behalf. ' +
+      'Connect multiple Instagram accounts for different businesses — each managed separately.',
+    durationInFrames: 1200,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
+  {
+    id: 'ai-capability-chat',
+    title: 'AI Chat Capabilities | Synthex',
+    description:
+      'Discover what you can do with Synthex AI Chat — strategy, content, research, and more.\n\n#AIChat #MarketingAI #Synthex',
+    tags: [
+      'AI chat',
+      'content strategy',
+      'marketing AI',
+      'Synthex',
+      'tutorial',
+    ],
+    compositionId: 'ExplainerVideo',
+    voiceoverScript:
+      'Synthex AI Chat is your always-on marketing strategist. ' +
+      'Ask it to brainstorm campaign ideas, write captions for specific platforms, or analyse competitor content. ' +
+      'It remembers your brand profile and past conversations, so advice gets more personalised over time. ' +
+      'Use it to draft email subject lines, plan content calendars, or refine your value proposition. ' +
+      'Every response is grounded in your industry context — not generic marketing advice.',
+    durationInFrames: 900,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
+  {
+    id: 'feature-tour-research',
+    title: 'Research Feature Tour | Synthex',
+    description:
+      'Explore Synthex Research — AI-powered market intelligence to inform your content strategy.\n\n#ContentResearch #MarketIntelligence #Synthex',
+    tags: [
+      'research',
+      'market intelligence',
+      'content strategy',
+      'AI',
+      'Synthex',
+    ],
+    compositionId: 'ExplainerVideo',
+    voiceoverScript:
+      'The Synthex Research module puts market intelligence at your fingertips. ' +
+      'Search any topic and get a synthesised brief — trends, key players, audience questions, and content angles. ' +
+      'Research reports are saved to your library for future reference. ' +
+      'Use the citation panel to back up your content with credible sources. ' +
+      "The AI identifies gaps in your competitors's content that you can fill — giving you a consistent edge.",
+    durationInFrames: 900,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
+  {
+    id: 'workflow-overview',
+    title: 'Creative Suite Workflow Overview | Synthex',
+    description:
+      'Get an overview of the Synthex Creative Suite — AI content studio, brand tools, and campaign builder.\n\n#CreativeSuite #ContentStudio #Synthex',
+    tags: [
+      'creative suite',
+      'content studio',
+      'brand tools',
+      'campaign builder',
+      'Synthex',
+    ],
+    compositionId: 'ExplainerVideo',
+    voiceoverScript:
+      'The Synthex Creative Suite is where ideas become campaigns. ' +
+      'Start in the AI Content Studio to generate copy, images, and video briefs in minutes. ' +
+      'Move to the Brand Tools section to apply your visual identity — logo, colours, fonts. ' +
+      'Then hand off to the Campaign Builder to schedule and distribute across every platform. ' +
+      'The full workflow from concept to published campaign takes minutes, not days. ' +
+      'Your creative output scales with your ambition.',
+    durationInFrames: 900,
     fps: 30,
     width: 1920,
     height: 1080,

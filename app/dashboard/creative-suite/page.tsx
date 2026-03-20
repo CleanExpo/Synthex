@@ -11,6 +11,7 @@ import {
   BarChart3,
   Search,
 } from '@/components/icons';
+import { HelpVideo } from '@/components/ui/HelpVideo';
 
 // ============================================================================
 // TYPES
@@ -128,9 +129,12 @@ export default function CreativeSuitePage() {
         transition={{ duration: 0.4, ease: 'easeOut' }}
         className="space-y-1.5"
       >
-        <h1 className="text-2xl font-light text-white tracking-wide">
-          Creative Intelligence Suite
-        </h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-light text-white tracking-wide">
+            Creative Intelligence Suite
+          </h1>
+          <HelpVideo videoId="workflow-overview" />
+        </div>
         <p className="text-sm text-white/50">
           Your complete AI marketing toolkit
         </p>
