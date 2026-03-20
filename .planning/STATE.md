@@ -9,15 +9,16 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 123 (diagnostic-repeat) — **COMPLETE** ✅
-Last activity: 2026-03-19 — Phase 123 diagnostic complete. All code-verifiable gates passed.
-Linear: SYN-388 (Phase 123, Done), SYN-391/392 (ROUTE-10/11, Done — properly fixed with schema migration)
+Phase: 124 (openai-v6) — **COMPLETE** ✅
+Last activity: 2026-03-20 — openai SDK upgraded ^4.104.0 → ^6.0.0 (6.32.0). Zero breaking changes in src/services/openrouter.ts. type-check 0 errors, 1547 tests passing.
+Linear: SYN-400 (Phase 124, Done)
 
 Milestone: v10.0 Full Platform Quality Loop — **PENDING HUMAN GATE**
 Last milestone shipped: v9.0 — 2026-03-17
 Status: Phases 119–123 code-complete. Only SYN-410 (Phase 122 E2E) remains — human-gated.
+Phase 124 (openai v6 upgrade, SYN-400) added as first v11.0 Tech Foundation phase — DONE.
 
-Progress: █████████░ 95% v10.0
+Progress: █████████░ 95% v10.0 (human gate remaining) | Phase 124 opens v11.0
 
 **v10.0 Code Gate Status (2026-03-19):**
 

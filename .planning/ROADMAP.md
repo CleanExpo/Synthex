@@ -25,7 +25,8 @@ None (internal platform work)
 - ✅ [v7.0 Production Hardening & Quality](milestones/v7.0-ROADMAP.md) (Phases 108-113) — SHIPPED 2026-03-12
 - ✅ **v8.0 Production Go-Live** — Phases 114-117 — SHIPPED 2026-03-13
 - ✅ [v9.0 Autonomous Operation](milestones/v9.0-ROADMAP.md) (Phase 118) — SHIPPED 2026-03-17
-- 🚧 **v10.0 Full Platform Quality Loop** — Phases 119-123 — IN PROGRESS
+- 🚧 **v10.0 Full Platform Quality Loop** — Phases 119-123 — IN PROGRESS (human gate: SYN-410 E2E)
+- 🚧 **v11.0 Tech Foundation Upgrades** — Phases 124+ — IN PROGRESS
 
 ## Phases
 
@@ -149,10 +150,15 @@ None (internal platform work)
 ### 🚧 v10.0 Full Platform Quality Loop
 
 - [x] **Phase 119: Deep Audit** — 107 findings (12 CRITICAL, 23 HIGH, 32 MEDIUM, 40 LOW); TypeScript clean; 4 test failures; cookie auth regression on ~28 routes; 28 contrast issues; master 119-FINDINGS.md compiled — DONE 2026-03-17
-- [ ] **Phase 120: Linear Catalog** — Auto-generate Linear issues for all audit findings; tag and triage
-- [ ] **Phase 121: Priority Execution** — Highest-priority issues first: security → performance → UX → features
-- [ ] **Phase 122: Production Validation Loop** — Test, retest, fix, retest until all pass; apply to production
-- [ ] **Phase 123: Diagnostic Repeat** — Remove bloat, strengthen code, find weaknesses, clean all .md files, self-learn loop
+- [x] **Phase 120: Linear Catalog** — Auto-generate Linear issues for all audit findings; tag and triage — DONE 2026-03-18
+- [x] **Phase 121: Priority Execution** — Highest-priority issues first: security → performance → UX → features — DONE 2026-03-18
+- [x] **Phase 122: Production Validation Loop** — Test, retest, fix, retest until all pass; apply to production — DONE 2026-03-19 (SYN-410 E2E human-gated)
+- [x] **Phase 123: Diagnostic Repeat** — Remove bloat, strengthen code, find weaknesses, clean all .md files — DONE 2026-03-19
+
+### 🚧 v11.0 Tech Foundation Upgrades (SYN-407)
+
+- [x] **Phase 124: openai SDK 4.x → 6.x** — Package bump ^4.104.0→^6.0.0; 0 breaking changes (src/services/openrouter.ts uses local types) — DONE 2026-03-20
+- [ ] **Phase 125: React 18 → 19 + Next.js 15 → 16** — Major upgrade; requires dedicated planning session (large blast radius)
 
 ## Phase Details
 
