@@ -1,7 +1,7 @@
 // Test environment variables — must be set before any module imports
 process.env.JWT_SECRET =
   process.env.JWT_SECRET || 'test-secret-at-least-32-chars-long!!';
-process.env.OWNER_EMAILS = process.env.OWNER_EMAILS || 'test@synthex.app';
+process.env.OWNER_EMAILS = process.env.OWNER_EMAILS || 'test@synthex.social';
 
 const { TextDecoder, TextEncoder } = require('util');
 

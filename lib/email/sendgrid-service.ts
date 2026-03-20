@@ -37,7 +37,7 @@ export class SendGridService {
         to: data.to,
         from: {
           email: data.from || this.fromEmail,
-          name: this.fromName
+          name: this.fromName,
         },
         subject: data.subject,
         html: data.html,
@@ -55,9 +55,13 @@ export class SendGridService {
   /**
    * Send welcome email to new user
    */
-  async sendWelcomeEmail(userEmail: string, userName: string): Promise<boolean> {
-    const subject = 'Welcome to SYNTHEX - Your AI Social Media Agency is Ready! 🚀';
-    
+  async sendWelcomeEmail(
+    userEmail: string,
+    userName: string
+  ): Promise<boolean> {
+    const subject =
+      'Welcome to SYNTHEX - Your AI Social Media Agency is Ready! 🚀';
+
     const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -79,11 +83,11 @@ export class SendGridService {
   <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #0a0a0a;">
     <tr>
       <td align="center" style="padding: 40px 20px;">
-        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background: linear-gradient(135deg, #1a0033 0%, #0a0a0a 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 20px 40px rgba(6, 182, 212, 0.1);">
+        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background: linear-gradient(135deg, #1a0033 0%, #0a0a0a 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 20px 40px rgba(245, 158, 11, 0.1);">
           
           <!-- Header with Logo -->
           <tr>
-            <td align="center" style="padding: 40px 20px 30px; background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);">
+            <td align="center" style="padding: 40px 20px 30px; background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%);">
               <div style="display: inline-block;">
                 <h1 style="margin: 0; color: #ffffff; font-size: 36px; font-weight: bold; letter-spacing: -1px;">
                   ✨ SYNTHEX
@@ -111,7 +115,7 @@ export class SendGridService {
           <!-- Your AI Team -->
           <tr>
             <td style="padding: 0 40px 30px;">
-              <div style="background: rgba(6, 182, 212, 0.1); border-radius: 12px; padding: 30px; border: 1px solid rgba(6, 182, 212, 0.2);">
+              <div style="background: rgba(245, 158, 11, 0.1); border-radius: 12px; padding: 30px; border: 1px solid rgba(245, 158, 11, 0.2);">
                 <h3 style="margin: 0 0 20px; color: #ffffff; font-size: 20px; font-weight: bold;">
                   Your AI Team is Ready to Work 24/7
                 </h3>
@@ -171,7 +175,7 @@ export class SendGridService {
               
               <div style="margin-bottom: 20px;">
                 <div style="display: flex; align-items: flex-start; margin-bottom: 15px;">
-                  <div style="background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color: #ffffff; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px; flex-shrink: 0;">1</div>
+                  <div style="background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%); color: #ffffff; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px; flex-shrink: 0;">1</div>
                   <div>
                     <strong style="color: #ffffff; font-size: 16px;">Connect Your Social Accounts</strong>
                     <p style="margin: 5px 0 0; color: #a3a3a3; font-size: 14px; line-height: 1.5;">Link Twitter, LinkedIn, Instagram, and more in seconds.</p>
@@ -179,7 +183,7 @@ export class SendGridService {
                 </div>
                 
                 <div style="display: flex; align-items: flex-start; margin-bottom: 15px;">
-                  <div style="background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color: #ffffff; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px; flex-shrink: 0;">2</div>
+                  <div style="background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%); color: #ffffff; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px; flex-shrink: 0;">2</div>
                   <div>
                     <strong style="color: #ffffff; font-size: 16px;">Train Your AI on Your Brand</strong>
                     <p style="margin: 5px 0 0; color: #a3a3a3; font-size: 14px; line-height: 1.5;">Upload past content so AI learns your unique voice.</p>
@@ -187,7 +191,7 @@ export class SendGridService {
                 </div>
                 
                 <div style="display: flex; align-items: flex-start;">
-                  <div style="background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color: #ffffff; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px; flex-shrink: 0;">3</div>
+                  <div style="background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%); color: #ffffff; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px; flex-shrink: 0;">3</div>
                   <div>
                     <strong style="color: #ffffff; font-size: 16px;">Launch Your First Campaign</strong>
                     <p style="margin: 5px 0 0; color: #a3a3a3; font-size: 14px; line-height: 1.5;">Generate viral content and schedule across all platforms.</p>
@@ -200,7 +204,7 @@ export class SendGridService {
           <!-- CTA Button -->
           <tr>
             <td align="center" style="padding: 0 40px 40px;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color: #ffffff; padding: 16px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px; box-shadow: 0 10px 20px rgba(6, 182, 212, 0.3);">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%); color: #ffffff; padding: 16px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px; box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);">
                 Go to Your Dashboard →
               </a>
             </td>
@@ -215,24 +219,24 @@ export class SendGridService {
               <table cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td width="50%" style="padding-right: 10px;">
-                    <a href="${process.env.NEXT_PUBLIC_APP_URL}/docs" style="color: #06b6d4; text-decoration: none; font-size: 14px;">
+                    <a href="${process.env.NEXT_PUBLIC_APP_URL}/docs" style="color: #f59e0b; text-decoration: none; font-size: 14px;">
                       📖 Documentation
                     </a>
                   </td>
                   <td width="50%" style="padding-left: 10px;">
-                    <a href="${process.env.NEXT_PUBLIC_APP_URL}/academy" style="color: #06b6d4; text-decoration: none; font-size: 14px;">
+                    <a href="${process.env.NEXT_PUBLIC_APP_URL}/academy" style="color: #f59e0b; text-decoration: none; font-size: 14px;">
                       🎓 SYNTHEX Academy
                     </a>
                   </td>
                 </tr>
                 <tr>
                   <td width="50%" style="padding: 10px 10px 0 0;">
-                    <a href="${process.env.NEXT_PUBLIC_APP_URL}/best-practices" style="color: #06b6d4; text-decoration: none; font-size: 14px;">
+                    <a href="${process.env.NEXT_PUBLIC_APP_URL}/best-practices" style="color: #f59e0b; text-decoration: none; font-size: 14px;">
                       💡 Best Practices Guide
                     </a>
                   </td>
                   <td width="50%" style="padding: 10px 0 0 10px;">
-                    <a href="${process.env.NEXT_PUBLIC_APP_URL}/support" style="color: #06b6d4; text-decoration: none; font-size: 14px;">
+                    <a href="${process.env.NEXT_PUBLIC_APP_URL}/support" style="color: #f59e0b; text-decoration: none; font-size: 14px;">
                       💬 24/7 Support
                     </a>
                   </td>
@@ -251,9 +255,9 @@ export class SendGridService {
                 © 2025 SYNTHEX. All rights reserved.
               </p>
               <div style="margin-top: 20px;">
-                <a href="https://twitter.com/synthexai" style="color: #06b6d4; text-decoration: none; font-size: 12px; margin: 0 10px;">Twitter</a>
-                <a href="https://linkedin.com/company/synthex" style="color: #06b6d4; text-decoration: none; font-size: 12px; margin: 0 10px;">LinkedIn</a>
-                <a href="mailto:support@synthex.social" style="color: #06b6d4; text-decoration: none; font-size: 12px; margin: 0 10px;">Support</a>
+                <a href="https://twitter.com/synthexai" style="color: #f59e0b; text-decoration: none; font-size: 12px; margin: 0 10px;">Twitter</a>
+                <a href="https://linkedin.com/company/synthex" style="color: #f59e0b; text-decoration: none; font-size: 12px; margin: 0 10px;">LinkedIn</a>
+                <a href="mailto:support@synthex.social" style="color: #f59e0b; text-decoration: none; font-size: 12px; margin: 0 10px;">Support</a>
               </div>
             </td>
           </tr>
@@ -269,16 +273,19 @@ export class SendGridService {
     return this.sendEmail({
       to: userEmail,
       subject,
-      html
+      html,
     });
   }
 
   /**
    * Send cancellation/goodbye email
    */
-  async sendCancellationEmail(userEmail: string, userName: string): Promise<boolean> {
-    const subject = 'We\'re Sorry to See You Go 😢';
-    
+  async sendCancellationEmail(
+    userEmail: string,
+    userName: string
+  ): Promise<boolean> {
+    const subject = "We're Sorry to See You Go 😢";
+
     const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -291,7 +298,7 @@ export class SendGridService {
   <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #0a0a0a;">
     <tr>
       <td align="center" style="padding: 40px 20px;">
-        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background: linear-gradient(135deg, #1a0033 0%, #0a0a0a 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 20px 40px rgba(6, 182, 212, 0.1);">
+        <table cellpadding="0" cellspacing="0" border="0" width="600" style="background: linear-gradient(135deg, #1a0033 0%, #0a0a0a 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 20px 40px rgba(245, 158, 11, 0.1);">
           
           <!-- Header -->
           <tr>
@@ -341,7 +348,7 @@ export class SendGridService {
           <!-- Feedback Request -->
           <tr>
             <td style="padding: 0 40px 30px;">
-              <div style="background: rgba(6, 182, 212, 0.1); border-radius: 12px; padding: 25px; border: 1px solid rgba(6, 182, 212, 0.2);">
+              <div style="background: rgba(245, 158, 11, 0.1); border-radius: 12px; padding: 25px; border: 1px solid rgba(245, 158, 11, 0.2);">
                 <h3 style="margin: 0 0 15px; color: #ffffff; font-size: 18px; font-weight: bold;">
                   💭 Help Us Improve
                 </h3>
@@ -349,7 +356,7 @@ export class SendGridService {
                   Your feedback is invaluable. Would you mind sharing why you decided to leave? 
                   It'll help us serve our community better.
                 </p>
-                <a href="${process.env.NEXT_PUBLIC_APP_URL}/feedback" style="display: inline-block; background: rgba(6, 182, 212, 0.2); color: #06b6d4; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 14px; border: 1px solid rgba(6, 182, 212, 0.3);">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/feedback" style="display: inline-block; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 14px; border: 1px solid rgba(245, 158, 11, 0.3);">
                   Share Feedback
                 </a>
               </div>
@@ -401,7 +408,7 @@ export class SendGridService {
                 If you have any questions, our support team is here to help.
               </p>
               <p style="margin: 20px 0 15px;">
-                <a href="mailto:support@synthex.social" style="color: #06b6d4; text-decoration: none; font-size: 14px; font-weight: bold;">
+                <a href="mailto:support@synthex.social" style="color: #f59e0b; text-decoration: none; font-size: 14px; font-weight: bold;">
                   support@synthex.social
                 </a>
               </p>
@@ -422,7 +429,7 @@ export class SendGridService {
     return this.sendEmail({
       to: userEmail,
       subject,
-      html
+      html,
     });
   }
 

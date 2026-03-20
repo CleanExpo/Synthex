@@ -18,7 +18,7 @@ export const BIO_THEMES: BioTheme[] = [
   {
     id: 'default',
     name: 'Synthex',
-    primaryColor: '#06b6d4',
+    primaryColor: '#f59e0b',
     backgroundColor: '#0f172a',
     textColor: '#ffffff',
     buttonStyle: 'rounded',
@@ -36,7 +36,7 @@ export const BIO_THEMES: BioTheme[] = [
   {
     id: 'gradient',
     name: 'Gradient',
-    primaryColor: '#8b5cf6',
+    primaryColor: '#f59e0b',
     backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     textColor: '#ffffff',
     buttonStyle: 'pill',
@@ -75,7 +75,7 @@ export const BIO_THEMES: BioTheme[] = [
  * Get theme by ID
  */
 export function getThemeById(id: string): BioTheme | undefined {
-  return BIO_THEMES.find((theme) => theme.id === id);
+  return BIO_THEMES.find(theme => theme.id === id);
 }
 
 /**

@@ -20,7 +20,7 @@ interface PlatformScoresProps {
 const platformLabels: Record<string, { name: string; color: string }> = {
   google_aio: { name: 'Google AI Overviews', color: 'text-blue-400' },
   chatgpt: { name: 'ChatGPT', color: 'text-emerald-400' },
-  perplexity: { name: 'Perplexity', color: 'text-purple-400' },
+  perplexity: { name: 'Perplexity', color: 'text-amber-400' },
   bing_copilot: { name: 'Bing Copilot', color: 'text-amber-400' },
 };
 

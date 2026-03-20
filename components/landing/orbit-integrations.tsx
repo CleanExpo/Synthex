@@ -179,7 +179,7 @@ function SynthexLogo() {
       <circle cx="20" cy="20" r="2.5" fill="white" />
       <defs>
         <linearGradient id="synth-grad" x1="0" y1="0" x2="40" y2="40">
-          <stop offset="0%" stopColor="#06b6d4" />
+          <stop offset="0%" stopColor="#f59e0b" />
           <stop offset="100%" stopColor="#0e7490" />
         </linearGradient>
       </defs>

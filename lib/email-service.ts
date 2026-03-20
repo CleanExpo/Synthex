@@ -63,12 +63,12 @@ function escapeHtml(text: string): string {
     '"': '&quot;',
     "'": '&#39;',
   };
-  return text.replace(/[&<>"']/g, (char) => htmlEscapes[char]);
+  return text.replace(/[&<>"']/g, char => htmlEscapes[char]);
 }
 
 class EmailService {
-  private defaultFrom = 'SYNTHEX <noreply@synthex.ai>';
-  
+  private defaultFrom = 'SYNTHEX <noreply@synthex.social>';
+
   /**
    * Email templates
    */
@@ -103,7 +103,7 @@ class EmailService {
                   <li>Schedule content for the week</li>
                   <li>Track your performance</li>
                 </ul>
-                <a href="${variables.dashboardUrl || 'https://synthex.ai/dashboard'}" class="button">Go to Dashboard</a>
+                <a href="${variables.dashboardUrl || 'https://synthex.social/dashboard'}" class="button">Go to Dashboard</a>
                 <p>If you have any questions, feel free to reach out to our support team.</p>
                 <p>Best regards,<br>The SYNTHEX Team</p>
               </div>
@@ -115,10 +115,12 @@ class EmailService {
           </body>
         </html>
       `,
-      text: `Welcome to SYNTHEX, ${variables.name || 'Friend'}! We're excited to have you on board.`
+      text: `Welcome to SYNTHEX, ${variables.name || 'Friend'}! We're excited to have you on board.`,
     }),
 
-    passwordReset: (variables: PasswordResetTemplateVariables): EmailTemplate => ({
+    passwordReset: (
+      variables: PasswordResetTemplateVariables
+    ): EmailTemplate => ({
       subject: 'Reset Your SYNTHEX Password',
       html: `
         <!DOCTYPE html>
@@ -152,10 +154,12 @@ class EmailService {
           </body>
         </html>
       `,
-      text: `Reset your SYNTHEX password using this link: ${variables.resetUrl}`
+      text: `Reset your SYNTHEX password using this link: ${variables.resetUrl}`,
     }),
 
-    notification: (variables: NotificationTemplateVariables): EmailTemplate => ({
+    notification: (
+      variables: NotificationTemplateVariables
+    ): EmailTemplate => ({
       subject: variables.subject || 'SYNTHEX Notification',
       html: `
         <!DOCTYPE html>
@@ -182,10 +186,12 @@ class EmailService {
           </body>
         </html>
       `,
-      text: `${variables.title || 'Notification'}: ${variables.message}`
+      text: `${variables.title || 'Notification'}: ${variables.message}`,
     }),
 
-    weeklyReport: (variables: WeeklyReportTemplateVariables): EmailTemplate => ({
+    weeklyReport: (
+      variables: WeeklyReportTemplateVariables
+    ): EmailTemplate => ({
       subject: `Your SYNTHEX Weekly Report - ${variables.weekOf}`,
       html: `
         <!DOCTYPE html>
@@ -223,15 +229,15 @@ class EmailService {
               </div>
               <h3>Top Performing Posts:</h3>
               <ul>
-                ${(variables.topPosts || []).map((post) => `<li>${post.title} - ${post.engagement} engagements</li>`).join('')}
+                ${(variables.topPosts || []).map(post => `<li>${post.title} - ${post.engagement} engagements</li>`).join('')}
               </ul>
-              <p><a href="${variables.dashboardUrl || 'https://synthex.ai/dashboard'}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px;">View Full Report</a></p>
+              <p><a href="${variables.dashboardUrl || 'https://synthex.social/dashboard'}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px;">View Full Report</a></p>
             </div>
           </body>
         </html>
       `,
-      text: `Your weekly SYNTHEX report for ${variables.weekOf}`
-    })
+      text: `Your weekly SYNTHEX report for ${variables.weekOf}`,
+    }),
   };
 
   /**
@@ -241,24 +247,27 @@ class EmailService {
     try {
       // Get template if specified
       let emailContent: EmailTemplate;
-      
+
       if (options.template && options.variables) {
-        const templateFn = this.templates[options.template as keyof typeof this.templates];
+        const templateFn =
+          this.templates[options.template as keyof typeof this.templates];
         if (templateFn) {
           // Type assertion needed as variables come from user input
-          emailContent = (templateFn as (vars: Record<string, unknown>) => EmailTemplate)(options.variables);
+          emailContent = (
+            templateFn as (vars: Record<string, unknown>) => EmailTemplate
+          )(options.variables);
         } else {
           emailContent = {
             subject: options.subject,
             html: options.html || '',
-            text: options.text
+            text: options.text,
           };
         }
       } else {
         emailContent = {
           subject: options.subject,
           html: options.html || '',
-          text: options.text
+          text: options.text,
         };
       }
 
@@ -268,7 +277,7 @@ class EmailService {
         from: options.from || this.defaultFrom,
         subject: emailContent.subject,
         html: emailContent.html,
-        text: emailContent.text || this.extractText(emailContent.html)
+        text: emailContent.text || this.extractText(emailContent.html),
       };
 
       // Email queued for delivery
@@ -295,52 +304,62 @@ class EmailService {
       subject: 'Welcome to SYNTHEX!',
       variables: {
         name,
-        dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`
-      }
+        dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+      },
     });
   }
 
   /**
    * Send password reset email
    */
-  async sendPasswordResetEmail(email: string, resetUrl: string, code?: string): Promise<boolean> {
+  async sendPasswordResetEmail(
+    email: string,
+    resetUrl: string,
+    code?: string
+  ): Promise<boolean> {
     return this.send({
       to: email,
       template: 'passwordReset',
       subject: 'Reset Your Password',
       variables: {
         resetUrl,
-        code
-      }
+        code,
+      },
     });
   }
 
   /**
    * Send notification email
    */
-  async sendNotification(email: string, notification: {
-    type: 'info' | 'success' | 'warning' | 'error';
-    title: string;
-    message: string;
-    actionUrl?: string;
-  }): Promise<boolean> {
+  async sendNotification(
+    email: string,
+    notification: {
+      type: 'info' | 'success' | 'warning' | 'error';
+      title: string;
+      message: string;
+      actionUrl?: string;
+    }
+  ): Promise<boolean> {
     return this.send({
       to: email,
       template: 'notification',
       subject: notification.title,
-      variables: notification
+      variables: notification,
     });
   }
 
   /**
    * Send weekly report
    */
-  async sendWeeklyReport(email: string, reportData: WeeklyReportTemplateVariables): Promise<boolean> {
+  async sendWeeklyReport(
+    email: string,
+    reportData: WeeklyReportTemplateVariables
+  ): Promise<boolean> {
     return this.send({
       to: email,
       template: 'weeklyReport',
       subject: `Your SYNTHEX Weekly Report`,
-      variables: reportData as unknown as Record<string, unknown>
+      variables: reportData as unknown as Record<string, unknown>,
     });
   }
 
@@ -348,7 +367,10 @@ class EmailService {
    * Extract plain text from HTML
    */
   private extractText(html: string): string {
-    return html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    return html
+      .replace(/<[^>]*>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   /**
@@ -362,7 +384,9 @@ class EmailService {
   /**
    * Batch send emails
    */
-  async sendBatch(emails: EmailOptions[]): Promise<{ sent: number; failed: number }> {
+  async sendBatch(
+    emails: EmailOptions[]
+  ): Promise<{ sent: number; failed: number }> {
     let sent = 0;
     let failed = 0;
 

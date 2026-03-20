@@ -63,7 +63,7 @@ function getFrequencyBadge(frequency: string): {
     case 'weekly':
       return {
         label: 'Weekly',
-        className: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+        className: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
       };
     case 'monthly':
       return {
@@ -496,7 +496,7 @@ function AuditHistoryTab({
                     <Tooltip
                       contentStyle={{
                         backgroundColor: '#111111',
-                        border: '1px solid rgba(6, 182, 212, 0.2)',
+                        border: '1px solid rgba(245, 158, 11, 0.2)',
                         borderRadius: '8px',
                       }}
                     />

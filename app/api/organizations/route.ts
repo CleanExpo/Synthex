@@ -22,8 +22,16 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { ResponseOptimizer, cacheHeaders } from '@/lib/api/response-optimizer';
-import { generateTenantSlug, createDefaultSettings, PLAN_LIMITS, TenantPlan } from '@/lib/multi-tenant';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  generateTenantSlug,
+  createDefaultSettings,
+  PLAN_LIMITS,
+  TenantPlan,
+} from '@/lib/multi-tenant';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 
 const createOrganizationSchema = z.object({
   name: z.string().min(1),
@@ -54,10 +62,7 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.json();
     const validation = createOrganizationSchema.safeParse(rawBody);
     if (!validation.success) {
-      return ResponseOptimizer.createErrorResponse(
-        'Invalid request data',
-        400
-      );
+      return ResponseOptimizer.createErrorResponse('Invalid request data', 400);
     }
     const { name, slug: providedSlug, plan } = validation.data;
 
@@ -85,21 +90,33 @@ export async function POST(request: NextRequest) {
     }
 
     // Get plan limits with fallback
-    const planLimits = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS] ?? PLAN_LIMITS.free;
+    const planLimits =
+      PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS] ?? PLAN_LIMITS.free;
 
     // Create organization and default roles in a transaction
-    const organization = await prisma.$transaction(async (tx) => {
+    const organization = await prisma.$transaction(async tx => {
       const org = await tx.organization.create({
         data: {
           name,
           slug,
           plan,
           status: 'active',
-          domain: `${slug}.synthex.app`,
-          settings: JSON.parse(JSON.stringify(createDefaultSettings(plan as TenantPlan))),
-          maxUsers: (planLimits?.maxUsers ?? 5) === -1 ? 999999 : (planLimits?.maxUsers ?? 5),
-          maxPosts: (planLimits?.maxPosts ?? 500) === -1 ? 999999 : (planLimits?.maxPosts ?? 500),
-          maxCampaigns: (planLimits?.maxCampaigns ?? 10) === -1 ? 999999 : (planLimits?.maxCampaigns ?? 10),
+          domain: `${slug}.synthex.social`,
+          settings: JSON.parse(
+            JSON.stringify(createDefaultSettings(plan as TenantPlan))
+          ),
+          maxUsers:
+            (planLimits?.maxUsers ?? 5) === -1
+              ? 999999
+              : (planLimits?.maxUsers ?? 5),
+          maxPosts:
+            (planLimits?.maxPosts ?? 500) === -1
+              ? 999999
+              : (planLimits?.maxPosts ?? 500),
+          maxCampaigns:
+            (planLimits?.maxCampaigns ?? 10) === -1
+              ? 999999
+              : (planLimits?.maxCampaigns ?? 10),
           users: {
             connect: { id: userId },
           },
@@ -165,8 +182,11 @@ export async function GET(request: NextRequest) {
   if (!security.allowed) {
     return APISecurityChecker.createSecureResponse(
       { error: security.error || 'Admin access required' },
-      security.error?.includes('Rate limit') ? 429 :
-      security.error?.includes('permission') ? 403 : 401,
+      security.error?.includes('Rate limit')
+        ? 429
+        : security.error?.includes('permission')
+          ? 403
+          : 401,
       security.context
     );
   }
@@ -256,7 +276,10 @@ export async function GET(request: NextRequest) {
 // HELPER FUNCTIONS
 // ============================================================================
 
-async function createDefaultRoles(organizationId: string, tx?: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]): Promise<void> {
+async function createDefaultRoles(
+  organizationId: string,
+  tx?: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
+): Promise<void> {
   const db = tx ?? prisma;
   const defaultRoles = [
     {

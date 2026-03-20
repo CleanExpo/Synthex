@@ -41,7 +41,6 @@ const updateOrganizationSchema = z.object({
 // Auth Helper - Verify user and organization membership
 // =============================================================================
 
-
 /**
  * Check if user is a member of the organization
  */
@@ -91,13 +90,19 @@ export async function GET(
     // Authenticate user
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+      return ResponseOptimizer.createErrorResponse(
+        'Authentication required',
+        401
+      );
     }
 
     // Verify user is a member of the organization
     const isMember = await isOrgMember(userId, orgId);
     if (!isMember) {
-      return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
+      return ResponseOptimizer.createErrorResponse(
+        'Organization not found or access denied',
+        404
+      );
     }
 
     const cache = getCache();
@@ -146,7 +151,10 @@ export async function GET(
     });
 
     if (!organization) {
-      return ResponseOptimizer.createErrorResponse('Organization not found', 404);
+      return ResponseOptimizer.createErrorResponse(
+        'Organization not found',
+        404
+      );
     }
 
     const response = {
@@ -183,7 +191,10 @@ export async function GET(
     };
 
     // Cache the response (user-specific)
-    await cache.set(cacheKey, response, { ttl: 300, tags: [`org:${orgId}`, `user:${userId}`] });
+    await cache.set(cacheKey, response, {
+      ttl: 300,
+      tags: [`org:${orgId}`, `user:${userId}`],
+    });
 
     return ResponseOptimizer.createResponse(response, {
       cacheType: 'api',
@@ -191,7 +202,10 @@ export async function GET(
     });
   } catch (error) {
     logger.error('Failed to get organization', { error, orgId });
-    return ResponseOptimizer.createErrorResponse('Failed to get organization', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to get organization',
+      500
+    );
   }
 }
 
@@ -208,7 +222,10 @@ export async function PATCH(
     // Authenticate user
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+      return ResponseOptimizer.createErrorResponse(
+        'Authentication required',
+        401
+      );
     }
 
     // Verify user is an admin of the organization
@@ -217,9 +234,15 @@ export async function PATCH(
       // Check if they're at least a member (for better error message)
       const isMember = await isOrgMember(userId, orgId);
       if (!isMember) {
-        return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
+        return ResponseOptimizer.createErrorResponse(
+          'Organization not found or access denied',
+          404
+        );
       }
-      return ResponseOptimizer.createErrorResponse('Admin privileges required to update organization', 403);
+      return ResponseOptimizer.createErrorResponse(
+        'Admin privileges required to update organization',
+        403
+      );
     }
 
     const rawBody = await request.json();
@@ -235,7 +258,10 @@ export async function PATCH(
     });
 
     if (!existing) {
-      return ResponseOptimizer.createErrorResponse('Organization not found', 404);
+      return ResponseOptimizer.createErrorResponse(
+        'Organization not found',
+        404
+      );
     }
 
     // Build update data
@@ -268,9 +294,12 @@ export async function PATCH(
       }
 
       updateData.plan = newPlan;
-      updateData.maxUsers = planLimits.maxUsers === -1 ? 999999 : planLimits.maxUsers;
-      updateData.maxPosts = planLimits.maxPosts === -1 ? 999999 : planLimits.maxPosts;
-      updateData.maxCampaigns = planLimits.maxCampaigns === -1 ? 999999 : planLimits.maxCampaigns;
+      updateData.maxUsers =
+        planLimits.maxUsers === -1 ? 999999 : planLimits.maxUsers;
+      updateData.maxPosts =
+        planLimits.maxPosts === -1 ? 999999 : planLimits.maxPosts;
+      updateData.maxCampaigns =
+        planLimits.maxCampaigns === -1 ? 999999 : planLimits.maxCampaigns;
     }
 
     // Check slug uniqueness if changing
@@ -288,7 +317,7 @@ export async function PATCH(
       }
 
       updateData.slug = body.slug;
-      updateData.domain = `${body.slug}.synthex.app`;
+      updateData.domain = `${body.slug}.synthex.social`;
     }
 
     // Check custom domain uniqueness
@@ -310,7 +339,7 @@ export async function PATCH(
     }
 
     // Update organization and log in a transaction
-    const organization = await prisma.$transaction(async (tx) => {
+    const organization = await prisma.$transaction(async tx => {
       const updated = await tx.organization.update({
         where: { id: orgId },
         data: updateData,
@@ -360,7 +389,10 @@ export async function PATCH(
     );
   } catch (error) {
     logger.error('Failed to update organization', { error, orgId: orgId });
-    return ResponseOptimizer.createErrorResponse('Failed to update organization', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to update organization',
+      500
+    );
   }
 }
 
@@ -377,7 +409,10 @@ export async function DELETE(
     // Authenticate user
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+      return ResponseOptimizer.createErrorResponse(
+        'Authentication required',
+        401
+      );
     }
 
     // Verify user is an admin of the organization
@@ -386,9 +421,15 @@ export async function DELETE(
       // Check if they're at least a member (for better error message)
       const isMember = await isOrgMember(userId, orgId);
       if (!isMember) {
-        return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
+        return ResponseOptimizer.createErrorResponse(
+          'Organization not found or access denied',
+          404
+        );
       }
-      return ResponseOptimizer.createErrorResponse('Admin privileges required to delete organization', 403);
+      return ResponseOptimizer.createErrorResponse(
+        'Admin privileges required to delete organization',
+        403
+      );
     }
 
     // Check organization exists
@@ -402,11 +443,14 @@ export async function DELETE(
     });
 
     if (!existing) {
-      return ResponseOptimizer.createErrorResponse('Organization not found', 404);
+      return ResponseOptimizer.createErrorResponse(
+        'Organization not found',
+        404
+      );
     }
 
     // Soft delete org, remove users, and log in a transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
       await tx.organization.update({
         where: { id: orgId },
         data: {
@@ -428,7 +472,10 @@ export async function DELETE(
           action: 'organization_deleted',
           resource: 'organization',
           resourceId: orgId,
-          details: { organizationName: existing.name, userCount: existing._count.users },
+          details: {
+            organizationName: existing.name,
+            userCount: existing._count.users,
+          },
           severity: 'high',
           category: 'admin',
           outcome: 'success',
@@ -455,7 +502,10 @@ export async function DELETE(
     );
   } catch (error) {
     logger.error('Failed to delete organization', { error, orgId: orgId });
-    return ResponseOptimizer.createErrorResponse('Failed to delete organization', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to delete organization',
+      500
+    );
   }
 }
 

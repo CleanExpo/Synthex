@@ -16,24 +16,26 @@ const securityHeaders = {
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    "upgrade-insecure-requests"
+    'upgrade-insecure-requests',
   ].join('; '),
-  
+
   // Strict Transport Security
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
-  
+
   // Other security headers
   'X-Frame-Options': 'DENY',
   'X-Content-Type-Options': 'nosniff',
   'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  
+
   // CORS headers for API routes
   'Access-Control-Allow-Credentials': 'true',
-  'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.ai',
+  'Access-Control-Allow-Origin':
+    process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+  'Access-Control-Allow-Headers':
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization',
 };
 
 // Rate limiting configuration
@@ -41,30 +43,35 @@ const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 60; // 60 requests per minute
 
 // Upstash Redis REST API helper
-async function checkRateLimit(key: string): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
+async function checkRateLimit(
+  key: string
+): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
   const now = Date.now();
   const window = RATE_LIMIT_WINDOW;
   const resetTime = now + window;
-  
+
   // If Upstash is not configured, allow all requests
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+  if (
+    !process.env.UPSTASH_REDIS_REST_URL ||
+    !process.env.UPSTASH_REDIS_REST_TOKEN
+  ) {
     return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS, resetTime };
   }
-  
+
   try {
     // Use Upstash REST API for rate limiting
     const url = `${process.env.UPSTASH_REDIS_REST_URL}`;
     const token = process.env.UPSTASH_REDIS_REST_TOKEN;
     const rateLimitKey = `ratelimit:${key}`;
-    
+
     // Get current count
     const getResponse = await fetch(`${url}/get/${rateLimitKey}`, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     });
-    
+
     let count = 0;
     let currentResetTime = resetTime;
-    
+
     if (getResponse.ok) {
       const data = await getResponse.json();
       if (data.result) {
@@ -75,25 +82,28 @@ async function checkRateLimit(key: string): Promise<{ allowed: boolean; remainin
         }
       }
     }
-    
+
     // Check if limit exceeded
     if (count >= RATE_LIMIT_MAX_REQUESTS) {
       return { allowed: false, remaining: 0, resetTime: currentResetTime };
     }
-    
+
     // Increment count
     count++;
     const ttl = Math.ceil(window / 1000);
     const value = JSON.stringify({ count, resetTime: currentResetTime });
-    
-    await fetch(`${url}/setex/${rateLimitKey}/${ttl}/${encodeURIComponent(value)}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    
-    return { 
-      allowed: true, 
-      remaining: RATE_LIMIT_MAX_REQUESTS - count, 
-      resetTime: currentResetTime 
+
+    await fetch(
+      `${url}/setex/${rateLimitKey}/${ttl}/${encodeURIComponent(value)}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    return {
+      allowed: true,
+      remaining: RATE_LIMIT_MAX_REQUESTS - count,
+      resetTime: currentResetTime,
     };
   } catch (error) {
     console.error('Rate limit check failed:', error);
@@ -109,7 +119,7 @@ export async function middleware(request: NextRequest) {
     },
   });
   const pathname = request.nextUrl.pathname;
-  
+
   // Create Supabase client for auth checks
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -136,22 +146,26 @@ export async function middleware(request: NextRequest) {
       },
     }
   );
-  
+
   // Refresh session if expired
-  const { data: { session } } = await supabase.auth.getSession();
-  
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   // Apply security headers to all responses
   Object.entries(securityHeaders).forEach(([key, value]) => {
     response.headers.set(key, value);
   });
-  
+
   // Rate limiting for API routes
   if (pathname.startsWith('/api/')) {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown';
+    const ip =
+      request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown';
     const rateLimitKey = `${ip}:${pathname}`;
-    
-    const { allowed, remaining, resetTime } = await checkRateLimit(rateLimitKey);
-    
+
+    const { allowed, remaining, resetTime } =
+      await checkRateLimit(rateLimitKey);
+
     if (!allowed) {
       const retryAfter = Math.ceil((resetTime - Date.now()) / 1000);
       return new NextResponse('Too Many Requests', {
@@ -160,28 +174,38 @@ export async function middleware(request: NextRequest) {
           'Retry-After': String(retryAfter),
           'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
           'X-RateLimit-Remaining': '0',
-          'X-RateLimit-Reset': new Date(resetTime).toISOString()
-        }
+          'X-RateLimit-Reset': new Date(resetTime).toISOString(),
+        },
       });
     }
-    
+
     // Add rate limit headers
     response.headers.set('X-RateLimit-Limit', String(RATE_LIMIT_MAX_REQUESTS));
     response.headers.set('X-RateLimit-Remaining', String(remaining));
-    response.headers.set('X-RateLimit-Reset', new Date(resetTime).toISOString());
+    response.headers.set(
+      'X-RateLimit-Reset',
+      new Date(resetTime).toISOString()
+    );
   }
-  
+
   // Authentication check for protected routes
-  const protectedPaths = ['/dashboard', '/api/protected', '/api/user', '/api/integrations'];
+  const protectedPaths = [
+    '/dashboard',
+    '/api/protected',
+    '/api/user',
+    '/api/integrations',
+  ];
   const authPaths = ['/auth/login', '/auth/register'];
-  const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path));
+  const isProtectedPath = protectedPaths.some(path =>
+    pathname.startsWith(path)
+  );
   const isAuthPath = authPaths.some(path => pathname.startsWith(path));
-  
+
   // Allow demo routes without authentication
   if (pathname.startsWith('/demo')) {
     return response;
   }
-  
+
   // Redirect to login if accessing protected route without session
   if (isProtectedPath && !session) {
     if (!pathname.startsWith('/api/')) {
@@ -194,32 +218,32 @@ export async function middleware(request: NextRequest) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
   }
-  
+
   // Redirect to dashboard if accessing auth routes with active session
   if (isAuthPath && session) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
-  
+
   // CSRF protection for mutations
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
     const csrfToken = request.headers.get('x-csrf-token');
     const origin = request.headers.get('origin');
     const referer = request.headers.get('referer');
-    
+
     // Verify origin/referer for CSRF protection
     if (origin && !origin.includes(request.nextUrl.hostname)) {
       return new NextResponse('Forbidden', { status: 403 });
     }
   }
-  
+
   // Add request ID for tracing
   const requestId = crypto.randomUUID();
   response.headers.set('X-Request-Id', requestId);
-  
+
   // Log security events (integrate with monitoring service)
   if (pathname.startsWith('/api/auth')) {
   }
-  
+
   return response;
 }
 

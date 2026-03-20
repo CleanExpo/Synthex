@@ -565,7 +565,7 @@ export default function DesignSystemPage() {
                   <div
                     className="absolute inset-0 opacity-30"
                     style={{
-                      backgroundImage: `linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px)`,
+                      backgroundImage: `linear-gradient(rgba(245, 158, 11, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(245, 158, 11, 0.1) 1px, transparent 1px)`,
                       backgroundSize: '40px 40px',
                     }}
                   />
@@ -615,7 +615,7 @@ export default function DesignSystemPage() {
                       className="absolute inset-0"
                       style={{
                         background:
-                          'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6, 182, 212, 0.3), transparent 70%)',
+                          'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245, 158, 11, 0.3), transparent 70%)',
                       }}
                     />
                     <div className="relative flex h-full items-center justify-center">
@@ -628,9 +628,9 @@ export default function DesignSystemPage() {
                     className="relative h-48 overflow-hidden rounded-xl"
                     style={{
                       background: `
-                        radial-gradient(at 40% 20%, rgba(6, 182, 212, 0.15) 0px, transparent 50%),
+                        radial-gradient(at 40% 20%, rgba(245, 158, 11, 0.15) 0px, transparent 50%),
                         radial-gradient(at 80% 0%, rgba(34, 211, 238, 0.15) 0px, transparent 50%),
-                        radial-gradient(at 0% 50%, rgba(6, 182, 212, 0.1) 0px, transparent 50%),
+                        radial-gradient(at 0% 50%, rgba(245, 158, 11, 0.1) 0px, transparent 50%),
                         rgb(10, 22, 40)
                       `,
                     }}

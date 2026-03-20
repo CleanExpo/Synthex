@@ -57,6 +57,6 @@ export const CATEGORY_BADGE_STYLES: Record<
   },
   automation: {
     label: 'Automation',
-    className: 'bg-purple-500/20 border-purple-500/30 text-purple-200',
+    className: 'bg-amber-500/20 border-amber-500/30 text-amber-200',
   },
 };

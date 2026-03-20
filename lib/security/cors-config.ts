@@ -44,17 +44,21 @@ export interface CorsResult {
 // ============================================================================
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-const VERCEL_URL = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
-const CUSTOM_ORIGINS = process.env.CORS_ALLOWED_ORIGINS?.split(',').map(s => s.trim()) || [];
+const VERCEL_URL = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : null;
+const CUSTOM_ORIGINS =
+  process.env.CORS_ALLOWED_ORIGINS?.split(',').map(s => s.trim()) || [];
 
 // Default allowed origins
+const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
+
 const DEFAULT_ALLOWED_ORIGINS = [
   APP_URL,
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'https://synthex.ai',
-  'https://www.synthex.ai',
-  'https://app.synthex.ai',
+  ...(IS_DEVELOPMENT ? ['http://localhost:3000', 'http://localhost:3001'] : []),
+  'https://synthex.social',
+  'https://www.synthex.social',
+  'https://app.synthex.social',
   ...(VERCEL_URL ? [VERCEL_URL] : []),
   ...CUSTOM_ORIGINS,
 ].filter(Boolean);
@@ -89,7 +93,11 @@ export const DEFAULT_CORS_CONFIG: CorsConfig = {
 // Strict CORS for sensitive endpoints
 export const STRICT_CORS_CONFIG: CorsConfig = {
   ...DEFAULT_CORS_CONFIG,
-  allowedOrigins: [APP_URL, 'https://synthex.ai', 'https://app.synthex.ai'],
+  allowedOrigins: [
+    APP_URL,
+    'https://synthex.social',
+    'https://app.synthex.social',
+  ],
   allowedMethods: ['GET', 'POST', 'OPTIONS'],
   allowNoOrigin: false,
 };
@@ -173,7 +181,10 @@ export class CorsValidator {
     }
 
     // Check requested method
-    if (requestMethod && !this.config.allowedMethods.includes(requestMethod.toUpperCase())) {
+    if (
+      requestMethod &&
+      !this.config.allowedMethods.includes(requestMethod.toUpperCase())
+    ) {
       return {
         allowed: false,
         headers: {},
@@ -183,7 +194,9 @@ export class CorsValidator {
 
     // Check requested headers
     if (requestHeaders) {
-      const requested = requestHeaders.split(',').map(h => h.trim().toLowerCase());
+      const requested = requestHeaders
+        .split(',')
+        .map(h => h.trim().toLowerCase());
       const allowed = this.config.allowedHeaders.map(h => h.toLowerCase());
 
       const disallowed = requested.filter(h => !allowed.includes(h));
@@ -221,7 +234,7 @@ export class CorsValidator {
       // Exact match
       if (allowed === normalizedOrigin) return true;
 
-      // Wildcard subdomain matching (e.g., *.synthex.ai)
+      // Wildcard subdomain matching (e.g., *.synthex.social)
       if (allowed.startsWith('*.')) {
         const domain = allowed.slice(2);
         const originDomain = new URL(normalizedOrigin).hostname;
@@ -238,7 +251,7 @@ export class CorsValidator {
       'Access-Control-Allow-Methods': this.config.allowedMethods.join(', '),
       'Access-Control-Allow-Headers': this.config.allowedHeaders.join(', '),
       'Access-Control-Expose-Headers': this.config.exposedHeaders.join(', '),
-      'Vary': 'Origin',
+      Vary: 'Origin',
     };
 
     if (this.config.credentials && origin !== '*') {
@@ -283,7 +296,11 @@ export function createPreflightResponse(
   config: CorsConfig = DEFAULT_CORS_CONFIG
 ): Response {
   const validator = new CorsValidator(config);
-  const result = validator.handlePreflight(origin, requestMethod, requestHeaders);
+  const result = validator.handlePreflight(
+    origin,
+    requestMethod,
+    requestHeaders
+  );
 
   if (!result.allowed) {
     return new Response(result.reason, {

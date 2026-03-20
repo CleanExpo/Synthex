@@ -62,7 +62,7 @@ const TYPE_CONFIG: Record<
   },
   'competitor-link': {
     label: 'Competitor Link',
-    className: 'bg-purple-900/60 text-purple-300 border border-purple-700/40',
+    className: 'bg-amber-900/60 text-amber-300 border border-amber-700/40',
   },
   'journalist-mention': {
     label: 'Journalist Mention',

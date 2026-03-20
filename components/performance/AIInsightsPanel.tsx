@@ -48,9 +48,9 @@ const IMPACT_STYLES: Record<
     glow: 'shadow-amber-500/20',
   },
   medium: {
-    bg: 'bg-violet-500/10',
-    border: 'border-violet-500/30',
-    text: 'text-violet-400',
+    bg: 'bg-amber-500/10',
+    border: 'border-amber-500/30',
+    text: 'text-amber-400',
   },
   low: {
     bg: 'bg-gray-500/10',

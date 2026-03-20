@@ -47,7 +47,8 @@ const mockCreateSecureResponse = jest.fn();
 jest.mock('@/lib/security/api-security-checker', () => ({
   APISecurityChecker: {
     check: (...args: unknown[]) => mockSecurityCheck(...args),
-    createSecureResponse: (...args: unknown[]) => mockCreateSecureResponse(...args),
+    createSecureResponse: (...args: unknown[]) =>
+      mockCreateSecureResponse(...args),
   },
   DEFAULT_POLICIES: {
     AUTHENTICATED_WRITE: { requireAuth: true },
@@ -81,7 +82,10 @@ jest.mock('@/lib/api/response-optimizer', () => ({
     createResponse: (data: unknown, opts?: { status?: number }) =>
       NextResponse.json(data, { status: opts?.status ?? 200 }),
     createErrorResponse: (message: string, status: number, details?: unknown) =>
-      NextResponse.json({ error: message, status, ...(details ? { details } : {}) }, { status }),
+      NextResponse.json(
+        { error: message, status, ...(details ? { details } : {}) },
+        { status }
+      ),
   },
   cacheHeaders: {
     none: 'no-store',
@@ -133,12 +137,18 @@ const errorResponseSchema = z.object({
 // Helper: createMockNextRequest adapted for organizations route
 // =============================================================================
 
-function createMockRequest(opts: {
-  method?: string;
-  body?: object;
-  url?: string;
-} = {}) {
-  const { method = 'GET', body, url = 'http://localhost:3000/api/organizations' } = opts;
+function createMockRequest(
+  opts: {
+    method?: string;
+    body?: object;
+    url?: string;
+  } = {}
+) {
+  const {
+    method = 'GET',
+    body,
+    url = 'http://localhost:3000/api/organizations',
+  } = opts;
   const parsedUrl = new URL(url);
   const bodyString = body ? JSON.stringify(body) : undefined;
 
@@ -146,7 +156,8 @@ function createMockRequest(opts: {
     url,
     method,
     headers: {
-      get: (name: string) => name === 'content-type' ? 'application/json' : null,
+      get: (name: string) =>
+        name === 'content-type' ? 'application/json' : null,
       has: () => false,
     },
     nextUrl: parsedUrl,
@@ -167,7 +178,7 @@ const mockOrg = {
   name: 'Test Organization',
   slug: 'test-org',
   plan: 'free',
-  domain: 'test-org.synthex.app',
+  domain: 'test-org.synthex.social',
   status: 'active',
   createdAt: new Date('2025-01-01T00:00:00.000Z'),
   updatedAt: new Date('2025-01-01T00:00:00.000Z'),
@@ -232,7 +243,9 @@ describe('Organizations API Contract Tests', () => {
         plan: z.string().optional().default('free'),
       });
 
-      const result = createOrganizationSchema.safeParse({ name: 'My Organization' });
+      const result = createOrganizationSchema.safeParse({
+        name: 'My Organization',
+      });
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.plan).toBe('free'); // default applied
@@ -276,7 +289,10 @@ describe('Organizations API Contract Tests', () => {
         NextResponse.json({ error: 'Authentication required' }, { status: 401 })
       );
 
-      const req = createMockRequest({ method: 'POST', body: { name: 'My Org' } });
+      const req = createMockRequest({
+        method: 'POST',
+        body: { name: 'My Org' },
+      });
       const response = await POST(req);
 
       expect(response.status).toBe(401);
@@ -295,7 +311,10 @@ describe('Organizations API Contract Tests', () => {
         NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
       );
 
-      const req = createMockRequest({ method: 'POST', body: { name: 'My Org' } });
+      const req = createMockRequest({
+        method: 'POST',
+        body: { name: 'My Org' },
+      });
       const response = await POST(req);
 
       expect(response.status).toBe(429);
@@ -319,13 +338,15 @@ describe('Organizations API Contract Tests', () => {
       mockOrgFindUnique.mockResolvedValue(null);
 
       // Transaction returns the created org
-      mockTransaction.mockImplementation(async (fn: (tx: any) => Promise<any>) => {
-        const tx = {
-          organization: { create: jest.fn().mockResolvedValue(mockOrg) },
-          role: { createMany: jest.fn().mockResolvedValue({ count: 3 }) },
-        };
-        return fn(tx);
-      });
+      mockTransaction.mockImplementation(
+        async (fn: (tx: any) => Promise<any>) => {
+          const tx = {
+            organization: { create: jest.fn().mockResolvedValue(mockOrg) },
+            role: { createMany: jest.fn().mockResolvedValue({ count: 3 }) },
+          };
+          return fn(tx);
+        }
+      );
 
       const req = createMockRequest({
         method: 'POST',
@@ -448,7 +469,7 @@ describe('Organizations API Contract Tests', () => {
           slug: 'org-one',
           plan: 'free',
           status: 'active',
-          domain: 'org-one.synthex.app',
+          domain: 'org-one.synthex.social',
           customDomain: null,
           createdAt: new Date('2025-01-01T00:00:00.000Z'),
           updatedAt: new Date('2025-01-01T00:00:00.000Z'),
@@ -460,7 +481,7 @@ describe('Organizations API Contract Tests', () => {
           slug: 'org-two',
           plan: 'pro',
           status: 'active',
-          domain: 'org-two.synthex.app',
+          domain: 'org-two.synthex.social',
           customDomain: null,
           createdAt: new Date('2025-01-02T00:00:00.000Z'),
           updatedAt: new Date('2025-01-02T00:00:00.000Z'),
@@ -505,7 +526,7 @@ describe('Organizations API Contract Tests', () => {
           slug: 'org-one',
           plan: 'free',
           status: 'active',
-          domain: 'org-one.synthex.app',
+          domain: 'org-one.synthex.social',
           customDomain: null,
           createdAt: new Date(),
           updatedAt: new Date(),

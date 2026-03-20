@@ -45,7 +45,7 @@ export function AwardTemplateGrid({ onSelect }: AwardTemplateGridProps) {
             className={cn(
               'text-xs px-3 py-1.5 rounded-lg font-medium transition-colors',
               country === c
-                ? 'bg-purple-500/30 text-purple-300 border border-purple-500/40'
+                ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
                 : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-transparent'
             )}
           >
@@ -82,7 +82,7 @@ export function AwardTemplateGrid({ onSelect }: AwardTemplateGridProps) {
                     {t.organizer}
                   </p>
                 </div>
-                <Plus className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors flex-shrink-0 mt-0.5" />
+                <Plus className="h-4 w-4 text-slate-500 group-hover:text-amber-400 transition-colors flex-shrink-0 mt-0.5" />
               </div>
 
               <p className="text-xs text-slate-500 line-clamp-2 mb-2">

@@ -41,19 +41,20 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 export function sendPaymentReceiptEmail(params: {
   email: string;
   name?: string;
-  amount: number;      // Amount in cents
-  currency: string;    // e.g. "aud"
-  plan: string;        // e.g. "Professional"
+  amount: number; // Amount in cents
+  currency: string; // e.g. "aud"
+  plan: string; // e.g. "Professional"
   billingPortalUrl: string;
 }): void {
   const displayAmount = `${params.currency.toUpperCase()} ${(params.amount / 100).toFixed(2)}`;
   const planLabel = params.plan.charAt(0).toUpperCase() + params.plan.slice(1);
 
-  getResend().emails.send({
-    from: FROM,
-    to: params.email,
-    subject: `Payment received — ${planLabel} plan`,
-    html: `<!DOCTYPE html>
+  getResend()
+    .emails.send({
+      from: FROM,
+      to: params.email,
+      subject: `Payment received — ${planLabel} plan`,
+      html: `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -66,7 +67,7 @@ export function sendPaymentReceiptEmail(params: {
       <td align="center" style="padding:40px 20px;">
         <table width="600" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#1a1a2e 0%,#0a0a0a 100%);border-radius:16px;overflow:hidden;">
           <tr>
-            <td style="background:linear-gradient(135deg,#10b981 0%,#06b6d4 100%);padding:40px 20px;text-align:center;">
+            <td style="background:linear-gradient(135deg,#10b981 0%,#f59e0b 100%);padding:40px 20px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:32px;">✓ Payment Received</h1>
               <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:14px;">Synthex</p>
             </td>
@@ -93,7 +94,7 @@ export function sendPaymentReceiptEmail(params: {
                 Your ${planLabel} subscription is now active. You can manage your billing and download invoices at any time.
               </p>
               <div style="text-align:center;">
-                <a href="${params.billingPortalUrl}" style="display:inline-block;background:linear-gradient(135deg,#06b6d4 0%,#3b82f6 100%);color:#ffffff;padding:14px 35px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;">
+                <a href="${params.billingPortalUrl}" style="display:inline-block;background:linear-gradient(135deg,#f59e0b 0%,#3b82f6 100%);color:#ffffff;padding:14px 35px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;">
                   Manage Subscription
                 </a>
               </div>
@@ -110,7 +111,10 @@ export function sendPaymentReceiptEmail(params: {
   </table>
 </body>
 </html>`,
-  }).catch((err: unknown) => console.error('[billing-email] receipt send failed:', err));
+    })
+    .catch((err: unknown) =>
+      console.error('[billing-email] receipt send failed:', err)
+    );
 }
 
 // ============================================================================
@@ -124,17 +128,18 @@ export function sendPaymentReceiptEmail(params: {
 export function sendPaymentFailedEmail(params: {
   email: string;
   name?: string;
-  amount: number;      // Amount in cents
-  currency: string;    // e.g. "aud"
+  amount: number; // Amount in cents
+  currency: string; // e.g. "aud"
   billingPortalUrl: string;
 }): void {
   const displayAmount = `${params.currency.toUpperCase()} ${(params.amount / 100).toFixed(2)}`;
 
-  getResend().emails.send({
-    from: FROM,
-    to: params.email,
-    subject: 'Payment failed — action required',
-    html: `<!DOCTYPE html>
+  getResend()
+    .emails.send({
+      from: FROM,
+      to: params.email,
+      subject: 'Payment failed — action required',
+      html: `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -186,7 +191,10 @@ export function sendPaymentFailedEmail(params: {
   </table>
 </body>
 </html>`,
-  }).catch((err: unknown) => console.error('[billing-email] failed-payment send failed:', err));
+    })
+    .catch((err: unknown) =>
+      console.error('[billing-email] failed-payment send failed:', err)
+    );
 }
 
 // ============================================================================
@@ -200,16 +208,17 @@ export function sendPaymentFailedEmail(params: {
 export function sendSubscriptionCancelledEmail(params: {
   email: string;
   name?: string;
-  plan: string;    // e.g. "Professional"
+  plan: string; // e.g. "Professional"
   endDate: string; // Human-readable date string, e.g. "31 March 2026"
 }): void {
   const planLabel = params.plan.charAt(0).toUpperCase() + params.plan.slice(1);
 
-  getResend().emails.send({
-    from: FROM,
-    to: params.email,
-    subject: 'Your Synthex subscription has been cancelled',
-    html: `<!DOCTYPE html>
+  getResend()
+    .emails.send({
+      from: FROM,
+      to: params.email,
+      subject: 'Your Synthex subscription has been cancelled',
+      html: `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -242,7 +251,7 @@ export function sendSubscriptionCancelledEmail(params: {
                 We'd love to have you back — you can reactivate your subscription at any time.
               </p>
               <div style="text-align:center;">
-                <a href="${APP_URL}/pricing" style="display:inline-block;background:linear-gradient(135deg,#06b6d4 0%,#3b82f6 100%);color:#ffffff;padding:14px 35px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;">
+                <a href="${APP_URL}/pricing" style="display:inline-block;background:linear-gradient(135deg,#f59e0b 0%,#3b82f6 100%);color:#ffffff;padding:14px 35px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;">
                   View Plans
                 </a>
               </div>
@@ -262,7 +271,10 @@ export function sendSubscriptionCancelledEmail(params: {
   </table>
 </body>
 </html>`,
-  }).catch((err: unknown) => console.error('[billing-email] cancellation send failed:', err));
+    })
+    .catch((err: unknown) =>
+      console.error('[billing-email] cancellation send failed:', err)
+    );
 }
 
 // ============================================================================
@@ -274,11 +286,12 @@ export function sendSubscriptionCancelledEmail(params: {
  * Fire-and-forget — does not throw.
  */
 export function sendWelcomeSequenceDay0(email: string, name?: string): void {
-  getResend().emails.send({
-    from: FROM,
-    to: email,
-    subject: 'Welcome to Synthex — let\'s get you your first result',
-    html: `<!DOCTYPE html>
+  getResend()
+    .emails.send({
+      from: FROM,
+      to: email,
+      subject: "Welcome to Synthex — let's get you your first result",
+      html: `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -291,7 +304,7 @@ export function sendWelcomeSequenceDay0(email: string, name?: string): void {
       <td align="center" style="padding:40px 20px;">
         <table width="600" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#1a1a2e 0%,#0a0a0a 100%);border-radius:16px;overflow:hidden;">
           <tr>
-            <td style="background:linear-gradient(135deg,#06b6d4 0%,#3b82f6 100%);padding:40px 20px;text-align:center;">
+            <td style="background:linear-gradient(135deg,#f59e0b 0%,#3b82f6 100%);padding:40px 20px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:32px;">Welcome to Synthex</h1>
               <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:16px;">Your AI marketing platform is ready</p>
             </td>
@@ -305,7 +318,7 @@ export function sendWelcomeSequenceDay0(email: string, name?: string): void {
               <!-- Step 1 -->
               <div style="background:#1a1a1a;border-radius:12px;padding:20px;margin:0 0 16px;">
                 <div style="display:flex;align-items:flex-start;">
-                  <div style="background:linear-gradient(135deg,#06b6d4 0%,#3b82f6 100%);border-radius:50%;width:32px;height:32px;display:inline-block;text-align:center;line-height:32px;color:#fff;font-weight:bold;font-size:14px;flex-shrink:0;">1</div>
+                  <div style="background:linear-gradient(135deg,#f59e0b 0%,#3b82f6 100%);border-radius:50%;width:32px;height:32px;display:inline-block;text-align:center;line-height:32px;color:#fff;font-weight:bold;font-size:14px;flex-shrink:0;">1</div>
                   <div style="margin-left:16px;">
                     <p style="margin:0 0 4px;color:#ffffff;font-size:15px;font-weight:600;">Connect a social platform</p>
                     <p style="margin:0;color:#a3a3a3;font-size:14px;line-height:1.5;">Link Instagram, LinkedIn, or Facebook so Synthex can publish directly on your behalf.</p>
@@ -315,7 +328,7 @@ export function sendWelcomeSequenceDay0(email: string, name?: string): void {
               <!-- Step 2 -->
               <div style="background:#1a1a1a;border-radius:12px;padding:20px;margin:0 0 16px;">
                 <div style="display:flex;align-items:flex-start;">
-                  <div style="background:linear-gradient(135deg,#06b6d4 0%,#3b82f6 100%);border-radius:50%;width:32px;height:32px;display:inline-block;text-align:center;line-height:32px;color:#fff;font-weight:bold;font-size:14px;flex-shrink:0;">2</div>
+                  <div style="background:linear-gradient(135deg,#f59e0b 0%,#3b82f6 100%);border-radius:50%;width:32px;height:32px;display:inline-block;text-align:center;line-height:32px;color:#fff;font-weight:bold;font-size:14px;flex-shrink:0;">2</div>
                   <div style="margin-left:16px;">
                     <p style="margin:0 0 4px;color:#ffffff;font-size:15px;font-weight:600;">Generate your first piece of content</p>
                     <p style="margin:0;color:#a3a3a3;font-size:14px;line-height:1.5;">Head to the Content Studio and let the AI write a post tailored to your brand voice.</p>
@@ -325,7 +338,7 @@ export function sendWelcomeSequenceDay0(email: string, name?: string): void {
               <!-- Step 3 -->
               <div style="background:#1a1a1a;border-radius:12px;padding:20px;margin:0 0 32px;">
                 <div style="display:flex;align-items:flex-start;">
-                  <div style="background:linear-gradient(135deg,#06b6d4 0%,#3b82f6 100%);border-radius:50%;width:32px;height:32px;display:inline-block;text-align:center;line-height:32px;color:#fff;font-weight:bold;font-size:14px;flex-shrink:0;">3</div>
+                  <div style="background:linear-gradient(135deg,#f59e0b 0%,#3b82f6 100%);border-radius:50%;width:32px;height:32px;display:inline-block;text-align:center;line-height:32px;color:#fff;font-weight:bold;font-size:14px;flex-shrink:0;">3</div>
                   <div style="margin-left:16px;">
                     <p style="margin:0 0 4px;color:#ffffff;font-size:15px;font-weight:600;">Connect your AI API key</p>
                     <p style="margin:0;color:#a3a3a3;font-size:14px;line-height:1.5;">Add your OpenRouter key in Settings to use your own model credits and unlock full AI power.</p>
@@ -333,7 +346,7 @@ export function sendWelcomeSequenceDay0(email: string, name?: string): void {
                 </div>
               </div>
               <div style="text-align:center;">
-                <a href="${APP_URL}/dashboard" style="display:inline-block;background:linear-gradient(135deg,#06b6d4 0%,#3b82f6 100%);color:#ffffff;padding:14px 35px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;">
+                <a href="${APP_URL}/dashboard" style="display:inline-block;background:linear-gradient(135deg,#f59e0b 0%,#3b82f6 100%);color:#ffffff;padding:14px 35px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;">
                   Go to Your Dashboard
                 </a>
               </div>
@@ -353,7 +366,10 @@ export function sendWelcomeSequenceDay0(email: string, name?: string): void {
   </table>
 </body>
 </html>`,
-  }).catch((err: unknown) => console.error('[welcome-email] day-0 send failed:', err));
+    })
+    .catch((err: unknown) =>
+      console.error('[welcome-email] day-0 send failed:', err)
+    );
 }
 
 // ============================================================================
@@ -364,7 +380,10 @@ export function sendWelcomeSequenceDay0(email: string, name?: string): void {
  * Send the Day 3 tips email to users who have started the welcome sequence.
  * Returns a Promise so callers can await delivery and handle errors.
  */
-export async function sendWelcomeSequenceDay3(email: string, name?: string): Promise<void> {
+export async function sendWelcomeSequenceDay3(
+  email: string,
+  name?: string
+): Promise<void> {
   await getResend().emails.send({
     from: FROM,
     to: email,
@@ -382,7 +401,7 @@ export async function sendWelcomeSequenceDay3(email: string, name?: string): Pro
       <td align="center" style="padding:40px 20px;">
         <table width="600" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#1a1a2e 0%,#0a0a0a 100%);border-radius:16px;overflow:hidden;">
           <tr>
-            <td style="background:linear-gradient(135deg,#8b5cf6 0%,#06b6d4 100%);padding:40px 20px;text-align:center;">
+            <td style="background:linear-gradient(135deg,#f59e0b 0%,#f59e0b 100%);padding:40px 20px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:32px;">3 Days In — Great Start</h1>
               <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:16px;">Here's what sets top performers apart</p>
             </td>
@@ -394,7 +413,7 @@ export async function sendWelcomeSequenceDay3(email: string, name?: string): Pro
                 Our most successful users share a few habits in their first week. Here's what's working for them:
               </p>
               <!-- Tip 1 -->
-              <div style="background:#1a1a1a;border-left:3px solid #8b5cf6;border-radius:0 12px 12px 0;padding:20px;margin:0 0 16px;">
+              <div style="background:#1a1a1a;border-left:3px solid #f59e0b;border-radius:0 12px 12px 0;padding:20px;margin:0 0 16px;">
                 <p style="margin:0 0 6px;color:#c4b5fd;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Tip 01</p>
                 <p style="margin:0 0 8px;color:#ffffff;font-size:15px;font-weight:600;">Use AI content generation every day</p>
                 <p style="margin:0;color:#a3a3a3;font-size:14px;line-height:1.5;">
@@ -402,7 +421,7 @@ export async function sendWelcomeSequenceDay3(email: string, name?: string): Pro
                 </p>
               </div>
               <!-- Tip 2 -->
-              <div style="background:#1a1a1a;border-left:3px solid #06b6d4;border-radius:0 12px 12px 0;padding:20px;margin:0 0 16px;">
+              <div style="background:#1a1a1a;border-left:3px solid #f59e0b;border-radius:0 12px 12px 0;padding:20px;margin:0 0 16px;">
                 <p style="margin:0 0 6px;color:#67e8f9;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Tip 02</p>
                 <p style="margin:0 0 8px;color:#ffffff;font-size:15px;font-weight:600;">Schedule a week of posts in one sitting</p>
                 <p style="margin:0;color:#a3a3a3;font-size:14px;line-height:1.5;">
@@ -418,7 +437,7 @@ export async function sendWelcomeSequenceDay3(email: string, name?: string): Pro
                 </p>
               </div>
               <div style="text-align:center;">
-                <a href="${APP_URL}/dashboard/content" style="display:inline-block;background:linear-gradient(135deg,#8b5cf6 0%,#06b6d4 100%);color:#ffffff;padding:14px 35px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;">
+                <a href="${APP_URL}/dashboard/content" style="display:inline-block;background:linear-gradient(135deg,#f59e0b 0%,#f59e0b 100%);color:#ffffff;padding:14px 35px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;">
                   Open Content Studio
                 </a>
               </div>
@@ -449,11 +468,14 @@ export async function sendWelcomeSequenceDay3(email: string, name?: string): Pro
  * Send the Day 7 check-in and upgrade nudge email (free/starter users only).
  * Returns a Promise so callers can await delivery and handle errors.
  */
-export async function sendWelcomeSequenceDay7(email: string, name?: string): Promise<void> {
+export async function sendWelcomeSequenceDay7(
+  email: string,
+  name?: string
+): Promise<void> {
   await getResend().emails.send({
     from: FROM,
     to: email,
-    subject: 'How\'s your first week with Synthex going?',
+    subject: "How's your first week with Synthex going?",
     html: `<!DOCTYPE html>
 <html>
 <head>

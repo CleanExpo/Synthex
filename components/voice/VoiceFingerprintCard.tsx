@@ -152,7 +152,7 @@ export function VoiceFingerprintCard({
           value={`${fp.sentenceLengths.mean} ±${fp.sentenceLengths.stdDev} words`}
           subLabel={`Min ${fp.sentenceLengths.min} / Max ${fp.sentenceLengths.max}`}
           barPct={(fp.sentenceLengths.mean / 40) * 100}
-          barColour="bg-violet-500"
+          barColour="bg-amber-500"
         />
 
         {/* Vocabulary Diversity */}

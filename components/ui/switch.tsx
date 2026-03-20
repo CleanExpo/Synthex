@@ -50,11 +50,11 @@ const switchThumbVariants = cva(
         default: '',
         glass: 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.3)]',
         'glass-solid': 'bg-white',
-        'glass-primary': 'bg-white shadow-[0_0_10px_rgba(6,182,212,0.3)]',
-        'glass-secondary': 'bg-white shadow-[0_0_10px_rgba(6,182,212,0.3)]',
+        'glass-primary': 'bg-white shadow-[0_0_10px_rgba(245,158,11,0.3)]',
+        'glass-secondary': 'bg-white shadow-[0_0_10px_rgba(245,158,11,0.3)]',
         'glass-success': 'bg-white shadow-[0_0_10px_rgba(16,185,129,0.3)]',
-        'gradient-primary': 'bg-white shadow-[0_0_10px_rgba(6,182,212,0.3)]',
-        'gradient-secondary': 'bg-white shadow-[0_0_10px_rgba(6,182,212,0.3)]',
+        'gradient-primary': 'bg-white shadow-[0_0_10px_rgba(245,158,11,0.3)]',
+        'gradient-secondary': 'bg-white shadow-[0_0_10px_rgba(245,158,11,0.3)]',
       },
       size: {
         default:

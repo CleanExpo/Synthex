@@ -478,7 +478,7 @@ export default function LocalPage() {
                 label="Total reviews"
                 value={OVERVIEW_METRICS.totalReviews}
                 subtext={`${OVERVIEW_METRICS.averageRating} average rating`}
-                iconColour="text-violet-400"
+                iconColour="text-amber-400"
               />
             </div>
           </TabsContent>
@@ -627,7 +627,7 @@ export default function LocalPage() {
                       <Tooltip
                         contentStyle={{
                           backgroundColor: '#1e293b',
-                          border: '1px solid rgba(6,182,212,0.2)',
+                          border: '1px solid rgba(245,158,11,0.2)',
                           borderRadius: '8px',
                           color: '#fff',
                         }}
@@ -674,7 +674,7 @@ export default function LocalPage() {
                       <Tooltip
                         contentStyle={{
                           backgroundColor: '#1e293b',
-                          border: '1px solid rgba(6,182,212,0.2)',
+                          border: '1px solid rgba(245,158,11,0.2)',
                           borderRadius: '8px',
                           color: '#fff',
                         }}

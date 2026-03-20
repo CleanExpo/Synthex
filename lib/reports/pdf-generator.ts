@@ -70,7 +70,7 @@ interface AutoTableOptions {
 
 const DEFAULT_BRANDING: BrandingConfig = {
   primaryColor: '#00d4ff',
-  accentColor: '#06b6d4',
+  accentColor: '#f59e0b',
   fontFamily: 'helvetica',
   companyName: 'Synthex',
 };
@@ -285,10 +285,11 @@ export class PDFReportGenerator {
   private addSummaryMetrics(summary: Record<string, number>) {
     const metrics = Object.entries(summary);
     const cardsPerRow = 3;
-    const cardWidth = (this.pageWidth - 2 * this.margin - 10 * (cardsPerRow - 1)) / cardsPerRow;
+    const cardWidth =
+      (this.pageWidth - 2 * this.margin - 10 * (cardsPerRow - 1)) / cardsPerRow;
     const cardHeight = 25;
 
-    metrics.forEach(([ key, value], index) => {
+    metrics.forEach(([key, value], index) => {
       const row = Math.floor(index / cardsPerRow);
       const col = index % cardsPerRow;
       const x = this.margin + col * (cardWidth + 10);
@@ -302,7 +303,11 @@ export class PDFReportGenerator {
       this.doc.setTextColor(150, 150, 150);
       this.doc.setFontSize(8);
       this.doc.setFont(this.branding.fontFamily || 'helvetica', 'normal');
-      this.doc.text(METRIC_LABELS[key] || key.replace(/_/g, ' ').toUpperCase(), x + 5, y + 8);
+      this.doc.text(
+        METRIC_LABELS[key] || key.replace(/_/g, ' ').toUpperCase(),
+        x + 5,
+        y + 8
+      );
 
       // Metric value
       this.doc.setTextColor(255, 255, 255);
@@ -320,12 +325,13 @@ export class PDFReportGenerator {
    */
   private addPlatformTable(byPlatform: Record<string, Record<string, number>>) {
     const platforms = Object.keys(byPlatform);
-    const metrics = platforms.length > 0 ? Object.keys(byPlatform[platforms[0]]) : [];
+    const metrics =
+      platforms.length > 0 ? Object.keys(byPlatform[platforms[0]]) : [];
 
-    const headers = ['Platform', ...metrics.map((m) => METRIC_LABELS[m] || m)];
-    const rows = platforms.map((platform) => [
+    const headers = ['Platform', ...metrics.map(m => METRIC_LABELS[m] || m)];
+    const rows = platforms.map(platform => [
       platform.charAt(0).toUpperCase() + platform.slice(1),
-      ...metrics.map((m) => formatNumber(byPlatform[platform][m] || 0, m)),
+      ...metrics.map(m => formatNumber(byPlatform[platform][m] || 0, m)),
     ]);
 
     this.doc.autoTable({
@@ -356,18 +362,20 @@ export class PDFReportGenerator {
   /**
    * Add daily trends table
    */
-  private addDailyTable(byDay: { date: string; metrics: Record<string, number> }[]) {
+  private addDailyTable(
+    byDay: { date: string; metrics: Record<string, number> }[]
+  ) {
     if (byDay.length === 0) return;
 
     const metrics = Object.keys(byDay[0].metrics);
-    const headers = ['Date', ...metrics.map((m) => METRIC_LABELS[m] || m)];
+    const headers = ['Date', ...metrics.map(m => METRIC_LABELS[m] || m)];
 
     // Limit to last 14 days for readability
     const recentDays = byDay.slice(-14);
 
-    const rows = recentDays.map((day) => [
+    const rows = recentDays.map(day => [
       formatDate(day.date),
-      ...metrics.map((m) => formatNumber(day.metrics[m] || 0, m)),
+      ...metrics.map(m => formatNumber(day.metrics[m] || 0, m)),
     ]);
 
     this.doc.autoTable({
@@ -407,7 +415,12 @@ export class PDFReportGenerator {
     // Footer line
     this.doc.setDrawColor(50, 50, 50);
     this.doc.setLineWidth(0.5);
-    this.doc.line(this.margin, footerY - 5, this.pageWidth - this.margin, footerY - 5);
+    this.doc.line(
+      this.margin,
+      footerY - 5,
+      this.pageWidth - this.margin,
+      footerY - 5
+    );
 
     // Generated timestamp
     this.doc.setTextColor(100, 100, 100);

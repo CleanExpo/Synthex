@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
           position: 'absolute',
           inset: 0,
           backgroundImage:
-            'linear-gradient(rgba(6, 182, 212, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.06) 1px, transparent 1px)',
+            'linear-gradient(rgba(245, 158, 11, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(245, 158, 11, 0.06) 1px, transparent 1px)',
           backgroundSize: '50px 50px',
         }}
       />
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
           width: '500px',
           height: '500px',
           background:
-            'radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%)',
+            'radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 70%)',
           borderRadius: '50%',
         }}
       />
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
           width: '400px',
           height: '400px',
           background:
-            'radial-gradient(circle, rgba(6, 182, 212, 0.10) 0%, transparent 70%)',
+            'radial-gradient(circle, rgba(245, 158, 11, 0.10) 0%, transparent 70%)',
           borderRadius: '50%',
         }}
       />
@@ -167,8 +167,8 @@ export async function GET(request: NextRequest) {
             gap: '8px',
             padding: '8px 20px',
             borderRadius: '999px',
-            background: 'rgba(6, 182, 212, 0.10)',
-            border: '1px solid rgba(6, 182, 212, 0.25)',
+            background: 'rgba(245, 158, 11, 0.10)',
+            border: '1px solid rgba(245, 158, 11, 0.25)',
             marginTop: '8px',
           }}
         >

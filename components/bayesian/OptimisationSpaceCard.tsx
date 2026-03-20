@@ -25,10 +25,13 @@ interface OptimisationSpaceCardProps {
 }
 
 function formatSurface(surface: string): string {
-  return SURFACE_LABELS[surface] ?? surface
-    .split('_')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
+  return (
+    SURFACE_LABELS[surface] ??
+    surface
+      .split('_')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ')
+  );
 }
 
 function relativeTime(dateStr: string): string {
@@ -56,13 +59,15 @@ export function OptimisationSpaceCard({
     : null;
 
   return (
-    <Card className="bg-surface-base/80 backdrop-blur-xl border border-violet-500/10 hover:border-violet-500/30 transition-colors">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 hover:border-amber-500/30 transition-colors">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-white text-sm font-semibold leading-tight">
             {formatSurface(space.surface)}
             {space.name && (
-              <span className="block text-xs font-normal text-gray-400 mt-0.5">{space.name}</span>
+              <span className="block text-xs font-normal text-gray-400 mt-0.5">
+                {space.name}
+              </span>
             )}
           </CardTitle>
           <LearningIndicator
@@ -76,7 +81,9 @@ export function OptimisationSpaceCard({
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-2 text-center">
           <div>
-            <div className="text-lg font-bold text-white">{space.totalObservations}</div>
+            <div className="text-lg font-bold text-white">
+              {space.totalObservations}
+            </div>
             <div className="text-xs text-gray-500">Observations</div>
           </div>
           <div>
@@ -86,7 +93,9 @@ export function OptimisationSpaceCard({
             <div className="text-xs text-gray-500">Best Score</div>
           </div>
           <div>
-            <div className="text-xs font-medium text-gray-300">{relativeTime(space.updatedAt)}</div>
+            <div className="text-xs font-medium text-gray-300">
+              {relativeTime(space.updatedAt)}
+            </div>
             <div className="text-xs text-gray-500">Last Activity</div>
           </div>
         </div>
@@ -96,9 +105,14 @@ export function OptimisationSpaceCard({
           <div className="bg-white/[0.03] rounded-lg p-2 space-y-1">
             <div className="text-xs text-gray-500 mb-1.5">Best Parameters</div>
             {topParams.map(([key, value]) => (
-              <div key={key} className="flex justify-between items-center text-xs">
+              <div
+                key={key}
+                className="flex justify-between items-center text-xs"
+              >
                 <span className="text-gray-400 font-mono">{key}</span>
-                <span className="text-violet-300 font-mono">{value.toFixed(3)}</span>
+                <span className="text-amber-300 font-mono">
+                  {value.toFixed(3)}
+                </span>
               </div>
             ))}
           </div>
@@ -118,7 +132,7 @@ export function OptimisationSpaceCard({
           size="sm"
           onClick={() => onRunOptimisation(space.id)}
           disabled={isDisabled}
-          className="w-full border-violet-500/30 text-violet-400 hover:bg-violet-500/10 hover:border-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isDisabled ? (
             <>

@@ -195,8 +195,8 @@ export default function UnifiedDashboardPage() {
         </div>
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-500/10">
-              <Activity className="w-5 h-5 text-purple-400" />
+            <div className="p-2 rounded-lg bg-amber-500/10">
+              <Activity className="w-5 h-5 text-amber-400" />
             </div>
             <div>
               <p className="text-sm text-gray-400">Total Engagement</p>
@@ -273,10 +273,10 @@ export default function UnifiedDashboardPage() {
               </div>
             )}
             {data.insights.bestEngagementRate && (
-              <div className="bg-gradient-to-r from-purple-500/10 to-transparent border border-purple-500/20 rounded-xl p-4">
+              <div className="bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20 rounded-xl p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-purple-500/20">
-                    <Zap className="w-5 h-5 text-purple-400" />
+                  <div className="p-2 rounded-lg bg-amber-500/20">
+                    <Zap className="w-5 h-5 text-amber-400" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">

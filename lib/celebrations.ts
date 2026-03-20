@@ -12,7 +12,7 @@ export const confetti = () => {
     return Math.random() * (max - min) + min;
   }
 
-  const interval: ReturnType<typeof setInterval> = setInterval(function() {
+  const interval: ReturnType<typeof setInterval> = setInterval(function () {
     const timeLeft = animationEnd - Date.now();
 
     if (timeLeft <= 0) {
@@ -20,16 +20,16 @@ export const confetti = () => {
     }
 
     const particleCount = 50 * (timeLeft / duration);
-    
+
     // Create confetti elements
     createConfettiParticles(particleCount);
   }, 250);
 };
 
 function createConfettiParticles(count: number) {
-  const colors = ['#9333EA', '#EC4899', '#8B5CF6', '#3B82F6', '#10B981'];
+  const colors = ['#9333EA', '#EC4899', '#f59e0b', '#3B82F6', '#10B981'];
   const container = document.body;
-  
+
   for (let i = 0; i < count; i++) {
     const particle = document.createElement('div');
     particle.className = 'confetti-particle';
@@ -45,9 +45,9 @@ function createConfettiParticles(count: number) {
       z-index: 9999;
       pointer-events: none;
     `;
-    
+
     container.appendChild(particle);
-    
+
     // Remove after animation
     setTimeout(() => particle.remove(), 3000);
   }
@@ -57,7 +57,7 @@ function createConfettiParticles(count: number) {
 export const emojiBurst = (emoji: string = '🎉') => {
   const container = document.body;
   const count = 20;
-  
+
   for (let i = 0; i < count; i++) {
     const emojiEl = document.createElement('div');
     emojiEl.textContent = emoji;
@@ -73,7 +73,7 @@ export const emojiBurst = (emoji: string = '🎉') => {
       pointer-events: none;
       --angle: ${(360 / count) * i}deg;
     `;
-    
+
     container.appendChild(emojiEl);
     setTimeout(() => emojiEl.remove(), 1500);
   }
@@ -83,7 +83,7 @@ export const emojiBurst = (emoji: string = '🎉') => {
 export const successCheck = () => {
   const container = document.body;
   const checkmark = document.createElement('div');
-  
+
   checkmark.innerHTML = `
     <svg width="100" height="100" viewBox="0 0 100 100" style="
       position: fixed;
@@ -102,7 +102,7 @@ export const successCheck = () => {
             style="animation: check-draw 0.3s 0.5s ease-out forwards"/>
     </svg>
   `;
-  
+
   container.appendChild(checkmark);
   setTimeout(() => checkmark.remove(), 2000);
 };
@@ -111,7 +111,7 @@ export const successCheck = () => {
 export const streakAnimation = (days: number) => {
   const container = document.body;
   const streak = document.createElement('div');
-  
+
   streak.style.cssText = `
     position: fixed;
     top: 50%;
@@ -127,7 +127,7 @@ export const streakAnimation = (days: number) => {
     animation: streak-pop 0.5s ease-out forwards;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   `;
-  
+
   streak.innerHTML = `
     <div style="text-align: center;">
       <div style="font-size: 3rem; margin-bottom: 0.5rem;">🔥</div>
@@ -135,7 +135,7 @@ export const streakAnimation = (days: number) => {
       <div style="font-size: 0.875rem; opacity: 0.9; margin-top: 0.5rem;">Keep it going!</div>
     </div>
   `;
-  
+
   container.appendChild(streak);
   setTimeout(() => streak.remove(), 3000);
 };
@@ -144,7 +144,7 @@ export const streakAnimation = (days: number) => {
 export const levelUp = (level: number) => {
   const container = document.body;
   const levelUpEl = document.createElement('div');
-  
+
   levelUpEl.style.cssText = `
     position: fixed;
     top: 20%;
@@ -155,7 +155,7 @@ export const levelUp = (level: number) => {
     z-index: 9999;
     pointer-events: none;
   `;
-  
+
   levelUpEl.innerHTML = `
     <div style="
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -174,10 +174,10 @@ export const levelUp = (level: number) => {
       <span style="font-size: 1.5rem;">⭐</span>
     </div>
   `;
-  
+
   container.appendChild(levelUpEl);
   setTimeout(() => levelUpEl.remove(), 2500);
-  
+
   // Also trigger confetti
   setTimeout(confetti, 200);
 };
@@ -185,7 +185,7 @@ export const levelUp = (level: number) => {
 // Add required CSS animations
 export const injectCelebrationStyles = () => {
   if (document.getElementById('celebration-styles')) return;
-  
+
   const style = document.createElement('style');
   style.id = 'celebration-styles';
   style.textContent = `
@@ -244,7 +244,7 @@ export const injectCelebrationStyles = () => {
       }
     }
   `;
-  
+
   document.head.appendChild(style);
 };
 

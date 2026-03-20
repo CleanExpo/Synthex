@@ -81,7 +81,7 @@ export function PassageHighlighter({ passages }: PassageHighlighterProps) {
                       </Badge>
                     )}
                     {passage.hasCitation && (
-                      <Badge className="bg-purple-500/20 text-purple-400 text-xs">
+                      <Badge className="bg-amber-500/20 text-amber-400 text-xs">
                         Has Citation
                       </Badge>
                     )}

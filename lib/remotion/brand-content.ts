@@ -347,7 +347,7 @@ Join the national network building a stronger restoration industry.
     brandName: 'Synthex',
     tagline: 'AI-Powered Marketing Automation',
     industry: 'Marketing Technology',
-    brandColour: '#8B5CF6', // violet-500
+    brandColour: '#f59e0b', // amber-500
     websiteUrl: 'synthex.social',
     valueProps: [
       'AI Content Generation Across 9 Platforms',
@@ -495,7 +495,7 @@ Purpose-built for the restoration industry. Less paperwork, more restoration.
     brandName: 'Unite Group',
     tagline: "Building Tomorrow's Technology Solutions",
     industry: 'Technology Holdings',
-    brandColour: '#7C3AED', // violet-600
+    brandColour: '#d97706', // amber-600
     websiteUrl: 'unite-group.in',
     valueProps: [
       'Innovation Portfolio Across Multiple Industries',

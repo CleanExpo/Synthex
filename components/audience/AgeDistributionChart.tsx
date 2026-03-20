@@ -27,10 +27,10 @@ interface AgeDistributionChartProps {
 const AGE_COLORS: Record<string, string> = {
   '13-17': '#ffb87b', // amber-500
   '18-24': '#ffdcc2', // amber-400
-  '25-34': '#8b5cf6', // violet-500
-  '35-44': '#a78bfa', // violet-400
-  '45-54': '#c084fc', // purple-400
-  '55+': '#d946ef', // fuchsia-500
+  '25-34': '#f59e0b', // amber-500
+  '35-44': '#fbbf24', // amber-400
+  '45-54': '#fcd34d', // amber-400
+  '55+': '#f59e0b', // amber-500
 };
 
 function formatNumber(num: number): string {

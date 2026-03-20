@@ -220,7 +220,7 @@ export default function IntegrationsPage() {
       <section className="pb-20 px-6">
         <div className="container mx-auto">
           <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-sm mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm mb-4">
               <Zap className="h-4 w-4" /> AI Models
             </div>
             <h2 className="text-3xl font-bold text-white mb-3">AI Providers</h2>
@@ -234,10 +234,10 @@ export default function IntegrationsPage() {
             {AI_PROVIDERS.map(a => (
               <Card
                 key={a.name}
-                className="bg-[#0d1f35]/60 border-purple-500/10 hover:border-purple-500/30 transition-all p-6"
+                className="bg-[#0d1f35]/60 border-amber-500/10 hover:border-amber-500/30 transition-all p-6"
               >
                 <h3 className="font-semibold text-white mb-2 flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-purple-400" />
+                  <CheckCircle2 className="h-4 w-4 text-amber-400" />
                   {a.name}
                 </h3>
                 <p className="text-sm text-gray-400">{a.description}</p>
@@ -282,7 +282,7 @@ export default function IntegrationsPage() {
       {/* CTA */}
       <section className="pb-20 px-6">
         <div className="container mx-auto text-center">
-          <div className="p-10 rounded-2xl bg-gradient-to-br from-amber-500/10 to-purple-500/10 border border-amber-500/20 max-w-3xl mx-auto">
+          <div className="p-10 rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-500/10 border border-amber-500/20 max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold text-white mb-4">
               Ready to connect everything?
             </h2>

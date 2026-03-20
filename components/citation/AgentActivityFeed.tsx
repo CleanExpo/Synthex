@@ -40,7 +40,7 @@ const AGENT_META: Record<AgentType, AgentMeta> = {
   },
   prompt: {
     Icon: Brain,
-    colour: 'text-purple-400 bg-purple-500/10',
+    colour: 'text-amber-400 bg-amber-500/10',
     label: 'Prompt Intel',
   },
   backlink: {

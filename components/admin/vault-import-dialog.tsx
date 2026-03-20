@@ -964,7 +964,7 @@ export function VaultImportDialog({
                     </Badge>
                   )}
                   {aiFlags.size > 0 && (
-                    <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+                    <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30">
                       {aiFlags.size} flagged
                     </Badge>
                   )}
@@ -1001,7 +1001,7 @@ export function VaultImportDialog({
                 size="sm"
                 onClick={runSmartCleanup}
                 disabled={isAnalysing}
-                className="border-purple-500/40 text-purple-300 hover:bg-purple-500/10 text-xs h-7 shrink-0 gap-1"
+                className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10 text-xs h-7 shrink-0 gap-1"
               >
                 {isAnalysing ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -1039,12 +1039,12 @@ export function VaultImportDialog({
 
             {/* AI Smart Cleanup panel */}
             {showAiPanel && (
-              <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 overflow-hidden">
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 overflow-hidden">
                 {/* Panel header */}
-                <div className="flex items-center justify-between px-3 py-2 border-b border-purple-500/20">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-amber-500/20">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                    <span className="text-purple-300 text-xs font-medium">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="text-amber-300 text-xs font-medium">
                       Smart Cleanup Analysis
                     </span>
                     {aiFlags.size === 0 && (
@@ -1094,7 +1094,7 @@ export function VaultImportDialog({
 
                 {/* Flagged entries list */}
                 {aiFlags.size > 0 && (
-                  <div className="max-h-44 overflow-y-auto divide-y divide-purple-500/10">
+                  <div className="max-h-44 overflow-y-auto divide-y divide-amber-500/10">
                     {Array.from(aiFlags.values()).map(flag => {
                       const entry = entries.find(e => e.id === flag.id);
                       if (!entry) return null;

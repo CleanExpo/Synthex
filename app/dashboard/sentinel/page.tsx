@@ -243,7 +243,7 @@ function SentinelPageContent() {
                 <MetricTrendChart
                   data={positionData}
                   label="Average Position (lower is better)"
-                  colour="#a78bfa"
+                  colour="#fbbf24"
                   invertY
                 />
               </div>

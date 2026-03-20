@@ -76,7 +76,7 @@ export async function getOwnedBusinesses(
     });
 
     const businesses: OwnedBusiness[] = await Promise.all(
-      ownerships.map(async (ownership) => {
+      ownerships.map(async ownership => {
         const business: OwnedBusiness = {
           id: ownership.id,
           organizationId: ownership.organizationId,
@@ -310,10 +310,10 @@ export async function createChildBusiness(
 
     const { name, displayName, monthlyRate = 249.0 } = params;
     const slug = generateSlug(name);
-    const domain = `${slug}.synthex.app`;
+    const domain = `${slug}.synthex.social`;
 
     // Create organization and ownership in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async tx => {
       // Create organization
       const organization = await tx.organization.create({
         data: {
@@ -499,7 +499,7 @@ export async function getCrossBusinessStats(
 
     // Calculate aggregations
     const totalBusinesses = businesses.length;
-    const activeBusinesses = businesses.filter((b) => b.isActive).length;
+    const activeBusinesses = businesses.filter(b => b.isActive).length;
 
     let totalCampaigns = 0;
     let totalPosts = 0;

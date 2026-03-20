@@ -190,7 +190,7 @@ export default function CompetitorPagesPage() {
                           className={`px-2 py-0.5 text-xs rounded-full ${
                             page.type === 'comparison'
                               ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                              : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
+                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                           }`}
                         >
                           {page.type === 'comparison'

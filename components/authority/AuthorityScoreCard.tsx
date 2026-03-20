@@ -39,7 +39,7 @@ function getTier(score: number) {
 const SOURCE_COLORS: Record<string, string> = {
   government: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
   academic: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-  industry: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+  industry: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
   web: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
 };
 
@@ -53,7 +53,7 @@ export function AuthorityScoreCard({
   const tier = getTier(score);
 
   return (
-    <Card className="bg-white/5 border-violet-500/10 backdrop-blur-sm">
+    <Card className="bg-white/5 border-amber-500/10 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="text-white text-sm font-medium">
           Authority Score

@@ -89,7 +89,7 @@ JSON schema:
  */
 export async function generatePressRelease(
   input: PRGenerationInput,
-  byokApiKey?: string,
+  byokApiKey?: string
 ): Promise<PRGenerationResult> {
   const apiKey = byokApiKey || process.env.OPENROUTER_API_KEY;
 
@@ -97,7 +97,10 @@ export async function generatePressRelease(
     try {
       return await generateWithAI(input, apiKey);
     } catch (err) {
-      console.error('[ai-generator] AI generation failed, falling back to template:', err);
+      console.error(
+        '[ai-generator] AI generation failed, falling back to template:',
+        err
+      );
     }
   }
 
@@ -110,29 +113,35 @@ export async function generatePressRelease(
 
 async function generateWithAI(
   input: PRGenerationInput,
-  apiKey: string,
+  apiKey: string
 ): Promise<PRGenerationResult> {
   const userPrompt = buildUserPrompt(input);
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': process.env.OPENROUTER_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.app',
-      'X-Title': process.env.OPENROUTER_SITE_NAME || 'Synthex',
-    },
-    body: JSON.stringify({
-      model: 'anthropic/claude-3-haiku',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.7,
-      max_tokens: 1200,
-    }),
-    signal: AbortSignal.timeout(30_000),
-  });
+  const response = await fetch(
+    'https://openrouter.ai/api/v1/chat/completions',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer':
+          process.env.OPENROUTER_SITE_URL ||
+          process.env.NEXT_PUBLIC_APP_URL ||
+          'https://synthex.social',
+        'X-Title': process.env.OPENROUTER_SITE_NAME || 'Synthex',
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-3-haiku',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 1200,
+      }),
+      signal: AbortSignal.timeout(30_000),
+    }
+  );
 
   if (!response.ok) {
     const text = await response.text().catch(() => '');
@@ -151,7 +160,11 @@ async function generateWithAI(
 
   let parsed: { title: string; summary: string; body: string };
   try {
-    parsed = JSON.parse(cleaned) as { title: string; summary: string; body: string };
+    parsed = JSON.parse(cleaned) as {
+      title: string;
+      summary: string;
+      body: string;
+    };
   } catch {
     throw new Error('OpenRouter returned non-JSON content');
   }
@@ -192,12 +205,15 @@ async function generateWithAI(
 // ---------------------------------------------------------------------------
 
 function generateWithTemplate(input: PRGenerationInput): PRGenerationResult {
-  const facts = input.keyFacts.length > 0 ? input.keyFacts : ['No additional details provided.'];
+  const facts =
+    input.keyFacts.length > 0
+      ? input.keyFacts
+      : ['No additional details provided.'];
 
   const body = [
     `${input.brandName} today announced ${input.angle}.`,
     '',
-    facts.map((f) => `• ${f}`).join('\n'),
+    facts.map(f => `• ${f}`).join('\n'),
     '',
     `"${input.quoteText}" said ${input.quoteName}.`,
     '',

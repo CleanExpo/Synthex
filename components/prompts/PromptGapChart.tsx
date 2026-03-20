@@ -18,7 +18,7 @@ import { CATEGORY_CONFIG } from '@/lib/prompts/types';
 // ─── Colour map (matches PromptCard) ────────────────────────────────────────
 
 const CATEGORY_BAR_COLOURS: Record<PromptCategory, string> = {
-  'brand-awareness': 'bg-purple-500',
+  'brand-awareness': 'bg-amber-500',
   'competitor-comparison': 'bg-amber-500',
   'local-discovery': 'bg-green-500',
   'use-case': 'bg-blue-500',

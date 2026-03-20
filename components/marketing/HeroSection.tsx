@@ -158,7 +158,7 @@ export function HeroSection({
               <a href={primaryCTA.href}>
                 <Button
                   size="lg"
-                  className="font-semibold px-8 bg-gradient-to-r from-amber-500 to-amber-500 hover:from-amber-400 hover:to-amber-400 text-white shadow-[0_0_30px_rgba(6,182,212,0.4)] hover:shadow-[0_0_40px_rgba(6,182,212,0.5)] transition-all duration-300"
+                  className="font-semibold px-8 bg-gradient-to-r from-amber-500 to-amber-500 hover:from-amber-400 hover:to-amber-400 text-white shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)] transition-all duration-300"
                 >
                   {primaryCTA.text}
                   <ArrowRight className="w-5 h-5 ml-2" />
@@ -168,7 +168,7 @@ export function HeroSection({
               <Button
                 size="lg"
                 onClick={primaryCTA.onClick}
-                className="font-semibold px-8 bg-gradient-to-r from-amber-500 to-amber-500 hover:from-amber-400 hover:to-amber-400 text-white shadow-[0_0_30px_rgba(6,182,212,0.4)] hover:shadow-[0_0_40px_rgba(6,182,212,0.5)] transition-all duration-300"
+                className="font-semibold px-8 bg-gradient-to-r from-amber-500 to-amber-500 hover:from-amber-400 hover:to-amber-400 text-white shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)] transition-all duration-300"
               >
                 {primaryCTA.text}
                 <ArrowRight className="w-5 h-5 ml-2" />

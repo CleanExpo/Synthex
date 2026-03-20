@@ -15,7 +15,7 @@ export default function AIPMFloatingButton() {
         onClick={() => setPanelOpen(true)}
         className={cn(
           'fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full',
-          'bg-gradient-to-br from-amber-500 to-purple-600 text-white shadow-lg shadow-amber-500/25',
+          'bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/25',
           'transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-amber-500/30',
           'focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-gray-950',
           panelOpen && 'scale-0 opacity-0'

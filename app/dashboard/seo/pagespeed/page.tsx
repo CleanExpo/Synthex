@@ -345,7 +345,7 @@ function PerformanceTrendsChart({
           <Tooltip
             contentStyle={{
               backgroundColor: '#111111',
-              border: '1px solid rgba(6, 182, 212, 0.2)',
+              border: '1px solid rgba(245, 158, 11, 0.2)',
               borderRadius: '8px',
               color: '#fff',
             }}

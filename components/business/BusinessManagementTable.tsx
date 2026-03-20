@@ -300,7 +300,7 @@ export function BusinessManagementTable({
                             onClick={() =>
                               onManageAccounts(business.organizationId)
                             }
-                            className="bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/20 hover:border-purple-500/30"
+                            className="bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20 hover:border-amber-500/30"
                           >
                             <Link2 className="h-3 w-3 mr-1" />
                             Manage
@@ -492,7 +492,7 @@ export function BusinessManagementTable({
                         onClick={() =>
                           onManageAccounts(business.organizationId)
                         }
-                        className="bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/20 hover:border-purple-500/30"
+                        className="bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20 hover:border-amber-500/30"
                       >
                         <Link2 className="h-3 w-3 mr-1" />
                         Manage Accounts

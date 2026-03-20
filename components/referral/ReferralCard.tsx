@@ -35,11 +35,9 @@ export default function ReferralCard() {
   const [error, setError] = useState('');
 
   const { mutate } = useSWRConfig();
-  const { data } = useSWR<ReferralData | null>(
-    '/api/referrals',
-    fetchJson,
-    { revalidateOnFocus: false }
-  );
+  const { data } = useSWR<ReferralData | null>('/api/referrals', fetchJson, {
+    revalidateOnFocus: false,
+  });
 
   const referralCode = data?.referralCode ?? '';
   const referralLink = data?.referralLink ?? '';
@@ -84,12 +82,14 @@ export default function ReferralCard() {
     <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 backdrop-blur-sm">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/20">
-          <Gift className="h-4 w-4 text-purple-400" />
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20">
+          <Gift className="h-4 w-4 text-amber-400" />
         </div>
         <div>
           <h3 className="text-sm font-semibold text-white">Refer & Earn</h3>
-          <p className="text-[10px] text-gray-500">Earn 500 AI credits per referral</p>
+          <p className="text-[10px] text-gray-500">
+            Earn 500 AI credits per referral
+          </p>
         </div>
       </div>
 
@@ -110,7 +110,11 @@ export default function ReferralCard() {
           aria-label={copied ? 'Referral link copied' : 'Copy referral link'}
           onClick={handleCopy}
         >
-          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          {copied ? (
+            <Check className="h-4 w-4" />
+          ) : (
+            <Copy className="h-4 w-4" />
+          )}
         </Button>
       </div>
 
@@ -118,7 +122,7 @@ export default function ReferralCard() {
       <div className="flex gap-2 mb-4">
         <Input
           value={inviteEmail}
-          onChange={(e) => setInviteEmail(e.target.value)}
+          onChange={e => setInviteEmail(e.target.value)}
           placeholder="friend@email.com"
           type="email"
           className="bg-white/5 border-white/10 text-xs text-gray-300 placeholder:text-gray-600"
@@ -127,15 +131,13 @@ export default function ReferralCard() {
           size="sm"
           disabled={!inviteEmail.trim() || sending}
           onClick={handleSendInvite}
-          className="shrink-0 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 text-xs"
+          className="shrink-0 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 text-xs"
         >
           {sending ? 'Sending...' : 'Invite'}
         </Button>
       </div>
 
-      {error && (
-        <p className="text-xs text-red-400 mb-3">{error}</p>
-      )}
+      {error && <p className="text-xs text-red-400 mb-3">{error}</p>}
 
       {/* Stats */}
       {stats && (
@@ -149,7 +151,9 @@ export default function ReferralCard() {
             <p className="text-[10px] text-gray-500">Signed Up</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-purple-400">{stats.rewardsEarned}</p>
+            <p className="text-lg font-bold text-amber-400">
+              {stats.rewardsEarned}
+            </p>
             <p className="text-[10px] text-gray-500">Credits Earned</p>
           </div>
         </div>

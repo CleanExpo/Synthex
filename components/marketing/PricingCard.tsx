@@ -59,7 +59,7 @@ export function PricingCard({
       className={cn(
         'relative overflow-hidden transition-all duration-500',
         isPopular
-          ? 'glass-primary scale-105 z-10 shadow-[0_0_60px_rgba(6,182,212,0.2)]'
+          ? 'glass-primary scale-105 z-10 shadow-[0_0_60px_rgba(245,158,11,0.2)]'
           : isEnterprise
             ? 'glass-gradient border-emerald-500/30'
             : 'glass hover:glass-interactive',
@@ -161,9 +161,9 @@ export function PricingCard({
           className={cn(
             'w-full font-semibold transition-all duration-300',
             isPopular
-              ? 'bg-gradient-to-r from-amber-500 to-amber-500 hover:from-amber-400 hover:to-amber-400 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)]'
+              ? 'bg-gradient-to-r from-amber-500 to-amber-500 hover:from-amber-400 hover:to-amber-400 text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)]'
               : isEnterprise
-                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white'
+                ? 'bg-gradient-to-r from-emerald-500 to-amber-500 hover:from-emerald-400 hover:to-amber-400 text-white'
                 : 'bg-white/10 hover:bg-white/15 text-white border border-white/10'
           )}
         >

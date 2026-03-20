@@ -61,16 +61,16 @@ const sliderThumbVariants = cva(
           'border-2 border-white/30 bg-white shadow-[0_0_10px_rgba(255,255,255,0.3)]',
         'glass-solid': 'border-2 border-white/20 bg-white shadow-lg',
         'glass-primary':
-          'border-2 border-amber-500/50 bg-white shadow-[0_0_10px_rgba(6,182,212,0.4)]',
+          'border-2 border-amber-500/50 bg-white shadow-[0_0_10px_rgba(245,158,11,0.4)]',
         'glass-secondary':
-          'border-2 border-amber-500/50 bg-white shadow-[0_0_10px_rgba(6,182,212,0.4)]',
+          'border-2 border-amber-500/50 bg-white shadow-[0_0_10px_rgba(245,158,11,0.4)]',
         'glass-success':
           'border-2 border-emerald-500/50 bg-white shadow-[0_0_10px_rgba(16,185,129,0.4)]',
         // Gradient variants
         'gradient-primary':
-          'border-0 bg-gradient-to-br from-amber-400 to-amber-400 shadow-[0_0_12px_rgba(6,182,212,0.5)]',
+          'border-0 bg-gradient-to-br from-amber-400 to-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.5)]',
         'gradient-secondary':
-          'border-0 bg-gradient-to-br from-amber-400 to-blue-400 shadow-[0_0_12px_rgba(6,182,212,0.5)]',
+          'border-0 bg-gradient-to-br from-amber-400 to-blue-400 shadow-[0_0_12px_rgba(245,158,11,0.5)]',
       },
       size: {
         default: 'h-5 w-5',

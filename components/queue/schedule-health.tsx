@@ -202,11 +202,11 @@ export function ScheduleHealth() {
 
             {/* Next Up / Retry Queue */}
             <div className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.02] border border-white/5">
-              <div className="p-2 rounded-lg bg-purple-500/10">
+              <div className="p-2 rounded-lg bg-amber-500/10">
                 {retryQueue.count > 0 ? (
                   <RotateCcw className="h-4 w-4 text-amber-400" />
                 ) : (
-                  <Clock className="h-4 w-4 text-purple-400" />
+                  <Clock className="h-4 w-4 text-amber-400" />
                 )}
               </div>
               <div>

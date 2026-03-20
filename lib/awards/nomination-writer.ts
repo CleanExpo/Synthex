@@ -25,9 +25,9 @@ export interface NominationInput {
   brand: {
     canonicalName: string;
     description: string;
-    credentials?: string[];   // e.g. ["Founded 2022", "500+ clients", "SOC 2 certified"]
-    achievements?: string[];  // e.g. ["Launched AI-powered content engine", "Grew 3x YoY"]
-    location?: string;        // e.g. "Brisbane, Australia"
+    credentials?: string[]; // e.g. ["Founded 2022", "500+ clients", "SOC 2 certified"]
+    achievements?: string[]; // e.g. ["Launched AI-powered content engine", "Grew 3x YoY"]
+    location?: string; // e.g. "Brisbane, Australia"
   };
 }
 
@@ -66,7 +66,7 @@ JSON schema:
  */
 export async function generateNomination(
   input: NominationInput,
-  byokApiKey?: string,
+  byokApiKey?: string
 ): Promise<NominationDraft> {
   const apiKey = byokApiKey || process.env.OPENROUTER_API_KEY;
 
@@ -74,7 +74,10 @@ export async function generateNomination(
     try {
       return await generateWithAI(input, apiKey);
     } catch (err) {
-      console.error('[nomination-writer] AI generation failed, falling back to template:', err);
+      console.error(
+        '[nomination-writer] AI generation failed, falling back to template:',
+        err
+      );
     }
   }
 
@@ -87,32 +90,35 @@ export async function generateNomination(
 
 async function generateWithAI(
   input: NominationInput,
-  apiKey: string,
+  apiKey: string
 ): Promise<NominationDraft> {
   const userPrompt = buildUserPrompt(input);
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer':
-        process.env.OPENROUTER_SITE_URL ||
-        process.env.NEXT_PUBLIC_APP_URL ||
-        'https://synthex.app',
-      'X-Title': process.env.OPENROUTER_SITE_NAME || 'Synthex',
-    },
-    body: JSON.stringify({
-      model: 'anthropic/claude-3-haiku',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.7,
-      max_tokens: 1400,
-    }),
-    signal: AbortSignal.timeout(30_000),
-  });
+  const response = await fetch(
+    'https://openrouter.ai/api/v1/chat/completions',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer':
+          process.env.OPENROUTER_SITE_URL ||
+          process.env.NEXT_PUBLIC_APP_URL ||
+          'https://synthex.social',
+        'X-Title': process.env.OPENROUTER_SITE_NAME || 'Synthex',
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-3-haiku',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 1400,
+      }),
+      signal: AbortSignal.timeout(30_000),
+    }
+  );
 
   if (!response.ok) {
     const text = await response.text().catch(() => '');
@@ -148,9 +154,9 @@ async function generateWithAI(
 function generateWithTemplate(input: NominationInput): NominationDraft {
   const { award, brand } = input;
   const credentialsList =
-    brand.credentials?.map((c) => `- ${c}`).join('\n') ?? '';
+    brand.credentials?.map(c => `- ${c}`).join('\n') ?? '';
   const achievementsList =
-    brand.achievements?.map((a) => `- ${a}`).join('\n') ?? '';
+    brand.achievements?.map(a => `- ${a}`).join('\n') ?? '';
   const location = brand.location ?? 'Australia';
 
   const body = `${brand.canonicalName} is proud to be nominated for the ${award.name} in the ${award.category} category, organised by ${award.organizer}.
@@ -166,7 +172,10 @@ We believe ${brand.canonicalName} represents the best of what ${award.category} 
   const keyPoints = [
     `${brand.canonicalName}: ${brand.description.slice(0, 100)}`,
     `Nominated for ${award.category} at the ${award.name}`,
-    ...(brand.credentials?.slice(0, 2) ?? ['Innovative product', 'Customer-focused']),
+    ...(brand.credentials?.slice(0, 2) ?? [
+      'Innovative product',
+      'Customer-focused',
+    ]),
     ...(brand.achievements?.slice(0, 2) ?? ['Strong growth trajectory']),
   ].slice(0, 5);
 
@@ -197,12 +206,12 @@ function buildUserPrompt(input: NominationInput): string {
 
   if (brand.credentials?.length) {
     lines.push('Credentials:');
-    brand.credentials.forEach((c) => lines.push(`  - ${c}`));
+    brand.credentials.forEach(c => lines.push(`  - ${c}`));
   }
 
   if (brand.achievements?.length) {
     lines.push('Key Achievements:');
-    brand.achievements.forEach((a) => lines.push(`  - ${a}`));
+    brand.achievements.forEach(a => lines.push(`  - ${a}`));
   }
 
   return lines.join('\n');

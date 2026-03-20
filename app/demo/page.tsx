@@ -25,7 +25,7 @@ const demos = [
       'Cutting-edge animations with Matrix rain, holographic cards, and cyberpunk effects',
     href: '/demo/ultra-animations',
     icon: Rocket,
-    gradient: 'from-amber-500 to-teal-500',
+    gradient: 'from-amber-500 to-amber-500',
     features: [
       'Matrix Rain',
       'Cyberpunk UI',
@@ -48,7 +48,7 @@ const demos = [
       'Next-gen landing page with 3D effects and advanced animations',
     href: '/demo/enhanced-landing',
     icon: Globe,
-    gradient: 'from-teal-500 to-amber-500',
+    gradient: 'from-amber-500 to-amber-500',
     features: [
       '3D Spheres',
       'Particle Fields',
@@ -61,7 +61,7 @@ const demos = [
     description: 'AI-powered content creation with 3D visualization',
     href: '/demo/enhanced-sandbox',
     icon: Layers,
-    gradient: 'from-amber-400 to-teal-400',
+    gradient: 'from-amber-400 to-amber-400',
     features: ['AI Generator', 'Platform Selector', '3D Preview', 'Analytics'],
   },
 ];
@@ -136,7 +136,7 @@ export default function DemoIndex() {
             }}
           />
           <motion.div
-            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl"
+            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl"
             animate={{
               scale: [1.2, 1, 1.2],
               opacity: [0.5, 0.3, 0.5],
@@ -167,7 +167,7 @@ export default function DemoIndex() {
             </motion.div>
 
             <h1 className="text-6xl md:text-7xl font-bold mb-6">
-              <span className="bg-gradient-to-r from-amber-400 via-teal-400 to-amber-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-amber-400 via-amber-400 to-amber-300 bg-clip-text text-transparent">
                 Animation Gallery
               </span>
             </h1>
@@ -234,7 +234,7 @@ export default function DemoIndex() {
                               transition={{ delay: 0.5 + index * 0.1 }}
                               className="absolute top-4 right-4 z-10"
                             >
-                              <span className="px-3 py-1 bg-gradient-to-r from-amber-500 to-teal-500 rounded-full text-xs font-bold text-white">
+                              <span className="px-3 py-1 bg-gradient-to-r from-amber-500 to-amber-500 rounded-full text-xs font-bold text-white">
                                 NEW
                               </span>
                             </motion.div>
@@ -255,7 +255,7 @@ export default function DemoIndex() {
                             </div>
 
                             {/* Title & Description */}
-                            <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-amber-400 group-hover:to-teal-400 group-hover:bg-clip-text transition-all duration-300">
+                            <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-amber-400 group-hover:to-amber-400 group-hover:bg-clip-text transition-all duration-300">
                               {demo.title}
                             </h3>
                             <p className="text-gray-400 mb-6">
@@ -288,9 +288,9 @@ export default function DemoIndex() {
                             className="absolute inset-0 rounded-2xl pointer-events-none"
                             animate={{
                               boxShadow: [
-                                '0 0 0 0px rgba(6, 182, 212, 0)',
-                                '0 0 0 2px rgba(6, 182, 212, 0.3)',
-                                '0 0 0 0px rgba(6, 182, 212, 0)',
+                                '0 0 0 0px rgba(245, 158, 11, 0)',
+                                '0 0 0 2px rgba(245, 158, 11, 0.3)',
+                                '0 0 0 0px rgba(245, 158, 11, 0)',
                               ],
                             }}
                             transition={{

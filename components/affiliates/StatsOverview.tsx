@@ -7,7 +7,13 @@
  */
 
 import { cn } from '@/lib/utils';
-import { MousePointer, TrendingUp, DollarSign, Percent, Globe } from '@/components/icons';
+import {
+  MousePointer,
+  TrendingUp,
+  DollarSign,
+  Percent,
+  Globe,
+} from '@/components/icons';
 import type { AffiliateStats } from '@/hooks/useAffiliateLinks';
 import { NETWORK_COLORS, type NetworkSlug } from '@/hooks/useAffiliateLinks';
 
@@ -87,7 +93,7 @@ function NetworkBreakdown({
       <div className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
         <div className="w-32 h-5 bg-white/5 rounded animate-pulse mb-4" />
         <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3].map(i => (
             <div key={i} className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-white/5 animate-pulse" />
               <div className="flex-1">
@@ -113,18 +119,23 @@ function NetworkBreakdown({
     );
   }
 
-  const maxClicks = Math.max(...breakdown.map((n) => n.clicks), 1);
+  const maxClicks = Math.max(...breakdown.map(n => n.clicks), 1);
 
   return (
     <div className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
       <h3 className="text-sm font-medium text-white/70 mb-4">By Network</h3>
       <div className="space-y-3">
         {breakdown.map((network, idx) => {
-          const color = NETWORK_COLORS[network.networkId as NetworkSlug] || NETWORK_COLORS.custom;
+          const color =
+            NETWORK_COLORS[network.networkId as NetworkSlug] ||
+            NETWORK_COLORS.custom;
           const width = (network.clicks / maxClicks) * 100;
 
           return (
-            <div key={network.networkId || idx} className="flex items-center gap-3">
+            <div
+              key={network.networkId || idx}
+              className="flex items-center gap-3"
+            >
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                 style={{ backgroundColor: `${color}20` }}
@@ -133,8 +144,12 @@ function NetworkBreakdown({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-white truncate">{network.networkName}</span>
-                  <span className="text-white/50 ml-2">{formatNumber(network.clicks)}</span>
+                  <span className="text-white truncate">
+                    {network.networkName}
+                  </span>
+                  <span className="text-white/50 ml-2">
+                    {formatNumber(network.clicks)}
+                  </span>
                 </div>
                 <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                   <div
@@ -163,7 +178,7 @@ function TopLinks({
       <div className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
         <div className="w-32 h-5 bg-white/5 rounded animate-pulse mb-4" />
         <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => (
+          {[1, 2, 3, 4, 5].map(i => (
             <div key={i} className="flex items-center justify-between py-2">
               <div className="w-32 h-4 bg-white/5 rounded animate-pulse" />
               <div className="w-16 h-4 bg-white/5 rounded animate-pulse" />
@@ -200,8 +215,12 @@ function TopLinks({
               <span className="text-white truncate">{link.name}</span>
             </div>
             <div className="flex items-center gap-4 flex-shrink-0">
-              <span className="text-white/50 text-sm">{formatNumber(link.clicks)}</span>
-              <span className="text-emerald-400 text-sm">{formatCurrency(link.revenue)}</span>
+              <span className="text-white/50 text-sm">
+                {formatNumber(link.clicks)}
+              </span>
+              <span className="text-emerald-400 text-sm">
+                {formatCurrency(link.revenue)}
+              </span>
             </div>
           </div>
         ))}
@@ -210,7 +229,11 @@ function TopLinks({
   );
 }
 
-export function StatsOverview({ stats, isLoading, className }: StatsOverviewProps) {
+export function StatsOverview({
+  stats,
+  isLoading,
+  className,
+}: StatsOverviewProps) {
   return (
     <div className={cn('space-y-4', className)}>
       {/* Summary Cards */}
@@ -240,14 +263,17 @@ export function StatsOverview({ stats, isLoading, className }: StatsOverviewProp
           icon={Percent}
           label="Conversion Rate"
           value={`${stats.conversionRate.toFixed(1)}%`}
-          color="#8B5CF6"
+          color="#f59e0b"
           isLoading={isLoading}
         />
       </div>
 
       {/* Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <NetworkBreakdown breakdown={stats.networkBreakdown} isLoading={isLoading} />
+        <NetworkBreakdown
+          breakdown={stats.networkBreakdown}
+          isLoading={isLoading}
+        />
         <TopLinks links={stats.topLinks} isLoading={isLoading} />
       </div>
     </div>

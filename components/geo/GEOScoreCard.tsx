@@ -32,7 +32,7 @@ const scoreDimensions = [
     label: 'Structure',
     icon: Database,
     weight: '20%',
-    color: 'bg-purple-500',
+    color: 'bg-amber-500',
   },
   {
     key: 'multiModal',

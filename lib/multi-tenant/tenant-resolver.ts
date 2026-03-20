@@ -2,7 +2,7 @@
  * Tenant Resolver
  *
  * @description Resolves tenant from various sources:
- * - Subdomain (e.g., acme.synthex.app)
+ * - Subdomain (e.g., acme.synthex.social)
  * - Custom domain (e.g., marketing.acme.com)
  * - Request header (X-Tenant-ID)
  * - JWT token claims
@@ -28,7 +28,12 @@ import {
 // TYPES
 // ============================================================================
 
-export type ResolutionStrategy = 'subdomain' | 'custom_domain' | 'header' | 'jwt' | 'path';
+export type ResolutionStrategy =
+  | 'subdomain'
+  | 'custom_domain'
+  | 'header'
+  | 'jwt'
+  | 'path';
 
 export interface ResolverConfig {
   baseDomain: string;
@@ -48,7 +53,7 @@ export interface ResolvedTenant {
 // ============================================================================
 
 const DEFAULT_CONFIG: ResolverConfig = {
-  baseDomain: process.env.NEXT_PUBLIC_APP_DOMAIN || 'synthex.app',
+  baseDomain: process.env.NEXT_PUBLIC_APP_DOMAIN || 'synthex.social',
   strategies: ['subdomain', 'custom_domain', 'header'],
   cacheEnabled: true,
   cacheTTL: 300, // 5 minutes
@@ -83,7 +88,10 @@ export class TenantResolver {
             }
 
             if (tenant.status !== 'active') {
-              logger.warn('Tenant not active', { tenantId: tenant.id, status: tenant.status });
+              logger.warn('Tenant not active', {
+                tenantId: tenant.id,
+                status: tenant.status,
+              });
               continue;
             }
 
@@ -93,7 +101,11 @@ export class TenantResolver {
           if (error instanceof TenantSuspendedError) {
             throw error;
           }
-          logger.warn('Tenant resolution failed', { strategy, identifier, error });
+          logger.warn('Tenant resolution failed', {
+            strategy,
+            identifier,
+            error,
+          });
         }
       }
     }
@@ -104,7 +116,10 @@ export class TenantResolver {
   /**
    * Extract tenant identifier based on strategy
    */
-  private extractIdentifier(request: NextRequest, strategy: ResolutionStrategy): string | null {
+  private extractIdentifier(
+    request: NextRequest,
+    strategy: ResolutionStrategy
+  ): string | null {
     switch (strategy) {
       case 'subdomain':
         return this.extractSubdomain(request);
@@ -199,7 +214,10 @@ export class TenantResolver {
   /**
    * Fetch tenant from database or cache
    */
-  private async fetchTenant(identifier: string, strategy: ResolutionStrategy): Promise<Tenant | null> {
+  private async fetchTenant(
+    identifier: string,
+    strategy: ResolutionStrategy
+  ): Promise<Tenant | null> {
     const cacheKey = `tenant:${strategy}:${identifier}`;
 
     // Check cache
@@ -240,7 +258,7 @@ export class TenantResolver {
         id: 'tenant_demo',
         slug: 'demo',
         name: 'Demo Organization',
-        domain: 'demo.synthex.app',
+        domain: 'demo.synthex.social',
         plan: 'pro',
         settings: createDefaultSettings('pro'),
         status: 'active',
@@ -251,7 +269,7 @@ export class TenantResolver {
         id: 'tenant_acme',
         slug: 'acme',
         name: 'Acme Corporation',
-        domain: 'acme.synthex.app',
+        domain: 'acme.synthex.social',
         customDomain: 'marketing.acme.com',
         plan: 'enterprise',
         settings: createDefaultSettings('enterprise'),
@@ -292,7 +310,9 @@ export class TenantResolver {
 
 let resolverInstance: TenantResolver | null = null;
 
-export function getTenantResolver(config?: Partial<ResolverConfig>): TenantResolver {
+export function getTenantResolver(
+  config?: Partial<ResolverConfig>
+): TenantResolver {
   if (!resolverInstance) {
     resolverInstance = new TenantResolver(config);
   }
@@ -306,7 +326,9 @@ export function getTenantResolver(config?: Partial<ResolverConfig>): TenantResol
 /**
  * Resolve tenant from request (convenience function)
  */
-export async function resolveTenant(request: NextRequest): Promise<ResolvedTenant | null> {
+export async function resolveTenant(
+  request: NextRequest
+): Promise<ResolvedTenant | null> {
   return getTenantResolver().resolve(request);
 }
 
@@ -318,7 +340,7 @@ export async function getTenantById(tenantId: string): Promise<Tenant | null> {
   // Use header strategy to look up by ID
   const mockRequest = {
     headers: {
-      get: (name: string) => name === 'X-Tenant-ID' ? tenantId : null,
+      get: (name: string) => (name === 'X-Tenant-ID' ? tenantId : null),
     },
     nextUrl: { pathname: '' },
   } as unknown as NextRequest;
@@ -335,7 +357,8 @@ export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
   // Create a mock request with the slug as subdomain
   const mockRequest = {
     headers: {
-      get: (name: string) => name === 'host' ? `${slug}.synthex.app` : null,
+      get: (name: string) =>
+        name === 'host' ? `${slug}.synthex.social` : null,
     },
     nextUrl: { pathname: '' },
   } as unknown as NextRequest;

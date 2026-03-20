@@ -163,7 +163,7 @@ export default function ActivityStreamSVG() {
     <div className="w-full h-[500px] relative rounded-2xl overflow-hidden bg-surface-void">
       {/* Background effects */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,rgba(6,182,212,0.2),transparent)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,rgba(245,158,11,0.2),transparent)]" />
       </div>
 
       {/* Starfield */}
@@ -346,7 +346,7 @@ export default function ActivityStreamSVG() {
       </div>
 
       {/* Activity feed overlay */}
-      <div className="absolute top-4 right-4 w-64 bg-black/70 backdrop-blur-xl rounded-xl p-4 border border-amber-500/30 shadow-[0_0_30px_rgba(6,182,212,0.2)]">
+      <div className="absolute top-4 right-4 w-64 bg-black/70 backdrop-blur-xl rounded-xl p-4 border border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
         <h3 className="text-white font-bold mb-3 text-sm flex items-center gap-2">
           <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
           Real-Time Activity

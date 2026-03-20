@@ -59,7 +59,7 @@ export default function OptimisationPage() {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-              <Brain className="h-7 w-7 text-violet-400" />
+              <Brain className="h-7 w-7 text-amber-400" />
               AI Optimisation
             </h1>
             <p className="text-gray-400 mt-1">
@@ -91,7 +91,7 @@ export default function OptimisationPage() {
             </div>
           ) : spaces.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-500 bg-white/[0.02] rounded-xl border border-white/[0.05]">
-              <Brain className="h-10 w-10 mb-3 opacity-30 text-violet-400" />
+              <Brain className="h-10 w-10 mb-3 opacity-30 text-amber-400" />
               <p className="text-sm font-medium">No optimisation spaces yet</p>
               <p className="text-xs mt-2 max-w-sm text-center">
                 Optimisation spaces are created automatically as your
@@ -122,7 +122,7 @@ export default function OptimisationPage() {
             </p>
           </div>
 
-          <div className="bg-surface-base/80 backdrop-blur-xl border border-violet-500/10 rounded-xl p-4">
+          <div className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 rounded-xl p-4">
             <RunHistoryTable runs={runs} isLoading={runsLoading} />
           </div>
         </section>

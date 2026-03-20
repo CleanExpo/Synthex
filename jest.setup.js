@@ -6,7 +6,7 @@ process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
 process.env.DATABASE_URL = 'postgresql://test';
 process.env.JWT_SECRET = 'test-secret';
-process.env.OWNER_EMAILS = 'test@synthex.app';
+process.env.OWNER_EMAILS = 'test@synthex.social';
 
 // Mock fetch
 global.fetch = jest.fn();

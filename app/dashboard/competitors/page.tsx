@@ -247,7 +247,7 @@ export default function CompetitorsPage() {
             label: 'Total Monitored',
             value: competitors.length,
             icon: BarChart3,
-            color: 'text-purple-400',
+            color: 'text-amber-400',
           },
           {
             label: 'High Priority Insights',

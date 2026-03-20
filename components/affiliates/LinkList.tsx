@@ -127,7 +127,7 @@ function LinkCard({
             className="w-16 h-16 rounded-lg object-cover"
           />
         ) : (
-          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-amber-500/20 to-purple-500/20 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20 flex items-center justify-center">
             <ImageIcon className="h-6 w-6 text-white/40" />
           </div>
         )}

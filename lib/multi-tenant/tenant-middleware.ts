@@ -14,7 +14,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { TenantResolver, getTenantResolver, ResolvedTenant } from './tenant-resolver';
+import {
+  TenantResolver,
+  getTenantResolver,
+  ResolvedTenant,
+} from './tenant-resolver';
 import {
   TenantContext,
   TenantSuspendedError,
@@ -30,9 +34,15 @@ export interface TenantMiddlewareConfig {
   publicPaths: string[];
   excludedPaths: string[];
   requireTenant: boolean;
-  onTenantResolved?: (tenant: ResolvedTenant, request: NextRequest) => void | Promise<void>;
+  onTenantResolved?: (
+    tenant: ResolvedTenant,
+    request: NextRequest
+  ) => void | Promise<void>;
   onTenantNotFound?: (request: NextRequest) => NextResponse | void;
-  onTenantSuspended?: (tenantId: string, request: NextRequest) => NextResponse | void;
+  onTenantSuspended?: (
+    tenantId: string,
+    request: NextRequest
+  ) => NextResponse | void;
 }
 
 // ============================================================================
@@ -135,7 +145,6 @@ export class TenantMiddleware {
 
       // Default: redirect to main site or show error
       return this.handleTenantNotFound(request);
-
     } catch (error) {
       if (error instanceof TenantSuspendedError) {
         // Custom handler for suspended
@@ -159,9 +168,7 @@ export class TenantMiddleware {
    * Check if path is excluded from tenant resolution
    */
   private isExcludedPath(pathname: string): boolean {
-    return this.config.excludedPaths.some(
-      path => pathname.startsWith(path)
-    );
+    return this.config.excludedPaths.some(path => pathname.startsWith(path));
   }
 
   /**
@@ -192,7 +199,7 @@ export class TenantMiddleware {
     }
 
     // For pages, redirect to main site
-    url.host = process.env.NEXT_PUBLIC_APP_DOMAIN || 'synthex.app';
+    url.host = process.env.NEXT_PUBLIC_APP_DOMAIN || 'synthex.social';
     url.pathname = '/not-found';
     return NextResponse.redirect(url);
   }
@@ -209,7 +216,8 @@ export class TenantMiddleware {
         {
           error: 'Tenant suspended',
           code: 'TENANT_SUSPENDED',
-          message: 'This organization has been suspended. Please contact support.',
+          message:
+            'This organization has been suspended. Please contact support.',
         },
         { status: 403 }
       );
@@ -232,7 +240,7 @@ export function createTenantMiddleware(
   config?: Partial<TenantMiddlewareConfig>
 ): (request: NextRequest) => Promise<NextResponse> {
   const middleware = new TenantMiddleware(config);
-  return (request) => middleware.handle(request);
+  return request => middleware.handle(request);
 }
 
 // ============================================================================

@@ -234,7 +234,7 @@ export function JournalistList({ onSelectJournalist }: JournalistListProps) {
                         handleEnrich(journalist);
                       }}
                       disabled={enrichingId === journalist.id}
-                      className="px-2 py-1 text-xs bg-purple-600/20 text-purple-300 border border-purple-500/30 rounded-lg hover:bg-purple-600/30 transition-colors disabled:opacity-50"
+                      className="px-2 py-1 text-xs bg-amber-600/20 text-amber-300 border border-amber-500/30 rounded-lg hover:bg-amber-600/30 transition-colors disabled:opacity-50"
                     >
                       {enrichingId === journalist.id ? (
                         <Loader2 className="h-3 w-3 animate-spin" />

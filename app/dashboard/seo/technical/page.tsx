@@ -88,7 +88,7 @@ function CwvHistoryChart({ history }: { history: CwvHistoryEntry[] }) {
           <Tooltip
             contentStyle={{
               backgroundColor: '#111111',
-              border: '1px solid rgba(6, 182, 212, 0.2)',
+              border: '1px solid rgba(245, 158, 11, 0.2)',
               borderRadius: '8px',
               color: '#fff',
             }}
@@ -118,9 +118,9 @@ function CwvHistoryChart({ history }: { history: CwvHistoryEntry[] }) {
           <Line
             type="monotone"
             dataKey="cls"
-            stroke="#8b5cf6"
+            stroke="#f59e0b"
             strokeWidth={2}
-            dot={{ fill: '#8b5cf6', r: 3 }}
+            dot={{ fill: '#f59e0b', r: 3 }}
             name="CLS"
             connectNulls
           />
@@ -140,7 +140,7 @@ function CwvHistoryChart({ history }: { history: CwvHistoryEntry[] }) {
           <span className="w-3 h-0.5 bg-amber-500 rounded" /> LCP (seconds)
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-0.5 bg-violet-500 rounded" /> CLS
+          <span className="w-3 h-0.5 bg-amber-500 rounded" /> CLS
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-0.5 bg-amber-500 rounded" /> INP (ms)

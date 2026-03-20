@@ -394,7 +394,7 @@ export default function CareersPage() {
             <Button className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-8 py-3">
               Send Your Resume
             </Button>
-            <p className="text-gray-400 mt-4">careers@synthex.ai</p>
+            <p className="text-gray-400 mt-4">careers@synthex.social</p>
           </Card>
         </div>
       </section>

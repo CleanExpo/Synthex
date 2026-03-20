@@ -126,7 +126,7 @@ export class OpenRouterProvider implements AIProvider {
       'HTTP-Referer':
         process.env.OPENROUTER_SITE_URL ||
         process.env.NEXT_PUBLIC_APP_URL ||
-        'https://synthex.app',
+        'https://synthex.social',
       'X-Title': process.env.OPENROUTER_SITE_NAME || 'SYNTHEX',
       'Content-Type': 'application/json',
     };

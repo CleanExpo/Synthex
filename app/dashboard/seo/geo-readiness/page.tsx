@@ -140,7 +140,7 @@ function getScoreRing(score: number): string {
 function getBarColor(colorName: string): string {
   const colors: Record<string, string> = {
     cyan: 'bg-amber-500',
-    purple: 'bg-purple-500',
+    purple: 'bg-amber-500',
     amber: 'bg-amber-500',
     emerald: 'bg-emerald-500',
     rose: 'bg-rose-500',
@@ -471,7 +471,7 @@ function PassagesTab({ result }: { result: GeoReadinessResult | null }) {
                   </span>
                 )}
                 {passage.hasCitation && (
-                  <span className="px-2 py-1 text-xs bg-purple-500/10 text-purple-400 rounded border border-purple-500/20">
+                  <span className="px-2 py-1 text-xs bg-amber-500/10 text-amber-400 rounded border border-amber-500/20">
                     Cited
                   </span>
                 )}
@@ -627,7 +627,7 @@ function TrendsTab({
             <Tooltip
               contentStyle={{
                 backgroundColor: '#111111',
-                border: '1px solid rgba(6, 182, 212, 0.2)',
+                border: '1px solid rgba(245, 158, 11, 0.2)',
                 borderRadius: '8px',
                 color: '#fff',
               }}

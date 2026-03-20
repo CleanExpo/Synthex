@@ -259,7 +259,7 @@ export function PatternCharts({
                 />
                 <Bar
                   dataKey="value"
-                  fill="#8b5cf6"
+                  fill="#f59e0b"
                   radius={[0, 4, 4, 0]}
                   maxBarSize={14}
                 />

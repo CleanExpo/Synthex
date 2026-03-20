@@ -257,7 +257,7 @@ const mockOrg = {
   name: 'Test Organization',
   slug: 'test-organization',
   plan: 'free',
-  domain: 'test-organization.synthex.app',
+  domain: 'test-organization.synthex.social',
   status: 'active',
   website: null,
   industry: 'technology',

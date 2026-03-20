@@ -71,12 +71,27 @@ interface ScrapeResult {
 // ============================================================================
 
 const VALID_INDUSTRIES = [
-  'technology', 'ecommerce', 'healthcare', 'finance', 'education',
-  'entertainment', 'food', 'travel', 'realestate', 'nonprofit', 'agency', 'other',
+  'technology',
+  'ecommerce',
+  'healthcare',
+  'finance',
+  'education',
+  'entertainment',
+  'food',
+  'travel',
+  'realestate',
+  'nonprofit',
+  'agency',
+  'other',
 ];
 
 const VALID_TONES = [
-  'professional', 'friendly', 'witty', 'inspiring', 'educational', 'bold',
+  'professional',
+  'friendly',
+  'witty',
+  'inspiring',
+  'educational',
+  'bold',
 ];
 
 const VALID_TEAM_SIZES = ['solo', 'small', 'medium', 'large', 'enterprise'];
@@ -137,7 +152,7 @@ async function scrapeWithFetch(url: string): Promise<ScrapeResult> {
       signal: controller.signal,
       headers: {
         'User-Agent': 'SynthexBot/1.0 (https://synthex.social)',
-        'Accept': 'text/html',
+        Accept: 'text/html',
       },
     });
     clearTimeout(timeout);
@@ -152,9 +167,13 @@ async function scrapeWithFetch(url: string): Promise<ScrapeResult> {
     const title = extractTag(html, /<title[^>]*>([^<]+)<\/title>/i);
     const metaDescription =
       extractMetaContent(html, 'description') ||
-      extractMetaProperty(html, 'og:description') || '';
+      extractMetaProperty(html, 'og:description') ||
+      '';
     const ogImage = extractMetaProperty(html, 'og:image') || undefined;
-    const favicon = extractLinkHref(html, 'icon') || extractLinkHref(html, 'shortcut icon') || undefined;
+    const favicon =
+      extractLinkHref(html, 'icon') ||
+      extractLinkHref(html, 'shortcut icon') ||
+      undefined;
     const themeColor = extractMetaContent(html, 'theme-color') || undefined;
 
     // Extract visible text (strip tags, limit length)
@@ -265,7 +284,7 @@ function extractSocialLinksFromHtml(html: string): string[] {
   let match;
   while ((match = hrefRegex.exec(html)) !== null) {
     const url = match[1];
-    if (SOCIAL_DOMAINS.some((s) => url.includes(s.domain))) {
+    if (SOCIAL_DOMAINS.some(s => url.includes(s.domain))) {
       links.push(url);
     }
   }
@@ -278,7 +297,7 @@ function extractSocialLinksFromText(text: string): string[] {
   let match;
   while ((match = urlRegex.exec(text)) !== null) {
     const url = match[0];
-    if (SOCIAL_DOMAINS.some((s) => url.includes(s.domain))) {
+    if (SOCIAL_DOMAINS.some(s => url.includes(s.domain))) {
       links.push(url);
     }
   }
@@ -299,7 +318,10 @@ function emptyResult(): ScrapeResult {
 // AI ANALYSIS
 // ============================================================================
 
-function buildAnalysisPrompt(businessName: string, scrapeData: ScrapeResult): string {
+function buildAnalysisPrompt(
+  businessName: string,
+  scrapeData: ScrapeResult
+): string {
   return `You are a business analyst. Analyze this website data and extract structured business details.
 
 BUSINESS NAME: ${businessName}
@@ -350,7 +372,11 @@ async function analyzeWithAI(
     const response = await ai.complete({
       model: ai.models.balanced,
       messages: [
-        { role: 'system', content: 'You are a precise business analyst. Return only valid JSON.' },
+        {
+          role: 'system',
+          content:
+            'You are a precise business analyst. Return only valid JSON.',
+        },
         { role: 'user', content: prompt },
       ],
       temperature: 0.3,
@@ -360,24 +386,35 @@ async function analyzeWithAI(
     const content = response.choices[0]?.message?.content || '';
 
     // Parse JSON — handle markdown fences if present
-    const jsonStr = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const jsonStr = content
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
     const parsed = JSON.parse(jsonStr);
 
     // Validate and clamp values to valid enums
     return {
-      industry: VALID_INDUSTRIES.includes(parsed.industry) ? parsed.industry : 'other',
+      industry: VALID_INDUSTRIES.includes(parsed.industry)
+        ? parsed.industry
+        : 'other',
       description: String(parsed.description || '').slice(0, 500),
-      teamSize: VALID_TEAM_SIZES.includes(parsed.teamSize) ? parsed.teamSize : 'small',
+      teamSize: VALID_TEAM_SIZES.includes(parsed.teamSize)
+        ? parsed.teamSize
+        : 'small',
       brandColors: {
-        primary: parsed.brandColors?.primary || '#06b6d4',
+        primary: parsed.brandColors?.primary || '#f59e0b',
         secondary: parsed.brandColors?.secondary || undefined,
         accent: parsed.brandColors?.accent || undefined,
       },
       logo: scrapeData.ogImage || undefined,
       socialHandles: parsed.socialHandles || {},
-      keyTopics: Array.isArray(parsed.keyTopics) ? parsed.keyTopics.slice(0, 5) : [],
+      keyTopics: Array.isArray(parsed.keyTopics)
+        ? parsed.keyTopics.slice(0, 5)
+        : [],
       targetAudience: String(parsed.targetAudience || ''),
-      suggestedTone: VALID_TONES.includes(parsed.suggestedTone) ? parsed.suggestedTone : 'professional',
+      suggestedTone: VALID_TONES.includes(parsed.suggestedTone)
+        ? parsed.suggestedTone
+        : 'professional',
       suggestedPersonaName: String(parsed.suggestedPersonaName || businessName),
       confidence: Math.min(100, Math.max(0, Number(parsed.confidence) || 50)),
     };
@@ -423,7 +460,7 @@ export async function analyzeWebsite(
       industry: 'other',
       description: '',
       teamSize: 'small',
-      brandColors: { primary: '#06b6d4' },
+      brandColors: { primary: '#f59e0b' },
       socialHandles: {},
       keyTopics: [],
       targetAudience: '',
@@ -475,7 +512,7 @@ export async function analyzeWebsite(
     description: scrapeData.metaDescription || '',
     teamSize: 'small',
     brandColors: {
-      primary: scrapeData.themeColor || '#06b6d4',
+      primary: scrapeData.themeColor || '#f59e0b',
     },
     logo: scrapeData.ogImage,
     socialHandles: scrapedHandles,

@@ -140,7 +140,7 @@ export function AIHashtagGenerator({
     if (tag.popularity === 'high')
       return 'bg-gradient-to-r from-blue-500 to-amber-500';
     if (tag.competition === 'low')
-      return 'bg-gradient-to-r from-green-500 to-teal-500';
+      return 'bg-gradient-to-r from-green-500 to-amber-500';
     return 'bg-gray-600';
   };
 

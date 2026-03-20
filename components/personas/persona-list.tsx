@@ -78,7 +78,7 @@ export function PersonaList({
             <div className="mt-2">
               <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-amber-500 to-teal-500"
+                  className="h-full bg-gradient-to-r from-amber-500 to-amber-500"
                   style={{ width: `${persona.accuracy}%` }}
                 />
               </div>

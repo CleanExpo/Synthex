@@ -39,7 +39,7 @@ export function CROScoreCard({ score, issues }: CROScoreCardProps) {
   void issues;
 
   return (
-    <Card className="bg-white/5 border-violet-500/10 backdrop-blur-sm">
+    <Card className="bg-white/5 border-amber-500/10 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="text-white text-sm font-medium flex items-center justify-between">
           CRO Readiness

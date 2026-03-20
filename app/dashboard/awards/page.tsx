@@ -124,7 +124,7 @@ function AddAwardForm({
   }
 
   const inputCls =
-    'w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-purple-500/50';
+    'w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50';
 
   return (
     <form
@@ -198,7 +198,7 @@ function AddAwardForm({
         <button
           type="submit"
           disabled={saving}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm rounded-lg font-medium transition-colors"
+          className="px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-sm rounded-lg font-medium transition-colors"
         >
           {saving ? 'Saving…' : 'Save Award'}
         </button>
@@ -271,7 +271,7 @@ function AddDirectoryForm({
   }
 
   const inputCls =
-    'w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-purple-500/50';
+    'w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50';
 
   return (
     <form
@@ -321,7 +321,7 @@ function AddDirectoryForm({
             type="checkbox"
             checked={isFree}
             onChange={e => setIsFree(e.target.checked)}
-            className="accent-purple-500"
+            className="accent-amber-500"
           />
           Free submission
         </label>
@@ -330,7 +330,7 @@ function AddDirectoryForm({
             type="checkbox"
             checked={isAiIdx}
             onChange={e => setAiIdx(e.target.checked)}
-            className="accent-purple-500"
+            className="accent-amber-500"
           />
           AI Indexed
         </label>
@@ -340,7 +340,7 @@ function AddDirectoryForm({
         <button
           type="submit"
           disabled={saving}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm rounded-lg font-medium transition-colors"
+          className="px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-sm rounded-lg font-medium transition-colors"
         >
           {saving ? 'Saving…' : 'Save Directory'}
         </button>
@@ -628,7 +628,7 @@ function AwardsPageContent() {
                 setAwardFormPrefill(undefined);
                 setShowAwardForm(true);
               }}
-              className="flex items-center gap-1.5 text-sm px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+              className="flex items-center gap-1.5 text-sm px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
             >
               <Plus className="h-4 w-4" /> Add Award
             </button>
@@ -694,7 +694,7 @@ function AwardsPageContent() {
                 setDirFormPrefill(undefined);
                 setShowDirForm(true);
               }}
-              className="flex items-center gap-1.5 text-sm px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+              className="flex items-center gap-1.5 text-sm px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
             >
               <Plus className="h-4 w-4" /> Add Directory
             </button>

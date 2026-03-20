@@ -53,7 +53,7 @@ const EVENT_TYPE_META: Record<
   },
   'schema-audit': {
     label: 'Schema Audit',
-    className: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+    className: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
   },
   'wikidata-update': {
     label: 'Wikidata Update',

@@ -61,17 +61,17 @@ const PLATFORM_COLORS: Record<string, { dot: string; label: string }> = {
 };
 
 function getPlatformMeta(platform: string | null) {
-  if (!platform) return { dot: 'bg-violet-400', label: 'General' };
+  if (!platform) return { dot: 'bg-amber-400', label: 'General' };
   return (
     PLATFORM_COLORS[platform.toLowerCase()] ?? {
-      dot: 'bg-violet-400',
+      dot: 'bg-amber-400',
       label: platform,
     }
   );
 }
 
 const CONTENT_TYPE_BADGES: Record<string, string> = {
-  post: 'bg-violet-500/15 text-violet-300 border-violet-500/20',
+  post: 'bg-amber-500/15 text-amber-300 border-amber-500/20',
   caption: 'bg-pink-500/15 text-pink-300 border-pink-500/20',
   story: 'bg-amber-500/15 text-amber-300 border-amber-500/20',
   thread: 'bg-sky-500/15 text-sky-300 border-sky-500/20',
@@ -129,8 +129,8 @@ function LibrarySkeleton() {
 function EmptyState({ filtered }: { filtered: boolean }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="rounded-full bg-violet-500/10 p-5 mb-4">
-        <BookOpen className="h-8 w-8 text-violet-400" />
+      <div className="rounded-full bg-amber-500/10 p-5 mb-4">
+        <BookOpen className="h-8 w-8 text-amber-400" />
       </div>
       <h3 className="text-lg font-semibold text-white mb-2">
         {filtered ? 'No matching content' : 'Your library is empty'}
@@ -286,7 +286,7 @@ function FilterBar({
       <select
         value={platform}
         onChange={e => onPlatformChange(e.target.value)}
-        className="text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+        className="text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
       >
         <option value="">All platforms</option>
         {ALL_PLATFORMS.map(p => (
@@ -300,7 +300,7 @@ function FilterBar({
       <select
         value={contentType}
         onChange={e => onContentTypeChange(e.target.value)}
-        className="text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+        className="text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
       >
         <option value="">All types</option>
         {ALL_CONTENT_TYPES.map(t => (

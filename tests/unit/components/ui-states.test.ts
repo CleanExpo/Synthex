@@ -247,7 +247,7 @@ describe('UI State Component Tests', () => {
     it('should format error report correctly', () => {
       const error = new Error('Test error');
       const timestamp = new Date().toISOString();
-      const url = 'https://app.synthex.ai/dashboard';
+      const url = 'https://app.synthex.social/dashboard';
       const userAgent = 'Mozilla/5.0';
 
       const errorReport = {
@@ -269,10 +269,10 @@ describe('UI State Component Tests', () => {
         'Error occurred at: 2025-01-15\nPage: /dashboard'
       );
 
-      const mailtoUrl = `mailto:support@synthex.ai?subject=${subject}&body=${body}`;
+      const mailtoUrl = `mailto:support@synthex.social?subject=${subject}&body=${body}`;
 
       expect(mailtoUrl).toContain('mailto:');
-      expect(mailtoUrl).toContain('support@synthex.ai');
+      expect(mailtoUrl).toContain('support@synthex.social');
       expect(mailtoUrl).toContain('subject=');
     });
   });

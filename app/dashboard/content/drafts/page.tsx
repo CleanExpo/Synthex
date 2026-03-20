@@ -74,7 +74,7 @@ const PLATFORM_COLORS: Record<string, { dot: string; label: string }> = {
 function getPlatformMeta(platform: string) {
   return (
     PLATFORM_COLORS[platform.toLowerCase()] ?? {
-      dot: 'bg-violet-400',
+      dot: 'bg-amber-400',
       label: platform,
     }
   );

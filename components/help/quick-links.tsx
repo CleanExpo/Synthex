@@ -37,7 +37,7 @@ export function QuickLinks() {
       >
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-lg bg-gradient-to-br from-amber-500/20 to-teal-500/20">
+            <div className="p-3 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20">
               <Video className="w-6 h-6 text-amber-400" />
             </div>
             <div>
@@ -58,7 +58,7 @@ export function QuickLinks() {
       >
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-lg bg-gradient-to-br from-amber-500/20 to-teal-500/20">
+            <div className="p-3 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20">
               <MessageCircle className="w-6 h-6 text-amber-400" />
             </div>
             <div>

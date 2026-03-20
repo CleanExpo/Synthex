@@ -46,9 +46,9 @@ const selectContentVariants = cva(
         'glass-solid':
           'bg-slate-900/95 backdrop-blur-xl border border-white/[0.08] text-white shadow-[0_8px_32px_rgba(0,0,0,0.4)]',
         'glass-primary':
-          'bg-amber-500/10 backdrop-blur-xl border border-amber-500/20 text-white shadow-[0_8px_32px_rgba(6,182,212,0.15)]',
+          'bg-amber-500/10 backdrop-blur-xl border border-amber-500/20 text-white shadow-[0_8px_32px_rgba(245,158,11,0.15)]',
         'glass-secondary':
-          'bg-amber-500/10 backdrop-blur-xl border border-amber-500/20 text-white shadow-[0_8px_32px_rgba(6,182,212,0.15)]',
+          'bg-amber-500/10 backdrop-blur-xl border border-amber-500/20 text-white shadow-[0_8px_32px_rgba(245,158,11,0.15)]',
       },
     },
     defaultVariants: {

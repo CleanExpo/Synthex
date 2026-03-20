@@ -91,7 +91,8 @@ export async function POST(
     // For self-hosted channel: publish the release
     let publicUrl: string | null = null;
     if (channels.includes('self-hosted')) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.app';
+      const appUrl =
+        process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
       publicUrl = `${appUrl}/newsroom/${release.orgId}/${release.slug}`;
 
       await prisma.pressRelease.update({

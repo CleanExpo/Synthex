@@ -22,7 +22,7 @@ interface PipelineOverviewProps {
 const STAGE_COLORS: Record<DealStage, string> = {
   negotiation: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400',
   contracted: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
-  in_progress: 'bg-purple-500/10 border-purple-500/30 text-purple-400',
+  in_progress: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
   delivered: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
   paid: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
   cancelled: 'bg-red-500/10 border-red-500/30 text-red-400',

@@ -236,7 +236,7 @@ export function CoverageFeed() {
                       {item.pitch && (
                         <>
                           <span className="text-gray-600">·</span>
-                          <span className="text-xs text-purple-300 truncate max-w-[200px]">
+                          <span className="text-xs text-amber-300 truncate max-w-[200px]">
                             via pitch: {item.pitch.subject}
                           </span>
                         </>

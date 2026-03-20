@@ -113,8 +113,8 @@ export function PROverviewStats() {
       label: 'Active Pitches',
       value: isLoading ? '—' : activePitches.toString(),
       sub: isLoading ? '' : `${pitches.length} total pitches`,
-      colour: 'text-purple-400',
-      bg: 'bg-purple-500/10 border-purple-500/20',
+      colour: 'text-amber-400',
+      bg: 'bg-amber-500/10 border-amber-500/20',
     },
     {
       icon: Globe,

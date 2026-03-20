@@ -73,7 +73,7 @@ export function AnimatedCard({
           whileHover={{
             opacity: 1,
             background:
-              'radial-gradient(circle at center, rgba(6, 182, 212, 0.15), transparent)',
+              'radial-gradient(circle at center, rgba(245, 158, 11, 0.15), transparent)',
           }}
           transition={{ duration: 0.3 }}
         />

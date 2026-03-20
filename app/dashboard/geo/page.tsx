@@ -90,7 +90,7 @@ export default function GEOPage() {
       label: 'Structure',
       icon: Database,
       weight: '20%',
-      color: 'text-purple-400',
+      color: 'text-amber-400',
     },
     {
       key: 'multiModal',
@@ -118,7 +118,7 @@ export default function GEOPage() {
       label: 'Entities',
       icon: Target,
       weight: '(diagnostic)',
-      color: 'text-violet-400',
+      color: 'text-amber-400',
     },
   ];
 
@@ -279,7 +279,7 @@ export default function GEOPage() {
                         Overall GEO Score
                       </p>
                       {result.weightSource === 'bo' && (
-                        <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-400 text-xs font-medium">
+                        <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-medium">
                           <Brain className="h-3 w-3" />
                           AI-Optimised
                         </div>
@@ -356,7 +356,7 @@ export default function GEOPage() {
                                   </Badge>
                                 )}
                                 {p.hasCitation && (
-                                  <Badge className="bg-purple-500/20 text-purple-400 text-xs">
+                                  <Badge className="bg-amber-500/20 text-amber-400 text-xs">
                                     Cited
                                   </Badge>
                                 )}
@@ -424,7 +424,7 @@ export default function GEOPage() {
               <div className="space-y-4">
                 {/* Entity Coherence Score + Stats */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  <Card className="bg-surface-base/80 border border-violet-500/10">
+                  <Card className="bg-surface-base/80 border border-amber-500/10">
                     <CardContent className="p-6 text-center">
                       <div className="text-5xl font-bold text-white mb-2">
                         {result.score.entityCoherence}
@@ -449,7 +449,7 @@ export default function GEOPage() {
                   </Card>
 
                   <div className="lg:col-span-2">
-                    <Card className="bg-surface-base/80 border border-violet-500/10 h-full">
+                    <Card className="bg-surface-base/80 border border-amber-500/10 h-full">
                       <CardContent className="p-6">
                         <h3 className="text-white font-medium mb-4">
                           Entity Breakdown
@@ -466,7 +466,7 @@ export default function GEOPage() {
                               {
                                 type: 'ORGANISATION',
                                 label: 'Organisations',
-                                pillColor: 'bg-purple-500/20 text-purple-400',
+                                pillColor: 'bg-amber-500/20 text-amber-400',
                                 icon: '🏢',
                               },
                               {
@@ -522,10 +522,10 @@ export default function GEOPage() {
 
                 {/* Entity List */}
                 {result.entityAnalysis.entities.length > 0 && (
-                  <Card className="bg-surface-base/80 border border-violet-500/10">
+                  <Card className="bg-surface-base/80 border border-amber-500/10">
                     <CardHeader>
                       <CardTitle className="text-white text-lg flex items-center gap-2">
-                        <Target className="h-5 w-5 text-violet-400" />
+                        <Target className="h-5 w-5 text-amber-400" />
                         Detected Entities (
                         {result.entityAnalysis.entities.length})
                       </CardTitle>
@@ -537,7 +537,7 @@ export default function GEOPage() {
                           .map((entity, i) => {
                             const typeColors: Record<string, string> = {
                               PERSON: 'bg-blue-500/20 text-blue-400',
-                              ORGANISATION: 'bg-purple-500/20 text-purple-400',
+                              ORGANISATION: 'bg-amber-500/20 text-amber-400',
                               LOCATION: 'bg-emerald-500/20 text-emerald-400',
                               CONCEPT: 'bg-amber-500/20 text-amber-400',
                             };
@@ -571,7 +571,7 @@ export default function GEOPage() {
                 )}
 
                 {/* Coherence Issues */}
-                <Card className="bg-surface-base/80 border border-violet-500/10">
+                <Card className="bg-surface-base/80 border border-amber-500/10">
                   <CardHeader>
                     <CardTitle className="text-white text-lg">
                       Coherence Analysis

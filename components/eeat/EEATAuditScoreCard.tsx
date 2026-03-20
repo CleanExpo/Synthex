@@ -72,8 +72,8 @@ const PILLAR_CONFIG: Record<PillarKey, PillarConf> = {
   expertise: {
     label: 'Expertise',
     Icon: BookOpen,
-    barColour: 'bg-purple-500',
-    ringColour: 'border-purple-500/30 bg-purple-500/10',
+    barColour: 'bg-amber-500',
+    ringColour: 'border-amber-500/30 bg-amber-500/10',
   },
   authority: {
     label: 'Authority',

@@ -43,8 +43,8 @@ const CATEGORY_STYLES: Record<
   { bg: string; text: string; label: string }
 > = {
   creation: {
-    bg: 'bg-violet-500/10',
-    text: 'text-violet-400',
+    bg: 'bg-amber-500/10',
+    text: 'text-amber-400',
     label: 'Creation',
   },
   equipment: {

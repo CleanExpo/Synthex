@@ -123,7 +123,10 @@ export interface ABTestResult {
 // CONSTANTS
 // ============================================================================
 
-const PLATFORM_LIMITS: Record<PlatformStyle, { minLength: number; maxLength: number; hashtagLimit: number }> = {
+const PLATFORM_LIMITS: Record<
+  PlatformStyle,
+  { minLength: number; maxLength: number; hashtagLimit: number }
+> = {
   twitter: { minLength: 20, maxLength: 280, hashtagLimit: 3 },
   instagram: { minLength: 20, maxLength: 2200, hashtagLimit: 30 },
   linkedin: { minLength: 50, maxLength: 3000, hashtagLimit: 5 },
@@ -159,7 +162,9 @@ export class ContentVariationsService {
   /**
    * Generate content variations
    */
-  async generateVariations(config: VariationConfig): Promise<ContentVariation[]> {
+  async generateVariations(
+    config: VariationConfig
+  ): Promise<ContentVariation[]> {
     const {
       originalContent,
       platform,
@@ -194,10 +199,13 @@ export class ContentVariationsService {
 
       // If we need more, generate additional tone variations
       while (variations.length < count) {
-        const tones: ToneType[] = ['casual', 'professional', 'conversational', 'inspirational'];
-        const unusedTone = tones.find(
-          t => !variations.some(v => v.tone === t)
-        );
+        const tones: ToneType[] = [
+          'casual',
+          'professional',
+          'conversational',
+          'inspirational',
+        ];
+        const unusedTone = tones.find(t => !variations.some(v => v.tone === t));
 
         if (!unusedTone) break;
 
@@ -236,9 +244,20 @@ export class ContentVariationsService {
     strategy: VariationStrategy,
     platform: PlatformStyle,
     limits: { minLength: number; maxLength: number; hashtagLimit: number },
-    options: { personaId?: string; context?: string; audience?: string; goal?: string }
+    options: {
+      personaId?: string;
+      context?: string;
+      audience?: string;
+      goal?: string;
+    }
   ): Promise<ContentVariation | null> {
-    const prompt = this.buildVariationPrompt(content, strategy, platform, limits, options);
+    const prompt = this.buildVariationPrompt(
+      content,
+      strategy,
+      platform,
+      limits,
+      options
+    );
 
     try {
       const response = await this.callAI(prompt);
@@ -247,7 +266,11 @@ export class ContentVariationsService {
       if (!generatedContent) return null;
 
       // Validate and adjust content
-      const adjustedContent = this.adjustForPlatform(generatedContent, platform, limits);
+      const adjustedContent = this.adjustForPlatform(
+        generatedContent,
+        platform,
+        limits
+      );
 
       return {
         id: this.generateId(),
@@ -291,7 +314,11 @@ Rewritten content:`;
 
       if (!generatedContent) return null;
 
-      const adjustedContent = this.adjustForPlatform(generatedContent, platform, limits);
+      const adjustedContent = this.adjustForPlatform(
+        generatedContent,
+        platform,
+        limits
+      );
 
       return {
         id: this.generateId(),
@@ -316,7 +343,12 @@ Rewritten content:`;
     strategy: VariationStrategy,
     platform: PlatformStyle,
     limits: { minLength: number; maxLength: number; hashtagLimit: number },
-    options: { personaId?: string; context?: string; audience?: string; goal?: string }
+    options: {
+      personaId?: string;
+      context?: string;
+      audience?: string;
+      goal?: string;
+    }
   ): string {
     const strategyInstructions: Record<VariationStrategy, string> = {
       tone: 'Change the tone while keeping the message',
@@ -362,7 +394,7 @@ Variation:`;
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${this.apiKey}`,
-        'HTTP-Referer': 'https://synthex.app',
+        'HTTP-Referer': 'https://synthex.social',
       },
       body: JSON.stringify({
         model: 'anthropic/claude-3-haiku',
@@ -388,7 +420,7 @@ Variation:`;
     let content = response.trim();
 
     // Remove common prefixes
-    const prefixes = ['Here\'s', 'Here is', 'Variation:', 'Content:'];
+    const prefixes = ["Here's", 'Here is', 'Variation:', 'Content:'];
     for (const prefix of prefixes) {
       if (content.startsWith(prefix)) {
         content = content.slice(prefix.length).trim();
@@ -448,19 +480,38 @@ Variation:`;
   private detectTone(content: string): ToneType {
     const lowerContent = content.toLowerCase();
 
-    if (lowerContent.includes('!') && (lowerContent.includes('now') || lowerContent.includes('limited'))) {
+    if (
+      lowerContent.includes('!') &&
+      (lowerContent.includes('now') || lowerContent.includes('limited'))
+    ) {
       return 'urgent';
     }
-    if (lowerContent.includes('😂') || lowerContent.includes('lol') || lowerContent.includes('haha')) {
+    if (
+      lowerContent.includes('😂') ||
+      lowerContent.includes('lol') ||
+      lowerContent.includes('haha')
+    ) {
       return 'humorous';
     }
-    if (lowerContent.includes('learn') || lowerContent.includes('tip') || lowerContent.includes('guide')) {
+    if (
+      lowerContent.includes('learn') ||
+      lowerContent.includes('tip') ||
+      lowerContent.includes('guide')
+    ) {
       return 'educational';
     }
-    if (lowerContent.includes('dream') || lowerContent.includes('achieve') || lowerContent.includes('believe')) {
+    if (
+      lowerContent.includes('dream') ||
+      lowerContent.includes('achieve') ||
+      lowerContent.includes('believe')
+    ) {
       return 'inspirational';
     }
-    if (lowerContent.includes('data shows') || lowerContent.includes('research') || lowerContent.includes('expert')) {
+    if (
+      lowerContent.includes('data shows') ||
+      lowerContent.includes('research') ||
+      lowerContent.includes('expert')
+    ) {
       return 'authoritative';
     }
     if (content.includes('?') || lowerContent.includes('what do you think')) {
@@ -469,10 +520,19 @@ Variation:`;
 
     // Check formality
     const informalIndicators = ['hey', 'guys', 'awesome', 'cool', '!'];
-    const formalIndicators = ['therefore', 'furthermore', 'regarding', 'pleased'];
+    const formalIndicators = [
+      'therefore',
+      'furthermore',
+      'regarding',
+      'pleased',
+    ];
 
-    const informalScore = informalIndicators.filter(i => lowerContent.includes(i)).length;
-    const formalScore = formalIndicators.filter(i => lowerContent.includes(i)).length;
+    const informalScore = informalIndicators.filter(i =>
+      lowerContent.includes(i)
+    ).length;
+    const formalScore = formalIndicators.filter(i =>
+      lowerContent.includes(i)
+    ).length;
 
     if (formalScore > informalScore) return 'professional';
     if (informalScore > formalScore) return 'casual';
@@ -531,10 +591,13 @@ Variation:`;
     if (words.length === 0 || sentences.length === 0) return 50;
 
     const avgWordsPerSentence = words.length / sentences.length;
-    const avgSyllablesPerWord = words.reduce((sum, word) => sum + this.countSyllables(word), 0) / words.length;
+    const avgSyllablesPerWord =
+      words.reduce((sum, word) => sum + this.countSyllables(word), 0) /
+      words.length;
 
     // Simplified Flesch Reading Ease
-    const score = 206.835 - 1.015 * avgWordsPerSentence - 84.6 * avgSyllablesPerWord;
+    const score =
+      206.835 - 1.015 * avgWordsPerSentence - 84.6 * avgSyllablesPerWord;
 
     return Math.max(0, Math.min(100, score));
   }
@@ -579,8 +642,16 @@ Variation:`;
     if (content.length > 500) score -= 10;
 
     // Boost for starting with a hook
-    const hookStarters = ['Did you know', 'What if', 'Imagine', 'The secret', 'Here\'s why'];
-    if (hookStarters.some(h => content.toLowerCase().startsWith(h.toLowerCase()))) {
+    const hookStarters = [
+      'Did you know',
+      'What if',
+      'Imagine',
+      'The secret',
+      "Here's why",
+    ];
+    if (
+      hookStarters.some(h => content.toLowerCase().startsWith(h.toLowerCase()))
+    ) {
       score += 15;
     }
 
@@ -626,7 +697,9 @@ Variation:`;
     _platform: PlatformStyle,
     _count: number
   ): ContentVariation[] {
-    logger.warn('Content variation generation failed: AI service unavailable. No fallback variations generated.');
+    logger.warn(
+      'Content variation generation failed: AI service unavailable. No fallback variations generated.'
+    );
     return [];
   }
 
@@ -745,15 +818,22 @@ export class ABTestService {
       engagements: r.engagements,
       clicks: r.clicks,
       conversions: r.conversions,
-      engagementRate: r.impressions > 0 ? (r.engagements / r.impressions) * 100 : 0,
+      engagementRate:
+        r.impressions > 0 ? (r.engagements / r.impressions) * 100 : 0,
       confidence: this.calculateConfidence(r.impressions, r.engagements),
     }));
 
     // Determine winner
     const metricKey = test.config.winningMetric;
     const sorted = [...variations].sort((a, b) => {
-      const aValue = metricKey === 'engagement' ? a.engagementRate : a[metricKey + 's' as keyof typeof a];
-      const bValue = metricKey === 'engagement' ? b.engagementRate : b[metricKey + 's' as keyof typeof b];
+      const aValue =
+        metricKey === 'engagement'
+          ? a.engagementRate
+          : a[(metricKey + 's') as keyof typeof a];
+      const bValue =
+        metricKey === 'engagement'
+          ? b.engagementRate
+          : b[(metricKey + 's') as keyof typeof b];
       return (bValue as number) - (aValue as number);
     });
 
@@ -761,23 +841,30 @@ export class ABTestService {
       v => v.impressions >= test.config.minimumSampleSize
     );
 
-    const winner = hasEnoughData && sorted[0].confidence > 95 ? sorted[0].id : undefined;
+    const winner =
+      hasEnoughData && sorted[0].confidence > 95 ? sorted[0].id : undefined;
 
     return {
       testId: test.id,
       status: winner ? 'completed' : hasEnoughData ? 'inconclusive' : 'running',
       variations,
       winner,
-      improvement: winner && sorted.length > 1
-        ? ((sorted[0].engagementRate - sorted[1].engagementRate) / sorted[1].engagementRate) * 100
-        : undefined,
+      improvement:
+        winner && sorted.length > 1
+          ? ((sorted[0].engagementRate - sorted[1].engagementRate) /
+              sorted[1].engagementRate) *
+            100
+          : undefined,
     };
   }
 
   /**
    * Calculate statistical confidence (simplified)
    */
-  private static calculateConfidence(impressions: number, conversions: number): number {
+  private static calculateConfidence(
+    impressions: number,
+    conversions: number
+  ): number {
     if (impressions < 100) return 0;
 
     const rate = conversions / impressions;

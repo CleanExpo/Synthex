@@ -27,7 +27,7 @@ interface ChannelsTabProps {
 
 const CHART_TOOLTIP_STYLE = {
   backgroundColor: 'rgba(0,0,0,0.8)',
-  border: '1px solid rgba(6, 182, 212, 0.3)',
+  border: '1px solid rgba(245, 158, 11, 0.3)',
   borderRadius: '8px',
 };
 

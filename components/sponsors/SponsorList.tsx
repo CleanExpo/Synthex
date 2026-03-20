@@ -107,7 +107,7 @@ function SponsorCard({
               className="w-12 h-12 rounded-full object-cover"
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500/20 to-purple-500/20 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-500/20 flex items-center justify-center">
               <Building className="h-6 w-6 text-white/50" />
             </div>
           )}

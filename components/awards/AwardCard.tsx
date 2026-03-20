@@ -10,7 +10,13 @@
  */
 
 import { useState } from 'react';
-import { Calendar, ExternalLink, Sparkles, Trash2, Edit } from '@/components/icons';
+import {
+  Calendar,
+  ExternalLink,
+  Sparkles,
+  Trash2,
+  Edit,
+} from '@/components/icons';
 import { cn } from '@/lib/utils';
 import type { AwardStatus, AwardPriority } from '@/lib/awards/types';
 
@@ -35,32 +41,52 @@ export interface AwardCardProps {
 
 // ─── Status config ───────────────────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<AwardStatus, { label: string; className: string }> = {
-  researched:    { label: 'Researched',    className: 'bg-slate-700/60 text-slate-300' },
-  'in-progress': { label: 'In Progress',  className: 'bg-blue-900/60 text-blue-300' },
-  submitted:     { label: 'Submitted',    className: 'bg-yellow-900/60 text-yellow-300' },
-  won:           { label: 'Won',          className: 'bg-emerald-900/60 text-emerald-300' },
-  shortlisted:   { label: 'Shortlisted',  className: 'bg-purple-900/60 text-purple-300' },
-  'not-selected':{ label: 'Not Selected', className: 'bg-red-900/60 text-red-400' },
-};
+const STATUS_CONFIG: Record<AwardStatus, { label: string; className: string }> =
+  {
+    researched: {
+      label: 'Researched',
+      className: 'bg-slate-700/60 text-slate-300',
+    },
+    'in-progress': {
+      label: 'In Progress',
+      className: 'bg-blue-900/60 text-blue-300',
+    },
+    submitted: {
+      label: 'Submitted',
+      className: 'bg-yellow-900/60 text-yellow-300',
+    },
+    won: { label: 'Won', className: 'bg-emerald-900/60 text-emerald-300' },
+    shortlisted: {
+      label: 'Shortlisted',
+      className: 'bg-amber-900/60 text-amber-300',
+    },
+    'not-selected': {
+      label: 'Not Selected',
+      className: 'bg-red-900/60 text-red-400',
+    },
+  };
 
 const PRIORITY_DOT: Record<AwardPriority, string> = {
-  low:    'bg-slate-400',
+  low: 'bg-slate-400',
   medium: 'bg-yellow-400',
-  high:   'bg-red-400',
+  high: 'bg-red-400',
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getDaysUntil(deadline: string): number {
   const now = new Date();
-  const dl  = new Date(deadline);
+  const dl = new Date(deadline);
   return Math.ceil((dl.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 function DeadlineBadge({ deadline }: { deadline: string }) {
   const days = getDaysUntil(deadline);
-  const dateStr = new Date(deadline).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+  const dateStr = new Date(deadline).toLocaleDateString('en-AU', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 
   if (days < 0) {
     return (
@@ -72,9 +98,11 @@ function DeadlineBadge({ deadline }: { deadline: string }) {
   }
 
   const colour =
-    days < 7   ? 'text-red-400' :
-    days < 30  ? 'text-yellow-400' :
-                 'text-emerald-400';
+    days < 7
+      ? 'text-red-400'
+      : days < 30
+        ? 'text-yellow-400'
+        : 'text-emerald-400';
 
   return (
     <span className={cn('text-xs flex items-center gap-1', colour)}>
@@ -112,7 +140,13 @@ export function AwardCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             {/* Priority dot */}
-            <span className={cn('inline-block h-2 w-2 rounded-full flex-shrink-0', PRIORITY_DOT[priority])} title={`Priority: ${priority}`} />
+            <span
+              className={cn(
+                'inline-block h-2 w-2 rounded-full flex-shrink-0',
+                PRIORITY_DOT[priority]
+              )}
+              title={`Priority: ${priority}`}
+            />
             <h3 className="font-medium text-sm text-white truncate">{name}</h3>
           </div>
           <p className="text-xs text-slate-400 truncate">{organizer}</p>
@@ -148,16 +182,22 @@ export function AwardCard({
         <div className="relative">
           <button
             onClick={() => setShowStatusMenu(!showStatusMenu)}
-            className={cn('text-xs px-2 py-0.5 rounded-full font-medium', statusCfg.className)}
+            className={cn(
+              'text-xs px-2 py-0.5 rounded-full font-medium',
+              statusCfg.className
+            )}
           >
             {statusCfg.label}
           </button>
           {showStatusMenu && (
             <div className="absolute top-full left-0 mt-1 z-20 bg-slate-900 border border-white/10 rounded-lg shadow-xl py-1 w-36">
-              {(Object.keys(STATUS_CONFIG) as AwardStatus[]).map((s) => (
+              {(Object.keys(STATUS_CONFIG) as AwardStatus[]).map(s => (
                 <button
                   key={s}
-                  onClick={() => { onStatusChange(id, s); setShowStatusMenu(false); }}
+                  onClick={() => {
+                    onStatusChange(id, s);
+                    setShowStatusMenu(false);
+                  }}
                   className={cn(
                     'w-full text-left px-3 py-1.5 text-xs hover:bg-white/5',
                     s === status ? 'text-white' : 'text-slate-400'
@@ -171,16 +211,22 @@ export function AwardCard({
         </div>
 
         {entryFee && (
-          <span className={cn(
-            'text-xs px-2 py-0.5 rounded-full',
-            entryFee === 'Free' ? 'bg-emerald-900/40 text-emerald-400' : 'bg-slate-700/60 text-slate-400'
-          )}>
+          <span
+            className={cn(
+              'text-xs px-2 py-0.5 rounded-full',
+              entryFee === 'Free'
+                ? 'bg-emerald-900/40 text-emerald-400'
+                : 'bg-slate-700/60 text-slate-400'
+            )}
+          >
             {entryFee}
           </span>
         )}
 
         {isRecurring && (
-          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700/40 text-slate-400">Annual</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700/40 text-slate-400">
+            Annual
+          </span>
         )}
       </div>
 
@@ -198,7 +244,7 @@ export function AwardCard({
           className={cn(
             'flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors',
             nominationDraft
-              ? 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30'
+              ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'
               : 'bg-slate-700/60 text-slate-300 hover:bg-slate-600/60'
           )}
         >

@@ -70,10 +70,10 @@ function SuggestionsCard({ items }: { items: AIMessage['suggestions'] }) {
   if (!items || items.length === 0) return null;
 
   return (
-    <div className="mt-2 rounded-lg border border-purple-500/20 bg-purple-500/5 p-3">
+    <div className="mt-2 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center justify-between text-xs font-medium text-purple-400"
+        className="flex w-full items-center justify-between text-xs font-medium text-amber-400"
       >
         <span>Suggestions ({items.length})</span>
         {expanded ? (
@@ -86,7 +86,7 @@ function SuggestionsCard({ items }: { items: AIMessage['suggestions'] }) {
         <ul className="mt-2 space-y-2">
           {items.map((item, i) => (
             <li key={i} className="text-xs text-gray-300">
-              <span className="mr-1 rounded bg-purple-500/20 px-1.5 py-0.5 text-[10px] font-medium text-purple-300">
+              <span className="mr-1 rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium text-amber-300">
                 {item.type}
               </span>
               <span className="font-medium text-white">{item.title}</span>
@@ -113,7 +113,7 @@ export default function AIPMChatThread({
   if (messages.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/20 to-purple-500/20 ring-1 ring-white/10">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/20 ring-1 ring-white/10">
           <Sparkles className="h-8 w-8 text-amber-400" />
         </div>
         <h3 className="text-lg font-semibold text-white">
@@ -159,7 +159,7 @@ export default function AIPMChatThread({
               'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
               msg.role === 'user'
                 ? 'bg-amber-500/20 text-amber-400'
-                : 'bg-gradient-to-br from-amber-500/30 to-purple-500/30 text-white'
+                : 'bg-gradient-to-br from-amber-500/30 to-amber-500/30 text-white'
             )}
           >
             {msg.role === 'user' ? (

@@ -76,7 +76,7 @@ const EXPERIMENT_TYPES: Array<{
     label: 'Meta Description',
     description: 'Test meta description variants for click-through improvement',
     icon: FileText,
-    colour: 'border-purple-500/40 text-purple-400 hover:bg-purple-500/10',
+    colour: 'border-amber-500/40 text-amber-400 hover:bg-amber-500/10',
   },
   {
     value: 'h1',

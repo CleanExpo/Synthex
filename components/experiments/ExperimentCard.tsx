@@ -63,7 +63,7 @@ interface ExperimentCardProps {
 
 const TYPE_COLOURS: Record<string, string> = {
   'title-tag': 'bg-blue-500/20 text-blue-300',
-  'meta-description': 'bg-purple-500/20 text-purple-300',
+  'meta-description': 'bg-amber-500/20 text-amber-300',
   h1: 'bg-amber-500/20 text-amber-300',
   schema: 'bg-green-500/20 text-green-300',
   'content-structure': 'bg-amber-500/20 text-amber-300',

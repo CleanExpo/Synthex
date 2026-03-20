@@ -39,7 +39,7 @@ const TYPE_COLOURS: Record<BacklinkOpportunityType, string> = {
   'resource-page': 'bg-blue-500',
   'guest-post': 'bg-emerald-500',
   'broken-link': 'bg-amber-500',
-  'competitor-link': 'bg-purple-500',
+  'competitor-link': 'bg-amber-500',
   'journalist-mention': 'bg-amber-500',
 };
 

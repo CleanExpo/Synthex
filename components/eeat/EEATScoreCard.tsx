@@ -32,7 +32,7 @@ const dimensions = [
     label: 'Expertise',
     icon: Award,
     weight: '25%',
-    color: 'text-purple-400',
+    color: 'text-amber-400',
   },
   {
     key: 'authoritativeness',

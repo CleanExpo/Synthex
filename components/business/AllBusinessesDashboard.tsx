@@ -223,8 +223,8 @@ export function AllBusinessesDashboard() {
             label: 'Campaigns',
             value: totalCampaigns,
             icon: Briefcase,
-            colour: 'text-violet-400',
-            bg: 'bg-violet-500/10',
+            colour: 'text-amber-400',
+            bg: 'bg-amber-500/10',
           },
           {
             label: 'Posts',

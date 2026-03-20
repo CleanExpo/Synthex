@@ -19,8 +19,24 @@ const MAX_TOKENS = 800;
 
 // Common AI search engine behaviour markers for quality scoring
 const QUALITY_MARKERS = {
-  positive: ['recommend', 'consider', 'popular', 'trusted', 'known for', 'specialises', 'offers', 'provides'],
-  negative: ['unfortunately', 'unable to', 'not sure', 'cannot', 'don\'t know', 'i don\'t have'],
+  positive: [
+    'recommend',
+    'consider',
+    'popular',
+    'trusted',
+    'known for',
+    'specialises',
+    'offers',
+    'provides',
+  ],
+  negative: [
+    'unfortunately',
+    'unable to',
+    'not sure',
+    'cannot',
+    "don't know",
+    "i don't have",
+  ],
 };
 
 // ─── Core Test Function ───────────────────────────────────────────────────────
@@ -42,25 +58,28 @@ const QUALITY_MARKERS = {
 export async function testPrompt(
   promptText: string,
   entityName: string,
-  boParams?: PromptTestingParams,
+  boParams?: PromptTestingParams
 ): Promise<PromptTestResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new Error('OPENROUTER_API_KEY not configured — cannot test prompts');
   }
 
-  const siteUrl = process.env.OPENROUTER_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.app';
+  const siteUrl =
+    process.env.OPENROUTER_SITE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    'https://synthex.social';
   const siteName = process.env.OPENROUTER_SITE_NAME || 'SYNTHEX';
 
   // Resolve parameters: use BO-optimised values when available, otherwise fall back to defaults
-  const maxTokens   = boParams?.maxTokens    ?? MAX_TOKENS;
-  const temperature = boParams?.temperature  ?? 0.7;
+  const maxTokens = boParams?.maxTokens ?? MAX_TOKENS;
+  const temperature = boParams?.temperature ?? 0.7;
 
   // ── Call the OpenRouter API ──
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       'HTTP-Referer': siteUrl,
       'X-Title': siteName,
       'Content-Type': 'application/json',
@@ -88,8 +107,8 @@ export async function testPrompt(
     throw new Error(`OpenRouter API error ${res.status}: ${err}`);
   }
 
-  const data = await res.json() as {
-    choices: { message: { content: string } }[]
+  const data = (await res.json()) as {
+    choices: { message: { content: string } }[];
   };
 
   const aiResponse = data.choices?.[0]?.message?.content ?? '';
@@ -111,7 +130,7 @@ export async function testPrompt(
 export function parseResponse(
   aiResponse: string,
   entityName: string,
-  positivityBias?: number,
+  positivityBias?: number
 ): PromptTestResult {
   const sentences = splitIntoSentences(aiResponse);
   const nameLower = entityName.toLowerCase();
@@ -124,7 +143,7 @@ export function parseResponse(
   for (let i = 0; i < sentences.length; i++) {
     if (sentences[i].toLowerCase().includes(nameLower)) {
       brandMentioned = true;
-      brandPosition = i + 1;  // 1-based position
+      brandPosition = i + 1; // 1-based position
       mentionContext = sentences[i].trim();
       break;
     }
@@ -135,7 +154,11 @@ export function parseResponse(
   const competitorsFound = extractProperNouns(aiResponse, entityName);
 
   // ── Response quality score ──
-  const responseQuality = scoreResponseQuality(aiResponse, sentences, positivityBias);
+  const responseQuality = scoreResponseQuality(
+    aiResponse,
+    sentences,
+    positivityBias
+  );
 
   return {
     response: aiResponse,
@@ -155,8 +178,8 @@ export function parseResponse(
 function splitIntoSentences(text: string): string[] {
   return text
     .split(/(?<=[.!?])\s+(?=[A-Z])/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 10);
+    .map(s => s.trim())
+    .filter(s => s.length > 10);
 }
 
 /**
@@ -168,18 +191,82 @@ function extractProperNouns(text: string, entityName: string): string[] {
 
   // Match capitalised words (potential brand names)
   // Pattern: one or more consecutive Title Case or ALL-CAPS words (2+ chars each)
-  const matches = text.match(/\b[A-Z][a-zA-Z]{1,}(?:\s+[A-Z][a-zA-Z]{1,}){0,2}\b/g) ?? [];
+  const matches =
+    text.match(/\b[A-Z][a-zA-Z]{1,}(?:\s+[A-Z][a-zA-Z]{1,}){0,2}\b/g) ?? [];
 
   const exclusions = new Set([
-    'I', 'The', 'A', 'An', 'In', 'On', 'At', 'To', 'For', 'Of', 'And', 'Or',
-    'But', 'If', 'So', 'As', 'By', 'Up', 'It', 'Is', 'Be', 'Do', 'Go', 'My',
-    'We', 'You', 'He', 'She', 'They', 'This', 'That', 'These', 'Those',
-    'When', 'Where', 'What', 'Which', 'Who', 'How', 'Why',
-    'Also', 'Additionally', 'Furthermore', 'However', 'Therefore', 'Moreover',
-    'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
-    'September', 'October', 'November', 'December',
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
-    'AI', 'API', 'URL', 'FAQ', 'CRM', 'SEO', 'CTA',
+    'I',
+    'The',
+    'A',
+    'An',
+    'In',
+    'On',
+    'At',
+    'To',
+    'For',
+    'Of',
+    'And',
+    'Or',
+    'But',
+    'If',
+    'So',
+    'As',
+    'By',
+    'Up',
+    'It',
+    'Is',
+    'Be',
+    'Do',
+    'Go',
+    'My',
+    'We',
+    'You',
+    'He',
+    'She',
+    'They',
+    'This',
+    'That',
+    'These',
+    'Those',
+    'When',
+    'Where',
+    'What',
+    'Which',
+    'Who',
+    'How',
+    'Why',
+    'Also',
+    'Additionally',
+    'Furthermore',
+    'However',
+    'Therefore',
+    'Moreover',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+    'AI',
+    'API',
+    'URL',
+    'FAQ',
+    'CRM',
+    'SEO',
+    'CTA',
   ]);
 
   const seen = new Set<string>();
@@ -216,9 +303,9 @@ function extractProperNouns(text: string, entityName: string): string[] {
 function scoreResponseQuality(
   text: string,
   sentences: string[],
-  positivityBias: number = 0.5,
+  positivityBias: number = 0.5
 ): number {
-  let score = 0.5;  // Baseline
+  let score = 0.5; // Baseline
 
   // Length bonus (longer = more informative)
   const wordCount = text.split(/\s+/).length;
@@ -228,11 +315,15 @@ function scoreResponseQuality(
   // Positive language bonus — scaled by positivityBias
   // At default bias (0.5): 0.06 * 0.5 = 0.03 per hit — matches original behaviour
   const textLower = text.toLowerCase();
-  const positiveHits = QUALITY_MARKERS.positive.filter((m) => textLower.includes(m)).length;
+  const positiveHits = QUALITY_MARKERS.positive.filter(m =>
+    textLower.includes(m)
+  ).length;
   score += positiveHits * 0.06 * positivityBias;
 
   // Negative language penalty
-  const negativeHits = QUALITY_MARKERS.negative.filter((m) => textLower.includes(m)).length;
+  const negativeHits = QUALITY_MARKERS.negative.filter(m =>
+    textLower.includes(m)
+  ).length;
   score -= negativeHits * 0.05;
 
   // Structure bonus (response has multiple sentences = structured answer)

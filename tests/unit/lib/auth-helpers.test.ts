@@ -356,13 +356,13 @@ describe('JWT Utilities', () => {
     // isOwnerEmail reads OWNER_EMAILS env var at module load time.
     // These tests verify the function's contract: env var controls the set.
     it('should return true for owner email when OWNER_EMAILS contains it', () => {
-      // OWNER_EMAILS is set to 'test@synthex.app' in jest.setup.ts
-      expect(isOwnerEmail('test@synthex.app')).toBe(true);
+      // OWNER_EMAILS is set to 'test@synthex.social' in jest.setup.ts
+      expect(isOwnerEmail('test@synthex.social')).toBe(true);
     });
 
     it('should be case-insensitive', () => {
-      expect(isOwnerEmail('Test@Synthex.App')).toBe(true);
-      expect(isOwnerEmail('TEST@SYNTHEX.APP')).toBe(true);
+      expect(isOwnerEmail('Test@Synthex.Social')).toBe(true);
+      expect(isOwnerEmail('TEST@SYNTHEX.SOCIAL')).toBe(true);
     });
 
     it('should return false for non-owner email', () => {

@@ -68,7 +68,7 @@ function stepTypeColour(type: string): string {
     case 'action':
       return 'text-green-400 bg-green-500/10 border-green-500/20';
     case 'validation':
-      return 'text-purple-400 bg-purple-500/10 border-purple-500/20';
+      return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
     default:
       return 'text-gray-400 bg-gray-500/10 border-gray-500/20';
   }

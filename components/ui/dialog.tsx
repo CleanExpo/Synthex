@@ -42,9 +42,9 @@ const dialogContentVariants = cva(
         'glass-gradient':
           'bg-gradient-to-br from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_8px_32px_rgba(0,0,0,0.3)]',
         'glass-primary':
-          'bg-gradient-to-br from-amber-500/10 to-amber-500/10 backdrop-blur-xl border border-amber-500/20 shadow-[0_0_0_1px_rgba(6,182,212,0.05)_inset,0_8px_32px_rgba(6,182,212,0.15)]',
+          'bg-gradient-to-br from-amber-500/10 to-amber-500/10 backdrop-blur-xl border border-amber-500/20 shadow-[0_0_0_1px_rgba(245,158,11,0.05)_inset,0_8px_32px_rgba(245,158,11,0.15)]',
         'glass-secondary':
-          'bg-gradient-to-br from-amber-500/10 to-blue-500/10 backdrop-blur-xl border border-amber-500/20 shadow-[0_0_0_1px_rgba(6,182,212,0.05)_inset,0_8px_32px_rgba(6,182,212,0.15)]',
+          'bg-gradient-to-br from-amber-500/10 to-blue-500/10 backdrop-blur-xl border border-amber-500/20 shadow-[0_0_0_1px_rgba(245,158,11,0.05)_inset,0_8px_32px_rgba(245,158,11,0.15)]',
       },
     },
     defaultVariants: {

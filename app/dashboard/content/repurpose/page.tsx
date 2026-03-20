@@ -236,7 +236,7 @@ function PlatformResultCard({ result }: PlatformResultCardProps) {
               {charLimit !== Infinity && (
                 <div className="h-1 w-full rounded-full bg-zinc-800">
                   <div
-                    className={`h-1 rounded-full transition-all ${isOverLimit ? 'bg-red-500' : 'bg-violet-500'}`}
+                    className={`h-1 rounded-full transition-all ${isOverLimit ? 'bg-red-500' : 'bg-amber-500'}`}
                     style={{ width: `${usagePercent}%` }}
                   />
                 </div>
@@ -423,7 +423,7 @@ export default function RepurposePage() {
       <Card className="bg-zinc-900/50 border border-zinc-800/50">
         <CardHeader className="pb-4">
           <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
-            <Repeat className="h-4 w-4 text-violet-400" />
+            <Repeat className="h-4 w-4 text-amber-400" />
             Source Content
           </CardTitle>
         </CardHeader>
@@ -443,7 +443,7 @@ export default function RepurposePage() {
                 }}
                 className={`px-4 py-1.5 rounded-md text-sm font-medium border transition-colors ${
                   sourceType === 'text'
-                    ? 'bg-violet-600/20 border-violet-500/50 text-white'
+                    ? 'bg-amber-600/20 border-amber-500/50 text-white'
                     : 'bg-zinc-800/40 border-zinc-700/50 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
                 }`}
               >
@@ -457,7 +457,7 @@ export default function RepurposePage() {
                 }}
                 className={`px-4 py-1.5 rounded-md text-sm font-medium border transition-colors ${
                   sourceType === 'url'
-                    ? 'bg-violet-600/20 border-violet-500/50 text-white'
+                    ? 'bg-amber-600/20 border-amber-500/50 text-white'
                     : 'bg-zinc-800/40 border-zinc-700/50 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
                 }`}
               >
@@ -481,7 +481,7 @@ export default function RepurposePage() {
                 value={sourceContent}
                 onChange={e => setSourceContent(e.target.value)}
                 placeholder="Paste your blog post, article, or existing social content here…"
-                className="w-full rounded-md px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 bg-zinc-800/50 border border-zinc-700/50 focus:outline-none focus:ring-1 focus:ring-violet-500/60 focus:border-violet-500/40 transition-colors resize-none leading-relaxed"
+                className="w-full rounded-md px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 bg-zinc-800/50 border border-zinc-700/50 focus:outline-none focus:ring-1 focus:ring-amber-500/60 focus:border-amber-500/40 transition-colors resize-none leading-relaxed"
               />
             </div>
           ) : (
@@ -501,7 +501,7 @@ export default function RepurposePage() {
                   if (e.key === 'Enter' && canRepurpose) handleRepurpose();
                 }}
                 placeholder="https://example.com/your-article"
-                className="w-full h-10 rounded-md px-3 text-sm text-white placeholder:text-zinc-600 bg-zinc-800/50 border border-zinc-700/50 focus:outline-none focus:ring-1 focus:ring-violet-500/60 focus:border-violet-500/40 transition-colors"
+                className="w-full h-10 rounded-md px-3 text-sm text-white placeholder:text-zinc-600 bg-zinc-800/50 border border-zinc-700/50 focus:outline-none focus:ring-1 focus:ring-amber-500/60 focus:border-amber-500/40 transition-colors"
               />
             </div>
           )}
@@ -510,7 +510,7 @@ export default function RepurposePage() {
           <div className="space-y-2">
             <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide">
               Target platforms
-              <span className="ml-2 normal-case font-normal text-violet-400">
+              <span className="ml-2 normal-case font-normal text-amber-400">
                 {selectedIds.size} selected
               </span>
             </p>
@@ -522,7 +522,7 @@ export default function RepurposePage() {
                     key={platform.id}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm cursor-pointer select-none transition-colors ${
                       active
-                        ? 'bg-violet-600/20 border-violet-500/50 text-white'
+                        ? 'bg-amber-600/20 border-amber-500/50 text-white'
                         : 'bg-zinc-800/40 border-zinc-700/50 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
                     }`}
                   >
@@ -554,7 +554,7 @@ export default function RepurposePage() {
               id="output-format-select"
               value={outputFormat}
               onChange={e => setOutputFormat(e.target.value as OutputFormat)}
-              className="h-10 rounded-md px-3 text-sm text-white bg-zinc-800/50 border border-zinc-700/50 focus:outline-none focus:ring-1 focus:ring-violet-500/60 focus:border-violet-500/40 transition-colors appearance-none cursor-pointer"
+              className="h-10 rounded-md px-3 text-sm text-white bg-zinc-800/50 border border-zinc-700/50 focus:outline-none focus:ring-1 focus:ring-amber-500/60 focus:border-amber-500/40 transition-colors appearance-none cursor-pointer"
             >
               {OUTPUT_FORMATS.map(f => (
                 <option key={f.value} value={f.value} className="bg-zinc-900">
@@ -569,7 +569,7 @@ export default function RepurposePage() {
             <Button
               onClick={handleRepurpose}
               disabled={!canRepurpose}
-              className="bg-violet-600 hover:bg-violet-700 text-white disabled:opacity-40 disabled:cursor-not-allowed px-5"
+              className="bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-40 disabled:cursor-not-allowed px-5"
             >
               {isRepurposing ? (
                 <>
@@ -595,12 +595,12 @@ export default function RepurposePage() {
           <h2 className="text-sm font-medium text-zinc-400">
             Results
             {isRepurposing && (
-              <span className="ml-2 text-violet-400">
+              <span className="ml-2 text-amber-400">
                 — repurposing
                 <span className="inline-flex ml-1 gap-0.5">
-                  <span className="w-1 h-1 rounded-full bg-violet-400 animate-bounce [animation-delay:0ms]" />
-                  <span className="w-1 h-1 rounded-full bg-violet-400 animate-bounce [animation-delay:150ms]" />
-                  <span className="w-1 h-1 rounded-full bg-violet-400 animate-bounce [animation-delay:300ms]" />
+                  <span className="w-1 h-1 rounded-full bg-amber-400 animate-bounce [animation-delay:0ms]" />
+                  <span className="w-1 h-1 rounded-full bg-amber-400 animate-bounce [animation-delay:150ms]" />
+                  <span className="w-1 h-1 rounded-full bg-amber-400 animate-bounce [animation-delay:300ms]" />
                 </span>
               </span>
             )}

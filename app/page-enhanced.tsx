@@ -37,7 +37,7 @@ export default function EnhancedHomePage() {
         <div className="fixed inset-0 opacity-30">
           <div className="absolute top-0 -left-4 w-96 h-96 bg-amber-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
           <div className="absolute top-0 -right-4 w-96 h-96 bg-amber-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-20 w-96 h-96 bg-teal-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+          <div className="absolute -bottom-8 left-20 w-96 h-96 bg-amber-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
         </div>
       </div>
 
@@ -238,7 +238,7 @@ export default function EnhancedHomePage() {
                     <span className="px-3 py-1 rounded-full text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30">
                       Instagram
                     </span>
-                    <span className="px-3 py-1 rounded-full text-xs bg-teal-500/20 text-amber-400 border border-teal-500/30">
+                    <span className="px-3 py-1 rounded-full text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30">
                       TikTok
                     </span>
                     <span className="px-3 py-1 rounded-full text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30">
@@ -294,7 +294,7 @@ export default function EnhancedHomePage() {
               <Link href="/signup">
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-amber-500 via-teal-500 to-amber-500 text-white px-12 py-7 text-lg shadow-beautiful-xl shadow-hover-lift"
+                  className="bg-gradient-to-r from-amber-500 via-amber-500 to-amber-500 text-white px-12 py-7 text-lg shadow-beautiful-xl shadow-hover-lift"
                   data-magnetic
                 >
                   Start Your Free Trial

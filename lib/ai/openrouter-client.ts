@@ -51,33 +51,35 @@ export interface OpenRouterResponse {
 export class OpenRouterClient {
   private apiKey: string;
   private baseURL = 'https://openrouter.ai/api/v1';
-  
+
   // Available models for different use cases
   public models = {
     // Fast and cheap for simple tasks
     fast: 'openai/gpt-3.5-turbo',
-    
+
     // Balanced performance and cost
     balanced: 'anthropic/claude-3-haiku',
-    
+
     // High quality for complex tasks
     creative: 'anthropic/claude-3-sonnet',
-    
+
     // Best quality but expensive
     premium: 'openai/gpt-4-turbo',
-    
+
     // Specialized for code
     code: 'deepseek/deepseek-coder',
-    
+
     // Free tier option
-    free: 'google/gemini-flash-1.5-8b'
+    free: 'google/gemini-flash-1.5-8b',
   };
 
   constructor() {
     this.apiKey = process.env.OPENROUTER_API_KEY || '';
-    
+
     if (!this.apiKey) {
-      logger.warn('OpenRouter API key not configured. AI features will be limited.');
+      logger.warn(
+        'OpenRouter API key not configured. AI features will be limited.'
+      );
     }
   }
 
@@ -96,25 +98,37 @@ export class OpenRouterClient {
           ...request,
           // Add site info for OpenRouter tracking
           transforms: ['middle-out'],
-          route: 'fallback'
+          route: 'fallback',
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'HTTP-Referer': process.env.OPENROUTER_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.app',
+            Authorization: `Bearer ${this.apiKey}`,
+            'HTTP-Referer':
+              process.env.OPENROUTER_SITE_URL ||
+              process.env.NEXT_PUBLIC_APP_URL ||
+              'https://synthex.social',
             'X-Title': process.env.OPENROUTER_SITE_NAME || 'SYNTHEX',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
-          timeout: 30000 // 30 second timeout
+          timeout: 30000, // 30 second timeout
         }
       );
 
       return response.data;
     } catch (error: unknown) {
-      const axiosError = error as { response?: { status: number; data: { error?: { message?: string } } }; request?: unknown };
+      const axiosError = error as {
+        response?: { status: number; data: { error?: { message?: string } } };
+        request?: unknown;
+      };
       if (axiosError.response) {
-        logger.error('OpenRouter API error', { status: axiosError.response.status, data: axiosError.response.data });
-        throw new Error(axiosError.response.data.error?.message || 'OpenRouter API request failed');
+        logger.error('OpenRouter API error', {
+          status: axiosError.response.status,
+          data: axiosError.response.data,
+        });
+        throw new Error(
+          axiosError.response.data.error?.message ||
+            'OpenRouter API request failed'
+        );
       } else if (axiosError.request) {
         logger.error('OpenRouter network error', { error });
         throw new Error('Network error connecting to OpenRouter');
@@ -128,7 +142,9 @@ export class OpenRouterClient {
   /**
    * Generate content with streaming support
    */
-  async *stream(request: OpenRouterRequest): AsyncGenerator<string, void, unknown> {
+  async *stream(
+    request: OpenRouterRequest
+  ): AsyncGenerator<string, void, unknown> {
     if (!this.apiKey) {
       throw new Error('OpenRouter API key not configured');
     }
@@ -137,16 +153,19 @@ export class OpenRouterClient {
       `${this.baseURL}/chat/completions`,
       {
         ...request,
-        stream: true
+        stream: true,
       },
       {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'HTTP-Referer': process.env.OPENROUTER_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.app',
+          Authorization: `Bearer ${this.apiKey}`,
+          'HTTP-Referer':
+            process.env.OPENROUTER_SITE_URL ||
+            process.env.NEXT_PUBLIC_APP_URL ||
+            'https://synthex.social',
           'X-Title': process.env.OPENROUTER_SITE_NAME || 'SYNTHEX',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        responseType: 'stream'
+        responseType: 'stream',
       }
     );
 
@@ -162,7 +181,7 @@ export class OpenRouterClient {
         if (line.startsWith('data: ')) {
           const data = line.slice(6);
           if (data === '[DONE]') return;
-          
+
           try {
             const parsed = JSON.parse(data);
             const content = parsed.choices?.[0]?.delta?.content;
@@ -182,8 +201,8 @@ export class OpenRouterClient {
     try {
       const response = await axios.get(`${this.baseURL}/models`, {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`
-        }
+          Authorization: `Bearer ${this.apiKey}`,
+        },
       });
       return response.data;
     } catch (error) {
@@ -195,7 +214,11 @@ export class OpenRouterClient {
   /**
    * Estimate cost for a request
    */
-  estimateCost(model: string, promptTokens: number, completionTokens: number): number {
+  estimateCost(
+    model: string,
+    promptTokens: number,
+    completionTokens: number
+  ): number {
     // Approximate pricing per 1M tokens (check OpenRouter for latest)
     const pricing: Record<string, { prompt: number; completion: number }> = {
       'openai/gpt-3.5-turbo': { prompt: 0.5, completion: 1.5 },
@@ -203,14 +226,15 @@ export class OpenRouterClient {
       'anthropic/claude-3-haiku': { prompt: 0.25, completion: 1.25 },
       'anthropic/claude-3-sonnet': { prompt: 3, completion: 15 },
       'google/gemini-flash-1.5-8b': { prompt: 0, completion: 0 }, // Free tier
-      'deepseek/deepseek-coder': { prompt: 0.14, completion: 0.28 }
+      'deepseek/deepseek-coder': { prompt: 0.14, completion: 0.28 },
     };
 
     const modelPricing = pricing[model] || { prompt: 1, completion: 2 };
-    
+
     const promptCost = (promptTokens / 1_000_000) * modelPricing.prompt;
-    const completionCost = (completionTokens / 1_000_000) * modelPricing.completion;
-    
+    const completionCost =
+      (completionTokens / 1_000_000) * modelPricing.completion;
+
     return promptCost + completionCost;
   }
 }

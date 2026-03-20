@@ -65,8 +65,8 @@ export default function OnboardingLayout({
       <div
         className="fixed inset-0 opacity-[0.02]"
         style={{
-          backgroundImage: `linear-gradient(rgba(6, 182, 212, 0.5) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(6, 182, 212, 0.5) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(rgba(245, 158, 11, 0.5) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(245, 158, 11, 0.5) 1px, transparent 1px)`,
           backgroundSize: '50px 50px',
         }}
       />

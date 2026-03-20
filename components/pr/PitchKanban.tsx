@@ -57,7 +57,7 @@ const STATUSES = [
   {
     key: 'opened',
     label: 'Opened',
-    colour: 'border-purple-500/40 bg-purple-500/5',
+    colour: 'border-amber-500/40 bg-amber-500/5',
   },
   {
     key: 'replied',

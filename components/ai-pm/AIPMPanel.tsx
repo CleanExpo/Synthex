@@ -61,7 +61,7 @@ export default function AIPMPanel({ open, onOpenChange }: AIPMPanelProps) {
           className="w-full border-white/[0.08] bg-gray-950/95 backdrop-blur-xl sm:max-w-lg p-0"
         >
           <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/20 to-purple-500/20 ring-1 ring-white/10">
+            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/20 ring-1 ring-white/10">
               <Lock className="h-10 w-10 text-gray-400" />
             </div>
             <h3 className="text-xl font-bold text-white">AI Project Manager</h3>
@@ -78,7 +78,7 @@ export default function AIPMPanel({ open, onOpenChange }: AIPMPanelProps) {
               ($399/month)
             </p>
             <Button
-              className="mt-6 bg-gradient-to-r from-amber-500 to-purple-500 text-white hover:from-amber-400 hover:to-purple-400"
+              className="mt-6 bg-gradient-to-r from-amber-500 to-amber-500 text-white hover:from-amber-400 hover:to-amber-400"
               onClick={() => {
                 onOpenChange(false);
                 // Navigate to settings/subscription

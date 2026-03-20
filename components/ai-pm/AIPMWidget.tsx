@@ -23,7 +23,7 @@ export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500/20 to-purple-500/20">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20">
             <Sparkles className="h-4 w-4 text-amber-400" />
           </div>
           <div>
@@ -68,7 +68,7 @@ export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
                 className={cn(
                   'mt-0.5 h-4 w-4 shrink-0',
                   suggestion.type === 'content'
-                    ? 'text-purple-400'
+                    ? 'text-amber-400'
                     : suggestion.type === 'growth'
                       ? 'text-green-400'
                       : suggestion.type === 'optimization'

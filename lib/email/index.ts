@@ -140,7 +140,10 @@ class UnifiedEmailService {
     });
 
     if (!user) {
-      return { success: false, message: 'Invalid or expired verification code' };
+      return {
+        success: false,
+        message: 'Invalid or expired verification code',
+      };
     }
 
     await prisma.user.update({
@@ -156,7 +159,11 @@ class UnifiedEmailService {
     // Send welcome email
     await this.sendWelcomeEmail(user.email, user.name || undefined);
 
-    return { success: true, userId: user.id, message: 'Email verified successfully' };
+    return {
+      success: true,
+      userId: user.id,
+      message: 'Email verified successfully',
+    };
   }
 
   // ============================================================================
@@ -201,7 +208,9 @@ class UnifiedEmailService {
   /**
    * Validate reset token
    */
-  async validateResetToken(token: string): Promise<{ valid: boolean; userId?: string }> {
+  async validateResetToken(
+    token: string
+  ): Promise<{ valid: boolean; userId?: string }> {
     const user = await prisma.user.findFirst({
       where: {
         resetToken: token,
@@ -306,7 +315,9 @@ class UnifiedEmailService {
     if (!user) return true; // Unknown email, allow
 
     const prefs = user.preferences as Record<string, unknown> | null;
-    const emailStatus = prefs?.emailStatus as Record<string, unknown> | undefined;
+    const emailStatus = prefs?.emailStatus as
+      | Record<string, unknown>
+      | undefined;
 
     if (!emailStatus) return true;
 
@@ -334,7 +345,7 @@ class UnifiedEmailService {
         <table width="600" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #1a1a2e 0%, #0a0a0a 100%); border-radius: 16px; overflow: hidden;">
           <!-- Header -->
           <tr>
-            <td style="background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); padding: 40px 20px; text-align: center;">
+            <td style="background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%); padding: 40px 20px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 32px;">✨ SYNTHEX</h1>
               <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">Verify Your Email</p>
             </td>
@@ -347,12 +358,12 @@ class UnifiedEmailService {
                 Thanks for signing up for SYNTHEX! Please verify your email address by clicking the button below.
               </p>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${url}" style="display: inline-block; background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color: #ffffff; padding: 16px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
+                <a href="${url}" style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%); color: #ffffff; padding: 16px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
                   Verify Email Address
                 </a>
               </div>
               <p style="margin: 30px 0 10px; color: #666666; font-size: 14px;">Or copy this link:</p>
-              <p style="margin: 0; background: #1a1a1a; padding: 15px; border-radius: 8px; word-break: break-all; color: #06b6d4; font-size: 13px;">
+              <p style="margin: 0; background: #1a1a1a; padding: 15px; border-radius: 8px; word-break: break-all; color: #f59e0b; font-size: 13px;">
                 ${url}
               </p>
               <p style="margin: 30px 0 0; color: #666666; font-size: 14px;">
@@ -374,7 +385,11 @@ class UnifiedEmailService {
 </html>`;
   }
 
-  private getPasswordResetTemplate(name: string, url: string, code: string): string {
+  private getPasswordResetTemplate(
+    name: string,
+    url: string,
+    code: string
+  ): string {
     return `
 <!DOCTYPE html>
 <html>
@@ -413,7 +428,7 @@ class UnifiedEmailService {
               <h3 style="margin: 0 0 15px; color: #ffffff; font-size: 18px;">Option 2: Use this code</h3>
               <div style="background: #1a1a1a; padding: 25px; border-radius: 12px; text-align: center; margin: 20px 0;">
                 <p style="margin: 0 0 10px; color: #666666; font-size: 14px;">Your reset code:</p>
-                <p style="margin: 0; color: #06b6d4; font-size: 36px; font-weight: bold; letter-spacing: 8px;">${code}</p>
+                <p style="margin: 0; color: #f59e0b; font-size: 36px; font-weight: bold; letter-spacing: 8px;">${code}</p>
               </div>
 
               <p style="margin: 30px 0 0; color: #666666; font-size: 14px;">
@@ -451,7 +466,7 @@ class UnifiedEmailService {
         <table width="600" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #1a1a2e 0%, #0a0a0a 100%); border-radius: 16px; overflow: hidden;">
           <!-- Header -->
           <tr>
-            <td style="background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); padding: 50px 20px; text-align: center;">
+            <td style="background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%); padding: 50px 20px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 36px;">🚀 Welcome to SYNTHEX!</h1>
               <p style="margin: 12px 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">Your AI-Powered Marketing Platform</p>
             </td>
@@ -466,7 +481,7 @@ class UnifiedEmailService {
 
               <!-- Features -->
               <div style="margin: 30px 0;">
-                <div style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 12px; padding: 20px; margin-bottom: 15px;">
                   <p style="margin: 0; color: #ffffff;"><strong>🤖 AI Content Generation</strong></p>
                   <p style="margin: 8px 0 0; color: #a3a3a3; font-size: 14px;">Create viral content for any platform in seconds</p>
                 </div>
@@ -481,7 +496,7 @@ class UnifiedEmailService {
               </div>
 
               <div style="text-align: center; margin: 40px 0;">
-                <a href="${EMAIL_CONFIG.appUrl}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color: #ffffff; padding: 18px 50px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 18px;">
+                <a href="${EMAIL_CONFIG.appUrl}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%); color: #ffffff; padding: 18px 50px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 18px;">
                   Go to Dashboard →
                 </a>
               </div>
@@ -518,7 +533,7 @@ class UnifiedEmailService {
         <table width="600" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #1a1a2e 0%, #0a0a0a 100%); border-radius: 16px; overflow: hidden;">
           <!-- Header -->
           <tr>
-            <td style="background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); padding: 30px 20px; text-align: center;">
+            <td style="background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%); padding: 30px 20px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 28px;">✨ SYNTHEX</h1>
             </td>
           </tr>
@@ -530,7 +545,7 @@ class UnifiedEmailService {
                 ${message}
               </div>
               <div style="text-align: center; margin: 40px 0 0;">
-                <a href="${EMAIL_CONFIG.appUrl}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color: #ffffff; padding: 14px 35px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+                <a href="${EMAIL_CONFIG.appUrl}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%); color: #ffffff; padding: 14px 35px; border-radius: 8px; text-decoration: none; font-weight: bold;">
                   View Dashboard
                 </a>
               </div>

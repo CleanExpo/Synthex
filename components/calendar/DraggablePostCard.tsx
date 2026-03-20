@@ -113,7 +113,7 @@ export function DraggablePostCard({
 
   // Get primary platform for color
   const primaryPlatform = post.platforms[0] || 'twitter';
-  const platformColor = PLATFORM_COLORS[primaryPlatform] || '#8B5CF6';
+  const platformColor = PLATFORM_COLORS[primaryPlatform] || '#f59e0b';
   const PrimaryIcon = platformIcons[primaryPlatform];
 
   if (compact) {

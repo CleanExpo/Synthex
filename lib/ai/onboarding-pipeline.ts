@@ -12,7 +12,10 @@
  * @module lib/ai/onboarding-pipeline
  */
 
-import { analyzeWebsite, type WebsiteAnalysisResult } from '@/lib/ai/website-analyzer';
+import {
+  analyzeWebsite,
+  type WebsiteAnalysisResult,
+} from '@/lib/ai/website-analyzer';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
@@ -116,7 +119,10 @@ async function runWebsiteAnalysis(
     const result = await analyzeWebsite(input);
     return result;
   } catch (error) {
-    logger.error('[pipeline] Website analysis failed', error instanceof Error ? error : undefined);
+    logger.error(
+      '[pipeline] Website analysis failed',
+      error instanceof Error ? error : undefined
+    );
     return null;
   }
 }
@@ -128,7 +134,7 @@ async function runPageSpeedAnalysis(url: string): Promise<PageSpeedScores> {
   const result: PageSpeedScores = { mobile: null, desktop: null };
 
   const strategies = ['mobile', 'desktop'] as const;
-  const promises = strategies.map(async (strategy) => {
+  const promises = strategies.map(async strategy => {
     try {
       const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=${strategy}&category=performance`;
       const res = await fetch(apiUrl, { signal: AbortSignal.timeout(25000) });
@@ -188,13 +194,17 @@ async function runSEOScrape(url: string): Promise<SEOSignals | null> {
 
     // Extract SEO signals
     const title = $('title').first().text().trim() || null;
-    const metaDescription = $('meta[name="description"]').attr('content')?.trim() || null;
+    const metaDescription =
+      $('meta[name="description"]').attr('content')?.trim() || null;
     const h1 = $('h1').first().text().trim() || null;
     const h1Count = $('h1').length;
     const h2Count = $('h2').length;
-    const ogTitle = $('meta[property="og:title"]').attr('content')?.trim() || null;
-    const ogDescription = $('meta[property="og:description"]').attr('content')?.trim() || null;
-    const ogImage = $('meta[property="og:image"]').attr('content')?.trim() || null;
+    const ogTitle =
+      $('meta[property="og:title"]').attr('content')?.trim() || null;
+    const ogDescription =
+      $('meta[property="og:description"]').attr('content')?.trim() || null;
+    const ogImage =
+      $('meta[property="og:image"]').attr('content')?.trim() || null;
     const totalImages = $('img').length;
     const imagesWithoutAlt = $('img:not([alt]), img[alt=""]').length;
 
@@ -289,9 +299,13 @@ async function runEnhancedScrape(url: string): Promise<{
         const json = JSON.parse($(el).html() || '');
         const items = Array.isArray(json) ? json : [json];
         for (const item of items) {
-          if (item['@type'] === 'Organization' || item['@type'] === 'LocalBusiness') {
+          if (
+            item['@type'] === 'Organization' ||
+            item['@type'] === 'LocalBusiness'
+          ) {
             if (item.logo && !result.logoUrl) {
-              result.logoUrl = typeof item.logo === 'string' ? item.logo : item.logo?.url;
+              result.logoUrl =
+                typeof item.logo === 'string' ? item.logo : item.logo?.url;
             }
             if (item.telephone && !result.phone) {
               result.phone = item.telephone;
@@ -310,7 +324,9 @@ async function runEnhancedScrape(url: string): Promise<{
                   addr.addressRegion,
                   addr.postalCode,
                   addr.addressCountry,
-                ].filter(Boolean).join(', ');
+                ]
+                  .filter(Boolean)
+                  .join(', ');
               }
             }
           }
@@ -322,18 +338,29 @@ async function runEnhancedScrape(url: string): Promise<{
 
     // Extract social media links from all anchors
     const socialDomains = [
-      'instagram.com', 'facebook.com', 'linkedin.com', 'twitter.com', 'x.com',
-      'tiktok.com', 'youtube.com', 'pinterest.com', 'reddit.com', 'threads.net',
+      'instagram.com',
+      'facebook.com',
+      'linkedin.com',
+      'twitter.com',
+      'x.com',
+      'tiktok.com',
+      'youtube.com',
+      'pinterest.com',
+      'reddit.com',
+      'threads.net',
     ];
     $('a[href]').each((_, el) => {
       const href = $(el).attr('href');
       if (!href) return;
       try {
         const linkUrl = new URL(href, baseUrl);
-        if (socialDomains.some((d) => linkUrl.hostname.includes(d))) {
+        if (socialDomains.some(d => linkUrl.hostname.includes(d))) {
           result.socialLinks.push(linkUrl.href);
         }
-        if (linkUrl.hostname.includes('google.com') && linkUrl.pathname.includes('/maps')) {
+        if (
+          linkUrl.hostname.includes('google.com') &&
+          linkUrl.pathname.includes('/maps')
+        ) {
           result.googleBusinessUrl = linkUrl.href;
         }
       } catch {
@@ -342,7 +369,9 @@ async function runEnhancedScrape(url: string): Promise<{
     });
 
     // ABN detection (Australian Business Number: 11-digit number)
-    const abnMatch = html.match(/\bABN[:\s]*(\d{2}\s?\d{3}\s?\d{3}\s?\d{3})\b/i);
+    const abnMatch = html.match(
+      /\bABN[:\s]*(\d{2}\s?\d{3}\s?\d{3}\s?\d{3})\b/i
+    );
     if (abnMatch) {
       result.abn = abnMatch[1].replace(/\s/g, '');
     }
@@ -380,7 +409,7 @@ async function verifySocialUrls(urls: string[]): Promise<SocialProfile[]> {
   const unique = [...new Set(urls)].slice(0, 15); // Cap at 15
 
   const results = await Promise.allSettled(
-    unique.map(async (url) => {
+    unique.map(async url => {
       try {
         const res = await fetch(url, {
           method: 'HEAD',
@@ -411,7 +440,8 @@ function detectPlatform(url: string): string {
   if (hostname.includes('instagram.com')) return 'instagram';
   if (hostname.includes('facebook.com')) return 'facebook';
   if (hostname.includes('linkedin.com')) return 'linkedin';
-  if (hostname.includes('twitter.com') || hostname.includes('x.com')) return 'x';
+  if (hostname.includes('twitter.com') || hostname.includes('x.com'))
+    return 'x';
   if (hostname.includes('tiktok.com')) return 'tiktok';
   if (hostname.includes('youtube.com')) return 'youtube';
   if (hostname.includes('pinterest.com')) return 'pinterest';
@@ -429,7 +459,8 @@ function computeSEOScore(seo: SEOSignals): number {
   if (seo.metaDescription) score += 20;
   if (seo.h1) score += 20;
   if (seo.ogTitle && seo.ogDescription && seo.ogImage) score += 20;
-  if (seo.totalImages === 0 || seo.imagesWithoutAlt / seo.totalImages < 0.3) score += 20;
+  if (seo.totalImages === 0 || seo.imagesWithoutAlt / seo.totalImages < 0.3)
+    score += 20;
   return score;
 }
 
@@ -440,9 +471,13 @@ function computeOverallHealth(
   seoScore: number,
   pageSpeed: PageSpeedScores
 ): 'excellent' | 'good' | 'needs-work' | 'poor' {
-  const avgSpeed = [pageSpeed.mobile?.score, pageSpeed.desktop?.score]
-    .filter((s): s is number => s !== null && s !== undefined);
-  const speedAvg = avgSpeed.length > 0 ? avgSpeed.reduce((a, b) => a + b, 0) / avgSpeed.length : 50;
+  const avgSpeed = [pageSpeed.mobile?.score, pageSpeed.desktop?.score].filter(
+    (s): s is number => s !== null && s !== undefined
+  );
+  const speedAvg =
+    avgSpeed.length > 0
+      ? avgSpeed.reduce((a, b) => a + b, 0) / avgSpeed.length
+      : 50;
   const combined = (seoScore + speedAvg) / 2;
 
   if (combined >= 80) return 'excellent';
@@ -466,12 +501,13 @@ export async function runOnboardingPipeline(
   const startTime = Date.now();
 
   // Run all sub-agents in parallel
-  const [analysisResult, pageSpeed, seoSignals, enhancedScrape] = await Promise.all([
-    runWebsiteAnalysis(input),
-    runPageSpeedAnalysis(input.url),
-    runSEOScrape(input.url),
-    runEnhancedScrape(input.url),
-  ]);
+  const [analysisResult, pageSpeed, seoSignals, enhancedScrape] =
+    await Promise.all([
+      runWebsiteAnalysis(input),
+      runPageSpeedAnalysis(input.url),
+      runSEOScrape(input.url),
+      runEnhancedScrape(input.url),
+    ]);
 
   // Collect all social links from analysis + enhanced scrape
   const allSocialUrls = [
@@ -480,9 +516,8 @@ export async function runOnboardingPipeline(
   ];
 
   // Verify social URLs (runs after the main scrapes complete)
-  const socialProfiles = allSocialUrls.length > 0
-    ? await verifySocialUrls(allSocialUrls)
-    : [];
+  const socialProfiles =
+    allSocialUrls.length > 0 ? await verifySocialUrls(allSocialUrls) : [];
 
   // Build social handles map (platform → URL)
   const socialHandles: Record<string, string> = {
@@ -499,10 +534,11 @@ export async function runOnboardingPipeline(
   const overallHealth = computeOverallHealth(seoScore, pageSpeed);
 
   // Determine logo URL (prefer schema.org → og:image → favicon)
-  const logoUrl = enhancedScrape.logoUrl
-    || analysisResult?.logo
-    || seoSignals?.ogImage
-    || null;
+  const logoUrl =
+    enhancedScrape.logoUrl ||
+    analysisResult?.logo ||
+    seoSignals?.ogImage ||
+    null;
 
   const elapsed = Date.now() - startTime;
   logger.info(`[pipeline] Complete in ${elapsed}ms`);
@@ -510,12 +546,13 @@ export async function runOnboardingPipeline(
   return {
     businessName: input.businessName,
     industry: analysisResult?.industry || 'other',
-    description: analysisResult?.description || seoSignals?.metaDescription || '',
+    description:
+      analysisResult?.description || seoSignals?.metaDescription || '',
     teamSize: analysisResult?.teamSize || 'small',
 
     logoUrl,
     faviconUrl: enhancedScrape.faviconUrl,
-    brandColours: analysisResult?.brandColors || { primary: '#06b6d4' },
+    brandColours: analysisResult?.brandColors || { primary: '#f59e0b' },
 
     seoSignals,
     seoScore,
@@ -534,7 +571,8 @@ export async function runOnboardingPipeline(
     keyTopics: analysisResult?.keyTopics || [],
     targetAudience: analysisResult?.targetAudience || '',
     suggestedTone: analysisResult?.suggestedTone || 'professional',
-    suggestedPersonaName: analysisResult?.suggestedPersonaName || input.businessName,
+    suggestedPersonaName:
+      analysisResult?.suggestedPersonaName || input.businessName,
 
     confidence: analysisResult?.confidence || 30,
 

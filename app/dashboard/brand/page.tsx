@@ -12,7 +12,7 @@
  * @module app/dashboard/brand/page
  */
 
-import { useState, useCallback , Suspense } from 'react';
+import { useState, useCallback, Suspense } from 'react';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
@@ -25,7 +25,11 @@ import { KnowledgePanelStatus } from '@/components/brand/KnowledgePanelStatus';
 import { BrandCalendarView } from '@/components/brand/BrandCalendarView';
 import { cn } from '@/lib/utils';
 import { useMutation } from '@/hooks/use-api';
-import type { ConsistencyReport, WikidataCheckResult, KGCheckResult } from '@/lib/brand/types';
+import type {
+  ConsistencyReport,
+  WikidataCheckResult,
+  KGCheckResult,
+} from '@/lib/brand/types';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -76,10 +80,10 @@ async function fetchJson<T>(url: string): Promise<T> {
 type TabId = 'identity' | 'consistency' | 'mentions' | 'calendar';
 
 const TABS: Array<{ id: TabId; label: string }> = [
-  { id: 'identity',    label: 'Identity' },
+  { id: 'identity', label: 'Identity' },
   { id: 'consistency', label: 'Consistency' },
-  { id: 'mentions',    label: 'Mentions' },
-  { id: 'calendar',    label: 'Calendar' },
+  { id: 'mentions', label: 'Mentions' },
+  { id: 'calendar', label: 'Calendar' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -102,18 +106,18 @@ interface BrandFormData {
 }
 
 const EMPTY_FORM: BrandFormData = {
-  entityType:   'organization',
+  entityType: 'organization',
   canonicalName: '',
-  canonicalUrl:  '',
-  description:   '',
-  wikidataUrl:   '',
-  wikipediaUrl:  '',
-  linkedinUrl:   '',
+  canonicalUrl: '',
+  description: '',
+  wikidataUrl: '',
+  wikipediaUrl: '',
+  linkedinUrl: '',
   crunchbaseUrl: '',
-  youtubeUrl:    '',
-  twitterUrl:    '',
-  facebookUrl:   '',
-  instagramUrl:  '',
+  youtubeUrl: '',
+  twitterUrl: '',
+  facebookUrl: '',
+  instagramUrl: '',
 };
 
 interface SaveBrandResponse {
@@ -125,24 +129,25 @@ function BrandIdentityForm({ onSuccess }: { onSuccess: () => void }) {
   const [form, setForm] = useState<BrandFormData>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { mutate: saveBrand, isLoading: saving } = useMutation<SaveBrandResponse, BrandFormData>(
-    async (data) => {
-      const body = Object.fromEntries(
-        Object.entries(data).filter(([, v]) => v !== '')
-      );
-      const res = await fetch('/api/brand/identity', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message ?? 'Failed to save brand identity');
-      }
-      return res.json();
+  const { mutate: saveBrand, isLoading: saving } = useMutation<
+    SaveBrandResponse,
+    BrandFormData
+  >(async data => {
+    const body = Object.fromEntries(
+      Object.entries(data).filter(([, v]) => v !== '')
+    );
+    const res = await fetch('/api/brand/identity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message ?? 'Failed to save brand identity');
     }
-  );
+    return res.json();
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,12 +169,18 @@ function BrandIdentityForm({ onSuccess }: { onSuccess: () => void }) {
   ) => (
     <div>
       <label className="block text-xs font-medium text-gray-400 mb-1">
-        {label}{required && <span className="text-red-400 ml-0.5">*</span>}
+        {label}
+        {required && <span className="text-red-400 ml-0.5">*</span>}
       </label>
       {key === 'entityType' ? (
         <select
           value={form.entityType}
-          onChange={e => setForm(f => ({ ...f, entityType: e.target.value as BrandFormData['entityType'] }))}
+          onChange={e =>
+            setForm(f => ({
+              ...f,
+              entityType: e.target.value as BrandFormData['entityType'],
+            }))
+          }
           className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
         >
           <option value="organization">Organisation</option>
@@ -198,27 +209,48 @@ function BrandIdentityForm({ onSuccess }: { onSuccess: () => void }) {
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-white/[0.03] border border-white/10 rounded-xl p-5">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 bg-white/[0.03] border border-white/10 rounded-xl p-5"
+    >
       <h3 className="text-sm font-semibold text-white">Create Brand Profile</h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {field('entityType',    'Entity Type',     '', true)}
-        {field('canonicalName', 'Brand Name',      'Synthex AI', true)}
-        {field('canonicalUrl',  'Website URL',     'https://synthex.ai', true)}
-        {field('description',   'Description',     'What your brand does…')}
+        {field('entityType', 'Entity Type', '', true)}
+        {field('canonicalName', 'Brand Name', 'Synthex AI', true)}
+        {field('canonicalUrl', 'Website URL', 'https://synthex.social', true)}
+        {field('description', 'Description', 'What your brand does…')}
       </div>
 
       <div>
-        <p className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">sameAs URLs (optional)</p>
+        <p className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
+          sameAs URLs (optional)
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {field('wikidataUrl',   'Wikidata',    'https://www.wikidata.org/wiki/Q...')}
-          {field('wikipediaUrl',  'Wikipedia',   'https://en.wikipedia.org/wiki/...')}
-          {field('linkedinUrl',   'LinkedIn',    'https://www.linkedin.com/company/...')}
-          {field('crunchbaseUrl', 'Crunchbase',  'https://www.crunchbase.com/organization/...')}
-          {field('twitterUrl',    'Twitter/X',   'https://twitter.com/...')}
-          {field('youtubeUrl',    'YouTube',     'https://www.youtube.com/@...')}
-          {field('facebookUrl',   'Facebook',    'https://www.facebook.com/...')}
-          {field('instagramUrl',  'Instagram',   'https://www.instagram.com/...')}
+          {field(
+            'wikidataUrl',
+            'Wikidata',
+            'https://www.wikidata.org/wiki/Q...'
+          )}
+          {field(
+            'wikipediaUrl',
+            'Wikipedia',
+            'https://en.wikipedia.org/wiki/...'
+          )}
+          {field(
+            'linkedinUrl',
+            'LinkedIn',
+            'https://www.linkedin.com/company/...'
+          )}
+          {field(
+            'crunchbaseUrl',
+            'Crunchbase',
+            'https://www.crunchbase.com/organization/...'
+          )}
+          {field('twitterUrl', 'Twitter/X', 'https://twitter.com/...')}
+          {field('youtubeUrl', 'YouTube', 'https://www.youtube.com/@...')}
+          {field('facebookUrl', 'Facebook', 'https://www.facebook.com/...')}
+          {field('instagramUrl', 'Instagram', 'https://www.instagram.com/...')}
         </div>
       </div>
 
@@ -235,7 +267,11 @@ function BrandIdentityForm({ onSuccess }: { onSuccess: () => void }) {
           disabled={saving || !form.canonicalName || !form.canonicalUrl}
           className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors disabled:opacity-50"
         >
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+          {saving ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Plus className="w-4 h-4" />
+          )}
           Save Brand Profile
         </button>
       </div>
@@ -255,9 +291,11 @@ function BrandBuilderPageContent() {
   );
   const [showForm, setShowForm] = useState(false);
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
-  const [consistencyReport, setConsistencyReport] = useState<ConsistencyReport | null>(null);
+  const [consistencyReport, setConsistencyReport] =
+    useState<ConsistencyReport | null>(null);
   const [consistencyLoading, setConsistencyLoading] = useState(false);
-  const [wikidataResult, setWikidataResult] = useState<WikidataCheckResult | null>(null);
+  const [wikidataResult, setWikidataResult] =
+    useState<WikidataCheckResult | null>(null);
   const [wikidataLoading, setWikidataLoading] = useState(false);
   const [kgResult, setKgResult] = useState<KGCheckResult | null>(null);
   const [kgLoading, setKgLoading] = useState(false);
@@ -270,7 +308,8 @@ function BrandBuilderPageContent() {
   );
 
   const identities = data?.identities ?? [];
-  const selectedBrand = identities.find(b => b.id === selectedBrandId) ?? identities[0] ?? null;
+  const selectedBrand =
+    identities.find(b => b.id === selectedBrandId) ?? identities[0] ?? null;
 
   // Keep selectedBrandId in sync
   const effectiveBrandId = selectedBrandId ?? identities[0]?.id ?? null;
@@ -305,9 +344,12 @@ function BrandBuilderPageContent() {
     if (!effectiveBrandId) return;
     setWikidataLoading(true);
     try {
-      const res = await fetch(`/api/brand/wikidata?brandId=${effectiveBrandId}`, {
-        credentials: 'include',
-      });
+      const res = await fetch(
+        `/api/brand/wikidata?brandId=${effectiveBrandId}`,
+        {
+          credentials: 'include',
+        }
+      );
       if (res.ok) {
         const result: WikidataCheckResult = await res.json();
         setWikidataResult(result);
@@ -323,9 +365,12 @@ function BrandBuilderPageContent() {
     if (!effectiveBrandId) return;
     setKgLoading(true);
     try {
-      const res = await fetch(`/api/brand/kg-check?brandId=${effectiveBrandId}`, {
-        credentials: 'include',
-      });
+      const res = await fetch(
+        `/api/brand/kg-check?brandId=${effectiveBrandId}`,
+        {
+          credentials: 'include',
+        }
+      );
       if (res.ok) {
         const result: KGCheckResult = await res.json();
         setKgResult(result);
@@ -347,7 +392,9 @@ function BrandBuilderPageContent() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">Brand Builder</h1>
-            <p className="text-sm text-gray-400">Entity graph, sameAs management, and Knowledge Panel signals</p>
+            <p className="text-sm text-gray-400">
+              Entity graph, sameAs management, and Knowledge Panel signals
+            </p>
           </div>
         </div>
         <button
@@ -360,9 +407,7 @@ function BrandBuilderPageContent() {
       </div>
 
       {/* Inline Form */}
-      {showForm && (
-        <BrandIdentityForm onSuccess={handleFormSuccess} />
-      )}
+      {showForm && <BrandIdentityForm onSuccess={handleFormSuccess} />}
 
       {/* Tabs */}
       <div className="border-b border-white/10">
@@ -395,7 +440,9 @@ function BrandBuilderPageContent() {
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3">
           <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
-          <p className="text-sm text-red-300">Failed to load brand identities.</p>
+          <p className="text-sm text-red-300">
+            Failed to load brand identities.
+          </p>
         </div>
       )}
 
@@ -409,7 +456,9 @@ function BrandBuilderPageContent() {
             className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           >
             {identities.map(b => (
-              <option key={b.id} value={b.id}>{b.canonicalName}</option>
+              <option key={b.id} value={b.id}>
+                {b.canonicalName}
+              </option>
             ))}
           </select>
         </div>
@@ -424,9 +473,12 @@ function BrandBuilderPageContent() {
               {identities.length === 0 && !showForm && (
                 <div className="bg-white/[0.03] border border-white/10 rounded-xl p-10 text-center">
                   <Building2 className="w-10 h-10 text-gray-500 mx-auto mb-3" />
-                  <p className="text-sm font-medium text-gray-300">No brand profiles yet</p>
+                  <p className="text-sm font-medium text-gray-300">
+                    No brand profiles yet
+                  </p>
                   <p className="text-xs text-gray-500 mt-1 mb-4">
-                    Create your first brand profile to generate an entity graph and start tracking your Knowledge Panel signals.
+                    Create your first brand profile to generate an entity graph
+                    and start tracking your Knowledge Panel signals.
                   </p>
                   <button
                     onClick={() => setShowForm(true)}
@@ -488,7 +540,7 @@ function BrandBuilderPageContent() {
                       result={kgResult}
                       loading={kgLoading}
                       onCheck={checkKG}
-                      hasApiKey={true}  // The API handles gracefully if key missing
+                      hasApiKey={true} // The API handles gracefully if key missing
                     />
                   </div>
                 </>

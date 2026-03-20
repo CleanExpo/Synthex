@@ -105,13 +105,16 @@ export class StreamingOptimizer {
       const response = await fetch(`${this.BASE_URL}/models`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
         signal: AbortSignal.timeout(5000),
       });
 
       if (!response.ok) {
-        logger.warn('Model warm-up request failed', { model, status: response.status });
+        logger.warn('Model warm-up request failed', {
+          model,
+          status: response.status,
+        });
       } else {
         logger.debug('Model connection warmed', { model });
       }
@@ -146,8 +149,9 @@ export class StreamingOptimizer {
       const response = await fetch(`${this.BASE_URL}/chat/completions`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.app',
+          Authorization: `Bearer ${apiKey}`,
+          'HTTP-Referer':
+            process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social',
           'X-Title': 'SYNTHEX',
           'Content-Type': 'application/json',
         },
@@ -211,7 +215,8 @@ export class StreamingOptimizer {
                 options.onProgress({
                   tokensGenerated: tokenCount,
                   elapsedMs: chunkTime - startTime,
-                  tokensPerSecond: tokenCount / ((chunkTime - startTime) / 1000),
+                  tokensPerSecond:
+                    tokenCount / ((chunkTime - startTime) / 1000),
                 });
               }
 
@@ -297,7 +302,10 @@ export class StreamingOptimizer {
         return; // Success
       } catch (error) {
         lastError = error as Error;
-        logger.warn('Stream attempt failed', { attempt, error: lastError.message });
+        logger.warn('Stream attempt failed', {
+          attempt,
+          error: lastError.message,
+        });
 
         if (attempt < maxRetries) {
           // Exponential backoff
@@ -321,8 +329,14 @@ export class StreamingOptimizer {
   /**
    * Get warm connection status
    */
-  static getWarmStatus(): Map<string, { model: string; age: number; valid: boolean }> {
-    const status = new Map<string, { model: string; age: number; valid: boolean }>();
+  static getWarmStatus(): Map<
+    string,
+    { model: string; age: number; valid: boolean }
+  > {
+    const status = new Map<
+      string,
+      { model: string; age: number; valid: boolean }
+    >();
     const now = Date.now();
 
     for (const [key, conn] of this.warmConnections) {
@@ -349,7 +363,8 @@ export async function* streamAI(
   prompt: string,
   options: Omit<StreamOptions, 'startTime'> & { systemPrompt?: string }
 ): AsyncGenerator<string> {
-  const systemPrompt = options.systemPrompt || 'You are a helpful AI assistant.';
+  const systemPrompt =
+    options.systemPrompt || 'You are a helpful AI assistant.';
 
   const stream = StreamingOptimizer.streamWithOptimization(
     prompt,

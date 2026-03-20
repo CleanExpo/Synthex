@@ -672,7 +672,7 @@ export default function ContentPage() {
         <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-light text-white flex items-center gap-2">
-              <Brain className="h-4 w-4 text-purple-400" />
+              <Brain className="h-4 w-4 text-amber-400" />
               Psychology Analysis
             </h3>
             <Link
@@ -701,7 +701,7 @@ export default function ContentPage() {
               {psychologyScore.topPrinciples.map(p => (
                 <span
                   key={p.name}
-                  className="text-xs bg-purple-500/10 text-purple-300 px-2 py-1 rounded-sm border-[0.5px] border-purple-500/20"
+                  className="text-xs bg-amber-500/10 text-amber-300 px-2 py-1 rounded-sm border-[0.5px] border-amber-500/20"
                 >
                   {p.name} ({p.strength}%)
                 </span>

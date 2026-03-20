@@ -100,7 +100,7 @@ export default function TermsPage() {
                   <strong className="text-amber-400">Important:</strong> These
                   terms constitute a legal agreement. If you disagree with any
                   part, please don't use our service. Contact us at
-                  legal@synthex.ai if you have questions.
+                  legal@synthex.social if you have questions.
                 </p>
               </div>
             </div>
