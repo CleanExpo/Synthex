@@ -90,11 +90,13 @@ const PLANS: PricingPlan[] = [
 interface PricingSectionProps {
   title?: string;
   description?: string;
+  headingLevel?: 'h1' | 'h2';
 }
 
 export function PricingSection({
   title = 'Simple, Transparent Pricing',
   description = 'Choose the plan that works for you. All plans include a 14-day free trial.',
+  headingLevel = 'h2',
 }: PricingSectionProps) {
   const [isMonthly, setIsMonthly] = useState(true);
   const [isDesktop] = useState(() =>
@@ -129,9 +131,15 @@ export function PricingSection({
   return (
     <div className="container py-20 md:py-28">
       <div className="text-center space-y-4 mb-12">
-        <h2 className="text-4xl font-bold tracking-tight sm:text-5xl text-white">
-          {title}
-        </h2>
+        {headingLevel === 'h1' ? (
+          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl text-white">
+            {title}
+          </h1>
+        ) : (
+          <h2 className="text-4xl font-bold tracking-tight sm:text-5xl text-white">
+            {title}
+          </h2>
+        )}
         <p className="text-white/60 text-lg whitespace-pre-line">
           {description}
         </p>

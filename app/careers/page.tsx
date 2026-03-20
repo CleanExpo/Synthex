@@ -173,8 +173,7 @@ export default function CareersPage() {
       <section className="pt-12 pb-20 px-6">
         <div className="container mx-auto text-center">
           <h1 className="text-6xl font-bold text-white mb-6 heading-serif">
-            Join Us in Building the
-            <br />
+            Join Us in Building the <br />
             <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
               Future of AI Marketing
             </span>

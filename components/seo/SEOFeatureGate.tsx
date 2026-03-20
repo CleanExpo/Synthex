@@ -88,7 +88,7 @@ export function SEOFeatureGate({
             </div>
 
             {/* Upgrade button */}
-            <Link href="/dashboard/settings/billing">
+            <Link href="/dashboard/billing">
               <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all px-8">
                 <Sparkles className="w-4 h-4 mr-2" />
                 Upgrade to{' '}

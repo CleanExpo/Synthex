@@ -83,6 +83,7 @@ export default function PricingPage() {
           description={
             'Choose the perfect plan for your social media growth.\nAll plans include a 14-day free trial.'
           }
+          headingLevel="h1"
         />
       </section>
 

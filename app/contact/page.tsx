@@ -122,8 +122,7 @@ export default function ContactPage() {
       <section className="pt-12 pb-20 px-6">
         <div className="container mx-auto text-center">
           <h1 className="text-6xl font-bold text-white mb-6 heading-serif">
-            Get in
-            <br />
+            Get in <br />
             <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
               Touch
             </span>

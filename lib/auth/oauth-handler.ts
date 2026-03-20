@@ -147,8 +147,8 @@ export async function handleOAuthCallback(
 export async function disconnectOAuth(platform: string) {
   try {
     // Authentication is handled via httpOnly cookies (credentials: 'include')
-    const response = await fetch(`/api/integrations/${platform}/disconnect`, {
-      method: 'POST',
+    const response = await fetch(`/api/integrations/${platform}/connect`, {
+      method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },

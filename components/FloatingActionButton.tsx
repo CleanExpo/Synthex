@@ -53,7 +53,7 @@ export function FloatingActionButton() {
       icon: Edit,
       color: 'bg-blue-500',
       onClick: () => {
-        router.push('/create?type=post');
+        router.push('/dashboard/content');
         setIsOpen(false);
         notify.success('Opening post creator...');
       },
@@ -64,7 +64,7 @@ export function FloatingActionButton() {
       icon: Calendar,
       color: 'bg-green-500',
       onClick: () => {
-        router.push('/schedule');
+        router.push('/dashboard/schedule');
         setIsOpen(false);
         notify.success('Opening scheduler...');
       },
@@ -75,7 +75,7 @@ export function FloatingActionButton() {
       icon: TrendingUp,
       color: 'bg-amber-500',
       onClick: () => {
-        router.push('/analytics');
+        router.push('/dashboard/analytics');
         setIsOpen(false);
       },
     },
@@ -85,7 +85,7 @@ export function FloatingActionButton() {
       icon: Sparkles,
       color: 'bg-pink-500',
       onClick: () => {
-        router.push('/create?ai=true');
+        router.push('/dashboard/content?ai=true');
         setIsOpen(false);
         notify.custom('✨ AI Assistant ready!');
       },
@@ -96,7 +96,7 @@ export function FloatingActionButton() {
       icon: Camera,
       color: 'bg-amber-500',
       onClick: () => {
-        router.push('/create?type=photo');
+        router.push('/dashboard/content?type=photo');
         setIsOpen(false);
       },
     },
@@ -106,7 +106,7 @@ export function FloatingActionButton() {
       icon: Video,
       color: 'bg-red-500',
       onClick: () => {
-        router.push('/create?type=video');
+        router.push('/dashboard/content?type=video');
         setIsOpen(false);
       },
     },
@@ -220,7 +220,7 @@ export function FloatingActionButton() {
               <button
                 key={action.action}
                 onClick={() => {
-                  router.push(`/create?type=${action.action}`);
+                  router.push(`/dashboard/content?type=${action.action}`);
                   notify.custom(`Opening ${action.action} creator...`);
                 }}
                 className="p-2 text-gray-400 hover:text-white transition-colors"

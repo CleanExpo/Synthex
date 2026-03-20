@@ -180,7 +180,9 @@ export function useEngagementMetrics(
   });
 }
 
-export function useRealtimeAnalytics(options?: UseApiOptions<AnalyticsMetrics>) {
+export function useRealtimeAnalytics(
+  options?: UseApiOptions<AnalyticsMetrics>
+) {
   return useApi<AnalyticsMetrics>('/api/analytics/realtime', {
     staleTime: 10 * 1000, // 10 seconds
     pollingInterval: 30 * 1000, // Poll every 30 seconds
@@ -198,9 +200,20 @@ export interface PerformanceAnalyticsParams {
 
 export function usePerformanceAnalytics(
   params: PerformanceAnalyticsParams = {},
-  options?: UseApiOptions<{ success: boolean; data: PerformanceData; period: { start: string; end: string }; generatedAt: string }>
+  options?: UseApiOptions<{
+    success: boolean;
+    data: PerformanceData;
+    period: { start: string; end: string };
+    generatedAt: string;
+  }>
 ) {
-  const { period = '30d', platform, startDate, endDate, granularity = 'day' } = params;
+  const {
+    period = '30d',
+    platform,
+    startDate,
+    endDate,
+    granularity = 'day',
+  } = params;
   const searchParams = new URLSearchParams();
 
   if (startDate && endDate) {
@@ -225,11 +238,23 @@ export function usePerformanceAnalytics(
 
   const url = `/api/analytics/performance?${searchParams.toString()}`;
 
-  return useApi<{ success: boolean; data: PerformanceData; period: { start: string; end: string }; generatedAt: string }>(url, {
+  return useApi<{
+    success: boolean;
+    data: PerformanceData;
+    period: { start: string; end: string };
+    generatedAt: string;
+  }>(url, {
     staleTime: 60 * 1000, // 1 minute
     cacheTime: 10 * 60 * 1000, // 10 minutes
     ...options,
-    deps: [period, platform, startDate, endDate, granularity, ...(options?.deps || [])],
+    deps: [
+      period,
+      platform,
+      startDate,
+      endDate,
+      granularity,
+      ...(options?.deps || []),
+    ],
   });
 }
 
@@ -270,7 +295,7 @@ export function useTasks(
 }
 
 export function useTask(taskId: string | null, options?: UseApiOptions<Task>) {
-  return useApi<Task>(taskId ? `/api/tasks/${taskId}` : null, {
+  return useApi<Task>(taskId ? `/api/tasks?id=${taskId}` : null, {
     skip: !taskId,
     staleTime: 30 * 1000,
     cacheTime: 5 * 60 * 1000,
@@ -292,7 +317,7 @@ export function useCreateTask() {
 export function useUpdateTask() {
   return useMutation(
     async ({ id, ...updates }: Partial<Task> & { id: string }) => {
-      return fetchWithAuth<Task>(`/api/tasks/${id}`, {
+      return fetchWithAuth<Task>(`/api/tasks?id=${id}`, {
         method: 'PATCH',
         body: updates,
       });
@@ -302,7 +327,7 @@ export function useUpdateTask() {
 
 export function useDeleteTask() {
   return useMutation(async (taskId: string) => {
-    return fetchWithAuth<{ success: boolean }>(`/api/tasks/${taskId}`, {
+    return fetchWithAuth<{ success: boolean }>(`/api/tasks?id=${taskId}`, {
       method: 'DELETE',
     });
   });
@@ -538,8 +563,4 @@ export async function fetchForecast(params: {
 // EXPORTS
 // ============================================================================
 
-export {
-  useApi,
-  useMutation,
-  fetchWithAuth,
-} from './use-api';
+export { useApi, useMutation, fetchWithAuth } from './use-api';

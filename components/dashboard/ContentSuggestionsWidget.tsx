@@ -62,7 +62,7 @@ export function ContentSuggestionsWidget({
             connected a social platform.
           </p>
           <a
-            href="/dashboard/settings/connections"
+            href="/dashboard/platforms"
             className="inline-block mt-1 text-[10px] uppercase tracking-[0.15em] px-2.5 py-1 rounded-sm border-[0.5px] border-amber-500/30 bg-amber-500/[0.08] text-amber-400 hover:bg-amber-500/[0.12] transition-colors"
           >
             Connect Platform
