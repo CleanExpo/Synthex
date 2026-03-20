@@ -182,9 +182,10 @@ const nextConfig = {
       'node_modules/@ffprobe-installer/**',
       'node_modules/puppeteer/**',
       'node_modules/puppeteer-core/**',
-      // Prisma query engine binaries for other platforms (only need linux-openssl-3.0.x on Vercel)
+      // Prisma schema/migration engines — build tools, NOT needed at runtime.
+      // DO NOT exclude .prisma/client/libquery_engine-* — that is the runtime
+      // query engine binary and Prisma will crash without it on Vercel.
       'node_modules/@prisma/engines/**',
-      'node_modules/.prisma/client/libquery_engine-*',
     ],
   },
 
