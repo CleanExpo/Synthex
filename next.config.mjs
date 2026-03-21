@@ -109,6 +109,10 @@ const nextConfig = {
     // hung ALL Lambda cold starts for 10+ seconds. No longer needed here.
   ],
 
+  // Turbopack config — Next.js 16 defaults to Turbopack and errors without this
+  // when a webpack config is also present. Empty object silences the warning.
+  turbopack: {},
+
   // Experimental features
   experimental: {
     // Note: forceSwcTransforms removed — deprecated in Next.js 15 and causes

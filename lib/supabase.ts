@@ -2,18 +2,46 @@ import { createClient } from '@supabase/supabase-js';
 import { encryptCredentials, decryptCredentials } from './encryption';
 
 // Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
 // Public client for client-side operations
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+let _supabase: any = null;
+
+export const supabase: any = new Proxy(
+  {},
+  {
+    get(_, prop) {
+      if (!_supabase) {
+        _supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+      }
+      return (_supabase as Record<string, unknown>)[prop as string];
+    },
+  }
+);
 
 // Service client for server-side operations (has elevated privileges)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+let _supabaseAdmin: any = null;
+
+export const supabaseAdmin: any = new Proxy(
+  {},
+  {
+    get(_, prop) {
+      if (!_supabaseAdmin) {
+        _supabaseAdmin = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+      }
+      return (_supabaseAdmin as Record<string, unknown>)[prop as string];
+    },
+  }
+);
 
 // Types for our database schema
-export type IntegrationPlatform = 
+export type IntegrationPlatform =
   | 'twitter'
   | 'linkedin'
   | 'instagram'
@@ -23,11 +51,7 @@ export type IntegrationPlatform =
   | 'pinterest'
   | 'threads';
 
-export type IntegrationStatus = 
-  | 'active'
-  | 'expired'
-  | 'error'
-  | 'disconnected';
+export type IntegrationStatus = 'active' | 'expired' | 'error' | 'disconnected';
 
 export interface UserIntegration {
   id: string;
@@ -67,38 +91,44 @@ export class IntegrationService {
     accountName?: string
   ): Promise<UserIntegration> {
     // Use FIELD_ENCRYPTION_KEY (primary) with ENCRYPTION_KEY fallback for backward compatibility
-    const encryptionKey = process.env.FIELD_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY;
+    const encryptionKey =
+      process.env.FIELD_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY;
     if (!encryptionKey) {
-      throw new Error('FIELD_ENCRYPTION_KEY environment variable is required for credential encryption');
+      throw new Error(
+        'FIELD_ENCRYPTION_KEY environment variable is required for credential encryption'
+      );
     }
 
     // Encrypt credentials
     const encryptedCredentials = encryptCredentials(credentials, encryptionKey);
-    
+
     // Insert or update integration
     const { data, error } = await supabaseAdmin
       .from('user_integrations')
-      .upsert({
-        user_id: userId,
-        platform,
-        credentials: encryptedCredentials,
-        account_name: accountName,
-        status: 'active',
-        connected_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_id,platform'
-      })
+      .upsert(
+        {
+          user_id: userId,
+          platform,
+          credentials: encryptedCredentials,
+          account_name: accountName,
+          status: 'active',
+          connected_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'user_id,platform',
+        }
+      )
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     // Log the connection event
     await this.logEvent(userId, data.id, platform, 'connect');
-    
+
     return data;
   }
-  
+
   /**
    * Get all integrations for a user
    */
@@ -108,23 +138,29 @@ export class IntegrationService {
       .select('*')
       .eq('user_id', userId)
       .order('connected_at', { ascending: false });
-    
+
     if (error) throw error;
-    
+
     return data || [];
   }
-  
+
   /**
    * Get a specific integration with decrypted credentials (server-side only)
    */
   static async getIntegrationWithCredentials(
     userId: string,
     platform: IntegrationPlatform
-  ): Promise<{ integration: UserIntegration; credentials: Record<string, unknown> }> {
+  ): Promise<{
+    integration: UserIntegration;
+    credentials: Record<string, unknown>;
+  }> {
     // Use FIELD_ENCRYPTION_KEY (primary) with ENCRYPTION_KEY fallback for backward compatibility
-    const encryptionKey = process.env.FIELD_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY;
+    const encryptionKey =
+      process.env.FIELD_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY;
     if (!encryptionKey) {
-      throw new Error('FIELD_ENCRYPTION_KEY environment variable is required for credential decryption');
+      throw new Error(
+        'FIELD_ENCRYPTION_KEY environment variable is required for credential decryption'
+      );
     }
 
     // Get integration from database
@@ -135,19 +171,19 @@ export class IntegrationService {
       .eq('platform', platform)
       .eq('status', 'active')
       .single();
-    
+
     if (error) throw error;
     if (!data) throw new Error('Integration not found');
-    
+
     // Decrypt credentials
     const credentials = decryptCredentials(data.credentials, encryptionKey);
-    
+
     return {
       integration: data,
-      credentials
+      credentials,
     };
   }
-  
+
   /**
    * Disconnect an integration
    */
@@ -160,19 +196,19 @@ export class IntegrationService {
       .from('user_integrations')
       .update({
         status: 'disconnected',
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('user_id', userId)
       .eq('platform', platform)
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     // Log the disconnection event
     await this.logEvent(userId, data.id, platform, 'disconnect');
   }
-  
+
   /**
    * Update integration status
    */
@@ -187,14 +223,14 @@ export class IntegrationService {
       .update({
         status,
         error_message: errorMessage,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('user_id', userId)
       .eq('platform', platform);
-    
+
     if (error) throw error;
   }
-  
+
   /**
    * Log an integration event
    */
@@ -206,22 +242,20 @@ export class IntegrationService {
     eventData?: Record<string, unknown>,
     errorMessage?: string
   ): Promise<void> {
-    const { error } = await supabaseAdmin
-      .from('integration_logs')
-      .insert({
-        user_id: userId,
-        integration_id: integrationId,
-        platform,
-        event_type: eventType,
-        event_data: eventData,
-        error_message: errorMessage
-      });
-    
+    const { error } = await supabaseAdmin.from('integration_logs').insert({
+      user_id: userId,
+      integration_id: integrationId,
+      platform,
+      event_type: eventType,
+      event_data: eventData,
+      error_message: errorMessage,
+    });
+
     if (error) {
       console.error('Failed to log integration event:', error);
     }
   }
-  
+
   /**
    * Get integration statistics for a user
    */
@@ -230,12 +264,12 @@ export class IntegrationService {
       .from('integration_statistics')
       .select('*')
       .eq('user_id', userId);
-    
+
     if (error) throw error;
-    
+
     return data;
   }
-  
+
   /**
    * Validate platform credentials before saving
    */
@@ -251,15 +285,15 @@ export class IntegrationService {
       tiktok: ['accessToken', 'openId'],
       youtube: ['apiKey', 'refreshToken'],
       pinterest: ['accessToken'],
-      threads: ['accessToken', 'userId']
+      threads: ['accessToken', 'userId'],
     };
-    
+
     const required = requiredFields[platform] || [];
     const missing = required.filter(field => !credentials[field]);
-    
+
     return {
       valid: missing.length === 0,
-      missing
+      missing,
     };
   }
 }
