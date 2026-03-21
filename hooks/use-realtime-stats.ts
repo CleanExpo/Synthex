@@ -15,11 +15,11 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { createClient, RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { createClient, RealtimeChannel, RealtimePostgresChanhgesPayload } from '@supabase/supabase-js';
 
 // ============================================================================
 // TYPES
-// ============================================================================
+// ============================================================================h
 
 export interface DashboardStats {
   posts: {
@@ -322,7 +322,7 @@ export function useRealtimeStats(
           table,
           // filter: `user_id=eq.${userId}`, // Add if your tables have user_id
         },
-        (payload) => {
+        (payload: any) => {
           if (mountedRef.current) {
             setStats(current => mergeChanges(current, payload));
           }
@@ -332,7 +332,7 @@ export function useRealtimeStats(
 
     // Subscribe
     channel
-      .subscribe((status) => {
+      .subscribe((status: any) => {
         if (mountedRef.current) {
           setIsConnected(status === 'SUBSCRIBED');
 
