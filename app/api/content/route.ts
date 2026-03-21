@@ -28,38 +28,52 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || undefined;
     const platform = searchParams.get('platform') || undefined;
     const limitParam = searchParams.get('limit');
-    const take = limitParam ? Math.min(parseInt(limitParam, 10) || 50, 100) : 50;
+    const pageParam = searchParams.get('page');
+    const limit = limitParam ? Math.min(parseInt(limitParam, 10) || 50, 100) : 50;
+    const page = pageParam ? Math.max(parseInt(pageParam, 10) || 1, 1) : 1;
+    const skip = (page - 1) * limit;
 
     const organizationId = await getEffectiveOrganizationId(userId);
     const ownerFilter = organizationId ? { organizationId } : { userId };
 
-    const posts = await prisma.post.findMany({
-      where: {
-        campaign: { ...ownerFilter },
-        ...(status ? { status } : {}),
-        ...(platform ? { platform } : {}),
-      },
-      select: {
-        id: true,
-        content: true,
-        platform: true,
-        status: true,
-        scheduledAt: true,
-        publishedAt: true,
-        createdAt: true,
-        updatedAt: true,
-        metadata: true,
-        campaign: {
-          select: { id: true, name: true },
+    const whereClause = {
+      campaign: { ...ownerFilter },
+      ...(status ? { status } : {}),
+      ...(platform ? { platform } : {}),
+    };
+
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          content: true,
+          platform: true,
+          status: true,
+          scheduledAt: true,
+          publishedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          metadata: true,
+          campaign: {
+            select: { id: true, name: true },
+          },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-      take,
-    });
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip,
+      }),
+      prisma.post.count({ where: whereClause }),
+    ]);
 
     return NextResponse.json({
       data: posts,
-      total: posts.length,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     logger.error('[Content] Error:', error);

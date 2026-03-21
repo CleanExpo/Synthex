@@ -223,6 +223,7 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { createdAt: 'desc' },
+      take: 1000, // Safety cap for aggregation queries
     });
 
     // Calculate previous period for comparison
@@ -244,6 +245,7 @@ export async function GET(request: NextRequest) {
       select: {
         analytics: true,
       },
+      take: 1000, // Safety cap for aggregation queries
     });
 
     // Aggregate current period metrics

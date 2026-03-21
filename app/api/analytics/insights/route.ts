@@ -68,10 +68,11 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    // Get user's campaigns
+    // Get user's campaigns (capped at 500 — sufficient for aggregation)
     const userCampaigns = await prisma.campaign.findMany({
       where: { userId: security.context.userId },
-      select: { id: true }
+      select: { id: true },
+      take: 500,
     });
     const campaignIds = userCampaigns.map(c => c.id);
 

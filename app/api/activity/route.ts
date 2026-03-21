@@ -75,15 +75,16 @@ export async function GET(request: NextRequest) {
     // Get limit from query params
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get('limit') || '10', 10), 50);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1);
+    const offset = parseInt(searchParams.get('offset') || String((page - 1) * limit), 10);
 
     // Build user filter if authenticated
     const userId = security.context.userId;
     const userFilter = userId ? { userId } : {};
     const campaignFilter = userId ? { campaign: { userId } } : {};
 
-    // Fetch recent activities from multiple sources
-    const [posts, auditLogs] = await Promise.all([
+    // Fetch recent activities from multiple sources + counts for pagination
+    const [posts, auditLogs, postCount, auditCount] = await Promise.all([
       // Recent posts
       prisma.post.findMany({
         where: campaignFilter,
@@ -116,6 +117,19 @@ export async function GET(request: NextRequest) {
             skip: offset,
           })
         : Promise.resolve([]),
+
+      // Total post count for pagination
+      prisma.post.count({ where: campaignFilter }),
+
+      // Total audit log count for pagination
+      userId
+        ? prisma.auditLog.count({
+            where: {
+              userId,
+              category: { in: ['data', 'auth'] },
+            },
+          })
+        : Promise.resolve(0),
     ]);
 
     // Transform posts to activity items
@@ -184,10 +198,15 @@ export async function GET(request: NextRequest) {
         })
       : allActivities;
 
+    const totalActivities = postCount + auditCount;
     return NextResponse.json({
       activities: filteredActivities,
-      total: filteredActivities.length,
-      hasMore: filteredActivities.length === limit,
+      pagination: {
+        page,
+        limit,
+        total: totalActivities,
+        totalPages: Math.ceil(totalActivities / limit),
+      },
     });
   } catch (error) {
     logger.error('Activity feed error:', error);

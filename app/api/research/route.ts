@@ -66,19 +66,37 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
+    const limitParam = searchParams.get('limit');
+    const pageParam = searchParams.get('page');
+    const limit = limitParam ? Math.min(parseInt(limitParam, 10) || 50, 100) : 50;
+    const page = pageParam ? Math.max(parseInt(pageParam, 10) || 1, 1) : 1;
+    const skip = (page - 1) * limit;
 
     // Org-scoped for multi-business owners (SYN-392)
     const scopeFilter = await getEffectiveQueryFilter(userId);
     const where: Prisma.GEOResearchReportWhereInput = { ...scopeFilter };
     if (status) where.status = status;
 
-    const reports = await prisma.gEOResearchReport.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { visuals: true } } },
-    });
+    const [reports, total] = await Promise.all([
+      prisma.gEOResearchReport.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        include: { _count: { select: { visuals: true } } },
+        take: limit,
+        skip,
+      }),
+      prisma.gEOResearchReport.count({ where }),
+    ]);
 
-    return NextResponse.json({ reports, total: reports.length });
+    return NextResponse.json({
+      reports,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     logger.error('List research reports error:', error);
     return NextResponse.json(
