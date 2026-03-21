@@ -558,6 +558,10 @@ model Organization {
   gbpReviews    GBPReview[]
   gbpSnapshots  GBPSnapshot[]
 
+  // Autopilot Engine (Phase 132)
+  autopilotConfig AutopilotConfig?
+  autopilotRuns   AutopilotRun[]
+
   // Indices for multi-tenant queries
   @@index([slug])
   @@index([status])
@@ -4515,4 +4519,88 @@ model GBPSnapshot {
   @@index([organizationId, locationId])
   @@index([date])
   @@map("gbp_snapshots")
+}
+
+// ==========================================
+// Autopilot Engine (Phase 132)
+// AI-powered content generation, scoring, and scheduling autopilot
+// ==========================================
+
+/// Per-organisation autopilot configuration — controls generation cadence,
+/// quality thresholds, content mix, and feature toggles.
+model AutopilotConfig {
+  id                      String   @id @default(cuid())
+  organizationId          String   @unique @map("organization_id")
+  enabled                 Boolean  @default(false)
+  status                  String   @default("idle") // 'idle' | 'generating' | 'scheduling' | 'paused' | 'error'
+
+  // Cadence
+  postsPerDayPerPlatform  Int      @default(1) @map("posts_per_day_per_platform")
+  planningHorizonDays     Int      @default(7) @map("planning_horizon_days")
+
+  // Quality gates
+  minScoreThreshold       Int      @default(65) @map("min_score_threshold")
+  autoApproveThreshold    Int      @default(80) @map("auto_approve_threshold")
+
+  // Content strategy — weighted mix (values should sum to 100)
+  contentMix              Json     @default("{\"educational\":30,\"promotional\":20,\"engagement\":25,\"storytelling\":25}") @map("content_mix")
+
+  // Feature toggles
+  enableABTesting         Boolean  @default(false) @map("enable_ab_testing")
+  enableTrendContent      Boolean  @default(true) @map("enable_trend_content")
+  enableRepurposing       Boolean  @default(true) @map("enable_repurposing")
+
+  // Connected platforms for autopilot
+  enabledPlatforms        String[] @map("enabled_platforms")
+
+  // Runtime state
+  lastRunAt               DateTime? @map("last_run_at")
+  nextRunAt               DateTime? @map("next_run_at")
+  lastErrorMessage        String?   @map("last_error_message")
+
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([enabled, nextRunAt])
+  @@map("autopilot_configs")
+}
+
+/// Execution log for each autopilot run — tracks posts generated, scores,
+/// and outcomes for observability and the performance learner.
+model AutopilotRun {
+  id              String   @id @default(cuid())
+  organizationId  String   @map("organization_id")
+  runType         String   @map("run_type") // 'kickstart' | 'daily' | 'trend_react' | 'repurpose' | 'ab_test'
+  status          String   @default("running") // 'running' | 'completed' | 'partial' | 'failed'
+
+  // Metrics
+  postsGenerated  Int      @default(0) @map("posts_generated")
+  postsScheduled  Int      @default(0) @map("posts_scheduled")
+  postsDrafted    Int      @default(0) @map("posts_drafted")
+  postsRejected   Int      @default(0) @map("posts_rejected")
+  avgScore        Float?   @map("avg_score")
+
+  // References
+  postIds         String[] @map("post_ids")
+  campaignId      String?  @map("campaign_id")
+  inputSummary    Json?    @map("input_summary")
+  errorMessage    String?  @map("error_message")
+
+  // Timing
+  startedAt       DateTime @default(now()) @map("started_at")
+  completedAt     DateTime? @map("completed_at")
+  durationMs      Int?     @map("duration_ms")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, startedAt(sort: Desc)])
+  @@index([runType])
+  @@index([status])
+  @@map("autopilot_runs")
 }

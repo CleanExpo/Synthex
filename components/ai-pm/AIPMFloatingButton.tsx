@@ -1,12 +1,45 @@
 'use client';
 
-import { useState } from 'react';
-import { Sparkles, X } from '@/components/icons';
+import { useState, useEffect, useCallback } from 'react';
+import { Sparkles } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import AIPMPanel from './AIPMPanel';
 
+/**
+ * Open the AI PM panel with pre-filled context from anywhere in the app.
+ * Usage: `openAIPMWithContext("Explain why post X was scheduled at 9am")`
+ */
+export function openAIPMWithContext(context: string) {
+  window.dispatchEvent(
+    new CustomEvent('aipm:open-with-context', { detail: { context } })
+  );
+}
+
 export default function AIPMFloatingButton() {
   const [panelOpen, setPanelOpen] = useState(false);
+  const [initialContext, setInitialContext] = useState<string | null>(null);
+
+  // Listen for contextual open events
+  const handleContextEvent = useCallback((e: Event) => {
+    const detail = (e as CustomEvent<{ context: string }>).detail;
+    if (detail?.context) {
+      setInitialContext(detail.context);
+      setPanelOpen(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('aipm:open-with-context', handleContextEvent);
+    return () => {
+      window.removeEventListener('aipm:open-with-context', handleContextEvent);
+    };
+  }, [handleContextEvent]);
+
+  // Clear context when panel closes
+  const handleOpenChange = useCallback((open: boolean) => {
+    setPanelOpen(open);
+    if (!open) setInitialContext(null);
+  }, []);
 
   return (
     <>
@@ -32,7 +65,11 @@ export default function AIPMFloatingButton() {
       </button>
 
       {/* Panel (Sheet) */}
-      <AIPMPanel open={panelOpen} onOpenChange={setPanelOpen} />
+      <AIPMPanel
+        open={panelOpen}
+        onOpenChange={handleOpenChange}
+        initialContext={initialContext}
+      />
     </>
   );
 }

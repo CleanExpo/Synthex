@@ -21,12 +21,16 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { generateToken } from '@/lib/auth/jwt-utils';
 import { sendWelcomeSequenceDay0 } from '@/lib/email/billing-emails';
 import { seedVaultFromOnboarding } from '@/lib/vault/onboarding-seeder';
+import { runLaunchPipeline } from '@/lib/autopilot/launch-pipeline';
 
 // ============================================================================
 // POST — Complete Onboarding
@@ -65,8 +69,11 @@ export async function POST(request: NextRequest) {
 
     if (!org) {
       return NextResponse.json(
-        { error: 'No organisation found. Please complete the review step first.' },
-        { status: 400 },
+        {
+          error:
+            'No organisation found. Please complete the review step first.',
+        },
+        { status: 400 }
       );
     }
 
@@ -83,7 +90,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Run completion in a transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
       // 1. Create BusinessOwnership if missing
       const existingOwnership = await tx.businessOwnership.findFirst({
         where: { ownerId: user.id, organizationId: org.id },
@@ -111,17 +118,18 @@ export async function POST(request: NextRequest) {
       });
 
       // 3. Create persona from AI-suggested data
-      const personaName = (pipelineData?.suggestedPersonaName as string) || `${org.name} AI`;
-      const personaTone = (pipelineData?.suggestedTone as string) || 'professional';
+      const personaName =
+        (pipelineData?.suggestedPersonaName as string) || `${org.name} AI`;
+      const personaTone =
+        (pipelineData?.suggestedTone as string) || 'professional';
       const keyTopics = (pipelineData?.keyTopics as string[]) || [];
 
       await tx.persona.create({
         data: {
           name: personaName,
           tone: personaTone,
-          description: keyTopics.length > 0
-            ? `Topics: ${keyTopics.join(', ')}`
-            : null,
+          description:
+            keyTopics.length > 0 ? `Topics: ${keyTopics.join(', ')}` : null,
           status: 'active',
           userId: user.id,
         },
@@ -205,15 +213,35 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    logger.info('[complete] Onboarding completed', { userId: user.id, orgId: org.id });
+    // Launch autopilot content pipeline (fire-and-forget)
+    try {
+      runLaunchPipeline({ userId: user.id, organizationId: org.id }).catch(
+        err => {
+          logger.warn('[complete] Autopilot launch failed (non-fatal)', {
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      );
+    } catch {
+      // Non-fatal — autopilot will retry via daily cron
+    }
+
+    logger.info('[complete] Onboarding completed', {
+      userId: user.id,
+      orgId: org.id,
+    });
 
     return response;
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    logger.error('[complete] Onboarding completion failed', error instanceof Error ? error : undefined, { message: msg });
+    logger.error(
+      '[complete] Onboarding completion failed',
+      error instanceof Error ? error : undefined,
+      { message: msg }
+    );
     return NextResponse.json(
       { error: 'Failed to complete onboarding' },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

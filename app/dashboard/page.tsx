@@ -4,13 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
-import {
-  AlertTriangle,
-  MessageSquare,
-  RefreshCw,
-  Link2,
-} from '@/components/icons';
-import Link from 'next/link';
+import { AlertTriangle, MessageSquare, RefreshCw } from '@/components/icons';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
@@ -20,43 +14,19 @@ import {
   FetchError,
   formatTimeAgo,
   DashboardHeader,
-  QuickStats,
   AnimatedCard,
-  OverviewTab,
   GetStartedChecklist,
-  GamificationWidget,
   ContentSuggestionsWidget,
   FirstWeekWidget,
 } from '@/components/dashboard';
 import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
-import { InsightsWidget } from '@/components/insights/InsightsWidget';
 import { AllBusinessesDashboard } from '@/components/business/AllBusinessesDashboard';
-import { SystemPulsePanel } from '@/components/dashboard/SystemPulsePanel';
-import { UniteHubWidget } from '@/components/dashboard/UniteHubWidget';
 
-// Phase 5C — Loyalty Tier Card (framer-motion: client-only, no SSR)
-const LoyaltyTierCard = dynamic(
+// AI Command Centre — replaces returning-user widget soup (Phase 132)
+const AICommandCentre = dynamic(
   () =>
-    import('@/components/dashboard/LoyaltyTierCard').then(m => ({
-      default: m.LoyaltyTierCard,
-    })),
-  { ssr: false }
-);
-
-// UNI-1611 — User Health Score Widget (SWR client component, no SSR)
-const HealthScoreWidget = dynamic(
-  () =>
-    import('@/components/dashboard/HealthScoreWidget').then(m => ({
-      default: m.HealthScoreWidget,
-    })),
-  { ssr: false }
-);
-
-// SYN-430 — Auto-Research Widget (SWR client component, no SSR)
-const AutoResearchWidget = dynamic(
-  () =>
-    import('@/components/dashboard/AutoResearchWidget').then(m => ({
-      default: m.AutoResearchWidget,
+    import('@/components/command-centre').then(m => ({
+      default: m.AICommandCentre,
     })),
   { ssr: false }
 );
@@ -292,9 +262,6 @@ export default function DashboardPage() {
     stats.followers === 0 &&
     stats.scheduledPosts === 0;
 
-  const showOnboarding =
-    stats !== null && (stats.connectedPlatforms === 0 || isNewUser);
-
   return (
     <ErrorBoundary
       fallbackTitle="Dashboard Error"
@@ -339,69 +306,8 @@ export default function DashboardPage() {
             <ContentSuggestionsWidget />
           </div>
         ) : (
-          /* ── Returning user flow ────────────────────────────────────────── */
-          <div className="space-y-4">
-            {/* Zero-platform banner — auto-dismisses once a platform is connected */}
-            {stats && stats.connectedPlatforms === 0 && (
-              <div className="flex items-center justify-between px-5 py-3.5 border-[0.5px] border-amber-500/20 bg-amber-500/[0.04] rounded-sm">
-                <div className="flex items-center gap-3">
-                  <Link2 className="h-4 w-4 text-amber-400 shrink-0" />
-                  <p className="text-sm text-white/70">
-                    Connect your first platform to see real data in your
-                    dashboard.
-                  </p>
-                </div>
-                <Link
-                  href="/dashboard/platforms"
-                  className="shrink-0 ml-4 px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors"
-                >
-                  Connect now
-                </Link>
-              </div>
-            )}
-
-            {/* Stats data strip */}
-            <QuickStats stats={stats} />
-
-            {/* Onboarding checklist (if incomplete) */}
-            {showOnboarding && (
-              <AnimatedCard delay={0.1}>
-                <GetStartedChecklist
-                  hasConnections={stats.connectedPlatforms > 0}
-                  hasCampaigns={stats.scheduledPosts > 0}
-                  hasContent={stats.totalPosts > 0}
-                />
-              </AnimatedCard>
-            )}
-
-            {/* First week content */}
-            <FirstWeekWidget />
-
-            {/* Main overview */}
-            <OverviewTab stats={stats} />
-
-            {/* AI Insights */}
-            <InsightsWidget />
-
-            {/* Auto-Research — self-learning trend intelligence */}
-            <AutoResearchWidget />
-
-            {/* System health */}
-            <SystemPulsePanel />
-
-            {/* Unite-Group hub */}
-            <UniteHubWidget />
-
-            {/* User Health Score */}
-            <HealthScoreWidget />
-
-            {/* Gamification + Loyalty Tier + content suggestions */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <GamificationWidget />
-              <LoyaltyTierCard />
-              <ContentSuggestionsWidget />
-            </div>
-          </div>
+          /* ── Returning user flow — AI Command Centre ─────────────────── */
+          <AICommandCentre />
         )}
       </div>
     </ErrorBoundary>

@@ -17,9 +17,15 @@ import AIPMInput from './AIPMInput';
 interface AIPMPanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Pre-fill context for a contextual conversation (e.g., "Explain why post X was scheduled at 9am") */
+  initialContext?: string | null;
 }
 
-export default function AIPMPanel({ open, onOpenChange }: AIPMPanelProps) {
+export default function AIPMPanel({
+  open,
+  onOpenChange,
+  initialContext,
+}: AIPMPanelProps) {
   const {
     conversations,
     activeConversation,
@@ -41,6 +47,22 @@ export default function AIPMPanel({ open, onOpenChange }: AIPMPanelProps) {
       loadConversations();
     }
   }, [open, loadConversations]);
+
+  // Auto-create contextual conversation when opened with context
+  useEffect(() => {
+    if (open && initialContext) {
+      (async () => {
+        const convId = await createConversation(
+          initialContext.substring(0, 80)
+        );
+        if (convId) {
+          await sendMessage(initialContext);
+        }
+      })();
+    }
+    // Only run on open + context change, not on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialContext]);
 
   const handleNewConversation = useCallback(async () => {
     await createConversation();

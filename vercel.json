@@ -148,6 +148,14 @@
     {
       "path": "/api/cron/gsc-auto-index",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/autopilot",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/autopilot-learn",
+      "schedule": "0 8 * * 1"
     }
   ]
 }

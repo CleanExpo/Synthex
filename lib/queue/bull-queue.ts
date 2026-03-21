@@ -26,6 +26,7 @@ export const QUEUE_NAMES = {
   WORKFLOW_PARALLEL: 'workflow-parallel',
   BAYESIAN_OPTIMISATION: 'bayesian-optimisation',
   AUTONOMOUS_TASKS: 'autonomous-tasks',
+  AUTOPILOT_LAUNCH: 'autopilot-launch',
 } as const;
 
 // Job types
@@ -41,7 +42,9 @@ export type JobType =
   | 'bo:run-optimisation'
   | 'bo:train-forecast'
   | 'bo:train-spatiotemporal'
-  | 'autonomous:execute-task';
+  | 'autonomous:execute-task'
+  | 'autopilot:launch'
+  | 'autopilot:daily-batch';
 
 // Job data interfaces
 export interface ScheduledPostJobData {
@@ -137,7 +140,7 @@ export interface BOTrainSpatiotemporalJobData {
 export interface AutonomousTaskJobData {
   type: 'autonomous:execute-task';
   issueId: string;
-  identifier: string;  // e.g. "UNI-1181"
+  identifier: string; // e.g. "UNI-1181"
   title: string;
   description: string | null;
 }
@@ -217,7 +220,7 @@ export function getQueue(name: string): Queue {
       defaultJobOptions,
     });
 
-    queue.on('error', (error) => {
+    queue.on('error', error => {
       logger.error(`Queue ${name} error:`, { error });
     });
 
@@ -369,15 +372,12 @@ export async function queueMediaProcessing(
   mediaUrl: string,
   operations: Array<'resize' | 'compress' | 'watermark' | 'transcode'>
 ): Promise<Job<MediaProcessingJobData>> {
-  return addJob<MediaProcessingJobData>(
-    QUEUE_NAMES.MEDIA_PROCESSING,
-    {
-      type: 'process-media',
-      userId,
-      mediaUrl,
-      operations,
-    }
-  );
+  return addJob<MediaProcessingJobData>(QUEUE_NAMES.MEDIA_PROCESSING, {
+    type: 'process-media',
+    userId,
+    mediaUrl,
+    operations,
+  });
 }
 
 /**
@@ -389,22 +389,22 @@ export async function queueReportGeneration(
   dateRange: { start: string; end: string },
   format: 'pdf' | 'csv' | 'json' = 'pdf'
 ): Promise<Job<ReportJobData>> {
-  return addJob<ReportJobData>(
-    QUEUE_NAMES.REPORT_GENERATION,
-    {
-      type: 'generate-report',
-      userId,
-      reportType,
-      dateRange,
-      format,
-    }
-  );
+  return addJob<ReportJobData>(QUEUE_NAMES.REPORT_GENERATION, {
+    type: 'generate-report',
+    userId,
+    reportType,
+    dateRange,
+    format,
+  });
 }
 
 /**
  * Cancel a scheduled job
  */
-export async function cancelJob(queueName: string, jobId: string): Promise<boolean> {
+export async function cancelJob(
+  queueName: string,
+  jobId: string
+): Promise<boolean> {
   const queue = getQueue(queueName);
 
   try {
@@ -463,9 +463,7 @@ export async function cleanQueue(
  * Gracefully shutdown all queues
  */
 export async function shutdownQueues(): Promise<void> {
-  const closePromises = Array.from(queues.values()).map((queue) =>
-    queue.close()
-  );
+  const closePromises = Array.from(queues.values()).map(queue => queue.close());
 
   await Promise.all(closePromises);
   queues.clear();
@@ -493,7 +491,7 @@ export async function enqueueWorkflowBatch(
         { jobId: `workflow-batch-${batchId}-${index}` }
       )
     )
-  )
+  );
 }
 
 /**
@@ -513,7 +511,7 @@ export async function enqueueWorkflowStep(
       retryCount,
     },
     { jobId: `workflow-step-${workflowExecutionId}-${stepIndex}-${retryCount}` }
-  )
+  );
 }
 
 // Export queue events for monitoring
