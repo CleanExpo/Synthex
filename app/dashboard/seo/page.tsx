@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import {
   Card,
@@ -12,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { SEOFeatureGate } from '@/components/seo';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useSEODashboardStats } from '@/hooks/useSEODashboardStats';
 import { useToast } from '@/hooks/use-toast';
 import {
   Search,
@@ -165,13 +165,14 @@ function QuickStatCard({
 
 export default function SEODashboardPage() {
   const { subscription, isLoading } = useSubscription();
+  const { stats: seoStats, isLoading: statsLoading } = useSEODashboardStats();
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2 block">
             Optimisation
           </span>
           <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white flex items-center gap-3">
@@ -209,13 +210,33 @@ export default function SEODashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <QuickStatCard
             title="SEO Health Score"
-            value="85/100"
-            change="+5 this month"
+            value={
+              statsLoading
+                ? '—'
+                : seoStats?.healthScore?.value != null
+                  ? `${seoStats.healthScore.value}/100`
+                  : 'N/A'
+            }
+            change={
+              seoStats?.healthScore.change !== null &&
+              seoStats?.healthScore.change !== undefined
+                ? `${seoStats.healthScore.change >= 0 ? '+' : ''}${seoStats.healthScore.change} since last audit`
+                : 'No previous audit'
+            }
             icon={Target}
-            trend="up"
+            trend={
+              seoStats?.healthScore.change !== null &&
+              seoStats?.healthScore.change !== undefined
+                ? seoStats.healthScore.change > 0
+                  ? 'up'
+                  : seoStats.healthScore.change < 0
+                    ? 'down'
+                    : 'neutral'
+                : 'neutral'
+            }
           />
           <QuickStatCard
-            title="Pages Analyzed"
+            title="Pages Analysed"
             value={subscription?.usage?.seoPages?.toString() || '0'}
             change={`of ${subscription?.limits?.seoPages === -1 ? 'unlimited' : subscription?.limits?.seoPages || 0}`}
             icon={FileSearch}
@@ -223,17 +244,59 @@ export default function SEODashboardPage() {
           />
           <QuickStatCard
             title="Issues Found"
-            value="23"
-            change="-8 fixed"
+            value={
+              statsLoading
+                ? '—'
+                : seoStats?.issuesFound?.value != null
+                  ? String(seoStats.issuesFound.value)
+                  : 'N/A'
+            }
+            change={
+              seoStats?.issuesFound.change !== null &&
+              seoStats?.issuesFound.change !== undefined
+                ? seoStats.issuesFound.change <= 0
+                  ? `${Math.abs(seoStats.issuesFound.change)} fewer since last audit`
+                  : `${seoStats.issuesFound.change} more since last audit`
+                : 'No previous audit'
+            }
             icon={AlertTriangle}
-            trend="down"
+            trend={
+              seoStats?.issuesFound.change !== null &&
+              seoStats?.issuesFound.change !== undefined
+                ? seoStats.issuesFound.change < 0
+                  ? 'down'
+                  : seoStats.issuesFound.change > 0
+                    ? 'up'
+                    : 'neutral'
+                : 'neutral'
+            }
           />
           <QuickStatCard
             title="AI Visibility"
-            value="72%"
-            change="+12% this week"
+            value={
+              statsLoading
+                ? '—'
+                : seoStats?.aiVisibility?.value != null
+                  ? `${seoStats.aiVisibility.value}%`
+                  : 'N/A'
+            }
+            change={
+              seoStats?.aiVisibility.change !== null &&
+              seoStats?.aiVisibility.change !== undefined
+                ? `${seoStats.aiVisibility.change >= 0 ? '+' : ''}${seoStats.aiVisibility.change}% since last analysis`
+                : 'No previous analysis'
+            }
             icon={Eye}
-            trend="up"
+            trend={
+              seoStats?.aiVisibility.change !== null &&
+              seoStats?.aiVisibility.change !== undefined
+                ? seoStats.aiVisibility.change > 0
+                  ? 'up'
+                  : seoStats.aiVisibility.change < 0
+                    ? 'down'
+                    : 'neutral'
+                : 'neutral'
+            }
           />
         </div>
 
@@ -388,10 +451,10 @@ export default function SEODashboardPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-sm text-white/25">
+                      <span className="text-sm text-white/50">
                         {audit.date}
                       </span>
-                      <ArrowRight className="w-4 h-4 text-white/25" />
+                      <ArrowRight className="w-4 h-4 text-white/50" />
                     </div>
                   </div>
                 ))}
@@ -400,7 +463,7 @@ export default function SEODashboardPage() {
               {/* Empty state */}
               {false && (
                 <div className="text-center py-12">
-                  <Search className="w-12 h-12 text-white/25 mx-auto mb-4" />
+                  <Search className="w-12 h-12 text-white/50 mx-auto mb-4" />
                   <h3 className="text-base font-light text-white mb-2">
                     No audits yet
                   </h3>
