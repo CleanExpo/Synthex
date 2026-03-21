@@ -26,8 +26,6 @@ import {
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
 // =============================================================================
 // Data Fetching
@@ -274,8 +272,12 @@ function toJSON(data: AnalyticsData): string {
   return JSON.stringify(data, null, 2);
 }
 
-function toPDF(data: AnalyticsData): Uint8Array {
+async function toPDF(data: AnalyticsData): Promise<Uint8Array> {
   const { posts, campaigns, summary } = data;
+
+  // Lazy-load jsPDF + autoTable to keep the serverless bundle lean
+  const { jsPDF } = await import('jspdf');
+  const { default: autoTable } = await import('jspdf-autotable');
 
   // Create PDF document
   const doc = new jsPDF();
@@ -509,7 +511,7 @@ export async function GET(request: NextRequest) {
         filename = `synthex-analytics-${timestamp}.json`;
         break;
       case 'pdf':
-        content = toPDF(data);
+        content = await toPDF(data);
         contentType = 'application/pdf';
         filename = `synthex-analytics-${timestamp}.pdf`;
         break;

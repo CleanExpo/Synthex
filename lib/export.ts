@@ -3,8 +3,7 @@
  * Allows users to export their data in various formats
  */
 
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import type { jsPDF as JsPDFType } from 'jspdf';
 import { format } from 'date-fns';
 
 /** Cell value in export row */
@@ -65,24 +64,29 @@ interface ExportOptions {
  */
 export function exportToCSV(data: ExportData, filename = 'export.csv') {
   const { headers, rows } = data;
-  
+
   // Build CSV content
   const csvContent = [
     // Headers
     headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','),
     // Data rows
-    ...rows.map(row => 
-      row.map(cell => {
-        if (cell === null || cell === undefined) return '';
-        if (typeof cell === 'string') return `"${cell.replace(/"/g, '""')}"`;
-        if (cell instanceof Date) return `"${format(cell, 'yyyy-MM-dd HH:mm:ss')}"`;
-        return `"${String(cell)}"`;
-      }).join(',')
-    )
+    ...rows.map(row =>
+      row
+        .map(cell => {
+          if (cell === null || cell === undefined) return '';
+          if (typeof cell === 'string') return `"${cell.replace(/"/g, '""')}"`;
+          if (cell instanceof Date)
+            return `"${format(cell, 'yyyy-MM-dd HH:mm:ss')}"`;
+          return `"${String(cell)}"`;
+        })
+        .join(',')
+    ),
   ].join('\n');
-  
+
   // Create blob and download
-  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob(['\ufeff' + csvContent], {
+    type: 'text/csv;charset=utf-8;',
+  });
   downloadBlob(blob, filename);
 }
 
@@ -91,7 +95,7 @@ export function exportToCSV(data: ExportData, filename = 'export.csv') {
  */
 export function exportToJSON(data: ExportData, filename = 'export.json') {
   const { headers, rows, metadata } = data;
-  
+
   // Convert rows to objects
   const jsonData = rows.map(row => {
     const obj: Record<string, unknown> = {};
@@ -100,13 +104,13 @@ export function exportToJSON(data: ExportData, filename = 'export.json') {
     });
     return obj;
   });
-  
+
   // Include metadata if requested
   const exportData = metadata ? { metadata, data: jsonData } : jsonData;
-  
+
   // Create blob and download
-  const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
-    type: 'application/json' 
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+    type: 'application/json',
   });
   downloadBlob(blob, filename);
 }
@@ -114,41 +118,51 @@ export function exportToJSON(data: ExportData, filename = 'export.json') {
 /**
  * Export data to PDF format
  */
-export function exportToPDF(data: ExportData, filename = 'export.pdf') {
+export async function exportToPDF(data: ExportData, filename = 'export.pdf') {
   const { headers, rows, metadata } = data;
-  
+
+  // Lazy-load jsPDF + autoTable (~300kB) only when PDF export is requested
+  const { jsPDF } = await import('jspdf');
+  await import('jspdf-autotable');
+
   // Create PDF document
   const doc = new jsPDF({
     orientation: headers.length > 6 ? 'landscape' : 'portrait',
     unit: 'mm',
-    format: 'a4'
+    format: 'a4',
   });
-  
+
   // Add metadata
   let yPosition = 20;
-  
+
   if (metadata?.title) {
     doc.setFontSize(18);
     doc.text(metadata.title, 14, yPosition);
     yPosition += 10;
   }
-  
+
   if (metadata?.description) {
     doc.setFontSize(12);
     doc.text(metadata.description, 14, yPosition);
     yPosition += 8;
   }
-  
+
   if (metadata?.generatedAt) {
     doc.setFontSize(10);
-    doc.text(`Generated: ${format(metadata.generatedAt, 'PPpp')}`, 14, yPosition);
+    doc.text(
+      `Generated: ${format(metadata.generatedAt, 'PPpp')}`,
+      14,
+      yPosition
+    );
     yPosition += 8;
   }
-  
+
   // Add table - using type assertion for jspdf-autotable plugin
-  (doc as jsPDF & { autoTable: (options: Record<string, unknown>) => void }).autoTable({
+  (
+    doc as JsPDFType & { autoTable: (options: Record<string, unknown>) => void }
+  ).autoTable({
     head: [headers],
-    body: rows.map(row => 
+    body: rows.map(row =>
       row.map(cell => {
         if (cell === null || cell === undefined) return '';
         if (cell instanceof Date) return format(cell, 'yyyy-MM-dd HH:mm');
@@ -159,18 +173,18 @@ export function exportToPDF(data: ExportData, filename = 'export.pdf') {
     theme: 'grid',
     styles: {
       fontSize: 9,
-      cellPadding: 3
+      cellPadding: 3,
     },
     headStyles: {
       fillColor: [139, 92, 246], // Purple color
       textColor: 255,
-      fontStyle: 'bold'
+      fontStyle: 'bold',
     },
     alternateRowStyles: {
-      fillColor: [245, 245, 250]
-    }
+      fillColor: [245, 245, 250],
+    },
   });
-  
+
   // Add page numbers
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
@@ -182,7 +196,7 @@ export function exportToPDF(data: ExportData, filename = 'export.pdf') {
       doc.internal.pageSize.height - 10
     );
   }
-  
+
   // Save PDF
   doc.save(filename);
 }
@@ -194,7 +208,7 @@ export function exportToPDF(data: ExportData, filename = 'export.pdf') {
 export async function exportToExcel(data: ExportData, filename = 'export.csv') {
   // Using CSV export as safer alternative to vulnerable xlsx package
   return exportToCSV(data, filename);
-  
+
   /* Original XLSX code - disabled due to security vulnerability
   const XLSX = await import('xlsx');
   
@@ -239,24 +253,21 @@ export async function exportToExcel(data: ExportData, filename = 'export.csv') {
 /**
  * Universal export function
  */
-export async function exportData(
-  data: ExportData,
-  options: ExportOptions
-) {
+export async function exportData(data: ExportData, options: ExportOptions) {
   const timestamp = format(new Date(), 'yyyy-MM-dd-HHmmss');
   const defaultFilename = `export-${timestamp}`;
-  
+
   const filename = options.filename || `${defaultFilename}.${options.format}`;
-  
+
   // Add metadata
   const enrichedData = {
     ...data,
     metadata: {
       ...data.metadata,
-      generatedAt: new Date()
-    }
+      generatedAt: new Date(),
+    },
   };
-  
+
   switch (options.format) {
     case 'csv':
       exportToCSV(enrichedData, filename);
@@ -265,7 +276,7 @@ export async function exportData(
       exportToJSON(enrichedData, filename);
       break;
     case 'pdf':
-      exportToPDF(enrichedData, filename);
+      await exportToPDF(enrichedData, filename);
       break;
     case 'excel':
       await exportToExcel(enrichedData, filename);
@@ -302,8 +313,8 @@ export const exportHelpers = {
       c.status,
       c.platform,
       c.createdAt,
-      c.performance
-    ])
+      c.performance,
+    ]),
   }),
 
   // Format data for analytics
@@ -315,8 +326,8 @@ export const exportHelpers = {
       a.clicks,
       `${a.ctr}%`,
       a.conversions,
-      `$${a.revenue}`
-    ])
+      `$${a.revenue}`,
+    ]),
   }),
 
   // Format data for content
@@ -329,7 +340,7 @@ export const exportHelpers = {
       c.status,
       c.author,
       c.createdAt,
-      c.views
-    ])
-  })
+      c.views,
+    ]),
+  }),
 };

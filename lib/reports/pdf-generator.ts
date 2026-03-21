@@ -10,8 +10,8 @@
  * Uses jsPDF for PDF generation
  */
 
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+// Lazy-load jsPDF + autoTable to avoid bundling ~300kB on every import
+import type { jsPDF as JsPDFType } from 'jspdf';
 
 // ============================================================================
 // TYPES
@@ -165,24 +165,34 @@ function hexToRgb(hex: string): [number, number, number] {
 // ============================================================================
 
 export class PDFReportGenerator {
-  private doc: jsPDF;
+  private doc!: JsPDFType;
   private branding: BrandingConfig;
-  private pageWidth: number;
-  private pageHeight: number;
+  private pageWidth!: number;
+  private pageHeight!: number;
   private margin: number;
-  private currentY: number;
+  private currentY!: number;
+  private options: PDFOptions;
 
   constructor(options: PDFOptions = {}) {
-    this.doc = new jsPDF({
-      orientation: options.orientation || 'portrait',
-      unit: 'mm',
-      format: options.format || 'a4',
-    });
-
+    this.options = options;
     this.branding = { ...DEFAULT_BRANDING, ...options.branding };
+    this.margin = 20;
+  }
+
+  /**
+   * Lazily initialise the jsPDF document.
+   */
+  private async ensureDoc(): Promise<void> {
+    if (this.doc) return;
+    const { jsPDF } = await import('jspdf');
+    await import('jspdf-autotable');
+    this.doc = new jsPDF({
+      orientation: this.options.orientation || 'portrait',
+      unit: 'mm',
+      format: this.options.format || 'a4',
+    });
     this.pageWidth = this.doc.internal.pageSize.getWidth();
     this.pageHeight = this.doc.internal.pageSize.getHeight();
-    this.margin = 20;
     this.currentY = this.margin;
   }
 
@@ -190,6 +200,8 @@ export class PDFReportGenerator {
    * Generate PDF from report data
    */
   async generate(data: ReportData): Promise<Buffer> {
+    await this.ensureDoc();
+
     // Header
     this.addHeader(data.name, data.dateRange);
 

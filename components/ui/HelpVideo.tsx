@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, X } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import {
@@ -13,9 +13,27 @@ interface HelpVideoProps {
   className?: string;
 }
 
+/**
+ * Get all focusable elements within a container.
+ */
+function getFocusableElements(container: HTMLElement): HTMLElement[] {
+  const selectors = [
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])',
+    'iframe',
+  ].join(', ');
+  return Array.from(container.querySelectorAll<HTMLElement>(selectors));
+}
+
 export function HelpVideo({ videoId, className }: HelpVideoProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const video: EducationalVideo | undefined = EDUCATIONAL_VIDEOS.find(
     v => v.id === videoId
@@ -30,14 +48,53 @@ export function HelpVideo({ videoId, className }: HelpVideoProps) {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  // Close on Escape key
+  // Focus trapping + Escape key
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (!isOpen || !modalRef.current) return;
+
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        triggerRef.current?.focus();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        const focusable = getFocusableElements(modalRef.current);
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    },
+    [isOpen]
+  );
+
   useEffect(() => {
-    if (!isOpen) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsOpen(false);
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  // Move focus into the modal when it opens; restore when it closes
+  useEffect(() => {
+    if (isOpen && modalRef.current) {
+      const focusable = getFocusableElements(modalRef.current);
+      if (focusable.length > 0) {
+        focusable[0].focus();
+      }
+    }
   }, [isOpen]);
 
   if (!video) return null;
@@ -48,6 +105,7 @@ export function HelpVideo({ videoId, className }: HelpVideoProps) {
     <>
       {/* Trigger pill */}
       <button
+        ref={triggerRef}
         onClick={() => setIsOpen(true)}
         className={cn(
           'inline-flex items-center gap-1.5 px-3 py-1.5',
@@ -67,6 +125,7 @@ export function HelpVideo({ videoId, className }: HelpVideoProps) {
       {/* Modal overlay */}
       {isOpen && (
         <div
+          ref={modalRef}
           className={cn(
             'fixed inset-0 z-50 flex items-center justify-center p-4',
             'bg-black/80 backdrop-blur-xl',
@@ -92,7 +151,10 @@ export function HelpVideo({ videoId, className }: HelpVideoProps) {
                 {video.title}
               </p>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  triggerRef.current?.focus();
+                }}
                 className="shrink-0 p-1.5 rounded-sm text-white/40 hover:text-white/80 hover:bg-white/5 transition-colors"
                 aria-label="Close tutorial"
               >

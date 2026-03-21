@@ -9,10 +9,15 @@
  * - YOUTUBE_REFRESH_TOKEN: OAuth refresh token
  */
 
-import { google } from 'googleapis';
 import * as fs from 'fs';
 import * as path from 'path';
 import { logger } from '@/lib/logger';
+
+// Lazy-load googleapis to avoid pulling the entire SDK into every bundle
+async function loadGoogle() {
+  const { google } = await import('googleapis');
+  return google;
+}
 
 export interface VideoMetadata {
   title: string;
@@ -51,38 +56,66 @@ export const YOUTUBE_CATEGORIES = {
 };
 
 export class YouTubeUploader {
-  private oauth2Client: InstanceType<typeof google.auth.OAuth2>;
-  private youtube: ReturnType<typeof google.youtube>;
-  private _configured: boolean;
+  private oauth2Client: any;
+  private youtube: any;
 
-  constructor(credentials?: { clientId: string; clientSecret: string; refreshToken: string }) {
+  private _configured: boolean;
+  private _initialised: boolean = false;
+  private _credentials: {
+    clientId?: string;
+    clientSecret?: string;
+    refreshToken?: string;
+  };
+
+  constructor(credentials?: {
+    clientId: string;
+    clientSecret: string;
+    refreshToken: string;
+  }) {
     const clientId = credentials?.clientId ?? process.env.YOUTUBE_CLIENT_ID;
-    const clientSecret = credentials?.clientSecret ?? process.env.YOUTUBE_CLIENT_SECRET;
-    const refreshToken = credentials?.refreshToken ?? process.env.YOUTUBE_REFRESH_TOKEN;
+    const clientSecret =
+      credentials?.clientSecret ?? process.env.YOUTUBE_CLIENT_SECRET;
+    const refreshToken =
+      credentials?.refreshToken ?? process.env.YOUTUBE_REFRESH_TOKEN;
 
     if (!clientId || !clientSecret) {
       console.warn('[YouTubeUploader] Missing YouTube API credentials');
     }
 
     this._configured = !!(clientId && clientSecret && refreshToken);
-    this.oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
+    this._credentials = { clientId, clientSecret, refreshToken };
+  }
 
-    if (refreshToken) {
+  /**
+   * Lazily initialise the Google API clients on first use.
+   */
+  private async ensureInitialised(): Promise<void> {
+    if (this._initialised) return;
+    const google = await loadGoogle();
+    this.oauth2Client = new google.auth.OAuth2(
+      this._credentials.clientId,
+      this._credentials.clientSecret
+    );
+    if (this._credentials.refreshToken) {
       this.oauth2Client.setCredentials({
-        refresh_token: refreshToken,
+        refresh_token: this._credentials.refreshToken,
       });
     }
-
     this.youtube = google.youtube({
       version: 'v3',
       auth: this.oauth2Client,
     });
+    this._initialised = true;
   }
 
   /**
    * Create an uploader from explicit credentials (e.g. decrypted DB tokens)
    */
-  static fromCredentials(clientId: string, clientSecret: string, refreshToken: string): YouTubeUploader {
+  static fromCredentials(
+    clientId: string,
+    clientSecret: string,
+    refreshToken: string
+  ): YouTubeUploader {
     return new YouTubeUploader({ clientId, clientSecret, refreshToken });
   }
 
@@ -96,7 +129,11 @@ export class YouTubeUploader {
   /**
    * Upload video to YouTube
    */
-  async uploadVideo(videoPath: string, metadata: VideoMetadata): Promise<UploadResult> {
+  async uploadVideo(
+    videoPath: string,
+    metadata: VideoMetadata
+  ): Promise<UploadResult> {
+    await this.ensureInitialised();
     if (!this.isConfigured()) {
       throw new Error(
         'YouTube API not configured. Set YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, and YOUTUBE_REFRESH_TOKEN'
@@ -113,7 +150,9 @@ export class YouTubeUploader {
     });
 
     const fileSize = fs.statSync(videoPath).size;
-    logger.info('YouTubeUploader file info', { fileSizeMB: (fileSize / 1024 / 1024).toFixed(2) });
+    logger.info('YouTubeUploader file info', {
+      fileSizeMB: (fileSize / 1024 / 1024).toFixed(2),
+    });
 
     const response = await this.youtube.videos.insert({
       part: ['snippet', 'status'],
@@ -148,7 +187,8 @@ export class YouTubeUploader {
       } catch (thumbErr) {
         logger.warn('YouTubeUploader thumbnail upload skipped', {
           videoId,
-          reason: thumbErr instanceof Error ? thumbErr.message : String(thumbErr),
+          reason:
+            thumbErr instanceof Error ? thumbErr.message : String(thumbErr),
         });
       }
     }
@@ -170,6 +210,7 @@ export class YouTubeUploader {
    * Upload custom thumbnail
    */
   async uploadThumbnail(videoId: string, thumbnailPath: string): Promise<void> {
+    await this.ensureInitialised();
     logger.info('YouTubeUploader uploading thumbnail', { videoId });
 
     await this.youtube.thumbnails.set({
@@ -186,6 +227,7 @@ export class YouTubeUploader {
    * Add video to playlist
    */
   async addToPlaylist(videoId: string, playlistId: string): Promise<void> {
+    await this.ensureInitialised();
     logger.info('YouTubeUploader adding to playlist', { videoId, playlistId });
 
     await this.youtube.playlistItems.insert({
@@ -212,6 +254,7 @@ export class YouTubeUploader {
     description: string,
     privacyStatus: 'public' | 'private' | 'unlisted' = 'public'
   ): Promise<string> {
+    await this.ensureInitialised();
     logger.info('YouTubeUploader creating playlist', { title });
 
     const response = await this.youtube.playlists.insert({
@@ -239,7 +282,11 @@ export class YouTubeUploader {
   /**
    * Update video metadata
    */
-  async updateVideo(videoId: string, metadata: Partial<VideoMetadata>): Promise<void> {
+  async updateVideo(
+    videoId: string,
+    metadata: Partial<VideoMetadata>
+  ): Promise<void> {
+    await this.ensureInitialised();
     logger.info('YouTubeUploader updating video', { videoId });
 
     await this.youtube.videos.update({
@@ -267,6 +314,7 @@ export class YouTubeUploader {
    * Get video details
    */
   async getVideo(videoId: string) {
+    await this.ensureInitialised();
     return this.youtube.videos.list({
       part: ['snippet', 'statistics', 'status'],
       id: [videoId],
