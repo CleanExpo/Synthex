@@ -19,7 +19,6 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { AIContentGenerator } from '@/lib/ai/content-generator';
 import type { ContentRequest } from '@/lib/ai/content-generator';
-import { postingTimePredictor } from '@/lib/ml/posting-time-predictor';
 import type { Platform } from '@/lib/ml/posting-time-predictor';
 import { planDailyContent } from '@/lib/autopilot/daily-planner';
 import { evaluateContent, scoreDimensions } from '@/lib/autopilot/quality-gate';
@@ -297,9 +296,7 @@ interface SlotInput {
   minScoreThreshold: number;
 }
 
-async function generateSlotContent(
-  input: SlotInput
-): Promise<{
+async function generateSlotContent(input: SlotInput): Promise<{
   postId: string;
   score: number;
   status: 'scheduled' | 'draft' | 'rejected';
@@ -359,6 +356,8 @@ async function generateSlotContent(
   let scheduledAt = input.slot.date;
   if (VALID_PLATFORMS.includes(input.slot.platform as Platform)) {
     try {
+      const { postingTimePredictor } =
+        await import('@/lib/ml/posting-time-predictor');
       const timeResult = await postingTimePredictor.getOptimalTimes(
         input.userId,
         input.slot.platform as Platform,

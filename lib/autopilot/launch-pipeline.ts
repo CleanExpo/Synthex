@@ -17,7 +17,6 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { AIContentGenerator } from '@/lib/ai/content-generator';
 import type { ContentRequest } from '@/lib/ai/content-generator';
-import { postingTimePredictor } from '@/lib/ml/posting-time-predictor';
 import type { Platform } from '@/lib/ml/posting-time-predictor';
 import { evaluateContent, scoreDimensions } from './quality-gate';
 import { allocateSlots } from './content-strategy';
@@ -390,6 +389,8 @@ async function generateAndGatePost(
   let scheduledAt = slot.date;
   if (VALID_PLATFORMS_FOR_PREDICTOR.includes(slot.platform as Platform)) {
     try {
+      const { postingTimePredictor } =
+        await import('@/lib/ml/posting-time-predictor');
       const timeResult = await postingTimePredictor.getOptimalTimes(
         input.userId,
         slot.platform as Platform,
