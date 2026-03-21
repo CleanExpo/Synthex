@@ -324,7 +324,9 @@ export async function GET(request: NextRequest) {
     const parentId = searchParams.get('parentId');
     const includeReplies = searchParams.get('includeReplies') !== 'false';
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const pageParam = searchParams.get('page');
+    const page = pageParam ? Math.max(parseInt(pageParam, 10) || 1, 1) : null;
+    const offset = page ? (page - 1) * limit : parseInt(searchParams.get('offset') || '0', 10);
 
     if (!contentType || !contentId) {
       return NextResponse.json(
@@ -387,8 +389,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       comments: enrichedComments,
-      total,
-      hasMore: (comments?.length || 0) === limit,
+      pagination: {
+        page: page ?? Math.floor(offset / limit) + 1,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     logger.error('Get comments error:', error);
