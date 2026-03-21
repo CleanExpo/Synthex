@@ -27,7 +27,7 @@ import {
   type MetricType,
   type TimeGranularity,
   type ExportFormat,
-} from '@/src/services/analytics/report-builder';
+} from '@/lib/analytics/report-builder';
 
 // Validation schema for report generation
 const GenerateReportSchema = z.object({

@@ -12,7 +12,7 @@ import {
   del,
   getImplementationType
 } from '@/lib/redis-unified';
-import { withOptionalSession } from '@/src/middleware/session';
+import { withOptionalSession } from '@/lib/middleware/session';
 import { logger } from '@/lib/logger';
 
 interface PerfStats {

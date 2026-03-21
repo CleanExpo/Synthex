@@ -25,7 +25,7 @@ import {
   type VariationConfig,
   type VariationStrategy,
   type PlatformStyle,
-} from '@/src/services/ai/content-variations';
+} from '@/lib/ai/content-variations';
 
 // ============================================================================
 // POST - Generate Variations

@@ -2,15 +2,39 @@ import { createClient } from '@supabase/supabase-js';
 import { encryptCredentials, decryptCredentials } from './encryption';
 
 // Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
 // Public client for client-side operations
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabase: any = null;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const supabase: any = new Proxy({}, {
+  get(_, prop) {
+    if (!_supabase) {
+      _supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+    }
+    return (_supabase as Record<string, unknown>)[prop as string];
+  },
+});
 
 // Service client for server-side operations (has elevated privileges)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabaseAdmin: any = null;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const supabaseAdmin: any = new Proxy({}, {
+  get(_, prop) {
+    if (!_supabaseAdmin) {
+      _supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+    }
+    return (_supabaseAdmin as Record<string, unknown>)[prop as string];
+  },
+});
 
 // Types for our database schema
 export type IntegrationPlatform = 

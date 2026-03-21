@@ -240,9 +240,9 @@ DATABASE_URL=http://user:pass@localhost:5432/db
 
     it('should check for exposed secrets in patterns', async () => {
       const exposedSecrets = `
-AWS_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
-GITHUB_TOKEN=ghp_16CharactersSecretsToken1234567890
-STRIPE_KEY=sk_test_4eC39HqLyjWDarjtT1zdp7dc
+AWS_ACCESS_KEY=REDACTED_FOR_ARCHIVE
+GITHUB_TOKEN=REDACTED_FOR_ARCHIVE
+STRIPE_KEY=REDACTED_FOR_ARCHIVE
 `;
       await fs.writeFile(testEnvFile, exposedSecrets);
 

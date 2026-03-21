@@ -19,7 +19,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
-import { CalendarService, type ScheduleOptions } from '@/src/services/content/calendar-service';
+import { CalendarService, type ScheduleOptions } from '@/lib/content/calendar-service';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 

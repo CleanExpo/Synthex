@@ -26,7 +26,7 @@ import {
   getUpstashConfig,
   determineRedisMode,
   RedisHealthStatus,
-} from '../src/config/redis.config';
+} from '@/lib/config/redis.config';
 
 // ============================================================================
 // TYPES

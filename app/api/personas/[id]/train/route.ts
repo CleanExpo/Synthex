@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-import { PersonaTrainingPipeline, TrainingSource } from '@/src/services/ai/persona-training-pipeline';
+import { PersonaTrainingPipeline, TrainingSource } from '@/lib/ai/persona-training-pipeline';
 import { logger } from '@/lib/logger';
 
 // ============================================================================

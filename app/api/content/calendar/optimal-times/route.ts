@@ -15,7 +15,7 @@
 import { NextRequest } from 'next/server';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
-import { CalendarService } from '@/src/services/content/calendar-service';
+import { CalendarService } from '@/lib/content/calendar-service';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
 // ============================================================================

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cachedRoute } from '@/src/middleware/cache-middleware';
+import { cachedRoute } from '@/lib/middleware/cache-middleware';
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
@@ -19,10 +19,17 @@ interface PatternRecord {
 }
 
 // Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+let _supabase: ReturnType<typeof createClient> | null = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 async function handler(req: NextRequest) {
   try {
@@ -32,7 +39,7 @@ async function handler(req: NextRequest) {
     const timeframe = searchParams.get('timeframe') || '7d';
     
     // Fetch viral patterns from database
-    let query = supabase
+    let query = getSupabase()
       .from('viral_patterns')
       .select('*')
       .order('engagement_rate', { ascending: false })
@@ -65,9 +72,9 @@ async function handler(req: NextRequest) {
     }
     
     // Calculate trending score
-    const patternsWithScore = (data || []).map(pattern => ({
-      ...pattern,
-      trendingScore: calculateTrendingScore(pattern),
+    const patternsWithScore = (data || []).map((pattern) => ({
+      ...(pattern as Record<string, unknown>),
+      trendingScore: calculateTrendingScore(pattern as PatternRecord),
       cacheTimestamp: new Date().toISOString()
     }));
     

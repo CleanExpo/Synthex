@@ -11,7 +11,7 @@ import { getAuthUser } from '@/lib/supabase-server';
 import {
   getAutoScalingConfig,
   getMonitoringThresholds,
-} from '../../../../src/config/scaling.config';
+} from '@/lib/config/scaling.config';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';

@@ -14,20 +14,14 @@ module.exports = {
     '<rootDir>/tests/contract/**/*.spec.{ts,tsx,js}',
     '<rootDir>/tests/strategic-marketing/**/*.test.{ts,tsx,js}',
     '<rootDir>/tests/strategic-marketing/**/*.spec.{ts,tsx,js}',
-    '<rootDir>/src/**/*.test.{ts,tsx,js}',
-    '<rootDir>/src/**/*.spec.{ts,tsx,js}',
-    '<rootDir>/src/**/__tests__/**/*.{ts,tsx,js}',
     '<rootDir>/__tests__/**/*.test.{ts,tsx,js}',
     '<rootDir>/__tests__/**/*.spec.{ts,tsx,js}',
   ],
 
   // Coverage configuration
   collectCoverageFrom: [
-    'src/**/*.{ts,js}',
-    '!src/**/*.d.ts',
-    '!src/index.ts',
-    '!src/index-legacy.ts',
-    '!src/testing/**',
+    'lib/**/*.{ts,js}',
+    '!lib/**/*.d.ts',
     '!**/node_modules/**',
     '!**/dist/**',
   ],
@@ -69,7 +63,6 @@ module.exports = {
   moduleNameMapper: {
     '^@/components/(.*)$': '<rootDir>/components/$1',
     '^@/lib/(.*)$': '<rootDir>/lib/$1',
-    '^@/src/(.*)$': '<rootDir>/src/$1',
     '^@/hooks/(.*)$': '<rootDir>/hooks/$1',
     '^@/utils/(.*)$': '<rootDir>/utils/$1',
     '^@/types/(.*)$': '<rootDir>/types/$1',
@@ -85,8 +78,6 @@ module.exports = {
     '/coverage/',
     '/tests/e2e/',
     '/tests/playwright/',
-    // Temporarily ignore ESM test files that need migration
-    'src/tests/optimizers.test.js',
   ],
 
   // Reporter configuration
