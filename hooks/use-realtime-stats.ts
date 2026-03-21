@@ -147,7 +147,7 @@ export function useRealtimeStats(
 
     try {
       // Fetch posts stats
-      const { data: postsData, error: postsError } = await supabase
+      const { data: postsData, error: postsError } = await getSupabase()
         .from('posts')
         .select('status')
         .eq('campaign_id', userId); // Adjust based on your schema
@@ -156,13 +156,13 @@ export function useRealtimeStats(
 
       const postStats = {
         total: postsData?.length || 0,
-        published: postsData?.filter(p => p.status === 'published').length || 0,
-        scheduled: postsData?.filter(p => p.status === 'scheduled').length || 0,
-        draft: postsData?.filter(p => p.status === 'draft').length || 0,
+        published: postsData?.filter((p: any) => p.status === 'published').length || 0,
+        scheduled: postsData?.filter((p: any) => p.status === 'scheduled').length || 0,
+        draft: postsData?.filter((p: any) => p.status === 'draft').length || 0,
       };
 
       // Fetch engagement metrics
-      const { data: metricsData, error: metricsError } = await supabase
+      const { data: metricsData, error: metricsError } = await getSupabase()
         .from('platform_metrics')
         .select('likes, comments, shares, views')
         .limit(100);
@@ -170,7 +170,7 @@ export function useRealtimeStats(
       if (metricsError) throw metricsError;
 
       const engagementStats = (metricsData || []).reduce(
-        (acc, m) => ({
+        (acc: any, m: any) => ({
           totalLikes: acc.totalLikes + (m.likes || 0),
           totalComments: acc.totalComments + (m.comments || 0),
           totalShares: acc.totalShares + (m.shares || 0),
@@ -310,7 +310,7 @@ export function useRealtimeStats(
     if (!userId || !enableRealtime) return;
 
     // Create channel
-    const channel = supabase.channel(`stats:${userId}`);
+    const channel = getSupabase().channel(`stats:${userId}`);
 
     // Subscribe to each table
     for (const table of tables) {
@@ -351,7 +351,7 @@ export function useRealtimeStats(
 
     return () => {
       if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
+        getSupabase().removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
