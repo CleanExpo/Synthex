@@ -32,10 +32,17 @@ function sanitizeHtml(html: string): string {
     .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+let _supabase: ReturnType<typeof createClient> | null = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -98,7 +105,7 @@ export async function POST(request: NextRequest) {
 
     // Log email send attempt
     try {
-      await supabase.from('email_logs').insert({
+      await getSupabase().from('email_logs').insert({
         to,
         subject,
         type: type || 'custom',

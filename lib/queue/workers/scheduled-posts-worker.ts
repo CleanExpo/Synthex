@@ -16,10 +16,17 @@ import { LinkedInService } from '@/lib/social/linkedin-service';
 import { twitterService } from '@/lib/social/twitter-service';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+let _supabase: ReturnType<typeof createClient> | null = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Get Redis connection
 function getRedisConnection() {
@@ -50,13 +57,13 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
 
   try {
     // Update status to processing
-    await supabase
+    await getSupabase()
       .from('scheduled_posts')
       .update({ status: 'processing' })
       .eq('id', postId);
 
     // Get user's platform connection
-    const { data: connection, error: connectionError } = await supabase
+    const { data: connection, error: connectionError } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -204,7 +211,7 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
     }
 
     // Update scheduled post status
-    await supabase
+    await getSupabase()
       .from('scheduled_posts')
       .update({
         status: 'published',
@@ -214,7 +221,7 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
       .eq('id', postId);
 
     // Create social_posts record
-    await supabase.from('social_posts').insert({
+    await getSupabase().from('social_posts').insert({
       user_id: userId,
       platform,
       content,
@@ -226,7 +233,7 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
     });
 
     // Track usage
-    await supabase.from('usage_tracking').insert({
+    await getSupabase().from('usage_tracking').insert({
       user_id: userId,
       feature: `${platform}_scheduled_post`,
       count: 1,
@@ -234,7 +241,7 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
     });
 
     // Send notification to user
-    await supabase.from('notifications').insert({
+    await getSupabase().from('notifications').insert({
       user_id: userId,
       title: 'Scheduled Post Published',
       message: `Your scheduled ${platform} post has been published successfully.`,
@@ -251,7 +258,7 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
     logger.error(`Failed to publish scheduled post ${postId}:`, { error });
 
     // Update status to failed
-    await supabase
+    await getSupabase()
       .from('scheduled_posts')
       .update({
         status: 'failed',
@@ -260,7 +267,7 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
       .eq('id', postId);
 
     // Send failure notification
-    await supabase.from('notifications').insert({
+    await getSupabase().from('notifications').insert({
       user_id: userId,
       title: 'Scheduled Post Failed',
       message: `Your scheduled ${platform} post failed to publish: ${error instanceof Error ? error.message : String(error)}`,

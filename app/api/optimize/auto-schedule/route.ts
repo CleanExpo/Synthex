@@ -22,10 +22,17 @@ import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getContentSchedulingWeights } from '@/lib/bayesian/surfaces/content-scheduling';
 import { registerObservationSilently } from '@/lib/bayesian/fallback';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+let _supabase: ReturnType<typeof createClient> | null = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Request validation schemas
 const OptimalTimesSchema = z.object({
@@ -294,7 +301,7 @@ export async function POST(request: NextRequest) {
 
     for (const postId of validated.postIds) {
       // Fetch post to determine content type and platforms
-      const { data: post } = await supabase
+      const { data: post } = await getSupabase()
         .from('scheduled_posts')
         .select('*')
         .eq('id', postId)
@@ -342,7 +349,7 @@ export async function POST(request: NextRequest) {
 
       if (bestTime) {
         // Update post with scheduled time
-        await supabase
+        await getSupabase()
           .from('scheduled_posts')
           .update({
             scheduled_time: bestTime.toISOString(),
@@ -444,7 +451,7 @@ export async function PUT(request: NextRequest) {
     const validated = settingsSchema.parse(body);
 
     // Update user settings
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('user_settings')
       .upsert({
         user_id: userId,

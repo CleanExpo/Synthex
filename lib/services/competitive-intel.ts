@@ -14,10 +14,17 @@
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+let _supabase: ReturnType<typeof createClient> | null = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 export type Platform =
   | 'instagram'
@@ -196,7 +203,7 @@ class CompetitiveIntelligence {
         addedAt: new Date(),
       };
 
-      await supabase.from('competitors').insert({
+      await getSupabase().from('competitors').insert({
         id: competitor.id,
         user_id: userId,
         name: competitor.name,
@@ -229,7 +236,7 @@ class CompetitiveIntelligence {
     } = {}
   ): Promise<Competitor[]> {
     try {
-      let query = supabase
+      let query = getSupabase()
         .from('competitors')
         .select('*')
         .eq('user_id', userId)
@@ -280,7 +287,7 @@ class CompetitiveIntelligence {
     platform: Platform
   ): Promise<CompetitorProfile | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('competitor_profiles')
         .select('*')
         .eq('competitor_id', competitorId)
@@ -328,7 +335,7 @@ class CompetitiveIntelligence {
     try {
       const { limit = 50, startDate, endDate } = options;
 
-      let query = supabase
+      let query = getSupabase()
         .from('competitor_content')
         .select('*')
         .eq('competitor_id', competitorId)
@@ -829,7 +836,7 @@ class CompetitiveIntelligence {
   ): Promise<MetricSet> {
     // Get user's own metrics from analytics
     try {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('analytics_summary')
         .select('*')
         .eq('user_id', userId)
@@ -867,7 +874,7 @@ class CompetitiveIntelligence {
     period: { start: Date; end: Date }
   ): Promise<MetricSet> {
     try {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('competitor_metrics')
         .select('*')
         .eq('competitor_id', competitorId)
@@ -1111,7 +1118,7 @@ class CompetitiveIntelligence {
     platform: Platform
   ): Promise<Set<string>> {
     try {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('posts')
         .select('themes')
         .eq('user_id', userId)

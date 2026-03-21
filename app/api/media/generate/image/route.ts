@@ -26,10 +26,17 @@ import { logger } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+let _supabase: ReturnType<typeof createClient> | null = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Request validation schema
 const ImageGenerationSchema = z.object({
@@ -152,7 +159,7 @@ export async function POST(request: NextRequest) {
     // Save to media library if requested
     let mediaAssetId: string | undefined;
     if (validated.saveToLibrary && result.imageBase64) {
-      const { data: asset, error: saveError } = await supabase
+      const { data: asset, error: saveError } = await getSupabase()
         .from('media_assets')
         .insert({
           user_id: userId,
@@ -254,7 +261,7 @@ export async function PUT(request: NextRequest) {
     if (validated.saveToLibrary) {
       for (const result of results) {
         if (result.success && result.imageBase64) {
-          const { data: asset } = await supabase
+          const { data: asset } = await getSupabase()
             .from('media_assets')
             .insert({
               user_id: userId,

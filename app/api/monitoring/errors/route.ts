@@ -6,10 +6,17 @@ import { logger } from '@/lib/logger';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 // Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+let _supabase: ReturnType<typeof createClient> | null = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 /** Error log entry structure */
 interface ErrorLogEntry {
@@ -58,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (authHeader) {
       try {
         const token = authHeader.replace('Bearer ', '');
-        const { data: { user } } = await supabase.auth.getUser(token);
+        const { data: { user } } = await getSupabase().auth.getUser(token);
         if (user) {
           error.userId = user.id;
           error.userEmail = user.email;

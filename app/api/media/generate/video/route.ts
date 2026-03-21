@@ -30,10 +30,17 @@ import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+let _supabase: ReturnType<typeof createClient> | null = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Request validation schemas
 const VideoGenerationSchema = z.object({
@@ -215,7 +222,7 @@ export async function POST(request: NextRequest) {
     // Save to media library if video is processing/complete
     let mediaAssetId: string | undefined;
     if (validated.saveToLibrary && result.videoId) {
-      const { data: asset, error: saveError } = await supabase
+      const { data: asset, error: saveError } = await getSupabase()
         .from('media_assets')
         .insert({
           user_id: userId,
@@ -369,7 +376,7 @@ export async function GET(request: NextRequest) {
 
     // Update media asset if status changed
     if (result.videoUrl) {
-      await supabase
+      await getSupabase()
         .from('media_assets')
         .update({
           status: result.status,
@@ -455,7 +462,7 @@ export async function PUT(request: NextRequest) {
 
       // Save to library
       if (req.saveToLibrary && result.videoId) {
-        const { data: asset } = await supabase
+        const { data: asset } = await getSupabase()
           .from('media_assets')
           .insert({
             user_id: userId,

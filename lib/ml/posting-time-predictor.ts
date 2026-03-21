@@ -94,16 +94,20 @@ const INDUSTRY_OPTIMAL_TIMES: Record<Platform, Array<{ day: number; hour: number
 };
 
 class PostingTimePredictor {
-  private supabase: SupabaseClient;
+  private _supabase: SupabaseClient | null = null;
   private cache: Map<string, { result: OptimalTimeResult; expiry: number }> = new Map();
   private readonly CACHE_TTL = 3600000; // 1 hour
   private readonly MIN_DATA_POINTS = 10; // Minimum posts needed for reliable prediction
 
-  constructor() {
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+  /** Lazy Supabase client — avoids crash during Next.js build when env vars are missing */
+  private get supabase(): SupabaseClient {
+    if (!this._supabase) {
+      this._supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+    }
+    return this._supabase;
   }
 
   /**

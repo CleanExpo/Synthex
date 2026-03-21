@@ -1,16 +1,35 @@
 import { createClient } from '@supabase/supabase-js';
 import { encryptCredentials, decryptCredentials } from './encryption';
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// Lazy Supabase clients — avoids crash during Next.js build when env vars are missing
+let _supabase: ReturnType<typeof createClient> | null = null;
+let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
 
 // Public client for client-side operations
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
+  get(_, prop) {
+    if (!_supabase) {
+      _supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+    }
+    return (_supabase as Record<string, unknown>)[prop as string];
+  },
+});
 
 // Service client for server-side operations (has elevated privileges)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+export const supabaseAdmin = new Proxy({} as ReturnType<typeof createClient>, {
+  get(_, prop) {
+    if (!_supabaseAdmin) {
+      _supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+    }
+    return (_supabaseAdmin as Record<string, unknown>)[prop as string];
+  },
+});
 
 // Types for our database schema
 export type IntegrationPlatform = 
