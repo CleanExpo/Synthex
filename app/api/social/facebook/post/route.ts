@@ -19,10 +19,18 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
+    );
+  }
+  return _supabase;
+}
 
 const GRAPH_API_BASE = 'https://graph.facebook.com/v19.0';
 
@@ -150,7 +158,7 @@ export async function POST(request: NextRequest) {
     const postData: PostRequest = validation.data;
 
     // Get user's Facebook connection
-    const { data: connection, error: connectionError } = await supabase
+    const { data: connection, error: connectionError } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -235,7 +243,7 @@ export async function POST(request: NextRequest) {
       );
 
       // Save to database
-      await supabase.from('scheduled_posts').insert({
+      await getSupabase().from('scheduled_posts').insert({
         user_id: userId,
         platform: 'facebook',
         content: postData.message,
@@ -349,7 +357,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Save post to database
-    await supabase.from('social_posts').insert({
+    await getSupabase().from('social_posts').insert({
       user_id: userId,
       platform: 'facebook',
       content: postData.message,
@@ -362,7 +370,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Track usage
-    await supabase.from('usage_tracking').insert({
+    await getSupabase().from('usage_tracking').insert({
       user_id: userId,
       feature: 'facebook_post',
       count: 1,
@@ -423,7 +431,7 @@ export async function GET(request: NextRequest) {
     const pageId = searchParams.get('pageId');
     const syncFromPlatform = searchParams.get('sync') === 'true';
 
-    const { data: connection } = await supabase
+    const { data: connection } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -466,7 +474,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const { data: posts, error } = await supabase
+    const { data: posts, error } = await getSupabase()
       .from('social_posts')
       .select('*')
       .eq('user_id', userId)

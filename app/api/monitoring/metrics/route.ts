@@ -4,10 +4,18 @@ import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
 // Initialize Supabase client for server-side operations
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,11 +23,11 @@ export async function GET(request: NextRequest) {
     const now = new Date();
     
     // Fetch database metrics
-    const { count: userCount } = await supabase
+    const { count: userCount } = await getSupabase()
       .from('profiles')
       .select('*', { count: 'exact', head: true });
     
-    const { count: postCount } = await supabase
+    const { count: postCount } = await getSupabase()
       .from('content_posts')
       .select('*', { count: 'exact', head: true });
     

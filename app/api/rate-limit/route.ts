@@ -15,10 +15,18 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // Initialize Supabase
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // GET: Get rate limit status
 export async function GET(req: NextRequest) {
@@ -35,7 +43,7 @@ export async function GET(req: NextRequest) {
     const status = await getRateLimitStatus(userId);
     
     // Get user's subscription info
-    const { data: user } = await supabase
+    const { data: user } = await getSupabase()
       .from('users')
       .select('email, subscription_plan, rate_limit_override')
       .eq('id', userId)
@@ -82,7 +90,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Verify user exists
-    const { data: user } = await supabase
+    const { data: user } = await getSupabase()
       .from('users')
       .select('id, email')
       .eq('id', userId)
@@ -99,7 +107,7 @@ export async function POST(req: NextRequest) {
     await resetRateLimits(userId);
     
     // Log admin action
-    await supabase
+    await getSupabase()
       .from('audit_logs')
       .insert({
         action: 'rate_limit_reset',
@@ -153,7 +161,7 @@ export async function PATCH(req: NextRequest) {
     }
     
     // Update user's custom rate limit
-    const { data: user, error } = await supabase
+    const { data: user, error } = await getSupabase()
       .from('users')
       .update({ rate_limit_override: limit })
       .eq('id', userId)
@@ -168,7 +176,7 @@ export async function PATCH(req: NextRequest) {
     }
     
     // Log admin action
-    await supabase
+    await getSupabase()
       .from('audit_logs')
       .insert({
         action: 'rate_limit_update',

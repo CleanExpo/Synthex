@@ -21,10 +21,18 @@ import { auditLogger } from '@/lib/security/audit-logger';
 import { createPlatformService } from '@/lib/social';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
+    );
+  }
+  return _supabase;
+}
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 const YOUTUBE_UPLOAD_BASE = 'https://www.googleapis.com/upload/youtube/v3';
@@ -83,7 +91,7 @@ export async function POST(request: NextRequest) {
     const postType = searchParams.get('type') || 'video';
 
     // Get user's YouTube connection
-    const { data: connection, error: connectionError } = await supabase
+    const { data: connection, error: connectionError } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -130,7 +138,7 @@ export async function POST(request: NextRequest) {
     // Handle scheduled uploads
     if (videoData.scheduledTime) {
       // Save to database for processing
-      const { data: scheduledPost, error: scheduleError } = await supabase
+      const { data: scheduledPost, error: scheduleError } = await getSupabase()
         .from('scheduled_posts')
         .insert({
           user_id: userId,
@@ -260,7 +268,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Save to database
-    await supabase.from('social_posts').insert({
+    await getSupabase().from('social_posts').insert({
       user_id: userId,
       platform: 'youtube',
       content: `${videoData.title}\n\n${videoData.description || ''}`,
@@ -273,7 +281,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Track usage
-    await supabase.from('usage_tracking').insert({
+    await getSupabase().from('usage_tracking').insert({
       user_id: userId,
       feature: 'youtube_upload',
       count: 1,
@@ -335,7 +343,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20', 10);
     const syncFromPlatform = searchParams.get('sync') === 'true';
 
-    const { data: connection } = await supabase
+    const { data: connection } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -389,7 +397,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const { data: posts, error } = await supabase
+    const { data: posts, error } = await getSupabase()
       .from('social_posts')
       .select('*')
       .eq('user_id', userId)

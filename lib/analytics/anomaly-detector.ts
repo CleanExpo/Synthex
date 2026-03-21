@@ -11,13 +11,20 @@
  */
 
 import { randomUUID } from 'crypto';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@getSupabase()/getSupabase()-js';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build when env vars are missing
+let _supabase: SupabaseClient | null = null;
+function getSupabase(): SupabaseClient {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Anomaly severity levels
 export type AnomalySeverity = 'low' | 'medium' | 'high' | 'critical';
@@ -624,7 +631,7 @@ class AnomalyDetector {
     userId: string
   ): Promise<Record<MetricType, AnomalyDetectionConfig>> {
     try {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('anomaly_detection_configs')
         .select('*')
         .eq('user_id', userId);
@@ -665,7 +672,7 @@ class AnomalyDetector {
     try {
       const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-      let query = supabase
+      let query = getSupabase()
         .from('analytics_metrics')
         .select('value, recorded_at')
         .eq('user_id', userId)
@@ -705,7 +712,7 @@ class AnomalyDetector {
     filters: { platform?: string; accountId?: string }
   ): Promise<Array<{ value: number; timestamp: Date }>> {
     try {
-      let query = supabase
+      let query = getSupabase()
         .from('analytics_metrics')
         .select('value, recorded_at')
         .eq('user_id', userId)
@@ -748,7 +755,7 @@ class AnomalyDetector {
         Date.now() - cooldownMinutes * 60 * 1000
       );
 
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('anomalies')
         .select('id')
         .eq('user_id', userId)
@@ -768,7 +775,7 @@ class AnomalyDetector {
    */
   private async saveAnomaly(anomaly: Anomaly): Promise<void> {
     try {
-      await supabase.from('anomalies').insert({
+      await getSupabase().from('anomalies').insert({
         id: anomaly.id,
         user_id: anomaly.userId,
         account_id: anomaly.accountId,
@@ -804,7 +811,7 @@ class AnomalyDetector {
         const alertId = `alert_${randomUUID()}`;
 
         // Save alert record
-        await supabase.from('anomaly_alerts').insert({
+        await getSupabase().from('anomaly_alerts').insert({
           id: alertId,
           anomaly_id: anomaly.id,
           user_id: anomaly.userId,
@@ -862,7 +869,7 @@ class AnomalyDetector {
    * Send in-app notification
    */
   private async sendInAppAlert(anomaly: Anomaly): Promise<void> {
-    await supabase.from('notifications').insert({
+    await getSupabase().from('notifications').insert({
       user_id: anomaly.userId,
       type: 'anomaly_detected',
       title: `${anomaly.severity.toUpperCase()}: ${anomaly.metricType} Anomaly Detected`,
@@ -894,7 +901,7 @@ class AnomalyDetector {
     } = {}
   ): Promise<{ anomalies: Anomaly[]; total: number }> {
     try {
-      let query = supabase
+      let query = getSupabase()
         .from('anomalies')
         .select('*', { count: 'exact' })
         .eq('user_id', userId)
@@ -968,7 +975,7 @@ class AnomalyDetector {
     notes?: string
   ): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('anomalies')
         .update({
           acknowledged: true,
@@ -995,7 +1002,7 @@ class AnomalyDetector {
     resolution?: string
   ): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('anomalies')
         .update({
           acknowledged: true,
@@ -1023,7 +1030,7 @@ class AnomalyDetector {
     config: Partial<AnomalyDetectionConfig>
   ): Promise<boolean> {
     try {
-      await supabase.from('anomaly_detection_configs').upsert({
+      await getSupabase().from('anomaly_detection_configs').upsert({
         user_id: userId,
         metric_type: metricType,
         enabled: config.enabled,
@@ -1060,7 +1067,7 @@ class AnomalyDetector {
     try {
       const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('anomalies')
         .select('severity, anomaly_type, metric_type, acknowledged, detected_at')
         .eq('user_id', userId)
@@ -1157,4 +1164,11 @@ class AnomalyDetector {
   }
 }
 
-export const anomalyDetector = new AnomalyDetector();
+// Lazy singleton — only instantiated when first accessed at runtime
+let _anomalyDetectorInstance: AnomalyDetector | null = null;
+export const anomalyDetector = new Proxy({} as AnomalyDetector, {
+  get(_, prop) {
+    if (!_anomalyDetectorInstance) _anomalyDetectorInstance = new AnomalyDetector();
+    return (_anomalyDetectorInstance as Record<string, unknown>)[prop as string];
+  },
+});

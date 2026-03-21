@@ -26,10 +26,18 @@ import { clientManagement } from '@/lib/services/client-management';
 import { logger } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Request validation schemas
 const CreateClientSchema = z.object({
@@ -120,7 +128,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Get user's organization
-    const { data: userOrg } = await supabase
+    const { data: userOrg } = await getSupabase()
       .from('organization_members')
       .select('organization_id')
       .eq('user_id', userId)
@@ -281,7 +289,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create client
-    const { data: userOrg } = await supabase
+    const { data: userOrg } = await getSupabase()
       .from('organization_members')
       .select('organization_id')
       .eq('user_id', userId)

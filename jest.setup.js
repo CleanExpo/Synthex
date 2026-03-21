@@ -4,9 +4,16 @@ import '@testing-library/jest-dom';
 // Mock environment variables
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
+process.env.SUPABASE_URL = 'http://localhost:54321';
+process.env.SUPABASE_ANON_KEY = 'test-anon-key';
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
 process.env.DATABASE_URL = 'postgresql://test';
 process.env.JWT_SECRET = 'test-secret';
 process.env.OWNER_EMAILS = 'test@synthex.social';
+process.env.OPENROUTER_API_KEY = 'test-openrouter-key';
+process.env.CRON_SECRET = 'test-cron-secret';
+process.env.ENCRYPTION_KEY = 'test-encryption-key-32-chars-long';
+process.env.FIELD_ENCRYPTION_KEY = 'test-field-encryption-key-32chars';
 
 // Mock fetch
 global.fetch = jest.fn();

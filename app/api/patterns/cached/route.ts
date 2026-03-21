@@ -19,10 +19,18 @@ interface PatternRecord {
 }
 
 // Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 async function handler(req: NextRequest) {
   try {
@@ -32,7 +40,7 @@ async function handler(req: NextRequest) {
     const timeframe = searchParams.get('timeframe') || '7d';
     
     // Fetch viral patterns from database
-    let query = supabase
+    let query = getSupabase()
       .from('viral_patterns')
       .select('*')
       .order('engagement_rate', { ascending: false })

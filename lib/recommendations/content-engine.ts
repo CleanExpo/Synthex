@@ -14,10 +14,18 @@
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 export type Platform =
   | 'instagram'
@@ -556,7 +564,7 @@ class ContentRecommendationEngine {
   ): Promise<ContentFormatRecommendation> {
     try {
       // Get user's format performance
-      const { data: formatData } = await supabase
+      const { data: formatData } = await getSupabase()
         .from('posts')
         .select('content_type, engagement_rate')
         .eq('user_id', userId)
@@ -647,7 +655,7 @@ class ContentRecommendationEngine {
 
       for (const platform of platforms) {
         // Get user's content themes
-        const { data: userContent } = await supabase
+        const { data: userContent } = await getSupabase()
           .from('posts')
           .select('themes, engagement_rate')
           .eq('user_id', userId)
@@ -704,7 +712,7 @@ class ContentRecommendationEngine {
     recommendationId: string
   ): Promise<boolean> {
     try {
-      await supabase.from('dismissed_recommendations').insert({
+      await getSupabase().from('dismissed_recommendations').insert({
         user_id: userId,
         recommendation_id: recommendationId,
         dismissed_at: new Date().toISOString(),
@@ -726,7 +734,7 @@ class ContentRecommendationEngine {
   ): Promise<{ success: boolean; result?: Record<string, unknown> }> {
     try {
       // Log application
-      await supabase.from('applied_recommendations').insert({
+      await getSupabase().from('applied_recommendations').insert({
         user_id: userId,
         recommendation_id: recommendationId,
         action,
@@ -750,7 +758,7 @@ class ContentRecommendationEngine {
     platforms: Platform[]
   ): Promise<Array<{ platform: string; date: string; [key: string]: unknown }>> {
     try {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('analytics_summary')
         .select('*')
         .eq('user_id', userId)
@@ -767,7 +775,7 @@ class ContentRecommendationEngine {
 
   private async getUserTimezone(userId: string): Promise<string> {
     try {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('user_settings')
         .select('timezone')
         .eq('user_id', userId)
@@ -784,7 +792,7 @@ class ContentRecommendationEngine {
     platform: Platform
   ): Promise<Array<{ dayOfWeek: number; hour: number; engagementRate: number }>> {
     try {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('posts')
         .select('published_at, engagement_rate')
         .eq('user_id', userId)

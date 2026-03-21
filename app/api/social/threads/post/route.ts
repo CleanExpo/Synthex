@@ -22,10 +22,18 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Request validation schema
 const PostRequestSchema = z.object({
@@ -83,7 +91,7 @@ export async function POST(request: NextRequest) {
     const postData: PostRequest = validation.data;
 
     // Get user's Threads connection
-    const { data: connection, error: connectionError } = await supabase
+    const { data: connection, error: connectionError } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -117,7 +125,7 @@ export async function POST(request: NextRequest) {
     // Handle scheduled posts
     if (postData.scheduledAt) {
       // Save to database for later processing
-      const { data: scheduledPost, error: scheduleError } = await supabase
+      const { data: scheduledPost, error: scheduleError } = await getSupabase()
         .from('scheduled_posts')
         .insert({
           user_id: userId,
@@ -178,7 +186,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Save post to database
-    const { data: savedPost } = await supabase
+    const { data: savedPost } = await getSupabase()
       .from('social_posts')
       .insert({
         user_id: userId,
@@ -195,7 +203,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     // Track usage
-    await supabase.from('usage_tracking').insert({
+    await getSupabase().from('usage_tracking').insert({
       user_id: userId,
       feature: 'threads_post',
       count: 1,
@@ -273,7 +281,7 @@ export async function GET(request: NextRequest) {
     const syncFromPlatform = searchParams.get('sync') === 'true';
 
     // Get user's Threads connection
-    const { data: connection, error: connectionError } = await supabase
+    const { data: connection, error: connectionError } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -305,7 +313,7 @@ export async function GET(request: NextRequest) {
       if (syncResult.success) {
         // Update database with synced posts
         for (const post of syncResult.posts) {
-          await supabase
+          await getSupabase()
             .from('social_posts')
             .upsert({
               user_id: userId,
@@ -332,7 +340,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get posts from database
-    const { data: posts, error } = await supabase
+    const { data: posts, error } = await getSupabase()
       .from('social_posts')
       .select('*')
       .eq('user_id', userId)

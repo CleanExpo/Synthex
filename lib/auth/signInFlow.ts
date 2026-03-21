@@ -50,7 +50,15 @@ const JWT_SECRET = (() => {
 })();
 
 // Initialize Supabase client once
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Lazy Supabase client — avoids crash during Next.js build
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+  return _supabase;
+}
 
 /** OAuth user data from provider */
 interface OAuthUserData {
@@ -145,7 +153,7 @@ export class SignInFlow {
     }
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await getSupabase().auth.signInWithPassword({
         email,
         password
       });

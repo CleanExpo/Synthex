@@ -16,10 +16,18 @@ import { LinkedInService } from '@/lib/social/linkedin-service';
 import { twitterService } from '@/lib/social/twitter-service';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Supabase client — avoids crash during Next.js build
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 function getRedisConnection() {
   const redisUrl = process.env.REDIS_URL;
@@ -49,7 +57,7 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
 
   try {
     // Get user's platform connection
-    const { data: connection, error: connectionError } = await supabase
+    const { data: connection, error: connectionError } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('id', connectionId)
@@ -251,7 +259,7 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
     }
 
     // Store analytics snapshot
-    await supabase.from('platform_analytics_snapshots').insert({
+    await getSupabase().from('platform_analytics_snapshots').insert({
       user_id: userId,
       platform,
       connection_id: connectionId,
@@ -260,7 +268,7 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
     });
 
     // Update connection with latest metrics
-    await supabase
+    await getSupabase()
       .from('platform_connections')
       .update({
         last_metrics: analyticsResult.metrics,
@@ -276,7 +284,7 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
     logger.error(`Failed to collect analytics for ${platform}:`, { error });
 
     // Update connection with error
-    await supabase
+    await getSupabase()
       .from('platform_connections')
       .update({
         last_sync_error: error instanceof Error ? error.message : String(error),
