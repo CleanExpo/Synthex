@@ -3,6 +3,7 @@
  *
  * GET /api/seo/search-console/sitemaps
  * Returns sitemap status from Google Search Console.
+ * Uses per-org OAuth if PlatformConnection exists, else service account fallback.
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - JWT_SECRET: Token signing key (CRITICAL)
@@ -10,7 +11,13 @@
  */
 
 import { NextRequest } from 'next/server';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
+import { findOAuthConnection } from '@/lib/google/google-auth';
+import { listSitemaps } from '@/lib/google/search-console-oauth';
 import { getSitemapStatus } from '@/lib/google/search-console';
 import { logger } from '@/lib/logger';
 
@@ -64,11 +71,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const sitemaps = await getSitemapStatus(siteUrl);
+    // Try OAuth first, fall back to service account
+    const organizationId = await getEffectiveOrganizationId(userId);
+    const connectionId = organizationId
+      ? await findOAuthConnection(organizationId, 'searchconsole')
+      : null;
+
+    let sitemaps;
+
+    if (connectionId) {
+      sitemaps = await listSitemaps(siteUrl, { connectionId });
+    } else {
+      sitemaps = await getSitemapStatus(siteUrl);
+    }
 
     return APISecurityChecker.createSecureResponse({
       success: true,
       sitemaps,
+      source: connectionId ? 'oauth' : 'service_account',
     });
   } catch (error) {
     logger.error('Sitemaps API error:', error);

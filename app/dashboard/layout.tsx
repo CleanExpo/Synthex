@@ -249,6 +249,11 @@ const sidebarGroups: Array<{
       { icon: Shield, label: 'Authority', href: '/dashboard/authority' },
       { icon: Map, label: 'Local SEO', href: '/dashboard/local' },
       {
+        icon: Map,
+        label: 'Google Business',
+        href: '/dashboard/google-business',
+      },
+      {
         icon: ShieldExclamation,
         label: 'Sentinel',
         href: '/dashboard/sentinel',

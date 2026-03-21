@@ -551,6 +551,13 @@ model Organization {
   longestStreak   Int      @default(0)
   timezone        String   @default("Australia/Sydney")
 
+  // Google Search Console + Business Profile (Phase 128)
+  gscProperties GSCProperty[]
+  gscSnapshots  GSCSnapshot[]
+  gbpLocations  GBPLocation[]
+  gbpReviews    GBPReview[]
+  gbpSnapshots  GBPSnapshot[]
+
   // Indices for multi-tenant queries
   @@index([slug])
   @@index([status])
@@ -4380,4 +4387,132 @@ model TrendInsight {
   @@index([runId])
   @@index([confidence])
   @@map("trend_insights")
+}
+
+// ============================================================================
+// Google Search Console + Business Profile (Phase 128)
+// ============================================================================
+
+/// Connected Google Search Console property per organisation.
+/// Links an org to a verified GSC site via OAuth PlatformConnection.
+model GSCProperty {
+  id              String    @id @default(cuid())
+  organizationId  String    @map("organization_id")
+  connectionId    String    @map("connection_id") // PlatformConnection for 'searchconsole'
+  siteUrl         String    @map("site_url") // e.g. "sc-domain:example.com" or "https://example.com/"
+  permissionLevel String?   @map("permission_level") // siteOwner, siteFullUser, siteRestrictedUser, siteUnverifiedUser
+  isPrimary       Boolean   @default(false) @map("is_primary")
+  lastSyncedAt    DateTime? @map("last_synced_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, siteUrl])
+  @@index([organizationId])
+  @@index([connectionId])
+  @@map("gsc_properties")
+}
+
+/// Daily snapshot of GSC metrics for trend tracking.
+model GSCSnapshot {
+  id              String   @id @default(cuid())
+  organizationId  String   @map("organization_id")
+  siteUrl         String   @map("site_url")
+  date            DateTime @db.Date
+  clicks          Int      @default(0)
+  impressions     Int      @default(0)
+  ctr             Float    @default(0)
+  position        Float    @default(0)
+  indexedPages     Int?    @map("indexed_pages")
+  errorPages       Int?    @map("error_pages")
+  warningPages     Int?    @map("warning_pages")
+  excludedPages    Int?    @map("excluded_pages")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, siteUrl, date])
+  @@index([organizationId, siteUrl])
+  @@index([date])
+  @@map("gsc_snapshots")
+}
+
+/// Connected Google Business Profile location per organisation.
+model GBPLocation {
+  id              String    @id @default(cuid())
+  organizationId  String    @map("organization_id")
+  connectionId    String    @map("connection_id") // PlatformConnection for 'googlebusiness'
+  locationId      String    @map("location_id") // GBP location resource name
+  locationName    String    @map("location_name")
+  address         Json?     // { addressLines, locality, region, postalCode, country }
+  phone           String?
+  website         String?
+  categories      Json?     // { primaryCategory, additionalCategories }
+  hours           Json?     // regularHours and specialHours
+  verified        Boolean   @default(false)
+  isPrimary       Boolean   @default(false) @map("is_primary")
+  lastSyncedAt    DateTime? @map("last_synced_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  reviews      GBPReview[]
+
+  @@unique([organizationId, locationId])
+  @@index([organizationId])
+  @@index([connectionId])
+  @@map("gbp_locations")
+}
+
+/// Google Business Profile review with reply tracking and AI suggestion.
+model GBPReview {
+  id              String    @id @default(cuid())
+  organizationId  String    @map("organization_id")
+  locationId      String    @map("location_id") // GBPLocation.id (internal)
+  gbpReviewId     String    @map("gbp_review_id") // Google's review resource name
+  reviewerName    String?   @map("reviewer_name")
+  reviewerAvatar  String?   @map("reviewer_avatar")
+  rating          Int       // 1-5 stars
+  comment         String?   @db.Text
+  reviewTime      DateTime  @map("review_time")
+  replyText       String?   @map("reply_text") @db.Text
+  replyTime       DateTime? @map("reply_time")
+  aiSuggestion    String?   @map("ai_suggestion") @db.Text // AI-generated reply suggestion
+  aiSuggestionAt  DateTime? @map("ai_suggestion_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  location     GBPLocation  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, gbpReviewId])
+  @@index([organizationId])
+  @@index([locationId])
+  @@index([rating])
+  @@index([reviewTime])
+  @@map("gbp_reviews")
+}
+
+/// Daily snapshot of GBP performance metrics for trend tracking.
+model GBPSnapshot {
+  id              String   @id @default(cuid())
+  organizationId  String   @map("organization_id")
+  locationId      String   @map("location_id")
+  date            DateTime @db.Date
+  searchViews     Int?     @map("search_views")
+  mapsViews       Int?     @map("maps_views")
+  websiteClicks   Int?     @map("website_clicks")
+  phoneClicks     Int?     @map("phone_clicks")
+  directionClicks Int?     @map("direction_clicks")
+  totalReviews    Int?     @map("total_reviews")
+  averageRating   Float?   @map("average_rating")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, locationId, date])
+  @@index([organizationId, locationId])
+  @@index([date])
+  @@map("gbp_snapshots")
 }

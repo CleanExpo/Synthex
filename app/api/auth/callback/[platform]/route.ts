@@ -56,7 +56,8 @@ const oauthConfigs: Record<string, OAuthConfig> = {
   },
   twitter: {
     tokenUrl: 'https://api.twitter.com/2/oauth2/token',
-    userInfoUrl: 'https://api.twitter.com/2/users/me?user.fields=profile_image_url,name,username',
+    userInfoUrl:
+      'https://api.twitter.com/2/users/me?user.fields=profile_image_url,name,username',
     // Twitter OAuth 2.0 uses Basic auth for confidential clients
     useBasicAuth: true,
   },
@@ -74,13 +75,15 @@ const oauthConfigs: Record<string, OAuthConfig> = {
   },
   tiktok: {
     tokenUrl: 'https://open.tiktokapis.com/v2/oauth/token/',
-    userInfoUrl: 'https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name,avatar_url',
+    userInfoUrl:
+      'https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name,avatar_url',
     useJsonBody: true,
     clientIdParam: 'client_key',
   },
   youtube: {
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    userInfoUrl: 'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
+    userInfoUrl:
+      'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
   },
   pinterest: {
     tokenUrl: 'https://api.pinterest.com/v5/oauth/token',
@@ -96,7 +99,8 @@ const oauthConfigs: Record<string, OAuthConfig> = {
   },
   threads: {
     tokenUrl: 'https://graph.threads.net/oauth/access_token',
-    userInfoUrl: 'https://graph.threads.net/v1.0/me?fields=id,username,name,threads_profile_picture_url',
+    userInfoUrl:
+      'https://graph.threads.net/v1.0/me?fields=id,username,name,threads_profile_picture_url',
   },
   searchconsole: {
     tokenUrl: 'https://oauth2.googleapis.com/token',
@@ -110,6 +114,11 @@ const oauthConfigs: Record<string, OAuthConfig> = {
   googleanalytics: {
     tokenUrl: 'https://oauth2.googleapis.com/token',
     // Standard userinfo — GA4 property data is fetched on demand using stored tokens
+    userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
+  },
+  googlebusiness: {
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    // Standard userinfo — GBP location data is fetched on demand using stored tokens
     userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
   },
 };
@@ -136,7 +145,7 @@ function escapeForJs(str: string): string {
     .replace(/"/g, '\\"')
     .replace(/\n/g, '\\n')
     .replace(/\r/g, '\\r')
-    .replace(/<\//g, '<\\/');  // prevent </script> injection
+    .replace(/<\//g, '<\\/'); // prevent </script> injection
 }
 
 /**
@@ -150,7 +159,10 @@ function buildPostMessageHtml(
   fallbackText?: string
 ): string {
   const safePlatform = escapeForJs(platform);
-  const safeText = escapeForHtml(fallbackText || (type === 'oauth-success' ? `Connected to ${platform}!` : `OAuth error`));
+  const safeText = escapeForHtml(
+    fallbackText ||
+      (type === 'oauth-success' ? `Connected to ${platform}!` : `OAuth error`)
+  );
 
   // Build the postMessage payload as safe JS
   const payloadParts = [`type: '${type}'`, `platform: '${safePlatform}'`];
@@ -165,7 +177,8 @@ function buildPostMessageHtml(
   const safeType = escapeForJs(type);
   const successRedirect = `/dashboard/integrations?oauth_success=1&platform=${safePlatform}`;
   const errorRedirect = `/dashboard/integrations?oauth_error=1&platform=${safePlatform}`;
-  const redirectUrl = type === 'oauth-success' ? successRedirect : errorRedirect;
+  const redirectUrl =
+    type === 'oauth-success' ? successRedirect : errorRedirect;
 
   return `<!DOCTYPE html><html><body><script>
 if (window.opener) {
@@ -190,7 +203,7 @@ if (window.opener) {
 function integrationErrorResponse(
   platform: string,
   errorMsg: string,
-  returnTo?: string,
+  returnTo?: string
 ): NextResponse {
   if (returnTo) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -202,8 +215,16 @@ function integrationErrorResponse(
       // returnTo was invalid — fall through to postMessage
     }
   }
-  const html = buildPostMessageHtml('oauth-error', platform, { error: errorMsg }, `OAuth error: ${errorMsg}`);
-  return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
+  const html = buildPostMessageHtml(
+    'oauth-error',
+    platform,
+    { error: errorMsg },
+    `OAuth error: ${errorMsg}`
+  );
+  return new NextResponse(html, {
+    status: 200,
+    headers: { 'Content-Type': 'text/html' },
+  });
 }
 
 // =============================================================================
@@ -214,7 +235,9 @@ function integrationErrorResponse(
  * Verify HMAC-signed state parameter.
  * Returns decoded state data or null if invalid.
  */
-function verifyAndDecodeState(signedState: string): Record<string, unknown> | null {
+function verifyAndDecodeState(
+  signedState: string
+): Record<string, unknown> | null {
   const secret = process.env.OAUTH_STATE_SECRET || process.env.JWT_SECRET;
   if (!secret) return null;
 
@@ -310,7 +333,9 @@ async function exchangeCodeForToken(
 
     // Basic auth: credentials go in Authorization header, not body
     if (config.useBasicAuth) {
-      const basicAuth = Buffer.from(`${credentials.clientId}:${credentials.clientSecret}`).toString('base64');
+      const basicAuth = Buffer.from(
+        `${credentials.clientId}:${credentials.clientSecret}`
+      ).toString('base64');
       headers['Authorization'] = `Basic ${basicAuth}`;
     } else {
       params.client_id = credentials.clientId;
@@ -333,8 +358,13 @@ async function exchangeCodeForToken(
 
   if (!response.ok) {
     const errorText = await response.text();
-    logger.error(`Token exchange failed for ${platform} (${response.status}):`, errorText);
-    throw new Error(`Failed to exchange code for ${platform}: ${response.status} ${errorText.substring(0, 200)}`);
+    logger.error(
+      `Token exchange failed for ${platform} (${response.status}):`,
+      errorText
+    );
+    throw new Error(
+      `Failed to exchange code for ${platform}: ${response.status} ${errorText.substring(0, 200)}`
+    );
   }
 
   const data = await response.json();
@@ -380,8 +410,13 @@ async function fetchUserInfo(
 
   if (!response.ok) {
     const errorText = await response.text();
-    logger.error(`User info fetch failed for ${platform} (${response.status}):`, errorText);
-    throw new Error(`Failed to fetch user info from ${platform}: ${response.status}`);
+    logger.error(
+      `User info fetch failed for ${platform} (${response.status}):`,
+      errorText
+    );
+    throw new Error(
+      `Failed to fetch user info from ${platform}: ${response.status}`
+    );
   }
 
   const data = await response.json();
@@ -400,11 +435,16 @@ async function fetchUserInfo(
       let email = data.email;
       if (!email) {
         try {
-          const emailResponse = await fetch('https://api.github.com/user/emails', {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          });
+          const emailResponse = await fetch(
+            'https://api.github.com/user/emails',
+            {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            }
+          );
           const emails = await emailResponse.json();
-          email = emails.find((e: { primary?: boolean; email: string }) => e.primary)?.email;
+          email = emails.find(
+            (e: { primary?: boolean; email: string }) => e.primary
+          )?.email;
         } catch {
           // Email fetch failed, continue without it
         }
@@ -509,6 +549,15 @@ async function fetchUserInfo(
         username: data.email,
       };
     }
+    case 'googlebusiness': {
+      return {
+        id: data.id || data.sub || 'google-business',
+        name: data.name || data.email || 'Google Business Profile',
+        email: data.email,
+        avatar: data.picture,
+        username: data.email,
+      };
+    }
     default:
       return {
         id: data.id || data.sub || 'unknown',
@@ -544,20 +593,30 @@ export async function GET(
     // Check for OAuth error from provider
     const error = searchParams.get('error');
     if (error) {
-      const errorDescription = searchParams.get('error_description') || 'Authentication failed';
-      logger.error(`OAuth error for ${platform}:`, error, { description: errorDescription });
+      const errorDescription =
+        searchParams.get('error_description') || 'Authentication failed';
+      logger.error(`OAuth error for ${platform}:`, error, {
+        description: errorDescription,
+      });
 
       // Check if this was an integration flow by looking at state
       const state = searchParams.get('state');
       if (state) {
         const stateData = verifyAndDecodeState(state);
         if (stateData?.flow === 'integration') {
-          return integrationErrorResponse(platform, errorDescription, stateData.returnTo as string | undefined);
+          return integrationErrorResponse(
+            platform,
+            errorDescription,
+            stateData.returnTo as string | undefined
+          );
         }
       }
 
       return NextResponse.redirect(
-        new URL(`/login?error=${encodeURIComponent(errorDescription)}`, request.url)
+        new URL(
+          `/login?error=${encodeURIComponent(errorDescription)}`,
+          request.url
+        )
       );
     }
 
@@ -592,7 +651,8 @@ export async function GET(
     // Validate state timestamp (10 minute expiry -- generous for slow users)
     const stateTimestamp = stateData.timestamp as number;
     if (stateTimestamp && Date.now() - stateTimestamp > 10 * 60 * 1000) {
-      const expiredMsg = 'Authentication session expired. Please try connecting again.';
+      const expiredMsg =
+        'Authentication session expired. Please try connecting again.';
       if (stateData.flow === 'integration') {
         return integrationErrorResponse(platform, expiredMsg, earlyReturnTo);
       }
@@ -604,10 +664,17 @@ export async function GET(
     // Check if platform is supported
     if (!oauthConfigs[platform]) {
       if (stateData.flow === 'integration') {
-        return integrationErrorResponse(platform, `Unsupported platform: ${platform}`, earlyReturnTo);
+        return integrationErrorResponse(
+          platform,
+          `Unsupported platform: ${platform}`,
+          earlyReturnTo
+        );
       }
       return NextResponse.redirect(
-        new URL(`/login?error=Unsupported OAuth provider: ${platform}`, request.url)
+        new URL(
+          `/login?error=Unsupported OAuth provider: ${platform}`,
+          request.url
+        )
       );
     }
 
@@ -615,10 +682,17 @@ export async function GET(
     const creds = await getPlatformOAuthCredentials(platform);
     if (!creds) {
       if (stateData.flow === 'integration') {
-        return integrationErrorResponse(platform, 'Platform not configured. Please contact your administrator.', earlyReturnTo);
+        return integrationErrorResponse(
+          platform,
+          'Platform not configured. Please contact your administrator.',
+          earlyReturnTo
+        );
       }
       return NextResponse.redirect(
-        new URL('/login?error=This platform connection has not been set up yet. Please contact your administrator.', request.url)
+        new URL(
+          '/login?error=This platform connection has not been set up yet. Please contact your administrator.',
+          request.url
+        )
       );
     }
 
@@ -626,7 +700,10 @@ export async function GET(
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     if (!appUrl && process.env.NODE_ENV === 'production') {
       return NextResponse.redirect(
-        new URL('/login?error=NEXT_PUBLIC_APP_URL must be configured', request.url)
+        new URL(
+          '/login?error=NEXT_PUBLIC_APP_URL must be configured',
+          request.url
+        )
       );
     }
     const redirectUri = `${appUrl || 'http://localhost:3000'}/api/auth/callback/${platform}`;
@@ -639,10 +716,20 @@ export async function GET(
     }
 
     // Exchange code for token
-    const tokenData = await exchangeCodeForToken(platform, code, redirectUri, creds, codeVerifier);
+    const tokenData = await exchangeCodeForToken(
+      platform,
+      code,
+      redirectUri,
+      creds,
+      codeVerifier
+    );
 
     // Fetch user info
-    const userInfo = await fetchUserInfo(platform, tokenData.accessToken, creds);
+    const userInfo = await fetchUserInfo(
+      platform,
+      tokenData.accessToken,
+      creds
+    );
 
     // =========================================================================
     // Integration Flow (popup from Settings > Integrations)
@@ -663,9 +750,11 @@ export async function GET(
           ? new Date(Date.now() + tokenData.expiresIn * 1000)
           : null;
 
-        const encryptedAccessToken = encryptField(tokenData.accessToken) as string;
+        const encryptedAccessToken = encryptField(
+          tokenData.accessToken
+        ) as string;
         const encryptedRefreshToken = tokenData.refreshToken
-          ? encryptField(tokenData.refreshToken) ?? undefined
+          ? (encryptField(tokenData.refreshToken) ?? undefined)
           : undefined;
 
         await prisma.platformConnection.upsert({
@@ -709,22 +798,35 @@ export async function GET(
       } catch (dbError) {
         // Surface the error to the user — do NOT silently swallow and fake success.
         logger.error('Failed to store platform connection:', dbError);
-        return integrationErrorResponse(platform, 'Failed to store platform connection. Please try again.', returnTo);
+        return integrationErrorResponse(
+          platform,
+          'Failed to store platform connection. Please try again.',
+          returnTo
+        );
       }
 
       // Determine where to redirect after successful connection.
       // If returnTo is set in state (e.g. from onboarding/connect or platforms page),
       // do a full-page redirect back there. Otherwise close popup.
       if (returnTo) {
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const appUrl =
+          process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
         const redirectUrl = new URL(returnTo, appUrl);
         redirectUrl.searchParams.set('connected', platform);
         return NextResponse.redirect(redirectUrl.toString());
       }
 
       // Close popup and notify parent window (include org context)
-      const html = buildPostMessageHtml('oauth-success', platform, { organizationId: rawOrgId ?? null }, `Connected to ${platform}! This window will close automatically.`);
-      return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
+      const html = buildPostMessageHtml(
+        'oauth-success',
+        platform,
+        { organizationId: rawOrgId ?? null },
+        `Connected to ${platform}! This window will close automatically.`
+      );
+      return new NextResponse(html, {
+        status: 200,
+        headers: { 'Content-Type': 'text/html' },
+      });
     }
 
     // =========================================================================
@@ -746,7 +848,8 @@ export async function GET(
           avatar: userInfo.avatar || user.avatar,
           name: userInfo.name || user.name,
           emailVerified: true,
-          authProvider: user.authProvider === 'local' ? platform : user.authProvider,
+          authProvider:
+            user.authProvider === 'local' ? platform : user.authProvider,
           updatedAt: new Date(),
           ...(platform === 'google' ? { googleId: userInfo.id } : {}),
         },
@@ -780,9 +883,11 @@ export async function GET(
         : null;
 
       // Encrypt tokens before storing (accessToken is required)
-      const encryptedAccessToken = encryptField(tokenData.accessToken) as string;
+      const encryptedAccessToken = encryptField(
+        tokenData.accessToken
+      ) as string;
       const encryptedRefreshToken = tokenData.refreshToken
-        ? encryptField(tokenData.refreshToken) ?? undefined
+        ? (encryptField(tokenData.refreshToken) ?? undefined)
         : undefined;
 
       // Login flow -- store connection with user's primary org (or null)
@@ -839,10 +944,14 @@ export async function GET(
 
     // Auto-fix DB flags for owner on login (fire-and-forget)
     if (ownerBypass && (!user.onboardingComplete || !user.apiKeyConfigured)) {
-      prisma.user.update({
-        where: { id: user.id },
-        data: { onboardingComplete: true, apiKeyConfigured: true },
-      }).catch(() => { /* non-fatal */ });
+      prisma.user
+        .update({
+          where: { id: user.id },
+          data: { onboardingComplete: true, apiKeyConfigured: true },
+        })
+        .catch(() => {
+          /* non-fatal */
+        });
     }
 
     // Generate JWT token (include onboarding flags for middleware)
@@ -868,17 +977,21 @@ export async function GET(
     });
 
     // Also set a non-httpOnly cookie for client-side access
-    response.cookies.set('user-session', JSON.stringify({
-      userId: user.id,
-      email: user.email,
-      name: user.name,
-      avatar: user.avatar,
-    }), {
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60,
-      path: '/',
-    });
+    response.cookies.set(
+      'user-session',
+      JSON.stringify({
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        avatar: user.avatar,
+      }),
+      {
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60,
+        path: '/',
+      }
+    );
 
     return response;
   } catch (error: unknown) {
@@ -892,8 +1005,13 @@ export async function GET(
         if (stateData?.flow === 'integration') {
           const returnTo = stateData.returnTo as string | undefined;
           // Use the platform from state if available, else fall back to URL segment
-          const errPlatform = (stateData.platform as string | undefined) ?? 'unknown';
-          return integrationErrorResponse(errPlatform, 'Authentication failed. Please try again.', returnTo);
+          const errPlatform =
+            (stateData.platform as string | undefined) ?? 'unknown';
+          return integrationErrorResponse(
+            errPlatform,
+            'Authentication failed. Please try again.',
+            returnTo
+          );
         }
       }
     } catch {

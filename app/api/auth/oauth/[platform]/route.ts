@@ -1,27 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
-import { generatePKCEChallenge, generateState, storePKCEState } from '@/lib/auth/pkce';
+import {
+  generatePKCEChallenge,
+  generateState,
+  storePKCEState,
+} from '@/lib/auth/pkce';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
 
 // OAuth configuration for different platforms (credentials loaded dynamically from DB)
-const oauthConfig: Record<string, {
-  authUrl: string;
-  tokenUrl: string;
-  userInfoUrl: string;
-  scope: string;
-  responseType?: string;
-  accessType?: string;
-  prompt?: string;
-  codeChallengeMethod?: string;
-  /** duration query param (Reddit-specific) */
-  duration?: string;
-}> = {
+const oauthConfig: Record<
+  string,
+  {
+    authUrl: string;
+    tokenUrl: string;
+    userInfoUrl: string;
+    scope: string;
+    responseType?: string;
+    accessType?: string;
+    prompt?: string;
+    codeChallengeMethod?: string;
+    /** duration query param (Reddit-specific) */
+    duration?: string;
+  }
+> = {
   twitter: {
     authUrl: 'https://twitter.com/i/oauth2/authorize',
     tokenUrl: 'https://api.twitter.com/2/oauth2/token',
@@ -41,13 +51,15 @@ const oauthConfig: Record<string, {
     authUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
     tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
     userInfoUrl: 'https://graph.instagram.com/me',
-    scope: 'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement',
+    scope:
+      'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement',
   },
   facebook: {
     authUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
     tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
     userInfoUrl: 'https://graph.facebook.com/me',
-    scope: 'public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts',
+    scope:
+      'public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts',
   },
   tiktok: {
     authUrl: 'https://www.tiktok.com/v2/auth/authorize/',
@@ -58,8 +70,10 @@ const oauthConfig: Record<string, {
   youtube: {
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    userInfoUrl: 'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
-    scope: 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload',
+    userInfoUrl:
+      'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
+    scope:
+      'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload',
     accessType: 'offline',
     prompt: 'consent',
   },
@@ -87,7 +101,16 @@ const oauthConfig: Record<string, {
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
     userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
-    scope: 'https://www.googleapis.com/auth/webmasters.readonly profile email',
+    scope:
+      'https://www.googleapis.com/auth/webmasters https://www.googleapis.com/auth/indexing profile email',
+    accessType: 'offline',
+    prompt: 'consent',
+  },
+  googlebusiness: {
+    authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
+    scope: 'https://www.googleapis.com/auth/business.manage profile email',
     accessType: 'offline',
     prompt: 'consent',
   },
@@ -117,7 +140,9 @@ const oauthConfig: Record<string, {
 function signState(payload: string): string {
   const secret = process.env.OAUTH_STATE_SECRET || process.env.JWT_SECRET;
   if (!secret) {
-    throw new Error('OAUTH_STATE_SECRET or JWT_SECRET must be configured for OAuth');
+    throw new Error(
+      'OAUTH_STATE_SECRET or JWT_SECRET must be configured for OAuth'
+    );
   }
   const signature = crypto
     .createHmac('sha256', secret)
@@ -137,7 +162,10 @@ export async function GET(
 
     if (!(platform in oauthConfig)) {
       return NextResponse.json(
-        { error: 'Invalid platform', message: `"${platform}" is not a supported platform. Supported: ${Object.keys(oauthConfig).join(', ')}` },
+        {
+          error: 'Invalid platform',
+          message: `"${platform}" is not a supported platform. Supported: ${Object.keys(oauthConfig).join(', ')}`,
+        },
         { status: 400 }
       );
     }
@@ -148,15 +176,27 @@ export async function GET(
     const creds = await getPlatformOAuthCredentials(platform);
     if (!creds) {
       return NextResponse.json(
-        { error: 'Platform not configured', message: `OAuth credentials for ${platform} have not been set up yet. Please configure them in Settings > Platform Credentials or set the environment variables.` },
+        {
+          error: 'Platform not configured',
+          message: `OAuth credentials for ${platform} have not been set up yet. Please configure them in Settings > Platform Credentials or set the environment variables.`,
+        },
         { status: 400 }
       );
     }
 
     // Get the current user (supports NextAuth sessions + JWT cookies)
-    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_READ
+    );
     if (!security.allowed) {
-      return NextResponse.json({ error: 'Unauthorized', message: 'You must be logged in to connect a platform.' }, { status: 401 });
+      return NextResponse.json(
+        {
+          error: 'Unauthorized',
+          message: 'You must be logged in to connect a platform.',
+        },
+        { status: 401 }
+      );
     }
     const userId = security.context.userId!;
 
@@ -176,26 +216,34 @@ export async function GET(
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     if (!appUrl && process.env.NODE_ENV === 'production') {
       return NextResponse.json(
-        { error: 'Configuration error', message: 'NEXT_PUBLIC_APP_URL must be configured for OAuth in production.' },
+        {
+          error: 'Configuration error',
+          message:
+            'NEXT_PUBLIC_APP_URL must be configured for OAuth in production.',
+        },
         { status: 500 }
       );
     }
     const redirectUri = `${appUrl || 'http://localhost:3000'}/api/auth/callback/${platform}`;
 
     // Extract optional returnTo param — used by the platforms page to redirect back after OAuth
-    const returnTo = request.nextUrl.searchParams.get('returnTo') ?? '/dashboard/settings?tab=integrations';
+    const returnTo =
+      request.nextUrl.searchParams.get('returnTo') ??
+      '/dashboard/settings?tab=integrations';
 
     // Generate HMAC-signed state parameter for security (includes org context)
-    const statePayload = Buffer.from(JSON.stringify({
-      userId: user.id,
-      email: user.email,
-      platform,
-      organizationId: organizationId ?? null,
-      timestamp: Date.now(),
-      flow: 'integration',
-      nonce: crypto.randomBytes(16).toString('hex'),
-      returnTo,
-    })).toString('base64url');
+    const statePayload = Buffer.from(
+      JSON.stringify({
+        userId: user.id,
+        email: user.email,
+        platform,
+        organizationId: organizationId ?? null,
+        timestamp: Date.now(),
+        flow: 'integration',
+        nonce: crypto.randomBytes(16).toString('hex'),
+        returnTo,
+      })
+    ).toString('base64url');
     const state = signState(statePayload);
 
     // Build authorization URL params
@@ -246,12 +294,15 @@ export async function GET(
     return NextResponse.json({
       authorizationUrl,
       platform,
-      message: `Redirecting to ${platform} for authorization...`
+      message: `Redirecting to ${platform} for authorization...`,
     });
   } catch (error: unknown) {
     logger.error('OAuth initiation error:', error);
     return NextResponse.json(
-      { error: 'Failed to initiate OAuth', message: sanitizeErrorForResponse(error, 'OAuth operation failed') },
+      {
+        error: 'Failed to initiate OAuth',
+        message: sanitizeErrorForResponse(error, 'OAuth operation failed'),
+      },
       { status: 500 }
     );
   }

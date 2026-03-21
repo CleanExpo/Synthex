@@ -136,6 +136,18 @@
     {
       "path": "/api/cron/refresh-tokens",
       "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/gsc-monitor",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/gbp-monitor",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/gsc-auto-index",
+      "schedule": "0 6 * * *"
     }
   ]
 }

@@ -47,7 +47,10 @@ function setCache(platform: string, value: PlatformCredentials | null): void {
 
 // --- Environment variable mapping ---
 
-const ENV_VAR_MAP: Record<string, { clientIdVars: string[]; clientSecretVars: string[] }> = {
+const ENV_VAR_MAP: Record<
+  string,
+  { clientIdVars: string[]; clientSecretVars: string[] }
+> = {
   twitter: {
     clientIdVars: ['TWITTER_CLIENT_ID'],
     clientSecretVars: ['TWITTER_CLIENT_SECRET'],
@@ -88,17 +91,54 @@ const ENV_VAR_MAP: Record<string, { clientIdVars: string[]; clientSecretVars: st
   },
   // Google platforms share the same GCP OAuth client as YouTube
   searchconsole: {
-    clientIdVars: ['SEARCHCONSOLE_CLIENT_ID', 'YOUTUBE_CLIENT_ID', 'GOOGLE_CLIENT_ID'],
-    clientSecretVars: ['SEARCHCONSOLE_CLIENT_SECRET', 'YOUTUBE_CLIENT_SECRET', 'GOOGLE_CLIENT_SECRET'],
+    clientIdVars: [
+      'SEARCHCONSOLE_CLIENT_ID',
+      'YOUTUBE_CLIENT_ID',
+      'GOOGLE_CLIENT_ID',
+    ],
+    clientSecretVars: [
+      'SEARCHCONSOLE_CLIENT_SECRET',
+      'YOUTUBE_CLIENT_SECRET',
+      'GOOGLE_CLIENT_SECRET',
+    ],
   },
   googleanalytics: {
-    clientIdVars: ['GOOGLEANALYTICS_CLIENT_ID', 'YOUTUBE_CLIENT_ID', 'GOOGLE_CLIENT_ID'],
-    clientSecretVars: ['GOOGLEANALYTICS_CLIENT_SECRET', 'YOUTUBE_CLIENT_SECRET', 'GOOGLE_CLIENT_SECRET'],
+    clientIdVars: [
+      'GOOGLEANALYTICS_CLIENT_ID',
+      'YOUTUBE_CLIENT_ID',
+      'GOOGLE_CLIENT_ID',
+    ],
+    clientSecretVars: [
+      'GOOGLEANALYTICS_CLIENT_SECRET',
+      'YOUTUBE_CLIENT_SECRET',
+      'GOOGLE_CLIENT_SECRET',
+    ],
   },
   // Google Drive uses the same GCP OAuth client as YouTube
   googledrive: {
-    clientIdVars: ['GOOGLEDRIVE_CLIENT_ID', 'YOUTUBE_CLIENT_ID', 'GOOGLE_CLIENT_ID'],
-    clientSecretVars: ['GOOGLEDRIVE_CLIENT_SECRET', 'YOUTUBE_CLIENT_SECRET', 'GOOGLE_CLIENT_SECRET'],
+    clientIdVars: [
+      'GOOGLEDRIVE_CLIENT_ID',
+      'YOUTUBE_CLIENT_ID',
+      'GOOGLE_CLIENT_ID',
+    ],
+    clientSecretVars: [
+      'GOOGLEDRIVE_CLIENT_SECRET',
+      'YOUTUBE_CLIENT_SECRET',
+      'GOOGLE_CLIENT_SECRET',
+    ],
+  },
+  // Google Business Profile uses the same GCP OAuth client
+  googlebusiness: {
+    clientIdVars: [
+      'GOOGLEBUSINESS_CLIENT_ID',
+      'YOUTUBE_CLIENT_ID',
+      'GOOGLE_CLIENT_ID',
+    ],
+    clientSecretVars: [
+      'GOOGLEBUSINESS_CLIENT_SECRET',
+      'YOUTUBE_CLIENT_SECRET',
+      'GOOGLE_CLIENT_SECRET',
+    ],
   },
 };
 
@@ -156,12 +196,20 @@ export async function getPlatformOAuthCredentials(
   // Try database (admin-configured credentials)
   let dbCredentials: PlatformCredentials | null = null;
   try {
-    if (prisma != null && typeof prisma.platformOAuthCredential?.findUnique === 'function') {
+    if (
+      prisma != null &&
+      typeof prisma.platformOAuthCredential?.findUnique === 'function'
+    ) {
       const record = await prisma.platformOAuthCredential.findUnique({
         where: { platform: normalizedPlatform },
       });
 
-      if (record && record.isActive && record.encryptedClientId && record.encryptedClientSecret) {
+      if (
+        record &&
+        record.isActive &&
+        record.encryptedClientId &&
+        record.encryptedClientSecret
+      ) {
         const clientId = decryptApiKey(record.encryptedClientId);
         const clientSecret = decryptApiKey(record.encryptedClientSecret);
 

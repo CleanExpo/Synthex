@@ -3,16 +3,23 @@
  *
  * POST /api/seo/search-console/indexing-status
  * Inspects a URL's indexing status via the URL Inspection API.
+ * Uses per-org OAuth if PlatformConnection exists, else service account fallback.
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - JWT_SECRET: Token signing key (CRITICAL)
- * - GOOGLE_INDEXING_SERVICE_ACCOUNT_JSON: Service account credentials (REQUIRED)
+ * - GOOGLE_INDEXING_SERVICE_ACCOUNT_JSON: Service account credentials (REQUIRED for fallback)
  */
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-import { getIndexingStatus } from '@/lib/google/search-console';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
+import { findOAuthConnection } from '@/lib/google/google-auth';
+import { getUrlInspection } from '@/lib/google/search-console-oauth';
+import { getIndexingStatus as getIndexingStatusLegacy } from '@/lib/google/search-console';
 import { logger } from '@/lib/logger';
 
 // Request validation schema
@@ -61,11 +68,26 @@ export async function POST(request: NextRequest) {
 
     const { siteUrl, inspectionUrl } = validationResult.data;
 
-    const inspection = await getIndexingStatus(siteUrl, inspectionUrl);
+    // Try OAuth first, fall back to service account
+    const organizationId = await getEffectiveOrganizationId(userId);
+    const connectionId = organizationId
+      ? await findOAuthConnection(organizationId, 'searchconsole')
+      : null;
+
+    let inspection;
+
+    if (connectionId) {
+      inspection = await getUrlInspection(siteUrl, inspectionUrl, {
+        connectionId,
+      });
+    } else {
+      inspection = await getIndexingStatusLegacy(siteUrl, inspectionUrl);
+    }
 
     return APISecurityChecker.createSecureResponse({
       success: true,
       inspection,
+      source: connectionId ? 'oauth' : 'service_account',
     });
   } catch (error) {
     logger.error('Indexing Status API error:', error);
