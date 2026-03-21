@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { Brain, Building, ChevronDown, Layers } from '@/components/icons';
 import { fetchWithCSRF } from '@/lib/csrf';
+import { useAutoSave } from '@/hooks/useAutoSave';
 
 import {
   type GeneratedContentData,
@@ -26,6 +28,22 @@ import { GenerateVideoCard, VideoGenerationModal } from '@/components/video';
 import { BulkScheduleWizard } from '@/components/scheduling';
 import { usePersonas } from '@/hooks/use-personas';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
+
+// Dynamic imports for heavy components (code-split)
+const ContentScoreWidget = dynamic(
+  () =>
+    import('@/components/content/ContentScoreWidget').then(m => ({
+      default: m.ContentScoreWidget,
+    })),
+  { ssr: false }
+);
+const AIHashtagGenerator = dynamic(
+  () =>
+    import('@/components/AIHashtagGenerator').then(m => ({
+      default: m.AIHashtagGenerator,
+    })),
+  { ssr: false }
+);
 
 export default function ContentPage() {
   // Multi-business context
@@ -103,6 +121,36 @@ export default function ContentPage() {
 
   // Bulk schedule wizard
   const [bulkWizardOpen, setBulkWizardOpen] = useState(false);
+
+  // Auto-save drafts every 30s when content exists
+  useAutoSave({
+    data: generatedContent
+      ? {
+          topic,
+          platform,
+          tone,
+          content: editMode ? editedContent : generatedContent.primary,
+          hashtags: generatedContent.metadata?.hashtags,
+        }
+      : null,
+    onSave: async draft => {
+      if (!draft) return;
+      await fetchWithCSRF('/api/content-drafts', {
+        method: 'POST',
+        body: JSON.stringify({
+          platform: draft.platform,
+          content: draft.content,
+          title: draft.topic || `${draft.platform} post`,
+          hashtags: draft.hashtags || [],
+          tone: draft.tone || tone,
+          autoSaved: true,
+        }),
+      });
+    },
+    interval: 30000,
+    enabled: !!generatedContent,
+    storageKey: 'synthex-content-draft',
+  });
 
   const handleGenerate = useCallback(async () => {
     if (!topic) {
@@ -644,6 +692,41 @@ export default function ContentPage() {
           onSchedule={handleScheduleClick}
         />
       </div>
+
+      {/* Content quality score + hashtag generator (shown after content generation) */}
+      {generatedContent && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <ContentScoreWidget
+            content={editMode ? editedContent : generatedContent.primary}
+            platform={platform}
+          />
+          <AIHashtagGenerator
+            content={generatedContent.primary}
+            platform={platform}
+            onHashtagsSelected={tags => {
+              if (generatedContent.metadata) {
+                setGeneratedContent({
+                  ...generatedContent,
+                  metadata: {
+                    ...generatedContent.metadata,
+                    hashtags: tags.map(t => (t.startsWith('#') ? t : `#${t}`)),
+                  },
+                });
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Auto-save indicator */}
+      {generatedContent && (
+        <span
+          id="auto-save-indicator"
+          className="text-[11px] text-white/20 opacity-0 transition-opacity duration-300"
+        >
+          Auto-saved
+        </span>
+      )}
 
       {/* Schedule More -- opens BulkScheduleWizard pre-filled with current content */}
       {generatedContent && (

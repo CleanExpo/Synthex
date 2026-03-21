@@ -5,7 +5,6 @@
 
 import type {
   PlatformConnection,
-  BillingInfo,
   NotificationSettings,
   PrivacySettings,
   AdvancedSettings,
@@ -46,27 +45,6 @@ export const initialPlatforms: PlatformConnection[] = [
   { id: 'reddit', name: 'Reddit', icon: '🔴', connected: false },
   { id: 'threads', name: 'Threads', icon: '@', connected: false },
 ];
-
-export const platformConnections: PlatformConnection[] = [
-  { id: 'twitter', name: 'Twitter/X', icon: '𝕏', connected: true, username: '@synthexai' },
-  { id: 'linkedin', name: 'LinkedIn', icon: 'in', connected: true, username: 'Synthex AI' },
-  { id: 'instagram', name: 'Instagram', icon: '📷', connected: false },
-  { id: 'facebook', name: 'Facebook', icon: 'f', connected: false },
-  { id: 'tiktok', name: 'TikTok', icon: '♪', connected: false },
-  { id: 'youtube', name: 'YouTube', icon: '▶', connected: false },
-  { id: 'pinterest', name: 'Pinterest', icon: '📌', connected: false },
-  { id: 'reddit', name: 'Reddit', icon: '🔴', connected: false },
-  { id: 'threads', name: 'Threads', icon: '@', connected: false },
-];
-
-export const defaultBillingInfo: BillingInfo = {
-  plan: 'Pro',
-  price: '$99',
-  billingCycle: 'monthly',
-  nextBilling: '2026-03-01',
-  paymentMethod: 'Visa',
-  cardLast4: '4242',
-};
 
 export const languages = [
   { value: 'en', label: 'English' },

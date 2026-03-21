@@ -74,39 +74,10 @@ export default function TestAI() {
         err instanceof Error ? err.message : 'Failed to generate content';
       setError(errorMessage);
 
-      // If API key is not configured, show demo content
+      // If API key is not configured, show actionable error
       if (errorMessage.includes('API') || errorMessage.includes('key')) {
-        setGeneratedContent({
-          content: `🚀 ${topic} is revolutionizing the way we work! 
-
-Here's what you need to know:
-• Automate repetitive tasks
-• Focus on strategic thinking
-• Scale your impact 10x
-
-The future is here, and it's powered by AI. 💡
-
-#AI #Marketing #Automation #Innovation #FutureOfWork`,
-          platform,
-          hashtags: [
-            '#AI',
-            '#Marketing',
-            '#Automation',
-            '#Innovation',
-            '#FutureOfWork',
-          ],
-          emojis: ['🚀', '💡'],
-          estimatedEngagement: 85,
-          viralScore: 7.5,
-          metadata: {
-            generatedAt: new Date(),
-            model: 'demo',
-            tokens: 0,
-            processingTime: 0,
-          },
-        });
         setError(
-          'Using demo content (configure OpenRouter API key for real AI generation)'
+          'AI API key not configured. Go to Settings → AI Credentials to add your key.'
         );
       }
     } finally {

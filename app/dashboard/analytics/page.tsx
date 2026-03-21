@@ -61,6 +61,20 @@ const AnomalyAlerts = dynamic(
     })),
   { ssr: false }
 );
+const ContentPerformanceWidget = dynamic(
+  () =>
+    import('@/components/analytics/ContentPerformanceWidget').then(m => ({
+      default: m.ContentPerformanceWidget,
+    })),
+  { ssr: false }
+);
+const TrendPredictionsWidget = dynamic(
+  () =>
+    import('@/components/analytics/TrendPredictionsWidget').then(m => ({
+      default: m.TrendPredictionsWidget,
+    })),
+  { ssr: false }
+);
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('30d');
@@ -299,6 +313,11 @@ export default function AnalyticsPage() {
           onViewDetails={handleViewPostDetails}
           onViewAll={handleViewAllPosts}
         />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ContentPerformanceWidget />
+        <TrendPredictionsWidget />
       </div>
 
       <MetricsTable
