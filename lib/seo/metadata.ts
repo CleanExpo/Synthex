@@ -331,6 +331,27 @@ export const PAGE_METADATA = {
     path: '/docs',
     keywords: ['documentation', 'guides', 'tutorials', 'getting started'],
   }),
+
+  analytics: generateMetadata({
+    title: 'Analytics',
+    description: 'Track your social media performance with real-time engagement analytics, platform breakdowns, and AI-powered insights.',
+    path: '/analytics',
+    keywords: ['analytics', 'engagement tracking', 'social media metrics', 'performance dashboard'],
+  }),
+
+  designSystem: generateMetadata({
+    title: 'Design System',
+    description: 'Explore the Synthex design system — colours, typography, components, and UI patterns that power our platform.',
+    path: '/design-system',
+    keywords: ['design system', 'UI components', 'style guide', 'design tokens'],
+  }),
+
+  forgotPassword: generateMetadata({
+    title: 'Forgot Password',
+    description: 'Reset your Synthex account password. Enter your email to receive password reset instructions.',
+    path: '/forgot-password',
+    noIndex: true,
+  }),
 };
 
 /**
