@@ -4,6 +4,7 @@
  * Returns 202 Accepted immediately; extraction runs in background.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import {
   getUserIdFromRequestOrCookies,
@@ -13,11 +14,27 @@ import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope'
 import { extractAndPersistBrandDNA } from '@/lib/brand-dna/extractor';
 import { logger } from '@/lib/logger';
 
+// ── Validation ───────────────────────────────────────────────────────────────
+
+const refreshBodySchema = z.object({
+  force: z.boolean().optional(),
+}).strict().optional();
+
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   const userId = await getUserIdFromRequestOrCookies(req);
   if (!userId) return unauthorizedResponse();
+
+  // Validate optional body (reject unexpected fields)
+  const rawBody = await req.json().catch(() => ({}));
+  const parsed = refreshBodySchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed', details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
 
   const orgId = await getEffectiveOrganizationId(userId);
   if (!orgId) {

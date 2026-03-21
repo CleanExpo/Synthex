@@ -13,9 +13,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
+
+// ── Validation ───────────────────────────────────────────────────────────────
+
+const snapshotBodySchema = z.object({
+  platforms: z.array(z.string().max(50)).optional(),
+}).strict().optional();
 
 /** Tracked competitor record */
 interface TrackedCompetitorRecord {
@@ -198,6 +205,16 @@ export async function POST(
     }
 
     const userId = security.context.userId!;
+
+    // Validate optional body (reject unexpected fields)
+    const rawBody = await request.json().catch(() => ({}));
+    const parsed = snapshotBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
 
     // Verify competitor belongs to user
     const competitor = await (prisma as unknown as PrismaWithCompetitor).trackedCompetitor?.findFirst({

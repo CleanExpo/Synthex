@@ -12,9 +12,17 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+
+// ── Validation ───────────────────────────────────────────────────────────────
+
+const analyzeBodySchema = z.object({
+  platforms: z.array(z.string().max(50)).optional(),
+  depth: z.enum(['basic', 'detailed']).optional(),
+}).strict().optional();
 
 // Type for route params
 interface RouteParams {
@@ -51,6 +59,17 @@ export async function POST(
     if (!competitorId) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Competitor ID is required' },
+        400,
+        security.context
+      );
+    }
+
+    // Validate optional body (reject unexpected fields)
+    const rawBody = await request.json().catch(() => ({}));
+    const parsed = analyzeBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return APISecurityChecker.createSecureResponse(
+        { error: 'Validation failed', details: parsed.error.flatten() },
         400,
         security.context
       );

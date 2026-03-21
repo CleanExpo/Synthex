@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
+
+// ── Validation — optional cron body ──────────────────────────────────────────
+
+const backupBodySchema = z.object({
+  tables: z.array(z.string().max(100)).optional(),
+  type: z.enum(['full', 'incremental']).optional(),
+}).strict().optional();
 
 // Lazy-initialize Supabase admin client (avoids build-time errors)
 let supabaseAdmin: SupabaseClient | null = null;
@@ -32,6 +40,16 @@ export async function POST(request: NextRequest) {
   // Verify this is a legitimate cron job request
   if (!verifyCronSecret(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Validate optional body (reject unexpected fields)
+  const rawBody = await request.json().catch(() => ({}));
+  const parsed = backupBodySchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed', details: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
 
   try {

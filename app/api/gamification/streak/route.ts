@@ -9,11 +9,18 @@
  * - JWT_SECRET: Token signing key (CRITICAL)
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { recordDailyActivity, checkAndUnlockAchievements } from '@/lib/retention/achievement-tracker';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+
+// ── Validation ───────────────────────────────────────────────────────────────
+
+const streakBodySchema = z.object({
+  source: z.enum(['login', 'dashboard', 'post', 'manual']).optional(),
+}).strict().optional();
 
 export async function GET(request: NextRequest) {
   const security = await APISecurityChecker.check(
@@ -68,6 +75,16 @@ export async function POST(request: NextRequest) {
     return APISecurityChecker.createSecureResponse(
       { error: security.error },
       security.error === 'Authentication required' ? 401 : 403
+    );
+  }
+
+  // Validate optional body (reject unexpected fields)
+  const rawBody = await request.json().catch(() => ({}));
+  const parsed = streakBodySchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed', details: parsed.error.flatten() },
+      { status: 400 }
     );
   }
 

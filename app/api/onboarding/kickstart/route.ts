@@ -15,11 +15,21 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { generateKickstartContent } from '@/lib/ai/content-kickstart';
 import type { KickstartInput } from '@/lib/ai/content-kickstart';
+
+// ============================================================================
+// Validation — body is optional (endpoint is auth-gated)
+// ============================================================================
+
+const kickstartBodySchema = z.object({
+  platforms: z.array(z.string()).optional(),
+  postingMode: z.enum(['autopilot', 'assisted', 'manual']).optional(),
+}).strict().optional();
 
 // ============================================================================
 // GET — Return kickstart status (for FirstWeekWidget)
@@ -90,6 +100,16 @@ export async function POST(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) return unauthorizedResponse();
+
+    // Validate optional body (reject unexpected fields)
+    const rawBody = await request.json().catch(() => ({}));
+    const parsed = kickstartBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
