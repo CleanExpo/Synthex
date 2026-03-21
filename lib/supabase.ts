@@ -2,11 +2,14 @@ import { createClient } from '@supabase/supabase-js';
 import { encryptCredentials, decryptCredentials } from './encryption';
 
 // Lazy Supabase clients — avoids crash during Next.js build when env vars are missing
-let _supabase: ReturnType<typeof createClient> | null = null;
-let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabase: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabaseAdmin: any = null;
 
 // Public client for client-side operations
-export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const supabase: any = new Proxy({}, {
   get(_, prop) {
     if (!_supabase) {
       _supabase = createClient(
@@ -19,7 +22,8 @@ export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
 });
 
 // Service client for server-side operations (has elevated privileges)
-export const supabaseAdmin = new Proxy({} as ReturnType<typeof createClient>, {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const supabaseAdmin: any = new Proxy({}, {
   get(_, prop) {
     if (!_supabaseAdmin) {
       _supabaseAdmin = createClient(
