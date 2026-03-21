@@ -8,6 +8,7 @@ import { PendingApprovalQueue } from './PendingApprovalQueue';
 import { PerformancePulse } from './PerformancePulse';
 import { QuickActionsBar } from './QuickActionsBar';
 import { CommandCentrePanels } from './CommandCentrePanels';
+import { APIErrorCard } from '@/components/error-states';
 
 export function AICommandCentre() {
   const {
@@ -17,6 +18,7 @@ export function AICommandCentre() {
     performance,
     stats,
     isLoading,
+    error,
     mutateStatus,
     mutatePending,
     mutateActivity,
@@ -50,6 +52,23 @@ export function AICommandCentre() {
           <div className="lg:col-span-2 h-64 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm" />
           <div className="h-64 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm" />
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <APIErrorCard
+          title="Command Centre Error"
+          message="Failed to load Command Centre data. Please try again."
+          onRetry={() => {
+            mutateStatus();
+            mutateStats();
+            mutateActivity();
+            mutatePending();
+          }}
+        />
       </div>
     );
   }
