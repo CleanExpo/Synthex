@@ -125,22 +125,15 @@ const sidebarGroups: Array<{
     ],
   },
   {
-    id: 'creative-suite',
+    id: 'content-ai',
     icon: Sparkles,
-    label: 'CREATIVE SUITE',
+    label: 'CONTENT & AI',
     items: [
       {
         icon: Sparkles,
         label: 'Creative Suite',
         href: '/dashboard/creative-suite',
       },
-    ],
-  },
-  {
-    id: 'content-ai',
-    icon: Sparkles,
-    label: 'CONTENT & AI',
-    items: [
       { icon: FileText, label: 'Content', href: '/dashboard/content' },
       { icon: File, label: 'Drafts', href: '/dashboard/content/drafts' },
       { icon: MessageSquare, label: 'AI Chat', href: '/dashboard/ai-chat' },
@@ -341,7 +334,6 @@ const sidebarGroups: Array<{
 
 const STARTER_GROUP_IDS = new Set([
   'main',
-  'creative-suite',
   'content-ai',
   'planning',
   'analytics',
@@ -488,7 +480,7 @@ export default function DashboardLayout({
               {!sidebarCollapsed && (
                 <button
                   onClick={() => setSidebarCollapsed(true)}
-                  className="hidden lg:flex p-1 text-white/50 hover:text-white/60 transition-colors rounded-sm"
+                  className="hidden lg:flex p-1 text-white/25 hover:text-white/60 transition-colors rounded-sm"
                   aria-label="Collapse sidebar"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
@@ -514,7 +506,7 @@ export default function DashboardLayout({
                     <Link
                       key={group.id}
                       href={group.items[0]?.href ?? '/dashboard'}
-                      className="flex items-center justify-center w-9 h-9 text-white/50 hover:text-white/70 hover:bg-white/[0.04] rounded-sm transition-all"
+                      className="flex items-center justify-center w-9 h-9 text-white/30 hover:text-white/70 hover:bg-white/[0.04] rounded-sm transition-all"
                       aria-label={group.label}
                       title={group.label}
                     >
@@ -540,7 +532,7 @@ export default function DashboardLayout({
                   <button
                     onClick={toggleShowAllGroups}
                     aria-expanded={showAllGroups}
-                    className="w-full flex items-center gap-2 px-3 py-2 mt-2 text-[10px] tracking-[0.2em] uppercase text-white/50 hover:text-white/50 hover:bg-white/[0.02] rounded-sm transition-colors"
+                    className="w-full flex items-center gap-2 px-3 py-2 mt-2 text-[10px] tracking-[0.2em] uppercase text-white/25 hover:text-white/50 hover:bg-white/[0.02] rounded-sm transition-colors"
                   >
                     <ChevronDown
                       className={cn(
@@ -561,7 +553,7 @@ export default function DashboardLayout({
               <Link
                 href="/dashboard/help"
                 className={cn(
-                  'flex items-center gap-2.5 text-white/50 hover:text-white/60 hover:bg-white/[0.03] rounded-sm px-2 py-2 transition-all text-xs',
+                  'flex items-center gap-2.5 text-white/30 hover:text-white/60 hover:bg-white/[0.03] rounded-sm px-2 py-2 transition-all text-xs',
                   sidebarCollapsed && 'justify-center px-0'
                 )}
               >
@@ -594,16 +586,26 @@ export default function DashboardLayout({
 
                 {/* Search */}
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/50 pointer-events-none" />
+                  <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/25 pointer-events-none" />
                   <input
                     type="search"
                     placeholder="Search..."
                     value={searchValue}
                     onChange={e => setSearchValue(e.target.value)}
                     aria-label="Search"
-                    className="w-40 sm:w-52 md:w-64 pl-8 pr-3 py-1.5 text-xs bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/70 placeholder:text-white/50 rounded-sm focus:outline-none focus:border-white/20 focus:bg-white/[0.04] transition-all"
+                    className="w-40 sm:w-52 md:w-64 pl-8 pr-3 py-1.5 text-xs bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/70 placeholder:text-white/20 rounded-sm focus:outline-none focus:border-white/20 focus:bg-white/[0.04] transition-all"
                   />
                 </div>
+
+                {/* Command palette hint */}
+                <kbd
+                  onClick={() =>
+                    window.dispatchEvent(new Event('openCommandPalette'))
+                  }
+                  className="hidden md:inline-flex items-center gap-1 px-2 py-1 text-[10px] text-white/40 border border-white/[0.08] rounded-sm bg-white/[0.02] cursor-pointer hover:bg-white/[0.04] hover:text-white/50 transition-colors"
+                >
+                  <span>&#8984;</span>K
+                </kbd>
               </div>
 
               {/* Right: business switcher, notifications, user */}
