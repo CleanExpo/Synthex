@@ -44,6 +44,7 @@ import {
   Search,
   BarChart2,
   HardDrive,
+  MapPin,
 } from '@/components/icons';
 import { toast } from 'sonner';
 
@@ -181,6 +182,15 @@ const DEFAULT_ANALYTICS_INTEGRATIONS: Integration[] = [
       'View conversions',
       'Audience insights',
     ],
+  },
+  {
+    id: 'googlebusiness',
+    name: 'Google Business Profile',
+    description: 'Manage local listings, reviews, and posts',
+    icon: MapPin,
+    connected: false,
+    color: 'text-blue-400',
+    permissions: ['Manage locations', 'Read reviews', 'Create posts'],
   },
   {
     id: 'googledrive',

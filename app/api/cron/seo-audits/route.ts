@@ -39,7 +39,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const startTime = Date.now();
-    logger.info('cron:seo-audits:start', { timestamp: new Date().toISOString() });
+    logger.info('cron:seo-audits:start', {
+      timestamp: new Date().toISOString(),
+    });
 
     // Get all targets due for audit
     const targets = await getAllTargetsDueForAudit();
@@ -71,7 +73,11 @@ export async function GET(request: NextRequest) {
         auditsRun++;
 
         // Get user info from target (included in query)
-        const user = (target as unknown as { user: { id: string; email: string | null; name: string | null } }).user;
+        const user = (
+          target as unknown as {
+            user: { id: string; email: string | null; name: string | null };
+          }
+        ).user;
 
         // Store result
         await storeAuditResult(user.id, target, result);
@@ -85,18 +91,15 @@ export async function GET(request: NextRequest) {
           // Send alert email
           if (user.email) {
             try {
-              const emailHtml = buildAlertEmail(
-                user.name || 'there',
-                {
-                  targetName: target.name,
-                  url: target.url,
-                  oldScore: regression.oldScore,
-                  newScore: regression.newScore,
-                  dropPercent: regression.dropPercent,
-                  topIssues: result.issues,
-                  dashboardUrl: `${appUrl}/dashboard/seo/audits`,
-                }
-              );
+              const emailHtml = buildAlertEmail(user.name || 'there', {
+                targetName: target.name,
+                url: target.url,
+                oldScore: regression.oldScore,
+                newScore: regression.newScore,
+                dropPercent: regression.dropPercent,
+                topIssues: result.issues,
+                dashboardUrl: `${appUrl}/dashboard/seo/audits`,
+              });
 
               await emailQueue.enqueue({
                 to: user.email,
@@ -110,10 +113,49 @@ export async function GET(request: NextRequest) {
               });
               emailsSent++;
             } catch (emailErr) {
-              logger.error(`[SEO Audits Cron] Email failed for target ${target.id}:`, emailErr);
+              logger.error(
+                `[SEO Audits Cron] Email failed for target ${target.id}:`,
+                emailErr
+              );
               // Email failure does not stop batch processing
             }
           }
+        }
+
+        // Auto-enhance: submit sitemaps + request indexing for fixable issues
+        try {
+          const { analyseAuditForEnhancements, executeAutoEnhancements } =
+            await import('@/lib/seo/enhancement-engine');
+          // Get the stored audit ID from the most recent audit for this user/url
+          const storedAudit = await (
+            await import('@/lib/prisma')
+          ).prisma.sEOAudit.findFirst({
+            where: { userId: user.id, url: target.url },
+            orderBy: { createdAt: 'desc' },
+            select: { id: true },
+          });
+          if (storedAudit) {
+            const plan = await analyseAuditForEnhancements(
+              String(storedAudit.id),
+              user.id,
+              (target as unknown as { organizationId: string }).organizationId
+            );
+            if (plan.autoExecute.length > 0) {
+              const enhResult = await executeAutoEnhancements(
+                plan,
+                user.id,
+                (target as unknown as { organizationId: string }).organizationId
+              );
+              logger.info('[SEO Audits Cron] Auto-enhanced', {
+                executed: enhResult.executed,
+                errors: enhResult.errors,
+              });
+            }
+          }
+        } catch (enhErr) {
+          logger.warn('[SEO Audits Cron] Enhancement failed (non-fatal)', {
+            error: enhErr,
+          });
         }
 
         // Small delay between audits to respect PageSpeed API rate limits
@@ -125,7 +167,13 @@ export async function GET(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
-    logger.info('cron:seo-audits:end', { timestamp: new Date().toISOString(), durationMs: duration, auditsRun, regressionsDetected, errors });
+    logger.info('cron:seo-audits:end', {
+      timestamp: new Date().toISOString(),
+      durationMs: duration,
+      auditsRun,
+      regressionsDetected,
+      errors,
+    });
 
     return NextResponse.json({
       success: true,

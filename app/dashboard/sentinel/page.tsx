@@ -24,6 +24,7 @@ import { AlgorithmUpdateTimeline } from '@/components/sentinel/AlgorithmUpdateTi
 import { MetricTrendChart } from '@/components/sentinel/MetricTrendChart';
 import { useUser } from '@/hooks/use-user';
 import { fetchJson } from '@/lib/fetcher';
+import { CompositeHealthWidget } from '@/components/dashboard/CompositeHealthWidget';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -232,6 +233,8 @@ function SentinelPageContent() {
               snapshot={status.snapshot ?? null}
               onCheckNow={handleCheckNow}
             />
+
+            <CompositeHealthWidget />
 
             {history.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

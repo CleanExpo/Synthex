@@ -125,6 +125,23 @@ const PLATFORM_LIST: PlatformConfig[] = [
   },
 ];
 
+const GOOGLE_SEO_LIST: PlatformConfig[] = [
+  {
+    id: 'searchconsole',
+    label: 'Google Search Console',
+    icon: '🔍',
+    description: 'Search performance & indexing',
+    colour: 'from-green-500 to-green-600',
+  },
+  {
+    id: 'googlebusiness',
+    label: 'Google Business Profile',
+    icon: '📍',
+    description: 'Local listings & reviews',
+    colour: 'from-blue-500 to-blue-600',
+  },
+];
+
 const SESSION_KEY = 'synthex_pipeline_result';
 
 // ============================================================================
@@ -439,6 +456,90 @@ function ConnectPageInner() {
             </div>
           );
         })}
+      </div>
+
+      {/* Google Search & Local */}
+      <div className="max-w-2xl mx-auto space-y-3 pt-4">
+        <div className="text-center space-y-1">
+          <h2 className="text-lg font-semibold text-white">
+            Google Search & Local
+          </h2>
+          <p className="text-sm text-gray-500">
+            Optional — connect for SEO monitoring and local presence management
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {GOOGLE_SEO_LIST.map(platform => {
+            const connected = isConnected(platform.id);
+            const connection = getConnection(platform.id);
+            const connecting = connectingId === platform.id;
+
+            return (
+              <div
+                key={platform.id}
+                className={cn(
+                  'p-4 rounded-xl border transition-all',
+                  connected
+                    ? 'bg-green-500/5 border-green-500/20'
+                    : 'bg-surface-base/80 border-white/5 hover:border-white/10'
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-2xl shrink-0">{platform.icon}</span>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-medium text-white">
+                        {platform.label}
+                      </h3>
+                      {connected && connection?.profileName ? (
+                        <p className="text-xs text-green-400 truncate">
+                          ✓ {connection.profileName}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-gray-500">
+                          {platform.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="shrink-0">
+                    {connected ? (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-500/10 text-green-400">
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span className="text-xs font-medium">Connected</span>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleConnect(platform.id)}
+                        disabled={connecting || connectingId !== null}
+                        className={cn(
+                          'text-xs h-8 border-amber-500/20 hover:bg-amber-500/10 hover:border-amber-500/30',
+                          connecting && 'opacity-70'
+                        )}
+                      >
+                        {connecting ? (
+                          <>
+                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                            Connecting…
+                          </>
+                        ) : (
+                          <>
+                            <Link2 className="w-3 h-3 mr-1" />
+                            Connect
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Loading indicator */}

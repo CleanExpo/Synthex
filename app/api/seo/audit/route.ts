@@ -12,8 +12,14 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-import { subscriptionService, PLAN_LIMITS } from '@/lib/stripe/subscription-service';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
+import {
+  subscriptionService,
+  PLAN_LIMITS,
+} from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';
 
 // Request validation schema
@@ -32,9 +38,18 @@ const AuditRequestSchema = z.object({
  * ENVIRONMENT VARIABLES (OPTIONAL):
  * - GOOGLE_PAGESPEED_API_KEY: For higher rate limits (PUBLIC, optional)
  */
-async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRequestSchema>, 'url'>) {
+async function performSEOAudit(
+  url: string,
+  options: Omit<z.infer<typeof AuditRequestSchema>, 'url'>
+) {
   const domain = new URL(url).hostname;
-  const issues: { severity: string; title: string; description: string; recommendation: string; affectedPages: string[] }[] = [];
+  const issues: {
+    severity: string;
+    title: string;
+    description: string;
+    recommendation: string;
+    affectedPages: string[];
+  }[] = [];
 
   // -- Core Web Vitals via Google PageSpeed Insights API --
   let cwv = null;
@@ -46,7 +61,9 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
   if (options.includeCoreWebVitals) {
     try {
       const apiKey = process.env.GOOGLE_PAGESPEED_API_KEY;
-      const psiUrl = new URL('https://www.googleapis.com/pagespeedonline/v5/runPagespeed');
+      const psiUrl = new URL(
+        'https://www.googleapis.com/pagespeedonline/v5/runPagespeed'
+      );
       psiUrl.searchParams.set('url', url);
       psiUrl.searchParams.set('strategy', 'mobile');
       psiUrl.searchParams.set('category', 'PERFORMANCE');
@@ -55,17 +72,25 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
       psiUrl.searchParams.set('category', 'BEST_PRACTICES');
       if (apiKey) psiUrl.searchParams.set('key', apiKey);
 
-      const psiRes = await fetch(psiUrl.toString(), { signal: AbortSignal.timeout(30000) });
+      const psiRes = await fetch(psiUrl.toString(), {
+        signal: AbortSignal.timeout(30000),
+      });
 
       if (psiRes.ok) {
         const psi = await psiRes.json();
 
         // Extract Lighthouse scores
         const categories = psi.lighthouseResult?.categories;
-        performanceScore = Math.round((categories?.performance?.score || 0) * 100);
-        accessibilityScore = Math.round((categories?.accessibility?.score || 0) * 100);
+        performanceScore = Math.round(
+          (categories?.performance?.score || 0) * 100
+        );
+        accessibilityScore = Math.round(
+          (categories?.accessibility?.score || 0) * 100
+        );
         seoScore = Math.round((categories?.seo?.score || 0) * 100);
-        bestPracticesScore = Math.round((categories?.['best-practices']?.score || 0) * 100);
+        bestPracticesScore = Math.round(
+          (categories?.['best-practices']?.score || 0) * 100
+        );
 
         // Extract Core Web Vitals from field data or lab data
         const fieldMetrics = psi.loadingExperience?.metrics;
@@ -79,15 +104,24 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
 
         const clsValue = fieldMetrics?.CUMULATIVE_LAYOUT_SHIFT_SCORE?.percentile
           ? fieldMetrics.CUMULATIVE_LAYOUT_SHIFT_SCORE.percentile / 100
-          : labAudits?.['cumulative-layout-shift']?.numericValue ?? null;
+          : (labAudits?.['cumulative-layout-shift']?.numericValue ?? null);
 
-        const inpValue = fieldMetrics?.INTERACTION_TO_NEXT_PAINT?.percentile ?? null;
+        const inpValue =
+          fieldMetrics?.INTERACTION_TO_NEXT_PAINT?.percentile ?? null;
 
         const fidValue = fieldMetrics?.FIRST_INPUT_DELAY_MS?.percentile ?? null;
 
-        function rateMetric(value: number | null, good: number, poor: number): string {
+        function rateMetric(
+          value: number | null,
+          good: number,
+          poor: number
+        ): string {
           if (value === null) return 'no-data';
-          return value <= good ? 'good' : value <= poor ? 'needs-improvement' : 'poor';
+          return value <= good
+            ? 'good'
+            : value <= poor
+              ? 'needs-improvement'
+              : 'poor';
         }
 
         cwv = {
@@ -105,15 +139,20 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
             issues.push({
               severity,
               title: audit.title,
-              description: audit.description?.replace(/<[^>]*>/g, '').slice(0, 200) || '',
-              recommendation: audit.details?.items?.[0]?.node?.explanation || `Improve ${audit.title}`,
+              description:
+                audit.description?.replace(/<[^>]*>/g, '').slice(0, 200) || '',
+              recommendation:
+                audit.details?.items?.[0]?.node?.explanation ||
+                `Improve ${audit.title}`,
               affectedPages: [url],
             });
           }
         }
       }
     } catch (error) {
-      logger.warn('PageSpeed Insights API failed, using partial data:', { error });
+      logger.warn('PageSpeed Insights API failed, using partial data:', {
+        error,
+      });
     }
   }
 
@@ -134,7 +173,8 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
           severity: 'critical',
           title: 'Missing meta description',
           description: 'The page is missing a meta description tag',
-          recommendation: 'Add a unique meta description between 150-160 characters',
+          recommendation:
+            'Add a unique meta description between 150-160 characters',
           affectedPages: [url],
         });
       }
@@ -161,13 +201,16 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
 
       // Check images without alt text
       const imgMatches = html.match(/<img[^>]*>/gi) || [];
-      const missingAlt = imgMatches.filter(img => !img.match(/alt=["'][^"']+["']/i));
+      const missingAlt = imgMatches.filter(
+        img => !img.match(/alt=["'][^"']+["']/i)
+      );
       if (missingAlt.length > 0) {
         issues.push({
           severity: 'minor',
           title: 'Images missing alt text',
           description: `${missingAlt.length} image(s) are missing alt text`,
-          recommendation: 'Add descriptive alt text to all images for accessibility and SEO',
+          recommendation:
+            'Add descriptive alt text to all images for accessibility and SEO',
           affectedPages: [url],
         });
       }
@@ -178,7 +221,8 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
           severity: 'major',
           title: 'Missing viewport meta tag',
           description: 'Page may not be mobile-friendly without viewport meta',
-          recommendation: 'Add <meta name="viewport" content="width=device-width, initial-scale=1">',
+          recommendation:
+            'Add <meta name="viewport" content="width=device-width, initial-scale=1">',
           affectedPages: [url],
         });
       }
@@ -188,8 +232,10 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
         issues.push({
           severity: 'minor',
           title: 'Missing canonical tag',
-          description: 'No canonical URL specified — may cause duplicate content issues',
-          recommendation: 'Add a <link rel="canonical"> tag pointing to the preferred URL',
+          description:
+            'No canonical URL specified — may cause duplicate content issues',
+          recommendation:
+            'Add a <link rel="canonical"> tag pointing to the preferred URL',
           affectedPages: [url],
         });
       }
@@ -197,7 +243,10 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
       // Schema detection
       if (options.includeSchemaCheck) {
         const schemaTypes: string[] = [];
-        const ldJsonMatches = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
+        const ldJsonMatches =
+          html.match(
+            /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
+          ) || [];
         for (const block of ldJsonMatches) {
           const content = block.replace(/<\/?script[^>]*>/gi, '');
           try {
@@ -208,11 +257,16 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
                 if (item['@type']) schemaTypes.push(item['@type']);
               }
             }
-          } catch { /* malformed JSON-LD */ }
+          } catch {
+            /* malformed JSON-LD */
+          }
         }
 
         const recommendations: string[] = [];
-        if (!schemaTypes.includes('Organization') && !schemaTypes.includes('LocalBusiness')) {
+        if (
+          !schemaTypes.includes('Organization') &&
+          !schemaTypes.includes('LocalBusiness')
+        ) {
           recommendations.push('Add Organization or LocalBusiness schema');
         }
         if (!schemaTypes.includes('BreadcrumbList')) {
@@ -240,9 +294,18 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
   const info = issues.filter(i => i.severity === 'info');
 
   // Calculate composite score
-  const overallScore = seoScore > 0
-    ? Math.round((performanceScore * 0.3 + seoScore * 0.4 + accessibilityScore * 0.15 + bestPracticesScore * 0.15))
-    : Math.max(0, 100 - (critical.length * 15) - (major.length * 8) - (minor.length * 2));
+  const overallScore =
+    seoScore > 0
+      ? Math.round(
+          performanceScore * 0.3 +
+            seoScore * 0.4 +
+            accessibilityScore * 0.15 +
+            bestPracticesScore * 0.15
+        )
+      : Math.max(
+          0,
+          100 - critical.length * 15 - major.length * 8 - minor.length * 2
+        );
 
   return {
     url,
@@ -264,12 +327,24 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
     },
     categories: {
       technical: {
-        score: performanceScore || Math.max(0, 100 - critical.length * 20 - major.length * 10),
-        issues: issues.filter(i => ['Missing viewport', 'Slow', 'Missing canonical'].some(t => i.title.includes(t)) || i.severity === 'critical'),
+        score:
+          performanceScore ||
+          Math.max(0, 100 - critical.length * 20 - major.length * 10),
+        issues: issues.filter(
+          i =>
+            ['Missing viewport', 'Slow', 'Missing canonical'].some(t =>
+              i.title.includes(t)
+            ) || i.severity === 'critical'
+        ),
       },
       onPage: {
         score: seoScore || Math.max(0, 100 - minor.length * 5),
-        issues: issues.filter(i => i.title.includes('alt text') || i.title.includes('title') || i.title.includes('meta')),
+        issues: issues.filter(
+          i =>
+            i.title.includes('alt text') ||
+            i.title.includes('title') ||
+            i.title.includes('meta')
+        ),
       },
       content: {
         score: bestPracticesScore || 85,
@@ -332,7 +407,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (planLimits.maxSeoAudits !== -1 && usageCount >= planLimits.maxSeoAudits) {
+    if (
+      planLimits.maxSeoAudits !== -1 &&
+      usageCount >= planLimits.maxSeoAudits
+    ) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Monthly audit limit reached', upgradeRequired: true },
         429
@@ -354,7 +432,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { url, depth, includeSchemaCheck, includeCoreWebVitals, includeContentAnalysis } = validationResult.data;
+    const {
+      url,
+      depth,
+      includeSchemaCheck,
+      includeCoreWebVitals,
+      includeContentAnalysis,
+    } = validationResult.data;
 
     // Perform the audit (async — must be awaited)
     const auditResult = await performSEOAudit(url, {
@@ -377,12 +461,47 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Analyse for enhancements
+    let enhancementPlan = null;
+    try {
+      const { analyseAuditForEnhancements } =
+        await import('@/lib/seo/enhancement-engine');
+      // Get the just-created audit ID
+      const latestAudit = await prisma.sEOAudit.findFirst({
+        where: { userId, url },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true },
+      });
+      if (latestAudit) {
+        // Get user's org for org-scoped enhancement analysis
+        const auditUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { organizationId: true },
+        });
+        if (auditUser?.organizationId) {
+          enhancementPlan = await analyseAuditForEnhancements(
+            String(latestAudit.id),
+            userId,
+            auditUser.organizationId
+          );
+        }
+      }
+    } catch (enhErr) {
+      logger.warn('[SEO Audit] Enhancement analysis failed (non-fatal)', {
+        error: enhErr,
+      });
+    }
+
     return APISecurityChecker.createSecureResponse({
       success: true,
       audit: auditResult,
+      enhancements: enhancementPlan,
       limits: {
-        used: usageCount + 1, // Including this audit
-        remaining: planLimits.maxSeoAudits === -1 ? 'unlimited' : planLimits.maxSeoAudits - usageCount - 1,
+        used: usageCount + 1,
+        remaining:
+          planLimits.maxSeoAudits === -1
+            ? 'unlimited'
+            : planLimits.maxSeoAudits - usageCount - 1,
       },
     });
   } catch (error) {
@@ -454,7 +573,8 @@ export async function GET(request: NextRequest) {
         success: true,
         audits: [],
         total: 0,
-        message: 'No SEO audits have been run yet. Run your first audit to start building history.',
+        message:
+          'No SEO audits have been run yet. Run your first audit to start building history.',
       });
     }
 
