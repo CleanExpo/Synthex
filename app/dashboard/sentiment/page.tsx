@@ -170,7 +170,14 @@ export default function SentimentPage() {
   if (error && !data) {
     return (
       <div className="p-6">
-        <APIErrorCard error={error} onRetry={() => mutate()} />
+        <APIErrorCard
+          title="Sentiment Data Error"
+          message={
+            error?.message ||
+            'Failed to load sentiment analytics. Please try again.'
+          }
+          onRetry={() => mutate()}
+        />
       </div>
     );
   }
