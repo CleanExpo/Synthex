@@ -51,9 +51,9 @@ export function ActivityFeedItem({ item }: Props) {
           {item.description}
         </p>
         <div className="flex items-center gap-3 mt-1">
-          <span className="text-[10px] text-white/20">{timeAgo}</span>
+          <span className="text-[10px] text-white/50">{timeAgo}</span>
           {item.durationMs && (
-            <span className="text-[10px] text-white/20">
+            <span className="text-[10px] text-white/50">
               {(item.durationMs / 1000).toFixed(1)}s
             </span>
           )}
@@ -63,7 +63,7 @@ export function ActivityFeedItem({ item }: Props) {
                 `Explain this AI action: ${item.action}. ${item.description}`
               )
             }
-            className="text-[10px] text-white/20 hover:text-cyan-400 transition-colors"
+            className="text-[10px] text-white/50 hover:text-cyan-400 transition-colors"
             title="Ask AI PM about this action"
           >
             ?

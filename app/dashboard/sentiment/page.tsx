@@ -222,12 +222,12 @@ export default function SentimentPage() {
         <StatCard
           label="Total Analysed"
           value={data.overall.total.toLocaleString()}
-          icon={<BarChart3 className="h-4 w-4 text-white/30" />}
+          icon={<BarChart3 className="h-4 w-4 text-white/50" />}
         />
         <StatCard
           label="Average Score"
           value={data.overall.avgScore.toString()}
-          icon={<TrendingUp className="h-4 w-4 text-white/30" />}
+          icon={<TrendingUp className="h-4 w-4 text-white/50" />}
         />
         <StatCard
           label="Positive"
@@ -244,7 +244,7 @@ export default function SentimentPage() {
         <StatCard
           label="Top Emotion"
           value={topEmotion ? capitalise(topEmotion.emotion) : '\u2014'}
-          icon={<Heart className="h-4 w-4 text-white/30" />}
+          icon={<Heart className="h-4 w-4 text-white/50" />}
         />
       </div>
 
@@ -385,7 +385,7 @@ export default function SentimentPage() {
             Top Emotions Detected
           </h2>
           {data.topEmotions.length === 0 ? (
-            <p className="text-sm text-white/30 py-4">
+            <p className="text-sm text-white/50 py-4">
               No emotion data available
             </p>
           ) : (
@@ -421,7 +421,7 @@ export default function SentimentPage() {
             Platform Breakdown
           </h2>
           {Object.keys(data.platformBreakdown).length === 0 ? (
-            <p className="text-sm text-white/30 py-4">
+            <p className="text-sm text-white/50 py-4">
               No platform data available
             </p>
           ) : (
@@ -437,19 +437,19 @@ export default function SentimentPage() {
                     </h3>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <span className="text-white/30">Analysed</span>
+                        <span className="text-white/50">Analysed</span>
                         <p className="text-white/70">{stats.count}</p>
                       </div>
                       <div>
-                        <span className="text-white/30">Avg Score</span>
+                        <span className="text-white/50">Avg Score</span>
                         <p className="text-white/70">{stats.avgScore}</p>
                       </div>
                       <div>
-                        <span className="text-white/30">Positive</span>
+                        <span className="text-white/50">Positive</span>
                         <p className="text-green-400/80">{stats.positive}</p>
                       </div>
                       <div>
-                        <span className="text-white/30">Negative</span>
+                        <span className="text-white/50">Negative</span>
                         <p className="text-red-400/80">{stats.negative}</p>
                       </div>
                     </div>
@@ -502,7 +502,7 @@ function SentimentHeader({
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+        <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2 block">
           Analytics
         </span>
         <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">
@@ -552,7 +552,7 @@ function StatCard({
   return (
     <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-white/30">{label}</span>
+        <span className="text-xs text-white/50">{label}</span>
         {icon}
       </div>
       <span className={`text-xl font-light ${valueColour}`}>{value}</span>

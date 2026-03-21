@@ -654,11 +654,10 @@ export async function POST(request: NextRequest) {
       timestamp: now.toISOString(),
     });
   } catch (error) {
-    logger.error('Scheduled report execution error:', error);
-    return NextResponse.json(
-      { error: 'Execution failed', details: (error as Error).message },
-      { status: 500 }
-    );
+    logger.error('Scheduled report execution error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return NextResponse.json({ error: 'Execution failed' }, { status: 500 });
   }
 }
 

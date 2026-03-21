@@ -37,7 +37,7 @@ export function PerformancePulse({ data }: Props) {
                 className="w-full bg-cyan-400/30 rounded-sm min-h-[2px] transition-all"
                 style={{ height: `${Math.max(heightPct, 3)}%` }}
               />
-              <span className="text-[8px] text-white/20">
+              <span className="text-[8px] text-white/50">
                 {new Date(day.date).toLocaleDateString('en-AU', {
                   weekday: 'narrow',
                 })}
@@ -70,7 +70,7 @@ function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-white/[0.02] border-[0.5px] border-white/[0.06] rounded-sm p-3 text-center">
       <div className="text-sm font-light text-white tabular-nums">{value}</div>
-      <div className="text-[9px] text-white/30 uppercase tracking-wider mt-0.5">
+      <div className="text-[9px] text-white/50 uppercase tracking-wider mt-0.5">
         {label}
       </div>
     </div>

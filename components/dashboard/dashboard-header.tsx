@@ -18,7 +18,7 @@ export function DashboardHeader({ isNewUser }: DashboardHeaderProps) {
     <div className="mb-6">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2 block">
             Overview
           </span>
           <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">

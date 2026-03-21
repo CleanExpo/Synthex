@@ -90,7 +90,7 @@ export function InsightsWidget({ className }: { className?: string }) {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-6">
-          <Loader2 className="h-5 w-5 text-white/20 animate-spin" />
+          <Loader2 className="h-5 w-5 text-white/50 animate-spin" />
         </div>
       ) : latestRun && latestRun.outputData ? (
         <>
@@ -152,7 +152,7 @@ export function InsightsWidget({ className }: { className?: string }) {
       ) : (
         <div className="text-center py-4 space-y-1">
           <p className="text-xs text-white/50">AI insights run every 4 hours</p>
-          <p className="text-xs text-white/30">
+          <p className="text-xs text-white/50">
             High-confidence opportunities are auto-drafted to your content
             queue.
           </p>

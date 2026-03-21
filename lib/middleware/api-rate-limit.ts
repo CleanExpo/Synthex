@@ -17,6 +17,7 @@ export {
   admin,
   billing,
   aiGeneration,
+  writeDefault,
   mutation,
   readDefault,
 } from '@/lib/rate-limit';

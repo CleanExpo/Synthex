@@ -121,7 +121,7 @@ export default function BusinessesPage() {
             <Building className="w-5 h-5 text-amber-400" />
           </div>
           <div>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-1 block">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-1 block">
               Workspace
             </span>
             <h1 className="text-3xl font-extralight tracking-tight text-white">

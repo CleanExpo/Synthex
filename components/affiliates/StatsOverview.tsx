@@ -112,7 +112,7 @@ function NetworkBreakdown({
       <div className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
         <h3 className="text-sm font-medium text-white/70 mb-4">By Network</h3>
         <div className="text-center py-6">
-          <Globe className="h-8 w-8 text-white/20 mx-auto mb-2" />
+          <Globe className="h-8 w-8 text-white/50 mx-auto mb-2" />
           <p className="text-sm text-white/40">No network data yet</p>
         </div>
       </div>
@@ -194,7 +194,7 @@ function TopLinks({
       <div className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
         <h3 className="text-sm font-medium text-white/70 mb-4">Top Links</h3>
         <div className="text-center py-6">
-          <TrendingUp className="h-8 w-8 text-white/20 mx-auto mb-2" />
+          <TrendingUp className="h-8 w-8 text-white/50 mx-auto mb-2" />
           <p className="text-sm text-white/40">No link data yet</p>
         </div>
       </div>
@@ -211,7 +211,7 @@ function TopLinks({
             className="flex items-center justify-between py-2 hover:bg-white/5 rounded-lg px-2 -mx-2 transition-colors"
           >
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-white/30 text-sm w-4">{idx + 1}</span>
+              <span className="text-white/50 text-sm w-4">{idx + 1}</span>
               <span className="text-white truncate">{link.name}</span>
             </div>
             <div className="flex items-center gap-4 flex-shrink-0">

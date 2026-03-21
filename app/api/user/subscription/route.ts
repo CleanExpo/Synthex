@@ -14,7 +14,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';
 
@@ -43,7 +46,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Get or create subscription via Prisma (auto-creates free tier if none exists)
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
+    const subscription =
+      await subscriptionService.getOrCreateSubscription(userId);
 
     // Plan features map (matches billing page expectations)
     const planFeatures: Record<string, Record<string, unknown>> = {
@@ -98,13 +102,11 @@ export async function GET(request: NextRequest) {
       features: planFeatures[subscription.plan] || planFeatures.free,
     });
   } catch (error: unknown) {
-    logger.error('Subscription fetch error:', error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error('Subscription fetch error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
-      {
-        error: 'Failed to fetch subscription details',
-        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
-      },
+      { error: 'Failed to fetch subscription details' },
       { status: 500 }
     );
   }

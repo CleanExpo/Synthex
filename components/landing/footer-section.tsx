@@ -31,7 +31,7 @@ export function FooterSection() {
               <Link
                 key={href}
                 href={href}
-                className="text-[11px] font-medium text-white/30 hover:text-amber-400 transition-colors"
+                className="text-[11px] font-medium text-white/50 hover:text-amber-400 transition-colors"
               >
                 {label}
               </Link>
@@ -39,7 +39,7 @@ export function FooterSection() {
           </nav>
 
           {/* Copyright */}
-          <p className="text-[11px] text-white/20 flex-shrink-0">
+          <p className="text-[11px] text-white/50 flex-shrink-0">
             © 2026 Synthex. AI-native social media.
           </p>
         </div>

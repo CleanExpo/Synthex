@@ -227,7 +227,7 @@ export function DealList({
           className
         )}
       >
-        <Package className="h-10 w-10 text-white/20 mx-auto mb-3" />
+        <Package className="h-10 w-10 text-white/50 mx-auto mb-3" />
         <p className="text-white/50">No deals yet for this sponsor</p>
       </div>
     );

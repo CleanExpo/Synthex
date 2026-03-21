@@ -112,7 +112,7 @@ function StepPatternCard({
           <span className="text-sm font-medium text-white/80 truncate">
             Step {pattern.stepIndex + 1}: {pattern.stepName}
           </span>
-          <span className="text-xs text-white/30 shrink-0">
+          <span className="text-xs text-white/50 shrink-0">
             ({pattern.stepType})
           </span>
         </div>
@@ -194,7 +194,7 @@ export function IntelligencePanel({
   if (isLoading) {
     return (
       <div className={cn('flex items-center justify-center py-12', className)}>
-        <Loader2 className="h-5 w-5 text-white/30 animate-spin" />
+        <Loader2 className="h-5 w-5 text-white/50 animate-spin" />
       </div>
     );
   }
@@ -214,9 +214,9 @@ export function IntelligencePanel({
       <div
         className={cn('flex flex-col items-center py-12 space-y-3', className)}
       >
-        <Brain className="h-8 w-8 text-white/20" />
+        <Brain className="h-8 w-8 text-white/50" />
         <p className="text-sm text-white/50">No execution data yet</p>
-        <p className="text-xs text-white/30">
+        <p className="text-xs text-white/50">
           Run this template a few times to see performance analysis.
         </p>
       </div>
@@ -289,7 +289,7 @@ export function IntelligencePanel({
         </div>
       )}
 
-      <p className="text-xs text-white/30">
+      <p className="text-xs text-white/50">
         Analysed at {new Date(analysis.analysedAt).toLocaleString('en-AU')}
       </p>
     </div>

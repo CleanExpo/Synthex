@@ -569,7 +569,7 @@ export default function ApprovalsPage() {
             <GitBranch className="h-6 w-6 text-amber-400" />
           </div>
           <div>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-1 block">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-1 block">
               Workflow
             </span>
             <h1 className="text-3xl font-extralight tracking-tight text-white">

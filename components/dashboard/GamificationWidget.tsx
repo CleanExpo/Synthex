@@ -96,7 +96,7 @@ export function GamificationWidget({ className }: { className?: string }) {
             <Flame className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
             <div className="min-w-0">
               <div className="text-xs text-white/70">Start your streak</div>
-              <p className="text-[10px] text-white/30 mt-0.5 leading-relaxed">
+              <p className="text-[10px] text-white/50 mt-0.5 leading-relaxed">
                 Create and publish your first post to start your streak and earn
                 achievements.
               </p>
@@ -127,7 +127,7 @@ export function GamificationWidget({ className }: { className?: string }) {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-6">
-          <Loader2 className="h-4 w-4 text-white/20 animate-spin" />
+          <Loader2 className="h-4 w-4 text-white/50 animate-spin" />
         </div>
       ) : (
         <div className="space-y-3">
@@ -139,7 +139,7 @@ export function GamificationWidget({ className }: { className?: string }) {
                 <div className="font-mono text-base font-medium text-amber-400 tabular-nums">
                   {streak.currentStreak} day streak
                 </div>
-                <div className="text-[10px] text-white/30 mt-0.5">
+                <div className="text-[10px] text-white/50 mt-0.5">
                   {streak.points} pts · Level {streak.level}
                 </div>
               </div>
@@ -149,7 +149,7 @@ export function GamificationWidget({ className }: { className?: string }) {
           {/* Recent achievements */}
           {recentAchievements.length > 0 && (
             <div className="space-y-2">
-              <p className="text-[9px] uppercase tracking-[0.25em] text-white/25">
+              <p className="text-[9px] uppercase tracking-[0.25em] text-white/50">
                 Recent Achievements
               </p>
               {recentAchievements.map(achievement => (
@@ -164,7 +164,7 @@ export function GamificationWidget({ className }: { className?: string }) {
                     <div className="text-xs text-white/70 truncate">
                       {achievement.name}
                     </div>
-                    <div className="text-[10px] text-white/30">
+                    <div className="text-[10px] text-white/50">
                       {achievement.points} pts
                     </div>
                   </div>

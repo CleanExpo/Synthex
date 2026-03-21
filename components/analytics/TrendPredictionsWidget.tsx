@@ -17,7 +17,7 @@ import { useTrendPredictions } from '@/hooks/useTrendPredictions';
 function ChangeIndicator({ change }: { change: number }) {
   if (change > 5) return <TrendingUp className="h-3.5 w-3.5 text-green-400" />;
   if (change < -5) return <TrendingDown className="h-3.5 w-3.5 text-red-400" />;
-  return <Minus className="h-3.5 w-3.5 text-white/30" />;
+  return <Minus className="h-3.5 w-3.5 text-white/50" />;
 }
 
 // ── Sentiment Badge ─────────────────────────────────────────────────────────
@@ -63,7 +63,7 @@ export function TrendPredictionsWidget() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-xs text-white/30 text-center py-4">
+          <p className="text-xs text-white/50 text-center py-4">
             {error ||
               'No trend data available yet. Connect a platform to see predictions.'}
           </p>
@@ -92,7 +92,7 @@ export function TrendPredictionsWidget() {
               <span className="text-sm text-white truncate">{topic.topic}</span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs text-white/30">
+              <span className="text-xs text-white/50">
                 {topic.change > 0 ? '+' : ''}
                 {topic.change}%
               </span>

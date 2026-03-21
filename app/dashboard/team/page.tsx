@@ -50,7 +50,13 @@ export default function TeamPage() {
   }
 
   if (error) {
-    return <APIErrorCard title="Team Error" message={error} onRetry={fetchTeamMembers} />;
+    return (
+      <APIErrorCard
+        title="Team Error"
+        message={error}
+        onRetry={fetchTeamMembers}
+      />
+    );
   }
 
   if (teamMembers.length === 0) {
@@ -69,8 +75,12 @@ export default function TeamPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">People</span>
-          <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">Team Management</h1>
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2 block">
+            People
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">
+            Team Management
+          </h1>
           <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
             Manage your team members, roles, and permissions
           </p>

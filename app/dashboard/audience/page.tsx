@@ -93,7 +93,7 @@ function StatCard({
               </span>
             )}
           </div>
-          {subValue && <p className="text-xs text-white/25">{subValue}</p>}
+          {subValue && <p className="text-xs text-white/50">{subValue}</p>}
         </div>
       </div>
     </div>
@@ -422,7 +422,7 @@ export default function AudienceInsightsPage() {
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="flex items-center justify-center h-full text-white/25">
+                    <div className="flex items-center justify-center h-full text-white/50">
                       No active hours data
                     </div>
                   )}
@@ -489,7 +489,7 @@ export default function AudienceInsightsPage() {
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-white/25">
+                  <div className="flex items-center justify-center h-full text-white/50">
                     No growth data available
                   </div>
                 )}

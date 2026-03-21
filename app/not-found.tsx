@@ -67,21 +67,21 @@ function MessageDisplay() {
             >
               Content
             </Link>
-            <span className="text-white/20">•</span>
+            <span className="text-white/50">•</span>
             <Link
               href="/dashboard/analytics"
               className="text-amber-400 hover:text-amber-300 text-xs transition-colors"
             >
               Analytics
             </Link>
-            <span className="text-white/20">•</span>
+            <span className="text-white/50">•</span>
             <Link
               href="/dashboard/schedule"
               className="text-amber-400 hover:text-amber-300 text-xs transition-colors"
             >
               Schedule
             </Link>
-            <span className="text-white/20">•</span>
+            <span className="text-white/50">•</span>
             <Link
               href="/dashboard/settings"
               className="text-amber-400 hover:text-amber-300 text-xs transition-colors"

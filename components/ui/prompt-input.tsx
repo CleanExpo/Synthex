@@ -191,7 +191,7 @@ export function PromptInput({
                 'h-7 w-7 rounded-sm transition-all',
                 canSend
                   ? 'bg-amber-500 text-[#050505] hover:bg-amber-400'
-                  : 'bg-white/[0.04] text-white/20 border-[0.5px] border-white/[0.06] cursor-not-allowed'
+                  : 'bg-white/[0.04] text-white/50 border-[0.5px] border-white/[0.06] cursor-not-allowed'
               )}
             >
               <ArrowUp className="h-3.5 w-3.5" />

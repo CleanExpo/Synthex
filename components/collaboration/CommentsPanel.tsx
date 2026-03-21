@@ -407,9 +407,9 @@ export function CommentsPanel({
           </div>
         ) : comments.length === 0 ? (
           <div className="text-center py-12">
-            <MessageSquare className="w-12 h-12 text-white/20 mx-auto mb-3" />
+            <MessageSquare className="w-12 h-12 text-white/50 mx-auto mb-3" />
             <p className="text-white/40">No comments yet</p>
-            <p className="text-sm text-white/30">Be the first to comment</p>
+            <p className="text-sm text-white/50">Be the first to comment</p>
           </div>
         ) : (
           comments.map(comment => (

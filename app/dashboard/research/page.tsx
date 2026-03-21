@@ -170,7 +170,7 @@ function AutoResearchSection() {
         <div className="flex items-center gap-2">
           <Brain className="h-5 w-5 text-amber-400" />
           <h2 className="text-lg font-semibold text-white">Auto-Research</h2>
-          <span className="text-xs text-white/30 ml-1">
+          <span className="text-xs text-white/50 ml-1">
             Self-learning trend intelligence
           </span>
         </div>
@@ -203,8 +203,8 @@ function AutoResearchSection() {
               </div>
             ) : runs.length === 0 ? (
               <div className="py-6 text-center">
-                <Brain className="h-8 w-8 mx-auto mb-2 text-white/20" />
-                <p className="text-sm text-white/30">
+                <Brain className="h-8 w-8 mx-auto mb-2 text-white/50" />
+                <p className="text-sm text-white/50">
                   No runs yet — click Run Now to start
                 </p>
               </div>
@@ -226,9 +226,9 @@ function AutoResearchSection() {
                         })}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0 text-xs text-white/30">
+                    <div className="flex items-center gap-3 shrink-0 text-xs text-white/50">
                       <span>{run.insightsCount} insights</span>
-                      <span className="capitalize text-white/20">
+                      <span className="capitalize text-white/50">
                         {run.runType.replace('_', ' ')}
                       </span>
                     </div>
@@ -254,7 +254,7 @@ function AutoResearchSection() {
               </CardTitle>
               {availablePlatforms.length > 0 && (
                 <div className="flex items-center gap-1.5">
-                  <Filter className="h-3 w-3 text-white/30" />
+                  <Filter className="h-3 w-3 text-white/50" />
                   <select
                     value={platformFilter}
                     onChange={e => setPlatformFilter(e.target.value)}
@@ -280,8 +280,8 @@ function AutoResearchSection() {
               </div>
             ) : filteredInsights.length === 0 ? (
               <div className="py-6 text-center">
-                <AlertCircle className="h-8 w-8 mx-auto mb-2 text-white/20" />
-                <p className="text-sm text-white/30">
+                <AlertCircle className="h-8 w-8 mx-auto mb-2 text-white/50" />
+                <p className="text-sm text-white/50">
                   No insights yet — run a research cycle to start learning
                 </p>
               </div>
@@ -306,7 +306,7 @@ function AutoResearchSection() {
                         >
                           {insight.category}
                         </span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-white/[0.04] text-white/25">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-white/[0.04] text-white/50">
                           {Math.round(insight.confidence * 100)}% conf
                         </span>
                       </div>

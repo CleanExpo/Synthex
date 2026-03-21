@@ -207,7 +207,7 @@ export function GetStartedChecklist({
               type="button"
               onClick={handleDismiss}
               aria-label="Dismiss get started checklist"
-              className="p-1 rounded-sm text-white/25 hover:text-white/50 hover:bg-white/[0.05] transition-colors flex-shrink-0"
+              className="p-1 rounded-sm text-white/50 hover:text-white/50 hover:bg-white/[0.05] transition-colors flex-shrink-0"
             >
               <X className="h-4 w-4" />
             </button>
@@ -217,7 +217,7 @@ export function GetStartedChecklist({
         {/* Progress bar */}
         <div className="mt-4 space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] text-white/30">
+            <span className="text-[10px] text-white/50">
               {completedCount} of {steps.length} complete
             </span>
             <span className="font-mono text-[10px] text-amber-400 tabular-nums">
@@ -282,13 +282,13 @@ export function GetStartedChecklist({
               >
                 {step.title}
               </p>
-              <p className="text-[10px] text-white/30 mt-0.5 hidden sm:block">
+              <p className="text-[10px] text-white/50 mt-0.5 hidden sm:block">
                 {step.description}
               </p>
             </div>
 
             {!step.completed && (
-              <ChevronRight className="h-3.5 w-3.5 text-white/20 group-hover:text-amber-400 transition-colors flex-shrink-0" />
+              <ChevronRight className="h-3.5 w-3.5 text-white/50 group-hover:text-amber-400 transition-colors flex-shrink-0" />
             )}
           </Link>
         ))}
@@ -300,7 +300,7 @@ export function GetStartedChecklist({
           <button
             type="button"
             onClick={handleDismiss}
-            className="text-[10px] text-white/20 hover:text-white/40 transition-colors"
+            className="text-[10px] text-white/50 hover:text-white/40 transition-colors"
           >
             I know my way around — hide this
           </button>

@@ -190,7 +190,7 @@ function LockedBadge({ index }: { index: number }) {
         border-[0.5px] border-white/[0.06] bg-white/[0.02]
       "
     >
-      <Lock className="h-3.5 w-3.5 text-white/20" />
+      <Lock className="h-3.5 w-3.5 text-white/50" />
     </motion.div>
   );
 }
@@ -304,7 +304,7 @@ export function LoyaltyTierCard({ className }: { className?: string }) {
             <span className={`text-base font-medium ${config.colour}`}>
               {config.label}
             </span>
-            <span className="text-[10px] text-white/30 font-mono tabular-nums">
+            <span className="text-[10px] text-white/50 font-mono tabular-nums">
               {points.toLocaleString()} pts
             </span>
           </div>
@@ -313,7 +313,7 @@ export function LoyaltyTierCard({ className }: { className?: string }) {
           <ProgressBar progress={tierProgress} tier={tier} />
 
           {/* Progress label */}
-          <p className="mt-1.5 text-[10px] text-white/30">
+          <p className="mt-1.5 text-[10px] text-white/50">
             {isPlatinum ? (
               "Maximum tier — you've reached Platinum"
             ) : (
@@ -332,16 +332,16 @@ export function LoyaltyTierCard({ className }: { className?: string }) {
       {/* Achievements */}
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
-          <p className="text-[9px] uppercase tracking-[0.25em] text-white/25">
+          <p className="text-[9px] uppercase tracking-[0.25em] text-white/50">
             Achievements
           </p>
-          <span className="text-[9px] text-white/25 font-mono tabular-nums">
+          <span className="text-[9px] text-white/50 font-mono tabular-nums">
             {stats.totalUnlocked}/{stats.totalAvailable}
           </span>
         </div>
 
         {unlocked.length === 0 ? (
-          <p className="text-[10px] text-white/25 leading-relaxed py-1">
+          <p className="text-[10px] text-white/50 leading-relaxed py-1">
             Complete actions to earn achievements and unlock rewards.
           </p>
         ) : (
@@ -370,7 +370,7 @@ export function LoyaltyTierCard({ className }: { className?: string }) {
                   flex items-center justify-center
                   w-9 h-9 rounded-sm
                   border-[0.5px] border-white/[0.08] bg-white/[0.02]
-                  text-[9px] text-white/30 font-mono
+                  text-[9px] text-white/50 font-mono
                 "
               >
                 +{remainingCount}

@@ -73,7 +73,7 @@ export function IntelligenceSection() {
 
               {/* Card header */}
               <div className="flex items-center justify-between mb-8 relative z-10">
-                <span className="font-mono text-[10px] font-black tracking-[0.3em] uppercase text-white/30">
+                <span className="font-mono text-[10px] font-black tracking-[0.3em] uppercase text-white/50">
                   Signal Analysis
                 </span>
                 <div className="flex items-center gap-1.5">
@@ -111,7 +111,7 @@ export function IntelligenceSection() {
                 {['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'].map(month => (
                   <span
                     key={month}
-                    className="font-mono text-[8px] text-white/20 uppercase tracking-wider"
+                    className="font-mono text-[8px] text-white/50 uppercase tracking-wider"
                   >
                     {month}
                   </span>
@@ -128,7 +128,7 @@ export function IntelligenceSection() {
                 </span>
               </div>
               <div className="text-lg font-black text-white">+127%</div>
-              <div className="font-mono text-[8px] text-white/30 uppercase tracking-wider">
+              <div className="font-mono text-[8px] text-white/50 uppercase tracking-wider">
                 Engagement Forecast
               </div>
             </div>

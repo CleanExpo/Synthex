@@ -112,6 +112,12 @@ export const billing = createCategoryLimiter('billing', 60_000, 20);
 export const aiGeneration = createCategoryLimiter('ai-generation', 60_000, 20);
 
 /**
+ * Write-default for sensitive mutations (Stripe, billing, plan changes).
+ * 30 requests per minute.
+ */
+export const writeDefault = createCategoryLimiter('write-default', 60_000, 30);
+
+/**
  * POST/PUT/DELETE on user data.
  * 60 requests per minute.
  */
@@ -132,7 +138,16 @@ export const PRESET_CONFIG = {
   authGeneral: { category: 'auth-general', windowMs: 60_000, maxRequests: 15 },
   admin: { category: 'admin', windowMs: 60_000, maxRequests: 30 },
   billing: { category: 'billing', windowMs: 60_000, maxRequests: 20 },
-  aiGeneration: { category: 'ai-generation', windowMs: 60_000, maxRequests: 20 },
+  aiGeneration: {
+    category: 'ai-generation',
+    windowMs: 60_000,
+    maxRequests: 20,
+  },
+  writeDefault: {
+    category: 'write-default',
+    windowMs: 60_000,
+    maxRequests: 30,
+  },
   mutation: { category: 'mutation', windowMs: 60_000, maxRequests: 60 },
   readDefault: { category: 'read-default', windowMs: 60_000, maxRequests: 120 },
 } as const;

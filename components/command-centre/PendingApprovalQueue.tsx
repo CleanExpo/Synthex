@@ -16,8 +16,8 @@ export function PendingApprovalQueue({ items, onAction }: Props) {
           Pending Review
         </h3>
         <div className="text-center py-8">
-          <p className="text-sm text-white/30">All caught up</p>
-          <p className="text-xs text-white/20 mt-1">
+          <p className="text-sm text-white/50">All caught up</p>
+          <p className="text-xs text-white/50 mt-1">
             No posts waiting for your approval
           </p>
         </div>
@@ -31,7 +31,7 @@ export function PendingApprovalQueue({ items, onAction }: Props) {
         <h3 className="text-sm font-medium text-white/60 uppercase tracking-widest">
           Pending Review
         </h3>
-        <span className="text-xs text-white/30">{items.length} awaiting</span>
+        <span className="text-xs text-white/50">{items.length} awaiting</span>
       </div>
       <div className="space-y-3 max-h-[500px] overflow-y-auto">
         {items.map(item => (

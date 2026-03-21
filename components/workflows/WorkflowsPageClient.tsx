@@ -286,9 +286,9 @@ export function WorkflowsPageClient() {
           <div className="space-y-4">
             {templates.length === 0 ? (
               <div className="flex flex-col items-center py-12 space-y-3">
-                <Brain className="h-8 w-8 text-white/20" />
+                <Brain className="h-8 w-8 text-white/50" />
                 <p className="text-sm text-white/50">No templates available</p>
-                <p className="text-xs text-white/30">
+                <p className="text-xs text-white/50">
                   Create workflow templates to track performance.
                 </p>
               </div>
@@ -319,7 +319,7 @@ export function WorkflowsPageClient() {
                 {selectedTemplateId ? (
                   <IntelligencePanel templateId={selectedTemplateId} />
                 ) : (
-                  <p className="text-xs text-white/30 py-4">
+                  <p className="text-xs text-white/50 py-4">
                     Select a template to view performance analysis.
                   </p>
                 )}

@@ -143,7 +143,7 @@ export default function VideoProductionPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2 block">
             Production
           </span>
           <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white flex items-center gap-2">
@@ -236,7 +236,7 @@ export default function VideoProductionPage() {
                   <div className="w-10 h-10 rounded-sm bg-amber-500/10 border-[0.5px] border-amber-500/20 flex items-center justify-center">
                     <IconComponent className="w-5 h-5 text-amber-400" />
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-white/25">
+                  <div className="flex items-center gap-1 text-xs text-white/50">
                     <Clock className="w-3 h-3" />~{workflow.duration}s
                   </div>
                 </div>

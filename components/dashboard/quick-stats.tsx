@@ -57,7 +57,7 @@ export function QuickStats({ stats }: QuickStatsProps) {
   return (
     <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-y sm:divide-y-0 sm:divide-x divide-white/[0.06]">
-        {items.map((item) => (
+        {items.map(item => (
           <div
             key={item.key}
             className="flex flex-col gap-1.5 px-5 py-4 group hover:bg-white/[0.02] transition-colors"
@@ -68,7 +68,7 @@ export function QuickStats({ stats }: QuickStatsProps) {
             >
               {item.value}
             </span>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-white/30">
+            <span className="text-[10px] uppercase tracking-[0.2em] text-white/50">
               {item.label}
             </span>
           </div>

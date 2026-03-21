@@ -684,7 +684,7 @@ export function BulkScheduleWizard({
                       </div>
                       <button
                         onClick={() => removeItem(item.id)}
-                        className="text-white/30 hover:text-red-400 p-1 self-start"
+                        className="text-white/50 hover:text-red-400 p-1 self-start"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -707,7 +707,7 @@ export function BulkScheduleWizard({
             {activeTab === 'csv' && (
               <div className="space-y-3">
                 <div className="border-2 border-dashed border-white/10 rounded-lg p-6 text-center">
-                  <Upload className="h-8 w-8 text-white/30 mx-auto mb-2" />
+                  <Upload className="h-8 w-8 text-white/50 mx-auto mb-2" />
                   <p className="text-sm text-white/60 mb-2">
                     Upload a CSV file with columns: content, platform,
                     scheduledAt (optional), hashtags (optional)
@@ -790,9 +790,9 @@ export function BulkScheduleWizard({
                   </div>
                 ) : drafts.length === 0 ? (
                   <div className="text-center py-8">
-                    <FileText className="h-8 w-8 text-white/20 mx-auto mb-2" />
+                    <FileText className="h-8 w-8 text-white/50 mx-auto mb-2" />
                     <p className="text-sm text-white/40">No drafts available</p>
-                    <p className="text-xs text-white/30 mt-1">
+                    <p className="text-xs text-white/50 mt-1">
                       Create drafts from the Content page first
                     </p>
                   </div>
@@ -886,7 +886,7 @@ export function BulkScheduleWizard({
                           </span>
                           <button
                             onClick={() => removeItem(item.id)}
-                            className="text-white/30 hover:text-red-400"
+                            className="text-white/50 hover:text-red-400"
                           >
                             <Trash2 className="h-3 w-3" />
                           </button>

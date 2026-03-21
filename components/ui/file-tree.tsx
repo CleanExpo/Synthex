@@ -234,7 +234,7 @@ export const Folder = forwardRef<HTMLDivElement, FolderProps>(
             isSelect && isSelectable && 'bg-amber-500/[0.06]',
             isSelectable
               ? 'cursor-pointer text-white/60 hover:text-white'
-              : 'cursor-not-allowed opacity-50 text-white/30',
+              : 'cursor-not-allowed opacity-50 text-white/50',
             className
           )}
           disabled={!isSelectable}
@@ -312,7 +312,7 @@ export const File = forwardRef<
             !isSelected &&
               isSelectable &&
               'text-white/60 hover:text-white hover:bg-white/[0.02]',
-            !isSelectable && 'opacity-50 cursor-not-allowed text-white/30',
+            !isSelectable && 'opacity-50 cursor-not-allowed text-white/50',
             className
           )}
           onClick={() => selectItem(value)}

@@ -67,7 +67,7 @@ export function FAQSection() {
                   </h3>
                   <ChevronDown
                     className={`w-4 h-4 flex-shrink-0 transition-all duration-300 ${
-                      isOpen ? 'rotate-180 text-[#ffb87b]' : 'text-white/30'
+                      isOpen ? 'rotate-180 text-[#ffb87b]' : 'text-white/50'
                     }`}
                   />
                 </button>

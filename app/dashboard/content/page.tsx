@@ -623,7 +623,7 @@ export default function ContentPage() {
             </select>
           </div>
           {activeBusiness && (
-            <span className="text-xs text-white/25">
+            <span className="text-xs text-white/50">
               {activeBusiness.stats?.activePlatforms ?? 0} platforms connected
             </span>
           )}
@@ -722,7 +722,7 @@ export default function ContentPage() {
       {generatedContent && (
         <span
           id="auto-save-indicator"
-          className="text-[11px] text-white/20 opacity-0 transition-opacity duration-300"
+          className="text-[11px] text-white/50 opacity-0 transition-opacity duration-300"
         >
           Auto-saved
         </span>

@@ -116,7 +116,7 @@ export function BillingTab({
                 </Button>
               </div>
               <div className="mt-4 pt-4 border-t border-white/[0.06]">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-white/25 mb-3">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-white/50 mb-3">
                   Included on free
                 </p>
                 <div className="flex flex-wrap gap-x-6 gap-y-2">
@@ -162,7 +162,7 @@ export function BillingTab({
                 </Button>
               </div>
               <div className="mt-4 pt-4 border-t border-white/[0.06]">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-white/25 mb-3">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-white/50 mb-3">
                   Starter includes
                 </p>
                 <div className="flex flex-wrap gap-x-6 gap-y-2">
@@ -257,7 +257,7 @@ export function BillingTab({
                   className="flex items-center justify-between p-4 border-[0.5px] border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.03] rounded-sm transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <FileText className="w-4 h-4 text-white/25" />
+                    <FileText className="w-4 h-4 text-white/50" />
                     <div>
                       <p className="text-sm text-white">{invoice.id}</p>
                       <p className="text-xs text-white/40 mt-0.5">
@@ -299,7 +299,7 @@ export function BillingTab({
         <Card variant="glass">
           <CardContent className="py-10">
             <div className="text-center">
-              <FileText className="w-6 h-6 text-white/20 mx-auto mb-3" />
+              <FileText className="w-6 h-6 text-white/50 mx-auto mb-3" />
               <p className="text-xs text-white/40">
                 No billing history. Upgrade to a paid plan to access invoices.
               </p>

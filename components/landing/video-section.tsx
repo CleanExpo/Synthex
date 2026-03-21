@@ -32,7 +32,7 @@ export function VideoSection() {
         {/* Section header */}
         <div className="mb-16 flex flex-col lg:flex-row lg:items-end gap-6">
           <div>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/30 mb-4 block">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-4 block">
               See It In Action
             </span>
             <h2 className="text-4xl sm:text-5xl font-extralight tracking-tight text-white">

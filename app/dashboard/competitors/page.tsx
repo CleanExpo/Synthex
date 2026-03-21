@@ -262,7 +262,7 @@ export default function CompetitorsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2 block">
             Intelligence
           </span>
           <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">
@@ -412,12 +412,12 @@ export default function CompetitorsPage() {
                 </div>
 
                 <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                  <span className="text-xs text-white/25">
+                  <span className="text-xs text-white/50">
                     Added {new Date(comp.addedAt).toLocaleDateString()}
                   </span>
                   <button
                     onClick={() => handleRemove(comp.id, comp.name)}
-                    className="text-white/25 hover:text-red-400 transition-colors"
+                    className="text-white/50 hover:text-red-400 transition-colors"
                     title="Remove competitor"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -441,14 +441,14 @@ export default function CompetitorsPage() {
             </span>
           )}
           {alertsLoading && (
-            <RefreshCw className="h-3 w-3 text-white/25 animate-spin" />
+            <RefreshCw className="h-3 w-3 text-white/50 animate-spin" />
           )}
         </div>
         {alerts.length === 0 ? (
           <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-8 text-center">
             <Bell className="h-8 w-8 text-slate-600 mx-auto mb-3" />
             <p className="text-sm text-white/40">No competitor alerts</p>
-            <p className="text-xs text-white/25 mt-1">
+            <p className="text-xs text-white/50 mt-1">
               Alerts will appear when notable competitor activity is detected.
             </p>
           </div>
@@ -502,11 +502,11 @@ export default function CompetitorsPage() {
                   </p>
                   <div className="flex items-center gap-3 mt-2">
                     {alert.competitor && (
-                      <span className="text-[10px] text-white/25">
+                      <span className="text-[10px] text-white/50">
                         {alert.competitor.name}
                       </span>
                     )}
-                    <span className="text-[10px] text-white/20">
+                    <span className="text-[10px] text-white/50">
                       {new Date(alert.createdAt).toLocaleDateString()}
                     </span>
                   </div>
@@ -514,7 +514,7 @@ export default function CompetitorsPage() {
                 {!alert.isRead && (
                   <button
                     onClick={() => handleMarkAlertRead(alert.id)}
-                    className="shrink-0 flex items-center gap-1 text-[10px] text-white/30 hover:text-amber-400 transition-colors px-2 py-1 rounded-sm bg-white/[0.02] border-[0.5px] border-white/[0.06]"
+                    className="shrink-0 flex items-center gap-1 text-[10px] text-white/50 hover:text-amber-400 transition-colors px-2 py-1 rounded-sm bg-white/[0.02] border-[0.5px] border-white/[0.06]"
                     title="Mark as read"
                   >
                     <Check className="h-3 w-3" />

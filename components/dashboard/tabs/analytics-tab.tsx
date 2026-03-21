@@ -16,7 +16,7 @@ export function AnalyticsTab() {
                 Real-Time Analytics
               </span>
             </div>
-            <p className="text-xs text-white/25 mt-1">
+            <p className="text-xs text-white/50 mt-1">
               Live performance metrics across all platforms
             </p>
           </div>
@@ -47,11 +47,11 @@ export function AnalyticsTab() {
 
             {/* Platform Breakdown */}
             <div className="order-1 md:order-2 space-y-3">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">
+              <span className="text-[9px] uppercase tracking-[0.2em] text-white/50">
                 Platform Breakdown
               </span>
               <div className="border-[0.5px] border-white/[0.04] bg-white/[0.01] rounded-sm p-4 flex items-center justify-center min-h-[80px]">
-                <p className="text-[10px] text-white/25 text-center">
+                <p className="text-[10px] text-white/50 text-center">
                   No platform data yet. Connect your accounts to see analytics.
                 </p>
               </div>

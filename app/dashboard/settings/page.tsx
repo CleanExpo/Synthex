@@ -93,7 +93,7 @@ function SettingsPageContent() {
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2 block">
               Account
             </span>
             <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">
@@ -168,7 +168,7 @@ function SettingsPageContent() {
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-white/25" />
+                <ChevronRight className="w-4 h-4 text-white/50" />
               </div>
             </Link>
           </div>
@@ -224,7 +224,7 @@ function SettingsPageContent() {
             <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
               <div className="py-16 px-8 text-center space-y-5">
                 <div className="w-12 h-12 border-[0.5px] border-white/[0.08] bg-white/[0.02] rounded-sm flex items-center justify-center mx-auto">
-                  <Palette className="w-5 h-5 text-white/25" />
+                  <Palette className="w-5 h-5 text-white/50" />
                 </div>
                 <div>
                   <h2 className="text-lg font-light text-white mb-1">

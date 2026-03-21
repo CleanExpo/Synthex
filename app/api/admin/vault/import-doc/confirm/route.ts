@@ -12,7 +12,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isOwnerEmail } from '@/lib/auth/jwt-utils';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
 import { VaultService, slugify } from '@/lib/vault';
@@ -47,15 +50,18 @@ const CredentialEntrySchema = z.object({
   ]),
 });
 
-const ConfirmImportSchema = z.object({
-  // Accept either a single org ID (legacy) or an array for multi-org import
-  organizationId: z.string().min(1).optional(),
-  organizationIds: z.array(z.string().min(1)).min(1).optional(),
-  entries: z.array(CredentialEntrySchema).min(1).max(500),
-}).refine(
-  (d) => d.organizationId || (d.organizationIds && d.organizationIds.length > 0),
-  { message: 'At least one organisation ID is required' }
-);
+const ConfirmImportSchema = z
+  .object({
+    // Accept either a single org ID (legacy) or an array for multi-org import
+    organizationId: z.string().min(1).optional(),
+    organizationIds: z.array(z.string().min(1)).min(1).optional(),
+    entries: z.array(CredentialEntrySchema).min(1).max(500),
+  })
+  .refine(
+    d =>
+      d.organizationId || (d.organizationIds && d.organizationIds.length > 0),
+    { message: 'At least one organisation ID is required' }
+  );
 
 // =============================================================================
 // Owner Auth Helper
@@ -63,10 +69,18 @@ const ConfirmImportSchema = z.object({
 
 async function requireOwner(
   request: NextRequest
-): Promise<{ userId: string; ipAddress: string; userAgent: string } | { error: NextResponse }> {
-  const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+): Promise<
+  | { userId: string; ipAddress: string; userAgent: string }
+  | { error: NextResponse }
+> {
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_READ
+  );
   if (!security.allowed) {
-    return { error: NextResponse.json({ error: 'Unauthorised' }, { status: 401 }) };
+    return {
+      error: NextResponse.json({ error: 'Unauthorised' }, { status: 401 }),
+    };
   }
   const userId = security.context.userId!;
   const user = await prisma.user.findUnique({
@@ -74,7 +88,12 @@ async function requireOwner(
     select: { email: true },
   });
   if (!user || !isOwnerEmail(user.email)) {
-    return { error: NextResponse.json({ error: 'Owner access required' }, { status: 403 }) };
+    return {
+      error: NextResponse.json(
+        { error: 'Owner access required' },
+        { status: 403 }
+      ),
+    };
   }
   return {
     userId,
@@ -144,7 +163,10 @@ export async function POST(request: NextRequest) {
   const validation = ConfirmImportSchema.safeParse(body);
   if (!validation.success) {
     return NextResponse.json(
-      { error: 'Validation failed', details: validation.error.flatten().fieldErrors },
+      {
+        error: 'Validation failed',
+        details: validation.error.flatten().fieldErrors,
+      },
       { status: 400 }
     );
   }
@@ -152,9 +174,10 @@ export async function POST(request: NextRequest) {
   const { organizationId, organizationIds, entries } = validation.data;
 
   // Resolve to a list of org IDs (support both legacy single and new multi)
-  const targetOrgIds = organizationIds && organizationIds.length > 0
-    ? organizationIds
-    : [organizationId!];
+  const targetOrgIds =
+    organizationIds && organizationIds.length > 0
+      ? organizationIds
+      : [organizationId!];
 
   // Verify ownership of every requested org
   const [allOwnerships, userRecord] = await Promise.all([
@@ -169,13 +192,16 @@ export async function POST(request: NextRequest) {
   ]);
 
   const ownedIds = new Set([
-    ...allOwnerships.map((o) => o.organizationId),
+    ...allOwnerships.map(o => o.organizationId),
     ...(userRecord?.organizationId ? [userRecord.organizationId] : []),
   ]);
 
-  const authorisedOrgIds = targetOrgIds.filter((id) => ownedIds.has(id));
+  const authorisedOrgIds = targetOrgIds.filter(id => ownedIds.has(id));
   if (authorisedOrgIds.length === 0) {
-    return NextResponse.json({ error: 'No authorised organisations found' }, { status: 403 });
+    return NextResponse.json(
+      { error: 'No authorised organisations found' },
+      { status: 403 }
+    );
   }
 
   const actor: VaultActor = {
@@ -185,7 +211,12 @@ export async function POST(request: NextRequest) {
     userAgent: auth.userAgent,
   };
 
-  const results = { created: 0, skipped: 0, errors: [] as string[], orgCount: authorisedOrgIds.length };
+  const results = {
+    created: 0,
+    skipped: 0,
+    errors: [] as string[],
+    orgCount: authorisedOrgIds.length,
+  };
 
   // Import entries into EACH selected org
   for (const orgId of authorisedOrgIds) {
@@ -207,7 +238,9 @@ export async function POST(request: NextRequest) {
             if (orgId === authorisedOrgIds[0]) {
               // Only log skip error once (not once per org)
               results.skipped++;
-              results.errors.push(`Skipped "${entry.service}": too many duplicates`);
+              results.errors.push(
+                `Skipped "${entry.service}": too many duplicates`
+              );
             }
             break;
           }
@@ -250,9 +283,13 @@ export async function POST(request: NextRequest) {
         results.created++;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        logger.error('[Vault Import Confirm] Entry failed', { service: entry.service, orgId, error: msg });
+        logger.error('[Vault Import Confirm] Entry failed', {
+          service: entry.service,
+          orgId,
+          error: msg,
+        });
         if (orgId === authorisedOrgIds[0]) {
-          results.errors.push(`"${entry.service}": ${msg.slice(0, 100)}`);
+          results.errors.push(`"${entry.service}": failed to import`);
           results.skipped++;
         }
       }

@@ -125,7 +125,7 @@ export function WelcomeCard({
         {/* Top accent line */}
         <div className="h-px bg-gradient-to-r from-amber-500/60 via-amber-400/30 to-transparent" />
         <div className="px-6 pt-5 pb-4">
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 block mb-1">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 block mb-1">
             Getting Started
           </span>
           <h2 className="text-xl font-light text-white tracking-tight">
@@ -195,7 +195,7 @@ export function WelcomeCard({
       <div className="px-6 pt-5 pb-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 block mb-1">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 block mb-1">
               AI Analysis
             </span>
             <h2 className="text-xl font-light text-white tracking-tight">
@@ -212,7 +212,7 @@ export function WelcomeCard({
               type="button"
               onClick={handleDismiss}
               aria-label="Dismiss welcome card"
-              className="p-1 rounded-sm text-white/25 hover:text-white/50 hover:bg-white/[0.05] transition-colors flex-shrink-0"
+              className="p-1 rounded-sm text-white/50 hover:text-white/50 hover:bg-white/[0.05] transition-colors flex-shrink-0"
             >
               <X className="h-4 w-4" />
             </button>
@@ -225,8 +225,8 @@ export function WelcomeCard({
         {data.seoScore !== null && (
           <div className="px-5 py-4 text-center">
             <div className="flex items-center justify-center gap-1.5 mb-2">
-              <BarChart className="h-3 w-3 text-white/20" />
-              <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">
+              <BarChart className="h-3 w-3 text-white/50" />
+              <span className="text-[9px] uppercase tracking-[0.2em] text-white/50">
                 SEO Score
               </span>
             </div>
@@ -236,7 +236,7 @@ export function WelcomeCard({
             >
               {data.seoScore}
             </p>
-            <p className="text-[10px] text-white/30 mt-0.5">
+            <p className="text-[10px] text-white/50 mt-0.5">
               {seoScoreLabel(data.seoScore)}
             </p>
             {data.seoScore < 80 && (
@@ -256,15 +256,15 @@ export function WelcomeCard({
         {data.detectedPlatforms.length > 0 && (
           <div className="px-5 py-4 text-center">
             <div className="flex items-center justify-center gap-1.5 mb-2">
-              <Globe className="h-3 w-3 text-white/20" />
-              <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">
+              <Globe className="h-3 w-3 text-white/50" />
+              <span className="text-[9px] uppercase tracking-[0.2em] text-white/50">
                 Detected
               </span>
             </div>
             <p className="font-mono text-2xl font-medium text-amber-400 tabular-nums">
               {data.detectedPlatforms.length}
             </p>
-            <p className="text-[10px] text-white/30 mt-0.5">
+            <p className="text-[10px] text-white/50 mt-0.5">
               {data.detectedPlatforms
                 .slice(0, 3)
                 .map(p => p.charAt(0).toUpperCase() + p.slice(1))
@@ -276,8 +276,8 @@ export function WelcomeCard({
         {data.targetAudience && (
           <div className="px-5 py-4 text-center col-span-2 sm:col-span-1">
             <div className="flex items-center justify-center gap-1.5 mb-2">
-              <Users className="h-3 w-3 text-white/20" />
-              <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">
+              <Users className="h-3 w-3 text-white/50" />
+              <span className="text-[9px] uppercase tracking-[0.2em] text-white/50">
                 Audience
               </span>
             </div>
@@ -291,7 +291,7 @@ export function WelcomeCard({
       {/* Key Topics */}
       {data.keyTopics.length > 0 && (
         <div className="border-t-[0.5px] border-white/[0.06] px-6 py-4">
-          <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mb-2.5">
+          <p className="text-[9px] uppercase tracking-[0.2em] text-white/50 mb-2.5">
             Key topics from your website
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -315,7 +315,7 @@ export function WelcomeCard({
       {/* Brand Colours */}
       {data.brandColours.length > 0 && (
         <div className="border-t-[0.5px] border-white/[0.06] px-6 py-4">
-          <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mb-2.5">
+          <p className="text-[9px] uppercase tracking-[0.2em] text-white/50 mb-2.5">
             Brand colours
           </p>
           <div className="flex gap-2">
@@ -334,7 +334,7 @@ export function WelcomeCard({
       {/* What's Next */}
       {nextActions.length > 0 && (
         <div className="border-t-[0.5px] border-white/[0.06] px-6 py-4">
-          <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mb-3">
+          <p className="text-[9px] uppercase tracking-[0.2em] text-white/50 mb-3">
             What&apos;s Next
           </p>
           <div className="space-y-2">
@@ -350,7 +350,7 @@ export function WelcomeCard({
                 <p className="text-xs text-white/60 flex-1 group-hover:text-white/80 transition-colors">
                   {action.label}
                 </p>
-                <ArrowRight className="h-3.5 w-3.5 text-white/20 group-hover:text-amber-400 transition-colors flex-shrink-0" />
+                <ArrowRight className="h-3.5 w-3.5 text-white/50 group-hover:text-amber-400 transition-colors flex-shrink-0" />
               </Link>
             ))}
           </div>
@@ -361,18 +361,18 @@ export function WelcomeCard({
       <div className="border-t-[0.5px] border-white/[0.06] px-6 py-3 flex items-center justify-between">
         <div className="flex gap-4">
           <Link href="/dashboard/seo">
-            <span className="text-xs text-white/30 hover:text-amber-400 transition-colors cursor-pointer">
+            <span className="text-xs text-white/50 hover:text-amber-400 transition-colors cursor-pointer">
               Re-run Analysis
             </span>
           </Link>
           <Link href="/dashboard/settings">
-            <span className="text-xs text-white/30 hover:text-amber-400 transition-colors cursor-pointer">
+            <span className="text-xs text-white/50 hover:text-amber-400 transition-colors cursor-pointer">
               Edit Settings
             </span>
           </Link>
         </div>
         {!canDismiss && (
-          <p className="text-[10px] text-white/20">
+          <p className="text-[10px] text-white/50">
             Visible for {MIN_VIEWS_BEFORE_DISMISS - viewCount} more visit
             {MIN_VIEWS_BEFORE_DISMISS - viewCount !== 1 ? 's' : ''}
           </p>

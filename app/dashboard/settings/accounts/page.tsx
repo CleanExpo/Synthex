@@ -211,7 +211,7 @@ function AccountsSettingsPageContent() {
       </div>
 
       <div>
-        <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+        <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2 block">
           Settings
         </span>
         <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">
@@ -272,7 +272,7 @@ function AccountsSettingsPageContent() {
                       <p className="text-sm text-white/40">
                         {account.providerAccountId}
                       </p>
-                      <p className="text-xs text-white/25">
+                      <p className="text-xs text-white/50">
                         Linked{' '}
                         {new Date(account.createdAt).toLocaleDateString()}
                       </p>
@@ -302,7 +302,7 @@ function AccountsSettingsPageContent() {
                       </Button>
                     ) : (
                       <span
-                        className="text-xs text-white/25 cursor-help"
+                        className="text-xs text-white/50 cursor-help"
                         title={account.unlinkReason}
                       >
                         <AlertCircle className="h-4 w-4 inline mr-1" />

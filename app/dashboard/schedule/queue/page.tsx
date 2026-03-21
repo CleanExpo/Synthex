@@ -281,7 +281,7 @@ export default function QueuePage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2 block">
               Schedule
             </span>
             <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">
@@ -373,7 +373,7 @@ export default function QueuePage() {
       {/* Pagination */}
       {pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-white/25">
+          <p className="text-sm text-white/50">
             Page {pagination.page} of {pagination.totalPages} (
             {pagination.total} posts)
           </p>

@@ -27,8 +27,12 @@ export default function HelpPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
-        <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">Support</span>
-        <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white mb-2">Help Centre</h1>
+        <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2 block">
+          Support
+        </span>
+        <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white mb-2">
+          Help Centre
+        </h1>
         <p className="text-sm text-white/40 leading-relaxed">
           Find answers, learn best practices, and get the most out of SYNTHEX
         </p>

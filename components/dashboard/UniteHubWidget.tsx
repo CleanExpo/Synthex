@@ -138,7 +138,7 @@ export function UniteHubWidget({ className }: { className?: string }) {
             <p className="text-sm font-light text-white tracking-tight">
               Unite-Group
             </p>
-            <p className="text-[10px] text-white/30 mt-0.5">
+            <p className="text-[10px] text-white/50 mt-0.5">
               Nexus Dashboard Integration
             </p>
           </div>
@@ -149,7 +149,7 @@ export function UniteHubWidget({ className }: { className?: string }) {
       <div className="p-5 space-y-5">
         {/* Pull Endpoint */}
         <div className="space-y-2">
-          <p className="text-[9px] uppercase tracking-[0.2em] text-white/25">
+          <p className="text-[9px] uppercase tracking-[0.2em] text-white/50">
             Pull Endpoint
             <span className="text-white/70 ml-1 normal-case tracking-normal">
               (configure in Unite-Group)
@@ -164,14 +164,14 @@ export function UniteHubWidget({ className }: { className?: string }) {
               aria-label="Copy pull endpoint"
               className="h-8 w-8 flex items-center justify-center border-[0.5px] border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.06] rounded-sm transition-colors flex-shrink-0"
             >
-              <Copy className="h-3.5 w-3.5 text-white/30" />
+              <Copy className="h-3.5 w-3.5 text-white/50" />
             </button>
           </div>
         </div>
 
         {/* Event Types */}
         <div className="space-y-2">
-          <p className="text-[9px] uppercase tracking-[0.2em] text-white/25">
+          <p className="text-[9px] uppercase tracking-[0.2em] text-white/50">
             Events sent to Unite-Group
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -220,7 +220,7 @@ export function UniteHubWidget({ className }: { className?: string }) {
           )}
 
           {!data?.configured && (
-            <p className="text-[10px] text-center text-white/20">
+            <p className="text-[10px] text-center text-white/50">
               Configure UNITE_HUB_API_URL + UNITE_HUB_API_KEY to enable
             </p>
           )}
@@ -233,7 +233,7 @@ export function UniteHubWidget({ className }: { className?: string }) {
                 'noopener,noreferrer'
               )
             }
-            className="w-full flex items-center justify-center gap-2 py-2 text-xs text-white/30 hover:text-white/60 border-[0.5px] border-white/[0.06] hover:border-white/[0.12] rounded-sm transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-2 text-xs text-white/50 hover:text-white/60 border-[0.5px] border-white/[0.06] hover:border-white/[0.12] rounded-sm transition-colors"
           >
             <ExternalLink className="h-3.5 w-3.5" />
             Open Unite-Group

@@ -10,7 +10,10 @@
 import { useState, useCallback } from 'react';
 import { useBenchmarks } from '@/hooks/useBenchmarks';
 import { BenchmarkOverview } from '@/components/benchmarks/BenchmarkOverview';
-import { PlatformBenchmarkCard, PlatformBenchmarkCardSkeleton } from '@/components/benchmarks/PlatformBenchmarkCard';
+import {
+  PlatformBenchmarkCard,
+  PlatformBenchmarkCardSkeleton,
+} from '@/components/benchmarks/PlatformBenchmarkCard';
 import { BenchmarkRecommendations } from '@/components/benchmarks/BenchmarkRecommendations';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Button } from '@/components/ui/button';
@@ -21,12 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  RefreshCw,
-  Loader2,
-  AlertTriangle,
-  Target,
-} from '@/components/icons';
+import { RefreshCw, Loader2, AlertTriangle, Target } from '@/components/icons';
 
 export default function BenchmarkReportsPage() {
   const [platform, setPlatform] = useState<string>('all');
@@ -52,7 +50,9 @@ export default function BenchmarkReportsPage() {
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-6 h-6 text-red-400" />
             <div>
-              <h3 className="text-base font-light text-white">Failed to load benchmark data</h3>
+              <h3 className="text-base font-light text-white">
+                Failed to load benchmark data
+              </h3>
               <p className="text-red-400">{error}</p>
             </div>
           </div>
@@ -93,7 +93,10 @@ export default function BenchmarkReportsPage() {
               <SelectItem value="threads">Threads</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={period} onValueChange={(v) => setPeriod(v as '7d' | '30d' | '90d')}>
+          <Select
+            value={period}
+            onValueChange={v => setPeriod(v as '7d' | '30d' | '90d')}
+          >
             <SelectTrigger className="w-[100px] bg-white/[0.02] border-white/[0.06]">
               <SelectValue placeholder="Period" />
             </SelectTrigger>
@@ -123,7 +126,9 @@ export default function BenchmarkReportsPage() {
       {emptyData && !isLoading && (
         <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-12 text-center">
           <Target className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-light text-white mb-2">No Benchmark Data Yet</h3>
+          <h3 className="text-xl font-light text-white mb-2">
+            No Benchmark Data Yet
+          </h3>
           <p className="text-white/40 max-w-md mx-auto">
             Connect your social platforms and publish some posts to see how your
             performance compares to industry benchmarks.
@@ -144,20 +149,20 @@ export default function BenchmarkReportsPage() {
       {/* Platform Cards Grid */}
       {(!emptyData || isLoading) && (
         <div>
-          <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">Platform Breakdown</h3>
+          <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">
+            Platform Breakdown
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {isLoading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <PlatformBenchmarkCardSkeleton key={i} />
-              ))
-            ) : (
-              data?.byPlatform.map((platformReport) => (
-                <PlatformBenchmarkCard
-                  key={platformReport.platform}
-                  report={platformReport}
-                />
-              ))
-            )}
+            {isLoading
+              ? Array.from({ length: 3 }).map((_, i) => (
+                  <PlatformBenchmarkCardSkeleton key={i} />
+                ))
+              : data?.byPlatform.map(platformReport => (
+                  <PlatformBenchmarkCard
+                    key={platformReport.platform}
+                    report={platformReport}
+                  />
+                ))}
           </div>
         </div>
       )}
@@ -165,7 +170,9 @@ export default function BenchmarkReportsPage() {
       {/* Recommendations Section */}
       {(!emptyData || isLoading) && (
         <div>
-          <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">Insights & Actions</h3>
+          <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">
+            Insights & Actions
+          </h3>
           <BenchmarkRecommendations
             insights={data?.insights || []}
             recommendations={data?.recommendations || []}
@@ -177,9 +184,10 @@ export default function BenchmarkReportsPage() {
       {/* Info footer */}
       {!isLoading && !emptyData && (
         <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
-          <p className="text-xs text-white/25">
-            Benchmarks are based on industry averages across millions of social media accounts.
-            Data is updated periodically to reflect current standards.
+          <p className="text-xs text-white/50">
+            Benchmarks are based on industry averages across millions of social
+            media accounts. Data is updated periodically to reflect current
+            standards.
             {data?.generatedAt && (
               <span className="ml-2">
                 Last updated: {new Date(data.generatedAt).toLocaleString()}

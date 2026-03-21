@@ -145,7 +145,7 @@ export function EngagementPrediction({
                 ) : f.impact === 'negative' ? (
                   <ArrowDown className="h-3 w-3 text-red-400 flex-shrink-0" />
                 ) : (
-                  <span className="h-3 w-3 flex items-center justify-center text-white/30 flex-shrink-0">
+                  <span className="h-3 w-3 flex items-center justify-center text-white/50 flex-shrink-0">
                     &mdash;
                   </span>
                 )}
@@ -155,7 +155,7 @@ export function EngagementPrediction({
                       ? 'text-green-400/80'
                       : f.impact === 'negative'
                         ? 'text-red-400/80'
-                        : 'text-white/30'
+                        : 'text-white/50'
                   }
                 >
                   {f.factor}

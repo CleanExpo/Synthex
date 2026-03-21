@@ -28,15 +28,17 @@ interface ErrorLogEntry {
 const errorLog: ErrorLogEntry[] = [];
 const MAX_ERRORS = 1000;
 
-const errorLogSchema = z.object({
-  message: z.string().optional(),
-  stack: z.string().optional(),
-  url: z.string().optional(),
-  timestamp: z.string().optional(),
-  level: z.string().optional(),
-  context: z.record(z.unknown()).optional(),
-  id: z.string().optional(),
-}).passthrough();
+const errorLogSchema = z
+  .object({
+    message: z.string().optional(),
+    stack: z.string().optional(),
+    url: z.string().optional(),
+    timestamp: z.string().optional(),
+    level: z.string().optional(),
+    context: z.record(z.unknown()).optional(),
+    id: z.string().optional(),
+  })
+  .passthrough();
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,13 +54,15 @@ export async function POST(request: NextRequest) {
 
     // Add server timestamp
     error.serverTimestamp = new Date().toISOString();
-    
+
     // Get user info from session if available
     const authHeader = request.headers.get('authorization');
     if (authHeader) {
       try {
         const token = authHeader.replace('Bearer ', '');
-        const { data: { user } } = await supabase.auth.getUser(token);
+        const {
+          data: { user },
+        } = await supabase.auth.getUser(token);
         if (user) {
           error.userId = user.id;
           error.userEmail = user.email;
@@ -74,22 +78,22 @@ export async function POST(request: NextRequest) {
       errorLog.length = MAX_ERRORS;
     }
 
-    // Log critical errors
+    // Log critical errors (sanitise — do not include stack traces from client)
     if (error.level === 'error') {
       logger.error('[Error Tracking]', {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error.stack,
+        message:
+          typeof error.message === 'string' ? error.message : 'Unknown error',
         context: error.context,
-        timestamp: error.timestamp
+        timestamp: error.timestamp,
       });
     }
 
     // NOTE: Sentry.captureException() removed — server-side Sentry disabled (Phase 114-02).
     // Critical errors are already written to logger above; they appear in Vercel function logs.
 
-    return NextResponse.json({ 
-      success: true, 
-      id: error.id 
+    return NextResponse.json({
+      success: true,
+      id: error.id,
     });
   } catch (err) {
     logger.error('Error tracking failed:', err);
@@ -104,7 +108,10 @@ export async function GET(request: NextRequest) {
   // Require authentication — this endpoint exposes userId, userEmail, and stack traces
   const userId = await getUserIdFromRequestOrCookies(request);
   if (!userId) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
   }
 
   try {
@@ -113,23 +120,23 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const level = searchParams.get('level');
     const startDate = searchParams.get('startDate');
-    
+
     let errors = [...errorLog];
-    
+
     // Filter by level if specified
     if (level) {
       errors = errors.filter(e => e.level === level);
     }
-    
+
     // Filter by date if specified
     if (startDate) {
       const start = new Date(startDate);
       errors = errors.filter(e => new Date(e.timestamp) >= start);
     }
-    
+
     // Apply limit
     errors = errors.slice(0, limit);
-    
+
     // Calculate statistics
     const stats = {
       total: errorLog.length,
@@ -141,13 +148,13 @@ export async function GET(request: NextRequest) {
       byLevel: {
         error: errorLog.filter(e => e.level === 'error').length,
         warning: errorLog.filter(e => e.level === 'warning').length,
-        info: errorLog.filter(e => e.level === 'info').length
-      }
+        info: errorLog.filter(e => e.level === 'info').length,
+      },
     };
-    
+
     return NextResponse.json({
       errors,
-      stats
+      stats,
     });
   } catch (err) {
     logger.error('Failed to retrieve errors:', err);

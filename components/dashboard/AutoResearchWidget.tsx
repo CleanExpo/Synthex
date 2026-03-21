@@ -175,11 +175,11 @@ export function AutoResearchWidget({ className }: { className?: string }) {
               minute: '2-digit',
             })}
           </span>
-          <span className="text-white/30">·</span>
+          <span className="text-white/50">·</span>
           <span>{latestRun.insightsCount} insights</span>
         </div>
       ) : (
-        <p className="text-xs text-white/30">
+        <p className="text-xs text-white/50">
           No runs yet — trigger your first research run
         </p>
       )}
@@ -187,7 +187,7 @@ export function AutoResearchWidget({ className }: { className?: string }) {
       {/* Top 3 insights */}
       {insights.length > 0 ? (
         <div className="space-y-2">
-          <p className="text-[11px] text-white/30 uppercase tracking-wide">
+          <p className="text-[11px] text-white/50 uppercase tracking-wide">
             Latest Trends
           </p>
           {insights.map(insight => (
@@ -212,8 +212,8 @@ export function AutoResearchWidget({ className }: { className?: string }) {
           ))}
         </div>
       ) : (
-        <div className="flex items-center gap-2 text-xs text-white/30">
-          <AlertCircle className="h-3.5 w-3.5 text-white/20" />
+        <div className="flex items-center gap-2 text-xs text-white/50">
+          <AlertCircle className="h-3.5 w-3.5 text-white/50" />
           <span>No insights yet — run a research cycle to start learning</span>
         </div>
       )}

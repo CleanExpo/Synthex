@@ -391,7 +391,7 @@ export default function SEOAuditPage() {
           </Button>
         </Link>
         <div>
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2 block">
             SEO
           </span>
           <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white flex items-center gap-3">
@@ -414,7 +414,7 @@ export default function SEOAuditPage() {
           <div className="p-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
-                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/25" />
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
                 <Input
                   type="url"
                   placeholder="Enter website URL (e.g., https://example.com)"
@@ -460,7 +460,7 @@ export default function SEOAuditPage() {
                   <p className="text-white/40 text-sm mt-1">
                     {auditResult.domain}
                   </p>
-                  <div className="flex items-center gap-2 mt-4 text-white/25 text-sm">
+                  <div className="flex items-center gap-2 mt-4 text-white/50 text-sm">
                     <Clock className="w-4 h-4" />
                     {new Date(auditResult.timestamp).toLocaleString()}
                   </div>

@@ -65,7 +65,7 @@ export function ContentPerformanceWidget() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-xs text-white/30 text-center py-4">
+          <p className="text-xs text-white/50 text-center py-4">
             {error ||
               'No performance data yet. Start posting to see patterns emerge.'}
           </p>
@@ -144,7 +144,7 @@ export function ContentPerformanceWidget() {
                   className="bg-white/[0.05] text-white/60 border-[0.5px] border-white/[0.06] text-xs"
                 >
                   #{t.tag}
-                  <span className="ml-1 text-white/30">({t.count})</span>
+                  <span className="ml-1 text-white/50">({t.count})</span>
                 </Badge>
               ))}
             </div>
@@ -182,7 +182,7 @@ export function ContentPerformanceWidget() {
                 size="sm"
                 variant="ghost"
                 onClick={() => setExpanded(!expanded)}
-                className="w-full h-7 text-xs text-white/30 hover:text-white/50"
+                className="w-full h-7 text-xs text-white/50 hover:text-white/50"
               >
                 {expanded ? (
                   <>

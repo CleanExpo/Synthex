@@ -29,7 +29,7 @@ export function CommandCentreStats({ stats }: Props) {
             <div className="text-xl font-light text-white tabular-nums">
               {item.format ? item.format(value) : value.toLocaleString()}
             </div>
-            <div className="text-[10px] text-white/30 uppercase tracking-widest mt-1">
+            <div className="text-[10px] text-white/50 uppercase tracking-widest mt-1">
               {item.label}
             </div>
           </div>

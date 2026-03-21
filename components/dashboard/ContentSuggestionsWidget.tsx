@@ -97,7 +97,7 @@ export function ContentSuggestionsWidget({
 
       {isLoading ? (
         <div className="flex items-center justify-center py-6">
-          <Loader2 className="h-4 w-4 text-white/20 animate-spin" />
+          <Loader2 className="h-4 w-4 text-white/50 animate-spin" />
         </div>
       ) : (
         <div className="space-y-2">
@@ -120,7 +120,7 @@ export function ContentSuggestionsWidget({
                       'Content idea'}
                   </p>
                   {rec.reasoning && (
-                    <p className="text-[10px] text-white/30 mt-1 line-clamp-1">
+                    <p className="text-[10px] text-white/50 mt-1 line-clamp-1">
                       {rec.reasoning}
                     </p>
                   )}
@@ -130,7 +130,7 @@ export function ContentSuggestionsWidget({
                     onClick={() =>
                       handleCopy(rec.content ?? rec.description ?? '')
                     }
-                    className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-sm hover:bg-white/[0.06] text-white/30 hover:text-white/60"
+                    className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-sm hover:bg-white/[0.06] text-white/50 hover:text-white/60"
                     aria-label="Copy suggestion to clipboard"
                   >
                     <Copy className="h-3 w-3" />

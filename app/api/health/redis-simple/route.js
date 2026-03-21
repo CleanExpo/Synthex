@@ -18,13 +18,13 @@ export async function GET(request) {
     // Basic health check
     const health = await healthCheck();
     const stats = await getStats();
-    
+
     // Test basic operations
     const testKey = `health_check_${Date.now()}`;
     await set(testKey, 'test', 10);
     const testValue = await get(testKey);
     await del(testKey);
-    
+
     const responseData = {
       status: health.status,
       connection: health.connection,
@@ -34,25 +34,30 @@ export async function GET(request) {
       test: {
         write: 'OK',
         read: testValue === 'test' ? 'OK' : 'FAILED',
-        delete: 'OK'
-      }
+        delete: 'OK',
+      },
     };
-    
+
     // Determine HTTP status
-    const statusCode = health.status === 'healthy' ? 200 : 
-                      health.status === 'degraded' ? 207 : 503;
-    
+    const statusCode =
+      health.status === 'healthy'
+        ? 200
+        : health.status === 'degraded'
+          ? 207
+          : 503;
+
     return NextResponse.json(responseData, { status: statusCode });
-    
   } catch (error) {
-    logger.error('Redis health check error:', error);
-    
+    logger.error('Redis health check error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+
     return NextResponse.json(
       {
         status: 'error',
         message: 'Failed to check Redis health',
-        error: error.message,
-        timestamp: new Date().toISOString()
+        error: 'Redis service check failed',
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );

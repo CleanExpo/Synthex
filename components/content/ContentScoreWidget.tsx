@@ -177,7 +177,7 @@ export function ContentScoreWidget({
             )}
           </>
         ) : (
-          <p className="text-xs text-white/30 text-center py-4">
+          <p className="text-xs text-white/50 text-center py-4">
             Score will appear after content is generated
           </p>
         )}

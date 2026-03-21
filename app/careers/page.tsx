@@ -295,7 +295,7 @@ export default function CareersPage() {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-amber-400/20 rounded-2xl"></div>
                 <div className="relative p-8">
-                  <Users className="w-full h-64 text-white/20" />
+                  <Users className="w-full h-64 text-white/50" />
                 </div>
               </div>
             </div>

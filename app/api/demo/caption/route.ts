@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { aiGeneration } from '@/lib/rate-limit';
+import { authStrict } from '@/lib/rate-limit';
 
 const RequestSchema = z.object({
   businessName: z.string().min(1).max(80),
 });
 
 export async function POST(req: NextRequest) {
-  return aiGeneration(req, async () => {
+  // Strict rate limit: 5 req/min per IP — public route, no auth, burns AI credits
+  return authStrict(req, async () => {
     let body: unknown;
     try {
       body = await req.json();

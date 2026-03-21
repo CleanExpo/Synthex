@@ -215,7 +215,7 @@ export default function DashboardPage() {
 
           {/* Error detail */}
           <details className="mb-6">
-            <summary className="cursor-pointer text-xs text-white/30 hover:text-white/50 transition-colors">
+            <summary className="cursor-pointer text-xs text-white/50 hover:text-white/50 transition-colors">
               Show error detail
             </summary>
             <div className="mt-3 p-3 bg-black/20 border-[0.5px] border-white/[0.06] rounded-sm overflow-auto max-h-28">

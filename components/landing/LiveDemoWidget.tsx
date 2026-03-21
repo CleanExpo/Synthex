@@ -64,7 +64,7 @@ function InstagramCard({
           <div className="w-full h-full bg-gradient-to-br from-amber-900/40 via-charcoal-700 to-charcoal-800 flex items-center justify-center">
             <div className="text-center">
               <div className="text-4xl mb-2">📸</div>
-              <p className="text-white/30 text-xs">Image generation offline</p>
+              <p className="text-white/50 text-xs">Image generation offline</p>
             </div>
           </div>
         )}
@@ -207,7 +207,7 @@ export function LiveDemoWidget() {
 
       {/* Content area */}
       {state === 'idle' && !error && (
-        <div className="text-center py-8 text-white/20 text-sm">
+        <div className="text-center py-8 text-white/50 text-sm">
           Enter a business name above to generate a post
         </div>
       )}
@@ -230,7 +230,7 @@ export function LiveDemoWidget() {
             </p>
             <button
               onClick={handleReset}
-              className="text-white/30 hover:text-white/60 text-xs transition-colors"
+              className="text-white/50 hover:text-white/60 text-xs transition-colors"
             >
               Try another →
             </button>

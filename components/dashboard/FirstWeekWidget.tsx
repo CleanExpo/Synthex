@@ -178,7 +178,7 @@ export function FirstWeekWidget() {
           <p className="font-mono text-xl font-medium text-white tabular-nums">
             {totalCount}
           </p>
-          <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mt-0.5">
+          <p className="text-[9px] uppercase tracking-[0.2em] text-white/50 mt-0.5">
             Total
           </p>
         </div>
@@ -186,7 +186,7 @@ export function FirstWeekWidget() {
           <p className="font-mono text-xl font-medium text-amber-400 tabular-nums">
             {draftsCount}
           </p>
-          <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mt-0.5">
+          <p className="text-[9px] uppercase tracking-[0.2em] text-white/50 mt-0.5">
             Drafts
           </p>
         </div>
@@ -194,7 +194,7 @@ export function FirstWeekWidget() {
           <p className="font-mono text-xl font-medium text-emerald-400 tabular-nums">
             {scheduledCount}
           </p>
-          <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mt-0.5">
+          <p className="text-[9px] uppercase tracking-[0.2em] text-white/50 mt-0.5">
             Scheduled
           </p>
         </div>
@@ -218,7 +218,7 @@ export function FirstWeekWidget() {
       <div className="border-t-[0.5px] border-white/[0.06] divide-y-[0.5px] divide-white/[0.04]">
         {posts.slice(0, 3).map(post => (
           <div key={post.id} className="flex items-center gap-3 px-5 py-3">
-            <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-white/25 shrink-0 w-5">
+            <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-white/50 shrink-0 w-5">
               {PLATFORM_LABELS[post.platform] ??
                 post.platform.slice(0, 2).toUpperCase()}
             </span>
@@ -227,7 +227,7 @@ export function FirstWeekWidget() {
                 {post.campaignName ?? `${post.platform} post`}
               </p>
               {post.scheduledAt && (
-                <p className="text-[10px] text-white/25 flex items-center gap-1 mt-0.5">
+                <p className="text-[10px] text-white/50 flex items-center gap-1 mt-0.5">
                   <Calendar className="h-2.5 w-2.5" />
                   {new Date(post.scheduledAt).toLocaleDateString('en-AU', {
                     month: 'short',
@@ -252,7 +252,7 @@ export function FirstWeekWidget() {
         ))}
 
         {posts.length > 3 && (
-          <p className="px-5 py-2 text-[10px] text-white/25 text-center">
+          <p className="px-5 py-2 text-[10px] text-white/50 text-center">
             +{posts.length - 3} more posts in drafts
           </p>
         )}

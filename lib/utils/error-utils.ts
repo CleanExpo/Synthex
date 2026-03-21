@@ -166,12 +166,8 @@ export function sanitizeErrorForResponse(
     }
   }
 
-  // Default: if message is short and doesn't look like a stack trace, allow it
-  // Otherwise, return fallback
-  if (message.length < 100 && !message.includes('\n') && !message.includes('    at ')) {
-    return message;
-  }
-
+  // Default: in production, use the fallback message for any unrecognised error.
+  // This prevents leaking internal details that don't match known safe patterns.
   return fallbackMessage;
 }
 

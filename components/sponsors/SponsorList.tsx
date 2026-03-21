@@ -206,7 +206,7 @@ export function SponsorList({
           className
         )}
       >
-        <Building className="h-12 w-12 text-white/20 mx-auto mb-4" />
+        <Building className="h-12 w-12 text-white/50 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-white mb-2">
           No sponsors yet
         </h3>

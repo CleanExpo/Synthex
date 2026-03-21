@@ -74,7 +74,7 @@ export function OverviewTab({ stats }: OverviewTabProps) {
         <AnimatedCard delay={0.1} className="lg:col-span-2">
           <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
             <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06] flex items-center gap-2">
-              <BarChart3 className="h-3.5 w-3.5 text-white/25" />
+              <BarChart3 className="h-3.5 w-3.5 text-white/50" />
               <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
                 Performance Overview
               </span>
@@ -88,8 +88,8 @@ export function OverviewTab({ stats }: OverviewTabProps) {
                     className="px-4 py-4 hover:bg-white/[0.02] transition-colors"
                   >
                     <div className="flex items-center gap-1.5 mb-2">
-                      <Icon className="h-3 w-3 text-white/20" />
-                      <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">
+                      <Icon className="h-3 w-3 text-white/50" />
+                      <span className="text-[9px] uppercase tracking-[0.2em] text-white/50">
                         {item.label}
                       </span>
                     </div>
@@ -103,7 +103,7 @@ export function OverviewTab({ stats }: OverviewTabProps) {
                       className={cn(
                         'text-[9px] font-mono tabular-nums mt-1.5 block',
                         item.trend === '—'
-                          ? 'text-white/25'
+                          ? 'text-white/50'
                           : item.trendUp
                             ? 'text-emerald-400'
                             : 'text-red-400'
@@ -142,7 +142,7 @@ export function OverviewTab({ stats }: OverviewTabProps) {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-white/25 text-center py-4">
+                <p className="text-xs text-white/50 text-center py-4">
                   No trending topics yet
                 </p>
               )}
@@ -161,7 +161,7 @@ export function OverviewTab({ stats }: OverviewTabProps) {
       <AnimatedCard delay={0.3}>
         <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
           <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06] flex items-center gap-2">
-            <MessageSquare className="h-3.5 w-3.5 text-white/25" />
+            <MessageSquare className="h-3.5 w-3.5 text-white/50" />
             <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
               Recent Activity
             </span>
@@ -194,7 +194,7 @@ export function OverviewTab({ stats }: OverviewTabProps) {
                       {activity.message}
                     </span>
                   </div>
-                  <span className="font-mono text-[10px] text-white/25 whitespace-nowrap shrink-0 tabular-nums">
+                  <span className="font-mono text-[10px] text-white/50 whitespace-nowrap shrink-0 tabular-nums">
                     {activity.timestamp}
                   </span>
                 </motion.div>
@@ -202,7 +202,7 @@ export function OverviewTab({ stats }: OverviewTabProps) {
             </div>
           ) : (
             <div className="px-5 py-8 text-center">
-              <p className="text-xs text-white/25">No recent activity</p>
+              <p className="text-xs text-white/50">No recent activity</p>
             </div>
           )}
         </div>

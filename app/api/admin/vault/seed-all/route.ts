@@ -14,7 +14,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isOwnerEmail } from '@/lib/auth/jwt-utils';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { encryptField } from '@/lib/security/field-encryption';
 import { maskApiKey } from '@/lib/encryption/api-key-encryption';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
@@ -27,21 +30,49 @@ export const dynamic = 'force-dynamic';
 
 // Platform-level AI keys to seed into every org's vault
 const PLATFORM_SEEDS = [
-  { envVar: 'OPENROUTER_API_KEY', name: 'OpenRouter API Key', provider: 'openrouter', secretType: 'api_key' },
-  { envVar: 'OPENAI_API_KEY', name: 'OpenAI API Key', provider: 'openai', secretType: 'api_key' },
-  { envVar: 'ANTHROPIC_API_KEY', name: 'Anthropic API Key', provider: 'anthropic', secretType: 'api_key' },
-  { envVar: 'GOOGLE_AI_API_KEY', name: 'Google AI API Key', provider: 'google', secretType: 'api_key' },
-  { envVar: 'GOOGLE_GENERATIVE_AI_API_KEY', name: 'Google Generative AI Key', provider: 'google', secretType: 'api_key' },
+  {
+    envVar: 'OPENROUTER_API_KEY',
+    name: 'OpenRouter API Key',
+    provider: 'openrouter',
+    secretType: 'api_key',
+  },
+  {
+    envVar: 'OPENAI_API_KEY',
+    name: 'OpenAI API Key',
+    provider: 'openai',
+    secretType: 'api_key',
+  },
+  {
+    envVar: 'ANTHROPIC_API_KEY',
+    name: 'Anthropic API Key',
+    provider: 'anthropic',
+    secretType: 'api_key',
+  },
+  {
+    envVar: 'GOOGLE_AI_API_KEY',
+    name: 'Google AI API Key',
+    provider: 'google',
+    secretType: 'api_key',
+  },
+  {
+    envVar: 'GOOGLE_GENERATIVE_AI_API_KEY',
+    name: 'Google Generative AI Key',
+    provider: 'google',
+    secretType: 'api_key',
+  },
 ];
 
 // Build the list of env seeds that are actually available in this environment
 function getAvailableSeeds() {
-  return PLATFORM_SEEDS.filter((s) => !!process.env[s.envVar]);
+  return PLATFORM_SEEDS.filter(s => !!process.env[s.envVar]);
 }
 
 export async function POST(request: NextRequest) {
   // Auth: owner only
-  const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_WRITE);
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_WRITE
+  );
   if (!security.allowed) {
     return APISecurityChecker.createSecureResponse(
       { error: security.error },
@@ -55,14 +86,20 @@ export async function POST(request: NextRequest) {
   });
 
   if (!userRecord?.email || !isOwnerEmail(userRecord.email)) {
-    return NextResponse.json({ error: 'Owner access required' }, { status: 403 });
+    return NextResponse.json(
+      { error: 'Owner access required' },
+      { status: 403 }
+    );
   }
 
   const actor: VaultActor = { id: security.context.userId ?? '', type: 'user' };
   const availableSeeds = getAvailableSeeds();
 
   if (availableSeeds.length === 0) {
-    return NextResponse.json({ error: 'No platform API keys found in server environment' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'No platform API keys found in server environment' },
+      { status: 400 }
+    );
   }
 
   // Fetch all active organisations
@@ -81,7 +118,14 @@ export async function POST(request: NextRequest) {
   }> = [];
 
   for (const org of organisations) {
-    const orgResult = { orgId: org.id, orgName: org.name, seeded: 0, skipped: 0, errors: 0, details: [] as string[] };
+    const orgResult = {
+      orgId: org.id,
+      orgName: org.name,
+      seeded: 0,
+      skipped: 0,
+      errors: 0,
+      details: [] as string[],
+    };
 
     for (const seed of availableSeeds) {
       const rawValue = process.env[seed.envVar]!;
@@ -125,7 +169,7 @@ export async function POST(request: NextRequest) {
       } catch (err) {
         orgResult.errors++;
         const msg = err instanceof Error ? err.message : String(err);
-        orgResult.details.push(`✗ ${seed.name}: ${msg}`);
+        orgResult.details.push(`✗ ${seed.name}: failed to seed`);
         logger.error('[VaultSeedAll] Failed to seed key', {
           org: org.name,
           key: seed.envVar,
@@ -163,7 +207,10 @@ export async function POST(request: NextRequest) {
 
 // GET: Preview what would be seeded (dry-run)
 export async function GET(request: NextRequest) {
-  const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_READ
+  );
   if (!security.allowed) {
     return APISecurityChecker.createSecureResponse(
       { error: security.error },
@@ -177,15 +224,24 @@ export async function GET(request: NextRequest) {
   });
 
   if (!userRecord?.email || !isOwnerEmail(userRecord.email)) {
-    return NextResponse.json({ error: 'Owner access required' }, { status: 403 });
+    return NextResponse.json(
+      { error: 'Owner access required' },
+      { status: 403 }
+    );
   }
 
   const availableSeeds = getAvailableSeeds();
   const orgCount = await prisma.organization.count();
-  const existingSecrets = await prisma.vaultSecret.count({ where: { isActive: true } });
+  const existingSecrets = await prisma.vaultSecret.count({
+    where: { isActive: true },
+  });
 
   return NextResponse.json({
-    availableKeys: availableSeeds.map((s) => ({ name: s.name, provider: s.provider, envVar: s.envVar })),
+    availableKeys: availableSeeds.map(s => ({
+      name: s.name,
+      provider: s.provider,
+      envVar: s.envVar,
+    })),
     organisations: orgCount,
     estimatedNewSecrets: availableSeeds.length * orgCount,
     existingVaultSecrets: existingSecrets,

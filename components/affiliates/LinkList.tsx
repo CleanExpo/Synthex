@@ -262,7 +262,7 @@ export function LinkList({
           className
         )}
       >
-        <LinkIcon className="h-12 w-12 text-white/20 mx-auto mb-4" />
+        <LinkIcon className="h-12 w-12 text-white/50 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-white mb-2">
           No affiliate links yet
         </h3>

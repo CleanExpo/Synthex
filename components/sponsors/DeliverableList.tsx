@@ -79,7 +79,7 @@ function DeliverableRow({
         onClick={onToggleStatus}
         className={cn(
           'flex-shrink-0 transition-colors',
-          isCompleted ? 'text-emerald-400' : 'text-white/30 hover:text-white/50'
+          isCompleted ? 'text-emerald-400' : 'text-white/50 hover:text-white/50'
         )}
       >
         {isCompleted ? (
@@ -214,7 +214,7 @@ export function DeliverableList({
       ))}
 
       {deliverables.length === 0 && (
-        <p className="text-center text-sm text-white/30 py-4">
+        <p className="text-center text-sm text-white/50 py-4">
           No deliverables yet
         </p>
       )}

@@ -65,7 +65,7 @@ export function PendingContentCard({ item, onAction }: Props) {
             {item.platform}
           </span>
           {item.theme && (
-            <span className="text-[10px] text-white/30 uppercase tracking-wider">
+            <span className="text-[10px] text-white/50 uppercase tracking-wider">
               {item.theme}
             </span>
           )}
@@ -103,7 +103,7 @@ export function PendingContentCard({ item, onAction }: Props) {
         <button
           onClick={handleReject}
           disabled={isActing}
-          className="px-3 py-1.5 text-xs text-white/30 hover:text-red-400 border-[0.5px] border-white/[0.06] hover:border-red-500/20 rounded-sm transition-colors disabled:opacity-50"
+          className="px-3 py-1.5 text-xs text-white/50 hover:text-red-400 border-[0.5px] border-white/[0.06] hover:border-red-500/20 rounded-sm transition-colors disabled:opacity-50"
         >
           Reject
         </button>

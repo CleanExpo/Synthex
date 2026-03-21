@@ -56,6 +56,7 @@ export {
   admin,
   billing,
   aiGeneration,
+  writeDefault,
   mutation,
   readDefault,
   PRESET_CONFIG,

@@ -100,7 +100,7 @@ const STATUS_TEXT: Record<ServiceStatus, string> = {
   ok: 'text-emerald-400',
   warn: 'text-amber-400',
   error: 'text-red-400',
-  unknown: 'text-white/30',
+  unknown: 'text-white/50',
 };
 
 // ── SWR fetcher ───────────────────────────────────────────────────────────────
@@ -165,8 +165,8 @@ export function SystemPulsePanel({ className }: { className?: string }) {
       >
         <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Server className="h-3.5 w-3.5 text-white/25" />
-            <span className="text-[10px] uppercase tracking-[0.25em] text-white/30">
+            <Server className="h-3.5 w-3.5 text-white/50" />
+            <span className="text-[10px] uppercase tracking-[0.25em] text-white/50">
               System Pulse
             </span>
           </div>
@@ -197,7 +197,7 @@ export function SystemPulsePanel({ className }: { className?: string }) {
       {/* Header */}
       <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06] flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Server className="h-3.5 w-3.5 text-white/25 shrink-0" />
+          <Server className="h-3.5 w-3.5 text-white/50 shrink-0" />
           <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
             System Pulse
           </span>
@@ -214,7 +214,7 @@ export function SystemPulsePanel({ className }: { className?: string }) {
           <button
             onClick={handleRefresh}
             aria-label="Refresh system health"
-            className="h-6 w-6 flex items-center justify-center rounded-sm border-[0.5px] border-white/[0.06] text-white/25 hover:text-white/60 hover:bg-white/[0.04] transition-colors"
+            className="h-6 w-6 flex items-center justify-center rounded-sm border-[0.5px] border-white/[0.06] text-white/50 hover:text-white/60 hover:bg-white/[0.04] transition-colors"
           >
             <RefreshCw className={cn('h-3 w-3', isLoading && 'animate-spin')} />
           </button>
@@ -239,7 +239,7 @@ export function SystemPulsePanel({ className }: { className?: string }) {
                   isExpanded && 'border-white/[0.12] bg-white/[0.04]'
                 )}
               >
-                <Icon className="h-3 w-3 text-white/25 shrink-0" />
+                <Icon className="h-3 w-3 text-white/50 shrink-0" />
                 <span className="text-[10px] text-white/50 flex-1 truncate">
                   {svc.label}
                 </span>
@@ -250,7 +250,7 @@ export function SystemPulsePanel({ className }: { className?: string }) {
                   )}
                 />
                 {svc.latencyMs !== null && (
-                  <span className="font-mono text-[9px] text-white/20 hidden sm:block tabular-nums">
+                  <span className="font-mono text-[9px] text-white/50 hidden sm:block tabular-nums">
                     {svc.latencyMs}ms
                   </span>
                 )}
@@ -272,13 +272,13 @@ export function SystemPulsePanel({ className }: { className?: string }) {
                 {expandedService.label} — {expandedService.status.toUpperCase()}
               </p>
               {expandedService.latencyMs !== null && (
-                <span className="font-mono text-[10px] text-white/25 tabular-nums">
+                <span className="font-mono text-[10px] text-white/50 tabular-nums">
                   {expandedService.latencyMs}ms
                 </span>
               )}
             </div>
             {expandedService.detail && (
-              <pre className="text-[10px] text-white/25 overflow-auto max-h-28 leading-relaxed font-mono">
+              <pre className="text-[10px] text-white/50 overflow-auto max-h-28 leading-relaxed font-mono">
                 {JSON.stringify(
                   Object.fromEntries(
                     Object.entries(expandedService.detail).filter(
@@ -308,14 +308,14 @@ export function SystemPulsePanel({ className }: { className?: string }) {
                 <span className="text-emerald-400 font-mono font-medium tabular-nums">
                   {services.filter(s => s.status === 'ok').length}
                 </span>
-                <span className="text-white/25 ml-1">healthy</span>
+                <span className="text-white/50 ml-1">healthy</span>
               </span>
               {services.some(s => s.status === 'warn') && (
                 <span>
                   <span className="text-amber-400 font-mono font-medium tabular-nums">
                     {services.filter(s => s.status === 'warn').length}
                   </span>
-                  <span className="text-white/25 ml-1">degraded</span>
+                  <span className="text-white/50 ml-1">degraded</span>
                 </span>
               )}
               {services.some(s => s.status === 'error') && (
@@ -323,7 +323,7 @@ export function SystemPulsePanel({ className }: { className?: string }) {
                   <span className="text-red-400 font-mono font-medium tabular-nums">
                     {services.filter(s => s.status === 'error').length}
                   </span>
-                  <span className="text-white/25 ml-1">down</span>
+                  <span className="text-white/50 ml-1">down</span>
                 </span>
               )}
             </div>

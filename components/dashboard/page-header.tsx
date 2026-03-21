@@ -12,13 +12,19 @@ interface PageHeaderProps {
 }
 
 /** Universal dashboard page header — Scientific Luxury: extralight, sharp, consistent */
-export function PageHeader({ title, description, eyebrow, actions, className }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  description,
+  eyebrow,
+  actions,
+  className,
+}: PageHeaderProps) {
   return (
     <div className={cn('mb-6', className)}>
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           {eyebrow && (
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2 block">
               {eyebrow}
             </span>
           )}
@@ -32,9 +38,7 @@ export function PageHeader({ title, description, eyebrow, actions, className }: 
           )}
         </div>
         {actions && (
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {actions}
-          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>
         )}
       </div>
       <div className="mt-5 h-px bg-white/[0.06]" />

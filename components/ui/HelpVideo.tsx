@@ -111,7 +111,7 @@ export function HelpVideo({ videoId, className }: HelpVideoProps) {
                   title={video.title}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-white/30">
+                <div className="w-full h-full flex items-center justify-center text-white/50">
                   <p className="text-sm">
                     Video rendering in progress — check back soon.
                   </p>

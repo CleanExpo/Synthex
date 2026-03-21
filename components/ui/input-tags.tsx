@@ -129,7 +129,7 @@ function InputTags({
       )}
 
       {atMax && value.length > 0 && inputValue === '' && (
-        <span className="text-xs text-white/30 px-1.5">Max tags reached</span>
+        <span className="text-xs text-white/50 px-1.5">Max tags reached</span>
       )}
     </div>
   );

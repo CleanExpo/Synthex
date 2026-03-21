@@ -15,8 +15,8 @@ export function AIActivityFeed({ items }: Props) {
           AI Activity
         </h3>
         <div className="text-center py-8">
-          <p className="text-sm text-white/30">No AI activity yet</p>
-          <p className="text-xs text-white/20 mt-1">
+          <p className="text-sm text-white/50">No AI activity yet</p>
+          <p className="text-xs text-white/50 mt-1">
             Activity will appear here once autopilot generates content
           </p>
         </div>

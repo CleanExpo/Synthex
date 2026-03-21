@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 /**
  * ReviewQueuePanel — Phase 64
@@ -6,40 +6,40 @@
  * Provides inline approve/reject actions.
  */
 
-import { useState } from 'react'
-import useSWR from 'swr'
-import { cn } from '@/lib/utils'
-import { CheckCircle, XCircle, Loader2, Shield } from '@/components/icons'
-import { Button } from '@/components/ui/button'
-import { QualityScoreCard } from './QualityScoreCard'
-import type { QualityScore } from '@/lib/brand-voice/quality-scorer'
+import { useState } from 'react';
+import useSWR from 'swr';
+import { cn } from '@/lib/utils';
+import { CheckCircle, XCircle, Loader2, Shield } from '@/components/icons';
+import { Button } from '@/components/ui/button';
+import { QualityScoreCard } from './QualityScoreCard';
+import type { QualityScore } from '@/lib/brand-voice/quality-scorer';
 
 interface ReviewItem {
-  id: string
-  stepName: string
-  stepType: string
+  id: string;
+  stepName: string;
+  stepType: string;
   outputData: {
-    contentPreview?: string
-    qualityScore?: QualityScore
-    waitingFor?: string
-  } | null
-  confidenceScore: number | null
-  createdAt: string
+    contentPreview?: string;
+    qualityScore?: QualityScore;
+    waitingFor?: string;
+  } | null;
+  confidenceScore: number | null;
+  createdAt: string;
   workflowExecution: {
-    id: string
-    title: string
-  }
+    id: string;
+    title: string;
+  };
 }
 
 interface ReviewQueueResponse {
-  items: ReviewItem[]
-  total: number
+  items: ReviewItem[];
+  total: number;
 }
 
 async function fetcher(url: string): Promise<ReviewQueueResponse> {
-  const res = await fetch(url, { credentials: 'include' })
-  if (!res.ok) throw new Error(`Failed to fetch review queue (${res.status})`)
-  return res.json()
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error(`Failed to fetch review queue (${res.status})`);
+  return res.json();
 }
 
 export function ReviewQueuePanel({ className }: { className?: string }) {
@@ -47,70 +47,90 @@ export function ReviewQueuePanel({ className }: { className?: string }) {
     '/api/brand-voice/review-queue',
     fetcher,
     { refreshInterval: 15000 }
-  )
-  const [processingId, setProcessingId] = useState<string | null>(null)
-  const [rejectingId, setRejectingId] = useState<string | null>(null)
-  const [rejectReason, setRejectReason] = useState('')
+  );
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   async function handleApprove(stepId: string) {
-    setProcessingId(stepId)
+    setProcessingId(stepId);
     try {
-      const res = await fetch(`/api/brand-voice/review-queue/${stepId}/approve`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      })
-      if (!res.ok) throw new Error('Approval failed')
-      await mutate()
+      const res = await fetch(
+        `/api/brand-voice/review-queue/${stepId}/approve`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        }
+      );
+      if (!res.ok) throw new Error('Approval failed');
+      await mutate();
     } catch (err) {
-      console.error('Approve failed:', err)
+      console.error('Approve failed:', err);
     } finally {
-      setProcessingId(null)
+      setProcessingId(null);
     }
   }
 
   async function handleReject(stepId: string) {
-    if (!rejectReason.trim()) return
-    setProcessingId(stepId)
+    if (!rejectReason.trim()) return;
+    setProcessingId(stepId);
     try {
-      const res = await fetch(`/api/brand-voice/review-queue/${stepId}/reject`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: rejectReason }),
-      })
-      if (!res.ok) throw new Error('Rejection failed')
-      setRejectingId(null)
-      setRejectReason('')
-      await mutate()
+      const res = await fetch(
+        `/api/brand-voice/review-queue/${stepId}/reject`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: rejectReason }),
+        }
+      );
+      if (!res.ok) throw new Error('Rejection failed');
+      setRejectingId(null);
+      setRejectReason('');
+      await mutate();
     } catch (err) {
-      console.error('Reject failed:', err)
+      console.error('Reject failed:', err);
     } finally {
-      setProcessingId(null)
+      setProcessingId(null);
     }
   }
 
-  const items = data?.items ?? []
+  const items = data?.items ?? [];
 
   if (isLoading) {
     return (
       <div className={cn('flex items-center justify-center py-12', className)}>
-        <Loader2 className="h-6 w-6 text-white/30 animate-spin" role="status" aria-label="Loading review queue" />
+        <Loader2
+          className="h-6 w-6 text-white/50 animate-spin"
+          role="status"
+          aria-label="Loading review queue"
+        />
       </div>
-    )
+    );
   }
 
   if (items.length === 0) {
     return (
-      <div className={cn('flex flex-col items-center justify-center py-16 space-y-3', className)}>
+      <div
+        className={cn(
+          'flex flex-col items-center justify-center py-16 space-y-3',
+          className
+        )}
+      >
         <div className="h-12 w-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
           <Shield className="h-6 w-6 text-emerald-400" />
         </div>
-        <p className="text-sm font-medium text-white/70">No items pending review</p>
-        <p className="text-xs text-white/40">High-confidence content is auto-approved. Low-confidence items appear here.</p>
+        <p className="text-sm font-medium text-white/70">
+          No items pending review
+        </p>
+        <p className="text-xs text-white/40">
+          High-confidence content is auto-approved. Low-confidence items appear
+          here.
+        </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -120,11 +140,11 @@ export function ReviewQueuePanel({ className }: { className?: string }) {
         <span className="text-xs text-white/40">{items.length} pending</span>
       </div>
 
-      {items.map((item) => {
-        const qualityScore = item.outputData?.qualityScore
-        const preview = item.outputData?.contentPreview
-        const isProcessing = processingId === item.id
-        const isRejectOpen = rejectingId === item.id
+      {items.map(item => {
+        const qualityScore = item.outputData?.qualityScore;
+        const preview = item.outputData?.contentPreview;
+        const isProcessing = processingId === item.id;
+        const isRejectOpen = rejectingId === item.id;
 
         return (
           <div
@@ -134,8 +154,12 @@ export function ReviewQueuePanel({ className }: { className?: string }) {
             {/* Step info */}
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-white/90 truncate">{item.stepName}</p>
-                <p className="text-xs text-white/40">{item.workflowExecution.title}</p>
+                <p className="text-sm font-medium text-white/90 truncate">
+                  {item.stepName}
+                </p>
+                <p className="text-xs text-white/40">
+                  {item.workflowExecution.title}
+                </p>
               </div>
               {qualityScore && (
                 <QualityScoreCard score={qualityScore} compact />
@@ -157,11 +181,16 @@ export function ReviewQueuePanel({ className }: { className?: string }) {
             {/* Reject reason input */}
             {isRejectOpen && (
               <div className="space-y-2">
-                <label htmlFor={`reject-reason-${item.id}`} className="text-xs text-white/60">Rejection reason</label>
+                <label
+                  htmlFor={`reject-reason-${item.id}`}
+                  className="text-xs text-white/60"
+                >
+                  Rejection reason
+                </label>
                 <textarea
                   id={`reject-reason-${item.id}`}
                   value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
+                  onChange={e => setRejectReason(e.target.value)}
                   placeholder="Describe why this content is being rejected…"
                   className="w-full rounded-lg bg-white/5 border border-white/10 text-xs text-white/80 p-2 resize-none h-20 focus:outline-none focus:border-white/30 focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-0"
                 />
@@ -192,13 +221,20 @@ export function ReviewQueuePanel({ className }: { className?: string }) {
                     disabled={isProcessing || !rejectReason.trim()}
                     className="flex-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30"
                   >
-                    {isProcessing ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <XCircle className="h-3.5 w-3.5 mr-1" />}
+                    {isProcessing ? (
+                      <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                    ) : (
+                      <XCircle className="h-3.5 w-3.5 mr-1" />
+                    )}
                     Confirm Reject
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => { setRejectingId(null); setRejectReason('') }}
+                    onClick={() => {
+                      setRejectingId(null);
+                      setRejectReason('');
+                    }}
                     className="text-white/40 hover:text-white/60"
                   >
                     Cancel
@@ -217,8 +253,8 @@ export function ReviewQueuePanel({ className }: { className?: string }) {
               )}
             </div>
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

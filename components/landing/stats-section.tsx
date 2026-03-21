@@ -25,7 +25,7 @@ export function StatsSection() {
               >
                 {stat.value}
               </span>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/30">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/50">
                 {stat.label}
               </span>
             </div>

@@ -18,7 +18,7 @@ export function TeamTab() {
               Team Collaboration
             </span>
           </div>
-          <p className="text-xs text-white/25 mt-1">
+          <p className="text-xs text-white/50 mt-1">
             Manage your team and collaborate on content
           </p>
         </div>
@@ -27,11 +27,11 @@ export function TeamTab() {
         <div className="p-5 space-y-5">
           {/* Team Members */}
           <div className="space-y-2">
-            <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">
+            <span className="text-[9px] uppercase tracking-[0.2em] text-white/50">
               Team Members
             </span>
             <div className="border-[0.5px] border-white/[0.04] bg-white/[0.01] rounded-sm p-5 flex items-center justify-center">
-              <p className="text-[10px] text-white/25 text-center">
+              <p className="text-[10px] text-white/50 text-center">
                 No team members yet. Visit the Team page to invite members.
               </p>
             </div>
@@ -39,11 +39,11 @@ export function TeamTab() {
 
           {/* Pending Invites */}
           <div className="space-y-2">
-            <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">
+            <span className="text-[9px] uppercase tracking-[0.2em] text-white/50">
               Pending Invites
             </span>
             <div className="border-[0.5px] border-white/[0.04] bg-white/[0.01] rounded-sm px-4 py-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-              <span className="text-[10px] text-white/25">
+              <span className="text-[10px] text-white/50">
                 No pending invites
               </span>
               <button

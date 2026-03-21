@@ -246,7 +246,7 @@ function PlatformCard({
                   @{status.profileName}
                 </p>
               ) : (
-                <p className="text-[10px] text-white/25 truncate mt-0.5">
+                <p className="text-[10px] text-white/50 truncate mt-0.5">
                   {platform.description}
                 </p>
               )}
@@ -270,7 +270,7 @@ function PlatformCard({
                 'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[9px] uppercase tracking-[0.15em] border-[0.5px] shrink-0',
                 status.connected
                   ? 'bg-emerald-500/[0.08] text-emerald-400 border-emerald-500/20'
-                  : 'bg-white/[0.02] text-white/25 border-white/[0.06]'
+                  : 'bg-white/[0.02] text-white/50 border-white/[0.06]'
               )}
             >
               <span
@@ -371,7 +371,7 @@ function PlatformCard({
                 disabled={disconnecting}
                 title="Disconnect"
                 aria-label={`Disconnect ${platform.name}`}
-                className="inline-flex items-center justify-center h-8 w-8 text-white/30 hover:text-red-400 border-[0.5px] border-white/[0.06] bg-white/[0.01] hover:bg-red-500/[0.05] rounded-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center h-8 w-8 text-white/50 hover:text-red-400 border-[0.5px] border-white/[0.06] bg-white/[0.01] hover:bg-red-500/[0.05] rounded-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {disconnecting ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -460,8 +460,8 @@ function PlatformSummary({
               className="px-5 py-4 flex flex-col gap-1.5 hover:bg-white/[0.02] transition-colors"
             >
               <div className="flex items-center gap-1.5">
-                <Icon className="h-3 w-3 text-white/20" />
-                <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">
+                <Icon className="h-3 w-3 text-white/50" />
+                <span className="text-[9px] uppercase tracking-[0.2em] text-white/50">
                   {item.label}
                 </span>
               </div>
@@ -650,7 +650,7 @@ function PlatformsPageContent() {
           <p className="text-sm font-light text-white/40">
             No platforms connected yet
           </p>
-          <p className="text-xs text-white/25 mt-1">
+          <p className="text-xs text-white/50 mt-1">
             Click &ldquo;Connect&rdquo; on any platform card below to get
             started.
           </p>
@@ -660,7 +660,7 @@ function PlatformsPageContent() {
       {/* Connected platforms */}
       {connectedPlatforms.length > 0 && (
         <div className="space-y-3">
-          <span className="text-[9px] uppercase tracking-[0.25em] text-white/25">
+          <span className="text-[9px] uppercase tracking-[0.25em] text-white/50">
             Connected Platforms
           </span>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -684,7 +684,7 @@ function PlatformsPageContent() {
       {/* Available platforms */}
       {availablePlatforms.length > 0 && (
         <div className="space-y-3">
-          <span className="text-[9px] uppercase tracking-[0.25em] text-white/25">
+          <span className="text-[9px] uppercase tracking-[0.25em] text-white/50">
             Available Platforms
           </span>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

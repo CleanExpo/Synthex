@@ -176,7 +176,7 @@ export function InsightsPageClient() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-6 w-6 text-white/20 animate-spin" />
+          <Loader2 className="h-6 w-6 text-white/50 animate-spin" />
         </div>
       ) : insights.length === 0 ? (
         <div className="flex flex-col items-center py-16 space-y-3">
@@ -184,7 +184,7 @@ export function InsightsPageClient() {
             <Lightbulb className="h-6 w-6 text-amber-400" />
           </div>
           <p className="text-sm font-medium text-white/60">No insights yet</p>
-          <p className="text-xs text-white/30">
+          <p className="text-xs text-white/50">
             The agent runs every 4 hours. First run will appear here.
           </p>
         </div>
@@ -259,7 +259,7 @@ export function InsightsPageClient() {
                         </p>
                       )}
                       {se.outputData?.platform && (
-                        <span className="text-xs text-white/30 capitalize">
+                        <span className="text-xs text-white/50 capitalize">
                           {se.outputData.platform}
                         </span>
                       )}

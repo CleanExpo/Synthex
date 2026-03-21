@@ -57,7 +57,7 @@ export function AutopilotStatusBar({ status, onToggled }: Props) {
 
         {/* Next run */}
         {autopilot?.nextRunAt && (
-          <span className="text-xs text-white/30">
+          <span className="text-xs text-white/50">
             Next run:{' '}
             {new Date(autopilot.nextRunAt).toLocaleString('en-AU', {
               day: '2-digit',

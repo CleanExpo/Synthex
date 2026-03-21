@@ -132,7 +132,7 @@ export function CustomErrorPage({
             transition={{ delay: 0.2 }}
             className="mb-4"
           >
-            <span className="text-6xl font-bold text-white/20">
+            <span className="text-6xl font-bold text-white/50">
               {statusCode}
             </span>
           </motion.div>

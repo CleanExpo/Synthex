@@ -272,7 +272,7 @@ export default function BillingPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Page title */}
       <div className="mb-6">
-        <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+        <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2 block">
           Account
         </span>
         <h1 className="text-3xl font-extralight tracking-tight text-white">
@@ -285,7 +285,7 @@ export default function BillingPage() {
       <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
         <div className="px-6 pt-5 pb-4 border-b-[0.5px] border-white/[0.06] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Package className="w-3.5 h-3.5 text-white/25" />
+            <Package className="w-3.5 h-3.5 text-white/50" />
             <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
               Current Plan
             </span>
@@ -310,7 +310,7 @@ export default function BillingPage() {
 
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mb-1">
+            <p className="text-[9px] uppercase tracking-[0.2em] text-white/50 mb-1">
               Plan Type
             </p>
             <p className="font-mono text-2xl font-medium text-amber-400 tabular-nums capitalize">
@@ -320,7 +320,7 @@ export default function BillingPage() {
 
           {isFreePlan ? (
             <div>
-              <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mb-1">
+              <p className="text-[9px] uppercase tracking-[0.2em] text-white/50 mb-1">
                 Status
               </p>
               <p className="text-sm text-white/60">
@@ -329,7 +329,7 @@ export default function BillingPage() {
             </div>
           ) : subscription?.currentPeriodEnd ? (
             <div>
-              <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mb-1">
+              <p className="text-[9px] uppercase tracking-[0.2em] text-white/50 mb-1">
                 {subscription.cancelAtPeriodEnd
                   ? 'Expires On'
                   : 'Next Billing Date'}
@@ -375,7 +375,7 @@ export default function BillingPage() {
       {/* Billing Management */}
       <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
         <div className="px-6 pt-5 pb-4 border-b-[0.5px] border-white/[0.06] flex items-center gap-2">
-          <CreditCard className="w-3.5 h-3.5 text-white/25" />
+          <CreditCard className="w-3.5 h-3.5 text-white/50" />
           <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
             Billing Management
           </span>
@@ -443,7 +443,7 @@ export default function BillingPage() {
       {/* Usage & Limits */}
       <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
         <div className="px-6 pt-5 pb-4 border-b-[0.5px] border-white/[0.06] flex items-center gap-2">
-          <Calendar className="w-3.5 h-3.5 text-white/25" />
+          <Calendar className="w-3.5 h-3.5 text-white/50" />
           <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
             Usage &amp; Limits
           </span>

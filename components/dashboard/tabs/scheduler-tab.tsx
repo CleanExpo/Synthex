@@ -18,7 +18,7 @@ export function SchedulerTab() {
               Post Scheduler
             </span>
           </div>
-          <p className="text-xs text-white/25 mt-1">
+          <p className="text-xs text-white/50 mt-1">
             Schedule and manage your upcoming posts
           </p>
         </div>
@@ -27,11 +27,11 @@ export function SchedulerTab() {
         <div className="p-5 space-y-5">
           {/* Upcoming Posts */}
           <div className="space-y-2">
-            <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">
+            <span className="text-[9px] uppercase tracking-[0.2em] text-white/50">
               Upcoming Posts
             </span>
             <div className="border-[0.5px] border-white/[0.04] bg-white/[0.01] rounded-sm p-5 flex items-center justify-center">
-              <p className="text-[10px] text-white/25 text-center">
+              <p className="text-[10px] text-white/50 text-center">
                 No scheduled posts yet. Create your first post to get started.
               </p>
             </div>

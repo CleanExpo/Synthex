@@ -81,7 +81,7 @@ export function QuickActionsBar() {
               <div className="text-xs font-medium text-white/70 group-hover:text-white/90 transition-colors">
                 {action.label}
               </div>
-              <div className="text-[10px] text-white/30">{action.desc}</div>
+              <div className="text-[10px] text-white/50">{action.desc}</div>
             </div>
           </button>
         ))}
