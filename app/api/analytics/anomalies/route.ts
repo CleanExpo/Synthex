@@ -15,11 +15,11 @@ import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import type { MetricType, AnomalySeverity } from '@/lib/analytics/anomaly-detector';
-import { logger } from '@/lib/logger';l
+import { logger } from '@/lib/logger';
 
 // Lazy-load anomalyDetector to avoid creating Supabase client at module level during build
 async function getAnomalyDetector() {
-  const { anomalyDetector } = await import('@/lib/analytics/anomaly-detector');h
+  const { anomalyDetector } = await import('@/lib/analytics/anomaly-detector');
   return anomalyDetector;
 }
 
