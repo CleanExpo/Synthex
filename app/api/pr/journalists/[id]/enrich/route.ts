@@ -9,9 +9,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { enrichJournalist } from '@/lib/pr/hunter-enricher';
+
+// ── Validation ───────────────────────────────────────────────────────────────
+
+const enrichBodySchema = z.object({
+  forceRefresh: z.boolean().optional(),
+}).strict().optional();
 
 // ─── Route params type ─────────────────────────────────────────────────────────
 
@@ -26,6 +33,16 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+    }
+
+    // Validate optional body (reject unexpected fields)
+    const rawBody = await request.json().catch(() => ({}));
+    const parsed = enrichBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
 
     const { id } = await params;

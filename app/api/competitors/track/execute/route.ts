@@ -12,9 +12,17 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { fetchCompetitorMetrics } from '@/lib/social/competitor-fetcher';
 import { logger } from '@/lib/logger';
+
+// ── Validation — optional cron body parameters ──────────────────────────────
+
+const cronBodySchema = z.object({
+  limit: z.number().int().min(1).max(100).optional(),
+  dryRun: z.boolean().optional(),
+}).strict().optional();
 
 /** Tracked competitor record from database */
 interface TrackedCompetitor {
@@ -127,6 +135,16 @@ export async function POST(request: NextRequest) {
 
     if (!isAuthorized) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Validate optional body (reject unexpected fields)
+    const rawBody = await request.json().catch(() => ({}));
+    const parsed = cronBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
 
     const now = new Date();

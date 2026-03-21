@@ -11,11 +11,26 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import {
   getUserIdFromRequestOrCookies,
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
+
+// ─── Validation ──────────────────────────────────────────────────────────────
+
+const progressBodySchema = z.object({
+  businessName: z.string().max(255).optional(),
+  url: z.string().url().max(2048).optional(),
+  // Pipeline audit data — flexible JSON payload from the onboarding pipeline
+  industry: z.string().max(255).optional(),
+  description: z.string().max(5000).optional(),
+  keyTopics: z.array(z.string().max(255)).optional(),
+  targetAudience: z.string().max(1000).optional(),
+  suggestedTone: z.string().max(100).optional(),
+  suggestedPersonaName: z.string().max(255).optional(),
+}).passthrough(); // Allow additional pipeline fields
 
 // ─── GET /api/onboarding/progress ─────────────────────────────────────────────
 
@@ -80,13 +95,23 @@ export async function POST(request: NextRequest) {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) return unauthorizedResponse();
 
-    const body = await request.json().catch(() => null);
-    if (!body) {
+    const rawBody = await request.json().catch(() => null);
+    if (!rawBody) {
       return NextResponse.json(
         { error: 'Invalid request body' },
         { status: 400 }
       );
     }
+
+    const parsed = progressBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    // Use validated+typed fields; keep rawBody for Prisma JSON (auditData is flexible)
+    const { businessName, url } = parsed.data;
 
     // Find the user's org
     const org = await prisma.organization.findFirst({
@@ -110,16 +135,16 @@ export async function POST(request: NextRequest) {
         },
       },
       update: {
-        auditData: body,
-        businessName: body.businessName ?? undefined,
-        website: body.url ?? undefined,
+        auditData: rawBody,
+        businessName: businessName ?? undefined,
+        website: url ?? undefined,
       },
       create: {
         userId,
         organizationId: org.id,
-        auditData: body,
-        businessName: body.businessName ?? undefined,
-        website: body.url ?? undefined,
+        auditData: rawBody,
+        businessName: businessName ?? undefined,
+        website: url ?? undefined,
         currentStage: 'review',
       },
     });

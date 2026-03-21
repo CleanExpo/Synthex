@@ -10,8 +10,17 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+
+// ── Validation ───────────────────────────────────────────────────────────────
+
+const patchDistributionSchema = z.object({
+  distributionId: z.string().min(1),
+  status: z.enum(['pending', 'submitted', 'published', 'failed']),
+  channelUrl: z.string().url().max(2048).optional(),
+});
 
 // ─── GET /api/pr/press-releases/[id]/distributions ────────────────────────────
 
@@ -95,23 +104,15 @@ export async function PATCH(
       );
     }
 
-    const body = (await request.json()) as {
-      distributionId: string;
-      status: string;
-      channelUrl?: string;
-    };
-
-    if (!body.distributionId) {
+    const rawBody = await request.json();
+    const parsed = patchDistributionSchema.safeParse(rawBody);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'distributionId required' },
+        { error: 'Validation failed', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
-
-    const ALLOWED_STATUSES = ['pending', 'submitted', 'published', 'failed'];
-    if (!ALLOWED_STATUSES.includes(body.status)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
-    }
+    const body = parsed.data;
 
     const updated = await prisma.pRDistribution.update({
       where: { id: body.distributionId },

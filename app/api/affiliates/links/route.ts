@@ -8,6 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
@@ -15,6 +16,23 @@ import {
   type CreateLinkInput,
   type LinkFilters,
 } from '@/lib/affiliates/affiliate-link-service';
+
+// ── Validation ───────────────────────────────────────────────────────────────
+
+const createLinkSchema = z.object({
+  name: z.string().min(1).max(255),
+  originalUrl: z.string().url().max(2048),
+  affiliateUrl: z.string().url().max(2048),
+  networkId: z.string().max(255).optional(),
+  shortCode: z.string().max(100).optional(),
+  productName: z.string().max(255).optional(),
+  productImage: z.string().url().max(2048).optional(),
+  category: z.string().max(100).optional(),
+  tags: z.array(z.string().max(100)).optional(),
+  autoInsert: z.boolean().optional(),
+  keywords: z.array(z.string().max(100)).optional(),
+  isActive: z.boolean().optional(),
+});
 
 // =============================================================================
 // GET - List Links
@@ -66,44 +84,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    const body = await request.json();
-
-    // Validate required fields
-    if (!body.name || typeof body.name !== 'string') {
+    const rawBody = await request.json();
+    const parsed = createLinkSchema.safeParse(rawBody);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Name is required' },
+        { success: false, error: 'Validation failed', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
 
-    if (!body.originalUrl || typeof body.originalUrl !== 'string') {
-      return NextResponse.json(
-        { success: false, error: 'Original URL is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!body.affiliateUrl || typeof body.affiliateUrl !== 'string') {
-      return NextResponse.json(
-        { success: false, error: 'Affiliate URL is required' },
-        { status: 400 }
-      );
-    }
-
-    const input: CreateLinkInput = {
-      networkId: body.networkId,
-      name: body.name,
-      originalUrl: body.originalUrl,
-      affiliateUrl: body.affiliateUrl,
-      shortCode: body.shortCode,
-      productName: body.productName,
-      productImage: body.productImage,
-      category: body.category,
-      tags: body.tags,
-      autoInsert: body.autoInsert,
-      keywords: body.keywords,
-      isActive: body.isActive,
-    };
+    const input: CreateLinkInput = parsed.data;
 
     const link = await AffiliateLinkService.createLink(userId, input);
 

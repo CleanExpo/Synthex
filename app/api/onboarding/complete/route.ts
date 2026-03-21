@@ -21,6 +21,7 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import {
   getUserIdFromRequestOrCookies,
   unauthorizedResponse,
@@ -33,6 +34,14 @@ import { seedVaultFromOnboarding } from '@/lib/vault/onboarding-seeder';
 import { runLaunchPipeline } from '@/lib/autopilot/launch-pipeline';
 
 // ============================================================================
+// Validation — body is optional (endpoint is auth-gated, no required fields)
+// ============================================================================
+
+const completeOnboardingSchema = z.object({
+  skipWelcomeEmail: z.boolean().optional(),
+}).strict().optional();
+
+// ============================================================================
 // POST — Complete Onboarding
 // ============================================================================
 
@@ -40,6 +49,16 @@ export async function POST(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) return unauthorizedResponse();
+
+    // Validate optional body (reject unexpected fields)
+    const rawBody = await request.json().catch(() => ({}));
+    const parsed = completeOnboardingSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
 
     const user = await prisma.user.findUnique({
       where: { id: userId },

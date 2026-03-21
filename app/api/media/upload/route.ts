@@ -15,12 +15,22 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
   validateFile,
   uploadToStorage,
 } from '@/lib/storage/supabase-storage';
+
+// ---------------------------------------------------------------------------
+// Validation — multipart form fields (file validated separately)
+// ---------------------------------------------------------------------------
+
+const uploadFieldsSchema = z.object({
+  folder: z.string().max(255).optional(),
+  bucket: z.string().max(100).optional(),
+});
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -51,6 +61,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!file || !(file instanceof File)) {
     return NextResponse.json(
       { error: 'No file provided. Include a "file" field.' },
+      { status: 400 }
+    );
+  }
+
+  // -- Validate optional form fields --------------------------------------
+  const fields = {
+    folder: formData.get('folder')?.toString(),
+    bucket: formData.get('bucket')?.toString(),
+  };
+  const parsed = uploadFieldsSchema.safeParse(fields);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed', details: parsed.error.flatten() },
       { status: 400 }
     );
   }

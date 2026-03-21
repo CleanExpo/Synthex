@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import {
   APISecurityChecker,
@@ -12,6 +13,13 @@ import {
 } from '@/lib/security/api-security-checker';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
+
+// ── Validation ───────────────────────────────────────────────────────────────
+
+const autoReplyBodySchema = z.object({
+  tone: z.enum(['warm', 'professional', 'empathetic', 'constructive']).optional(),
+  maxWords: z.number().int().min(20).max(500).optional(),
+}).strict().optional();
 
 export async function POST(
   request: NextRequest,
@@ -26,6 +34,17 @@ export async function POST(
   }
 
   const userId = security.context.userId!;
+
+  // Validate optional body (reject unexpected fields)
+  const rawBody = await request.json().catch(() => ({}));
+  const parsed = autoReplyBodySchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed', details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+
   const organizationId = await getEffectiveOrganizationId(userId);
   const { reviewId } = await params;
 
