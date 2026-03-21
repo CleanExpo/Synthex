@@ -54,6 +54,13 @@ const MetricsTable = dynamic(
     import('@/components/analytics').then(m => ({ default: m.MetricsTable })),
   { ssr: false }
 );
+const AnomalyAlerts = dynamic(
+  () =>
+    import('@/components/analytics/AnomalyAlerts').then(m => ({
+      default: m.AnomalyAlerts,
+    })),
+  { ssr: false }
+);
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('30d');
@@ -275,6 +282,8 @@ export default function AnalyticsPage() {
       </div>
 
       <AnalyticsStats data={displayData} growth={performanceData?.growth} />
+
+      <AnomalyAlerts />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <EngagementChart data={chartEngagementData} />

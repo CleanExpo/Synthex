@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import { toast } from 'sonner';
+import { useCompetitorTracking } from '@/hooks/useCompetitorTracking';
+import type { CompetitorAlert } from '@/hooks/useCompetitorTracking';
 import {
   TrendingUp,
   Users,
@@ -14,8 +16,10 @@ import {
   ExternalLink,
   Target,
   AlertTriangle,
-  Zap,
   X,
+  Bell,
+  Check,
+  Eye,
 } from '@/components/icons';
 
 interface Competitor {
@@ -44,6 +48,15 @@ export default function CompetitorsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Hook for alerts and snapshots
+  const { listAlerts, markAlertsRead, triggerSnapshot } =
+    useCompetitorTracking();
+
+  // Alerts state
+  const [alerts, setAlerts] = useState<CompetitorAlert[]>([]);
+  const [alertsLoading, setAlertsLoading] = useState(false);
+  const [isSnapshotting, setIsSnapshotting] = useState(false);
+
   // Add competitor form state
   const [newName, setNewName] = useState('');
   const [newTwitter, setNewTwitter] = useState('');
@@ -51,6 +64,50 @@ export default function CompetitorsPage() {
   const [newLinkedin, setNewLinkedin] = useState('');
   const [newWebsite, setNewWebsite] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+
+  const fetchAlerts = useCallback(async () => {
+    setAlertsLoading(true);
+    try {
+      const result = await listAlerts({ limit: 20 });
+      if (result) {
+        setAlerts(result.alerts);
+      }
+    } catch {
+      // Alerts are non-critical — fail silently
+    } finally {
+      setAlertsLoading(false);
+    }
+  }, [listAlerts]);
+
+  const handleMarkAlertRead = useCallback(
+    async (alertId: string) => {
+      const success = await markAlertsRead([alertId]);
+      if (success) {
+        setAlerts(prev =>
+          prev.map(a => (a.id === alertId ? { ...a, isRead: true } : a))
+        );
+      }
+    },
+    [markAlertsRead]
+  );
+
+  const handleTriggerSnapshot = useCallback(async () => {
+    const firstCompetitor = competitors[0];
+    if (!firstCompetitor) {
+      toast.error('No competitors to snapshot');
+      return;
+    }
+    setIsSnapshotting(true);
+    try {
+      const result = await triggerSnapshot(firstCompetitor.id);
+      if (result) {
+        toast.success(`Snapshot captured for ${firstCompetitor.name}`);
+        fetchAlerts();
+      }
+    } finally {
+      setIsSnapshotting(false);
+    }
+  }, [competitors, triggerSnapshot, fetchAlerts]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -103,7 +160,8 @@ export default function CompetitorsPage() {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchAlerts();
+  }, [fetchData, fetchAlerts]);
 
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
@@ -197,6 +255,7 @@ export default function CompetitorsPage() {
 
   const highPriorityInsights = insights.filter(i => i.priority === 'high');
   const activeCompetitors = competitors.filter(c => c.isActive);
+  const unreadAlerts = alerts.filter(a => !a.isRead);
 
   return (
     <div className="space-y-6">
@@ -224,6 +283,18 @@ export default function CompetitorsPage() {
             />
             Refresh
           </button>
+          {competitors.length > 0 && (
+            <button
+              onClick={handleTriggerSnapshot}
+              disabled={isSnapshotting}
+              className="flex items-center gap-2 px-3 py-2 rounded-sm bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/40 hover:bg-white/[0.04] hover:text-white transition-colors text-sm disabled:opacity-50"
+            >
+              <Eye
+                className={`h-4 w-4 ${isSnapshotting ? 'animate-pulse' : ''}`}
+              />
+              {isSnapshotting ? 'Capturing...' : 'Snapshot Data'}
+            </button>
+          )}
           <button
             onClick={() => setShowAddForm(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-sm bg-amber-500/20 border-[0.5px] border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors text-sm"
@@ -256,10 +327,11 @@ export default function CompetitorsPage() {
             color: 'text-yellow-400',
           },
           {
-            label: 'Total Insights',
-            value: insights.length,
-            icon: Zap,
-            color: 'text-green-400',
+            label: 'Unread Alerts',
+            value: unreadAlerts.length,
+            icon: Bell,
+            color:
+              unreadAlerts.length > 0 ? 'text-amber-400' : 'text-green-400',
           },
         ].map(stat => (
           <div
@@ -351,6 +423,104 @@ export default function CompetitorsPage() {
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Alerts */}
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-sm uppercase tracking-[0.2em] text-white/40">
+            Competitor Alerts
+          </h2>
+          {alerts.filter(a => !a.isRead).length > 0 && (
+            <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-sm tabular-nums">
+              {alerts.filter(a => !a.isRead).length} unread
+            </span>
+          )}
+          {alertsLoading && (
+            <RefreshCw className="h-3 w-3 text-white/25 animate-spin" />
+          )}
+        </div>
+        {alerts.length === 0 ? (
+          <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-8 text-center">
+            <Bell className="h-8 w-8 text-slate-600 mx-auto mb-3" />
+            <p className="text-sm text-white/40">No competitor alerts</p>
+            <p className="text-xs text-white/25 mt-1">
+              Alerts will appear when notable competitor activity is detected.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {alerts.slice(0, 10).map(alert => (
+              <div
+                key={alert.id}
+                className={`border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4 flex items-start gap-3 transition-colors ${
+                  !alert.isRead ? 'border-l-2 border-l-amber-500/40' : ''
+                }`}
+              >
+                <div
+                  className={`p-1.5 rounded-sm shrink-0 mt-0.5 ${
+                    alert.severity === 'important'
+                      ? 'bg-red-500/10'
+                      : alert.severity === 'warning'
+                        ? 'bg-yellow-500/10'
+                        : 'bg-blue-500/10'
+                  }`}
+                >
+                  <AlertTriangle
+                    className={`h-3.5 w-3.5 ${
+                      alert.severity === 'important'
+                        ? 'text-red-400'
+                        : alert.severity === 'warning'
+                          ? 'text-yellow-400'
+                          : 'text-blue-400'
+                    }`}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <h3 className="text-sm font-light text-white truncate">
+                      {alert.title}
+                    </h3>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded-sm shrink-0 ${
+                        alert.severity === 'important'
+                          ? 'bg-red-500/10 text-red-400'
+                          : alert.severity === 'warning'
+                            ? 'bg-yellow-500/10 text-yellow-400'
+                            : 'bg-blue-500/10 text-blue-400'
+                      }`}
+                    >
+                      {alert.severity}
+                    </span>
+                  </div>
+                  <p className="text-xs text-white/40 line-clamp-2">
+                    {alert.description}
+                  </p>
+                  <div className="flex items-center gap-3 mt-2">
+                    {alert.competitor && (
+                      <span className="text-[10px] text-white/25">
+                        {alert.competitor.name}
+                      </span>
+                    )}
+                    <span className="text-[10px] text-white/20">
+                      {new Date(alert.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+                {!alert.isRead && (
+                  <button
+                    onClick={() => handleMarkAlertRead(alert.id)}
+                    className="shrink-0 flex items-center gap-1 text-[10px] text-white/30 hover:text-amber-400 transition-colors px-2 py-1 rounded-sm bg-white/[0.02] border-[0.5px] border-white/[0.06]"
+                    title="Mark as read"
+                  >
+                    <Check className="h-3 w-3" />
+                    Read
+                  </button>
+                )}
               </div>
             ))}
           </div>

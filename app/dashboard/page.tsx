@@ -43,6 +43,15 @@ const LoyaltyTierCard = dynamic(
   { ssr: false }
 );
 
+// UNI-1611 — User Health Score Widget (SWR client component, no SSR)
+const HealthScoreWidget = dynamic(
+  () =>
+    import('@/components/dashboard/HealthScoreWidget').then(m => ({
+      default: m.HealthScoreWidget,
+    })),
+  { ssr: false }
+);
+
 // SYN-430 — Auto-Research Widget (SWR client component, no SSR)
 const AutoResearchWidget = dynamic(
   () =>
@@ -382,6 +391,9 @@ export default function DashboardPage() {
 
             {/* Unite-Group hub */}
             <UniteHubWidget />
+
+            {/* User Health Score */}
+            <HealthScoreWidget />
 
             {/* Gamification + Loyalty Tier + content suggestions */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

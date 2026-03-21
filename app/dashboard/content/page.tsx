@@ -21,6 +21,7 @@ import {
   type PublishOptions,
   type PlatformScheduleResult,
 } from '@/components/content';
+import { EngagementPrediction } from '@/components/content/EngagementPrediction';
 import { GenerateVideoCard, VideoGenerationModal } from '@/components/video';
 import { BulkScheduleWizard } from '@/components/scheduling';
 import { usePersonas } from '@/hooks/use-personas';
@@ -62,6 +63,21 @@ export default function ContentPage() {
     topPrinciples: { name: string; strength: number }[];
     predictedEngagement: { level: string };
   } | null>(null);
+  const [engagementPrediction, setEngagementPrediction] = useState<{
+    likes: number;
+    comments: number;
+    shares: number;
+    reach: number;
+    engagementRate: number;
+    confidence: number;
+    factors: {
+      factor: string;
+      impact: 'positive' | 'neutral' | 'negative';
+      weight: number;
+    }[];
+    recommendations: string[];
+  } | null>(null);
+  const [predictingEngagement, setPredictingEngagement] = useState(false);
 
   // Media attachments
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
@@ -96,6 +112,7 @@ export default function ContentPage() {
 
     setIsGenerating(true);
     setPsychologyScore(null);
+    setEngagementPrediction(null);
     setPlatformAdaptations({});
     try {
       const response = await fetch('/api/ai/generate-content', {
@@ -231,6 +248,41 @@ export default function ContentPage() {
         } catch {
           // Psychology analysis is optional, don't block
         }
+
+        // Predict engagement
+        try {
+          setPredictingEngagement(true);
+          const engRes = await fetch('/api/analytics/predict-engagement', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              text: transformedContent.primary,
+              platform,
+              contentType: 'post',
+              hasMedia: mediaUrls.length > 0,
+            }),
+          });
+          if (engRes.ok) {
+            const engData = await engRes.json();
+            if (engData.prediction) {
+              setEngagementPrediction({
+                likes: engData.prediction.likes,
+                comments: engData.prediction.comments,
+                shares: engData.prediction.shares,
+                reach: engData.prediction.reach,
+                engagementRate: engData.prediction.engagementRate,
+                confidence: engData.prediction.confidence,
+                factors: engData.factors || [],
+                recommendations: engData.recommendations || [],
+              });
+            }
+          }
+        } catch {
+          // Engagement prediction is optional, don't block
+        } finally {
+          setPredictingEngagement(false);
+        }
       } else {
         toast.error(data.error || data.message || 'Failed to generate content');
       }
@@ -251,6 +303,7 @@ export default function ContentPage() {
     personaId,
     multiPlatformEnabled,
     selectedPlatforms,
+    mediaUrls,
   ]);
 
   const handleCopy = useCallback((content: string) => {
@@ -723,6 +776,11 @@ export default function ContentPage() {
           </div>
         </div>
       )}
+
+      <EngagementPrediction
+        prediction={engagementPrediction}
+        isLoading={predictingEngagement}
+      />
 
       {/* Post status tracker (shown after multi-platform schedule) */}
       {lastBatchId && (

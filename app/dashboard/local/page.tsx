@@ -27,6 +27,7 @@ import {
   Send,
   ArrowRight,
   Loader2,
+  Sparkles,
 } from '@/components/icons';
 import { GEOFeatureGate } from '@/components/geo/GEOFeatureGate';
 import { CompositeHealthWidget } from '@/components/dashboard/CompositeHealthWidget';
@@ -189,7 +190,11 @@ export default function LocalPage() {
   } = useGBPInsights(primaryLocationId, 30);
 
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
-  const { reviews, isLoading: reviewsLoading } = useGBPReviews({
+  const {
+    reviews,
+    isLoading: reviewsLoading,
+    refresh: refreshReviews,
+  } = useGBPReviews({
     locationId: primaryLocationId,
     rating: ratingFilter ?? undefined,
   });
@@ -222,6 +227,7 @@ export default function LocalPage() {
   // Reviews UI state
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [generatingFor, setGeneratingFor] = useState<string | null>(null);
 
   // Fetch case studies (existing)
   useEffect(() => {
@@ -567,6 +573,98 @@ export default function LocalPage() {
                           <p className="text-sm text-gray-300 leading-relaxed">
                             {review.comment ?? 'No comment provided'}
                           </p>
+
+                          {/* AI suggestion */}
+                          {!review.replyText && review.aiSuggestion && (
+                            <div className="mt-3 rounded-lg bg-amber-500/10 border-[0.5px] border-amber-500/20 p-3">
+                              <div className="flex items-center gap-1.5 mb-2">
+                                <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                                <span className="text-xs font-medium text-amber-400">
+                                  AI Suggested Reply
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-300 leading-relaxed mb-3">
+                                {review.aiSuggestion}
+                              </p>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="sm"
+                                  className="bg-amber-600 hover:bg-amber-700 text-white text-xs"
+                                  onClick={() => {
+                                    setReplyText(review.aiSuggestion!);
+                                    setReplyingTo(review.id);
+                                  }}
+                                >
+                                  Use Suggestion
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-amber-400 hover:text-amber-300 text-xs"
+                                  disabled={generatingFor === review.id}
+                                  onClick={async () => {
+                                    setGeneratingFor(review.id);
+                                    try {
+                                      await fetch(
+                                        `/api/google-business/reviews/${review.id}/auto-reply`,
+                                        {
+                                          method: 'POST',
+                                          credentials: 'include',
+                                        }
+                                      );
+                                      await refreshReviews();
+                                    } catch (err) {
+                                      console.error(
+                                        'Failed to generate suggestion:',
+                                        err
+                                      );
+                                    } finally {
+                                      setGeneratingFor(null);
+                                    }
+                                  }}
+                                >
+                                  {generatingFor === review.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                  ) : null}
+                                  Generate New
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                          {!review.replyText && !review.aiSuggestion && (
+                            <button
+                              type="button"
+                              className="mt-2 inline-flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition-colours disabled:opacity-50"
+                              disabled={generatingFor === review.id}
+                              onClick={async () => {
+                                setGeneratingFor(review.id);
+                                try {
+                                  await fetch(
+                                    `/api/google-business/reviews/${review.id}/auto-reply`,
+                                    {
+                                      method: 'POST',
+                                      credentials: 'include',
+                                    }
+                                  );
+                                  await refreshReviews();
+                                } catch (err) {
+                                  console.error(
+                                    'Failed to generate suggestion:',
+                                    err
+                                  );
+                                } finally {
+                                  setGeneratingFor(null);
+                                }
+                              }}
+                            >
+                              {generatingFor === review.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Sparkles className="h-3 w-3" />
+                              )}
+                              Get AI Suggestion
+                            </button>
+                          )}
 
                           {/* Existing reply */}
                           {review.replyText && (

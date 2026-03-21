@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { generateProactiveSuggestions } from '@/lib/ai/project-manager';
+import { anomalyDetector } from '@/lib/analytics/anomaly-detector';
 import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
@@ -51,7 +52,11 @@ async function detectAnomalies(): Promise<DetectedAnomaly[]> {
         select: { score: true, trend: true, riskLevel: true },
       });
 
-      if (healthScore && (healthScore.trend === 'declining' || healthScore.riskLevel === 'critical')) {
+      if (
+        healthScore &&
+        (healthScore.trend === 'declining' ||
+          healthScore.riskLevel === 'critical')
+      ) {
         anomalies.push({
           userId: user.userId,
           type: 'health_decline',
@@ -74,14 +79,20 @@ async function detectAnomalies(): Promise<DetectedAnomaly[]> {
           comments: true,
           shares: true,
           engagementRate: true,
-          post: { select: { content: true, connection: { select: { platform: true } } } },
+          post: {
+            select: {
+              content: true,
+              connection: { select: { platform: true } },
+            },
+          },
         },
         orderBy: { likes: 'desc' },
         take: 5,
       });
 
       if (recentMetrics.length > 0) {
-        const avgLikes = recentMetrics.reduce((s, m) => s + m.likes, 0) / recentMetrics.length;
+        const avgLikes =
+          recentMetrics.reduce((s, m) => s + m.likes, 0) / recentMetrics.length;
         const topPost = recentMetrics[0];
         if (topPost.likes > avgLikes * 2 && topPost.likes > 50) {
           anomalies.push({
@@ -108,7 +119,7 @@ async function detectAnomalies(): Promise<DetectedAnomaly[]> {
           by: ['type'],
           where: { userId: user.userId },
         });
-        const usedTypes = new Set(usedFeatures.map((e) => e.type));
+        const usedTypes = new Set(usedFeatures.map(e => e.type));
 
         const highValueFeatures = [
           'ab_test_created',
@@ -118,17 +129,47 @@ async function detectAnomalies(): Promise<DetectedAnomaly[]> {
           'analytics_viewed',
         ];
 
-        const unused = highValueFeatures.filter((f) => !usedTypes.has(f));
+        const unused = highValueFeatures.filter(f => !usedTypes.has(f));
         if (unused.length > 0) {
           anomalies.push({
             userId: user.userId,
             type: 'unused_feature',
-            data: { unusedFeatures: unused.slice(0, 3), totalDaysActive: streak.totalDays },
+            data: {
+              unusedFeatures: unused.slice(0, 3),
+              totalDaysActive: streak.totalDays,
+            },
           });
         }
       }
+
+      // Check 4: Metric-level anomalies (engagement rate, followers, etc.)
+      try {
+        const metricResult = await anomalyDetector.detectAnomalies(user.userId);
+        for (const anomaly of metricResult.anomalies) {
+          if (anomaly.severity === 'high' || anomaly.severity === 'critical') {
+            anomalies.push({
+              userId: user.userId,
+              type: `metric_anomaly`,
+              data: {
+                metricType: anomaly.metricType,
+                severity: anomaly.severity,
+                deviationPercent: Math.round(anomaly.deviationPercent),
+                value: anomaly.value,
+                expectedValue: anomaly.expectedValue,
+                platform: anomaly.platform,
+                recommendations: anomaly.recommendations?.slice(0, 2),
+              },
+            });
+          }
+        }
+      } catch {
+        // Metric anomaly detection is optional — skip on error
+      }
     } catch (err) {
-      logger.error(`[Proactive Insights] Error checking user ${user.userId}:`, err);
+      logger.error(
+        `[Proactive Insights] Error checking user ${user.userId}:`,
+        err
+      );
     }
   }
 
@@ -145,7 +186,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const startTime = Date.now();
-    logger.info('cron:proactive-insights:start', { timestamp: new Date().toISOString() });
+    logger.info('cron:proactive-insights:start', {
+      timestamp: new Date().toISOString(),
+    });
 
     const anomalies = await detectAnomalies();
 
@@ -165,7 +208,7 @@ export async function GET(request: NextRequest) {
       try {
         const suggestions = await generateProactiveSuggestions(
           userId,
-          userAnoms.map((a) => ({ type: a.type, data: a.data }))
+          userAnoms.map(a => ({ type: a.type, data: a.data }))
         );
 
         // Store as notifications
@@ -192,8 +235,54 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Create direct notifications for metric anomalies (high/critical severity)
+    // These appear immediately in the NotificationBell without AI rewording
+    for (const anomaly of anomalies) {
+      if (anomaly.type === 'metric_anomaly') {
+        try {
+          const d = anomaly.data as {
+            metricType: string;
+            severity: string;
+            deviationPercent: number;
+            platform?: string;
+          };
+          const label = d.metricType.replace(/_/g, ' ');
+          const direction = d.deviationPercent > 0 ? 'spike' : 'drop';
+          const pct = Math.abs(d.deviationPercent);
+          const platformTag = d.platform ? ` on ${d.platform}` : '';
+
+          await prisma.notification.create({
+            data: {
+              userId: anomaly.userId,
+              type: d.severity === 'critical' ? 'error' : 'warning',
+              title: `Anomaly: ${label} ${direction}${platformTag}`,
+              message: `${label} deviated ${pct}% from expected${platformTag}. Review your analytics for details.`,
+              data: {
+                source: 'anomaly_detector',
+                severity: d.severity,
+                metricType: d.metricType,
+                deviationPercent: d.deviationPercent,
+                link: '/dashboard/analytics',
+              },
+            },
+          });
+          notificationsSent++;
+        } catch (err) {
+          logger.error(
+            `[Proactive Insights] Failed to create metric anomaly notification:`,
+            err
+          );
+        }
+      }
+    }
+
     const duration = Date.now() - startTime;
-    logger.info('cron:proactive-insights:end', { timestamp: new Date().toISOString(), durationMs: duration, anomaliesDetected: anomalies.length, suggestionsGenerated });
+    logger.info('cron:proactive-insights:end', {
+      timestamp: new Date().toISOString(),
+      durationMs: duration,
+      anomaliesDetected: anomalies.length,
+      suggestionsGenerated,
+    });
 
     return NextResponse.json({
       success: true,

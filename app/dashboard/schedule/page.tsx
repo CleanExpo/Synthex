@@ -21,6 +21,7 @@ import {
 } from '@/components/calendar';
 import { toast } from 'sonner';
 import { fetchWithCSRF } from '@/lib/csrf';
+import { useOptimalTimes } from '@/hooks/use-optimal-times';
 import { HelpVideo } from '@/components/ui/HelpVideo';
 
 import {
@@ -88,6 +89,39 @@ export default function SchedulePage() {
   const [error, setError] = useState<string | null>(null);
   const [bulkWizardOpen, setBulkWizardOpen] = useState(false);
   const mountedRef = useRef(true);
+
+  // ── ML-predicted optimal times ──────────────────────────────────────────
+  const { slots: mlSlots, isLoading: mlLoading } = useOptimalTimes({
+    platforms: [
+      'twitter',
+      'linkedin',
+      'instagram',
+      'facebook',
+      'tiktok',
+      'youtube',
+    ],
+  });
+
+  const mlOptimalTimes = useMemo(() => {
+    if (!mlSlots || mlSlots.length === 0) return OPTIMAL_TIMES;
+
+    const result: Record<string, number[]> = {};
+    for (const slot of mlSlots) {
+      if (!result[slot.platform]) {
+        result[slot.platform] = [];
+      }
+      if (!result[slot.platform].includes(slot.hour)) {
+        result[slot.platform].push(slot.hour);
+      }
+    }
+
+    // Sort hours for each platform
+    for (const platform of Object.keys(result)) {
+      result[platform].sort((a, b) => a - b);
+    }
+
+    return Object.keys(result).length > 0 ? result : OPTIMAL_TIMES;
+  }, [mlSlots]);
 
   // ── Shared data fetcher ───────────────────────────────────────────────────
   const fetchPosts = useCallback(async () => {
@@ -561,7 +595,7 @@ export default function SchedulePage() {
             onPostClick={handlePostClick}
             onPostReschedule={handlePostReschedule}
             onPostCreate={handlePostCreate}
-            optimalTimes={OPTIMAL_TIMES}
+            optimalTimes={mlOptimalTimes}
             onWeekChange={handleWeekChange}
           />
         </div>
