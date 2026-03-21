@@ -73,7 +73,7 @@ async function handler(req: NextRequest) {
     }
     
     // Calculate trending score
-    const patternsWithScore = (data || []).map(pattern => ({
+    const patternsWithScore = (data || []).map((pattern: any) => ({
       ...pattern,
       trendingScore: calculateTrendingScore(pattern),
       cacheTimestamp: new Date().toISOString()
