@@ -1,5 +1,14 @@
-// Jest setup file
-import '@testing-library/jest-dom';
+// Jest setup file - use CommonJS to ensure proper module loading order
+const React = require('react');
+const ReactDOM = require('react-dom');
+
+// Polyfill React.act for React 19 + older @testing-library/react compatibility
+// This must happen BEFORE @testing-library/jest-dom is loaded
+if (!React.act && ReactDOM.act) {
+  React.act = ReactDOM.act;
+}
+
+require('@testing-library/jest-dom');
 
 // Mock environment variables
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
