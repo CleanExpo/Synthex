@@ -149,7 +149,7 @@ export function QuickPostModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0d1829] border-white/[0.08] max-w-lg">
+      <DialogContent className="bg-[#12121E] border-white/[0.08] max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white font-light">
             <div className="w-7 h-7 flex items-center justify-center bg-orange-500/10 border-[0.5px] border-orange-500/20 rounded-sm">
@@ -172,7 +172,7 @@ export function QuickPostModal({
               <SelectTrigger className="bg-white/[0.03] border-white/[0.08] text-white">
                 <SelectValue placeholder="Select platform" />
               </SelectTrigger>
-              <SelectContent className="bg-[#0d1829] border-white/[0.08]">
+              <SelectContent className="bg-[#12121E] border-white/[0.08]">
                 {availablePlatforms.map(p => (
                   <SelectItem
                     key={p}

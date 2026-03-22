@@ -19,8 +19,7 @@ export function CTASection() {
 
             {/* Subtext */}
             <p className="text-white/50 text-base mb-10 max-w-xl mx-auto">
-              Join 2,400+ businesses using Synthex to grow their social presence
-              on autopilot.
+              Start growing your social presence on autopilot.
             </p>
 
             {/* CTAs */}

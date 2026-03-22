@@ -19,12 +19,12 @@ export function SynthexLogo({
       <path d="M50 90 L85 65 L50 55 L15 65 Z" fill="url(#gradient2)" />
       <defs>
         <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#ffb87b" />
+          <stop offset="0%" stopColor="#FF6B35" />
           <stop offset="100%" stopColor="#ff8f00" />
         </linearGradient>
         <linearGradient id="gradient2" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#ffdcc2" />
-          <stop offset="100%" stopColor="#ffb87b" />
+          <stop offset="0%" stopColor="#FF6B35" />
+          <stop offset="100%" stopColor="#FF6B35" />
         </linearGradient>
       </defs>
     </svg>

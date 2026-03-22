@@ -28,7 +28,7 @@ function SocialProofRow() {
         ))}
       </div>
       <p className="text-sm text-white/50">
-        Join <span className="text-white font-semibold">2,400+</span> businesses
+        Start growing your social presence
       </p>
     </div>
   );

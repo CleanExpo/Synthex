@@ -166,8 +166,8 @@ html.lenis body {
 
   /* Simple Mode — Gunmetal + Champagne Bronze (Starter plan) */
   .mode-simple {
-    --mode-bg: #202124;
-    --mode-surface: #2b2d31;
+    --mode-bg: #0a0a12;
+    --mode-surface: #12121e;
     --mode-accent: #a8845c;
     --mode-accent-subtle: rgba(168, 132, 92, 0.15);
     --mode-accent-border: rgba(168, 132, 92, 0.35);
@@ -177,8 +177,8 @@ html.lenis body {
 
   /* Pro Mode — Deep Gunmetal + Amber Gold (Pro/Agency plan) */
   .mode-pro {
-    --mode-bg: #1c1b1e;
-    --mode-surface: #252428;
+    --mode-bg: #050508;
+    --mode-surface: #0a0a12;
     --mode-accent: #ff6b35;
     --mode-accent-subtle: rgba(255, 107, 53, 0.1);
     --mode-accent-border: rgba(255, 107, 53, 0.2);

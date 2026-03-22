@@ -142,7 +142,7 @@ const SidebarProvider = React.forwardRef<
               } as React.CSSProperties
             }
             className={cn(
-              'group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-[#0a0a0a]',
+              'group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-[#0a0a12]',
               className
             )}
             ref={ref}
@@ -186,7 +186,7 @@ const Sidebar = React.forwardRef<
       return (
         <div
           className={cn(
-            'flex h-full w-[--sidebar-width] flex-col bg-[#050505] text-white',
+            'flex h-full w-[--sidebar-width] flex-col bg-[#050508] text-white',
             className
           )}
           ref={ref}
@@ -203,7 +203,7 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-[#050505] p-0 text-white [&>button]:hidden border-r border-[0.5px] border-white/[0.06]"
+            className="w-[--sidebar-width] bg-[#050508] p-0 text-white [&>button]:hidden border-r border-[0.5px] border-white/[0.06]"
             style={
               {
                 '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
@@ -253,7 +253,7 @@ const Sidebar = React.forwardRef<
           <div
             data-sidebar="sidebar"
             className={cn(
-              'flex h-full w-full flex-col bg-[#050505]',
+              'flex h-full w-full flex-col bg-[#050508]',
               'group-data-[variant=floating]:rounded-sm group-data-[variant=floating]:border-[0.5px] group-data-[variant=floating]:border-white/[0.06] group-data-[variant=floating]:shadow'
             )}
           >
@@ -321,7 +321,7 @@ const SidebarRail = React.forwardRef<
         'absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-white/[0.06] group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex',
         '[[data-side=left]_&]:cursor-w-resize [[data-side=right]_&]:cursor-e-resize',
         '[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize',
-        'group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full group-data-[collapsible=offcanvas]:hover:bg-[#050505]',
+        'group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full group-data-[collapsible=offcanvas]:hover:bg-[#050508]',
         '[[data-side=left][data-collapsible=offcanvas]_&]:-right-2',
         '[[data-side=right][data-collapsible=offcanvas]_&]:-left-2',
         className
@@ -344,7 +344,7 @@ const SidebarInset = React.forwardRef<
     <main
       ref={ref}
       className={cn(
-        'relative flex min-h-svh flex-1 flex-col bg-[#0a0a0a]',
+        'relative flex min-h-svh flex-1 flex-col bg-[#0a0a12]',
         'peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-sm md:peer-data-[variant=inset]:shadow',
         className
       )}
@@ -367,7 +367,7 @@ const SidebarInput = React.forwardRef<
       ref={ref}
       data-sidebar="input"
       className={cn(
-        'h-8 w-full bg-[#0a0a0a] border-[0.5px] border-white/[0.06] text-white placeholder:text-white/40 shadow-none focus-visible:ring-1 focus-visible:ring-orange-500/40',
+        'h-8 w-full bg-[#0a0a12] border-[0.5px] border-white/[0.06] text-white placeholder:text-white/40 shadow-none focus-visible:ring-1 focus-visible:ring-orange-500/40',
         className
       )}
       {...props}
@@ -587,7 +587,7 @@ const sidebarMenuButtonVariants = cva(
       variant: {
         default: 'hover:bg-white/[0.06] hover:text-white text-white/60',
         outline:
-          'bg-[#0a0a0a] shadow-[0_0_0_1px_rgba(255,255,255,0.06)] hover:bg-white/[0.06] hover:text-white hover:shadow-[0_0_0_1px_rgba(255,184,123,0.2)] text-white/60',
+          'bg-[#0a0a12] shadow-[0_0_0_1px_rgba(255,255,255,0.06)] hover:bg-white/[0.06] hover:text-white hover:shadow-[0_0_0_1px_rgba(255,184,123,0.2)] text-white/60',
       },
       size: {
         default: 'h-8 text-sm',
@@ -653,7 +653,7 @@ const SidebarMenuButton = React.forwardRef<
           side="right"
           align="center"
           hidden={state !== 'collapsed' || isMobile}
-          className="bg-[#050505] border-[0.5px] border-white/[0.06] text-white/60 text-xs"
+          className="bg-[#050508] border-[0.5px] border-white/[0.06] text-white/60 text-xs"
           {...tooltip}
         />
       </Tooltip>
@@ -885,7 +885,7 @@ function MenuBar({ items, className, ...props }: MenuBarProps) {
               ref={tooltipRef}
               className={cn(
                 'h-7 px-3 rounded-sm inline-flex justify-center items-center overflow-hidden',
-                'bg-[#050505] border border-[0.5px] border-white/[0.06]',
+                'bg-[#050508] border border-[0.5px] border-white/[0.06]',
                 'shadow-[0_4px_16px_rgba(0,0,0,0.4)]'
               )}
               initial={{ x: tooltipPosition.left }}
@@ -905,7 +905,7 @@ function MenuBar({ items, className, ...props }: MenuBarProps) {
         ref={menuRef}
         className={cn(
           'h-10 px-1.5 inline-flex justify-center items-center gap-[3px] overflow-hidden z-10',
-          'rounded-full bg-[#0a0a0a]/95 backdrop-blur',
+          'rounded-full bg-[#0a0a12]/95 backdrop-blur',
           'border border-[0.5px] border-white/[0.06]',
           'shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_8px_16px_-4px_rgba(0,0,0,0.4)]'
         )}

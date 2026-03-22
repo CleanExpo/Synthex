@@ -118,7 +118,7 @@ export function PricingSection({
           x: x / window.innerWidth,
           y: y / window.innerHeight,
         },
-        colors: ['#f59e0b', '#d97706', '#fde68a'],
+        colors: ['#FF6B35', '#d97706', '#fde68a'],
         ticks: 200,
         gravity: 1.2,
         decay: 0.94,
