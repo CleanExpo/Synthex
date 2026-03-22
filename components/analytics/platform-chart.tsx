@@ -2,24 +2,43 @@
 
 /**
  * Platform Chart Component
- * Pie chart showing platform distribution
+ * Pie chart showing platform distribution.
+ * Wrapped with Shadcn ChartContainer + ChartTooltipContent (amber design tokens).
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  PieChart as RechartsPieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from '@/components/ui/chart';
+import { PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import type { PlatformDistributionItem } from './types';
+
+// Build a dynamic config from incoming data; amber used as fallback colour
+function buildPlatformConfig(data: PlatformDistributionItem[]): ChartConfig {
+  return Object.fromEntries(
+    data.map(item => [
+      item.name.toLowerCase(),
+      { label: item.name, color: item.color ?? '#D97706' },
+    ])
+  );
+}
 
 interface PlatformChartProps {
   data: PlatformDistributionItem[];
 }
 
 export function PlatformChart({ data }: PlatformChartProps) {
+  const config = buildPlatformConfig(data);
+
   return (
     <Card variant="glass">
       <CardHeader>
@@ -29,31 +48,35 @@ export function PlatformChart({ data }: PlatformChartProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <ChartContainer config={config} className="h-[300px]">
           <RechartsPieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={(entry) => `${entry.name}: ${entry.value}%`}
-              outerRadius={80}
-              fill="#8884d8"
+              label={({ name, value }) => `${name}: ${value}%`}
+              outerRadius={90}
               dataKey="value"
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={entry.color ?? '#D97706'}
+                  stroke="rgba(255,255,255,0.08)"
+                  strokeWidth={1}
+                />
               ))}
             </Pie>
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                border: '1px solid #333',
-                borderRadius: '8px',
-              }}
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  formatter={(value) => `${value}%`}
+                />
+              }
             />
           </RechartsPieChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       </CardContent>
     </Card>
   );

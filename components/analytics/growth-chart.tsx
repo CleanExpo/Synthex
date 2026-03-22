@@ -2,7 +2,8 @@
 
 /**
  * Growth Chart Component
- * Line chart showing follower growth and engagement rate
+ * Line chart showing follower growth and engagement rate.
+ * Wrapped with Shadcn ChartContainer + ChartTooltipContent (amber design tokens).
  */
 
 import {
@@ -13,16 +14,20 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  LineChart as RechartsLineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+  type ChartConfig,
+} from '@/components/ui/chart';
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import type { GrowthDataPoint } from './types';
+
+const growthConfig: ChartConfig = {
+  followers: { label: 'Followers', color: '#D97706' },   // amber-600
+  engagement: { label: 'Engagement', color: '#FBBF24' }, // amber-400
+};
 
 interface GrowthChartProps {
   data: GrowthDataPoint[];
@@ -34,42 +39,51 @@ export function GrowthChart({ data }: GrowthChartProps) {
       <CardHeader>
         <CardTitle>Growth Metrics</CardTitle>
         <CardDescription className="text-slate-400">
-          Follower growth and engagement rate
+          Follower growth and engagement over time
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={250}>
+        <ChartContainer config={growthConfig} className="h-[250px]">
           <RechartsLineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-            <XAxis dataKey="month" stroke="#666" />
-            <YAxis yAxisId="left" stroke="#666" />
-            <YAxis yAxisId="right" orientation="right" stroke="#666" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                border: '1px solid #333',
-                borderRadius: '8px',
-              }}
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+            <XAxis
+              dataKey="month"
+              stroke="rgba(255,255,255,0.3)"
+              tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }}
             />
-            <Legend />
+            <YAxis
+              yAxisId="left"
+              stroke="rgba(255,255,255,0.3)"
+              tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }}
+            />
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              stroke="rgba(255,255,255,0.3)"
+              tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }}
+            />
+            <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+            <ChartLegend content={<ChartLegendContent />} />
             <Line
               yAxisId="left"
               type="monotone"
               dataKey="followers"
-              stroke="#ffb87b"
+              stroke="#D97706"
               strokeWidth={2}
-              name="Followers"
+              dot={{ fill: '#D97706', r: 3 }}
+              activeDot={{ r: 5, fill: '#D97706' }}
             />
             <Line
               yAxisId="right"
               type="monotone"
               dataKey="engagement"
-              stroke="#10b981"
+              stroke="#FBBF24"
               strokeWidth={2}
-              name="Engagement %"
+              dot={{ fill: '#FBBF24', r: 3 }}
+              activeDot={{ r: 5, fill: '#FBBF24' }}
             />
           </RechartsLineChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       </CardContent>
     </Card>
   );
