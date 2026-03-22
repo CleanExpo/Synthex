@@ -272,7 +272,6 @@ export function HeroSection() {
               <LiveDemoWidget />
             </div>
           </div>
->>>>>>> d103a1ca (feat: candy visual overhaul, sidebar declutter, branded content wiring)
         </div>
       </section>
     </>

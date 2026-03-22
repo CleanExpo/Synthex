@@ -4,14 +4,42 @@ import { useRef, useEffect, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 
 const STATS = [
-  { value: '10+', numericValue: 10, suffix: '+', label: 'Platforms supported', highlight: true },
-  { value: '< 3s', numericValue: 3, prefix: '< ', suffix: 's', label: 'Avg. generation time', highlight: false },
-  { value: '24/7', numericValue: 24, suffix: '/7', label: 'AI availability', highlight: false },
-  { value: '\u221E', numericValue: null, suffix: '', label: 'Scheduling power', highlight: true },
+  {
+    value: '10+',
+    numericValue: 10,
+    suffix: '+',
+    label: 'Platforms supported',
+    highlight: true,
+  },
+  {
+    value: '< 3s',
+    numericValue: 3,
+    prefix: '< ',
+    suffix: 's',
+    label: 'Avg. generation time',
+    highlight: false,
+  },
+  {
+    value: '24/7',
+    numericValue: 24,
+    suffix: '/7',
+    label: 'AI availability',
+    highlight: false,
+  },
+  {
+    value: '\u221E',
+    numericValue: null,
+    suffix: '',
+    label: 'Scheduling power',
+    highlight: true,
+  },
 ];
 
-function CountUpValue({ stat, shouldAnimate }: {
-  stat: typeof STATS[number];
+function CountUpValue({
+  stat,
+  shouldAnimate,
+}: {
+  stat: (typeof STATS)[number];
   shouldAnimate: boolean;
 }) {
   const [count, setCount] = useState(0);
@@ -49,7 +77,9 @@ function CountUpValue({ stat, shouldAnimate }: {
 
   return (
     <>
-      {stat.prefix || ''}{done ? stat.numericValue : count}{stat.suffix || ''}
+      {stat.prefix || ''}
+      {done ? stat.numericValue : count}
+      {stat.suffix || ''}
     </>
   );
 }
@@ -66,7 +96,7 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
   },
 };
 

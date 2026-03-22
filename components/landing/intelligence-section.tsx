@@ -25,7 +25,11 @@ const containerVariants = {
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+  },
 };
 
 /** Unified Social Intelligence — 2-column section with animated bar chart visual */
@@ -42,21 +46,30 @@ export function IntelligenceSection() {
             viewport={{ once: true, margin: '-60px' }}
           >
             {/* Badge */}
-            <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1 rounded-sm bg-[#ffb87b]/10 border border-[#ffb87b]/20 mb-8">
+            <motion.div
+              variants={fadeUp}
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-sm bg-[#ffb87b]/10 border border-[#ffb87b]/20 mb-8"
+            >
               <span className="font-mono text-[10px] font-black tracking-[0.3em] uppercase text-[#ffb87b]">
                 The Neural Core
               </span>
             </motion.div>
 
             {/* Headline */}
-            <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl font-black uppercase tracking-tight text-white leading-[1.05] mb-6">
+            <motion.h2
+              variants={fadeUp}
+              className="text-4xl md:text-5xl font-black uppercase tracking-tight text-white leading-[1.05] mb-6"
+            >
               Unified Social
               <br />
               Intelligence.
             </motion.h2>
 
             {/* Description */}
-            <motion.p variants={fadeUp} className="text-white/40 text-sm leading-relaxed mb-10 max-w-md">
+            <motion.p
+              variants={fadeUp}
+              className="text-white/40 text-sm leading-relaxed mb-10 max-w-md"
+            >
               A continuously learning system that reads market signals,
               synthesises audience intelligence, and executes multi-platform
               content strategies with machine precision.
@@ -65,7 +78,11 @@ export function IntelligenceSection() {
             {/* Feature rows */}
             <div className="space-y-6">
               {FEATURES.map(({ icon: Icon, title, description }) => (
-                <motion.div key={title} variants={fadeUp} className="flex items-start gap-4">
+                <motion.div
+                  key={title}
+                  variants={fadeUp}
+                  className="flex items-start gap-4"
+                >
                   <div className="w-9 h-9 rounded-sm bg-[#ffb87b]/10 border border-[#ffb87b]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Icon className="w-4 h-4 text-[#ffb87b]" />
                   </div>
@@ -133,7 +150,10 @@ export function IntelligenceSection() {
               {/* X-axis labels */}
               <div className="flex justify-between relative z-10">
                 {['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'].map(month => (
-                  <span key={month} className="font-mono text-[8px] text-white/50 uppercase tracking-wider">
+                  <span
+                    key={month}
+                    className="font-mono text-[8px] text-white/50 uppercase tracking-wider"
+                  >
                     {month}
                   </span>
                 ))}
@@ -162,7 +182,9 @@ export function IntelligenceSection() {
                     <span
                       key={i}
                       className="w-0.5 h-3 rounded-full bg-[#ffb87b]"
-                      style={{ animation: `sync-bar 1s ease-in-out ${i * 0.2}s infinite alternate` }}
+                      style={{
+                        animation: `sync-bar 1s ease-in-out ${i * 0.2}s infinite alternate`,
+                      }}
                     />
                   ))}
                 </div>

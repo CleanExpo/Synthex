@@ -27,7 +27,9 @@ export async function GET(request: NextRequest) {
   }
 
   const startTime = Date.now();
-  logger.info('cron:analytics-sync:start', { timestamp: new Date().toISOString() });
+  logger.info('cron:analytics-sync:start', {
+    timestamp: new Date().toISOString(),
+  });
 
   try {
     // Find all organisations with at least one connected platform
@@ -62,7 +64,7 @@ export async function GET(request: NextRequest) {
           // will be added per-platform as integrations are completed
           await prisma.platformConnection.update({
             where: { id: conn.id },
-            data: { lastSyncedAt: new Date() },
+            data: { lastSync: new Date() },
           });
           totalSynced++;
         } catch (err) {
@@ -92,6 +94,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('cron:analytics-sync:fatal', { error });
-    return NextResponse.json({ error: 'Analytics sync failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Analytics sync failed' },
+      { status: 500 }
+    );
   }
 }
