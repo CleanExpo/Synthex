@@ -38,3 +38,69 @@ export function BrandVoicePageClient() {
             Pending Review
           </h2>
           <ReviewQueuePanel />
+        </div>
+
+        {/* Info panel */}
+        <div className="space-y-4">
+          <h2 className="text-sm font-semibold text-white/70 uppercase tracking-wide">
+            How It Works
+          </h2>
+          <div className="rounded-xl border border-white/10 bg-white/5 p-5 space-y-4">
+            <div className="space-y-3 text-sm text-white/60">
+              <div className="flex gap-3">
+                <div className="h-6 w-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-amber-400">1</span>
+                </div>
+                <div>
+                  <p className="font-medium text-white/80">
+                    AI generates content
+                  </p>
+                  <p className="text-xs mt-0.5">
+                    Workflow AI steps produce drafts using your configured
+                    templates.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="h-6 w-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-amber-400">2</span>
+                </div>
+                <div>
+                  <p className="font-medium text-white/80">Quality scoring</p>
+                  <p className="text-xs mt-0.5">
+                    Each draft is scored across 4 dimensions: brand alignment,
+                    clarity, engagement, and appropriateness.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="h-6 w-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-amber-400">3</span>
+                </div>
+                <div>
+                  <p className="font-medium text-white/80">Confidence gate</p>
+                  <p className="text-xs mt-0.5">
+                    Scores ≥ 85% are auto-approved. Lower scores are routed here
+                    for your review.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="h-6 w-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-amber-400">4</span>
+                </div>
+                <div>
+                  <p className="font-medium text-white/80">Human decision</p>
+                  <p className="text-xs mt-0.5">
+                    Approve to continue the workflow. Reject with a reason to
+                    stop and surface for revision.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+          }
