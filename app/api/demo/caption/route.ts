@@ -7,14 +7,13 @@ const RequestSchema = z.object({
 });
 
 /**
- * Demo caption generation — FREE tier via OpenRouter, with Anthropic/OpenAI fallback.
+ * Demo caption generation.
  *
- * Rate limit: 20 req/min per IP (aiGeneration preset — NOT authStrict).
- * Priority: OpenRouter free model → Anthropic Claude Haiku → OpenAI → sample caption.
- * Never returns an error to the user — always produces something.
+ * Priority: Gemini 2.5 Flash → OpenRouter free → Anthropic Haiku → OpenAI GPT-4o-mini → sample.
+ * Rate limit: 20 req/min per IP (aiGeneration preset).
+ * Never errors — always produces output.
  */
 
-/** Sample captions by business name keyword — guaranteed last-resort fallback */
 const SAMPLE_CAPTIONS: Record<string, string> = {
   restoration: `Training Australia's best — because clean isn't just a look, it's a health standard. Whether you're new to the industry or levelling up your certification, CARSI has the course for you. #RestorationTraining #CleaningScience`,
   cafe: `Freshly brewed and ready to make your morning. Stop by and let us fuel your day the right way — good coffee, good vibes. #CoffeeCulture #MorningRitual`,
@@ -29,6 +28,49 @@ function getSampleCaption(businessName: string): string {
     if (lower.includes(key)) return caption;
   }
   return `${businessName} — where quality meets passion. Follow along for updates, behind-the-scenes content, and offers you won't want to miss. #AustralianBusiness #SmallBiz`;
+}
+
+interface GeminiTextResponse {
+  candidates?: Array<{
+    content?: { parts?: Array<{ text?: string }> };
+  }>;
+}
+
+async function generateViaGemini(
+  businessName: string,
+  apiKey: string
+): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: `Write a single Instagram caption (2-3 sentences, 1-2 hashtags) for an Australian business called "${businessName}". Conversational tone, no emojis. Return only the caption text, nothing else.`,
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            maxOutputTokens: 200,
+            temperature: 0.85,
+          },
+        }),
+      }
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as GeminiTextResponse;
+    return (
+      data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null
+    );
+  } catch {
+    return null;
+  }
 }
 
 async function generateViaOpenRouter(
@@ -59,7 +101,6 @@ async function generateViaOpenRouter(
     if (!res.ok) return null;
     const data = (await res.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
-      model?: string;
     };
     return data?.choices?.[0]?.message?.content?.trim() || null;
   } catch {
@@ -126,7 +167,6 @@ async function generateViaOpenAI(
     if (!res.ok) return null;
     const data = (await res.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
-      model?: string;
     };
     return data?.choices?.[0]?.message?.content?.trim() || null;
   } catch {
@@ -153,6 +193,7 @@ export async function POST(req: NextRequest) {
 
     const { businessName } = parsed.data;
 
+    const geminiKey = process.env.GEMINI_API_KEY;
     const openRouterKey = process.env.OPENROUTER_API_KEY;
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
@@ -161,7 +202,16 @@ export async function POST(req: NextRequest) {
     let model = 'sample';
     let tier = 'free';
 
-    // 1. Try OpenRouter (free tier — zero cost)
+    // 1. Gemini 2.5 Flash — first priority, free tier, same key as image generation
+    if (!caption && geminiKey) {
+      caption = await generateViaGemini(businessName, geminiKey);
+      if (caption) {
+        model = 'gemini-2.5-flash';
+        tier = 'free';
+      }
+    }
+
+    // 2. OpenRouter (free tier — Llama 3.3 70B)
     if (!caption && openRouterKey) {
       caption = await generateViaOpenRouter(businessName, openRouterKey);
       if (caption) {
@@ -170,7 +220,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. Fallback: Anthropic Claude Haiku
+    // 3. Anthropic Claude Haiku
     if (!caption && anthropicKey) {
       caption = await generateViaAnthropic(businessName, anthropicKey);
       if (caption) {
@@ -179,7 +229,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Fallback: OpenAI GPT-4o Mini
+    // 4. OpenAI GPT-4o Mini
     if (!caption && openaiKey) {
       caption = await generateViaOpenAI(businessName, openaiKey);
       if (caption) {
@@ -188,7 +238,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. Final fallback: curated sample — demo ALWAYS produces output
+    // 5. Curated sample — always succeeds
     if (!caption) {
       caption = getSampleCaption(businessName);
       model = 'sample';

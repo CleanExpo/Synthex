@@ -149,13 +149,37 @@ function DemoBadge({ model, tier }: { model?: string; tier?: string }) {
       </div>
     );
   }
-  const displayModel = model
-    ? model.replace(':free', '').split('/').pop() || 'AI Model'
-    : 'Llama 3.3 70B';
+
+  const isGemini = model?.startsWith('gemini');
+  const isLlama = model?.includes('llama');
+
+  let displayModel: string;
+  if (isGemini) {
+    displayModel = 'Gemini 2.5 Flash';
+  } else if (model) {
+    displayModel = model.replace(':free', '').split('/').pop() || 'AI Model';
+  } else {
+    displayModel = 'Llama 3.3 70B';
+  }
+
   return (
     <div className="flex items-center gap-2 mt-2">
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-charcoal-700/80 border border-white/[0.06] text-[10px] text-white/40">
-        <span className="w-1.5 h-1.5 rounded-full bg-green-400/60 inline-block" />
+      <span
+        className={[
+          'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px]',
+          isGemini
+            ? 'bg-blue-500/10 border border-blue-400/20 text-blue-300/70'
+            : isLlama
+              ? 'bg-purple-500/10 border border-purple-400/20 text-purple-300/70'
+              : 'bg-charcoal-700/80 border border-white/[0.06] text-white/40',
+        ].join(' ')}
+      >
+        <span
+          className={[
+            'w-1.5 h-1.5 rounded-full inline-block',
+            isGemini ? 'bg-blue-400/70' : isLlama ? 'bg-purple-400/70' : 'bg-green-400/60',
+          ].join(' ')}
+        />
         Live AI &middot; {displayModel}
       </span>
     </div>
