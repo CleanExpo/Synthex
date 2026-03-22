@@ -8,13 +8,28 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { ClientBrandedContentService } from '@/lib/services/client-branded-content';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 
 export async function POST(request: NextRequest) {
+  const authenticatedUserId = await getUserIdFromRequestOrCookies(request);
+  if (!authenticatedUserId) return unauthorizedResponse();
+
+  const authenticatedOrgId =
+    await getEffectiveOrganizationId(authenticatedUserId);
+  if (!authenticatedOrgId) {
+    return NextResponse.json(
+      { error: 'No organisation context' },
+      { status: 403 }
+    );
+  }
+
   try {
     const body = await request.json();
     const {
-      orgId,
-      userId,
       platform,
       prompt,
       contentType,
@@ -25,16 +40,16 @@ export async function POST(request: NextRequest) {
       customInstructions,
     } = body;
 
-    if (!orgId || !userId || !platform || !prompt) {
+    if (!platform || !prompt) {
       return NextResponse.json(
-        { error: 'Missing required fields: orgId, userId, platform, prompt' },
+        { error: 'Missing required fields: platform, prompt' },
         { status: 400 }
       );
     }
 
     const result = await ClientBrandedContentService.generate({
-      orgId,
-      userId,
+      orgId: authenticatedOrgId,
+      userId: authenticatedUserId,
       platform,
       prompt,
       contentType,

@@ -13,12 +13,14 @@ const unifiedLoginSchema = z.object({
   email: z.string().email().optional(),
   password: z.string().optional(),
   provider: z.enum(['google', 'github']).optional(),
-  oauthUser: z.object({
-    id: z.string(),
-    email: z.string().email(),
-    name: z.string().nullish(),
-    image: z.string().nullish(),
-  }).optional(),
+  oauthUser: z
+    .object({
+      id: z.string(),
+      email: z.string().email(),
+      name: z.string().nullish(),
+      image: z.string().nullish(),
+    })
+    .optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -38,7 +40,7 @@ export async function POST(request: NextRequest) {
       email,
       password,
       provider,
-      oauthUser
+      oauthUser,
     });
 
     if (result.success && result.session) {
@@ -47,10 +49,9 @@ export async function POST(request: NextRequest) {
         success: true,
         user: result.session.user,
         session: {
-          accessToken: result.session.accessToken,
-          expiresAt: result.session.expiresAt
+          expiresAt: result.session.expiresAt,
         },
-        requiresVerification: result.requiresVerification
+        requiresVerification: result.requiresVerification,
       });
 
       // Set HTTP-only cookie for security
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60, // 7 days
-        path: '/'
+        path: '/',
       });
 
       return response;
@@ -76,9 +77,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('[UNIFIED-LOGIN] Error:', error);
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: 'Internal server error' 
+        error: 'Internal server error',
       },
       { status: 500 }
     );
@@ -88,14 +89,12 @@ export async function POST(request: NextRequest) {
 // Validate session endpoint
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value || 
-                  request.headers.get('Authorization')?.replace('Bearer ', '');
+    const token =
+      request.cookies.get('auth-token')?.value ||
+      request.headers.get('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
-      return NextResponse.json(
-        { authenticated: false },
-        { status: 401 }
-      );
+      return NextResponse.json({ authenticated: false }, { status: 401 });
     }
 
     const result = await signInFlow.validateSession(token);
@@ -104,19 +103,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         authenticated: true,
         user: result.session.user,
-        expiresAt: result.session.expiresAt
+        expiresAt: result.session.expiresAt,
       });
     }
 
-    return NextResponse.json(
-      { authenticated: false },
-      { status: 401 }
-    );
+    return NextResponse.json({ authenticated: false }, { status: 401 });
   } catch (error) {
     logger.error('[VALIDATE-SESSION] Error:', error);
-    return NextResponse.json(
-      { authenticated: false },
-      { status: 500 }
-    );
+    return NextResponse.json({ authenticated: false }, { status: 500 });
   }
 }

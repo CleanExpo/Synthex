@@ -5,12 +5,24 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+  forbiddenResponse,
+} from '@/lib/auth/jwt-utils';
+import { hasOrganizationAccess } from '@/lib/multi-business/business-scope';
 
 export async function GET(request: NextRequest) {
   const orgId = request.nextUrl.searchParams.get('orgId');
   if (!orgId) {
     return NextResponse.json({ error: 'orgId required' }, { status: 400 });
   }
+
+  const userId = await getUserIdFromRequestOrCookies(request);
+  if (!userId) return unauthorizedResponse();
+
+  const hasAccess = await hasOrganizationAccess(userId, orgId);
+  if (!hasAccess) return forbiddenResponse();
 
   try {
     const profile = await prisma.brandDNA.findUnique({
