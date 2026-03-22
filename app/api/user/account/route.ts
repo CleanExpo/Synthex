@@ -6,6 +6,7 @@
  * ENVIRONMENT VARIABLES REQUIRED:
  * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
  * - NEXT_PUBLIC_SUPABASE_ANON_KEY: Supabase anon key (PUBLIC)
+ * - SUPABASE_SERVICE_ROLE_KEY: Service role key for admin auth deletion (SECRET)
  *
  * SECURITY: Requires authentication via Supabase token
  * DELETE requires confirmation body: { "confirmation": "DELETE_MY_ACCOUNT" }
@@ -13,6 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase-client';
+import { createServerClient } from '@/lib/supabase-server';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -35,13 +37,13 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get account metadata
@@ -75,13 +77,13 @@ export async function DELETE(request: NextRequest) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Require confirmation for account deletion
@@ -109,6 +111,11 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Delete all user data — collect errors before touching the auth record.
+    // GDPR Art. 17: auth deletion must not proceed if any DB deletion fails,
+    // as that would leave orphaned rows with no way to re-attempt erasure.
+    const dbErrors: string[] = [];
+
     // Delete user profile data
     const { error: profileError } = await supabase
       .from('profiles')
@@ -116,8 +123,7 @@ export async function DELETE(request: NextRequest) {
       .eq('id', user.id);
 
     if (profileError) {
-      logger.error('Profile deletion error:', profileError);
-      // Continue with account deletion even if profile deletion fails
+      dbErrors.push(`profiles: ${profileError.message}`);
     }
 
     // Delete platform connections
@@ -127,7 +133,7 @@ export async function DELETE(request: NextRequest) {
       .eq('user_id', user.id);
 
     if (connectionsError) {
-      logger.error('Platform connections deletion error:', connectionsError);
+      dbErrors.push(`platform_connections: ${connectionsError.message}`);
     }
 
     // Delete campaigns and related data
@@ -137,16 +143,41 @@ export async function DELETE(request: NextRequest) {
       .eq('user_id', user.id);
 
     if (campaignsError) {
-      logger.error('Campaigns deletion error:', campaignsError);
+      dbErrors.push(`campaigns: ${campaignsError.message}`);
     }
 
-    // Note: Full account deletion from Supabase Auth requires admin privileges
-    // The user's auth record will remain but all their data is deleted
-    // In production, use Supabase admin API or database triggers for full deletion
+    // Gate auth deletion — if any DB deletion failed, stop here so the user
+    // record is preserved and the operation can be retried / investigated.
+    if (dbErrors.length > 0) {
+      logger.error('Account data deletion failed:', dbErrors);
+      return NextResponse.json(
+        {
+          error:
+            'Account deletion failed. Please try again or contact support.',
+        },
+        { status: 500 }
+      );
+    }
+
+    // All DB data deleted — now remove auth record (GDPR Art. 17 right to erasure)
+    const adminClient = createServerClient();
+    const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(
+      user.id
+    );
+    if (authDeleteError) {
+      logger.error('Auth record deletion failed:', authDeleteError);
+      return NextResponse.json(
+        {
+          error:
+            'Account data deleted but authentication record removal failed. Contact support.',
+        },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Account data deleted successfully. Please contact support to fully delete your authentication record.',
+      message: 'Account deleted successfully.',
     });
   } catch (error) {
     logger.error('Account deletion error:', error);
