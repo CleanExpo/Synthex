@@ -14,10 +14,16 @@
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 export type Platform =
   | 'instagram'
@@ -196,7 +202,7 @@ class CompetitiveIntelligence {
         addedAt: new Date(),
       };
 
-      await supabase.from('competitors').insert({
+      await getSupabase().from('competitors').insert({
         id: competitor.id,
         user_id: userId,
         name: competitor.name,
@@ -229,7 +235,7 @@ class CompetitiveIntelligence {
     } = {}
   ): Promise<Competitor[]> {
     try {
-      let query = supabase
+      let query = getSupabase()
         .from('competitors')
         .select('*')
         .eq('user_id', userId)
@@ -243,7 +249,7 @@ class CompetitiveIntelligence {
 
       if (error) throw error;
 
-      let competitors: Competitor[] = (data || []).map((d) => ({
+      let competitors: Competitor[] = (data || []).map((d: any) => ({
         id: d.id,
         userId: d.user_id,
         name: d.name,
@@ -260,9 +266,7 @@ class CompetitiveIntelligence {
 
       // Filter by platform if specified
       if (options.platform) {
-        competitors = competitors.filter(
-          (c) => c.handles[options.platform!]
-        );
+        competitors = competitors.filter(c => c.handles[options.platform!]);
       }
 
       return competitors;
@@ -280,7 +284,7 @@ class CompetitiveIntelligence {
     platform: Platform
   ): Promise<CompetitorProfile | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('competitor_profiles')
         .select('*')
         .eq('competitor_id', competitorId)
@@ -308,7 +312,10 @@ class CompetitiveIntelligence {
         lastUpdated: new Date(data.last_updated),
       };
     } catch (error) {
-      logger.error('Failed to get competitor profile:', { error, competitorId });
+      logger.error('Failed to get competitor profile:', {
+        error,
+        competitorId,
+      });
       return null;
     }
   }
@@ -328,7 +335,7 @@ class CompetitiveIntelligence {
     try {
       const { limit = 50, startDate, endDate } = options;
 
-      let query = supabase
+      let query = getSupabase()
         .from('competitor_content')
         .select('*')
         .eq('competitor_id', competitorId)
@@ -347,7 +354,7 @@ class CompetitiveIntelligence {
 
       if (error) throw error;
 
-      return (data || []).map((d) => ({
+      return (data || []).map((d: any) => ({
         competitorId: d.competitor_id,
         platform: d.platform,
         postId: d.post_id,
@@ -364,7 +371,10 @@ class CompetitiveIntelligence {
         performanceScore: d.performance_score,
       }));
     } catch (error) {
-      logger.error('Failed to analyze competitor content:', { error, competitorId });
+      logger.error('Failed to analyze competitor content:', {
+        error,
+        competitorId,
+      });
       return [];
     }
   }
@@ -393,7 +403,9 @@ class CompetitiveIntelligence {
       // Get competitors
       let competitors = await this.getCompetitors(userId, { activeOnly: true });
       if (competitorIds?.length) {
-        competitors = competitors.filter((c) => competitorIds.includes(c.id));
+        competitors = competitors.filter((c: any) =>
+          competitorIds.includes(c.id)
+        );
       }
 
       // Get user's own metrics
@@ -423,17 +435,18 @@ class CompetitiveIntelligence {
       const gaps = this.identifyGaps(userMetrics, industryAvg, topPerformer);
 
       // Identify opportunities and threats
-      const { opportunities, threats } = await this.identifyOpportunitiesAndThreats(
-        userId,
-        competitors,
-        platforms
-      );
+      const { opportunities, threats } =
+        await this.identifyOpportunitiesAndThreats(
+          userId,
+          competitors,
+          platforms
+        );
 
       return {
         userId,
         generatedAt: new Date(),
         period,
-        competitors: competitors.map((c) => c.id),
+        competitors: competitors.map((c: any) => c.id),
         platforms,
         metrics: {
           your: userMetrics,
@@ -473,7 +486,9 @@ class CompetitiveIntelligence {
       });
 
       if (competitorIds?.length) {
-        competitors = competitors.filter((c) => competitorIds.includes(c.id));
+        competitors = competitors.filter((c: any) =>
+          competitorIds.includes(c.id)
+        );
       }
 
       // Aggregate hashtag data
@@ -546,7 +561,7 @@ class CompetitiveIntelligence {
 
       // Sort by engagement and limit
       return analyses
-        .sort((a, b) => b.avgEngagement - a.avgEngagement)
+        .sort((a: any, b: any) => b.avgEngagement - a.avgEngagement)
         .slice(0, limit);
     } catch (error) {
       logger.error('Failed to analyze hashtags:', { error, userId });
@@ -574,7 +589,9 @@ class CompetitiveIntelligence {
       });
 
       if (competitorIds?.length) {
-        competitors = competitors.filter((c) => competitorIds.includes(c.id));
+        competitors = competitors.filter((c: any) =>
+          competitorIds.includes(c.id)
+        );
       }
 
       // Analyze competitor topics
@@ -646,8 +663,9 @@ class CompetitiveIntelligence {
         }
       }
 
-      return gaps.sort((a, b) => {
+      return gaps.sort((a: any, b: any) => {
         const priorityOrder = { high: 0, medium: 1, low: 2 };
+        // @ts-ignore - dynamic key indexing
         return priorityOrder[a.opportunity] - priorityOrder[b.opportunity];
       });
     } catch (error) {
@@ -676,7 +694,9 @@ class CompetitiveIntelligence {
       });
 
       if (competitorIds?.length) {
-        competitors = competitors.filter((c) => competitorIds.includes(c.id));
+        competitors = competitors.filter((c: any) =>
+          competitorIds.includes(c.id)
+        );
       }
 
       const comparisons: SentimentComparison[] = [];
@@ -722,11 +742,11 @@ class CompetitiveIntelligence {
             negative: sentimentCounts.negative / total,
           },
           topPositiveThemes: Array.from(positiveThemes.entries())
-            .sort((a, b) => b[1] - a[1])
+            .sort((a: any, b: any) => b[1] - a[1])
             .slice(0, 5)
             .map(([theme]) => theme),
           topNegativeThemes: Array.from(negativeThemes.entries())
-            .sort((a, b) => b[1] - a[1])
+            .sort((a: any, b: any) => b[1] - a[1])
             .slice(0, 5)
             .map(([theme]) => theme),
           responseRate: 0, // Would need comment reply data
@@ -734,7 +754,9 @@ class CompetitiveIntelligence {
         });
       }
 
-      return comparisons.sort((a, b) => b.overallSentiment - a.overallSentiment);
+      return comparisons.sort(
+        (a: any, b: any) => b.overallSentiment - a.overallSentiment
+      );
     } catch (error) {
       logger.error('Failed to compare sentiment:', { error, userId });
       return [];
@@ -763,7 +785,10 @@ class CompetitiveIntelligence {
 
       const strengths: string[] = [];
       const weaknesses: string[] = [];
-      const actionItems: { priority: 'high' | 'medium' | 'low'; action: string }[] = [];
+      const actionItems: {
+        priority: 'high' | 'medium' | 'low';
+        action: string;
+      }[] = [];
 
       // Analyze rankings
       for (const ranking of report.rankings) {
@@ -785,7 +810,9 @@ class CompetitiveIntelligence {
       // Analyze gaps
       for (const gap of report.gaps) {
         if (gap.priority === 'high') {
-          weaknesses.push(`${gap.metric} gap of ${Math.abs(gap.gapPercent).toFixed(1)}%`);
+          weaknesses.push(
+            `${gap.metric} gap of ${Math.abs(gap.gapPercent).toFixed(1)}%`
+          );
           actionItems.push({
             priority: 'high',
             action: gap.recommendations[0] || `Close the ${gap.metric} gap`,
@@ -798,8 +825,9 @@ class CompetitiveIntelligence {
         weaknesses,
         opportunities: report.opportunities,
         threats: report.threats,
-        actionItems: actionItems.sort((a, b) => {
+        actionItems: actionItems.sort((a: any, b: any) => {
           const order = { high: 0, medium: 1, low: 2 };
+          // @ts-ignore - dynamic key indexing
           return order[a.priority] - order[b.priority];
         }),
       };
@@ -829,7 +857,7 @@ class CompetitiveIntelligence {
   ): Promise<MetricSet> {
     // Get user's own metrics from analytics
     try {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('analytics_summary')
         .select('*')
         .eq('user_id', userId)
@@ -843,17 +871,29 @@ class CompetitiveIntelligence {
 
       // Aggregate metrics
       return {
-        followers: data.reduce((sum, d) => sum + (d.followers || 0), 0) / data.length,
+        followers:
+          data.reduce((sum: any, d: any) => sum + (d.followers || 0), 0) /
+          data.length,
         followersGrowth:
-          data.reduce((sum, d) => sum + (d.followers_growth || 0), 0) / data.length,
+          data.reduce(
+            (sum: any, d: any) => sum + (d.followers_growth || 0),
+            0
+          ) / data.length,
         avgEngagementRate:
-          data.reduce((sum, d) => sum + (d.engagement_rate || 0), 0) / data.length,
+          data.reduce((sum: any, d: any) => sum + (d.engagement_rate || 0), 0) /
+          data.length,
         postsPerWeek:
-          data.reduce((sum, d) => sum + (d.posts_count || 0), 0) / (data.length / 7),
-        avgLikes: data.reduce((sum, d) => sum + (d.avg_likes || 0), 0) / data.length,
+          data.reduce((sum: any, d: any) => sum + (d.posts_count || 0), 0) /
+          (data.length / 7),
+        avgLikes:
+          data.reduce((sum: any, d: any) => sum + (d.avg_likes || 0), 0) /
+          data.length,
         avgComments:
-          data.reduce((sum, d) => sum + (d.avg_comments || 0), 0) / data.length,
-        avgShares: data.reduce((sum, d) => sum + (d.avg_shares || 0), 0) / data.length,
+          data.reduce((sum: any, d: any) => sum + (d.avg_comments || 0), 0) /
+          data.length,
+        avgShares:
+          data.reduce((sum: any, d: any) => sum + (d.avg_shares || 0), 0) /
+          data.length,
       };
     } catch (error) {
       logger.error('Failed to get user metrics:', { error, userId });
@@ -867,7 +907,7 @@ class CompetitiveIntelligence {
     period: { start: Date; end: Date }
   ): Promise<MetricSet> {
     try {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('competitor_metrics')
         .select('*')
         .eq('competitor_id', competitorId)
@@ -880,20 +920,35 @@ class CompetitiveIntelligence {
       }
 
       return {
-        followers: data.reduce((sum, d) => sum + (d.followers || 0), 0) / data.length,
+        followers:
+          data.reduce((sum: any, d: any) => sum + (d.followers || 0), 0) /
+          data.length,
         followersGrowth:
-          data.reduce((sum, d) => sum + (d.followers_growth || 0), 0) / data.length,
+          data.reduce(
+            (sum: any, d: any) => sum + (d.followers_growth || 0),
+            0
+          ) / data.length,
         avgEngagementRate:
-          data.reduce((sum, d) => sum + (d.engagement_rate || 0), 0) / data.length,
+          data.reduce((sum: any, d: any) => sum + (d.engagement_rate || 0), 0) /
+          data.length,
         postsPerWeek:
-          data.reduce((sum, d) => sum + (d.posts_count || 0), 0) / (data.length / 7),
-        avgLikes: data.reduce((sum, d) => sum + (d.avg_likes || 0), 0) / data.length,
+          data.reduce((sum: any, d: any) => sum + (d.posts_count || 0), 0) /
+          (data.length / 7),
+        avgLikes:
+          data.reduce((sum: any, d: any) => sum + (d.avg_likes || 0), 0) /
+          data.length,
         avgComments:
-          data.reduce((sum, d) => sum + (d.avg_comments || 0), 0) / data.length,
-        avgShares: data.reduce((sum, d) => sum + (d.avg_shares || 0), 0) / data.length,
+          data.reduce((sum: any, d: any) => sum + (d.avg_comments || 0), 0) /
+          data.length,
+        avgShares:
+          data.reduce((sum: any, d: any) => sum + (d.avg_shares || 0), 0) /
+          data.length,
       };
     } catch (error) {
-      logger.error('Failed to get competitor metrics:', { error, competitorId });
+      logger.error('Failed to get competitor metrics:', {
+        error,
+        competitorId,
+      });
       return this.getEmptyMetricSet();
     }
   }
@@ -915,19 +970,26 @@ class CompetitiveIntelligence {
 
     return {
       followers:
-        metrics.reduce((sum, m) => sum + m.followers, 0) / metrics.length,
+        metrics.reduce((sum: any, m: any) => sum + m.followers, 0) /
+        metrics.length,
       followersGrowth:
-        metrics.reduce((sum, m) => sum + m.followersGrowth, 0) / metrics.length,
+        metrics.reduce((sum: any, m: any) => sum + m.followersGrowth, 0) /
+        metrics.length,
       avgEngagementRate:
-        metrics.reduce((sum, m) => sum + m.avgEngagementRate, 0) / metrics.length,
+        metrics.reduce((sum: any, m: any) => sum + m.avgEngagementRate, 0) /
+        metrics.length,
       postsPerWeek:
-        metrics.reduce((sum, m) => sum + m.postsPerWeek, 0) / metrics.length,
+        metrics.reduce((sum: any, m: any) => sum + m.postsPerWeek, 0) /
+        metrics.length,
       avgLikes:
-        metrics.reduce((sum, m) => sum + m.avgLikes, 0) / metrics.length,
+        metrics.reduce((sum: any, m: any) => sum + m.avgLikes, 0) /
+        metrics.length,
       avgComments:
-        metrics.reduce((sum, m) => sum + m.avgComments, 0) / metrics.length,
+        metrics.reduce((sum: any, m: any) => sum + m.avgComments, 0) /
+        metrics.length,
       avgShares:
-        metrics.reduce((sum, m) => sum + m.avgShares, 0) / metrics.length,
+        metrics.reduce((sum: any, m: any) => sum + m.avgShares, 0) /
+        metrics.length,
     };
   }
 
@@ -967,11 +1029,12 @@ class CompetitiveIntelligence {
       'avgShares',
     ] as const;
 
-    return metrics.map((metric) => {
+    return metrics.map((metric: any) => {
       const sorted = [...allMetrics].sort(
+        // @ts-ignore - dynamic key indexing
         (a, b) => b[metric] - a[metric]
       );
-      const rank = sorted.findIndex((m) => m === userMetrics) + 1;
+      const rank = sorted.findIndex(m => m === userMetrics) + 1;
       const percentile = ((allMetrics.length - rank) / allMetrics.length) * 100;
 
       return {
@@ -1044,8 +1107,7 @@ class CompetitiveIntelligence {
           : (topPerformer as any)[metric];
 
       const gap = benchmarkValue - yourValue;
-      const gapPercent =
-        benchmarkValue > 0 ? (gap / benchmarkValue) * 100 : 0;
+      const gapPercent = benchmarkValue > 0 ? (gap / benchmarkValue) * 100 : 0;
 
       if (gap > 0) {
         let priority: 'high' | 'medium' | 'low' = 'low';
@@ -1064,8 +1126,9 @@ class CompetitiveIntelligence {
       }
     }
 
-    return gaps.sort((a, b) => {
+    return gaps.sort((a: any, b: any) => {
       const order = { high: 0, medium: 1, low: 2 };
+      // @ts-ignore - dynamic key indexing
       return order[a.priority] - order[b.priority];
     });
   }
@@ -1081,10 +1144,10 @@ class CompetitiveIntelligence {
     // Analyze content gaps as opportunities
     for (const platform of platforms) {
       const gaps = await this.identifyContentGaps(userId, platform, {
-        competitorIds: competitors.map((c) => c.id),
+        competitorIds: competitors.map((c: any) => c.id),
       });
 
-      for (const gap of gaps.filter((g) => g.opportunity === 'high')) {
+      for (const gap of gaps.filter((g: any) => g.opportunity === 'high')) {
         opportunities.push(
           `Untapped topic: ${gap.topic} (avg ${gap.avgEngagement.toFixed(1)}% engagement)`
         );
@@ -1094,7 +1157,10 @@ class CompetitiveIntelligence {
     // Analyze competitor growth as threats
     for (const competitor of competitors) {
       for (const platform of platforms) {
-        const profile = await this.getCompetitorProfile(competitor.id, platform);
+        const profile = await this.getCompetitorProfile(
+          competitor.id,
+          platform
+        );
         if (profile && profile.growthRate.followers > 10) {
           threats.push(
             `${competitor.name} growing rapidly on ${platform} (+${profile.growthRate.followers.toFixed(1)}%)`
@@ -1103,7 +1169,10 @@ class CompetitiveIntelligence {
       }
     }
 
-    return { opportunities: opportunities.slice(0, 5), threats: threats.slice(0, 5) };
+    return {
+      opportunities: opportunities.slice(0, 5),
+      threats: threats.slice(0, 5),
+    };
   }
 
   private async getUserTopics(
@@ -1111,7 +1180,7 @@ class CompetitiveIntelligence {
     platform: Platform
   ): Promise<Set<string>> {
     try {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('posts')
         .select('themes')
         .eq('user_id', userId)
@@ -1139,9 +1208,9 @@ class CompetitiveIntelligence {
     const secondHalf = values.slice(Math.floor(values.length / 2));
 
     const firstAvg =
-      firstHalf.reduce((sum, v) => sum + v, 0) / firstHalf.length;
+      firstHalf.reduce((sum: any, v: any) => sum + v, 0) / firstHalf.length;
     const secondAvg =
-      secondHalf.reduce((sum, v) => sum + v, 0) / secondHalf.length;
+      secondHalf.reduce((sum: any, v: any) => sum + v, 0) / secondHalf.length;
 
     const change = ((secondAvg - firstAvg) / firstAvg) * 100;
 

@@ -14,10 +14,16 @@ import { randomUUID } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Anomaly severity levels
 export type AnomalySeverity = 'low' | 'medium' | 'high' | 'critical';
@@ -310,7 +316,10 @@ class AnomalyDetector {
             if (!inCooldown) {
               anomalies.push(anomaly);
               await this.saveAnomaly(anomaly);
-              await this.sendAlerts(anomaly, config.alertChannels || ['in_app']);
+              await this.sendAlerts(
+                anomaly,
+                config.alertChannels || ['in_app']
+              );
             }
           }
         }
@@ -347,7 +356,7 @@ class AnomalyDetector {
       metricType: MetricType;
     }
   ): Promise<Anomaly | null> {
-    const values = historicalData.map((d) => d.value);
+    const values = historicalData.map((d: any) => d.value);
     const mean = this.calculateMean(values);
     const stdDev = this.calculateStdDev(values, mean);
     const zScore = stdDev > 0 ? (dataPoint.value - mean) / stdDev : 0;
@@ -365,7 +374,8 @@ class AnomalyDetector {
           // Above maximum threshold
         } else if (percentChange !== undefined) {
           const lastValue = values[values.length - 1];
-          const change = Math.abs((dataPoint.value - lastValue) / lastValue) * 100;
+          const change =
+            Math.abs((dataPoint.value - lastValue) / lastValue) * 100;
           if (change < percentChange) {
             return null; // Not an anomaly
           }
@@ -525,12 +535,16 @@ class AnomalyDetector {
           causes.push('Optimal posting time hit');
           causes.push('Content aligned with trending topic');
           recommendations.push('Analyze what made this content successful');
-          recommendations.push('Create similar content to capitalize on momentum');
+          recommendations.push(
+            'Create similar content to capitalize on momentum'
+          );
         } else {
           causes.push('Content may not resonate with audience');
           causes.push('Algorithm changes may have affected reach');
           causes.push('Posting at suboptimal time');
-          recommendations.push('Review content strategy and audience preferences');
+          recommendations.push(
+            'Review content strategy and audience preferences'
+          );
           recommendations.push('Experiment with different content formats');
         }
         break;
@@ -624,7 +638,7 @@ class AnomalyDetector {
     userId: string
   ): Promise<Record<MetricType, AnomalyDetectionConfig>> {
     try {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('anomaly_detection_configs')
         .select('*')
         .eq('user_id', userId);
@@ -665,7 +679,7 @@ class AnomalyDetector {
     try {
       const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-      let query = supabase
+      let query = getSupabase()
         .from('analytics_metrics')
         .select('value, recorded_at')
         .eq('user_id', userId)
@@ -684,12 +698,16 @@ class AnomalyDetector {
 
       if (error) throw error;
 
-      return (data || []).map((d) => ({
+      return (data || []).map((d: any) => ({
         value: d.value,
         timestamp: new Date(d.recorded_at),
       }));
     } catch (error) {
-      logger.error('Failed to get historical data:', { error, userId, metricType });
+      logger.error('Failed to get historical data:', {
+        error,
+        userId,
+        metricType,
+      });
       return [];
     }
   }
@@ -705,7 +723,7 @@ class AnomalyDetector {
     filters: { platform?: string; accountId?: string }
   ): Promise<Array<{ value: number; timestamp: Date }>> {
     try {
-      let query = supabase
+      let query = getSupabase()
         .from('analytics_metrics')
         .select('value, recorded_at')
         .eq('user_id', userId)
@@ -725,7 +743,7 @@ class AnomalyDetector {
 
       if (error) throw error;
 
-      return (data || []).map((d) => ({
+      return (data || []).map((d: any) => ({
         value: d.value,
         timestamp: new Date(d.recorded_at),
       }));
@@ -744,11 +762,9 @@ class AnomalyDetector {
     cooldownMinutes: number
   ): Promise<boolean> {
     try {
-      const cooldownStart = new Date(
-        Date.now() - cooldownMinutes * 60 * 1000
-      );
+      const cooldownStart = new Date(Date.now() - cooldownMinutes * 60 * 1000);
 
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('anomalies')
         .select('id')
         .eq('user_id', userId)
@@ -768,7 +784,7 @@ class AnomalyDetector {
    */
   private async saveAnomaly(anomaly: Anomaly): Promise<void> {
     try {
-      await supabase.from('anomalies').insert({
+      await getSupabase().from('anomalies').insert({
         id: anomaly.id,
         user_id: anomaly.userId,
         account_id: anomaly.accountId,
@@ -804,7 +820,7 @@ class AnomalyDetector {
         const alertId = `alert_${randomUUID()}`;
 
         // Save alert record
-        await supabase.from('anomaly_alerts').insert({
+        await getSupabase().from('anomaly_alerts').insert({
           id: alertId,
           anomaly_id: anomaly.id,
           user_id: anomaly.userId,
@@ -829,7 +845,11 @@ class AnomalyDetector {
             break;
         }
       } catch (error) {
-        logger.error('Failed to send alert:', { error, channel, anomalyId: anomaly.id });
+        logger.error('Failed to send alert:', {
+          error,
+          channel,
+          anomalyId: anomaly.id,
+        });
       }
     }
   }
@@ -862,20 +882,22 @@ class AnomalyDetector {
    * Send in-app notification
    */
   private async sendInAppAlert(anomaly: Anomaly): Promise<void> {
-    await supabase.from('notifications').insert({
-      user_id: anomaly.userId,
-      type: 'anomaly_detected',
-      title: `${anomaly.severity.toUpperCase()}: ${anomaly.metricType} Anomaly Detected`,
-      message: `${anomaly.anomalyType} detected in ${anomaly.metricType}. Value: ${anomaly.value} (Expected: ${anomaly.expectedValue.toFixed(2)})`,
-      data: {
-        anomalyId: anomaly.id,
-        severity: anomaly.severity,
-        metricType: anomaly.metricType,
-        recommendations: anomaly.recommendations,
-      },
-      read: false,
-      created_at: new Date().toISOString(),
-    });
+    await getSupabase()
+      .from('notifications')
+      .insert({
+        user_id: anomaly.userId,
+        type: 'anomaly_detected',
+        title: `${anomaly.severity.toUpperCase()}: ${anomaly.metricType} Anomaly Detected`,
+        message: `${anomaly.anomalyType} detected in ${anomaly.metricType}. Value: ${anomaly.value} (Expected: ${anomaly.expectedValue.toFixed(2)})`,
+        data: {
+          anomalyId: anomaly.id,
+          severity: anomaly.severity,
+          metricType: anomaly.metricType,
+          recommendations: anomaly.recommendations,
+        },
+        read: false,
+        created_at: new Date().toISOString(),
+      });
   }
 
   /**
@@ -894,7 +916,7 @@ class AnomalyDetector {
     } = {}
   ): Promise<{ anomalies: Anomaly[]; total: number }> {
     try {
-      let query = supabase
+      let query = getSupabase()
         .from('anomalies')
         .select('*', { count: 'exact' })
         .eq('user_id', userId)
@@ -929,7 +951,7 @@ class AnomalyDetector {
 
       if (error) throw error;
 
-      const anomalies: Anomaly[] = (data || []).map((d) => ({
+      const anomalies: Anomaly[] = (data || []).map((d: any) => ({
         id: d.id,
         userId: d.user_id,
         accountId: d.account_id,
@@ -968,7 +990,7 @@ class AnomalyDetector {
     notes?: string
   ): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('anomalies')
         .update({
           acknowledged: true,
@@ -995,7 +1017,7 @@ class AnomalyDetector {
     resolution?: string
   ): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('anomalies')
         .update({
           acknowledged: true,
@@ -1023,7 +1045,7 @@ class AnomalyDetector {
     config: Partial<AnomalyDetectionConfig>
   ): Promise<boolean> {
     try {
-      await supabase.from('anomaly_detection_configs').upsert({
+      await getSupabase().from('anomaly_detection_configs').upsert({
         user_id: userId,
         metric_type: metricType,
         enabled: config.enabled,
@@ -1060,9 +1082,11 @@ class AnomalyDetector {
     try {
       const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('anomalies')
-        .select('severity, anomaly_type, metric_type, acknowledged, detected_at')
+        .select(
+          'severity, anomaly_type, metric_type, acknowledged, detected_at'
+        )
         .eq('user_id', userId)
         .gte('detected_at', startDate.toISOString());
 
@@ -1089,10 +1113,10 @@ class AnomalyDetector {
       // Calculate trend
       const midPoint = new Date(Date.now() - (days / 2) * 24 * 60 * 60 * 1000);
       const firstHalf = anomalies.filter(
-        (a) => new Date(a.detected_at) < midPoint
+        (a: any) => new Date(a.detected_at) < midPoint
       ).length;
       const secondHalf = anomalies.filter(
-        (a) => new Date(a.detected_at) >= midPoint
+        (a: any) => new Date(a.detected_at) >= midPoint
       ).length;
 
       let trend: 'increasing' | 'decreasing' | 'stable' = 'stable';
@@ -1123,13 +1147,15 @@ class AnomalyDetector {
   // Statistical utility methods
   private calculateMean(values: number[]): number {
     if (values.length === 0) return 0;
-    return values.reduce((sum, v) => sum + v, 0) / values.length;
+    return values.reduce((sum: any, v: any) => sum + v, 0) / values.length;
   }
 
   private calculateStdDev(values: number[], mean: number): number {
     if (values.length < 2) return 0;
-    const squaredDiffs = values.map((v) => Math.pow(v - mean, 2));
-    const variance = squaredDiffs.reduce((sum, v) => sum + v, 0) / (values.length - 1);
+    const squaredDiffs = values.map((v: any) => Math.pow(v - mean, 2));
+    const variance =
+      squaredDiffs.reduce((sum: any, v: any) => sum + v, 0) /
+      (values.length - 1);
     return Math.sqrt(variance);
   }
 

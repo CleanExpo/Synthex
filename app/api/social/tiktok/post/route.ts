@@ -13,22 +13,34 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { createPlatformService } from '@/lib/social';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Request validation schema
 const PostRequestSchema = z.object({
   videoUrl: z.string().url('Valid video URL required'),
-  caption: z.string().max(2200, 'Caption must be 2200 characters or less').optional(),
+  caption: z
+    .string()
+    .max(2200, 'Caption must be 2200 characters or less')
+    .optional(),
   privacy: z.enum(['PUBLIC', 'FRIENDS', 'SELF']).default('PUBLIC'),
   disableComment: z.boolean().default(false),
   disableDuet: z.boolean().default(false),
@@ -42,7 +54,9 @@ type PostRequest = z.infer<typeof PostRequestSchema>;
 /**
  * Map route-level privacy values to service-level visibility
  */
-function mapPrivacyToVisibility(privacy: string): 'public' | 'connections' | 'private' {
+function mapPrivacyToVisibility(
+  privacy: string
+): 'public' | 'connections' | 'private' {
   switch (privacy) {
     case 'SELF':
       return 'private';
@@ -99,7 +113,7 @@ export async function POST(request: NextRequest) {
     const postData: PostRequest = validation.data;
 
     // Get user's TikTok connection
-    const { data: connection, error: connectionError } = await supabase
+    const { data: connection, error: connectionError } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -109,14 +123,17 @@ export async function POST(request: NextRequest) {
 
     if (connectionError || !connection) {
       return NextResponse.json(
-        { error: 'TikTok account not connected. Please connect your TikTok account first.' },
+        {
+          error:
+            'TikTok account not connected. Please connect your TikTok account first.',
+        },
         { status: 400 }
       );
     }
 
     // Handle scheduled posts
     if (postData.scheduledTime) {
-      const { data: scheduledPost, error: scheduleError } = await supabase
+      const { data: scheduledPost, error: scheduleError } = await getSupabase()
         .from('scheduled_posts')
         .insert({
           user_id: userId,
@@ -144,7 +161,10 @@ export async function POST(request: NextRequest) {
         scheduledPost.id,
         userId,
         'success',
-        { action: 'tiktok_post_scheduled', scheduledTime: postData.scheduledTime }
+        {
+          action: 'tiktok_post_scheduled',
+          scheduledTime: postData.scheduledTime,
+        }
       );
 
       return NextResponse.json({
@@ -162,16 +182,20 @@ export async function POST(request: NextRequest) {
     let fullCaption = postData.caption || '';
     if (postData.hashtags && postData.hashtags.length > 0) {
       const hashtagString = postData.hashtags
-        .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
+        .map(tag => (tag.startsWith('#') ? tag : `#${tag}`))
         .join(' ');
-      fullCaption = fullCaption ? `${fullCaption} ${hashtagString}` : hashtagString;
+      fullCaption = fullCaption
+        ? `${fullCaption} ${hashtagString}`
+        : hashtagString;
     }
 
     // Create TikTok service via factory
     const service = createPlatformService('tiktok', {
       accessToken: connection.access_token,
       refreshToken: connection.refresh_token,
-      expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
+      expiresAt: connection.expires_at
+        ? new Date(connection.expires_at)
+        : undefined,
       platformUserId: connection.platform_user_id,
     });
 
@@ -199,20 +223,24 @@ export async function POST(request: NextRequest) {
     const publishId = result.postId;
 
     // Save post to database (status will be updated via webhook)
-    await supabase.from('social_posts').insert({
-      user_id: userId,
-      platform: 'tiktok',
-      content: fullCaption,
-      post_id: publishId,
-      media_urls: [postData.videoUrl],
-      media_type: 'VIDEO',
-      status: 'processing', // TikTok processes async
-      metrics: {},
-      created_at: new Date().toISOString(),
-    }).select().single();
+    await getSupabase()
+      .from('social_posts')
+      .insert({
+        user_id: userId,
+        platform: 'tiktok',
+        content: fullCaption,
+        post_id: publishId,
+        media_urls: [postData.videoUrl],
+        media_type: 'VIDEO',
+        status: 'processing', // TikTok processes async
+        metrics: {},
+        created_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
 
     // Track usage
-    await supabase.from('usage_tracking').insert({
+    await getSupabase().from('usage_tracking').insert({
       user_id: userId,
       feature: 'tiktok_post',
       count: 1,
@@ -267,14 +295,17 @@ export async function GET(request: NextRequest) {
 
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20', 10);
     const syncFromPlatform = searchParams.get('sync') === 'true';
 
-    const { data: connection } = await supabase
+    const { data: connection } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -283,7 +314,10 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (!connection) {
-      return NextResponse.json({ error: 'TikTok account not connected' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'TikTok account not connected' },
+        { status: 400 }
+      );
     }
 
     if (syncFromPlatform) {
@@ -292,7 +326,9 @@ export async function GET(request: NextRequest) {
         const service = createPlatformService('tiktok', {
           accessToken: connection.access_token,
           refreshToken: connection.refresh_token,
-          expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
+          expiresAt: connection.expires_at
+            ? new Date(connection.expires_at)
+            : undefined,
           platformUserId: connection.platform_user_id,
         });
 
@@ -301,7 +337,7 @@ export async function GET(request: NextRequest) {
 
           if (syncResult.success) {
             // Map to the existing response format to preserve API contract
-            const videos = syncResult.posts.map((post) => ({
+            const videos = syncResult.posts.map((post: any) => ({
               id: post.id,
               platformId: post.platformId,
               content: post.content,
@@ -328,7 +364,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const { data: posts, error } = await supabase
+    const { data: posts, error } = await getSupabase()
       .from('social_posts')
       .select('*')
       .eq('user_id', userId)

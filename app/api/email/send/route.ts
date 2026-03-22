@@ -32,10 +32,16 @@ function sanitizeHtml(html: string): string {
     .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,13 +81,16 @@ export async function POST(request: NextRequest) {
           type: variables?.notificationType || 'info',
           title: variables?.title || subject,
           message: variables?.message || '',
-          actionUrl: variables?.actionUrl
+          actionUrl: variables?.actionUrl,
         });
         break;
 
       case 'weeklyReport':
         // variables conforms to WeeklyReportTemplateVariables shape (validated at call site)
-        success = await emailService.sendWeeklyReport(to, variables as Parameters<typeof emailService.sendWeeklyReport>[1]);
+        success = await emailService.sendWeeklyReport(
+          to,
+          variables as Parameters<typeof emailService.sendWeeklyReport>[1]
+        );
         break;
 
       default:
@@ -92,19 +101,21 @@ export async function POST(request: NextRequest) {
           template,
           variables,
           html: variables?.html ? sanitizeHtml(variables.html) : undefined,
-          text: variables?.text
+          text: variables?.text,
         });
     }
 
     // Log email send attempt
     try {
-      await supabase.from('email_logs').insert({
-        to,
-        subject,
-        type: type || 'custom',
-        status: success ? 'sent' : 'failed',
-        metadata: { template, variables }
-      });
+      await getSupabase()
+        .from('email_logs')
+        .insert({
+          to,
+          subject,
+          type: type || 'custom',
+          status: success ? 'sent' : 'failed',
+          metadata: { template, variables },
+        });
     } catch (err) {
       logger.error('Failed to log email:', err);
     }
@@ -112,16 +123,18 @@ export async function POST(request: NextRequest) {
     if (success) {
       return NextResponse.json({
         success: true,
-        message: 'Email sent successfully'
+        message: 'Email sent successfully',
       });
     } else {
       throw new Error('Failed to send email');
     }
-
   } catch (error) {
     logger.error('Email send error:', error);
     return NextResponse.json(
-      { error: 'Failed to send email', message: sanitizeErrorForResponse(error, 'Email delivery failed') },
+      {
+        error: 'Failed to send email',
+        message: sanitizeErrorForResponse(error, 'Email delivery failed'),
+      },
       { status: 500 }
     );
   }
@@ -137,7 +150,7 @@ export async function GET(request: NextRequest) {
       'passwordReset',
       'notification',
       'weeklyReport',
-      'custom'
-    ]
+      'custom',
+    ],
   });
 }

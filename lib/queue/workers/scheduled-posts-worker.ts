@@ -16,10 +16,16 @@ import { LinkedInService } from '@/lib/social/linkedin-service';
 import { twitterService } from '@/lib/social/twitter-service';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Get Redis connection
 function getRedisConnection() {
@@ -40,7 +46,9 @@ function getRedisConnection() {
 /**
  * Process a scheduled post job
  */
-async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<void> {
+async function processScheduledPost(
+  job: Job<ScheduledPostJobData>
+): Promise<void> {
   const { postId, userId, platform, content, mediaUrls, metadata } = job.data;
 
   logger.info(`Processing scheduled post ${postId} for platform ${platform}`, {
@@ -50,13 +58,13 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
 
   try {
     // Update status to processing
-    await supabase
+    await getSupabase()
       .from('scheduled_posts')
       .update({ status: 'processing' })
       .eq('id', postId);
 
     // Get user's platform connection
-    const { data: connection, error: connectionError } = await supabase
+    const { data: connection, error: connectionError } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -73,7 +81,12 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
       throw new Error(`${platform} token expired. User needs to reconnect.`);
     }
 
-    let result: { success: boolean; postId?: string; url?: string; error?: string };
+    let result: {
+      success: boolean;
+      postId?: string;
+      url?: string;
+      error?: string;
+    };
 
     // Publish to the appropriate platform
     switch (platform) {
@@ -114,14 +127,16 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
           text: content,
           mediaUrls,
           linkUrl: metadata?.linkUrl as string | undefined,
-          visibility: (metadata?.visibility as 'public' | 'connections') || 'public',
+          visibility:
+            (metadata?.visibility as 'public' | 'connections') || 'public',
         });
         break;
       }
 
       case 'facebook': {
         // Use Facebook Graph API directly
-        const pageAccessToken = connection.page_access_token || connection.access_token;
+        const pageAccessToken =
+          connection.page_access_token || connection.access_token;
         const pageId = metadata?.pageId || connection.platform_user_id;
 
         const response = await fetch(
@@ -162,7 +177,7 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
           {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${connection.access_token}`,
+              Authorization: `Bearer ${connection.access_token}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -204,7 +219,7 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
     }
 
     // Update scheduled post status
-    await supabase
+    await getSupabase()
       .from('scheduled_posts')
       .update({
         status: 'published',
@@ -214,7 +229,7 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
       .eq('id', postId);
 
     // Create social_posts record
-    await supabase.from('social_posts').insert({
+    await getSupabase().from('social_posts').insert({
       user_id: userId,
       platform,
       content,
@@ -226,22 +241,26 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
     });
 
     // Track usage
-    await supabase.from('usage_tracking').insert({
-      user_id: userId,
-      feature: `${platform}_scheduled_post`,
-      count: 1,
-      timestamp: new Date().toISOString(),
-    });
+    await getSupabase()
+      .from('usage_tracking')
+      .insert({
+        user_id: userId,
+        feature: `${platform}_scheduled_post`,
+        count: 1,
+        timestamp: new Date().toISOString(),
+      });
 
     // Send notification to user
-    await supabase.from('notifications').insert({
-      user_id: userId,
-      title: 'Scheduled Post Published',
-      message: `Your scheduled ${platform} post has been published successfully.`,
-      type: 'success',
-      read: false,
-      created_at: new Date().toISOString(),
-    });
+    await getSupabase()
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        title: 'Scheduled Post Published',
+        message: `Your scheduled ${platform} post has been published successfully.`,
+        type: 'success',
+        read: false,
+        created_at: new Date().toISOString(),
+      });
 
     logger.info(`Successfully published scheduled post ${postId}`, {
       platform,
@@ -251,7 +270,7 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
     logger.error(`Failed to publish scheduled post ${postId}:`, { error });
 
     // Update status to failed
-    await supabase
+    await getSupabase()
       .from('scheduled_posts')
       .update({
         status: 'failed',
@@ -260,14 +279,16 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
       .eq('id', postId);
 
     // Send failure notification
-    await supabase.from('notifications').insert({
-      user_id: userId,
-      title: 'Scheduled Post Failed',
-      message: `Your scheduled ${platform} post failed to publish: ${error instanceof Error ? error.message : String(error)}`,
-      type: 'error',
-      read: false,
-      created_at: new Date().toISOString(),
-    });
+    await getSupabase()
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        title: 'Scheduled Post Failed',
+        message: `Your scheduled ${platform} post failed to publish: ${error instanceof Error ? error.message : String(error)}`,
+        type: 'error',
+        read: false,
+        created_at: new Date().toISOString(),
+      });
 
     throw error; // Re-throw for BullMQ retry mechanism
   }
@@ -292,15 +313,17 @@ export function createScheduledPostsWorker(): Worker {
     }
   );
 
-  worker.on('completed', (job) => {
+  worker.on('completed', job => {
     logger.info(`Job ${job.id} completed successfully`);
   });
 
   worker.on('failed', (job, error) => {
-    logger.error(`Job ${job?.id} failed:`, { error: error instanceof Error ? error.message : String(error) });
+    logger.error(`Job ${job?.id} failed:`, {
+      error: error instanceof Error ? error.message : String(error),
+    });
   });
 
-  worker.on('error', (error) => {
+  worker.on('error', error => {
     logger.error('Worker error:', { error });
   });
 

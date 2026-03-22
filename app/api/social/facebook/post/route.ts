@@ -13,16 +13,25 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 const GRAPH_API_BASE = 'https://graph.facebook.com/v19.0';
 
@@ -71,11 +80,13 @@ const PostRequestSchema = z.object({
   mediaType: z.enum(['photo', 'video', 'photos']).optional(),
   pageId: z.string().optional(), // If not provided, uses default page
   scheduledTime: z.string().datetime().optional(),
-  targeting: z.object({
-    geoLocations: z.array(z.string()).optional(),
-    ageMin: z.number().min(13).max(65).optional(),
-    ageMax: z.number().min(13).max(65).optional(),
-  }).optional(),
+  targeting: z
+    .object({
+      geoLocations: z.array(z.string()).optional(),
+      ageMin: z.number().min(13).max(65).optional(),
+      ageMax: z.number().min(13).max(65).optional(),
+    })
+    .optional(),
 });
 
 type PostRequest = z.infer<typeof PostRequestSchema>;
@@ -99,7 +110,9 @@ async function makeFacebookRequest<T>(
   const data = await response.json();
 
   if (!response.ok || data.error) {
-    throw new Error(data.error?.message || `Facebook API error: ${response.status}`);
+    throw new Error(
+      data.error?.message || `Facebook API error: ${response.status}`
+    );
   }
 
   return data;
@@ -150,7 +163,7 @@ export async function POST(request: NextRequest) {
     const postData: PostRequest = validation.data;
 
     // Get user's Facebook connection
-    const { data: connection, error: connectionError } = await supabase
+    const { data: connection, error: connectionError } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -160,7 +173,10 @@ export async function POST(request: NextRequest) {
 
     if (connectionError || !connection) {
       return NextResponse.json(
-        { error: 'Facebook account not connected. Please connect your Facebook account first.' },
+        {
+          error:
+            'Facebook account not connected. Please connect your Facebook account first.',
+        },
         { status: 400 }
       );
     }
@@ -178,7 +194,10 @@ export async function POST(request: NextRequest) {
 
       if (!pagesResponse.data || pagesResponse.data.length === 0) {
         return NextResponse.json(
-          { error: 'No Facebook Pages found. Please ensure you have admin access to at least one Facebook Page.' },
+          {
+            error:
+              'No Facebook Pages found. Please ensure you have admin access to at least one Facebook Page.',
+          },
           { status: 400 }
         );
       }
@@ -191,7 +210,7 @@ export async function POST(request: NextRequest) {
         '/me/accounts',
         connection.access_token
       );
-      const page = pagesResponse.data?.find((p) => p.id === pageId);
+      const page = pagesResponse.data?.find((p: any) => p.id === pageId);
       if (!page) {
         return NextResponse.json(
           { error: 'You do not have access to this Facebook Page.' },
@@ -203,13 +222,17 @@ export async function POST(request: NextRequest) {
 
     // Handle scheduled posts
     if (postData.scheduledTime) {
-      const scheduledTimestamp = Math.floor(new Date(postData.scheduledTime).getTime() / 1000);
+      const scheduledTimestamp = Math.floor(
+        new Date(postData.scheduledTime).getTime() / 1000
+      );
 
       // Facebook requires scheduled posts to be at least 10 minutes in future
       const minScheduleTime = Math.floor(Date.now() / 1000) + 600;
       if (scheduledTimestamp < minScheduleTime) {
         return NextResponse.json(
-          { error: 'Scheduled time must be at least 10 minutes in the future.' },
+          {
+            error: 'Scheduled time must be at least 10 minutes in the future.',
+          },
           { status: 400 }
         );
       }
@@ -235,7 +258,7 @@ export async function POST(request: NextRequest) {
       );
 
       // Save to database
-      await supabase.from('scheduled_posts').insert({
+      await getSupabase().from('scheduled_posts').insert({
         user_id: userId,
         platform: 'facebook',
         content: postData.message,
@@ -253,7 +276,11 @@ export async function POST(request: NextRequest) {
         result.id,
         userId,
         'success',
-        { action: 'facebook_post_scheduled', scheduledTime: postData.scheduledTime, pageId }
+        {
+          action: 'facebook_post_scheduled',
+          scheduledTime: postData.scheduledTime,
+          pageId,
+        }
       );
 
       return NextResponse.json({
@@ -271,7 +298,10 @@ export async function POST(request: NextRequest) {
     let result: FacebookPostResult;
 
     if (postData.mediaUrls && postData.mediaUrls.length > 0) {
-      if (postData.mediaType === 'video' || postData.mediaUrls[0].match(/\.(mp4|mov|avi)$/i)) {
+      if (
+        postData.mediaType === 'video' ||
+        postData.mediaUrls[0].match(/\.(mp4|mov|avi)$/i)
+      ) {
         // Video post
         result = await makeFacebookRequest<FacebookPostResult>(
           `/${pageId}/videos`,
@@ -284,7 +314,10 @@ export async function POST(request: NextRequest) {
             }),
           }
         );
-      } else if (postData.mediaUrls.length > 1 || postData.mediaType === 'photos') {
+      } else if (
+        postData.mediaUrls.length > 1 ||
+        postData.mediaType === 'photos'
+      ) {
         // Multi-photo post - upload each photo first
         const photoIds: string[] = [];
         for (const photoUrl of postData.mediaUrls) {
@@ -349,20 +382,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Save post to database
-    await supabase.from('social_posts').insert({
-      user_id: userId,
-      platform: 'facebook',
-      content: postData.message,
-      post_id: result.id || result.post_id,
-      link_url: postData.link,
-      media_urls: postData.mediaUrls,
-      status: 'published',
-      metrics: {},
-      created_at: new Date().toISOString(),
-    });
+    await getSupabase()
+      .from('social_posts')
+      .insert({
+        user_id: userId,
+        platform: 'facebook',
+        content: postData.message,
+        post_id: result.id || result.post_id,
+        link_url: postData.link,
+        media_urls: postData.mediaUrls,
+        status: 'published',
+        metrics: {},
+        created_at: new Date().toISOString(),
+      });
 
     // Track usage
-    await supabase.from('usage_tracking').insert({
+    await getSupabase().from('usage_tracking').insert({
       user_id: userId,
       feature: 'facebook_post',
       count: 1,
@@ -375,7 +410,11 @@ export async function POST(request: NextRequest) {
       result.id || result.post_id,
       userId,
       'success',
-      { action: 'facebook_post_created', pageId, hasMedia: !!postData.mediaUrls?.length }
+      {
+        action: 'facebook_post_created',
+        pageId,
+        hasMedia: !!postData.mediaUrls?.length,
+      }
     );
 
     return NextResponse.json({
@@ -389,7 +428,10 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Facebook post error:', error);
     return NextResponse.json(
-      { error: 'Failed to post to Facebook', message: 'An unexpected error occurred. Please try again.' },
+      {
+        error: 'Failed to post to Facebook',
+        message: 'An unexpected error occurred. Please try again.',
+      },
       { status: 500 }
     );
   }
@@ -415,7 +457,10 @@ export async function GET(request: NextRequest) {
 
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -423,7 +468,7 @@ export async function GET(request: NextRequest) {
     const pageId = searchParams.get('pageId');
     const syncFromPlatform = searchParams.get('sync') === 'true';
 
-    const { data: connection } = await supabase
+    const { data: connection } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -432,7 +477,10 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (!connection) {
-      return NextResponse.json({ error: 'Facebook account not connected' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Facebook account not connected' },
+        { status: 400 }
+      );
     }
 
     if (syncFromPlatform && pageId) {
@@ -443,7 +491,7 @@ export async function GET(request: NextRequest) {
           connection.access_token
         );
 
-        const posts = (postsResponse.data || []).map((post) => ({
+        const posts = (postsResponse.data || []).map((post: any) => ({
           id: post.id,
           platformId: post.id,
           content: post.message || '',
@@ -466,7 +514,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const { data: posts, error } = await supabase
+    const { data: posts, error } = await getSupabase()
       .from('social_posts')
       .select('*')
       .eq('user_id', userId)
@@ -480,7 +528,10 @@ export async function GET(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Get Facebook posts error:', error);
     return NextResponse.json(
-      { error: 'Failed to get Facebook posts', message: 'An unexpected error occurred. Please try again.' },
+      {
+        error: 'Failed to get Facebook posts',
+        message: 'An unexpected error occurred. Please try again.',
+      },
       { status: 500 }
     );
   }

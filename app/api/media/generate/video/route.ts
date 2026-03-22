@@ -14,7 +14,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import {
   generateVideo,
@@ -30,14 +33,26 @@ import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Request validation schemas
 const VideoGenerationSchema = z.object({
-  type: z.enum(['text-to-video', 'image-to-video', 'avatar', 'motion', 'template']),
+  type: z.enum([
+    'text-to-video',
+    'image-to-video',
+    'avatar',
+    'motion',
+    'template',
+  ]),
   prompt: z.string().max(2000).optional(),
   imageUrl: z.string().url().optional(),
   script: z.string().max(5000).optional(),
@@ -101,7 +116,10 @@ export async function POST(request: NextRequest) {
     const action = searchParams.get('action') || 'generate';
 
     let result;
-    let validated: z.infer<typeof VideoGenerationSchema> | z.infer<typeof ScriptVideoSchema> | z.infer<typeof AnimateImageSchema>;
+    let validated:
+      | z.infer<typeof VideoGenerationSchema>
+      | z.infer<typeof ScriptVideoSchema>
+      | z.infer<typeof AnimateImageSchema>;
 
     switch (action) {
       case 'script': {
@@ -207,7 +225,10 @@ export async function POST(request: NextRequest) {
     if (!result.success && result.status === 'failed') {
       logger.error('Video generation failed', { error: result.error, userId });
       return APISecurityChecker.createSecureResponse(
-        { error: result.error || 'Video generation failed', provider: result.provider },
+        {
+          error: result.error || 'Video generation failed',
+          provider: result.provider,
+        },
         500
       );
     }
@@ -215,7 +236,7 @@ export async function POST(request: NextRequest) {
     // Save to media library if video is processing/complete
     let mediaAssetId: string | undefined;
     if (validated.saveToLibrary && result.videoId) {
-      const { data: asset, error: saveError } = await supabase
+      const { data: asset, error: saveError } = await getSupabase()
         .from('media_assets')
         .insert({
           user_id: userId,
@@ -226,8 +247,8 @@ export async function POST(request: NextRequest) {
           metadata: {
             ...result.metadata,
             type: ('type' in validated ? validated.type : undefined) || action,
-            prompt: ('prompt' in validated ? validated.prompt : undefined),
-            script: ('script' in validated ? validated.script : undefined),
+            prompt: 'prompt' in validated ? validated.prompt : undefined,
+            script: 'script' in validated ? validated.script : undefined,
           },
           video_url: result.videoUrl,
           created_at: new Date().toISOString(),
@@ -340,7 +361,13 @@ export async function GET(request: NextRequest) {
           godModeOnly: true,
         },
       },
-      videoTypes: ['text-to-video', 'image-to-video', 'avatar', 'motion', 'template'],
+      videoTypes: [
+        'text-to-video',
+        'image-to-video',
+        'avatar',
+        'motion',
+        'template',
+      ],
       aspectRatios: ['16:9', '9:16', '1:1'],
       resolutions: ['720p', '1080p', '4k'],
       styles: ['cinematic', 'animation', 'realistic', 'artistic'],
@@ -349,7 +376,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const validated = StatusCheckSchema.parse({ videoId, provider: providerParam });
+    const validated = StatusCheckSchema.parse({
+      videoId,
+      provider: providerParam,
+    });
 
     // God Mode gate: HeyGen status polling is owner-only
     if (validated.provider === 'heygen') {
@@ -365,11 +395,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const result = await checkVideoStatus(validated.videoId, validated.provider);
+    const result = await checkVideoStatus(
+      validated.videoId,
+      validated.provider
+    );
 
     // Update media asset if status changed
     if (result.videoUrl) {
-      await supabase
+      await getSupabase()
         .from('media_assets')
         .update({
           status: result.status,
@@ -429,7 +462,10 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const requests = z.array(VideoGenerationSchema).max(5).parse(body.requests || []);
+    const requests = z
+      .array(VideoGenerationSchema)
+      .max(5)
+      .parse(body.requests || []);
 
     const results = [];
     const savedAssets: string[] = [];
@@ -455,7 +491,7 @@ export async function PUT(request: NextRequest) {
 
       // Save to library
       if (req.saveToLibrary && result.videoId) {
-        const { data: asset } = await supabase
+        const { data: asset } = await getSupabase()
           .from('media_assets')
           .insert({
             user_id: userId,
@@ -483,19 +519,12 @@ export async function PUT(request: NextRequest) {
     }
 
     // Audit log
-    await auditLogger.logData(
-      'create',
-      'video',
-      undefined,
-      userId,
-      'success',
-      {
-        action: 'MEDIA_GENERATE_BATCH',
-        count: requests.length,
-        successCount: results.filter(r => r.success).length,
-        savedAssets,
-      }
-    );
+    await auditLogger.logData('create', 'video', undefined, userId, 'success', {
+      action: 'MEDIA_GENERATE_BATCH',
+      count: requests.length,
+      successCount: results.filter(r => r.success).length,
+      savedAssets,
+    });
 
     return APISecurityChecker.createSecureResponse({
       success: true,

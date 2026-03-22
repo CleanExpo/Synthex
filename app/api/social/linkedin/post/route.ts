@@ -14,16 +14,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { LinkedInService } from '@/lib/social/linkedin-service';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Request validation schema
 const PostRequestSchema = z.object({
@@ -81,7 +90,7 @@ export async function POST(request: NextRequest) {
     const postData: PostRequest = validation.data;
 
     // Get user's LinkedIn connection
-    const { data: connection, error: connectionError } = await supabase
+    const { data: connection, error: connectionError } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -91,7 +100,10 @@ export async function POST(request: NextRequest) {
 
     if (connectionError || !connection) {
       return NextResponse.json(
-        { error: 'LinkedIn account not connected. Please connect your LinkedIn account first.' },
+        {
+          error:
+            'LinkedIn account not connected. Please connect your LinkedIn account first.',
+        },
         { status: 400 }
       );
     }
@@ -101,14 +113,16 @@ export async function POST(request: NextRequest) {
     linkedInService.initialize({
       accessToken: connection.access_token,
       refreshToken: connection.refresh_token,
-      expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
+      expiresAt: connection.expires_at
+        ? new Date(connection.expires_at)
+        : undefined,
       platformUserId: connection.platform_user_id,
       platformUsername: connection.platform_username,
     });
 
     // Handle scheduled posts
     if (postData.scheduledTime) {
-      const { data: scheduledPost, error: scheduleError } = await supabase
+      const { data: scheduledPost, error: scheduleError } = await getSupabase()
         .from('scheduled_posts')
         .insert({
           user_id: userId,
@@ -131,7 +145,10 @@ export async function POST(request: NextRequest) {
         scheduledPost.id,
         userId,
         'success',
-        { action: 'linkedin_post_scheduled', scheduledTime: postData.scheduledTime }
+        {
+          action: 'linkedin_post_scheduled',
+          scheduledTime: postData.scheduledTime,
+        }
       );
 
       return NextResponse.json({
@@ -161,7 +178,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Save post to database
-    await supabase.from('social_posts').insert({
+    await getSupabase().from('social_posts').insert({
       user_id: userId,
       platform: 'linkedin',
       content: postData.text,
@@ -174,7 +191,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Track usage
-    await supabase.from('usage_tracking').insert({
+    await getSupabase().from('usage_tracking').insert({
       user_id: userId,
       feature: 'linkedin_post',
       count: 1,
@@ -187,7 +204,11 @@ export async function POST(request: NextRequest) {
       result.postId,
       userId,
       'success',
-      { action: 'linkedin_post_created', visibility: postData.visibility, hasLink: !!postData.linkUrl }
+      {
+        action: 'linkedin_post_created',
+        visibility: postData.visibility,
+        hasLink: !!postData.linkUrl,
+      }
     );
 
     return NextResponse.json({
@@ -228,14 +249,17 @@ export async function GET(request: NextRequest) {
 
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20', 10);
     const syncFromPlatform = searchParams.get('sync') === 'true';
 
-    const { data: connection } = await supabase
+    const { data: connection } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -244,7 +268,10 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (!connection) {
-      return NextResponse.json({ error: 'LinkedIn account not connected' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'LinkedIn account not connected' },
+        { status: 400 }
+      );
     }
 
     if (syncFromPlatform) {
@@ -252,7 +279,9 @@ export async function GET(request: NextRequest) {
       linkedInService.initialize({
         accessToken: connection.access_token,
         refreshToken: connection.refresh_token,
-        expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
+        expiresAt: connection.expires_at
+          ? new Date(connection.expires_at)
+          : undefined,
       });
 
       const syncResult = await linkedInService.syncPosts(limit);
@@ -267,7 +296,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const { data: posts, error } = await supabase
+    const { data: posts, error } = await getSupabase()
       .from('social_posts')
       .select('*')
       .eq('user_id', userId)

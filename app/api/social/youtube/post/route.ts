@@ -14,17 +14,26 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { createPlatformService } from '@/lib/social';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 const YOUTUBE_UPLOAD_BASE = 'https://www.googleapis.com/upload/youtube/v3';
@@ -32,7 +41,10 @@ const YOUTUBE_UPLOAD_BASE = 'https://www.googleapis.com/upload/youtube/v3';
 // Request validation schema
 const VideoUploadSchema = z.object({
   title: z.string().min(1).max(100, 'Title must be 100 characters or less'),
-  description: z.string().max(5000, 'Description must be 5000 characters or less').optional(),
+  description: z
+    .string()
+    .max(5000, 'Description must be 5000 characters or less')
+    .optional(),
   videoUrl: z.string().url('Valid video URL required'),
   tags: z.array(z.string().max(500)).max(500).optional(),
   categoryId: z.string().default('22'), // Default: People & Blogs
@@ -44,7 +56,10 @@ const VideoUploadSchema = z.object({
 });
 
 const CommunityPostSchema = z.object({
-  text: z.string().min(1).max(500, 'Community post must be 500 characters or less'),
+  text: z
+    .string()
+    .min(1)
+    .max(500, 'Community post must be 500 characters or less'),
   imageUrl: z.string().url().optional(),
 });
 
@@ -83,7 +98,7 @@ export async function POST(request: NextRequest) {
     const postType = searchParams.get('type') || 'video';
 
     // Get user's YouTube connection
-    const { data: connection, error: connectionError } = await supabase
+    const { data: connection, error: connectionError } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -93,7 +108,10 @@ export async function POST(request: NextRequest) {
 
     if (connectionError || !connection) {
       return NextResponse.json(
-        { error: 'YouTube account not connected. Please connect your YouTube channel first.' },
+        {
+          error:
+            'YouTube account not connected. Please connect your YouTube channel first.',
+        },
         { status: 400 }
       );
     }
@@ -103,7 +121,10 @@ export async function POST(request: NextRequest) {
       const validation = CommunityPostSchema.safeParse(body);
       if (!validation.success) {
         return NextResponse.json(
-          { error: 'Validation failed', details: validation.error.flatten().fieldErrors },
+          {
+            error: 'Validation failed',
+            details: validation.error.flatten().fieldErrors,
+          },
           { status: 400 }
         );
       }
@@ -111,7 +132,10 @@ export async function POST(request: NextRequest) {
       // Note: YouTube Community Posts API has limited availability
       // This is a placeholder for when the API becomes more accessible
       return NextResponse.json(
-        { error: 'Community posts are currently only available through YouTube Studio' },
+        {
+          error:
+            'Community posts are currently only available through YouTube Studio',
+        },
         { status: 501 }
       );
     }
@@ -120,7 +144,10 @@ export async function POST(request: NextRequest) {
     const validation = VideoUploadSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.flatten().fieldErrors },
+        {
+          error: 'Validation failed',
+          details: validation.error.flatten().fieldErrors,
+        },
         { status: 400 }
       );
     }
@@ -130,7 +157,7 @@ export async function POST(request: NextRequest) {
     // Handle scheduled uploads
     if (videoData.scheduledTime) {
       // Save to database for processing
-      const { data: scheduledPost, error: scheduleError } = await supabase
+      const { data: scheduledPost, error: scheduleError } = await getSupabase()
         .from('scheduled_posts')
         .insert({
           user_id: userId,
@@ -161,7 +188,10 @@ export async function POST(request: NextRequest) {
         scheduledPost.id,
         userId,
         'success',
-        { action: 'youtube_video_scheduled', scheduledTime: videoData.scheduledTime }
+        {
+          action: 'youtube_video_scheduled',
+          scheduledTime: videoData.scheduledTime,
+        }
       );
 
       return NextResponse.json({
@@ -179,7 +209,9 @@ export async function POST(request: NextRequest) {
     const service = createPlatformService('youtube', {
       accessToken: connection.access_token,
       refreshToken: connection.refresh_token,
-      expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
+      expiresAt: connection.expires_at
+        ? new Date(connection.expires_at)
+        : undefined,
       platformUserId: connection.platform_user_id,
     });
 
@@ -188,14 +220,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Map privacy for visibility
-    const visibilityMap: Record<string, 'public' | 'private' | 'connections'> = {
-      public: 'public',
-      private: 'private',
-      unlisted: 'connections',
-    };
+    const visibilityMap: Record<string, 'public' | 'private' | 'connections'> =
+      {
+        public: 'public',
+        private: 'private',
+        unlisted: 'connections',
+      };
 
     const result = await service.createPost({
-      text: videoData.title + (videoData.description ? `\n\n${videoData.description}` : ''),
+      text:
+        videoData.title +
+        (videoData.description ? `\n\n${videoData.description}` : ''),
       mediaUrls: [videoData.videoUrl],
       visibility: visibilityMap[videoData.privacy] || 'public',
     });
@@ -214,7 +249,7 @@ export async function POST(request: NextRequest) {
           {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${connection.access_token}`,
+              Authorization: `Bearer ${connection.access_token}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -230,7 +265,10 @@ export async function POST(request: NextRequest) {
         );
 
         if (!playlistResponse.ok) {
-          logger.error('Failed to add video to playlist:', await playlistResponse.text());
+          logger.error(
+            'Failed to add video to playlist:',
+            await playlistResponse.text()
+          );
         }
       } catch (playlistError) {
         logger.error('Failed to add video to playlist:', playlistError);
@@ -248,7 +286,7 @@ export async function POST(request: NextRequest) {
           {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${connection.access_token}`,
+              Authorization: `Bearer ${connection.access_token}`,
               'Content-Type': 'image/jpeg',
             },
             body: thumbnailBuffer,
@@ -260,20 +298,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Save to database
-    await supabase.from('social_posts').insert({
-      user_id: userId,
-      platform: 'youtube',
-      content: `${videoData.title}\n\n${videoData.description || ''}`,
-      post_id: videoId,
-      media_urls: [videoData.videoUrl],
-      media_type: 'VIDEO',
-      status: 'published',
-      metrics: {},
-      created_at: new Date().toISOString(),
-    });
+    await getSupabase()
+      .from('social_posts')
+      .insert({
+        user_id: userId,
+        platform: 'youtube',
+        content: `${videoData.title}\n\n${videoData.description || ''}`,
+        post_id: videoId,
+        media_urls: [videoData.videoUrl],
+        media_type: 'VIDEO',
+        status: 'published',
+        metrics: {},
+        created_at: new Date().toISOString(),
+      });
 
     // Track usage
-    await supabase.from('usage_tracking').insert({
+    await getSupabase().from('usage_tracking').insert({
       user_id: userId,
       feature: 'youtube_upload',
       count: 1,
@@ -286,7 +326,11 @@ export async function POST(request: NextRequest) {
       videoId,
       userId,
       'success',
-      { action: 'youtube_video_uploaded', privacy: videoData.privacy, categoryId: videoData.categoryId }
+      {
+        action: 'youtube_video_uploaded',
+        privacy: videoData.privacy,
+        categoryId: videoData.categoryId,
+      }
     );
 
     return NextResponse.json({
@@ -328,14 +372,17 @@ export async function GET(request: NextRequest) {
 
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20', 10);
     const syncFromPlatform = searchParams.get('sync') === 'true';
 
-    const { data: connection } = await supabase
+    const { data: connection } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('user_id', userId)
@@ -344,7 +391,10 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (!connection) {
-      return NextResponse.json({ error: 'YouTube account not connected' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'YouTube account not connected' },
+        { status: 400 }
+      );
     }
 
     if (syncFromPlatform) {
@@ -353,7 +403,9 @@ export async function GET(request: NextRequest) {
         const service = createPlatformService('youtube', {
           accessToken: connection.access_token,
           refreshToken: connection.refresh_token,
-          expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
+          expiresAt: connection.expires_at
+            ? new Date(connection.expires_at)
+            : undefined,
           platformUserId: connection.platform_user_id,
         });
 
@@ -362,7 +414,7 @@ export async function GET(request: NextRequest) {
 
           if (syncResult.success) {
             // Map to the existing response format for backward compatibility
-            const videos = syncResult.posts.map((post) => ({
+            const videos = syncResult.posts.map((post: any) => ({
               id: post.id,
               platformId: post.platformId,
               content: post.content,
@@ -389,7 +441,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const { data: posts, error } = await supabase
+    const { data: posts, error } = await getSupabase()
       .from('social_posts')
       .select('*')
       .eq('user_id', userId)

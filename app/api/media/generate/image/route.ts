@@ -13,7 +13,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import {
   generateImage,
@@ -26,10 +29,16 @@ import { logger } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Request validation schema
 const ImageGenerationSchema = z.object({
@@ -38,7 +47,16 @@ const ImageGenerationSchema = z.object({
   aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:3', '3:4']).optional(),
   width: z.number().min(256).max(2048).optional(),
   height: z.number().min(256).max(2048).optional(),
-  style: z.enum(['photorealistic', 'artistic', 'anime', 'digital-art', 'cinematic', 'minimalist']).optional(),
+  style: z
+    .enum([
+      'photorealistic',
+      'artistic',
+      'anime',
+      'digital-art',
+      'cinematic',
+      'minimalist',
+    ])
+    .optional(),
   quality: z.enum(['standard', 'hd']).optional(),
   provider: z.enum(['stability', 'dalle', 'gemini']).optional(),
   seed: z.number().optional(),
@@ -54,7 +72,16 @@ const VariationsSchema = z.object({
   prompt: z.string().min(1).max(4000),
   count: z.number().min(1).max(8).default(4),
   aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:3', '3:4']).optional(),
-  style: z.enum(['photorealistic', 'artistic', 'anime', 'digital-art', 'cinematic', 'minimalist']).optional(),
+  style: z
+    .enum([
+      'photorealistic',
+      'artistic',
+      'anime',
+      'digital-art',
+      'cinematic',
+      'minimalist',
+    ])
+    .optional(),
   provider: z.enum(['stability', 'dalle', 'gemini']).optional(),
   saveToLibrary: z.boolean().default(true),
 });
@@ -80,13 +107,15 @@ export async function POST(request: NextRequest) {
   const userId = security.context.userId!;
 
   // Subscription gate — AI Images requires Professional plan or higher
-  const subscription = await subscriptionService.getOrCreateSubscription(userId);
+  const subscription =
+    await subscriptionService.getOrCreateSubscription(userId);
   const ALLOWED_PLANS = ['professional', 'business', 'custom'];
   if (!ALLOWED_PLANS.includes(subscription.plan)) {
     return APISecurityChecker.createSecureResponse(
       {
         success: false,
-        error: 'AI Image generation requires a Professional subscription or higher',
+        error:
+          'AI Image generation requires a Professional subscription or higher',
         upgradeRequired: true,
         requiredPlan: 'professional',
       },
@@ -110,7 +139,13 @@ export async function POST(request: NextRequest) {
       dimensions = {
         width: optimal.width,
         height: optimal.height,
-        aspectRatio: optimal.aspectRatio as '1:1' | '16:9' | '9:16' | '4:3' | '3:4' | undefined,
+        aspectRatio: optimal.aspectRatio as
+          | '1:1'
+          | '16:9'
+          | '9:16'
+          | '4:3'
+          | '3:4'
+          | undefined,
       };
     }
 
@@ -144,7 +179,10 @@ export async function POST(request: NextRequest) {
     if (!result.success) {
       logger.error('Image generation failed', { error: result.error, userId });
       return APISecurityChecker.createSecureResponse(
-        { error: result.error || 'Image generation failed', provider: result.provider },
+        {
+          error: result.error || 'Image generation failed',
+          provider: result.provider,
+        },
         500
       );
     }
@@ -152,7 +190,7 @@ export async function POST(request: NextRequest) {
     // Save to media library if requested
     let mediaAssetId: string | undefined;
     if (validated.saveToLibrary && result.imageBase64) {
-      const { data: asset, error: saveError } = await supabase
+      const { data: asset, error: saveError } = await getSupabase()
         .from('media_assets')
         .insert({
           user_id: userId,
@@ -254,7 +292,7 @@ export async function PUT(request: NextRequest) {
     if (validated.saveToLibrary) {
       for (const result of results) {
         if (result.success && result.imageBase64) {
-          const { data: asset } = await supabase
+          const { data: asset } = await getSupabase()
             .from('media_assets')
             .insert({
               user_id: userId,
@@ -276,19 +314,12 @@ export async function PUT(request: NextRequest) {
     }
 
     // Audit log
-    await auditLogger.logData(
-      'create',
-      'image',
-      undefined,
-      userId,
-      'success',
-      {
-        action: 'MEDIA_GENERATE_VARIATIONS',
-        count: validated.count,
-        successCount: results.filter(r => r.success).length,
-        savedAssets,
-      }
-    );
+    await auditLogger.logData('create', 'image', undefined, userId, 'success', {
+      action: 'MEDIA_GENERATE_VARIATIONS',
+      count: validated.count,
+      successCount: results.filter(r => r.success).length,
+      savedAssets,
+    });
 
     return APISecurityChecker.createSecureResponse({
       success: true,
@@ -361,14 +392,24 @@ export async function GET(request: NextRequest) {
     'youtube_thumbnail',
   ];
 
-  const allDimensions = platforms.reduce((acc, p) => {
-    acc[p] = getOptimalDimensions(p);
-    return acc;
-  }, {} as Record<string, unknown>);
+  const allDimensions = platforms.reduce(
+    (acc: any, p: any) => {
+      acc[p] = getOptimalDimensions(p);
+      return acc;
+    },
+    {} as Record<string, unknown>
+  );
 
   return APISecurityChecker.createSecureResponse({
     platforms: allDimensions,
-    styles: ['photorealistic', 'artistic', 'anime', 'digital-art', 'cinematic', 'minimalist'],
+    styles: [
+      'photorealistic',
+      'artistic',
+      'anime',
+      'digital-art',
+      'cinematic',
+      'minimalist',
+    ],
     providers: ['stability', 'dalle', 'gemini'],
   });
 }

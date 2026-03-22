@@ -12,9 +12,15 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
-import { postingTimePredictor, Platform } from '@/lib/ml/posting-time-predictor';
+import {
+  postingTimePredictor,
+  Platform,
+} from '@/lib/ml/posting-time-predictor';
 import { logger } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 import { prisma } from '@/lib/prisma';
@@ -22,37 +28,86 @@ import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getContentSchedulingWeights } from '@/lib/bayesian/surfaces/content-scheduling';
 import { registerObservationSilently } from '@/lib/bayesian/fallback';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Request validation schemas
 const OptimalTimesSchema = z.object({
-  platform: z.enum(['twitter', 'instagram', 'linkedin', 'facebook', 'tiktok', 'youtube']),
+  platform: z.enum([
+    'twitter',
+    'instagram',
+    'linkedin',
+    'facebook',
+    'tiktok',
+    'youtube',
+  ]),
   timezone: z.string().default('UTC'),
 });
 
 const MultiPlatformSchema = z.object({
-  platforms: z.array(z.enum(['twitter', 'instagram', 'linkedin', 'facebook', 'tiktok', 'youtube'])).min(1),
+  platforms: z
+    .array(
+      z.enum([
+        'twitter',
+        'instagram',
+        'linkedin',
+        'facebook',
+        'tiktok',
+        'youtube',
+      ])
+    )
+    .min(1),
   timezone: z.string().default('UTC'),
 });
 
 const WeeklyScheduleSchema = z.object({
-  platform: z.enum(['twitter', 'instagram', 'linkedin', 'facebook', 'tiktok', 'youtube']),
+  platform: z.enum([
+    'twitter',
+    'instagram',
+    'linkedin',
+    'facebook',
+    'tiktok',
+    'youtube',
+  ]),
   postsPerWeek: z.number().min(1).max(30).default(7),
   timezone: z.string().default('UTC'),
 });
 
 const PredictEngagementSchema = z.object({
-  platform: z.enum(['twitter', 'instagram', 'linkedin', 'facebook', 'tiktok', 'youtube']),
+  platform: z.enum([
+    'twitter',
+    'instagram',
+    'linkedin',
+    'facebook',
+    'tiktok',
+    'youtube',
+  ]),
   scheduledTime: z.string().datetime(),
   timezone: z.string().default('UTC'),
 });
 
 const AutoSchedulePostsSchema = z.object({
   postIds: z.array(z.string()).min(1).max(50),
-  platforms: z.array(z.enum(['twitter', 'instagram', 'linkedin', 'facebook', 'tiktok', 'youtube'])).min(1),
+  platforms: z
+    .array(
+      z.enum([
+        'twitter',
+        'instagram',
+        'linkedin',
+        'facebook',
+        'tiktok',
+        'youtube',
+      ])
+    )
+    .min(1),
   timezone: z.string().default('UTC'),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
@@ -99,12 +154,18 @@ export async function GET(request: NextRequest) {
         // Resolve plan for BO surface gating
         const userRecord = await prisma.user.findUnique({
           where: { id: userId },
-          select: { organizationId: true, organization: { select: { plan: true } } },
+          select: {
+            organizationId: true,
+            organization: { select: { plan: true } },
+          },
         });
         const orgId = userRecord?.organizationId ?? userId;
-        const plan  = (userRecord?.organization?.plan ?? 'free').toLowerCase();
+        const plan = (userRecord?.organization?.plan ?? 'free').toLowerCase();
 
-        const schedulingWeightsResult = isSurfaceAvailable(plan, 'content_scheduling')
+        const schedulingWeightsResult = isSurfaceAvailable(
+          plan,
+          'content_scheduling'
+        )
           ? await getContentSchedulingWeights(orgId)
           : undefined;
 
@@ -112,7 +173,7 @@ export async function GET(request: NextRequest) {
           userId,
           platform,
           timezone,
-          schedulingWeightsResult?.weights,
+          schedulingWeightsResult?.weights
         );
 
         // Register BO observation (fire-and-forget)
@@ -122,14 +183,16 @@ export async function GET(request: NextRequest) {
             'content_scheduling',
             orgId,
             {
-              historicalWeight:   schedulingWeightsResult.weights.historicalWeight,
-              industryWeight:     schedulingWeightsResult.weights.industryWeight,
-              recencyBonus:       schedulingWeightsResult.weights.recencyBonus,
-              peakHourMultiplier: schedulingWeightsResult.weights.peakHourMultiplier,
-              weekendDiscount:    schedulingWeightsResult.weights.weekendDiscount,
+              historicalWeight:
+                schedulingWeightsResult.weights.historicalWeight,
+              industryWeight: schedulingWeightsResult.weights.industryWeight,
+              recencyBonus: schedulingWeightsResult.weights.recencyBonus,
+              peakHourMultiplier:
+                schedulingWeightsResult.weights.peakHourMultiplier,
+              weekendDiscount: schedulingWeightsResult.weights.weekendDiscount,
             },
             topScore / 100,
-            { platform, methodology: result.methodology },
+            { platform, methodology: result.methodology }
           );
         }
 
@@ -157,7 +220,11 @@ export async function GET(request: NextRequest) {
         }
 
         const platforms = platformsParam.split(',') as Platform[];
-        const results = await postingTimePredictor.getOptimalTimesMultiPlatform(userId, platforms, timezone);
+        const results = await postingTimePredictor.getOptimalTimesMultiPlatform(
+          userId,
+          platforms,
+          timezone
+        );
 
         const response: Record<string, unknown> = {};
         results.forEach((result, platform) => {
@@ -178,7 +245,10 @@ export async function GET(request: NextRequest) {
       case 'weekly': {
         // Get weekly schedule recommendations
         const platform = searchParams.get('platform') as Platform;
-        const postsPerWeek = parseInt(searchParams.get('postsPerWeek') || '7', 10);
+        const postsPerWeek = parseInt(
+          searchParams.get('postsPerWeek') || '7',
+          10
+        );
         const timezone = searchParams.get('timezone') || 'UTC';
 
         if (!platform) {
@@ -271,15 +341,20 @@ export async function POST(request: NextRequest) {
     const validated = AutoSchedulePostsSchema.parse(body);
 
     // Get optimal times for each platform
-    const platformTimes = await postingTimePredictor.getOptimalTimesMultiPlatform(
-      userId,
-      validated.platforms as Platform[],
-      validated.timezone
-    );
+    const platformTimes =
+      await postingTimePredictor.getOptimalTimesMultiPlatform(
+        userId,
+        validated.platforms as Platform[],
+        validated.timezone
+      );
 
     // Calculate schedule start
-    const startDate = validated.startDate ? new Date(validated.startDate) : new Date();
-    const endDate = validated.endDate ? new Date(validated.endDate) : new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000); // Default to 1 week
+    const startDate = validated.startDate
+      ? new Date(validated.startDate)
+      : new Date();
+    const endDate = validated.endDate
+      ? new Date(validated.endDate)
+      : new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000); // Default to 1 week
 
     // Generate optimal schedule
     const scheduledPosts: Array<{
@@ -294,7 +369,7 @@ export async function POST(request: NextRequest) {
 
     for (const postId of validated.postIds) {
       // Fetch post to determine content type and platforms
-      const { data: post } = await supabase
+      const { data: post } = await getSupabase()
         .from('scheduled_posts')
         .select('*')
         .eq('id', postId)
@@ -342,7 +417,7 @@ export async function POST(request: NextRequest) {
 
       if (bestTime) {
         // Update post with scheduled time
-        await supabase
+        await getSupabase()
           .from('scheduled_posts')
           .update({
             scheduled_time: bestTime.toISOString(),
@@ -369,20 +444,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Audit log
-    await auditLogger.logData(
-      'update',
-      'post',
-      undefined,
-      userId,
-      'success',
-      {
-        action: 'AUTO_SCHEDULE',
-        totalPosts: validated.postIds.length,
-        scheduledCount: scheduledPosts.length,
-        platforms: validated.platforms,
-        timezone: validated.timezone,
-      }
-    );
+    await auditLogger.logData('update', 'post', undefined, userId, 'success', {
+      action: 'AUTO_SCHEDULE',
+      totalPosts: validated.postIds.length,
+      scheduledCount: scheduledPosts.length,
+      platforms: validated.platforms,
+      timezone: validated.timezone,
+    });
 
     return APISecurityChecker.createSecureResponse({
       success: true,
@@ -432,25 +500,27 @@ export async function PUT(request: NextRequest) {
     const settingsSchema = z.object({
       enabled: z.boolean().optional(),
       defaultTimezone: z.string().optional(),
-      platformSettings: z.record(z.object({
-        enabled: z.boolean().optional(),
-        postsPerWeek: z.number().min(0).max(30).optional(),
-        minIntervalHours: z.number().min(1).max(48).optional(),
-        preferredDays: z.array(z.number().min(0).max(6)).optional(),
-        preferredHours: z.array(z.number().min(0).max(23)).optional(),
-      })).optional(),
+      platformSettings: z
+        .record(
+          z.object({
+            enabled: z.boolean().optional(),
+            postsPerWeek: z.number().min(0).max(30).optional(),
+            minIntervalHours: z.number().min(1).max(48).optional(),
+            preferredDays: z.array(z.number().min(0).max(6)).optional(),
+            preferredHours: z.array(z.number().min(0).max(23)).optional(),
+          })
+        )
+        .optional(),
     });
 
     const validated = settingsSchema.parse(body);
 
     // Update user settings
-    const { error } = await supabase
-      .from('user_settings')
-      .upsert({
-        user_id: userId,
-        auto_schedule_settings: validated,
-        updated_at: new Date().toISOString(),
-      });
+    const { error } = await getSupabase().from('user_settings').upsert({
+      user_id: userId,
+      auto_schedule_settings: validated,
+      updated_at: new Date().toISOString(),
+    });
 
     if (error) {
       throw error;

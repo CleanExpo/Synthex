@@ -5,16 +5,22 @@
  * - TWITTER_ACCESS_TOKEN: Twitter access token (SECRET)
  * - TWITTER_ACCESS_SECRET: Twitter access token secret (SECRET)
  * - JWT_SECRET: For verifying user authentication (CRITICAL)
- * 
+ *
  * FAILURE MODE: Returns error response if missing
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { twitterService } from '@/lib/social/twitter-service';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { createClient } from '@supabase/supabase-js';
-import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 const twitterPostSchema = z.object({
@@ -24,10 +30,16 @@ const twitterPostSchema = z.object({
   scheduledTime: z.string().optional(),
 });
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,7 +61,7 @@ export async function POST(request: NextRequest) {
     if (!userId) return unauthorizedResponse();
 
     // Check user's subscription limits
-    const { data: subscription } = await supabase
+    const { data: subscription } = await getSupabase()
       .from('subscriptions')
       .select('plan, metadata')
       .eq('user_id', userId)
@@ -97,7 +109,7 @@ export async function POST(request: NextRequest) {
       );
 
       // Save to database for later processing
-      await supabase.from('scheduled_posts').insert({
+      await getSupabase().from('scheduled_posts').insert({
         user_id: userId,
         platform: 'twitter',
         content: text,
@@ -142,23 +154,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Log the post
-    await supabase.from('social_posts').insert({
-      user_id: userId,
-      platform: 'twitter',
-      content: text || thread?.join('\n'),
-      post_id: result.id || null,
-      status: 'published',
-      metrics: {},
-      created_at: new Date().toISOString(),
-    });
+    await getSupabase()
+      .from('social_posts')
+      .insert({
+        user_id: userId,
+        platform: 'twitter',
+        content: text || thread?.join('\n'),
+        post_id: result.id || null,
+        status: 'published',
+        metrics: {},
+        created_at: new Date().toISOString(),
+      });
 
     // Track usage
-    await supabase.from('usage_tracking').insert({
-      user_id: userId,
-      feature: 'twitter_post',
-      count: thread ? thread.length : 1,
-      timestamp: new Date().toISOString(),
-    });
+    await getSupabase()
+      .from('usage_tracking')
+      .insert({
+        user_id: userId,
+        feature: 'twitter_post',
+        count: thread ? thread.length : 1,
+        timestamp: new Date().toISOString(),
+      });
 
     return NextResponse.json({
       success: true,
@@ -167,7 +183,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Twitter post error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to post to Twitter',
         message: 'An unexpected error occurred. Please try again.',
       },
@@ -197,7 +213,7 @@ export async function GET(request: NextRequest) {
     if (!userId) return unauthorizedResponse();
 
     // Get posts from database
-    const { data: posts, error } = await supabase
+    const { data: posts, error } = await getSupabase()
       .from('social_posts')
       .select('*')
       .eq('user_id', userId)
@@ -218,7 +234,7 @@ export async function GET(request: NextRequest) {
           try {
             const metrics = await twitterService.getTweetMetrics(post.post_id);
             if (metrics) {
-              await supabase
+              await getSupabase()
                 .from('social_posts')
                 .update({ metrics })
                 .eq('id', post.id);

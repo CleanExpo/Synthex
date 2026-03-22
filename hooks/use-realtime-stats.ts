@@ -15,7 +15,11 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { createClient, RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import {
+  createClient,
+  RealtimeChannel,
+  RealtimePostgresChangesPayload,
+} from '@supabase/supabase-js';
 
 // ============================================================================
 // TYPES
@@ -70,10 +74,16 @@ export interface RealtimeStatsResult {
 // SUPABASE CLIENT
 // ============================================================================
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // ============================================================================
 // INITIAL STATE
@@ -139,7 +149,7 @@ export function useRealtimeStats(
 
     try {
       // Fetch posts stats
-      const { data: postsData, error: postsError } = await supabase
+      const { data: postsData, error: postsError } = await getSupabase()
         .from('posts')
         .select('status')
         .eq('campaign_id', userId); // Adjust based on your schema
@@ -148,13 +158,15 @@ export function useRealtimeStats(
 
       const postStats = {
         total: postsData?.length || 0,
-        published: postsData?.filter(p => p.status === 'published').length || 0,
-        scheduled: postsData?.filter(p => p.status === 'scheduled').length || 0,
-        draft: postsData?.filter(p => p.status === 'draft').length || 0,
+        published:
+          postsData?.filter((p: any) => p.status === 'published').length || 0,
+        scheduled:
+          postsData?.filter((p: any) => p.status === 'scheduled').length || 0,
+        draft: postsData?.filter((p: any) => p.status === 'draft').length || 0,
       };
 
       // Fetch engagement metrics
-      const { data: metricsData, error: metricsError } = await supabase
+      const { data: metricsData, error: metricsError } = await getSupabase()
         .from('platform_metrics')
         .select('likes, comments, shares, views')
         .limit(100);
@@ -162,7 +174,7 @@ export function useRealtimeStats(
       if (metricsError) throw metricsError;
 
       const engagementStats = (metricsData || []).reduce(
-        (acc, m) => ({
+        (acc: any, m: any) => ({
           totalLikes: acc.totalLikes + (m.likes || 0),
           totalComments: acc.totalComments + (m.comments || 0),
           totalShares: acc.totalShares + (m.shares || 0),
@@ -171,12 +183,14 @@ export function useRealtimeStats(
         { totalLikes: 0, totalComments: 0, totalShares: 0, totalViews: 0 }
       );
 
-      const totalEngagement = engagementStats.totalLikes +
+      const totalEngagement =
+        engagementStats.totalLikes +
         engagementStats.totalComments +
         engagementStats.totalShares;
-      const engagementRate = engagementStats.totalViews > 0
-        ? (totalEngagement / engagementStats.totalViews) * 100
-        : 0;
+      const engagementRate =
+        engagementStats.totalViews > 0
+          ? (totalEngagement / engagementStats.totalViews) * 100
+          : 0;
 
       return {
         posts: postStats,
@@ -230,70 +244,73 @@ export function useRealtimeStats(
   /**
    * Merge real-time changes into current stats
    */
-  const mergeChanges = useCallback((
-    current: DashboardStats | null,
-    payload: RealtimePostgresChangesPayload<Record<string, unknown>>
-  ): DashboardStats => {
-    if (!current) return initialStats;
+  const mergeChanges = useCallback(
+    (
+      current: DashboardStats | null,
+      payload: RealtimePostgresChangesPayload<Record<string, unknown>>
+    ): DashboardStats => {
+      if (!current) return initialStats;
 
-    const { table, eventType, new: newRecord, old: oldRecord } = payload;
+      const { table, eventType, new: newRecord, old: oldRecord } = payload;
 
-    // Deep clone to avoid mutations
-    const updated = JSON.parse(JSON.stringify(current)) as DashboardStats;
+      // Deep clone to avoid mutations
+      const updated = JSON.parse(JSON.stringify(current)) as DashboardStats;
 
-    switch (table) {
-      case 'posts':
-        if (eventType === 'INSERT') {
-          updated.posts.total++;
-          const status = (newRecord as { status?: string })?.status;
-          if (status === 'published') updated.posts.published++;
-          else if (status === 'scheduled') updated.posts.scheduled++;
-          else updated.posts.draft++;
-        } else if (eventType === 'DELETE') {
-          updated.posts.total--;
-          const status = (oldRecord as { status?: string })?.status;
-          if (status === 'published') updated.posts.published--;
-          else if (status === 'scheduled') updated.posts.scheduled--;
-          else updated.posts.draft--;
-        } else if (eventType === 'UPDATE') {
-          const oldStatus = (oldRecord as { status?: string })?.status;
-          const newStatus = (newRecord as { status?: string })?.status;
-          if (oldStatus !== newStatus) {
-            // Decrement old status
-            if (oldStatus === 'published') updated.posts.published--;
-            else if (oldStatus === 'scheduled') updated.posts.scheduled--;
-            else updated.posts.draft--;
-            // Increment new status
-            if (newStatus === 'published') updated.posts.published++;
-            else if (newStatus === 'scheduled') updated.posts.scheduled++;
-            else updated.posts.draft++;
-          }
-        }
-        break;
-
-      case 'platform_metrics':
-        if (eventType === 'INSERT' || eventType === 'UPDATE') {
-          const record = newRecord as {
-            likes?: number;
-            comments?: number;
-            shares?: number;
-            views?: number;
-          };
-          // For simplicity, just add the new metrics
-          // In production, you'd need to track and subtract old values
+      switch (table) {
+        case 'posts':
           if (eventType === 'INSERT') {
-            updated.engagement.totalLikes += record.likes || 0;
-            updated.engagement.totalComments += record.comments || 0;
-            updated.engagement.totalShares += record.shares || 0;
-            updated.engagement.totalViews += record.views || 0;
+            updated.posts.total++;
+            const status = (newRecord as { status?: string })?.status;
+            if (status === 'published') updated.posts.published++;
+            else if (status === 'scheduled') updated.posts.scheduled++;
+            else updated.posts.draft++;
+          } else if (eventType === 'DELETE') {
+            updated.posts.total--;
+            const status = (oldRecord as { status?: string })?.status;
+            if (status === 'published') updated.posts.published--;
+            else if (status === 'scheduled') updated.posts.scheduled--;
+            else updated.posts.draft--;
+          } else if (eventType === 'UPDATE') {
+            const oldStatus = (oldRecord as { status?: string })?.status;
+            const newStatus = (newRecord as { status?: string })?.status;
+            if (oldStatus !== newStatus) {
+              // Decrement old status
+              if (oldStatus === 'published') updated.posts.published--;
+              else if (oldStatus === 'scheduled') updated.posts.scheduled--;
+              else updated.posts.draft--;
+              // Increment new status
+              if (newStatus === 'published') updated.posts.published++;
+              else if (newStatus === 'scheduled') updated.posts.scheduled++;
+              else updated.posts.draft++;
+            }
           }
-        }
-        break;
-    }
+          break;
 
-    updated.lastUpdated = new Date();
-    return updated;
-  }, []);
+        case 'platform_metrics':
+          if (eventType === 'INSERT' || eventType === 'UPDATE') {
+            const record = newRecord as {
+              likes?: number;
+              comments?: number;
+              shares?: number;
+              views?: number;
+            };
+            // For simplicity, just add the new metrics
+            // In production, you'd need to track and subtract old values
+            if (eventType === 'INSERT') {
+              updated.engagement.totalLikes += record.likes || 0;
+              updated.engagement.totalComments += record.comments || 0;
+              updated.engagement.totalShares += record.shares || 0;
+              updated.engagement.totalViews += record.views || 0;
+            }
+          }
+          break;
+      }
+
+      updated.lastUpdated = new Date();
+      return updated;
+    },
+    []
+  );
 
   /**
    * Set up real-time subscription
@@ -302,7 +319,7 @@ export function useRealtimeStats(
     if (!userId || !enableRealtime) return;
 
     // Create channel
-    const channel = supabase.channel(`stats:${userId}`);
+    const channel = getSupabase().channel(`stats:${userId}`);
 
     // Subscribe to each table
     for (const table of tables) {
@@ -314,7 +331,7 @@ export function useRealtimeStats(
           table,
           // filter: `user_id=eq.${userId}`, // Add if your tables have user_id
         },
-        (payload) => {
+        (payload: any) => {
           if (mountedRef.current) {
             setStats(current => mergeChanges(current, payload));
           }
@@ -323,31 +340,40 @@ export function useRealtimeStats(
     }
 
     // Subscribe
-    channel
-      .subscribe((status) => {
-        if (mountedRef.current) {
-          setIsConnected(status === 'SUBSCRIBED');
+    channel.subscribe((status: any) => {
+      if (mountedRef.current) {
+        setIsConnected(status === 'SUBSCRIBED');
 
-          if (status === 'SUBSCRIBED') {
-          } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-            console.warn('Real-time stats disconnected, falling back to polling');
-            // Start polling fallback
-            if (!pollingIntervalRef.current) {
-              pollingIntervalRef.current = setInterval(refresh, pollingFallbackMs);
-            }
+        if (status === 'SUBSCRIBED') {
+        } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+          console.warn('Real-time stats disconnected, falling back to polling');
+          // Start polling fallback
+          if (!pollingIntervalRef.current) {
+            pollingIntervalRef.current = setInterval(
+              refresh,
+              pollingFallbackMs
+            );
           }
         }
-      });
+      }
+    });
 
     channelRef.current = channel;
 
     return () => {
       if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
+        getSupabase().removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
-  }, [userId, enableRealtime, tables, mergeChanges, refresh, pollingFallbackMs]);
+  }, [
+    userId,
+    enableRealtime,
+    tables,
+    mergeChanges,
+    refresh,
+    pollingFallbackMs,
+  ]);
 
   /**
    * Initial fetch

@@ -14,10 +14,16 @@
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 export type Platform =
   | 'instagram'
@@ -51,7 +57,10 @@ export interface CreateActionData {
 }
 
 /** Union type for all action data types */
-export type RecommendationActionData = ScheduleActionData | CreateActionData | Record<string, unknown>;
+export type RecommendationActionData =
+  | ScheduleActionData
+  | CreateActionData
+  | Record<string, unknown>;
 
 /** Supporting data for recommendations */
 export interface RecommendationSupportingData {
@@ -308,7 +317,10 @@ class ContentRecommendationEngine {
       const recommendations: Recommendation[] = [];
 
       // Get user's performance data
-      const performanceData = await this.getUserPerformanceData(userId, platforms);
+      const performanceData = await this.getUserPerformanceData(
+        userId,
+        platforms
+      );
 
       // Generate different types of recommendations
       for (const platform of platforms) {
@@ -363,9 +375,11 @@ class ContentRecommendationEngine {
 
       // Sort by priority and confidence
       const sorted = recommendations
-        .sort((a, b) => {
+        .sort((a: any, b: any) => {
           const priorityOrder = { high: 0, medium: 1, low: 2 };
+          // @ts-ignore - dynamic key indexing
           if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+            // @ts-ignore - dynamic key indexing
             return priorityOrder[a.priority] - priorityOrder[b.priority];
           }
           return b.confidence - a.confidence;
@@ -396,7 +410,7 @@ class ContentRecommendationEngine {
       const cards: RecommendationCard[] = [];
 
       // Timing card
-      const timingRecs = allRecs.filter((r) => r.type === 'optimal_time');
+      const timingRecs = allRecs.filter((r: any) => r.type === 'optimal_time');
       if (timingRecs.length > 0) {
         cards.push({
           id: 'timing',
@@ -411,7 +425,9 @@ class ContentRecommendationEngine {
       }
 
       // Content format card
-      const formatRecs = allRecs.filter((r) => r.type === 'content_format');
+      const formatRecs = allRecs.filter(
+        (r: any) => r.type === 'content_format'
+      );
       if (formatRecs.length > 0) {
         cards.push({
           id: 'formats',
@@ -426,7 +442,7 @@ class ContentRecommendationEngine {
       }
 
       // Hashtag card
-      const hashtagRecs = allRecs.filter((r) => r.type === 'hashtag');
+      const hashtagRecs = allRecs.filter((r: any) => r.type === 'hashtag');
       if (hashtagRecs.length > 0) {
         cards.push({
           id: 'hashtags',
@@ -441,9 +457,13 @@ class ContentRecommendationEngine {
       }
 
       // Engagement card
-      const engagementRecs = allRecs.filter((r) => r.type === 'engagement');
+      const engagementRecs = allRecs.filter(
+        (r: any) => r.type === 'engagement'
+      );
       if (engagementRecs.length > 0) {
-        const hasHighPriority = engagementRecs.some((r) => r.priority === 'high');
+        const hasHighPriority = engagementRecs.some(
+          (r: any) => r.priority === 'high'
+        );
         cards.push({
           id: 'engagement',
           category: 'Engagement Boost',
@@ -458,7 +478,7 @@ class ContentRecommendationEngine {
 
       // Topic/trending card
       const topicRecs = allRecs.filter(
-        (r) => r.type === 'topic' || r.type === 'trending'
+        r => r.type === 'topic' || r.type === 'trending'
       );
       if (topicRecs.length > 0) {
         cards.push({
@@ -475,7 +495,10 @@ class ContentRecommendationEngine {
 
       // Sort by urgency
       const urgencyOrder = { immediate: 0, soon: 1, when_ready: 2 };
-      return cards.sort((a, b) => urgencyOrder[a.urgency] - urgencyOrder[b.urgency]);
+      // @ts-ignore - dynamic key indexing
+      return cards.sort(
+        (a: any, b: any) => urgencyOrder[a.urgency] - urgencyOrder[b.urgency]
+      );
     } catch (error) {
       logger.error('Failed to get recommendation cards:', { error, userId });
       return [];
@@ -490,11 +513,16 @@ class ContentRecommendationEngine {
     platform: Platform
   ): Promise<PostingTimeRecommendation> {
     try {
-      const performanceData = await this.getUserPerformanceData(userId, [platform]);
+      const performanceData = await this.getUserPerformanceData(userId, [
+        platform,
+      ]);
       const userTimezone = await this.getUserTimezone(userId);
 
       // Analyze user's historical performance by time
-      const timePerformance = await this.analyzeTimePerformance(userId, platform);
+      const timePerformance = await this.analyzeTimePerformance(
+        userId,
+        platform
+      );
 
       // Combine with platform best practices
       const platformPractices = PLATFORM_BEST_PRACTICES[platform];
@@ -510,11 +538,13 @@ class ContentRecommendationEngine {
       for (const peakTime of platformPractices.peakEngagementTimes) {
         for (const hour of peakTime.hours) {
           const userPerf = timePerformance.find(
-            (t) => t.dayOfWeek === peakTime.dayOfWeek && t.hour === hour
+            t => t.dayOfWeek === peakTime.dayOfWeek && t.hour === hour
           );
 
           const score = userPerf
-            ? (userPerf.engagementRate + platformPractices.peakEngagementTimes.length) / 2
+            ? (userPerf.engagementRate +
+                platformPractices.peakEngagementTimes.length) /
+              2
             : 70; // Default score based on platform data
 
           optimalTimes.push({
@@ -529,7 +559,7 @@ class ContentRecommendationEngine {
       }
 
       // Sort by score
-      optimalTimes.sort((a, b) => b.score - a.score);
+      optimalTimes.sort((a: any, b: any) => b.score - a.score);
 
       // Find next best slot
       const now = new Date();
@@ -556,7 +586,7 @@ class ContentRecommendationEngine {
   ): Promise<ContentFormatRecommendation> {
     try {
       // Get user's format performance
-      const { data: formatData } = await supabase
+      const { data: formatData } = await getSupabase()
         .from('posts')
         .select('content_type, engagement_rate')
         .eq('user_id', userId)
@@ -566,7 +596,10 @@ class ContentRecommendationEngine {
       const formatStats = new Map<string, { total: number; sum: number }>();
 
       for (const post of formatData || []) {
-        const existing = formatStats.get(post.content_type) || { total: 0, sum: 0 };
+        const existing = formatStats.get(post.content_type) || {
+          total: 0,
+          sum: 0,
+        };
         existing.total++;
         existing.sum += post.engagement_rate;
         formatStats.set(post.content_type, existing);
@@ -583,13 +616,17 @@ class ContentRecommendationEngine {
 
       const overallAvg =
         formatData && formatData.length > 0
-          ? formatData.reduce((sum, p) => sum + p.engagement_rate, 0) / formatData.length
+          ? formatData.reduce(
+              (sum: any, p: any) => sum + p.engagement_rate,
+              0
+            ) / formatData.length
           : 3;
 
       for (const format of platformPractices.bestFormats) {
         const stats = formatStats.get(format);
         const avgEngagement = stats ? stats.sum / stats.total : 0;
-        const engagementLift = ((avgEngagement - overallAvg) / overallAvg) * 100;
+        const engagementLift =
+          ((avgEngagement - overallAvg) / overallAvg) * 100;
 
         recommendedFormats.push({
           format,
@@ -600,15 +637,15 @@ class ContentRecommendationEngine {
       }
 
       // Sort by score
-      recommendedFormats.sort((a, b) => b.score - a.score);
+      recommendedFormats.sort((a: any, b: any) => b.score - a.score);
 
       // Find underutilized and overutilized formats
       const usedFormats = Array.from(formatStats.keys());
       const underutilized = platformPractices.bestFormats.filter(
-        (f) => !usedFormats.includes(f)
+        f => !usedFormats.includes(f)
       );
       const overutilized = usedFormats.filter(
-        (f) =>
+        f =>
           !platformPractices.bestFormats.includes(f) &&
           (formatStats.get(f)?.total || 0) > 10
       );
@@ -623,11 +660,13 @@ class ContentRecommendationEngine {
       logger.error('Failed to get format recommendations:', { error, userId });
       return {
         platform,
-        recommendedFormats: PLATFORM_BEST_PRACTICES[platform].bestFormats.map((f) => ({
-          format: f,
-          score: 70,
-          engagementLift: 0,
-        })),
+        recommendedFormats: PLATFORM_BEST_PRACTICES[platform].bestFormats.map(
+          (f: any) => ({
+            format: f,
+            score: 70,
+            engagementLift: 0,
+          })
+        ),
         underutilizedFormats: [],
         overutilizedFormats: [],
       };
@@ -647,7 +686,7 @@ class ContentRecommendationEngine {
 
       for (const platform of platforms) {
         // Get user's content themes
-        const { data: userContent } = await supabase
+        const { data: userContent } = await getSupabase()
           .from('posts')
           .select('themes, engagement_rate')
           .eq('user_id', userId)
@@ -678,7 +717,12 @@ class ContentRecommendationEngine {
               opportunities.push({
                 topic: topic.topic,
                 potential: topic.engagement * 10,
-                competition: topic.competitorCoverage > 50 ? 'high' : topic.competitorCoverage > 20 ? 'medium' : 'low',
+                competition:
+                  topic.competitorCoverage > 50
+                    ? 'high'
+                    : topic.competitorCoverage > 20
+                      ? 'medium'
+                      : 'low',
                 suggestedApproach: `Test ${topic.topic} with 2-3 posts to gauge audience interest`,
               });
             }
@@ -704,14 +748,17 @@ class ContentRecommendationEngine {
     recommendationId: string
   ): Promise<boolean> {
     try {
-      await supabase.from('dismissed_recommendations').insert({
+      await getSupabase().from('dismissed_recommendations').insert({
         user_id: userId,
         recommendation_id: recommendationId,
         dismissed_at: new Date().toISOString(),
       });
       return true;
     } catch (error) {
-      logger.error('Failed to dismiss recommendation:', { error, recommendationId });
+      logger.error('Failed to dismiss recommendation:', {
+        error,
+        recommendationId,
+      });
       return false;
     }
   }
@@ -726,7 +773,7 @@ class ContentRecommendationEngine {
   ): Promise<{ success: boolean; result?: Record<string, unknown> }> {
     try {
       // Log application
-      await supabase.from('applied_recommendations').insert({
+      await getSupabase().from('applied_recommendations').insert({
         user_id: userId,
         recommendation_id: recommendationId,
         action,
@@ -738,7 +785,10 @@ class ContentRecommendationEngine {
 
       return { success: true };
     } catch (error) {
-      logger.error('Failed to apply recommendation:', { error, recommendationId });
+      logger.error('Failed to apply recommendation:', {
+        error,
+        recommendationId,
+      });
       return { success: false };
     }
   }
@@ -748,14 +798,19 @@ class ContentRecommendationEngine {
   private async getUserPerformanceData(
     userId: string,
     platforms: Platform[]
-  ): Promise<Array<{ platform: string; date: string; [key: string]: unknown }>> {
+  ): Promise<
+    Array<{ platform: string; date: string; [key: string]: unknown }>
+  > {
     try {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('analytics_summary')
         .select('*')
         .eq('user_id', userId)
         .in('platform', platforms)
-        .gte('date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .gte(
+          'date',
+          new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+        )
         .order('date', { ascending: false });
 
       return data || [];
@@ -767,7 +822,7 @@ class ContentRecommendationEngine {
 
   private async getUserTimezone(userId: string): Promise<string> {
     try {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('user_settings')
         .select('timezone')
         .eq('user_id', userId)
@@ -782,9 +837,11 @@ class ContentRecommendationEngine {
   private async analyzeTimePerformance(
     userId: string,
     platform: Platform
-  ): Promise<Array<{ dayOfWeek: number; hour: number; engagementRate: number }>> {
+  ): Promise<
+    Array<{ dayOfWeek: number; hour: number; engagementRate: number }>
+  > {
     try {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('posts')
         .select('published_at, engagement_rate')
         .eq('user_id', userId)
@@ -849,9 +906,17 @@ class ContentRecommendationEngine {
 
   private getTimesToAvoid(
     platform: Platform,
-    timePerformance: Array<{ dayOfWeek: number; hour: number; engagementRate: number }>
+    timePerformance: Array<{
+      dayOfWeek: number;
+      hour: number;
+      engagementRate: number;
+    }>
   ): Array<{ dayOfWeek: number; hour: number; reason: string }> {
-    const avoidTimes: Array<{ dayOfWeek: number; hour: number; reason: string }> = [];
+    const avoidTimes: Array<{
+      dayOfWeek: number;
+      hour: number;
+      reason: string;
+    }> = [];
 
     // General times to avoid
     const generalAvoid = [
@@ -873,8 +938,10 @@ class ContentRecommendationEngine {
     // Add times with poor historical performance
     const avgEngagement =
       timePerformance.length > 0
-        ? timePerformance.reduce((sum, t) => sum + t.engagementRate, 0) /
-          timePerformance.length
+        ? timePerformance.reduce(
+            (sum: any, t: any) => sum + t.engagementRate,
+            0
+          ) / timePerformance.length
         : 3;
 
     for (const time of timePerformance) {
@@ -929,7 +996,9 @@ class ContentRecommendationEngine {
 
   private async getTrendingTopics(
     platform: Platform
-  ): Promise<Array<{ topic: string; engagement: number; competitorCoverage: number }>> {
+  ): Promise<
+    Array<{ topic: string; engagement: number; competitorCoverage: number }>
+  > {
     // This would integrate with trend prediction service
     return [
       { topic: 'AI tools', engagement: 8.5, competitorCoverage: 45 },
@@ -939,13 +1008,20 @@ class ContentRecommendationEngine {
   }
 
   private calculateTotalImpact(recommendations: Recommendation[]): number {
-    return recommendations.reduce((sum, r) => sum + r.impact.expectedChange, 0);
+    return recommendations.reduce(
+      (sum: any, r: any) => sum + r.impact.expectedChange,
+      0
+    );
   }
 
   private async generateTimingRecommendations(
     userId: string,
     platform: Platform,
-    _performanceData: Array<{ platform: string; date: string; [key: string]: unknown }>
+    _performanceData: Array<{
+      platform: string;
+      date: string;
+      [key: string]: unknown;
+    }>
   ): Promise<Recommendation[]> {
     const timingData = await this.getOptimalPostingTimes(userId, platform);
     const recommendations: Recommendation[] = [];
@@ -985,7 +1061,11 @@ class ContentRecommendationEngine {
   private async generateFormatRecommendations(
     userId: string,
     platform: Platform,
-    _performanceData: Array<{ platform: string; date: string; [key: string]: unknown }>
+    _performanceData: Array<{
+      platform: string;
+      date: string;
+      [key: string]: unknown;
+    }>
   ): Promise<Recommendation[]> {
     const formatData = await this.getFormatRecommendations(userId, platform);
     const recommendations: Recommendation[] = [];
@@ -1092,7 +1172,11 @@ class ContentRecommendationEngine {
   private async generateEngagementRecommendations(
     userId: string,
     platform: Platform,
-    _performanceData: Array<{ platform: string; date: string; [key: string]: unknown }>
+    _performanceData: Array<{
+      platform: string;
+      date: string;
+      [key: string]: unknown;
+    }>
   ): Promise<Recommendation[]> {
     const recommendations: Recommendation[] = [];
     const tips = PLATFORM_BEST_PRACTICES[platform].contentTips;
@@ -1146,11 +1230,13 @@ class ContentRecommendationEngine {
     return recommendations;
   }
 
-  private getFallbackPostingTimes(platform: Platform): PostingTimeRecommendation {
+  private getFallbackPostingTimes(
+    platform: Platform
+  ): PostingTimeRecommendation {
     const practices = PLATFORM_BEST_PRACTICES[platform];
 
-    const optimalTimes = practices.peakEngagementTimes.flatMap((pt) =>
-      pt.hours.map((hour) => ({
+    const optimalTimes = practices.peakEngagementTimes.flatMap((pt: any) =>
+      pt.hours.map((hour: any) => ({
         dayOfWeek: pt.dayOfWeek,
         hour,
         score: 70,

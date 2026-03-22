@@ -20,16 +20,25 @@ export const runtime = 'nodejs';
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { clientManagement } from '@/lib/services/client-management';
 import { logger } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Request validation schemas
 const CreateClientSchema = z.object({
@@ -38,51 +47,63 @@ const CreateClientSchema = z.object({
   industry: z.string().optional(),
   timezone: z.string().default('UTC'),
   logo: z.string().url().optional(),
-  brandGuidelines: z.object({
-    primaryColor: z.string().optional(),
-    secondaryColor: z.string().optional(),
-    accentColor: z.string().optional(),
-    logo: z.string().optional(),
-    fonts: z.object({
-      heading: z.string(),
-      body: z.string(),
-    }).optional(),
-    voiceTone: z.string().optional(),
-    keywords: z.array(z.string()).optional(),
-    competitors: z.array(z.string()).optional(),
-    hashtags: z.array(z.string()).optional(),
-  }).optional(),
-  settings: z.object({
-    approvalRequired: z.boolean().optional(),
-    autoPublish: z.boolean().optional(),
-    defaultPlatforms: z.array(z.string()).optional(),
-    postingFrequency: z.object({
-      min: z.number(),
-      max: z.number(),
-      unit: z.enum(['day', 'week', 'month']),
-    }).optional(),
-    notifications: z.object({
-      email: z.boolean(),
-      slack: z.string().optional(),
-      discord: z.string().optional(),
-    }).optional(),
-    contentGuidelines: z.string().optional(),
-    restrictedTopics: z.array(z.string()).optional(),
-  }).optional(),
+  brandGuidelines: z
+    .object({
+      primaryColor: z.string().optional(),
+      secondaryColor: z.string().optional(),
+      accentColor: z.string().optional(),
+      logo: z.string().optional(),
+      fonts: z
+        .object({
+          heading: z.string(),
+          body: z.string(),
+        })
+        .optional(),
+      voiceTone: z.string().optional(),
+      keywords: z.array(z.string()).optional(),
+      competitors: z.array(z.string()).optional(),
+      hashtags: z.array(z.string()).optional(),
+    })
+    .optional(),
+  settings: z
+    .object({
+      approvalRequired: z.boolean().optional(),
+      autoPublish: z.boolean().optional(),
+      defaultPlatforms: z.array(z.string()).optional(),
+      postingFrequency: z
+        .object({
+          min: z.number(),
+          max: z.number(),
+          unit: z.enum(['day', 'week', 'month']),
+        })
+        .optional(),
+      notifications: z
+        .object({
+          email: z.boolean(),
+          slack: z.string().optional(),
+          discord: z.string().optional(),
+        })
+        .optional(),
+      contentGuidelines: z.string().optional(),
+      restrictedTopics: z.array(z.string()).optional(),
+    })
+    .optional(),
 });
 
 const UpdateClientSchema = CreateClientSchema.partial().extend({
   status: z.enum(['active', 'paused', 'archived']).optional(),
-  whiteLabel: z.object({
-    enabled: z.boolean(),
-    customDomain: z.string().optional(),
-    logoUrl: z.string().optional(),
-    faviconUrl: z.string().optional(),
-    brandName: z.string().optional(),
-    primaryColor: z.string().optional(),
-    hideWatermark: z.boolean().optional(),
-    customEmailDomain: z.string().optional(),
-  }).optional(),
+  whiteLabel: z
+    .object({
+      enabled: z.boolean(),
+      customDomain: z.string().optional(),
+      logoUrl: z.string().optional(),
+      faviconUrl: z.string().optional(),
+      brandName: z.string().optional(),
+      primaryColor: z.string().optional(),
+      hideWatermark: z.boolean().optional(),
+      customEmailDomain: z.string().optional(),
+    })
+    .optional(),
 });
 
 const InviteMemberSchema = z.object({
@@ -120,7 +141,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Get user's organization
-    const { data: userOrg } = await supabase
+    const { data: userOrg } = await getSupabase()
       .from('organization_members')
       .select('organization_id')
       .eq('user_id', userId)
@@ -159,7 +180,9 @@ export async function GET(request: NextRequest) {
     // Get client analytics
     const analyticsClientId = searchParams.get('analytics');
     if (analyticsClientId) {
-      const start = searchParams.get('start') || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const start =
+        searchParams.get('start') ||
+        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const end = searchParams.get('end') || new Date().toISOString();
 
       const analytics = await clientManagement.getClientAnalytics(
@@ -175,7 +198,11 @@ export async function GET(request: NextRequest) {
       return APISecurityChecker.createSecureResponse({ clients: [], total: 0 });
     }
 
-    const status = (searchParams.get('status') || 'active') as 'active' | 'paused' | 'archived' | 'all';
+    const status = (searchParams.get('status') || 'active') as
+      | 'active'
+      | 'paused'
+      | 'archived'
+      | 'all';
     const search = searchParams.get('search');
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
@@ -281,7 +308,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create client
-    const { data: userOrg } = await supabase
+    const { data: userOrg } = await getSupabase()
       .from('organization_members')
       .select('organization_id')
       .eq('user_id', userId)
@@ -404,17 +431,10 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    await auditLogger.logData(
-      'update',
-      'client',
-      clientId,
-      userId,
-      'success',
-      {
-        action: 'CLIENT_UPDATE',
-        updates: Object.keys(validated),
-      }
-    );
+    await auditLogger.logData('update', 'client', clientId, userId, 'success', {
+      action: 'CLIENT_UPDATE',
+      updates: Object.keys(validated),
+    });
 
     return APISecurityChecker.createSecureResponse({ client });
   } catch (error: unknown) {
@@ -483,14 +503,9 @@ export async function DELETE(request: NextRequest) {
     // Archive client
     await clientManagement.archiveClient(clientId, userId);
 
-    await auditLogger.logData(
-      'delete',
-      'client',
-      clientId,
-      userId,
-      'success',
-      { action: 'CLIENT_ARCHIVE' }
-    );
+    await auditLogger.logData('delete', 'client', clientId, userId, 'success', {
+      action: 'CLIENT_ARCHIVE',
+    });
 
     return APISecurityChecker.createSecureResponse({ success: true });
   } catch (error: unknown) {

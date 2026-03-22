@@ -11,7 +11,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import {
   generateSpeech,
@@ -27,32 +30,69 @@ import {
 import { logger } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Request validation schemas
-const VoiceConfigSchema = z.object({
-  stability: z.number().min(0).max(1).optional(),
-  similarityBoost: z.number().min(0).max(1).optional(),
-  style: z.number().min(0).max(1).optional(),
-  useSpeakerBoost: z.boolean().optional(),
-}).strict().optional();
+const VoiceConfigSchema = z
+  .object({
+    stability: z.number().min(0).max(1).optional(),
+    similarityBoost: z.number().min(0).max(1).optional(),
+    style: z.number().min(0).max(1).optional(),
+    useSpeakerBoost: z.boolean().optional(),
+  })
+  .strict()
+  .optional();
 
 const SpeechGenerationSchema = z.object({
   text: z.string().min(1).max(5000),
   voiceId: z.string().max(200).optional(),
-  voiceName: z.enum(['rachel', 'adam', 'bella', 'josh', 'elli', 'sam', 'charlotte', 'clyde', 'grace']).optional(),
-  modelId: z.enum(['eleven_multilingual_v2', 'eleven_turbo_v2', 'eleven_monolingual_v1']).optional(),
+  voiceName: z
+    .enum([
+      'rachel',
+      'adam',
+      'bella',
+      'josh',
+      'elli',
+      'sam',
+      'charlotte',
+      'clyde',
+      'grace',
+    ])
+    .optional(),
+  modelId: z
+    .enum([
+      'eleven_multilingual_v2',
+      'eleven_turbo_v2',
+      'eleven_monolingual_v1',
+    ])
+    .optional(),
   stability: z.number().min(0).max(1).optional(),
   similarityBoost: z.number().min(0).max(1).optional(),
   style: z.number().min(0).max(1).optional(),
   useSpeakerBoost: z.boolean().optional(),
-  outputFormat: z.enum(['mp3_44100_128', 'mp3_44100_192', 'pcm_16000', 'pcm_22050', 'pcm_24000']).optional(),
+  outputFormat: z
+    .enum([
+      'mp3_44100_128',
+      'mp3_44100_192',
+      'pcm_16000',
+      'pcm_22050',
+      'pcm_24000',
+    ])
+    .optional(),
   saveToLibrary: z.boolean().default(true),
   voiceConfig: VoiceConfigSchema,
-  metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+  metadata: z
+    .record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
+    .optional(),
 });
 
 const VoiceCloneSchema = z.object({
@@ -111,7 +151,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Save cloned voice reference
-        await supabase.from('user_voices').insert({
+        await getSupabase().from('user_voices').insert({
           user_id: userId,
           voice_id: result.voiceId,
           name: validated.name,
@@ -181,10 +221,13 @@ export async function POST(request: NextRequest) {
         const validated = SpeechGenerationSchema.parse(body);
 
         // Merge voiceConfig fields (voiceConfig overrides top-level if both provided)
-        const effectiveStability = validated.voiceConfig?.stability ?? validated.stability;
-        const effectiveSimilarityBoost = validated.voiceConfig?.similarityBoost ?? validated.similarityBoost;
+        const effectiveStability =
+          validated.voiceConfig?.stability ?? validated.stability;
+        const effectiveSimilarityBoost =
+          validated.voiceConfig?.similarityBoost ?? validated.similarityBoost;
         const effectiveStyle = validated.voiceConfig?.style ?? validated.style;
-        const effectiveUseSpeakerBoost = validated.voiceConfig?.useSpeakerBoost ?? validated.useSpeakerBoost;
+        const effectiveUseSpeakerBoost =
+          validated.voiceConfig?.useSpeakerBoost ?? validated.useSpeakerBoost;
 
         // Resolve voice ID from name if provided
         let voiceId = validated.voiceId;
@@ -204,7 +247,10 @@ export async function POST(request: NextRequest) {
         });
 
         if (!result.success) {
-          logger.error('Speech generation failed', { error: result.error, userId });
+          logger.error('Speech generation failed', {
+            error: result.error,
+            userId,
+          });
           return APISecurityChecker.createSecureResponse(
             { error: result.error || 'Speech generation failed' },
             500
@@ -214,7 +260,7 @@ export async function POST(request: NextRequest) {
         // Save to media library if requested
         let mediaAssetId: string | undefined;
         if (validated.saveToLibrary && result.audioBase64) {
-          const { data: asset, error: saveError } = await supabase
+          const { data: asset, error: saveError } = await getSupabase()
             .from('media_assets')
             .insert({
               user_id: userId,
@@ -350,7 +396,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Also get user's saved voices from database
-    const { data: userVoices } = await supabase
+    const { data: userVoices } = await getSupabase()
       .from('user_voices')
       .select('*')
       .eq('user_id', userId);
@@ -364,7 +410,11 @@ export async function GET(request: NextRequest) {
       defaultVoices: DEFAULT_VOICES,
       quota,
       models: [
-        { id: 'eleven_multilingual_v2', name: 'Multilingual V2', languages: 29 },
+        {
+          id: 'eleven_multilingual_v2',
+          name: 'Multilingual V2',
+          languages: 29,
+        },
         { id: 'eleven_turbo_v2', name: 'Turbo V2 (Fast)', languages: 1 },
         { id: 'eleven_monolingual_v1', name: 'Monolingual V1', languages: 1 },
       ],
@@ -410,7 +460,7 @@ export async function DELETE(request: NextRequest) {
     const validated = VoiceDeleteSchema.parse(body);
 
     // Verify user owns this voice
-    const { data: userVoice } = await supabase
+    const { data: userVoice } = await getSupabase()
       .from('user_voices')
       .select('*')
       .eq('user_id', userId)
@@ -435,7 +485,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete from database
-    await supabase
+    await getSupabase()
       .from('user_voices')
       .delete()
       .eq('voice_id', validated.voiceId)
@@ -496,7 +546,10 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const requests = z.array(SpeechGenerationSchema).max(10).parse(body.requests || []);
+    const requests = z
+      .array(SpeechGenerationSchema)
+      .max(10)
+      .parse(body.requests || []);
 
     const results = [];
     const savedAssets: string[] = [];
@@ -527,7 +580,7 @@ export async function PUT(request: NextRequest) {
 
         // Save to library
         if (req.saveToLibrary && result.audioBase64) {
-          const { data: asset } = await supabase
+          const { data: asset } = await getSupabase()
             .from('media_assets')
             .insert({
               user_id: userId,
@@ -556,20 +609,13 @@ export async function PUT(request: NextRequest) {
     }
 
     // Audit log
-    await auditLogger.logData(
-      'create',
-      'audio',
-      undefined,
-      userId,
-      'success',
-      {
-        action: 'MEDIA_GENERATE_BATCH',
-        count: requests.length,
-        successCount: results.filter(r => r.success).length,
-        totalCharacters,
-        savedAssets,
-      }
-    );
+    await auditLogger.logData('create', 'audio', undefined, userId, 'success', {
+      action: 'MEDIA_GENERATE_BATCH',
+      count: requests.length,
+      successCount: results.filter(r => r.success).length,
+      totalCharacters,
+      savedAssets,
+    });
 
     return APISecurityChecker.createSecureResponse({
       success: true,

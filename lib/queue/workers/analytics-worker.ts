@@ -16,10 +16,16 @@ import { LinkedInService } from '@/lib/social/linkedin-service';
 import { twitterService } from '@/lib/social/twitter-service';
 import { logger } from '@/lib/logger';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: any = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 function getRedisConnection() {
   const redisUrl = process.env.REDIS_URL;
@@ -39,7 +45,9 @@ function getRedisConnection() {
 /**
  * Process an analytics collection job
  */
-async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<void> {
+async function processAnalyticsCollection(
+  job: Job<AnalyticsJobData>
+): Promise<void> {
   const { userId, platform, connectionId, dateRange } = job.data;
 
   logger.info(`Collecting analytics for ${platform}`, {
@@ -49,7 +57,7 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
 
   try {
     // Get user's platform connection
-    const { data: connection, error: connectionError } = await supabase
+    const { data: connection, error: connectionError } = await getSupabase()
       .from('platform_connections')
       .select('*')
       .eq('id', connectionId)
@@ -121,13 +129,14 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
       case 'facebook': {
         // Collect Facebook Page insights
         const pageId = connection.platform_user_id;
-        const pageAccessToken = connection.page_access_token || connection.access_token;
+        const pageAccessToken =
+          connection.page_access_token || connection.access_token;
 
         try {
           const response = await fetch(
             `https://graph.facebook.com/v19.0/${pageId}/insights?` +
-            `metric=page_impressions,page_engaged_users,page_fans&` +
-            `period=day&access_token=${pageAccessToken}`
+              `metric=page_impressions,page_engaged_users,page_fans&` +
+              `period=day&access_token=${pageAccessToken}`
           );
 
           const data = await response.json();
@@ -143,7 +152,8 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
           };
 
           for (const insight of data.data || []) {
-            const value = insight.values?.[insight.values.length - 1]?.value || 0;
+            const value =
+              insight.values?.[insight.values.length - 1]?.value || 0;
             switch (insight.name) {
               case 'page_impressions':
                 metrics.impressions = value;
@@ -159,7 +169,10 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
 
           analyticsResult = { success: true, metrics };
         } catch (error: unknown) {
-          analyticsResult = { success: false, error: error instanceof Error ? error.message : String(error) };
+          analyticsResult = {
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          };
         }
         break;
       }
@@ -192,7 +205,10 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
             },
           };
         } catch (error: unknown) {
-          analyticsResult = { success: false, error: error instanceof Error ? error.message : String(error) };
+          analyticsResult = {
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          };
         }
         break;
       }
@@ -202,14 +218,14 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
         try {
           const response = await fetch(
             `https://youtubeanalytics.googleapis.com/v2/reports?` +
-            `ids=channel==MINE&` +
-            `metrics=views,likes,subscribersGained&` +
-            `dimensions=day&` +
-            `startDate=${new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}&` +
-            `endDate=${new Date().toISOString().split('T')[0]}`,
+              `ids=channel==MINE&` +
+              `metrics=views,likes,subscribersGained&` +
+              `dimensions=day&` +
+              `startDate=${new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}&` +
+              `endDate=${new Date().toISOString().split('T')[0]}`,
             {
               headers: {
-                'Authorization': `Bearer ${connection.access_token}`,
+                Authorization: `Bearer ${connection.access_token}`,
               },
             }
           );
@@ -221,7 +237,9 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
           }
 
           // Aggregate metrics from rows
-          let views = 0, likes = 0, subscribers = 0;
+          let views = 0,
+            likes = 0,
+            subscribers = 0;
           for (const row of data.rows || []) {
             views += row[1] || 0;
             likes += row[2] || 0;
@@ -237,7 +255,10 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
             },
           };
         } catch (error: unknown) {
-          analyticsResult = { success: false, error: error instanceof Error ? error.message : String(error) };
+          analyticsResult = {
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          };
         }
         break;
       }
@@ -251,7 +272,7 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
     }
 
     // Store analytics snapshot
-    await supabase.from('platform_analytics_snapshots').insert({
+    await getSupabase().from('platform_analytics_snapshots').insert({
       user_id: userId,
       platform,
       connection_id: connectionId,
@@ -260,7 +281,7 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
     });
 
     // Update connection with latest metrics
-    await supabase
+    await getSupabase()
       .from('platform_connections')
       .update({
         last_metrics: analyticsResult.metrics,
@@ -276,7 +297,7 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
     logger.error(`Failed to collect analytics for ${platform}:`, { error });
 
     // Update connection with error
-    await supabase
+    await getSupabase()
       .from('platform_connections')
       .update({
         last_sync_error: error instanceof Error ? error.message : String(error),
@@ -307,15 +328,17 @@ export function createAnalyticsWorker(): Worker {
     }
   );
 
-  worker.on('completed', (job) => {
+  worker.on('completed', job => {
     logger.debug(`Analytics job ${job.id} completed`);
   });
 
   worker.on('failed', (job, error) => {
-    logger.error(`Analytics job ${job?.id} failed:`, { error: error instanceof Error ? error.message : String(error) });
+    logger.error(`Analytics job ${job?.id} failed:`, {
+      error: error instanceof Error ? error.message : String(error),
+    });
   });
 
-  worker.on('error', (error) => {
+  worker.on('error', error => {
     logger.error('Analytics worker error:', { error });
   });
 
