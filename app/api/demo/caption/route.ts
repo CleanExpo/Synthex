@@ -65,9 +65,7 @@ async function generateViaGemini(
     );
     if (!res.ok) return null;
     const data = (await res.json()) as GeminiTextResponse;
-    return (
-      data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null
-    );
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
   } catch {
     return null;
   }

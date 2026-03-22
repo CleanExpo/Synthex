@@ -177,7 +177,11 @@ function DemoBadge({ model, tier }: { model?: string; tier?: string }) {
         <span
           className={[
             'w-1.5 h-1.5 rounded-full inline-block',
-            isGemini ? 'bg-blue-400/70' : isLlama ? 'bg-purple-400/70' : 'bg-green-400/60',
+            isGemini
+              ? 'bg-blue-400/70'
+              : isLlama
+                ? 'bg-purple-400/70'
+                : 'bg-green-400/60',
           ].join(' ')}
         />
         Live AI &middot; {displayModel}
