@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { LiveDemoWidget } from './LiveDemoWidget';
 
 /** Eyebrow pill label */
@@ -34,6 +35,15 @@ function SocialProofRow() {
   );
 }
 
+const heroTextVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.12, duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+  }),
+};
+
 /** Hero section — 55/45 asymmetric layout with LiveDemoWidget */
 export function HeroSection() {
   return (
@@ -46,41 +56,69 @@ export function HeroSection() {
         <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-12 items-center">
           {/* Left — copy */}
           <div>
-            <EyebrowPill>AI-native social media</EyebrowPill>
+            <motion.div custom={0} variants={heroTextVariants} initial="hidden" animate="visible">
+              <EyebrowPill>AI-native social media</EyebrowPill>
+            </motion.div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.05] mb-6">
+            <motion.h1
+              custom={1}
+              variants={heroTextVariants}
+              initial="hidden"
+              animate="visible"
+              className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.05] mb-6"
+            >
               The social media platform that{' '}
               <em className="text-orange-500 not-italic">works for you</em>
-            </h1>
+            </motion.h1>
 
-            <p className="text-lg text-white/50 max-w-lg leading-relaxed mb-10">
+            <motion.p
+              custom={2}
+              variants={heroTextVariants}
+              initial="hidden"
+              animate="visible"
+              className="text-lg text-white/50 max-w-lg leading-relaxed mb-10"
+            >
               AI generates posts in seconds. You approve. Synthex handles the
               rest — scheduling, engagement, and analytics across every channel.
-            </p>
+            </motion.p>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            {/* CTAs with shimmer */}
+            <motion.div
+              custom={3}
+              variants={heroTextVariants}
+              initial="hidden"
+              animate="visible"
+              className="flex flex-col sm:flex-row gap-3"
+            >
               <Link
                 href="/signup"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-orange-500 text-charcoal-900 font-bold rounded-full hover:bg-orange-400 hover:-translate-y-0.5 transition-all duration-200 text-sm"
+                className="group relative inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-orange-500 text-charcoal-900 font-bold rounded-full hover:bg-orange-400 hover:-translate-y-0.5 transition-all duration-200 text-sm overflow-hidden"
               >
-                Start free
+                <span className="relative z-10">Start free</span>
+                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
               </Link>
               <Link
                 href="/features"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white/[0.04] border border-white/10 text-white/80 hover:text-white hover:bg-white/[0.08] rounded-full transition-all duration-200 text-sm font-medium"
+                className="group relative inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white/[0.04] border border-white/10 text-white/80 hover:text-white hover:bg-white/[0.08] rounded-full transition-all duration-200 text-sm font-medium overflow-hidden"
               >
-                See it work
+                <span className="relative z-10">See it work</span>
+                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
               </Link>
-            </div>
+            </motion.div>
 
-            <SocialProofRow />
+            <motion.div custom={4} variants={heroTextVariants} initial="hidden" animate="visible">
+              <SocialProofRow />
+            </motion.div>
           </div>
 
           {/* Right — LiveDemoWidget */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          >
             <LiveDemoWidget />
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
