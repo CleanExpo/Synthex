@@ -275,7 +275,7 @@ function OrbitRing({
                 className={cn(
                   'w-full h-full rounded-sm border-[0.5px] border-white/[0.06] bg-[#0a1628] overflow-hidden',
                   'cursor-pointer transition-all duration-200',
-                  'hover:border-amber-500/20 hover:shadow-[0_0_16px_rgba(245,158,11,0.15)]'
+                  'hover:border-orange-500/20 hover:shadow-[0_0_16px_rgba(245,158,11,0.15)]'
                 )}
                 style={{ padding: iconSize * 0.14 }}
               >
@@ -396,7 +396,7 @@ export function OrbitIntegrations() {
           {/* Centre Synthex logo */}
           <div
             className={cn(
-              'absolute z-20 rounded-sm border-[0.5px] border-amber-500/20',
+              'absolute z-20 rounded-sm border-[0.5px] border-orange-500/20',
               'bg-[#0a1628] shadow-[0_0_32px_rgba(245,158,11,0.15)]',
               'overflow-hidden'
             )}

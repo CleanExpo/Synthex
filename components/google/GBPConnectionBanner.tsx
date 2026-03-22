@@ -21,10 +21,10 @@ export function GBPConnectionBanner({ onConnect }: GBPConnectionBannerProps) {
   };
 
   return (
-    <div className="p-6 bg-gradient-to-r from-amber-500/10 to-amber-600/5 border border-amber-500/20 rounded-xl">
+    <div className="p-6 bg-gradient-to-r from-orange-500/10 to-orange-600/5 border border-orange-500/20 rounded-xl">
       <div className="flex items-start gap-4">
-        <div className="p-3 bg-amber-500/10 rounded-lg">
-          <Map className="w-6 h-6 text-amber-400" />
+        <div className="p-3 bg-orange-500/10 rounded-lg">
+          <Map className="w-6 h-6 text-orange-400" />
         </div>
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-white mb-1">
@@ -37,7 +37,7 @@ export function GBPConnectionBanner({ onConnect }: GBPConnectionBannerProps) {
           </p>
           <Button
             onClick={handleConnect}
-            className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white"
+            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
           >
             <ExternalLink className="w-4 h-4 mr-2" />
             Connect Google Business Profile

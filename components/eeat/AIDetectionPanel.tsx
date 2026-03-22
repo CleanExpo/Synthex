@@ -34,7 +34,7 @@ export function AIDetectionPanel({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-white text-lg flex items-center gap-2">
-            <Brain className="h-5 w-5 text-amber-400" />
+            <Brain className="h-5 w-5 text-orange-400" />
             AI Content Detection
           </CardTitle>
           <Badge

@@ -44,7 +44,7 @@ export function PropertySelector({
             size="sm"
             onClick={onSync}
             disabled={syncing}
-            className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+            className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
           >
             {syncing ? (
               <Loader2 className="w-3 h-3 animate-spin mr-1" />
@@ -67,7 +67,7 @@ export function PropertySelector({
           onClick={() => setOpen(!open)}
           className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors text-sm min-w-[200px]"
         >
-          <Globe className="w-4 h-4 text-amber-400" />
+          <Globe className="w-4 h-4 text-orange-400" />
           <span className="text-white truncate flex-1 text-left">
             {selected?.siteUrl || 'Select property'}
           </span>
@@ -79,7 +79,7 @@ export function PropertySelector({
             size="sm"
             onClick={onSync}
             disabled={syncing}
-            className="text-gray-400 hover:text-amber-400"
+            className="text-gray-400 hover:text-orange-400"
             title="Sync properties from Google"
           >
             {syncing ? (
@@ -105,10 +105,10 @@ export function PropertySelector({
               <Globe className="w-4 h-4 text-gray-500 shrink-0" />
               <span className="text-white truncate flex-1">{p.siteUrl}</span>
               {p.siteUrl === selectedUrl && (
-                <Check className="w-4 h-4 text-amber-400 shrink-0" />
+                <Check className="w-4 h-4 text-orange-400 shrink-0" />
               )}
               {p.isPrimary && (
-                <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-400 rounded text-[10px] font-medium shrink-0">
+                <span className="px-1.5 py-0.5 bg-orange-500/10 text-orange-400 rounded text-[10px] font-medium shrink-0">
                   PRIMARY
                 </span>
               )}

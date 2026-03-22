@@ -228,9 +228,9 @@ export function RatingDisplay({
             className={cn(
               starSizes[size],
               i < Math.floor(rating)
-                ? 'fill-amber-400 text-amber-400'
+                ? 'fill-orange-400 text-orange-400'
                 : i < rating
-                  ? 'fill-amber-400/50 text-amber-400'
+                  ? 'fill-orange-400/50 text-orange-400'
                   : 'text-slate-600'
             )}
           />
@@ -275,7 +275,7 @@ export function Accolades({ accolades, className }: AccoladesProps) {
       {accolades.map((accolade, index) => {
         const Content = (
           <div className="flex items-center gap-3 px-4 py-2 rounded-xl glass hover:bg-white/[0.08] transition-colors">
-            <div className="text-amber-400">
+            <div className="text-orange-400">
               {accolade.icon || <Award className="w-5 h-5" />}
             </div>
             <div>
@@ -337,7 +337,7 @@ export function UserCount({
             />
           ))}
           {avatars.length > 5 && (
-            <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-amber-500/20 flex items-center justify-center text-xs font-medium text-amber-300">
+            <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-orange-500/20 flex items-center justify-center text-xs font-medium text-orange-300">
               +{avatars.length - 5}
             </div>
           )}

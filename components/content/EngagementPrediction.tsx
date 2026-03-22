@@ -53,7 +53,7 @@ export function EngagementPrediction({
     return (
       <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
         <div className="flex items-center gap-2">
-          <Loader2 className="h-4 w-4 text-amber-400 animate-spin" />
+          <Loader2 className="h-4 w-4 text-orange-400 animate-spin" />
           <span className="text-sm text-white/40">
             Predicting engagement...
           </span>
@@ -94,7 +94,7 @@ export function EngagementPrediction({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-light text-white flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-amber-400" />
+          <TrendingUp className="h-4 w-4 text-orange-400" />
           Engagement Prediction
         </h3>
         <span className="text-xs text-white/40">
@@ -106,11 +106,11 @@ export function EngagementPrediction({
       <div className="mb-4">
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs text-white/40">Confidence</span>
-          <span className="text-xs text-amber-400">{confidencePercent}%</span>
+          <span className="text-xs text-orange-400">{confidencePercent}%</span>
         </div>
         <div className="h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
           <div
-            className="h-full bg-amber-500/60 rounded-full transition-all duration-500"
+            className="h-full bg-orange-500/60 rounded-full transition-all duration-500"
             style={{ width: `${confidencePercent}%` }}
           />
         </div>
@@ -176,7 +176,7 @@ export function EngagementPrediction({
                 key={i}
                 className="text-xs text-white/50 flex items-start gap-1.5"
               >
-                <span className="text-amber-400 mt-0.5 flex-shrink-0">
+                <span className="text-orange-400 mt-0.5 flex-shrink-0">
                   &bull;
                 </span>
                 {rec}

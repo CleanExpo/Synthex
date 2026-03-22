@@ -56,7 +56,7 @@ export function GeneratedContentDisplay({
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <PlatformIcon className="w-5 h-5 text-amber-500" />
+            <PlatformIcon className="w-5 h-5 text-orange-500" />
             Generated Content
           </div>
           {generatedContent && (
@@ -236,7 +236,7 @@ export function GeneratedContentDisplay({
 
             {/* CTA */}
             {generatedContent.cta && (
-              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+              <div className="p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
                 <Label className="flex items-center gap-2 mb-2">
                   <Target className="w-4 h-4" />
                   Call to Action

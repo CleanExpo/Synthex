@@ -203,8 +203,8 @@ export function FileUpload({
         {...getRootProps()}
         className={cn(
           'relative overflow-hidden rounded-lg border-2 border-dashed transition-all cursor-pointer',
-          'hover:border-amber-400 hover:bg-amber-500/5',
-          isDragActive && 'border-amber-400 bg-amber-500/10',
+          'hover:border-orange-400 hover:bg-orange-500/5',
+          isDragActive && 'border-orange-400 bg-orange-500/10',
           isDragReject && 'border-red-400 bg-red-500/10',
           disabled && 'opacity-50 cursor-not-allowed',
           'border-white/20 bg-white/5'
@@ -221,7 +221,7 @@ export function FileUpload({
             <Upload
               className={cn(
                 'w-full h-full',
-                isDragActive ? 'text-amber-400' : 'text-gray-400'
+                isDragActive ? 'text-orange-400' : 'text-gray-400'
               )}
             />
           </motion.div>
@@ -257,7 +257,7 @@ export function FileUpload({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-amber-500/20 pointer-events-none"
+              className="absolute inset-0 bg-orange-500/20 pointer-events-none"
             />
           )}
         </AnimatePresence>
@@ -325,7 +325,7 @@ export function FileUpload({
                   {/* Status icon */}
                   <div className="flex items-center gap-2">
                     {file.status === 'uploading' && (
-                      <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
+                      <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
                     )}
                     {file.status === 'success' && (
                       <CheckCircle className="h-4 w-4 text-green-400" />

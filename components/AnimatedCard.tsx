@@ -119,7 +119,7 @@ export function AnimatedProgress({ value }: { value: number }) {
   return (
     <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
       <motion.div
-        className="h-full bg-gradient-to-r from-amber-500 to-amber-500"
+        className="h-full bg-gradient-to-r from-orange-500 to-orange-500"
         initial={{ width: '0%' }}
         animate={{ width: `${value}%` }}
         transition={{ duration: 0.5, ease: 'easeOut' }}

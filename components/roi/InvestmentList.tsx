@@ -43,23 +43,23 @@ const CATEGORY_STYLES: Record<
   { bg: string; text: string; label: string }
 > = {
   creation: {
-    bg: 'bg-amber-500/10',
-    text: 'text-amber-400',
+    bg: 'bg-orange-500/10',
+    text: 'text-orange-400',
     label: 'Creation',
   },
   equipment: {
-    bg: 'bg-amber-500/10',
-    text: 'text-amber-400',
+    bg: 'bg-orange-500/10',
+    text: 'text-orange-400',
     label: 'Equipment',
   },
   software: {
-    bg: 'bg-amber-500/10',
-    text: 'text-amber-400',
+    bg: 'bg-orange-500/10',
+    text: 'text-orange-400',
     label: 'Software',
   },
   promotion: {
-    bg: 'bg-amber-500/10',
-    text: 'text-amber-400',
+    bg: 'bg-orange-500/10',
+    text: 'text-orange-400',
     label: 'Promotion',
   },
   other: { bg: 'bg-gray-500/10', text: 'text-gray-400', label: 'Other' },

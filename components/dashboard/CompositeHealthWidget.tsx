@@ -100,9 +100,9 @@ export function CompositeHealthWidget() {
 
   if (isLoading) {
     return (
-      <Card className="bg-surface-base/80 border border-amber-500/10">
+      <Card className="bg-surface-base/80 border border-orange-500/10">
         <CardContent className="p-6 flex items-center justify-center">
-          <Loader2 className="w-5 h-5 text-amber-400 animate-spin" />
+          <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
         </CardContent>
       </Card>
     );
@@ -115,7 +115,7 @@ export function CompositeHealthWidget() {
   const { pillars, checklist, nextActions } = score;
 
   return (
-    <Card className="bg-surface-base/80 border border-amber-500/10">
+    <Card className="bg-surface-base/80 border border-orange-500/10">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg text-white flex items-center gap-2">
           Local SEO Health Score
@@ -125,7 +125,7 @@ export function CompositeHealthWidget() {
               score.total >= 80
                 ? 'bg-emerald-500/20 text-emerald-400'
                 : score.total >= 60
-                  ? 'bg-amber-500/20 text-amber-400'
+                  ? 'bg-orange-500/20 text-orange-400'
                   : 'bg-red-500/20 text-red-400'
             )}
           >
@@ -158,7 +158,7 @@ export function CompositeHealthWidget() {
                 key={action}
                 className="flex items-center gap-2 text-xs text-gray-300"
               >
-                <ArrowRight className="w-3 h-3 text-amber-400 shrink-0" />
+                <ArrowRight className="w-3 h-3 text-orange-400 shrink-0" />
                 {action}
               </div>
             ))}
@@ -203,7 +203,7 @@ export function CompositeHealthWidget() {
                 {!item.completed && item.actionUrl && (
                   <Link
                     href={item.actionUrl}
-                    className="ml-auto text-amber-400 hover:text-amber-300 text-[10px]"
+                    className="ml-auto text-orange-400 hover:text-orange-300 text-[10px]"
                   >
                     Fix
                   </Link>

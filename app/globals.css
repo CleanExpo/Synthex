@@ -76,13 +76,13 @@ html.lenis body {
     --color-violet: 255 184 123;
     --color-fuchsia: 255 184 123;
     --color-cyan: 6 182 212;
-    --color-amber: 245 158 11;
+    --color-amber: 255 107 53;
     --color-emerald: 16 185 129;
     --color-rose: 244 63 94;
 
     /* Semantic Colors */
     --color-success: 34 197 94;
-    --color-warning: 245 158 11;
+    --color-warning: 255 107 53;
     --color-error: 239 68 68;
     --color-info: 59 130 246;
 
@@ -120,7 +120,7 @@ html.lenis body {
     --glow-primary-lg:
       0 0 30px rgba(255, 184, 123, 0.5), 0 0 60px rgba(255, 184, 123, 0.2);
     --glow-amber:
-      0 0 20px rgba(245, 158, 11, 0.3), 0 0 40px rgba(245, 158, 11, 0.1);
+      0 0 20px rgba(255, 107, 53, 0.3), 0 0 40px rgba(255, 107, 53, 0.1);
 
     /* =========================================================================
        TYPOGRAPHY TOKENS
@@ -179,12 +179,12 @@ html.lenis body {
   .mode-pro {
     --mode-bg: #1c1b1e;
     --mode-surface: #252428;
-    --mode-accent: #f59e0b;
-    --mode-accent-subtle: rgba(245, 158, 11, 0.1);
-    --mode-accent-border: rgba(245, 158, 11, 0.2);
+    --mode-accent: #ff6b35;
+    --mode-accent-subtle: rgba(255, 107, 53, 0.1);
+    --mode-accent-border: rgba(255, 107, 53, 0.2);
     --mode-text-primary: rgba(255, 255, 255, 0.85);
     --mode-text-secondary: rgba(255, 255, 255, 0.35);
-    --mode-data-highlight: #f59e0b;
+    --mode-data-highlight: #ff6b35;
   }
 
   /* ===========================================================================
@@ -848,7 +848,7 @@ html.lenis body {
 }
 
 .gradient-text-amber {
-  background: linear-gradient(135deg, rgb(var(--color-amber)) 0%, #d97706 100%);
+  background: linear-gradient(135deg, rgb(var(--color-amber)) 0%, #ea580c 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;

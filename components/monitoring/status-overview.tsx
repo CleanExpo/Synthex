@@ -20,7 +20,7 @@ export function StatusOverview({ metrics }: StatusOverviewProps) {
       <Card variant="glass">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center">
-            <Server className="w-4 h-4 mr-2 text-amber-400" />
+            <Server className="w-4 h-4 mr-2 text-orange-400" />
             System Status
           </CardTitle>
         </CardHeader>

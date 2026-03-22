@@ -109,9 +109,9 @@ export function HelpVideo({ videoId, className }: HelpVideoProps) {
         onClick={() => setIsOpen(true)}
         className={cn(
           'inline-flex items-center gap-1.5 px-3 py-1.5',
-          'text-xs text-amber-400 hover:text-amber-300',
-          'border border-amber-500/20 hover:border-amber-500/40',
-          'bg-amber-500/5 hover:bg-amber-500/10',
+          'text-xs text-orange-400 hover:text-orange-300',
+          'border border-orange-500/20 hover:border-orange-500/40',
+          'bg-orange-500/5 hover:bg-orange-500/10',
           'rounded-full transition-all duration-200',
           !prefersReducedMotion && 'hover:scale-105',
           className

@@ -57,7 +57,7 @@ const STATUSES = [
   {
     key: 'opened',
     label: 'Opened',
-    colour: 'border-amber-500/40 bg-amber-500/5',
+    colour: 'border-orange-500/40 bg-orange-500/5',
   },
   {
     key: 'replied',
@@ -119,7 +119,7 @@ function PitchCard({ pitch, onStatusChange, updating }: PitchCardProps) {
       </div>
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-xs text-amber-300 font-medium">
+          <div className="text-xs text-orange-300 font-medium">
             {pitch.journalist.name}
           </div>
           <div className="text-xs text-gray-500">
@@ -234,7 +234,7 @@ export function PitchKanban({ onNewPitch }: PitchKanbanProps) {
         {onNewPitch && (
           <button
             onClick={onNewPitch}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <Send className="h-4 w-4" />
             New Pitch

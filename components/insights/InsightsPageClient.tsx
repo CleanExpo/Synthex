@@ -80,7 +80,7 @@ function StatusBadge({ status }: { status: string }) {
   }
   if (status === 'running') {
     return (
-      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30">
         <Loader2 className="h-3 w-3 animate-spin" />
         Running
       </span>
@@ -161,7 +161,7 @@ export function InsightsPageClient() {
               size="sm"
               onClick={handleRunNow}
               disabled={runningNow}
-              className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30"
+              className="bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/30"
             >
               {runningNow ? (
                 <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
@@ -180,8 +180,8 @@ export function InsightsPageClient() {
         </div>
       ) : insights.length === 0 ? (
         <div className="flex flex-col items-center py-16 space-y-3">
-          <div className="h-12 w-12 rounded-full bg-amber-500/20 flex items-center justify-center">
-            <Lightbulb className="h-6 w-6 text-amber-400" />
+          <div className="h-12 w-12 rounded-full bg-orange-500/20 flex items-center justify-center">
+            <Lightbulb className="h-6 w-6 text-orange-400" />
           </div>
           <p className="text-sm font-medium text-white/60">No insights yet</p>
           <p className="text-xs text-white/50">
@@ -208,7 +208,7 @@ export function InsightsPageClient() {
                 {run.outputData && (
                   <div className="flex items-center gap-4 text-xs">
                     <div className="text-center">
-                      <div className="text-sm font-bold text-amber-400">
+                      <div className="text-sm font-bold text-orange-400">
                         {run.outputData.opportunities ?? 0}
                       </div>
                       <div className="text-white/40">opps</div>
@@ -222,7 +222,7 @@ export function InsightsPageClient() {
                       <div className="text-white/40">drafted</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm font-bold text-amber-400">
+                      <div className="text-sm font-bold text-orange-400">
                         {run.outputData.queued ?? 0}
                       </div>
                       <div className="text-white/40">queued</div>
@@ -240,7 +240,7 @@ export function InsightsPageClient() {
                       key={se.id}
                       className={cn(
                         'rounded-lg border p-3 space-y-2',
-                        'border-amber-500/20 bg-amber-500/5'
+                        'border-orange-500/20 bg-orange-500/5'
                       )}
                     >
                       <div className="flex items-center justify-between">
@@ -248,7 +248,7 @@ export function InsightsPageClient() {
                           {se.outputData?.opportunityTitle ?? se.stepName}
                         </span>
                         {se.confidenceScore !== null && (
-                          <span className="text-xs text-amber-400 tabular-nums">
+                          <span className="text-xs text-orange-400 tabular-nums">
                             {Math.round(se.confidenceScore * 100)}% confidence
                           </span>
                         )}

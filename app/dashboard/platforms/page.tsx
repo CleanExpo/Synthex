@@ -202,7 +202,7 @@ function PlatformCard({
     <div
       className={cn(
         'border-[0.5px] rounded-sm overflow-hidden bg-white/[0.01] hover:bg-white/[0.02] transition-colors',
-        tokenAlert ? 'border-amber-500/20' : 'border-white/[0.06]'
+        tokenAlert ? 'border-orange-500/20' : 'border-white/[0.06]'
       )}
     >
       {/* Card header */}
@@ -260,7 +260,7 @@ function PlatformCard({
               Expired
             </span>
           ) : status.connected && status.needsRefresh ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[9px] uppercase tracking-[0.15em] bg-amber-500/[0.08] text-amber-400 border-[0.5px] border-amber-500/20 shrink-0">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[9px] uppercase tracking-[0.15em] bg-orange-500/[0.08] text-orange-400 border-[0.5px] border-orange-500/20 shrink-0">
               <AlertCircle className="h-2.5 w-2.5" />
               Refresh
             </span>
@@ -286,8 +286,8 @@ function PlatformCard({
 
         {/* Token alert banner */}
         {tokenAlert && (
-          <div className="mt-2.5 flex items-center justify-between gap-2 px-3 py-2 rounded-sm bg-amber-500/[0.05] border-[0.5px] border-amber-500/15">
-            <p className="text-[10px] text-amber-400/80">
+          <div className="mt-2.5 flex items-center justify-between gap-2 px-3 py-2 rounded-sm bg-orange-500/[0.05] border-[0.5px] border-orange-500/15">
+            <p className="text-[10px] text-orange-400/80">
               {status.isExpired
                 ? 'Access token expired — reconnect to continue publishing.'
                 : 'Token will expire soon. Refresh to avoid interruptions.'}
@@ -295,7 +295,7 @@ function PlatformCard({
             <button
               onClick={() => onRefresh(platform.id)}
               disabled={refreshing}
-              className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-sm text-[10px] text-amber-400 hover:text-white bg-amber-500/[0.08] hover:bg-amber-500/20 border-[0.5px] border-amber-500/20 transition-colors disabled:opacity-50"
+              className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-sm text-[10px] text-orange-400 hover:text-white bg-orange-500/[0.08] hover:bg-orange-500/20 border-[0.5px] border-orange-500/20 transition-colors disabled:opacity-50"
             >
               {refreshing ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -354,7 +354,7 @@ function PlatformCard({
             <div className="flex gap-2">
               <Link
                 href="/dashboard/content"
-                className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-sm transition-colors bg-amber-500 hover:bg-amber-400 text-[#050505]"
+                className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-sm transition-colors bg-orange-500 hover:bg-orange-400 text-[#050505]"
               >
                 <Send className="h-3.5 w-3.5" />
                 Create Post
@@ -627,7 +627,7 @@ function PlatformsPageContent() {
               Refresh
             </button>
             <Link href="/dashboard/integrations">
-              <span className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors cursor-pointer">
+              <span className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors cursor-pointer">
                 <Link2 className="h-3.5 w-3.5" />
                 Manage Connections
               </span>

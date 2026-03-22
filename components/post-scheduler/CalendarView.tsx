@@ -50,7 +50,7 @@ export function CalendarView({
             onClick={() => onSelectDate(day)}
             className={`
               min-h-[100px] p-2 rounded-lg border cursor-pointer transition-all
-              ${isSelected ? 'border-amber-500 bg-amber-500/10' : 'border-white/10'}
+              ${isSelected ? 'border-orange-500 bg-orange-500/10' : 'border-white/10'}
               ${isToday(day) ? 'bg-blue-500/10' : ''}
               ${isPastDay ? 'opacity-50' : ''}
               hover:bg-white/5

@@ -67,7 +67,7 @@ export interface DistributionPanelProps {
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     pending: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-    submitted: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    submitted: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
     published: 'bg-green-500/10 text-green-400 border-green-500/20',
     failed: 'bg-red-500/10 text-red-400 border-red-500/20',
   };
@@ -213,7 +213,7 @@ export function DistributionPanel({
   return (
     <div className="mt-4 rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 space-y-5">
       <div className="flex items-center gap-2">
-        <Share2 className="h-4 w-4 text-amber-400" />
+        <Share2 className="h-4 w-4 text-orange-400" />
         <h3 className="text-sm font-semibold text-white">
           Distribute Press Release
         </h3>
@@ -235,7 +235,7 @@ export function DistributionPanel({
                 className={cn(
                   'flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors',
                   isChecked
-                    ? 'border-amber-500/40 bg-amber-500/[0.06]'
+                    ? 'border-orange-500/40 bg-orange-500/[0.06]'
                     : 'border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12]'
                 )}
               >
@@ -243,7 +243,7 @@ export function DistributionPanel({
                   type="checkbox"
                   checked={isChecked}
                   onChange={() => toggleChannel(channel.id)}
-                  className="mt-0.5 accent-amber-500"
+                  className="mt-0.5 accent-orange-500"
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
@@ -273,7 +273,7 @@ export function DistributionPanel({
         type="button"
         onClick={handleDistribute}
         disabled={isDistributing || selectedChannels.length === 0}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold text-black transition-colors"
+        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold text-black transition-colors"
       >
         {isDistributing ? (
           <>
@@ -329,8 +329,8 @@ export function DistributionPanel({
                   {/* Manual channel instructions */}
                   {channelMeta?.requiresManualSubmission &&
                     dist.status === 'submitted' && (
-                      <div className="rounded-lg bg-amber-500/[0.05] border border-amber-500/20 px-3 py-2 space-y-2">
-                        <p className="text-xs text-amber-300/80">
+                      <div className="rounded-lg bg-orange-500/[0.05] border border-orange-500/20 px-3 py-2 space-y-2">
+                        <p className="text-xs text-orange-300/80">
                           {channelMeta.instructions}
                         </p>
                         <div className="flex items-center gap-3">
@@ -339,7 +339,7 @@ export function DistributionPanel({
                               href={channelMeta.submissionUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                              className="inline-flex items-center gap-1.5 text-xs text-orange-400 hover:text-orange-300 transition-colors"
                             >
                               <ExternalLink className="h-3 w-3" />
                               Open submission page
@@ -368,7 +368,7 @@ export function DistributionPanel({
                       href={dist.channelUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                      className="inline-flex items-center gap-1.5 text-xs text-orange-400 hover:text-orange-300 transition-colors"
                     >
                       <ExternalLink className="h-3 w-3" />
                       View published release

@@ -184,7 +184,7 @@ function MentionCard({
                 </Badge>
               )}
               {isNew && !mention.isRead && (
-                <Badge className="bg-amber-500/20 text-amber-400 text-xs">
+                <Badge className="bg-orange-500/20 text-orange-400 text-xs">
                   New
                 </Badge>
               )}
@@ -218,7 +218,7 @@ function MentionCard({
       {/* Keyword tag */}
       {mention.keyword && (
         <div className="mb-3">
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-amber-500/10 text-amber-400 text-xs">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-orange-500/10 text-orange-400 text-xs">
             <Hash className="h-3 w-3" />
             {mention.keyword.keyword}
           </span>
@@ -368,7 +368,7 @@ function ListeningPageContent() {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
           <p className="text-gray-400">Loading social listening...</p>
         </div>
       </div>
@@ -425,7 +425,7 @@ function ListeningPageContent() {
             {/* Add keyword CTA */}
             <Button
               onClick={() => setIsAddModalOpen(true)}
-              className="bg-amber-500 hover:bg-amber-600 text-white"
+              className="bg-orange-500 hover:bg-orange-600 text-white"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Keyword
@@ -491,7 +491,7 @@ function ListeningPageContent() {
                   onClick={() => setSelectedKeywordId(null)}
                   className={`w-full flex items-center justify-between p-2 rounded-lg transition-colors ${
                     !selectedKeywordId
-                      ? 'bg-amber-500/20 text-amber-400'
+                      ? 'bg-orange-500/20 text-orange-400'
                       : 'text-gray-300 hover:bg-white/5'
                   }`}
                 >
@@ -507,7 +507,7 @@ function ListeningPageContent() {
                     key={keyword.id}
                     className={`flex items-center justify-between p-2 rounded-lg transition-colors group ${
                       selectedKeywordId === keyword.id
-                        ? 'bg-amber-500/20 text-amber-400'
+                        ? 'bg-orange-500/20 text-orange-400'
                         : 'text-gray-300 hover:bg-white/5'
                     }`}
                   >
@@ -531,7 +531,7 @@ function ListeningPageContent() {
                     </button>
                     <div className="flex items-center gap-1">
                       {keyword.unreadCount > 0 && (
-                        <Badge className="bg-amber-500 text-white text-xs h-5 min-w-[20px] flex items-center justify-center">
+                        <Badge className="bg-orange-500 text-white text-xs h-5 min-w-[20px] flex items-center justify-center">
                           {keyword.unreadCount}
                         </Badge>
                       )}
@@ -674,7 +674,7 @@ function ListeningPageContent() {
                     }
                     className={`flex items-center gap-2 p-3 rounded-lg border transition-colors ${
                       newKeywordType === type.id
-                        ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
+                        ? 'bg-orange-500/20 border-orange-500/50 text-orange-400'
                         : 'bg-gray-800/50 border-white/10 text-gray-300 hover:bg-gray-800/70'
                     }`}
                   >
@@ -723,7 +723,7 @@ function ListeningPageContent() {
                   !newKeyword.trim() ||
                   newKeywordPlatforms.length === 0
                 }
-                className="bg-amber-500 hover:bg-amber-600 text-white"
+                className="bg-orange-500 hover:bg-orange-600 text-white"
               >
                 {isSubmitting ? (
                   <>

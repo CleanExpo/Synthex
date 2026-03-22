@@ -58,15 +58,15 @@ const TYPE_CONFIG: Record<
   },
   'broken-link': {
     label: 'Broken Link',
-    className: 'bg-amber-900/60 text-amber-300 border border-amber-700/40',
+    className: 'bg-orange-900/60 text-orange-300 border border-orange-700/40',
   },
   'competitor-link': {
     label: 'Competitor Link',
-    className: 'bg-amber-900/60 text-amber-300 border border-amber-700/40',
+    className: 'bg-orange-900/60 text-orange-300 border border-orange-700/40',
   },
   'journalist-mention': {
     label: 'Journalist Mention',
-    className: 'bg-amber-900/60 text-amber-300 border border-amber-700/40',
+    className: 'bg-orange-900/60 text-orange-300 border border-orange-700/40',
   },
 };
 
@@ -91,7 +91,7 @@ const STATUS_CONFIG: Record<
 function getDaColour(da: number | null): string {
   if (da === null) return 'text-slate-400';
   if (da >= 70) return 'text-emerald-400';
-  if (da >= 40) return 'text-amber-400';
+  if (da >= 40) return 'text-orange-400';
   return 'text-red-400';
 }
 

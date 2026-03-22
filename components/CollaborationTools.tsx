@@ -419,7 +419,7 @@ export function CollaborationTools({
                 <div
                   key={notification.id}
                   className={`p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors ${
-                    !notification.read ? 'bg-amber-500/10' : ''
+                    !notification.read ? 'bg-orange-500/10' : ''
                   }`}
                   onClick={() => markNotificationRead(notification.id)}
                 >
@@ -427,7 +427,7 @@ export function CollaborationTools({
                     <div
                       className={`p-1.5 rounded-full ${
                         notification.type === 'mention'
-                          ? 'bg-amber-500/20'
+                          ? 'bg-orange-500/20'
                           : notification.type === 'comment'
                             ? 'bg-blue-500/20'
                             : notification.type === 'reply'
@@ -436,7 +436,7 @@ export function CollaborationTools({
                       }`}
                     >
                       {notification.type === 'mention' && (
-                        <AtSign className="h-3 w-3 text-amber-400" />
+                        <AtSign className="h-3 w-3 text-orange-400" />
                       )}
                       {notification.type === 'comment' && (
                         <MessageSquare className="h-3 w-3 text-blue-400" />
@@ -454,7 +454,7 @@ export function CollaborationTools({
                       </p>
                     </div>
                     {!notification.read && (
-                      <div className="w-2 h-2 bg-amber-500 rounded-full" />
+                      <div className="w-2 h-2 bg-orange-500 rounded-full" />
                     )}
                   </div>
                 </div>

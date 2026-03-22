@@ -57,7 +57,7 @@ export const statusConfig: Record<TaskStatus, StatusConfig> = {
   },
   review: {
     label: 'In Review',
-    color: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+    color: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
     icon: Pause,
   },
   done: {
@@ -80,7 +80,7 @@ export const priorityConfig: Record<TaskPriority, PriorityConfig> = {
   },
   high: {
     label: 'High',
-    color: 'bg-amber-500/20 text-amber-300',
+    color: 'bg-orange-500/20 text-orange-300',
     icon: ArrowUp,
   },
   urgent: {
@@ -93,27 +93,27 @@ export const priorityConfig: Record<TaskPriority, PriorityConfig> = {
 export const typeConfig: Record<TaskType, TypeConfig> = {
   content: {
     label: 'Content',
-    color: 'bg-amber-500/20 text-amber-300',
+    color: 'bg-orange-500/20 text-orange-300',
     icon: FileText,
   },
   campaign: {
     label: 'Campaign',
-    color: 'bg-amber-500/20 text-amber-300',
+    color: 'bg-orange-500/20 text-orange-300',
     icon: Target,
   },
   analytics: {
     label: 'Analytics',
-    color: 'bg-amber-500/20 text-amber-300',
+    color: 'bg-orange-500/20 text-orange-300',
     icon: TrendingUp,
   },
   social: {
     label: 'Social',
-    color: 'bg-amber-500/20 text-amber-300',
+    color: 'bg-orange-500/20 text-orange-300',
     icon: MessageSquare,
   },
   design: {
     label: 'Design',
-    color: 'bg-amber-500/20 text-amber-300',
+    color: 'bg-orange-500/20 text-orange-300',
     icon: Sparkles,
   },
   other: {

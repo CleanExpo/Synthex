@@ -49,7 +49,7 @@ export function ContentInput({
     <Card variant="glass">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <MessageSquare className="w-5 h-5 mr-2 text-amber-400" />
+          <MessageSquare className="w-5 h-5 mr-2 text-orange-400" />
           Content to Analyze
         </CardTitle>
         <CardDescription>
@@ -62,7 +62,7 @@ export function ContentInput({
             value={content}
             onChange={e => onContentChange(e.target.value)}
             placeholder="Enter your content here... (e.g., social media post, email subject line, ad copy)"
-            className="w-full h-48 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+            className="w-full h-48 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
             maxLength={maxLength}
           />
           <div className="flex justify-between mt-2 text-sm text-gray-400">
@@ -79,7 +79,7 @@ export function ContentInput({
             <select
               value={platform}
               onChange={e => onPlatformChange(e.target.value)}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               {PLATFORMS.map(p => (
                 <option key={p.id} value={p.id} className="bg-gray-800">
@@ -96,7 +96,7 @@ export function ContentInput({
             <select
               value={contentType}
               onChange={e => onContentTypeChange(e.target.value)}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               {CONTENT_TYPES.map(ct => (
                 <option key={ct.id} value={ct.id} className="bg-gray-800">
@@ -116,7 +116,7 @@ export function ContentInput({
             value={targetAudience}
             onChange={e => onTargetAudienceChange(e.target.value)}
             placeholder="e.g., Tech professionals aged 25-45"
-            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         </div>
 

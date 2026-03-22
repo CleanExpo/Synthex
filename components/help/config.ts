@@ -20,7 +20,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     description: 'Learn the basics of using SYNTHEX',
     icon: Zap,
     articles: 12,
-    color: 'text-amber-400',
+    color: 'text-orange-400',
     links: [
       { title: 'Quick start guide', href: '/docs/quickstart' },
       { title: 'Setting up your profile', href: '/dashboard/settings' },
@@ -33,7 +33,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     description: 'Master AI-powered content generation',
     icon: Sparkles,
     articles: 18,
-    color: 'text-amber-400',
+    color: 'text-orange-400',
     links: [
       { title: 'Using AI for content', href: '/dashboard/content' },
       { title: 'Content templates', href: '/dashboard/content' },
@@ -59,7 +59,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     description: 'Plan and automate your posts',
     icon: Calendar,
     articles: 10,
-    color: 'text-amber-400',
+    color: 'text-orange-400',
     links: [
       { title: 'Schedule posts', href: '/dashboard/schedule' },
       { title: 'Bulk scheduling', href: '/dashboard/schedule' },
@@ -85,7 +85,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     description: 'Manage your subscription',
     icon: CreditCard,
     articles: 6,
-    color: 'text-amber-400',
+    color: 'text-orange-400',
     links: [
       { title: 'View plans', href: '/pricing' },
       { title: 'Update payment method', href: '/dashboard/settings' },

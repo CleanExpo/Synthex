@@ -57,13 +57,13 @@ export function ProfileTab({
                 unoptimized
               />
             ) : (
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-500 to-blue-600 flex items-center justify-center text-3xl font-bold text-white">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-500 to-blue-600 flex items-center justify-center text-3xl font-bold text-white">
                 {(profile.name || 'U').charAt(0).toUpperCase()}
               </div>
             )}
             <button
               onClick={onAvatarUpload}
-              className="absolute bottom-0 right-0 p-2 bg-amber-500 rounded-full text-white hover:bg-amber-600 transition-colors"
+              className="absolute bottom-0 right-0 p-2 bg-orange-500 rounded-full text-white hover:bg-orange-600 transition-colors"
               aria-label="Upload avatar"
             >
               <Camera className="w-4 h-4" />

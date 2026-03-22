@@ -324,8 +324,8 @@ export function IntegrationModal({
               </Alert>
             )}
 
-            <Alert className="border-amber-500/20 bg-amber-500/5">
-              <Info className="h-4 w-4 text-amber-500" />
+            <Alert className="border-orange-500/20 bg-orange-500/5">
+              <Info className="h-4 w-4 text-orange-500" />
               <AlertDescription className="text-gray-300">
                 Don't have API keys yet? Switch to the "How to Get Keys" tab for
                 step-by-step instructions.
@@ -345,8 +345,8 @@ export function IntegrationModal({
             <div className="space-y-3">
               {instructions.map(instruction => (
                 <div key={instruction.step} className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-amber-500/20 flex items-center justify-center">
-                    <span className="text-xs font-semibold text-amber-400">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-orange-500/20 flex items-center justify-center">
+                    <span className="text-xs font-semibold text-orange-400">
                       {instruction.step}
                     </span>
                   </div>
@@ -368,7 +368,7 @@ export function IntegrationModal({
                   href="https://developer.twitter.com/en/portal/dashboard"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-amber-400 hover:text-amber-300"
+                  className="flex items-center gap-2 text-sm text-orange-400 hover:text-orange-300"
                 >
                   Twitter Developer Portal
                   <ExternalLink className="w-3 h-3" />
@@ -379,7 +379,7 @@ export function IntegrationModal({
                   href="https://www.linkedin.com/developers/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-amber-400 hover:text-amber-300"
+                  className="flex items-center gap-2 text-sm text-orange-400 hover:text-orange-300"
                 >
                   LinkedIn Developer Portal
                   <ExternalLink className="w-3 h-3" />
@@ -390,7 +390,7 @@ export function IntegrationModal({
                   href="https://developers.facebook.com/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-amber-400 hover:text-amber-300"
+                  className="flex items-center gap-2 text-sm text-orange-400 hover:text-orange-300"
                 >
                   Facebook Developer Portal
                   <ExternalLink className="w-3 h-3" />
@@ -401,7 +401,7 @@ export function IntegrationModal({
                   href="https://developers.facebook.com/docs/instagram-basic-display-api"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-amber-400 hover:text-amber-300"
+                  className="flex items-center gap-2 text-sm text-orange-400 hover:text-orange-300"
                 >
                   Instagram Basic Display API
                   <ExternalLink className="w-3 h-3" />
@@ -412,7 +412,7 @@ export function IntegrationModal({
                   href="https://developers.tiktok.com/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-amber-400 hover:text-amber-300"
+                  className="flex items-center gap-2 text-sm text-orange-400 hover:text-orange-300"
                 >
                   TikTok Developer Portal
                   <ExternalLink className="w-3 h-3" />

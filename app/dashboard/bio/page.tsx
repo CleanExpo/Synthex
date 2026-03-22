@@ -126,8 +126,8 @@ function BioPagesPageContent() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/10">
-              <FileText className="w-5 h-5 text-amber-400" />
+            <div className="p-2 rounded-lg bg-orange-500/10">
+              <FileText className="w-5 h-5 text-orange-400" />
             </div>
             <div>
               <p className="text-sm text-gray-400">Total Pages</p>
@@ -139,8 +139,8 @@ function BioPagesPageContent() {
         </div>
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/10">
-              <Eye className="w-5 h-5 text-amber-400" />
+            <div className="p-2 rounded-lg bg-orange-500/10">
+              <Eye className="w-5 h-5 text-orange-400" />
             </div>
             <div>
               <p className="text-sm text-gray-400">Total Views</p>
@@ -168,7 +168,7 @@ function BioPagesPageContent() {
       {/* Loading State */}
       {isLoading && pages.length === 0 && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
         </div>
       )}
 
@@ -202,8 +202,8 @@ function BioPagesPageContent() {
                     className="w-12 h-12 rounded-full object-cover border border-white/10"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
-                    <Link2 className="w-6 h-6 text-amber-400" />
+                  <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
+                    <Link2 className="w-6 h-6 text-orange-400" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
@@ -309,7 +309,7 @@ function BioPagesPageContent() {
             {newTitle && (
               <p className="text-sm text-gray-400">
                 URL will be: /bio/
-                <span className="text-amber-400">{slugify(newTitle)}</span>
+                <span className="text-orange-400">{slugify(newTitle)}</span>
               </p>
             )}
           </div>

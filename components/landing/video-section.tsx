@@ -38,7 +38,7 @@ export function VideoSection() {
             <h2 className="text-4xl sm:text-5xl font-extralight tracking-tight text-white">
               Watch Synthex
               <br />
-              <span className="text-amber-400">work in real time.</span>
+              <span className="text-orange-400">work in real time.</span>
             </h2>
           </div>
           <p className="text-white/40 text-sm max-w-sm leading-relaxed lg:ml-auto lg:text-right">

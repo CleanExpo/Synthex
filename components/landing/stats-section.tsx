@@ -20,7 +20,7 @@ export function StatsSection() {
             >
               <span
                 className={`text-4xl md:text-5xl font-black tracking-tight mb-2 ${
-                  stat.highlight ? 'text-amber-500' : 'text-white'
+                  stat.highlight ? 'text-orange-500' : 'text-white'
                 }`}
               >
                 {stat.value}

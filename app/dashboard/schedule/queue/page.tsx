@@ -293,7 +293,7 @@ export default function QueuePage() {
           </div>
         </div>
         <Button
-          className="bg-amber-500/20 border-[0.5px] border-amber-500/30 text-amber-400 hover:bg-amber-500/30"
+          className="bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30"
           onClick={() => setBulkWizardOpen(true)}
         >
           <Layers className="h-4 w-4 mr-2" />

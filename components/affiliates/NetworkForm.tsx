@@ -118,7 +118,7 @@ export function NetworkForm({
               placeholder="e.g., My Amazon Account"
               required
               aria-label="Display name"
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
             />
           </div>
 
@@ -139,7 +139,7 @@ export function NetworkForm({
                       className={cn(
                         'flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-all',
                         slug === s
-                          ? 'border-amber-500/50 bg-amber-500/10'
+                          ? 'border-orange-500/50 bg-orange-500/10'
                           : 'border-white/10 bg-white/5 hover:bg-white/10'
                       )}
                     >
@@ -165,7 +165,7 @@ export function NetworkForm({
               onChange={e => setTrackingId(e.target.value)}
               placeholder="Your affiliate ID"
               aria-label="Tracking/Affiliate ID"
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
             />
           </div>
 
@@ -180,7 +180,7 @@ export function NetworkForm({
               onChange={e => setApiKey(e.target.value)}
               placeholder="For automated reporting"
               aria-label="API key"
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
             />
           </div>
 
@@ -198,7 +198,7 @@ export function NetworkForm({
               onChange={e => setCommissionRate(e.target.value)}
               placeholder="e.g., 5.00"
               aria-label="Default commission rate (%)"
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
             />
           </div>
 
@@ -210,7 +210,7 @@ export function NetworkForm({
               onClick={() => setIsActive(!isActive)}
               className={cn(
                 'relative w-11 h-6 rounded-full transition-colors',
-                isActive ? 'bg-amber-600' : 'bg-white/20'
+                isActive ? 'bg-orange-600' : 'bg-white/20'
               )}
             >
               <span
@@ -234,7 +234,7 @@ export function NetworkForm({
             <button
               type="submit"
               disabled={isLoading || !name}
-              className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:bg-amber-600/50 text-white rounded-lg font-medium transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:bg-orange-600/50 text-white rounded-lg font-medium transition-colors"
             >
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               {isEditing ? 'Save Changes' : 'Add Network'}

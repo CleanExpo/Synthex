@@ -105,7 +105,7 @@ export function AnalyzerTab({
                     {testResult.keyPhrases.map((phrase: string, i: number) => (
                       <Badge
                         key={i}
-                        className="bg-amber-500/20 text-amber-400 text-xs"
+                        className="bg-orange-500/20 text-orange-400 text-xs"
                       >
                         {phrase}
                       </Badge>

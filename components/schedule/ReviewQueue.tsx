@@ -199,7 +199,7 @@ export function ReviewQueue({ onEdit, onMutate }: ReviewQueueProps) {
 
   if (isLoading) {
     return (
-      <Card variant="glass" className="border-amber-500/20">
+      <Card variant="glass" className="border-orange-500/20">
         <CardContent className="py-4 flex items-center gap-2 text-slate-400">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span className="text-sm">Loading review queue…</span>
@@ -213,18 +213,18 @@ export function ReviewQueue({ onEdit, onMutate }: ReviewQueueProps) {
   }
 
   return (
-    <Card variant="glass" className="border-amber-500/30 bg-amber-500/5">
+    <Card variant="glass" className="border-orange-500/30 bg-orange-500/5">
       {/* Header */}
       <CardHeader className="pb-0 pt-4 px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/20">
-              <Sparkles className="h-4 w-4 text-amber-400" />
+            <div className="p-2 rounded-lg bg-orange-500/20">
+              <Sparkles className="h-4 w-4 text-orange-400" />
             </div>
             <div>
               <CardTitle className="text-base text-white flex items-center gap-2">
                 Review Queue
-                <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs">
+                <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30 text-xs">
                   {count} awaiting approval
                 </Badge>
               </CardTitle>
@@ -353,7 +353,7 @@ function ReviewPostCard({
 
       {post.content.length > 180 && (
         <button
-          className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1"
+          className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1"
           onClick={() => setExpanded(v => !v)}
         >
           <Eye className="h-3 w-3" />
@@ -385,7 +385,7 @@ function ReviewPostCard({
         <Button
           size="sm"
           variant="ghost"
-          className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 text-xs h-7 px-3"
+          className="text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 text-xs h-7 px-3"
           onClick={onEdit}
           disabled={isApproving || isRejecting}
         >

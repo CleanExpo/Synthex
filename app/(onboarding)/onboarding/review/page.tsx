@@ -141,11 +141,11 @@ function HealthBadge({ health }: { health: string }) {
     },
     good: {
       label: 'Good',
-      colour: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+      colour: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
     },
     'needs-work': {
       label: 'Needs Work',
-      colour: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+      colour: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
     },
     poor: {
       label: 'Poor',
@@ -277,10 +277,10 @@ function Section({
   badge?: React.ReactNode;
 }) {
   return (
-    <div className="p-5 rounded-xl bg-surface-base/80 border border-amber-500/10 backdrop-blur-sm space-y-4">
+    <div className="p-5 rounded-xl bg-surface-base/80 border border-orange-500/10 backdrop-blur-sm space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Icon className="w-5 h-5 text-amber-400" />
+          <Icon className="w-5 h-5 text-orange-400" />
           <h2 className="text-base font-semibold text-white">{title}</h2>
         </div>
         {badge}
@@ -470,7 +470,7 @@ export default function ReviewPage() {
       <div className="space-y-8">
         <StepProgressV2 currentStep={2} />
         <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <div className="w-12 h-12 border-2 border-amber-500/30 border-t-amber-400 rounded-full animate-spin" />
+          <div className="w-12 h-12 border-2 border-orange-500/30 border-t-orange-400 rounded-full animate-spin" />
           <p className="text-gray-400">Loading your analysis results…</p>
         </div>
       </div>
@@ -482,13 +482,13 @@ export default function ReviewPage() {
       <div className="space-y-8">
         <StepProgressV2 currentStep={2} />
         <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <AlertCircle className="w-12 h-12 text-amber-400" />
+          <AlertCircle className="w-12 h-12 text-orange-400" />
           <p className="text-gray-400">
             No analysis data found. Please start from the beginning.
           </p>
           <Button
             onClick={() => router.replace('/onboarding')}
-            className="bg-amber-500 hover:bg-amber-400 text-white"
+            className="bg-orange-500 hover:bg-orange-400 text-white"
           >
             Start Over
           </Button>
@@ -511,8 +511,8 @@ export default function ReviewPage() {
         </p>
         {confidence > 0 && (
           <div className="flex items-center justify-center gap-2 mt-1">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-xs text-amber-400">
+            <Sparkles className="w-3.5 h-3.5 text-orange-400" />
+            <span className="text-xs text-orange-400">
               AI confidence: {Math.round(confidence * 100)}%
             </span>
           </div>
@@ -528,7 +528,7 @@ export default function ReviewPage() {
             <Input
               value={businessName}
               onChange={e => setBusinessName(e.target.value)}
-              className="bg-surface-dark/50 border-amber-500/20 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20"
+              className="bg-surface-dark/50 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
             />
           </div>
 
@@ -538,7 +538,7 @@ export default function ReviewPage() {
             <select
               value={industry}
               onChange={e => setIndustry(e.target.value)}
-              className="w-full rounded-md bg-surface-dark/50 border border-amber-500/20 text-white text-sm px-3 py-2 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20"
+              className="w-full rounded-md bg-surface-dark/50 border border-orange-500/20 text-white text-sm px-3 py-2 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20"
             >
               <option value="">Select industry…</option>
               {INDUSTRIES.map(ind => (
@@ -555,7 +555,7 @@ export default function ReviewPage() {
             <select
               value={teamSize}
               onChange={e => setTeamSize(e.target.value)}
-              className="w-full rounded-md bg-surface-dark/50 border border-amber-500/20 text-white text-sm px-3 py-2 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20"
+              className="w-full rounded-md bg-surface-dark/50 border border-orange-500/20 text-white text-sm px-3 py-2 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20"
             >
               <option value="">Select team size…</option>
               {TEAM_SIZES.map(ts => (
@@ -574,16 +574,16 @@ export default function ReviewPage() {
                 <img
                   src={result.logoUrl}
                   alt="Detected logo"
-                  className="w-12 h-12 rounded-lg border border-amber-500/20 object-contain bg-white/5"
+                  className="w-12 h-12 rounded-lg border border-orange-500/20 object-contain bg-white/5"
                 />
               ) : result.faviconUrl ? (
                 <img
                   src={result.faviconUrl}
                   alt="Favicon"
-                  className="w-12 h-12 rounded-lg border border-amber-500/20 object-contain bg-white/5 p-1"
+                  className="w-12 h-12 rounded-lg border border-orange-500/20 object-contain bg-white/5 p-1"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-lg border border-amber-500/20 bg-white/5 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-lg border border-orange-500/20 bg-white/5 flex items-center justify-center">
                   <Globe className="w-6 h-6 text-gray-500" />
                 </div>
               )}
@@ -605,7 +605,7 @@ export default function ReviewPage() {
             value={description}
             onChange={e => setDescription(e.target.value)}
             rows={3}
-            className="w-full rounded-md bg-surface-dark/50 border border-amber-500/20 text-white text-sm px-3 py-2 placeholder:text-gray-500 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 resize-none"
+            className="w-full rounded-md bg-surface-dark/50 border border-orange-500/20 text-white text-sm px-3 py-2 placeholder:text-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 resize-none"
             placeholder="A short description of your business…"
           />
         </div>
@@ -691,7 +691,7 @@ export default function ReviewPage() {
                   key={idx}
                   className="flex items-start gap-2 text-sm text-gray-300"
                 >
-                  <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                  <Zap className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
                   <span>{win}</span>
                 </li>
               ))}
@@ -739,7 +739,7 @@ export default function ReviewPage() {
                       ) : (
                         <Badge
                           variant="outline"
-                          className="text-[10px] px-1.5 py-0 bg-amber-500/10 text-amber-400 border-amber-500/20"
+                          className="text-[10px] px-1.5 py-0 bg-orange-500/10 text-orange-400 border-orange-500/20"
                         >
                           Unverified
                         </Badge>
@@ -748,7 +748,7 @@ export default function ReviewPage() {
                     <Input
                       value={profile.url}
                       onChange={e => updateSocialUrl(idx, e.target.value)}
-                      className="bg-surface-dark/50 border-amber-500/20 text-white text-sm placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20 h-8"
+                      className="bg-surface-dark/50 border-orange-500/20 text-white text-sm placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 h-8"
                     />
                   </div>
                   <button
@@ -782,7 +782,7 @@ export default function ReviewPage() {
           {/* Target Audience */}
           <div className="space-y-1.5">
             <Label className="text-xs text-gray-400">Target Audience</Label>
-            <p className="text-sm text-white bg-surface-dark/50 rounded-md border border-amber-500/10 px-3 py-2">
+            <p className="text-sm text-white bg-surface-dark/50 rounded-md border border-orange-500/10 px-3 py-2">
               {targetAudience || 'Not detected'}
             </p>
           </div>
@@ -790,7 +790,7 @@ export default function ReviewPage() {
           {/* Suggested Tone */}
           <div className="space-y-1.5">
             <Label className="text-xs text-gray-400">Suggested Tone</Label>
-            <p className="text-sm text-white bg-surface-dark/50 rounded-md border border-amber-500/10 px-3 py-2">
+            <p className="text-sm text-white bg-surface-dark/50 rounded-md border border-orange-500/10 px-3 py-2">
               {suggestedTone || 'Not detected'}
             </p>
           </div>
@@ -805,7 +805,7 @@ export default function ReviewPage() {
                 <Badge
                   key={idx}
                   variant="outline"
-                  className="bg-amber-500/5 text-amber-400 border-amber-500/20 text-xs"
+                  className="bg-orange-500/5 text-orange-400 border-orange-500/20 text-xs"
                 >
                   {topic}
                 </Badge>
@@ -818,10 +818,10 @@ export default function ReviewPage() {
         {result.suggestedPersonaName && (
           <div className="pt-2 border-t border-white/5">
             <div className="flex items-center gap-2">
-              <Star className="w-4 h-4 text-amber-400" />
+              <Star className="w-4 h-4 text-orange-400" />
               <span className="text-xs text-gray-400">
                 Suggested AI persona name:{' '}
-                <span className="text-amber-400 font-medium">
+                <span className="text-orange-400 font-medium">
                   {result.suggestedPersonaName}
                 </span>
               </span>
@@ -840,7 +840,7 @@ export default function ReviewPage() {
               className={cn(
                 'p-3 rounded-lg border text-center transition-all',
                 postingMode === mode.id
-                  ? 'bg-amber-500/10 border-amber-500/30 shadow-sm shadow-amber-500/10'
+                  ? 'bg-orange-500/10 border-orange-500/30 shadow-sm shadow-orange-500/10'
                   : 'bg-surface-dark/30 border-white/5 hover:border-white/10'
               )}
             >
@@ -848,7 +848,7 @@ export default function ReviewPage() {
               <p
                 className={cn(
                   'text-sm font-medium',
-                  postingMode === mode.id ? 'text-amber-400' : 'text-white'
+                  postingMode === mode.id ? 'text-orange-400' : 'text-white'
                 )}
               >
                 {mode.label}
@@ -874,7 +874,7 @@ export default function ReviewPage() {
           size="lg"
           onClick={handleContinue}
           disabled={saving || !businessName.trim()}
-          className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all disabled:opacity-50 px-8"
+          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all disabled:opacity-50 px-8"
         >
           {saving ? (
             <>

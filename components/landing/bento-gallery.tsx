@@ -252,8 +252,8 @@ const GalleryModal = ({
         className="fixed z-50 left-1/2 bottom-4 -translate-x-1/2 touch-none"
       >
         <motion.div
-          className="relative rounded-sm bg-amber-500/[0.08] backdrop-blur-xl
-                     border-[0.5px] border-amber-500/20 shadow-lg
+          className="relative rounded-sm bg-orange-500/[0.08] backdrop-blur-xl
+                     border-[0.5px] border-orange-500/20 shadow-lg
                      cursor-grab active:cursor-grabbing"
         >
           <div className="flex items-center -space-x-2 px-3 py-2">
@@ -274,7 +274,7 @@ const GalleryModal = ({
                   'relative group w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex-shrink-0',
                   'rounded-sm overflow-hidden cursor-pointer hover:z-20',
                   selectedItem.id === item.id
-                    ? 'ring-2 ring-amber-400/70 shadow-lg'
+                    ? 'ring-2 ring-orange-400/70 shadow-lg'
                     : 'hover:ring-2 hover:ring-white/30'
                 )}
                 initial={{ rotate: index % 2 === 0 ? -15 : 15 }}
@@ -304,7 +304,7 @@ const GalleryModal = ({
                 {selectedItem.id === item.id && (
                   <motion.div
                     layoutId="activeGlow"
-                    className="absolute -inset-2 bg-amber-400/20 blur-xl"
+                    className="absolute -inset-2 bg-orange-400/20 blur-xl"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.2 }}
@@ -339,7 +339,7 @@ const InteractiveBentoGallery: React.FC<InteractiveBentoGalleryProps> = ({
       <div className="mb-8 text-center">
         <motion.h1
           className="text-2xl sm:text-3xl md:text-4xl font-bold bg-clip-text text-transparent
-                     bg-gradient-to-r from-white via-amber-400 to-white"
+                     bg-gradient-to-r from-white via-orange-400 to-white"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}

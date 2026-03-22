@@ -18,10 +18,10 @@ export function AuthorityFeatureGate({
   if (hasAddon) return <>{children}</>;
 
   return (
-    <Card className="bg-white/5 border-amber-500/10 backdrop-blur-sm">
+    <Card className="bg-white/5 border-orange-500/10 backdrop-blur-sm">
       <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-4">
-          <Shield className="h-6 w-6 text-amber-400" />
+        <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center mb-4">
+          <Shield className="h-6 w-6 text-orange-400" />
         </div>
         <h3 className="text-lg font-semibold text-white mb-2">
           Unlock {featureName}
@@ -32,7 +32,7 @@ export function AuthorityFeatureGate({
         </p>
         <a
           href="/dashboard/billing"
-          className="inline-flex items-center px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium transition-colors"
+          className="inline-flex items-center px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium transition-colors"
         >
           Upgrade to Authority Engine
         </a>

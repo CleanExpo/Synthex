@@ -38,9 +38,9 @@ export interface BacklinkAnalysisSummaryProps {
 const TYPE_COLOURS: Record<BacklinkOpportunityType, string> = {
   'resource-page': 'bg-blue-500',
   'guest-post': 'bg-emerald-500',
-  'broken-link': 'bg-amber-500',
-  'competitor-link': 'bg-amber-500',
-  'journalist-mention': 'bg-amber-500',
+  'broken-link': 'bg-orange-500',
+  'competitor-link': 'bg-orange-500',
+  'journalist-mention': 'bg-orange-500',
 };
 
 const TYPE_SHORT: Record<BacklinkOpportunityType, string> = {

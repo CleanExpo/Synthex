@@ -52,13 +52,13 @@ interface ScheduleHealthStats {
 
 function getSuccessRateColour(rate: number): string {
   if (rate >= 90) return 'text-emerald-400';
-  if (rate >= 70) return 'text-amber-400';
+  if (rate >= 70) return 'text-orange-400';
   return 'text-red-400';
 }
 
 function getSuccessRateBg(rate: number): string {
   if (rate >= 90) return 'bg-emerald-500/10 border-emerald-500/20';
-  if (rate >= 70) return 'bg-amber-500/10 border-amber-500/20';
+  if (rate >= 70) return 'bg-orange-500/10 border-orange-500/20';
   return 'bg-red-500/10 border-red-500/20';
 }
 
@@ -131,7 +131,7 @@ export function ScheduleHealth() {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
         <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-amber-400" />
+          <TrendingUp className="h-4 w-4 text-orange-400" />
           <h3 className="text-sm font-semibold text-white">Schedule Health</h3>
         </div>
         <span className="text-xs text-gray-500">Last 7 days</span>
@@ -189,8 +189,8 @@ export function ScheduleHealth() {
 
             {/* Average Delay */}
             <div className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.02] border border-white/5">
-              <div className="p-2 rounded-lg bg-amber-500/10">
-                <Clock className="h-4 w-4 text-amber-400" />
+              <div className="p-2 rounded-lg bg-orange-500/10">
+                <Clock className="h-4 w-4 text-orange-400" />
               </div>
               <div>
                 <p className="text-xs text-gray-500">Avg Delay</p>
@@ -202,18 +202,18 @@ export function ScheduleHealth() {
 
             {/* Next Up / Retry Queue */}
             <div className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.02] border border-white/5">
-              <div className="p-2 rounded-lg bg-amber-500/10">
+              <div className="p-2 rounded-lg bg-orange-500/10">
                 {retryQueue.count > 0 ? (
-                  <RotateCcw className="h-4 w-4 text-amber-400" />
+                  <RotateCcw className="h-4 w-4 text-orange-400" />
                 ) : (
-                  <Clock className="h-4 w-4 text-amber-400" />
+                  <Clock className="h-4 w-4 text-orange-400" />
                 )}
               </div>
               <div>
                 {retryQueue.count > 0 ? (
                   <>
                     <p className="text-xs text-gray-500">Retrying</p>
-                    <p className="text-lg font-semibold text-amber-400 tabular-nums">
+                    <p className="text-lg font-semibold text-orange-400 tabular-nums">
                       {retryQueue.count}
                     </p>
                   </>

@@ -31,11 +31,11 @@ export function Testimonials() {
       <div className="max-w-5xl mx-auto px-6">
         <div className="bg-charcoal-800/60 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-10 md:p-16 relative overflow-hidden shadow-2xl shadow-black/30 ring-1 ring-white/[0.04]">
           {/* Ambient amber glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-500/[0.04] blur-3xl rounded-full pointer-events-none" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-orange-500/[0.04] blur-3xl rounded-full pointer-events-none" />
 
           <div className="relative z-10">
             {/* Large decorative quote mark */}
-            <div className="text-amber-500/20 font-black text-[8rem] leading-none mb-4 select-none">
+            <div className="text-orange-500/20 font-black text-[8rem] leading-none mb-4 select-none">
               &ldquo;
             </div>
 
@@ -49,8 +49,8 @@ export function Testimonials() {
 
                   {/* Attribution */}
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-charcoal-600 border border-amber-500/20 flex-shrink-0 flex items-center justify-center">
-                      <span className="text-amber-400/60 text-xs font-bold">
+                    <div className="w-10 h-10 rounded-full bg-charcoal-600 border border-orange-500/20 flex-shrink-0 flex items-center justify-center">
+                      <span className="text-orange-400/60 text-xs font-bold">
                         {t.initials}
                       </span>
                     </div>

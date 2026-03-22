@@ -66,9 +66,9 @@ const TIER_CONFIG: Record<
 > = {
   bronze: {
     label: 'Bronze',
-    colour: 'text-amber-600',
-    bgColour: 'bg-amber-600/10',
-    borderColour: 'border-amber-600/30',
+    colour: 'text-orange-600',
+    bgColour: 'bg-orange-600/10',
+    borderColour: 'border-orange-600/30',
     badgeColour: '#CD7F32',
   },
   silver: {
@@ -168,9 +168,9 @@ function AchievementBadge({
       className="
         flex items-center justify-center
         w-9 h-9 rounded-sm
-        border-[0.5px] border-amber-500/20 bg-amber-500/[0.05]
+        border-[0.5px] border-orange-500/20 bg-orange-500/[0.05]
         cursor-default select-none
-        hover:border-amber-500/40 hover:bg-amber-500/[0.08] transition-colors
+        hover:border-orange-500/40 hover:bg-orange-500/[0.08] transition-colors
       "
     >
       <span className="text-base leading-none">{achievement.icon}</span>
@@ -227,7 +227,7 @@ function ErrorCard() {
   return (
     <div className="border-[0.5px] border-red-500/20 bg-red-500/[0.03] rounded-sm p-5">
       <div className="flex items-center gap-2 mb-1">
-        <Trophy className="h-3.5 w-3.5 text-amber-400" />
+        <Trophy className="h-3.5 w-3.5 text-orange-400" />
         <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
           Your Loyalty Tier
         </span>

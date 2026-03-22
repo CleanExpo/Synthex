@@ -88,7 +88,7 @@ export function GEOEditorPanel({
         value={content}
         onChange={handleChange}
         placeholder="Paste your content here to score it against the 9 Princeton GEO tactics — authoritative citations, statistics, quotations, fluency, readability, technical vocabulary, uniqueness, information flow, and persuasion..."
-        className="flex-1 w-full bg-white/5 border border-white/10 rounded-lg p-4 text-slate-200 text-sm resize-none focus:outline-none focus:border-amber-500/50 placeholder:text-slate-600 font-mono leading-relaxed min-h-[500px] transition-colors"
+        className="flex-1 w-full bg-white/5 border border-white/10 rounded-lg p-4 text-slate-200 text-sm resize-none focus:outline-none focus:border-orange-500/50 placeholder:text-slate-600 font-mono leading-relaxed min-h-[500px] transition-colors"
       />
 
       {/* Content too short hint */}
@@ -108,7 +108,7 @@ export function GEOEditorPanel({
         {error ? (
           <span className="text-red-400">{error}</span>
         ) : isScoring ? (
-          <span className="flex items-centre gap-1.5 text-amber-400">
+          <span className="flex items-centre gap-1.5 text-orange-400">
             <svg
               className="h-3 w-3 animate-spin"
               xmlns="http://www.w3.org/2000/svg"

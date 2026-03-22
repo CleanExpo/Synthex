@@ -22,9 +22,9 @@ interface PipelineOverviewProps {
 const STAGE_COLORS: Record<DealStage, string> = {
   negotiation: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400',
   contracted: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
-  in_progress: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
+  in_progress: 'bg-orange-500/10 border-orange-500/30 text-orange-400',
   delivered: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
-  paid: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
+  paid: 'bg-orange-500/10 border-orange-500/30 text-orange-400',
   cancelled: 'bg-red-500/10 border-red-500/30 text-red-400',
 };
 
@@ -106,7 +106,7 @@ export function PipelineOverview({
           <h3 className="text-lg font-semibold text-white">Deal Pipeline</h3>
           <span className="text-sm text-white/50">({totalDeals} deals)</span>
         </div>
-        <div className="flex items-center gap-2 text-amber-400">
+        <div className="flex items-center gap-2 text-orange-400">
           <DollarSign className="h-5 w-5" />
           <span className="text-xl font-bold">
             {formatCurrency(pipeline.totalValue)}

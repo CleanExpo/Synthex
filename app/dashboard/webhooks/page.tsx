@@ -171,7 +171,7 @@ function WebhookCard({
   };
 
   return (
-    <Card className="bg-white/5 border-amber-500/10">
+    <Card className="bg-white/5 border-orange-500/10">
       <CardContent className="p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
@@ -199,7 +199,7 @@ function WebhookCard({
                 <Badge
                   key={event}
                   variant="outline"
-                  className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs"
+                  className="bg-orange-500/20 text-orange-300 border-orange-500/30 text-xs"
                 >
                   {event}
                 </Badge>
@@ -409,7 +409,7 @@ function CreateWebhookDialog({
   if (createdSecret) {
     return (
       <Dialog open={open} onOpenChange={handleDone}>
-        <DialogContent className="bg-surface-base/95 border-amber-500/20 backdrop-blur-xl sm:max-w-md">
+        <DialogContent className="bg-surface-base/95 border-orange-500/20 backdrop-blur-xl sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-white flex items-center gap-2">
               <Check className="w-5 h-5 text-green-400" />
@@ -421,14 +421,14 @@ function CreateWebhookDialog({
           </DialogHeader>
 
           <div className="py-4">
-            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-4">
+            <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4 mb-4">
               <div className="flex items-start gap-2">
-                <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-amber-200 font-medium text-sm">
+                  <p className="text-orange-200 font-medium text-sm">
                     Save this secret
                   </p>
-                  <p className="text-amber-300/70 text-xs mt-1">
+                  <p className="text-orange-300/70 text-xs mt-1">
                     This secret will not be shown again. Copy it now and store
                     it securely.
                   </p>
@@ -476,7 +476,7 @@ function CreateWebhookDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-surface-base/95 border-amber-500/20 backdrop-blur-xl sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-surface-base/95 border-orange-500/20 backdrop-blur-xl sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-white">Create Webhook</DialogTitle>
           <DialogDescription className="text-gray-400">
@@ -561,7 +561,7 @@ function CreateWebhookDialog({
                           variant="ghost"
                           size="sm"
                           onClick={() => selectAllInCategory(category.events)}
-                          className="text-xs text-amber-400 hover:text-amber-300 h-auto py-1 px-2"
+                          className="text-xs text-orange-400 hover:text-orange-300 h-auto py-1 px-2"
                           disabled={allSelected}
                         >
                           Select All
@@ -646,11 +646,11 @@ function CreateWebhookDialog({
 
 function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
   return (
-    <Card className="bg-white/5 border-amber-500/10">
+    <Card className="bg-white/5 border-orange-500/10">
       <CardContent className="py-16">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 mb-4">
-            <Link2 className="w-8 h-8 text-amber-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 mb-4">
+            <Link2 className="w-8 h-8 text-orange-400" />
           </div>
           <h3 className="text-lg font-medium text-white mb-2">
             No webhooks configured
@@ -780,7 +780,7 @@ export default function WebhooksPage() {
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+          <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
         </div>
       )}
 

@@ -42,9 +42,9 @@ function colourFor(score: number): {
       bg: 'bg-emerald-500/10',
     };
   if (score >= 60)
-    return { ring: '#ffb87b', text: 'text-amber-400', bg: 'bg-amber-500/10' };
+    return { ring: '#ffb87b', text: 'text-orange-400', bg: 'bg-orange-500/10' };
   if (score >= 40)
-    return { ring: '#f59e0b', text: 'text-amber-400', bg: 'bg-amber-500/10' };
+    return { ring: '#f59e0b', text: 'text-orange-400', bg: 'bg-orange-500/10' };
   return { ring: '#ef4444', text: 'text-red-400', bg: 'bg-red-500/10' };
 }
 

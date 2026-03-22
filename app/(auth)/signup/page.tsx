@@ -275,7 +275,7 @@ export default function SignupPage() {
     if (passwordStrength === 0) return 'bg-gray-600';
     if (passwordStrength === 1) return 'bg-red-500';
     if (passwordStrength === 2) return 'bg-yellow-500';
-    if (passwordStrength === 3) return 'bg-amber-500';
+    if (passwordStrength === 3) return 'bg-orange-500';
     return 'bg-green-500';
   };
 
@@ -309,27 +309,27 @@ export default function SignupPage() {
         />
 
         {/* Glow Effects */}
-        <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-[150px] pointer-events-none" />
-        <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-amber-400/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
 
-        <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 shadow-2xl shadow-amber-500/5">
+        <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 shadow-2xl shadow-orange-500/5">
           <CardHeader className="space-y-1">
             <div className="flex items-center justify-center mb-4">
               <SynthexLogo className="w-12 h-12" />
             </div>
             <div className="flex items-center justify-center mb-2">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 flex items-center justify-center">
-                <Mail className="w-8 h-8 text-amber-400" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 flex items-center justify-center">
+                <Mail className="w-8 h-8 text-orange-400" />
               </div>
             </div>
-            <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300">
+            <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
               Check your email
             </CardTitle>
             <CardDescription className="text-center text-gray-400 space-y-2">
               <span className="block">
                 Your account has been created. We sent a verification email to:
               </span>
-              <span className="block text-amber-300 font-medium">
+              <span className="block text-orange-300 font-medium">
                 {verificationEmail}
               </span>
               <span className="block text-xs text-gray-500 mt-2">
@@ -344,7 +344,7 @@ export default function SignupPage() {
                 wired yet). This prevents blocking the user flow. */}
             <Button
               onClick={() => router.push('/onboarding')}
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-medium shadow-lg shadow-amber-500/25 transition-all hover:shadow-amber-500/40"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40"
             >
               Continue to onboarding
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -354,7 +354,7 @@ export default function SignupPage() {
               variant="outline"
               onClick={handleResendVerification}
               disabled={resendLoading || resendStatus === 'sent'}
-              className="w-full border-amber-500/20 text-gray-300 hover:bg-amber-500/10 hover:text-white"
+              className="w-full border-orange-500/20 text-gray-300 hover:bg-orange-500/10 hover:text-white"
             >
               {resendLoading ? (
                 <>
@@ -363,7 +363,7 @@ export default function SignupPage() {
                 </>
               ) : resendStatus === 'sent' ? (
                 <>
-                  <CheckCircle className="mr-2 h-4 w-4 text-amber-400" />
+                  <CheckCircle className="mr-2 h-4 w-4 text-orange-400" />
                   Verification email sent
                 </>
               ) : (
@@ -388,7 +388,7 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={() => setVerificationEmail(null)}
-                className="text-amber-400 hover:text-amber-300 transition-colors"
+                className="text-orange-400 hover:text-orange-300 transition-colors"
               >
                 Go back
               </button>
@@ -415,16 +415,16 @@ export default function SignupPage() {
       />
 
       {/* Glow Effects */}
-      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-amber-400/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
 
       {/* Card Container */}
-      <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 shadow-2xl shadow-amber-500/5">
+      <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 shadow-2xl shadow-orange-500/5">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
             <SynthexLogo className="w-12 h-12" />
           </div>
-          <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300">
+          <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
             Create your account
           </CardTitle>
           <CardDescription className="text-center text-gray-400">
@@ -474,7 +474,7 @@ export default function SignupPage() {
                         inviteCode: e.target.value.toUpperCase(),
                       })
                     }
-                    className={`pl-10 bg-white/5 border-amber-500/20 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20 uppercase tracking-wider font-mono ${fieldErrors.inviteCode ? 'border-red-500/60' : ''}`}
+                    className={`pl-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 uppercase tracking-wider font-mono ${fieldErrors.inviteCode ? 'border-red-500/60' : ''}`}
                     required
                     disabled={isSubmitDisabled}
                     maxLength={20}
@@ -490,7 +490,7 @@ export default function SignupPage() {
                   Don&apos;t have an invite code?{' '}
                   <Link
                     href="/"
-                    className="text-amber-400 hover:text-amber-300 transition-colors"
+                    className="text-orange-400 hover:text-orange-300 transition-colors"
                   >
                     Request access
                   </Link>
@@ -512,7 +512,7 @@ export default function SignupPage() {
                   onChange={e =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className={`pl-10 bg-white/5 border-amber-500/20 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20 ${fieldErrors.name ? 'border-red-500/60' : ''}`}
+                  className={`pl-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.name ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isSubmitDisabled}
                 />
@@ -536,7 +536,7 @@ export default function SignupPage() {
                   onChange={e =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  className={`pl-10 bg-white/5 border-amber-500/20 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20 ${fieldErrors.email ? 'border-red-500/60' : ''}`}
+                  className={`pl-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.email ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isSubmitDisabled}
                 />
@@ -561,7 +561,7 @@ export default function SignupPage() {
                     setFormData({ ...formData, password: e.target.value });
                     calculatePasswordStrength(e.target.value);
                   }}
-                  className={`pl-10 pr-10 bg-white/5 border-amber-500/20 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20 ${fieldErrors.password ? 'border-red-500/60' : ''}`}
+                  className={`pl-10 pr-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.password ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isSubmitDisabled}
                 />
@@ -597,7 +597,7 @@ export default function SignupPage() {
                     <span
                       className={
                         passwordStrength >= 3
-                          ? 'text-amber-400'
+                          ? 'text-orange-400'
                           : 'text-yellow-400'
                       }
                     >
@@ -628,13 +628,13 @@ export default function SignupPage() {
                       confirmPassword: e.target.value,
                     })
                   }
-                  className={`pl-10 pr-10 bg-white/5 border-amber-500/20 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20 ${fieldErrors.confirmPassword ? 'border-red-500/60' : ''}`}
+                  className={`pl-10 pr-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.confirmPassword ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isSubmitDisabled}
                 />
                 {formData.confirmPassword &&
                 formData.password === formData.confirmPassword ? (
-                  <CheckCircle className="absolute right-3 top-3 w-4 h-4 text-amber-500" />
+                  <CheckCircle className="absolute right-3 top-3 w-4 h-4 text-orange-500" />
                 ) : (
                   <button
                     type="button"
@@ -663,21 +663,21 @@ export default function SignupPage() {
               <label className="flex items-center space-x-2 text-sm">
                 <input
                   type="checkbox"
-                  className="rounded border-gray-600 bg-white/5 text-amber-500 focus:ring-amber-500/20"
+                  className="rounded border-gray-600 bg-white/5 text-orange-500 focus:ring-orange-500/20"
                   required
                 />
                 <span className="text-gray-400">
                   I agree to the{' '}
                   <Link
                     href="/terms"
-                    className="text-amber-400 hover:text-amber-300 transition-colors"
+                    className="text-orange-400 hover:text-orange-300 transition-colors"
                   >
                     Terms of Service
                   </Link>{' '}
                   and{' '}
                   <Link
                     href="/privacy"
-                    className="text-amber-400 hover:text-amber-300 transition-colors"
+                    className="text-orange-400 hover:text-orange-300 transition-colors"
                   >
                     Privacy Policy
                   </Link>
@@ -687,7 +687,7 @@ export default function SignupPage() {
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-medium shadow-lg shadow-amber-500/25 transition-all hover:shadow-amber-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitDisabled}
             >
               {isLoading ? (
@@ -712,7 +712,7 @@ export default function SignupPage() {
             <>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-amber-500/10" />
+                  <span className="w-full border-t border-orange-500/10" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-surface-base px-2 text-gray-500">
@@ -725,7 +725,7 @@ export default function SignupPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full bg-white/5 border-amber-500/20 text-white hover:bg-amber-500/10 hover:border-amber-500/40 transition-all"
+                  className="w-full bg-white/5 border-orange-500/20 text-white hover:bg-orange-500/10 hover:border-orange-500/40 transition-all"
                   onClick={handleGoogleSignup}
                   disabled={isLoading}
                 >
@@ -741,7 +741,7 @@ export default function SignupPage() {
             Already have an account?{' '}
             <Link
               href="/login"
-              className="text-amber-400 hover:text-amber-300 transition-colors"
+              className="text-orange-400 hover:text-orange-300 transition-colors"
             >
               Sign in
             </Link>

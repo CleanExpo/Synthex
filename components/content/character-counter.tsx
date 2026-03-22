@@ -29,13 +29,13 @@ export function CharacterCounter({
   const colourClass = isOver
     ? 'text-red-400'
     : isWarning
-      ? 'text-amber-400'
+      ? 'text-orange-400'
       : 'text-green-400';
 
   const barColourClass = isOver
     ? 'bg-red-400'
     : isWarning
-      ? 'bg-amber-400'
+      ? 'bg-orange-400'
       : 'bg-green-400';
 
   // Clamp bar width to 100% for display

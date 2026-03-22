@@ -320,7 +320,7 @@ function ConfidenceBadge({
   return (
     <Badge
       variant="outline"
-      className="border-amber-500 text-amber-500 text-xs shrink-0"
+      className="border-orange-500 text-orange-500 text-xs shrink-0"
     >
       Low ⚠
     </Badge>
@@ -804,7 +804,7 @@ export function VaultImportDialog({
           <>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-white">
-                <FileText className="w-5 h-5 text-amber-400" />
+                <FileText className="w-5 h-5 text-orange-400" />
                 Import Credentials from Document
               </DialogTitle>
               <DialogDescription className="text-zinc-400">
@@ -826,12 +826,12 @@ export function VaultImportDialog({
               className={`
                 mt-2 border-2 border-dashed rounded-xl p-10 flex flex-col items-center gap-3
                 cursor-pointer transition-colors
-                ${isDragging ? 'border-amber-400 bg-amber-400/10' : 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10'}
+                ${isDragging ? 'border-orange-400 bg-orange-400/10' : 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10'}
               `}
             >
               {isParsing ? (
                 <>
-                  <Loader2 className="w-10 h-10 text-amber-400 animate-spin" />
+                  <Loader2 className="w-10 h-10 text-orange-400 animate-spin" />
                   <p className="text-zinc-300 text-sm font-medium">
                     Reading and extracting credentials…
                   </p>
@@ -879,7 +879,7 @@ export function VaultImportDialog({
                   <button
                     type="button"
                     onClick={selectAllOrgs}
-                    className="text-amber-400 text-xs hover:text-amber-300"
+                    className="text-orange-400 text-xs hover:text-orange-300"
                   >
                     Select all
                   </button>
@@ -897,13 +897,13 @@ export function VaultImportDialog({
                           flex items-center gap-2 rounded-lg px-3 py-2 text-sm border transition-colors text-left
                           ${
                             selected
-                              ? 'border-amber-500 bg-amber-500/10 text-amber-300'
+                              ? 'border-orange-500 bg-orange-500/10 text-orange-300'
                               : 'border-white/10 bg-white/5 text-zinc-400 hover:border-white/30'
                           }
                         `}
                       >
                         <div
-                          className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0 ${selected ? 'bg-amber-500 border-amber-500' : 'border-white/30'}`}
+                          className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0 ${selected ? 'bg-orange-500 border-orange-500' : 'border-white/30'}`}
                         >
                           {selected && (
                             <span className="text-white text-[9px] leading-none">
@@ -953,18 +953,18 @@ export function VaultImportDialog({
             <DialogHeader>
               <div className="flex items-center justify-between">
                 <DialogTitle className="flex items-center gap-2 text-white">
-                  <CheckCircle className="w-5 h-5 text-amber-400" />
+                  <CheckCircle className="w-5 h-5 text-orange-400" />
                   Review Credentials
-                  <Badge className="ml-1 bg-amber-500/20 text-amber-300 border-amber-500/30">
+                  <Badge className="ml-1 bg-orange-500/20 text-orange-300 border-orange-500/30">
                     {entries.length} found
                   </Badge>
                   {lowConfidenceCount > 0 && (
-                    <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30">
+                    <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30">
                       {lowConfidenceCount} low confidence
                     </Badge>
                   )}
                   {aiFlags.size > 0 && (
-                    <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30">
+                    <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30">
                       {aiFlags.size} flagged
                     </Badge>
                   )}
@@ -1001,7 +1001,7 @@ export function VaultImportDialog({
                 size="sm"
                 onClick={runSmartCleanup}
                 disabled={isAnalysing}
-                className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10 text-xs h-7 shrink-0 gap-1"
+                className="border-orange-500/40 text-orange-300 hover:bg-orange-500/10 text-xs h-7 shrink-0 gap-1"
               >
                 {isAnalysing ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -1018,7 +1018,7 @@ export function VaultImportDialog({
                   variant="outline"
                   size="sm"
                   onClick={skipLowConfidence}
-                  className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10 text-xs h-7 shrink-0"
+                  className="border-orange-500/40 text-orange-400 hover:bg-orange-500/10 text-xs h-7 shrink-0"
                 >
                   Remove {lowConfidenceCount} low-confidence
                 </Button>
@@ -1039,12 +1039,12 @@ export function VaultImportDialog({
 
             {/* AI Smart Cleanup panel */}
             {showAiPanel && (
-              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 overflow-hidden">
+              <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 overflow-hidden">
                 {/* Panel header */}
-                <div className="flex items-center justify-between px-3 py-2 border-b border-amber-500/20">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-orange-500/20">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="text-amber-300 text-xs font-medium">
+                    <Sparkles className="w-3.5 h-3.5 text-orange-400" />
+                    <span className="text-orange-300 text-xs font-medium">
                       Smart Cleanup Analysis
                     </span>
                     {aiFlags.size === 0 && (
@@ -1058,7 +1058,7 @@ export function VaultImportDialog({
                       </Badge>
                     )}
                     {aiReviewCount > 0 && (
-                      <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px]">
+                      <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30 text-[10px]">
                         {aiReviewCount} to review
                       </Badge>
                     )}
@@ -1077,7 +1077,7 @@ export function VaultImportDialog({
                       <button
                         type="button"
                         onClick={selectFlaggedForReview}
-                        className="text-amber-400 hover:text-amber-300 text-xs underline-offset-2 hover:underline"
+                        className="text-orange-400 hover:text-orange-300 text-xs underline-offset-2 hover:underline"
                       >
                         Select {aiReviewCount} for review
                       </button>
@@ -1094,7 +1094,7 @@ export function VaultImportDialog({
 
                 {/* Flagged entries list */}
                 {aiFlags.size > 0 && (
-                  <div className="max-h-44 overflow-y-auto divide-y divide-amber-500/10">
+                  <div className="max-h-44 overflow-y-auto divide-y divide-orange-500/10">
                     {Array.from(aiFlags.values()).map(flag => {
                       const entry = entries.find(e => e.id === flag.id);
                       if (!entry) return null;
@@ -1104,11 +1104,11 @@ export function VaultImportDialog({
                           className={`flex items-start gap-2 px-3 py-1.5 text-xs ${
                             flag.action === 'remove'
                               ? 'bg-red-500/5'
-                              : 'bg-amber-500/5'
+                              : 'bg-orange-500/5'
                           }`}
                         >
                           <span
-                            className={`shrink-0 mt-0.5 font-bold ${flag.action === 'remove' ? 'text-red-400' : 'text-amber-400'}`}
+                            className={`shrink-0 mt-0.5 font-bold ${flag.action === 'remove' ? 'text-red-400' : 'text-orange-400'}`}
                           >
                             {flag.action === 'remove' ? '✕' : '⚠'}
                           </span>
@@ -1154,7 +1154,7 @@ export function VaultImportDialog({
                         type="checkbox"
                         checked={allVisibleChecked}
                         onChange={toggleCheckAll}
-                        className="rounded border-white/20 bg-white/5 accent-amber-500 cursor-pointer"
+                        className="rounded border-white/20 bg-white/5 accent-orange-500 cursor-pointer"
                         title="Select all visible"
                       />
                     </th>
@@ -1180,9 +1180,9 @@ export function VaultImportDialog({
                             : aiFlag?.action === 'remove'
                               ? 'bg-red-500/5 border-l-2 border-l-red-500/20'
                               : aiFlag?.action === 'review'
-                                ? 'bg-amber-500/5 border-l-2 border-l-amber-500/20'
+                                ? 'bg-orange-500/5 border-l-2 border-l-orange-500/20'
                                 : entry.confidence === 'low'
-                                  ? 'bg-amber-500/5'
+                                  ? 'bg-orange-500/5'
                                   : 'hover:bg-white/5'
                         }`}
                         title={aiFlag ? aiFlag.reasons.join('; ') : undefined}
@@ -1193,7 +1193,7 @@ export function VaultImportDialog({
                             type="checkbox"
                             checked={checkedIds.has(entry.id)}
                             onChange={() => toggleCheck(entry.id)}
-                            className="rounded border-white/20 bg-white/5 accent-amber-500 cursor-pointer"
+                            className="rounded border-white/20 bg-white/5 accent-orange-500 cursor-pointer"
                           />
                         </td>
                         {/* Service */}
@@ -1301,9 +1301,9 @@ export function VaultImportDialog({
             </div>
 
             {lowConfidenceCount > 0 && aiFlags.size === 0 && (
-              <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-500/20 p-2.5">
-                <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
-                <p className="text-amber-300 text-xs">
+              <div className="flex items-start gap-2 rounded-lg bg-orange-500/10 border border-orange-500/20 p-2.5">
+                <AlertTriangle className="w-4 h-4 text-orange-400 mt-0.5 shrink-0" />
+                <p className="text-orange-300 text-xs">
                   {lowConfidenceCount} row{lowConfidenceCount !== 1 ? 's' : ''}{' '}
                   have low confidence — review before importing.
                 </p>
@@ -1330,7 +1330,7 @@ export function VaultImportDialog({
               <Button
                 onClick={confirmImport}
                 disabled={isImporting || validCount === 0}
-                className="bg-amber-600 hover:bg-amber-500 text-white gap-2 text-xs"
+                className="bg-orange-600 hover:bg-orange-500 text-white gap-2 text-xs"
               >
                 {isImporting ? (
                   <>
@@ -1374,19 +1374,19 @@ export function VaultImportDialog({
               </div>
 
               {importResult.skipped > 0 && (
-                <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-3">
-                  <p className="text-amber-300 text-sm font-medium">
+                <div className="rounded-lg bg-orange-500/10 border border-orange-500/20 p-3">
+                  <p className="text-orange-300 text-sm font-medium">
                     {importResult.skipped} skipped
                   </p>
                   {importResult.errors.length > 0 && (
                     <ul className="mt-1.5 space-y-1">
                       {importResult.errors.slice(0, 5).map((err, i) => (
-                        <li key={i} className="text-amber-400/70 text-xs">
+                        <li key={i} className="text-orange-400/70 text-xs">
                           • {err}
                         </li>
                       ))}
                       {importResult.errors.length > 5 && (
-                        <li className="text-amber-400/70 text-xs">
+                        <li className="text-orange-400/70 text-xs">
                           …and {importResult.errors.length - 5} more
                         </li>
                       )}
@@ -1404,7 +1404,7 @@ export function VaultImportDialog({
             <DialogFooter>
               <Button
                 onClick={() => handleOpenChange(false)}
-                className="bg-amber-600 hover:bg-amber-500 text-white"
+                className="bg-orange-600 hover:bg-orange-500 text-white"
               >
                 Done
               </Button>

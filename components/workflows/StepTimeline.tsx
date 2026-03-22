@@ -15,7 +15,13 @@ import type { StepExecution } from '@/lib/workflow/hooks/use-workflow-executions
 // Step type → icon mapping
 // ---------------------------------------------------------------------------
 
-function StepIcon({ stepType, className }: { stepType: string; className?: string }) {
+function StepIcon({
+  stepType,
+  className,
+}: {
+  stepType: string;
+  className?: string;
+}) {
   switch (stepType) {
     case 'ai':
       return <Brain className={cn('h-4 w-4', className)} />;
@@ -43,15 +49,27 @@ function statusColour(status: string): {
     case 'pending':
       return { dot: 'bg-gray-500', label: 'Pending', text: 'text-gray-400' };
     case 'running':
-      return { dot: 'bg-blue-500 animate-pulse', label: 'Running', text: 'text-blue-400' };
+      return {
+        dot: 'bg-blue-500 animate-pulse',
+        label: 'Running',
+        text: 'text-blue-400',
+      };
     case 'completed':
-      return { dot: 'bg-green-500', label: 'Completed', text: 'text-green-400' };
+      return {
+        dot: 'bg-green-500',
+        label: 'Completed',
+        text: 'text-green-400',
+      };
     case 'failed':
       return { dot: 'bg-red-500', label: 'Failed', text: 'text-red-400' };
     case 'skipped':
       return { dot: 'bg-gray-600', label: 'Skipped', text: 'text-gray-500' };
     case 'waiting_approval':
-      return { dot: 'bg-amber-500', label: 'Awaiting Approval', text: 'text-amber-400' };
+      return {
+        dot: 'bg-orange-500',
+        label: 'Awaiting Approval',
+        text: 'text-orange-400',
+      };
     default:
       return { dot: 'bg-gray-500', label: status, text: 'text-gray-400' };
   }
@@ -73,7 +91,9 @@ interface StepTimelineProps {
 export function StepTimeline({ steps, className }: StepTimelineProps) {
   if (!steps.length) {
     return (
-      <p className="text-sm text-gray-500 italic py-4 text-center">No steps recorded yet.</p>
+      <p className="text-sm text-gray-500 italic py-4 text-center">
+        No steps recorded yet.
+      </p>
     );
   }
 
@@ -127,7 +147,9 @@ export function StepTimeline({ steps, className }: StepTimelineProps) {
 
                 {/* Auto-approved indicator */}
                 {step.autoApproved && (
-                  <span className="text-[10px] text-gray-500 italic">auto-approved</span>
+                  <span className="text-[10px] text-gray-500 italic">
+                    auto-approved
+                  </span>
                 )}
               </div>
 
@@ -151,7 +173,9 @@ export function StepTimeline({ steps, className }: StepTimelineProps) {
               {/* Error message */}
               {step.status === 'failed' && step.errorMessage && (
                 <div className="mt-1 rounded-md bg-red-500/10 border border-red-500/20 px-2 py-1">
-                  <p className="text-xs text-red-400 break-words">{step.errorMessage}</p>
+                  <p className="text-xs text-red-400 break-words">
+                    {step.errorMessage}
+                  </p>
                 </div>
               )}
             </div>

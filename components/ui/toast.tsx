@@ -18,7 +18,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
           toast:
             'group toast bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg group-[.toaster]:text-white group-[.toaster]:shadow-lg',
           description: 'group-[.toast]:text-gray-400',
-          actionButton: 'group-[.toast]:bg-amber-500 group-[.toast]:text-white',
+          actionButton:
+            'group-[.toast]:bg-orange-500 group-[.toast]:text-white',
           cancelButton:
             'group-[.toast]:bg-white/10 group-[.toast]:text-gray-400',
           error:

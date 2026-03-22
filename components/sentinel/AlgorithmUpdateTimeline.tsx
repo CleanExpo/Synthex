@@ -36,8 +36,8 @@ const IMPACT_CONFIG = {
     label: 'High Impact',
   },
   medium: {
-    dot: 'bg-amber-500',
-    badge: 'bg-amber-500/20 text-amber-300',
+    dot: 'bg-orange-500',
+    badge: 'bg-orange-500/20 text-orange-300',
     label: 'Medium Impact',
   },
   low: {
@@ -199,7 +199,7 @@ export function AlgorithmUpdateTimeline({
 
                 {/* Correlation chip */}
                 {correlation !== null && (
-                  <div className="mt-2 inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                  <div className="mt-2 inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded bg-orange-500/10 text-orange-300 border border-orange-500/20">
                     <span>⚠</span>
                     <span>
                       Traffic dropped {Math.abs(correlation).toFixed(0)}% during
@@ -214,7 +214,7 @@ export function AlgorithmUpdateTimeline({
                     href={update.sourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-2 block text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                    className="mt-2 block text-xs text-orange-400 hover:text-orange-300 transition-colors"
                   >
                     Google Search Central →
                   </a>

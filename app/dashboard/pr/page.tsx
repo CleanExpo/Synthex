@@ -102,8 +102,8 @@ function PRManagerPageContent() {
     <div className="max-w-screen-xl mx-auto">
       {/* Page header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-          <Newspaper className="h-6 w-6 text-amber-400" />
+        <div className="p-2 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+          <Newspaper className="h-6 w-6 text-orange-400" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">PR Manager</h1>

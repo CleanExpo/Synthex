@@ -25,12 +25,12 @@ interface AgeDistributionChartProps {
 
 // Age gradient colors (young cyan → older purple)
 const AGE_COLORS: Record<string, string> = {
-  '13-17': '#ffb87b', // amber-500
-  '18-24': '#ffdcc2', // amber-400
-  '25-34': '#f59e0b', // amber-500
-  '35-44': '#fbbf24', // amber-400
-  '45-54': '#fcd34d', // amber-400
-  '55+': '#f59e0b', // amber-500
+  '13-17': '#ffb87b', // orange-500
+  '18-24': '#ffdcc2', // orange-400
+  '25-34': '#f59e0b', // orange-500
+  '35-44': '#fbbf24', // orange-400
+  '45-54': '#fcd34d', // orange-400
+  '55+': '#f59e0b', // orange-500
 };
 
 function formatNumber(num: number): string {

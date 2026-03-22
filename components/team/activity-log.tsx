@@ -39,7 +39,7 @@ export function ActivityLogCard({
         {activities.slice(0, maxItems).map(activity => (
           <div key={activity.id} className="flex space-x-3">
             <div className="flex-shrink-0">
-              <div className="h-2 w-2 rounded-full bg-amber-400 mt-2" />
+              <div className="h-2 w-2 rounded-full bg-orange-400 mt-2" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-white">

@@ -18,7 +18,7 @@ export const platformIcons = {
 
 export const platformColors = {
   twitter: 'bg-blue-500',
-  instagram: 'bg-gradient-to-br from-amber-600 to-amber-500',
+  instagram: 'bg-gradient-to-br from-orange-600 to-orange-500',
   linkedin: 'bg-blue-700',
   youtube: 'bg-red-600',
   facebook: 'bg-blue-600',
@@ -28,12 +28,12 @@ export const platformColors = {
 export const getViralScoreColor = (score: number) => {
   if (score >= 80) return 'text-green-500';
   if (score >= 60) return 'text-yellow-500';
-  if (score >= 40) return 'text-amber-500';
+  if (score >= 40) return 'text-orange-500';
   return 'text-red-500';
 };
 
 export const getEngagementColor = (rate: number) => {
   if (rate >= 4) return 'text-green-500';
   if (rate >= 2.5) return 'text-yellow-500';
-  return 'text-amber-500';
+  return 'text-orange-500';
 };

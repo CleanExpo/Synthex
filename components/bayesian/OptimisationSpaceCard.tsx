@@ -59,7 +59,7 @@ export function OptimisationSpaceCard({
     : null;
 
   return (
-    <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 hover:border-amber-500/30 transition-colors">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 hover:border-orange-500/30 transition-colors">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-white text-sm font-semibold leading-tight">
@@ -110,7 +110,7 @@ export function OptimisationSpaceCard({
                 className="flex justify-between items-center text-xs"
               >
                 <span className="text-gray-400 font-mono">{key}</span>
-                <span className="text-amber-300 font-mono">
+                <span className="text-orange-300 font-mono">
                   {value.toFixed(3)}
                 </span>
               </div>
@@ -120,8 +120,8 @@ export function OptimisationSpaceCard({
 
         {/* Status badge for running */}
         {space.status === 'running' && (
-          <Badge className="bg-amber-500/20 text-amber-400 text-xs w-full justify-center">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse mr-1.5" />
+          <Badge className="bg-orange-500/20 text-orange-400 text-xs w-full justify-center">
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse mr-1.5" />
             Optimisation running…
           </Badge>
         )}
@@ -132,7 +132,7 @@ export function OptimisationSpaceCard({
           size="sm"
           onClick={() => onRunOptimisation(space.id)}
           disabled={isDisabled}
-          className="w-full border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full border-orange-500/30 text-orange-400 hover:bg-orange-500/10 hover:border-orange-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isDisabled ? (
             <>

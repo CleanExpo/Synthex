@@ -68,12 +68,12 @@ export function PricingCard({
     >
       {/* Popular badge */}
       {isPopular && (
-        <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-amber-500 to-amber-500" />
+        <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-orange-500 to-orange-500" />
       )}
 
       {/* Badge */}
       {tier.badge && (
-        <div className="absolute -right-8 top-6 rotate-45 bg-gradient-to-r from-amber-500 to-amber-500 px-10 py-1 text-xs font-semibold text-white shadow-lg">
+        <div className="absolute -right-8 top-6 rotate-45 bg-gradient-to-r from-orange-500 to-orange-500 px-10 py-1 text-xs font-semibold text-white shadow-lg">
           {tier.badge}
         </div>
       )}
@@ -82,7 +82,7 @@ export function PricingCard({
         <div className="flex items-center gap-3 mb-2">
           {tier.icon ||
             (isPopular ? (
-              <Sparkles className="w-5 h-5 text-amber-400" />
+              <Sparkles className="w-5 h-5 text-orange-400" />
             ) : isEnterprise ? (
               <Zap className="w-5 h-5 text-emerald-400" />
             ) : null)}
@@ -111,7 +111,7 @@ export function PricingCard({
               className={cn(
                 'text-4xl font-bold tracking-tight',
                 isPopular
-                  ? 'bg-gradient-to-r from-amber-200 to-amber-200 bg-clip-text text-transparent'
+                  ? 'bg-gradient-to-r from-orange-200 to-orange-200 bg-clip-text text-transparent'
                   : 'text-white'
               )}
             >
@@ -138,7 +138,7 @@ export function PricingCard({
                   'w-4 h-4 mt-0.5 flex-shrink-0',
                   feature.included
                     ? feature.highlight
-                      ? 'text-amber-400'
+                      ? 'text-orange-400'
                       : 'text-emerald-400'
                     : 'text-slate-600'
                 )}
@@ -161,9 +161,9 @@ export function PricingCard({
           className={cn(
             'w-full font-semibold transition-all duration-300',
             isPopular
-              ? 'bg-gradient-to-r from-amber-500 to-amber-500 hover:from-amber-400 hover:to-amber-400 text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)]'
+              ? 'bg-gradient-to-r from-orange-500 to-orange-500 hover:from-orange-400 hover:to-orange-400 text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)]'
               : isEnterprise
-                ? 'bg-gradient-to-r from-emerald-500 to-amber-500 hover:from-emerald-400 hover:to-amber-400 text-white'
+                ? 'bg-gradient-to-r from-emerald-500 to-orange-500 hover:from-emerald-400 hover:to-orange-400 text-white'
                 : 'bg-white/10 hover:bg-white/15 text-white border border-white/10'
           )}
         >

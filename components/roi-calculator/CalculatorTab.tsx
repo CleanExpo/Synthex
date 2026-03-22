@@ -221,9 +221,9 @@ export function CalculatorTab({
               </div>
             </div>
 
-            <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+            <div className="p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="h-4 w-4 text-amber-400" />
+                <Sparkles className="h-4 w-4 text-orange-400" />
                 <p className="text-sm font-medium text-white">
                   AI Recommendations
                 </p>

@@ -49,8 +49,8 @@ const ERROR_CONFIGS: Record<ErrorType, ErrorConfig> = {
     title: 'Connection Error',
     description:
       'Unable to connect to the server. Please check your internet connection.',
-    color: 'text-amber-600 dark:text-amber-400',
-    bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+    color: 'text-orange-600 dark:text-orange-400',
+    bgColor: 'bg-orange-50 dark:bg-orange-900/20',
   },
   server: {
     icon: ServerCrash,
@@ -84,8 +84,8 @@ const ERROR_CONFIGS: Record<ErrorType, ErrorConfig> = {
     icon: AlertCircle,
     title: 'Validation Error',
     description: 'The data provided is invalid. Please check and try again.',
-    color: 'text-amber-600 dark:text-amber-400',
-    bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+    color: 'text-orange-600 dark:text-orange-400',
+    bgColor: 'bg-orange-50 dark:bg-orange-900/20',
   },
   unknown: {
     icon: AlertCircle,

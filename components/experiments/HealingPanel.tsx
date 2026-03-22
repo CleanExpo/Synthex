@@ -89,7 +89,7 @@ function IssueCard({ issue }: { issue: HealingIssue }) {
         'p-4 rounded-lg border transition-colors',
         isCritical
           ? 'bg-red-500/5 border-red-500/30'
-          : 'bg-amber-500/5 border-amber-500/30'
+          : 'bg-orange-500/5 border-orange-500/30'
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -97,7 +97,7 @@ function IssueCard({ issue }: { issue: HealingIssue }) {
           {isCritical ? (
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
           ) : (
-            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -106,7 +106,7 @@ function IssueCard({ issue }: { issue: HealingIssue }) {
                   'text-xs',
                   isCritical
                     ? 'bg-red-500/20 text-red-400'
-                    : 'bg-amber-500/20 text-amber-400'
+                    : 'bg-orange-500/20 text-orange-400'
                 )}
               >
                 {isCritical ? 'Critical' : 'Warning'}
@@ -218,7 +218,7 @@ export function HealingPanel() {
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Search className="w-4 h-4 text-amber-400" />
+            <Search className="w-4 h-4 text-orange-400" />
             Analyse URL for Healing Opportunities
           </CardTitle>
         </CardHeader>
@@ -267,7 +267,7 @@ export function HealingPanel() {
                   </Badge>
                 )}
                 {analysisResult.warningCount > 0 && (
-                  <Badge className="bg-amber-500/20 text-amber-400 text-xs">
+                  <Badge className="bg-orange-500/20 text-orange-400 text-xs">
                     {analysisResult.warningCount} Warning
                   </Badge>
                 )}
@@ -323,7 +323,7 @@ export function HealingPanel() {
                       'w-2 h-2 rounded-full shrink-0',
                       action.severity === 'critical'
                         ? 'bg-red-400'
-                        : 'bg-amber-400'
+                        : 'bg-orange-400'
                     )}
                   />
                   <div className="flex-1 min-w-0">

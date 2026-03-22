@@ -31,8 +31,8 @@ export function HowItWorks() {
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 mb-6">
-            <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-amber-400">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 mb-6">
+            <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-orange-400">
               How it works
             </span>
           </div>
@@ -53,13 +53,13 @@ export function HowItWorks() {
               className="group relative bg-charcoal-800/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-8 overflow-hidden shadow-2xl shadow-black/30 ring-1 ring-white/[0.04] hover:-translate-y-1 hover:border-white/[0.10] transition-all duration-300"
             >
               {/* Step number — amber, prominent */}
-              <div className="text-amber-500 font-black text-5xl leading-none mb-6 select-none">
+              <div className="text-orange-500 font-black text-5xl leading-none mb-6 select-none">
                 {number}
               </div>
 
               {/* Icon */}
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-5">
-                <Icon className="w-5 h-5 text-amber-400" />
+              <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-5">
+                <Icon className="w-5 h-5 text-orange-400" />
               </div>
 
               {/* Title */}

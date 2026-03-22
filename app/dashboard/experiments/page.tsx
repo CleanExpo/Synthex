@@ -262,7 +262,7 @@ function ExperimentsTab() {
         <DialogContent className="bg-gray-900 border border-white/10 max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Beaker className="w-5 h-5 text-amber-400" />
+              <Beaker className="w-5 h-5 text-orange-400" />
               New SEO Experiment
             </DialogTitle>
           </DialogHeader>
@@ -306,9 +306,9 @@ function ExperimentsPageContent() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Beaker className="w-6 h-6 text-amber-400" />
+            <Beaker className="w-6 h-6 text-orange-400" />
             <h1 className="text-2xl font-bold text-white">Experiments</h1>
-            <Badge className="bg-amber-500/20 text-amber-400 text-xs">
+            <Badge className="bg-orange-500/20 text-orange-400 text-xs">
               Phase 98
             </Badge>
           </div>
@@ -327,7 +327,7 @@ function ExperimentsPageContent() {
             className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
               activeTab === tab.id
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             )}
           >
@@ -355,7 +355,7 @@ function ExperimentsPageContent() {
             {
               title: 'Set a clear hypothesis',
               body: 'Define what metric you expect to improve and by how much.',
-              colour: 'bg-amber-500/10 border-amber-500/20',
+              colour: 'bg-orange-500/10 border-orange-500/20',
             },
             {
               title: 'Wait for meaningful data',
@@ -365,7 +365,7 @@ function ExperimentsPageContent() {
             {
               title: 'Apply winners immediately',
               body: 'Once a winner is identified, apply the change and move to the next test.',
-              colour: 'bg-amber-500/10 border-amber-500/20',
+              colour: 'bg-orange-500/10 border-orange-500/20',
             },
           ].map(tip => (
             <div

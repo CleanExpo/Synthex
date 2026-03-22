@@ -49,7 +49,7 @@ export function UsersTable({
                 }
                 onChange={onToggleSelectAll}
                 aria-label="Select all users"
-                className="rounded border-white/20 bg-white/5 text-amber-500 focus:ring-amber-500"
+                className="rounded border-white/20 bg-white/5 text-orange-500 focus:ring-orange-500"
               />
             </th>
             <th
@@ -108,7 +108,7 @@ export function UsersTable({
               <tr
                 key={user.id}
                 className={`border-b border-white/5 hover:bg-white/5 transition-colors ${
-                  selectedUserIds.has(user.id) ? 'bg-amber-500/10' : ''
+                  selectedUserIds.has(user.id) ? 'bg-orange-500/10' : ''
                 }`}
               >
                 <td className="py-3 px-4">
@@ -117,12 +117,12 @@ export function UsersTable({
                     checked={selectedUserIds.has(user.id)}
                     onChange={() => onToggleSelection(user.id)}
                     aria-label={`Select ${user.name ?? user.email}`}
-                    className="rounded border-white/20 bg-white/5 text-amber-500 focus:ring-amber-500"
+                    className="rounded border-white/20 bg-white/5 text-orange-500 focus:ring-orange-500"
                   />
                 </td>
                 <td className="py-3 px-4">
                   <div className="flex items-center">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-amber-500 to-amber-500 flex items-center justify-center text-white text-sm font-bold mr-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-orange-500 flex items-center justify-center text-white text-sm font-bold mr-3">
                       {user.email?.[0]?.toUpperCase()}
                     </div>
                     <div>
@@ -148,7 +148,7 @@ export function UsersTable({
                   </Badge>
                 </td>
                 <td className="py-3 px-4">
-                  <Badge className="bg-amber-500/20 text-amber-400">
+                  <Badge className="bg-orange-500/20 text-orange-400">
                     {user.role === 'admin' ? (
                       <Shield className="w-3 h-3 mr-1" />
                     ) : null}

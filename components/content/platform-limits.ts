@@ -34,8 +34,8 @@ export const PLATFORM_LIMITS: Record<string, PlatformLimit> = {
     maxMedia: 10,
     mediaAspectRatio: '1:1',
     displayName: 'Instagram',
-    brandColour: 'text-amber-400',
-    avatarBg: 'bg-amber-500/20',
+    brandColour: 'text-orange-400',
+    avatarBg: 'bg-orange-500/20',
     features: { hashtags: true, mentions: true, links: false, threads: false },
   },
   linkedin: {
@@ -83,8 +83,8 @@ export const PLATFORM_LIMITS: Record<string, PlatformLimit> = {
     maxChars: 40000,
     maxMedia: 20,
     displayName: 'Reddit',
-    brandColour: 'text-amber-400',
-    avatarBg: 'bg-amber-500/20',
+    brandColour: 'text-orange-400',
+    avatarBg: 'bg-orange-500/20',
     features: { hashtags: false, mentions: true, links: true, threads: true },
   },
   threads: {

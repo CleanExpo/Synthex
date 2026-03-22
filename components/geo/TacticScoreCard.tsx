@@ -19,9 +19,9 @@ function statusColours(status: 'green' | 'amber' | 'red') {
   }
   if (status === 'amber') {
     return {
-      border: 'border-amber-500/30',
-      text: 'text-amber-400',
-      bg: 'bg-amber-500',
+      border: 'border-orange-500/30',
+      text: 'text-orange-400',
+      bg: 'bg-orange-500',
     };
   }
   return {
@@ -91,7 +91,7 @@ export function TacticScoreCard({
         <button
           onClick={() => onImprove(score.tactic)}
           disabled={improving}
-          className="mt-2 text-xs text-amber-400 hover:text-amber-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-centre gap-1 transition-colors"
+          className="mt-2 text-xs text-orange-400 hover:text-orange-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-centre gap-1 transition-colors"
         >
           {improving ? (
             <>

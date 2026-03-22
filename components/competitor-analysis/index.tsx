@@ -157,8 +157,8 @@ export function CompetitorAnalysis() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20">
-            <Target className="h-6 w-6 text-amber-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+            <Target className="h-6 w-6 text-orange-400" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">
@@ -175,7 +175,7 @@ export function CompetitorAnalysis() {
             onClick={() => setComparisonMode(!comparisonMode)}
             className={
               comparisonMode
-                ? 'bg-amber-500/20 border-amber-500'
+                ? 'bg-orange-500/20 border-orange-500'
                 : 'bg-white/5 border-white/10'
             }
           >

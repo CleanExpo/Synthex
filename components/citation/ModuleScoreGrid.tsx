@@ -154,7 +154,7 @@ function ScoreColour(numeric: number, module: string): string {
   // Sentinel: lower is better
   if (module === 'Algorithm Sentinel') {
     if (numeric === 0) return 'text-emerald-400';
-    if (numeric <= 3) return 'text-amber-400';
+    if (numeric <= 3) return 'text-orange-400';
     return 'text-red-400';
   }
   // Count modules
@@ -166,12 +166,12 @@ function ScoreColour(numeric: number, module: string): string {
       'AI Slop Detection',
     ].includes(module)
   ) {
-    return numeric > 0 ? 'text-amber-400' : 'text-gray-500';
+    return numeric > 0 ? 'text-orange-400' : 'text-gray-500';
   }
   // Score modules
   if (numeric >= 80) return 'text-emerald-400';
-  if (numeric >= 60) return 'text-amber-400';
-  if (numeric >= 40) return 'text-amber-400';
+  if (numeric >= 60) return 'text-orange-400';
+  if (numeric >= 40) return 'text-orange-400';
   if (numeric > 0) return 'text-red-400';
   return 'text-gray-500';
 }

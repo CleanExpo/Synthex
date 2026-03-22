@@ -237,7 +237,7 @@ export function PublishConfirmModal({
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-amber-400" />
+            <Calendar className="h-5 w-5 text-orange-400" />
             {isMultiPlatform
               ? `Schedule to ${platforms.length} Platforms`
               : 'Schedule Post'}
@@ -257,7 +257,7 @@ export function PublishConfirmModal({
               {platforms.map(p => (
                 <span
                   key={p}
-                  className="text-[10px] font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20"
+                  className="text-[10px] font-medium text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full border border-orange-500/20"
                 >
                   {getPlatformLabel(p)}
                 </span>
@@ -315,7 +315,7 @@ export function PublishConfirmModal({
                             : 'border-red-500/20 bg-red-500/5'
                           : conn
                             ? 'border-white/[0.06] bg-white/[0.02]'
-                            : 'border-amber-500/20 bg-amber-500/5'
+                            : 'border-orange-500/20 bg-orange-500/5'
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -328,7 +328,7 @@ export function PublishConfirmModal({
                                   : 'bg-red-400'
                                 : conn
                                   ? 'bg-emerald-400'
-                                  : 'bg-amber-400'
+                                  : 'bg-orange-400'
                             }`}
                           />
                           <span className="text-xs font-medium text-white">
@@ -355,7 +355,7 @@ export function PublishConfirmModal({
                       {!conn && !result && (
                         <Link
                           href="/dashboard/platforms"
-                          className="inline-flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 transition-colors mt-1"
+                          className="inline-flex items-center gap-1 text-[10px] text-orange-400 hover:text-orange-300 transition-colors mt-1"
                         >
                           Connect account
                           <ExternalLink className="h-2.5 w-2.5" />
@@ -373,17 +373,17 @@ export function PublishConfirmModal({
                 </span>
               </div>
             ) : (
-              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2.5 space-y-2">
+              <div className="rounded-lg border border-orange-500/20 bg-orange-500/5 px-3 py-2.5 space-y-2">
                 <div className="flex items-start gap-2">
-                  <AlertTriangle className="h-3.5 w-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-xs text-amber-300">
+                  <AlertTriangle className="h-3.5 w-3.5 text-orange-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-orange-300">
                     No connected {getPlatformLabel(platform)} account. The post
                     will fail to publish without a connected account.
                   </span>
                 </div>
                 <Link
                   href="/dashboard/platforms"
-                  className="inline-flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                  className="inline-flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 transition-colors"
                 >
                   Connect account
                   <ExternalLink className="h-3 w-3" />
@@ -399,7 +399,7 @@ export function PublishConfirmModal({
                 {scheduleResults.every(r => r.success) ? (
                   <Check className="h-4 w-4 text-emerald-400" />
                 ) : (
-                  <AlertTriangle className="h-4 w-4 text-amber-400" />
+                  <AlertTriangle className="h-4 w-4 text-orange-400" />
                 )}
                 <span className="text-xs text-white font-medium">
                   {scheduleResults.filter(r => r.success).length}/

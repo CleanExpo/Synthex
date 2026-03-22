@@ -79,7 +79,7 @@ function OAuthCallbackContent() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]">
       <Card className="liquid-glass p-8 max-w-md w-full mx-4">
         <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="w-12 h-12 text-amber-400 animate-spin" />
+          <Loader2 className="w-12 h-12 text-orange-400 animate-spin" />
           <h2 className="text-2xl font-semibold text-white">
             Completing sign-in, please wait...
           </h2>
@@ -99,7 +99,7 @@ export default function OAuthCallbackPage() {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]">
           <Card className="liquid-glass p-8 max-w-md w-full mx-4">
             <div className="flex flex-col items-center space-y-4">
-              <Loader2 className="w-12 h-12 text-amber-400 animate-spin" />
+              <Loader2 className="w-12 h-12 text-orange-400 animate-spin" />
               <h2 className="text-2xl font-semibold text-white">Loading...</h2>
             </div>
           </Card>

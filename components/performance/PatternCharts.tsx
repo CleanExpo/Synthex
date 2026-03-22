@@ -289,7 +289,7 @@ export function PatternCharts({
             <div className="mt-4 w-full px-4">
               <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full"
+                  className="h-full bg-gradient-to-r from-orange-500 to-emerald-500 rounded-full"
                   style={{
                     width: `${Math.min(100, (patterns.bestLength.max / 500) * 100)}%`,
                     marginLeft: `${Math.min(40, (patterns.bestLength.min / 500) * 100)}%`,

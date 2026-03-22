@@ -48,10 +48,10 @@ function formatVitalValue(key: string, value: number): string {
 
 export function CoreWebVitalsCard({ vitals }: CoreWebVitalsCardProps) {
   return (
-    <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-amber-400" />
+          <TrendingUp className="w-5 h-5 text-orange-400" />
           Core Web Vitals
         </CardTitle>
       </CardHeader>

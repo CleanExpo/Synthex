@@ -117,13 +117,13 @@ export function MonthView({
                 key={index}
                 className={`bg-slate-900 min-h-[100px] p-2 ${
                   date ? 'hover:bg-white/5 cursor-pointer' : ''
-                } ${isToday ? 'ring-1 ring-amber-500' : ''}`}
+                } ${isToday ? 'ring-1 ring-orange-500' : ''}`}
                 onClick={() => date && onCreatePost(date, 12)}
               >
                 {date && (
                   <>
                     <div
-                      className={`text-sm mb-1 ${isToday ? 'text-amber-400 font-bold' : 'text-slate-400'}`}
+                      className={`text-sm mb-1 ${isToday ? 'text-orange-400 font-bold' : 'text-slate-400'}`}
                     >
                       {date.getDate()}
                     </div>
@@ -142,7 +142,7 @@ export function MonthView({
                             className={`text-xs p-1 rounded flex items-center space-x-1 cursor-pointer hover:scale-[1.02] transition-transform ${
                               post.status === 'published'
                                 ? 'bg-green-500/20 text-green-300'
-                                : 'bg-amber-500/20 text-amber-300'
+                                : 'bg-orange-500/20 text-orange-300'
                             }`}
                           >
                             {IconComponent && (

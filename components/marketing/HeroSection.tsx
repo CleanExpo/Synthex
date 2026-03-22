@@ -73,7 +73,7 @@ export function HeroSection({
     return (
       <>
         {parts[0]}
-        <span className="bg-gradient-to-r from-amber-400 via-amber-400 to-amber-400 bg-clip-text text-transparent animate-gradient-x">
+        <span className="bg-gradient-to-r from-orange-400 via-orange-400 to-orange-400 bg-clip-text text-transparent animate-gradient-x">
           {highlightedText}
         </span>
         {parts[1]}
@@ -107,14 +107,14 @@ export function HeroSection({
               {badge.href ? (
                 <a
                   href={badge.href}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 hover:bg-amber-500/15 transition-colors group"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-300 hover:bg-orange-500/15 transition-colors group"
                 >
                   {badge.icon || <Sparkles className="w-4 h-4" />}
                   <span className="text-sm font-medium">{badge.text}</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </a>
               ) : (
-                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300">
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-300">
                   {badge.icon || <Sparkles className="w-4 h-4" />}
                   <span className="text-sm font-medium">{badge.text}</span>
                 </span>
@@ -158,7 +158,7 @@ export function HeroSection({
               <a href={primaryCTA.href}>
                 <Button
                   size="lg"
-                  className="font-semibold px-8 bg-gradient-to-r from-amber-500 to-amber-500 hover:from-amber-400 hover:to-amber-400 text-white shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)] transition-all duration-300"
+                  className="font-semibold px-8 bg-gradient-to-r from-orange-500 to-orange-500 hover:from-orange-400 hover:to-orange-400 text-white shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)] transition-all duration-300"
                 >
                   {primaryCTA.text}
                   <ArrowRight className="w-5 h-5 ml-2" />
@@ -168,7 +168,7 @@ export function HeroSection({
               <Button
                 size="lg"
                 onClick={primaryCTA.onClick}
-                className="font-semibold px-8 bg-gradient-to-r from-amber-500 to-amber-500 hover:from-amber-400 hover:to-amber-400 text-white shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)] transition-all duration-300"
+                className="font-semibold px-8 bg-gradient-to-r from-orange-500 to-orange-500 hover:from-orange-400 hover:to-orange-400 text-white shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)] transition-all duration-300"
               >
                 {primaryCTA.text}
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -229,7 +229,7 @@ export function HeroSection({
                         className={cn(
                           'w-4 h-4',
                           i < socialProof.rating!
-                            ? 'fill-amber-400 text-amber-400'
+                            ? 'fill-orange-400 text-orange-400'
                             : 'text-slate-600'
                         )}
                       />

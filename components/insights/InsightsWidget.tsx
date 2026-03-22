@@ -77,7 +77,7 @@ export function InsightsWidget({ className }: { className?: string }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Lightbulb className="h-4 w-4 text-amber-400" />
+          <Lightbulb className="h-4 w-4 text-orange-400" />
           <span className="text-sm font-semibold text-white/90">
             AI Insights
           </span>
@@ -97,7 +97,7 @@ export function InsightsWidget({ className }: { className?: string }) {
           {/* Summary stats */}
           <div className="grid grid-cols-3 gap-2">
             <div className="rounded-lg bg-white/5 border border-white/10 p-2 text-center">
-              <div className="text-base font-bold tabular-nums text-amber-400">
+              <div className="text-base font-bold tabular-nums text-orange-400">
                 {latestRun.outputData.opportunities ?? 0}
               </div>
               <div className="text-xs text-white/40">opportunities</div>
@@ -111,7 +111,7 @@ export function InsightsWidget({ className }: { className?: string }) {
               <div className="text-xs text-white/40">auto-drafted</div>
             </div>
             <div className="rounded-lg bg-white/5 border border-white/10 p-2 text-center">
-              <div className="text-base font-bold tabular-nums text-amber-400">
+              <div className="text-base font-bold tabular-nums text-orange-400">
                 {latestRun.outputData.queued ?? 0}
               </div>
               <div className="text-xs text-white/40">for review</div>
@@ -127,14 +127,14 @@ export function InsightsWidget({ className }: { className?: string }) {
               {pendingReview.map(item => (
                 <div
                   key={item.id}
-                  className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 space-y-1"
+                  className="rounded-lg border border-orange-500/20 bg-orange-500/5 p-3 space-y-1"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-medium text-white/80 truncate">
                       {item.outputData?.opportunityTitle ?? item.stepName}
                     </span>
                     {item.confidenceScore !== null && (
-                      <span className="text-xs tabular-nums text-amber-400 shrink-0">
+                      <span className="text-xs tabular-nums text-orange-400 shrink-0">
                         {Math.round(item.confidenceScore * 100)}%
                       </span>
                     )}
@@ -161,7 +161,7 @@ export function InsightsWidget({ className }: { className?: string }) {
 
       <Link
         href="/dashboard/insights"
-        className="flex items-center gap-1.5 text-xs text-amber-400/80 hover:text-amber-400 transition-colours"
+        className="flex items-center gap-1.5 text-xs text-orange-400/80 hover:text-orange-400 transition-colours"
       >
         View all insights
         <ArrowRight className="h-3 w-3" />

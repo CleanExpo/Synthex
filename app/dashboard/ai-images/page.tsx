@@ -90,9 +90,9 @@ export default function AIImagesPage() {
     return (
       <div className="p-6 max-w-4xl mx-auto">
         <div className="flex items-start gap-3 mb-8">
-          <div className="p-2 rounded-sm bg-amber-500/10 border-[0.5px] border-amber-500/20">
+          <div className="p-2 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20">
             {/* eslint-disable-next-line jsx-a11y/alt-text */}
-            <Image className="h-6 w-6 text-amber-400" />
+            <Image className="h-6 w-6 text-orange-400" />
           </div>
           <div>
             <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-1 block">
@@ -107,10 +107,10 @@ export default function AIImagesPage() {
           </div>
         </div>
 
-        <div className="border-[0.5px] border-amber-500/20 bg-amber-500/[0.04] rounded-sm py-12 px-6">
+        <div className="border-[0.5px] border-orange-500/20 bg-orange-500/[0.04] rounded-sm py-12 px-6">
           <div className="text-center max-w-md mx-auto">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-sm bg-amber-500/10 border-[0.5px] border-amber-500/20 mb-4">
-              <Crown className="w-8 h-8 text-amber-400" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20 mb-4">
+              <Crown className="w-8 h-8 text-orange-400" />
             </div>
             <h3 className="text-xl font-light text-white mb-2">
               Upgrade to Professional
@@ -121,7 +121,7 @@ export default function AIImagesPage() {
             </p>
             <Button
               asChild
-              className="bg-amber-500/20 border-[0.5px] border-amber-500/30 text-amber-400 hover:bg-amber-500/30"
+              className="bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30"
             >
               <Link href="/dashboard/billing">
                 <Sparkles className="w-4 h-4 mr-2" />
@@ -139,9 +139,9 @@ export default function AIImagesPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-sm bg-amber-500/10 border-[0.5px] border-amber-500/20">
+          <div className="p-2 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20">
             {/* eslint-disable-next-line jsx-a11y/alt-text */}
-            <Image className="h-5 w-5 text-amber-400" />
+            <Image className="h-5 w-5 text-orange-400" />
           </div>
           <div>
             <h1 className="text-xl font-light text-white">
@@ -166,7 +166,7 @@ export default function AIImagesPage() {
           )}
           <Badge
             variant="outline"
-            className="bg-amber-500/10 border-[0.5px] border-amber-500/20 text-amber-400"
+            className="bg-orange-500/10 border-[0.5px] border-orange-500/20 text-orange-400"
           >
             Professional
           </Badge>

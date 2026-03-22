@@ -118,7 +118,7 @@ function DayStrip({ days, selectedDay, onSelect }: DayStripProps) {
             onClick={() => onSelect(day)}
             className={`flex flex-col items-center min-w-[3.5rem] px-2 py-2 rounded-lg text-xs font-medium transition-all ${
               isSelected
-                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 ring-1 ring-amber-500/20'
+                ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30 ring-1 ring-orange-500/20'
                 : isToday
                   ? 'bg-white/5 text-white border border-white/10'
                   : 'bg-white/[0.02] text-slate-400 border border-white/[0.06] hover:bg-white/5 hover:text-slate-300'
@@ -131,7 +131,7 @@ function DayStrip({ days, selectedDay, onSelect }: DayStripProps) {
               {day.getDate()}
             </span>
             {isToday && (
-              <span className="text-[8px] text-amber-400 mt-0.5">Today</span>
+              <span className="text-[8px] text-orange-400 mt-0.5">Today</span>
             )}
           </button>
         );
@@ -196,8 +196,8 @@ function HourGrid({
           scoreBg = 'bg-green-500/10 border-green-500/30';
           scoreIndicator = 'text-green-400';
         } else if (score >= 50) {
-          scoreBg = 'bg-amber-500/10 border-amber-500/20';
-          scoreIndicator = 'text-amber-400';
+          scoreBg = 'bg-orange-500/10 border-orange-500/20';
+          scoreIndicator = 'text-orange-400';
         }
 
         return (
@@ -210,7 +210,7 @@ function HourGrid({
               isDisabled
                 ? 'opacity-30 cursor-not-allowed bg-gray-900/50 border-white/[0.04] text-slate-600'
                 : isSelected
-                  ? 'ring-2 ring-amber-500 bg-amber-500/15 border-amber-500/40 text-amber-300'
+                  ? 'ring-2 ring-orange-500 bg-orange-500/15 border-orange-500/40 text-orange-300'
                   : `${scoreBg} text-slate-300 hover:bg-white/10 hover:border-white/20 cursor-pointer`
             }`}
             title={
@@ -258,7 +258,7 @@ function MinuteSelector({ selectedMinute, onSelect }: MinuteSelectorProps) {
           onClick={() => onSelect(minute)}
           className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all border ${
             selectedMinute === minute
-              ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+              ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
               : 'bg-white/[0.03] text-slate-400 border-white/[0.06] hover:bg-white/5 hover:text-slate-300'
           }`}
         >
@@ -477,7 +477,7 @@ export function TimeSlotPicker({
       {/* Header with Suggest Best Time button */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          {!compact && <Clock className="h-4 w-4 text-amber-400" />}
+          {!compact && <Clock className="h-4 w-4 text-orange-400" />}
           <span className="text-xs font-medium text-slate-300">
             {selectionText || 'Select a time'}
           </span>
@@ -487,7 +487,7 @@ export function TimeSlotPicker({
           type="button"
           onClick={handleSuggestBestTime}
           disabled={optimalLoading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 transition-colors disabled:opacity-50"
         >
           <Sparkles className="h-3 w-3" />
           Suggest Best Time
@@ -576,7 +576,7 @@ export function TimeSlotPicker({
             Optimal (80+)
           </div>
           <div className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-amber-400" />
+            <span className="h-2 w-2 rounded-full bg-orange-400" />
             Good (50-79)
           </div>
           <div className="flex items-center gap-1">

@@ -157,15 +157,15 @@ export default function CaseStudiesPage() {
       {/* Hero Section */}
       <section className="pt-12 pb-16 px-6">
         <div className="container mx-auto text-center">
-          <div className="inline-flex items-center bg-amber-500/10 border border-amber-500/20 rounded-full px-4 py-2 mb-6">
-            <Award className="w-4 h-4 text-amber-400 mr-2" />
-            <span className="text-amber-300 text-sm">
+          <div className="inline-flex items-center bg-orange-500/10 border border-orange-500/20 rounded-full px-4 py-2 mb-6">
+            <Award className="w-4 h-4 text-orange-400 mr-2" />
+            <span className="text-orange-300 text-sm">
               Real Results from Real Businesses
             </span>
           </div>
           <h1 className="text-5xl font-bold text-white mb-6">
             Success Stories That{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
               Inspire
             </span>
           </h1>
@@ -179,11 +179,11 @@ export default function CaseStudiesPage() {
       {/* Stats Bar */}
       <section className="pb-16 px-6">
         <div className="container mx-auto">
-          <div className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 rounded-2xl p-8">
+          <div className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 rounded-2xl p-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center">
-                  <div className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300 mb-2">
+                  <div className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300 mb-2">
                     {stat.value}
                   </div>
                   <div className="text-gray-500 text-sm">{stat.label}</div>
@@ -208,10 +208,10 @@ export default function CaseStudiesPage() {
             {featuredStudies.map(study => (
               <Card
                 key={study.id}
-                className="bg-surface-base/60 backdrop-blur-xl border border-amber-500/10 p-8 relative overflow-hidden hover:border-amber-500/30 transition-all"
+                className="bg-surface-base/60 backdrop-blur-xl border border-orange-500/10 p-8 relative overflow-hidden hover:border-orange-500/30 transition-all"
               >
                 <div className="absolute top-4 right-4">
-                  <span className="bg-amber-500/20 text-amber-300 text-xs px-3 py-1 rounded-full border border-amber-500/30">
+                  <span className="bg-orange-500/20 text-orange-300 text-xs px-3 py-1 rounded-full border border-orange-500/30">
                     Featured
                   </span>
                 </div>
@@ -222,7 +222,7 @@ export default function CaseStudiesPage() {
                     <h3 className="text-xl font-bold text-white">
                       {study.company}
                     </h3>
-                    <p className="text-amber-400 text-sm">{study.industry}</p>
+                    <p className="text-orange-400 text-sm">{study.industry}</p>
                   </div>
                 </div>
 
@@ -244,7 +244,7 @@ export default function CaseStudiesPage() {
                   {study.results.map((result, idx) => (
                     <div
                       key={idx}
-                      className="text-center bg-surface-dark/60 border border-amber-500/10 rounded-lg p-3"
+                      className="text-center bg-surface-dark/60 border border-orange-500/10 rounded-lg p-3"
                     >
                       <div className="text-2xl font-bold text-emerald-400">
                         {result.metric}
@@ -256,13 +256,13 @@ export default function CaseStudiesPage() {
                   ))}
                 </div>
 
-                <div className="border-t border-amber-500/10 pt-6">
-                  <Quote className="w-8 h-8 text-amber-500/30 mb-3" />
+                <div className="border-t border-orange-500/10 pt-6">
+                  <Quote className="w-8 h-8 text-orange-500/30 mb-3" />
                   <p className="text-gray-400 italic mb-4">
                     &quot;{study.quote}&quot;
                   </p>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-semibold">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-semibold">
                       {study.author
                         .split(' ')
                         .map(n => n[0])
@@ -285,7 +285,7 @@ export default function CaseStudiesPage() {
       </section>
 
       {/* More Case Studies */}
-      <section className="py-20 px-6 bg-surface-base/50 border-y border-amber-500/10">
+      <section className="py-20 px-6 bg-surface-base/50 border-y border-orange-500/10">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-white mb-4">
             More Success Stories
@@ -298,13 +298,13 @@ export default function CaseStudiesPage() {
             {moreStudies.map(study => (
               <Card
                 key={study.id}
-                className="bg-surface-base/60 backdrop-blur-xl border border-amber-500/10 p-6 hover:border-amber-500/30 transition-all cursor-pointer group"
+                className="bg-surface-base/60 backdrop-blur-xl border border-orange-500/10 p-6 hover:border-orange-500/30 transition-all cursor-pointer group"
               >
                 <div className="text-3xl mb-4">{study.logo}</div>
                 <h3 className="text-lg font-bold text-white mb-1">
                   {study.company}
                 </h3>
-                <p className="text-amber-400 text-xs mb-4">{study.industry}</p>
+                <p className="text-orange-400 text-xs mb-4">{study.industry}</p>
 
                 <div className="space-y-2 mb-4">
                   {study.results.slice(0, 2).map((result, idx) => (
@@ -322,7 +322,7 @@ export default function CaseStudiesPage() {
                   ))}
                 </div>
 
-                <div className="flex items-center text-amber-400 text-sm group-hover:text-amber-300 transition">
+                <div className="flex items-center text-orange-400 text-sm group-hover:text-orange-300 transition">
                   Read full story
                   <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -354,9 +354,9 @@ export default function CaseStudiesPage() {
             ].map((industry, index) => (
               <div
                 key={index}
-                className="text-center bg-surface-base/60 backdrop-blur-xl border border-amber-500/10 rounded-xl p-4 hover:border-amber-500/30 transition-all"
+                className="text-center bg-surface-base/60 backdrop-blur-xl border border-orange-500/10 rounded-xl p-4 hover:border-orange-500/30 transition-all"
               >
-                <industry.icon className="w-8 h-8 text-amber-400 mx-auto mb-2" />
+                <industry.icon className="w-8 h-8 text-orange-400 mx-auto mb-2" />
                 <div className="text-white font-medium mb-1">
                   {industry.name}
                 </div>
@@ -368,7 +368,7 @@ export default function CaseStudiesPage() {
       </section>
 
       {/* Testimonials Grid */}
-      <section className="py-20 px-6 bg-surface-base/50 border-y border-amber-500/10">
+      <section className="py-20 px-6 bg-surface-base/50 border-y border-orange-500/10">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-white mb-12">
             What Our Customers Say
@@ -378,13 +378,13 @@ export default function CaseStudiesPage() {
             {caseStudies.slice(0, 3).map(study => (
               <Card
                 key={study.id}
-                className="bg-surface-base/60 backdrop-blur-xl border border-amber-500/10 p-6"
+                className="bg-surface-base/60 backdrop-blur-xl border border-orange-500/10 p-6"
               >
                 <div className="flex gap-1 mb-4">
                   {[1, 2, 3, 4, 5].map(star => (
                     <Star
                       key={star}
-                      className="w-4 h-4 text-amber-400 fill-amber-400"
+                      className="w-4 h-4 text-orange-400 fill-orange-400"
                     />
                   ))}
                 </div>
@@ -392,7 +392,7 @@ export default function CaseStudiesPage() {
                   &quot;{study.quote}&quot;
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white text-sm font-semibold">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white text-sm font-semibold">
                     {study.author
                       .split(' ')
                       .map(n => n[0])
@@ -414,7 +414,7 @@ export default function CaseStudiesPage() {
       {/* CTA */}
       <section className="py-20 px-6">
         <div className="container mx-auto">
-          <div className="bg-gradient-to-br from-amber-500/10 to-amber-600/10 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-12 text-center">
+          <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 backdrop-blur-xl border border-orange-500/20 rounded-2xl p-12 text-center">
             <h2 className="text-3xl font-bold text-white mb-4">
               Ready to Write Your Success Story?
             </h2>
@@ -426,7 +426,7 @@ export default function CaseStudiesPage() {
               <Link href="/signup">
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white px-10 py-6 text-lg shadow-lg shadow-amber-500/25"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-10 py-6 text-lg shadow-lg shadow-orange-500/25"
                 >
                   Start Free Trial
                   <ArrowRight className="ml-2" />
@@ -436,7 +436,7 @@ export default function CaseStudiesPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-amber-500/30 text-white hover:bg-amber-500/10 px-10 py-6 text-lg"
+                  className="border-orange-500/30 text-white hover:bg-orange-500/10 px-10 py-6 text-lg"
                 >
                   View Pricing
                 </Button>

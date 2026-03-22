@@ -74,8 +74,8 @@ export function CreateBusinessDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <Card className="w-full max-w-md bg-gray-950 border border-amber-500/10">
-        <CardHeader className="border-b border-amber-500/10">
+      <Card className="w-full max-w-md bg-gray-950 border border-orange-500/10">
+        <CardHeader className="border-b border-orange-500/10">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-semibold text-white">
               Create New Business
@@ -85,7 +85,7 @@ export function CreateBusinessDialog({
               size="sm"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="h-8 w-8 p-0 hover:bg-amber-500/10"
+              className="h-8 w-8 p-0 hover:bg-orange-500/10"
             >
               <X className="h-4 w-4 text-gray-400" />
             </Button>
@@ -108,7 +108,7 @@ export function CreateBusinessDialog({
                 value={businessName}
                 onChange={e => setBusinessName(e.target.value)}
                 placeholder="Acme Corporation"
-                className="w-full px-3 py-2 bg-surface-base/80 border border-amber-500/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-amber-500/30 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                className="w-full px-3 py-2 bg-surface-base/80 border border-orange-500/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-orange-500/30 focus:ring-2 focus:ring-orange-500/20 transition-all"
                 disabled={isSubmitting}
                 required
               />
@@ -131,7 +131,7 @@ export function CreateBusinessDialog({
                 value={displayLabel}
                 onChange={e => setDisplayLabel(e.target.value)}
                 placeholder="Acme Corp - Marketing"
-                className="w-full px-3 py-2 bg-surface-base/80 border border-amber-500/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-amber-500/30 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                className="w-full px-3 py-2 bg-surface-base/80 border border-orange-500/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-orange-500/30 focus:ring-2 focus:ring-orange-500/20 transition-all"
                 disabled={isSubmitting}
               />
               <p className="text-xs text-gray-500">
@@ -140,16 +140,16 @@ export function CreateBusinessDialog({
             </div>
 
             {/* Pricing Notice */}
-            <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+            <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
               <div className="flex items-start gap-3">
-                <Plus className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                <Plus className="h-5 w-5 text-orange-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-white">
                     Additional Business Pricing
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
                     Each additional business is{' '}
-                    <span className="text-amber-400 font-semibold">
+                    <span className="text-orange-400 font-semibold">
                       $249/month
                     </span>
                     . You can manage billing in your account settings.
@@ -172,14 +172,14 @@ export function CreateBusinessDialog({
                 variant="outline"
                 onClick={handleClose}
                 disabled={isSubmitting}
-                className="flex-1 bg-transparent border-amber-500/10 text-white hover:bg-amber-500/10 hover:border-amber-500/20"
+                className="flex-1 bg-transparent border-orange-500/10 text-white hover:bg-orange-500/10 hover:border-orange-500/20"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting || !businessName.trim()}
-                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
               >
                 {isSubmitting ? (
                   <>

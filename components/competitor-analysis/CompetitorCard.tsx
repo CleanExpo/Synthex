@@ -60,7 +60,7 @@ export function CompetitorCard({
       <Card
         variant="glass"
         className={`cursor-pointer ${
-          isSelected ? 'ring-2 ring-amber-500' : ''
+          isSelected ? 'ring-2 ring-orange-500' : ''
         } ${isSelectedForComparison ? 'ring-2 ring-blue-500' : ''}`}
         onClick={() => !isComparing && onSelect()}
       >

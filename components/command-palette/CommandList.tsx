@@ -40,7 +40,7 @@ export function CommandList({
                   transition-colors duration-150
                   ${
                     isSelected
-                      ? 'bg-amber-500/20 text-white'
+                      ? 'bg-orange-500/20 text-white'
                       : 'text-gray-300 hover:bg-white/5 hover:text-white'
                   }
                 `}

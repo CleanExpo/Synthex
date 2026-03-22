@@ -77,7 +77,7 @@ export function PendingContentCard({ item, onAction }: Props) {
               item.score >= 80
                 ? 'text-emerald-400'
                 : item.score >= 65
-                  ? 'text-amber-400'
+                  ? 'text-orange-400'
                   : 'text-red-400'
             )}
           >

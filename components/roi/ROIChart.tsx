@@ -40,7 +40,7 @@ function LoadingSkeleton() {
   return (
     <div className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-8 h-8 bg-amber-500/10 rounded-lg animate-pulse" />
+        <div className="w-8 h-8 bg-orange-500/10 rounded-lg animate-pulse" />
         <div className="w-48 h-5 bg-white/5 rounded animate-pulse" />
       </div>
       <div className="h-[300px] bg-white/5 rounded animate-pulse" />
@@ -118,8 +118,8 @@ export function ROIChart({
       )}
     >
       <div className="flex items-center gap-2 mb-4">
-        <div className="p-2 bg-amber-500/10 rounded-lg">
-          <ChartBarIcon className="w-4 h-4 text-amber-400" />
+        <div className="p-2 bg-orange-500/10 rounded-lg">
+          <ChartBarIcon className="w-4 h-4 text-orange-400" />
         </div>
         <h3 className="font-medium text-white">
           Revenue vs Investment by Platform

@@ -60,9 +60,9 @@ function getStatusColor(status: string): string {
     case 'pending':
       return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30';
     case 'in_review':
-      return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
+      return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
     case 'revision_requested':
-      return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
+      return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
     default:
       return 'text-white/40 bg-white/[0.04] border-white/[0.06]';
   }
@@ -84,7 +84,7 @@ function getPriorityColor(priority: string): string {
     case 'urgent':
       return 'bg-red-500';
     case 'high':
-      return 'bg-amber-500';
+      return 'bg-orange-500';
     case 'normal':
       return 'bg-yellow-500';
     case 'low':
@@ -115,7 +115,7 @@ function RequestCard({
 
   return (
     <Card
-      className="bg-white/5 border-amber-500/10 cursor-pointer hover:bg-white/10 transition-colors"
+      className="bg-white/5 border-orange-500/10 cursor-pointer hover:bg-white/10 transition-colors"
       onClick={() => onSelect(request)}
     >
       <CardContent className="p-4">
@@ -157,7 +157,7 @@ function RequestCard({
         <div className="flex items-center gap-2 mb-3">
           <Badge
             variant="outline"
-            className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs"
+            className="bg-orange-500/20 text-orange-300 border-orange-500/30 text-xs"
           >
             {request.contentType}
           </Badge>
@@ -279,7 +279,7 @@ function RequestDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0a0a0a] border-amber-500/20 backdrop-blur-xl max-w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-[#0a0a0a] border-orange-500/20 backdrop-blur-xl max-w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div>
@@ -317,7 +317,7 @@ function RequestDetailDialog({
                       : step.status === 'rejected'
                         ? 'bg-red-500/10'
                         : index === request.currentStep
-                          ? 'bg-amber-500/10'
+                          ? 'bg-orange-500/10'
                           : 'bg-white/5'
                   }`}
                 >
@@ -328,7 +328,7 @@ function RequestDetailDialog({
                         : step.status === 'rejected'
                           ? 'bg-red-500/20'
                           : index === request.currentStep
-                            ? 'bg-amber-500/20'
+                            ? 'bg-orange-500/20'
                             : 'bg-white/[0.04]'
                     }`}
                   >
@@ -337,7 +337,7 @@ function RequestDetailDialog({
                     ) : step.status === 'rejected' ? (
                       <XCircle className="h-4 w-4 text-red-400" />
                     ) : index === request.currentStep ? (
-                      <Clock className="h-4 w-4 text-amber-400" />
+                      <Clock className="h-4 w-4 text-orange-400" />
                     ) : (
                       <Clock className="h-4 w-4 text-white/40" />
                     )}
@@ -417,7 +417,7 @@ function RequestDetailDialog({
                   <Button
                     onClick={() => handleAction('resubmit')}
                     disabled={isSubmitting}
-                    className="bg-amber-500 hover:bg-amber-600"
+                    className="bg-orange-500 hover:bg-orange-600"
                   >
                     {isSubmitting ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -440,7 +440,7 @@ function RequestDetailDialog({
                       onClick={() => handleAction('revision')}
                       disabled={isSubmitting || !feedback.trim()}
                       variant="outline"
-                      className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border-amber-500/30"
+                      className="bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 border-orange-500/30"
                     >
                       <RotateCcw className="h-4 w-4 mr-2" />
                       Request Revision
@@ -480,11 +480,11 @@ function RequestDetailDialog({
 
 function EmptyState({ filter }: { filter: string }) {
   return (
-    <Card className="bg-white/5 border-amber-500/10">
+    <Card className="bg-white/5 border-orange-500/10">
       <CardContent className="py-16">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 mb-4">
-            <FileText className="w-8 h-8 text-amber-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 mb-4">
+            <FileText className="w-8 h-8 text-orange-400" />
           </div>
           <h3 className="text-lg font-medium text-white mb-2">
             {filter === 'all'
@@ -565,8 +565,8 @@ export default function ApprovalsPage() {
       {/* Page Header */}
       <div className="flex items-start justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-sm bg-amber-500/10 border-[0.5px] border-amber-500/20">
-            <GitBranch className="h-6 w-6 text-amber-400" />
+          <div className="p-2 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20">
+            <GitBranch className="h-6 w-6 text-orange-400" />
           </div>
           <div>
             <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-1 block">
@@ -628,7 +628,7 @@ export default function ApprovalsPage() {
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+          <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
         </div>
       )}
 

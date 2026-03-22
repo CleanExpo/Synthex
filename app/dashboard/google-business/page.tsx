@@ -30,11 +30,11 @@ function MetricCard({
   icon: React.ElementType;
 }) {
   return (
-    <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-amber-500/10 rounded-lg">
-            <Icon className="w-5 h-5 text-amber-400" />
+          <div className="p-2 bg-orange-500/10 rounded-lg">
+            <Icon className="w-5 h-5 text-orange-400" />
           </div>
           <div>
             <p className="text-sm text-gray-400">{label}</p>
@@ -71,7 +71,7 @@ export default function GoogleBusinessPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-          <Map className="w-8 h-8 text-amber-400" />
+          <Map className="w-8 h-8 text-orange-400" />
           Google Business Profile
         </h1>
         <p className="text-gray-400 mt-2">
@@ -83,16 +83,16 @@ export default function GoogleBusinessPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+          <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
         </div>
       ) : hasLocations ? (
         <>
           {/* Current Location */}
           {primaryLocation && (
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <MapPin className="w-5 h-5 text-amber-400" />
+                  <MapPin className="w-5 h-5 text-orange-400" />
                   <div>
                     <p className="text-white font-semibold">
                       {primaryLocation.locationName}
@@ -145,10 +145,10 @@ export default function GoogleBusinessPage() {
 
           {/* Rating + Reviews Summary */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
               <CardContent className="p-6">
                 <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Star className="w-5 h-5 text-amber-400" />
+                  <Star className="w-5 h-5 text-orange-400" />
                   Rating Overview
                 </h2>
                 <div className="flex items-baseline gap-3 mb-2">
@@ -161,7 +161,7 @@ export default function GoogleBusinessPage() {
                         key={star}
                         className={`w-5 h-5 ${
                           star <= Math.round(averageRating || 0)
-                            ? 'text-amber-400'
+                            ? 'text-orange-400'
                             : 'text-gray-600'
                         }`}
                       />
@@ -174,16 +174,16 @@ export default function GoogleBusinessPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-amber-400" />
+                    <MessageSquare className="w-5 h-5 text-orange-400" />
                     Recent Reviews
                   </h2>
                   <Link
                     href="/dashboard/google-business/reviews"
-                    className="text-sm text-amber-400 hover:text-amber-300 flex items-center gap-1"
+                    className="text-sm text-orange-400 hover:text-orange-300 flex items-center gap-1"
                   >
                     View all <ArrowRight className="w-3 h-3" />
                   </Link>
@@ -209,7 +209,7 @@ export default function GoogleBusinessPage() {
                                 key={star}
                                 className={`w-3 h-3 ${
                                   star <= review.rating
-                                    ? 'text-amber-400'
+                                    ? 'text-orange-400'
                                     : 'text-gray-600'
                                 }`}
                               />
@@ -241,9 +241,9 @@ export default function GoogleBusinessPage() {
           {/* Quick Links */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Link href="/dashboard/google-business/reviews">
-              <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 hover:border-amber-500/30 transition-colors cursor-pointer">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 hover:border-orange-500/30 transition-colors cursor-pointer">
                 <CardContent className="p-4 flex items-center gap-3">
-                  <MessageSquare className="w-5 h-5 text-amber-400" />
+                  <MessageSquare className="w-5 h-5 text-orange-400" />
                   <span className="text-white font-medium">
                     Review Management
                   </span>
@@ -252,18 +252,18 @@ export default function GoogleBusinessPage() {
               </Card>
             </Link>
             <Link href="/dashboard/google-business/posts">
-              <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 hover:border-amber-500/30 transition-colors cursor-pointer">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 hover:border-orange-500/30 transition-colors cursor-pointer">
                 <CardContent className="p-4 flex items-center gap-3">
-                  <Globe className="w-5 h-5 text-amber-400" />
+                  <Globe className="w-5 h-5 text-orange-400" />
                   <span className="text-white font-medium">Google Posts</span>
                   <ArrowRight className="w-4 h-4 text-gray-500 ml-auto" />
                 </CardContent>
               </Card>
             </Link>
             <Link href="/dashboard/google-business/insights">
-              <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 hover:border-amber-500/30 transition-colors cursor-pointer">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 hover:border-orange-500/30 transition-colors cursor-pointer">
                 <CardContent className="p-4 flex items-center gap-3">
-                  <TrendingUp className="w-5 h-5 text-amber-400" />
+                  <TrendingUp className="w-5 h-5 text-orange-400" />
                   <span className="text-white font-medium">
                     Performance Insights
                   </span>

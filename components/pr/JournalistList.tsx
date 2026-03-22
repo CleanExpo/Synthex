@@ -61,7 +61,7 @@ const TIER_STYLES: Record<string, { label: string; className: string }> = {
   },
   hot: {
     label: 'Hot',
-    className: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+    className: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
   },
   advocate: {
     label: 'Advocate',
@@ -154,12 +154,12 @@ export function JournalistList({ onSelectJournalist }: JournalistListProps) {
             placeholder="Search journalists..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+            className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
           />
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="ml-3 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"
+          className="ml-3 px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-medium rounded-lg transition-colors"
         >
           + New Journalist
         </button>
@@ -234,7 +234,7 @@ export function JournalistList({ onSelectJournalist }: JournalistListProps) {
                         handleEnrich(journalist);
                       }}
                       disabled={enrichingId === journalist.id}
-                      className="px-2 py-1 text-xs bg-amber-600/20 text-amber-300 border border-amber-500/30 rounded-lg hover:bg-amber-600/30 transition-colors disabled:opacity-50"
+                      className="px-2 py-1 text-xs bg-orange-600/20 text-orange-300 border border-orange-500/30 rounded-lg hover:bg-orange-600/30 transition-colors disabled:opacity-50"
                     >
                       {enrichingId === journalist.id ? (
                         <Loader2 className="h-3 w-3 animate-spin" />

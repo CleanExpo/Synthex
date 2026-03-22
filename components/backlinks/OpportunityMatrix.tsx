@@ -11,7 +11,11 @@
  */
 
 import { cn } from '@/lib/utils';
-import type { BacklinkOpportunityType, DomainAuthorityTier, MatrixFilter } from '@/lib/backlinks/types';
+import type {
+  BacklinkOpportunityType,
+  DomainAuthorityTier,
+  MatrixFilter,
+} from '@/lib/backlinks/types';
 import type { ProspectCardData } from './BacklinkProspectCard';
 
 // ─── Config ─────────────────────────────────────────────────────────────────
@@ -25,23 +29,23 @@ const TYPES: BacklinkOpportunityType[] = [
 ];
 
 const TYPE_SHORT_LABELS: Record<BacklinkOpportunityType, string> = {
-  'resource-page':      'Resource',
-  'guest-post':         'Guest Post',
-  'broken-link':        'Broken Link',
-  'competitor-link':    'Competitor',
+  'resource-page': 'Resource',
+  'guest-post': 'Guest Post',
+  'broken-link': 'Broken Link',
+  'competitor-link': 'Competitor',
   'journalist-mention': 'Journalist',
 };
 
 const TIERS: { tier: DomainAuthorityTier; label: string; range: string }[] = [
-  { tier: 'high',   label: 'High DA',   range: '70+' },
+  { tier: 'high', label: 'High DA', range: '70+' },
   { tier: 'medium', label: 'Medium DA', range: '40–69' },
-  { tier: 'low',    label: 'Low DA',    range: '<40' },
+  { tier: 'low', label: 'Low DA', range: '<40' },
 ];
 
 const TIER_COLOURS: Record<DomainAuthorityTier, string> = {
-  high:   'text-emerald-400',
-  medium: 'text-amber-400',
-  low:    'text-slate-400',
+  high: 'text-emerald-400',
+  medium: 'text-orange-400',
+  low: 'text-slate-400',
 };
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -81,7 +85,10 @@ export function OpportunityMatrix({
   onFilterChange,
   activeFilter,
 }: OpportunityMatrixProps) {
-  function handleCellClick(type: BacklinkOpportunityType, tier: DomainAuthorityTier) {
+  function handleCellClick(
+    type: BacklinkOpportunityType,
+    tier: DomainAuthorityTier
+  ) {
     // Toggle: click same cell = clear filter
     if (activeFilter?.opportunityType === type && activeFilter?.tier === tier) {
       onFilterChange(null);
@@ -98,16 +105,23 @@ export function OpportunityMatrix({
     <div className="rounded-xl border border-white/10 bg-white/5 p-4">
       <h3 className="text-sm font-semibold text-white mb-3">
         Opportunity Matrix
-        <span className="ml-2 text-xs font-normal text-slate-400">Click a cell to filter</span>
+        <span className="ml-2 text-xs font-normal text-slate-400">
+          Click a cell to filter
+        </span>
       </h3>
 
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
             <tr>
-              <th className="text-left pr-3 pb-2 text-slate-500 font-medium w-24">DA Tier</th>
+              <th className="text-left pr-3 pb-2 text-slate-500 font-medium w-24">
+                DA Tier
+              </th>
               {TYPES.map(type => (
-                <th key={type} className="pb-2 text-center text-slate-400 font-medium px-2">
+                <th
+                  key={type}
+                  className="pb-2 text-center text-slate-400 font-medium px-2"
+                >
                   {TYPE_SHORT_LABELS[type]}
                 </th>
               ))}
@@ -117,12 +131,16 @@ export function OpportunityMatrix({
             {TIERS.map(({ tier, label, range }) => (
               <tr key={tier}>
                 <td className="py-1.5 pr-3 text-left">
-                  <div className={cn('font-medium', TIER_COLOURS[tier])}>{label}</div>
+                  <div className={cn('font-medium', TIER_COLOURS[tier])}>
+                    {label}
+                  </div>
                   <div className="text-slate-600">{range}</div>
                 </td>
                 {TYPES.map(type => {
                   const count = countCell(prospects, type, tier);
-                  const isActive = activeFilter?.opportunityType === type && activeFilter?.tier === tier;
+                  const isActive =
+                    activeFilter?.opportunityType === type &&
+                    activeFilter?.tier === tier;
                   const isHighlighted = count >= 3;
 
                   return (

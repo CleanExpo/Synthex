@@ -24,11 +24,11 @@ interface RevenueEntryListProps {
 }
 
 const SOURCE_COLORS: Record<RevenueSource, { bg: string; text: string }> = {
-  sponsorship: { bg: 'bg-amber-500/10', text: 'text-amber-400' },
+  sponsorship: { bg: 'bg-orange-500/10', text: 'text-orange-400' },
   affiliate: { bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
-  ads: { bg: 'bg-amber-500/10', text: 'text-amber-400' },
-  tips: { bg: 'bg-amber-500/10', text: 'text-amber-400' },
-  merchandise: { bg: 'bg-amber-500/10', text: 'text-amber-400' },
+  ads: { bg: 'bg-orange-500/10', text: 'text-orange-400' },
+  tips: { bg: 'bg-orange-500/10', text: 'text-orange-400' },
+  merchandise: { bg: 'bg-orange-500/10', text: 'text-orange-400' },
   other: { bg: 'bg-gray-500/10', text: 'text-gray-400' },
 };
 

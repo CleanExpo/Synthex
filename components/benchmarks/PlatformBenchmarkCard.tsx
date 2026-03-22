@@ -55,9 +55,9 @@ const RATING_COLORS = {
     badge: 'bg-green-500/10 text-green-400',
   },
   excellent: {
-    text: 'text-amber-400',
-    bg: 'bg-amber-500',
-    badge: 'bg-amber-500/10 text-amber-400',
+    text: 'text-orange-400',
+    bg: 'bg-orange-500',
+    badge: 'bg-orange-500/10 text-orange-400',
   },
 };
 

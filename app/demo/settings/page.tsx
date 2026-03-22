@@ -148,12 +148,12 @@ export default function DemoSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-amber-950/20 to-gray-950">
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-orange-950/20 to-gray-950">
       {/* Demo Mode Banner */}
-      <div className="bg-amber-500/10 border border-amber-500/20 p-3">
+      <div className="bg-orange-500/10 border border-orange-500/20 p-3">
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
-          <Info className="w-4 h-4 text-amber-400" />
-          <p className="text-sm text-amber-400">
+          <Info className="w-4 h-4 text-orange-400" />
+          <p className="text-sm text-orange-400">
             Demo Mode: Test the settings UI. Changes won't be saved permanently.
           </p>
         </div>
@@ -188,7 +188,7 @@ export default function DemoSettingsPage() {
               <CardContent>
                 <div className="flex items-center gap-6">
                   <div className="relative">
-                    <Avatar className="w-24 h-24 border-2 border-amber-500/20">
+                    <Avatar className="w-24 h-24 border-2 border-orange-500/20">
                       <AvatarImage src={avatarPreview} alt="Profile" />
                       <AvatarFallback>JD</AvatarFallback>
                     </Avatar>
@@ -767,7 +767,7 @@ export default function DemoSettingsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                  <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="text-lg font-semibold text-white">

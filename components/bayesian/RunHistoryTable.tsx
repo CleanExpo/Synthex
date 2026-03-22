@@ -24,31 +24,41 @@ interface RunHistoryTableProps {
 }
 
 const STATUS_STYLES: Record<RunStatus, string> = {
-  pending:   'bg-gray-500/20 text-gray-400',
-  running:   'bg-amber-500/20 text-amber-400',
+  pending: 'bg-gray-500/20 text-gray-400',
+  running: 'bg-orange-500/20 text-orange-400',
   completed: 'bg-emerald-500/20 text-emerald-400',
-  failed:    'bg-red-500/20 text-red-400',
+  failed: 'bg-red-500/20 text-red-400',
   cancelled: 'bg-gray-500/20 text-gray-400',
 };
 
-const STATUS_ICONS: Record<RunStatus, React.ComponentType<{ className?: string }>> = {
-  pending:   Clock,
-  running:   Brain,
+const STATUS_ICONS: Record<
+  RunStatus,
+  React.ComponentType<{ className?: string }>
+> = {
+  pending: Clock,
+  running: Brain,
   completed: CheckCircle,
-  failed:    AlertCircle,
+  failed: AlertCircle,
   cancelled: Clock,
 };
 
 function formatSurface(surface: string): string {
-  return (SURFACE_LABELS as Record<string, string>)[surface] ?? surface
-    .split('_')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
+  return (
+    (SURFACE_LABELS as Record<string, string>)[surface] ??
+    surface
+      .split('_')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ')
+  );
 }
 
-function formatDuration(startedAt: string | null, completedAt: string | null): string {
+function formatDuration(
+  startedAt: string | null,
+  completedAt: string | null
+): string {
   if (!startedAt || !completedAt) return '—';
-  const diffMs = new Date(completedAt).getTime() - new Date(startedAt).getTime();
+  const diffMs =
+    new Date(completedAt).getTime() - new Date(startedAt).getTime();
   const secs = Math.floor(diffMs / 1_000);
   if (secs < 60) return `${secs}s`;
   const mins = Math.floor(secs / 60);
@@ -69,15 +79,15 @@ function formatDate(dateStr: string | null): string {
 /**
  * Table showing an organisation's past Bayesian Optimisation runs.
  */
-export function RunHistoryTable({ runs, isLoading = false }: RunHistoryTableProps) {
+export function RunHistoryTable({
+  runs,
+  isLoading = false,
+}: RunHistoryTableProps) {
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-12 animate-pulse bg-white/5 rounded-lg"
-          />
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-12 animate-pulse bg-white/5 rounded-lg" />
         ))}
       </div>
     );
@@ -88,7 +98,9 @@ export function RunHistoryTable({ runs, isLoading = false }: RunHistoryTableProp
       <div className="flex flex-col items-center justify-center py-12 text-gray-500">
         <Brain className="h-10 w-10 mb-3 opacity-30" />
         <p className="text-sm">No optimisation runs yet</p>
-        <p className="text-xs mt-1">Trigger a run from an optimisation space card above</p>
+        <p className="text-xs mt-1">
+          Trigger a run from an optimisation space card above
+        </p>
       </div>
     );
   }
@@ -119,15 +131,20 @@ export function RunHistoryTable({ runs, isLoading = false }: RunHistoryTableProp
           </tr>
         </thead>
         <tbody className="divide-y divide-white/[0.05]">
-          {runs.map((run) => {
+          {runs.map(run => {
             const StatusIcon = STATUS_ICONS[run.status];
             const statusStyle = STATUS_STYLES[run.status];
             return (
-              <tr key={run.id} className="hover:bg-white/[0.02] transition-colors">
+              <tr
+                key={run.id}
+                className="hover:bg-white/[0.02] transition-colors"
+              >
                 <td className="px-4 py-3 text-white font-medium">
                   {formatSurface(run.space.surface)}
                   {run.space.name && (
-                    <span className="block text-xs text-gray-500 font-normal">{run.space.name}</span>
+                    <span className="block text-xs text-gray-500 font-normal">
+                      {run.space.name}
+                    </span>
                   )}
                 </td>
                 <td className="px-4 py-3">

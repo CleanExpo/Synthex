@@ -19,7 +19,7 @@ const statsConfig = [
     title: 'Total Users',
     description: 'Registered accounts',
     Icon: Users,
-    iconColor: 'text-amber-400',
+    iconColor: 'text-orange-400',
   },
   {
     key: 'activeToday' as const,

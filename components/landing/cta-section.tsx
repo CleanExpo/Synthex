@@ -8,7 +8,7 @@ export function CTASection() {
         <div className="relative overflow-hidden rounded-2xl px-12 py-20 text-center bg-charcoal-800/80 backdrop-blur-xl border border-white/[0.08] shadow-2xl shadow-black/50 ring-1 ring-white/[0.04]">
           {/* Warm amber radial glow */}
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-amber-500/[0.08] blur-[100px] rounded-full" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-orange-500/[0.08] blur-[100px] rounded-full" />
           </div>
 
           <div className="relative z-10">
@@ -27,7 +27,7 @@ export function CTASection() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 href="/signup"
-                className="inline-flex items-center justify-center px-8 py-3.5 bg-amber-500 text-charcoal-900 font-bold rounded-full hover:bg-amber-400 hover:-translate-y-0.5 transition-all duration-200 text-sm"
+                className="inline-flex items-center justify-center px-8 py-3.5 bg-orange-500 text-charcoal-900 font-bold rounded-full hover:bg-orange-400 hover:-translate-y-0.5 transition-all duration-200 text-sm"
               >
                 Start free
               </Link>

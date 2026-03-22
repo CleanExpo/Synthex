@@ -42,12 +42,15 @@ export function ApprovalActions({
     setError(null);
     setApproving(true);
     try {
-      const res = await fetch(`/api/workflows/executions/${executionId}/approve`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stepId }),
-      });
+      const res = await fetch(
+        `/api/workflows/executions/${executionId}/approve`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ stepId }),
+        }
+      );
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? `Approve failed (${res.status})`);
@@ -73,12 +76,17 @@ export function ApprovalActions({
     setError(null);
     setRejecting(true);
     try {
-      const res = await fetch(`/api/workflows/executions/${executionId}/cancel`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: rejectReason || 'Rejected by reviewer' }),
-      });
+      const res = await fetch(
+        `/api/workflows/executions/${executionId}/cancel`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reason: rejectReason || 'Rejected by reviewer',
+          }),
+        }
+      );
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? `Reject failed (${res.status})`);
@@ -102,7 +110,7 @@ export function ApprovalActions({
         className
       )}
     >
-      <p className="text-xs font-medium text-amber-400 uppercase tracking-wide">
+      <p className="text-xs font-medium text-orange-400 uppercase tracking-wide">
         Awaiting your approval
       </p>
 
@@ -150,7 +158,7 @@ export function ApprovalActions({
             autoFocus
             placeholder="Reason for rejection (optional)"
             value={rejectReason}
-            onChange={(e) => setRejectReason(e.target.value)}
+            onChange={e => setRejectReason(e.target.value)}
             rows={2}
             className="w-full rounded-md bg-white/5 border border-white/10 text-sm text-white placeholder:text-gray-500 px-2 py-1.5 resize-none focus:outline-none focus:border-red-500/50"
           />
@@ -172,7 +180,11 @@ export function ApprovalActions({
               size="sm"
               variant="ghost"
               disabled={rejecting}
-              onClick={() => { setPhase('idle'); setRejectReason(''); setError(null); }}
+              onClick={() => {
+                setPhase('idle');
+                setRejectReason('');
+                setError(null);
+              }}
               className="text-gray-400 hover:text-white"
             >
               Cancel

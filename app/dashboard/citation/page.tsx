@@ -126,8 +126,8 @@ export default function CitationDashboardPage() {
       <div className="mb-8">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-amber-500/10">
-              <CommandLine className="w-6 h-6 text-amber-400" />
+            <div className="p-2.5 rounded-xl bg-orange-500/10">
+              <CommandLine className="w-6 h-6 text-orange-400" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">

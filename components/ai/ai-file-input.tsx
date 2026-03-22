@@ -112,7 +112,7 @@ interface FileDisplayProps {
 function FileDisplay({ fileName, onClear }: FileDisplayProps) {
   return (
     <div className="flex items-center gap-2 bg-white/[0.04] w-fit px-3 py-1 rounded-sm border-[0.5px] border-white/[0.06] group">
-      <FileUp className="w-4 h-4 text-amber-400" />
+      <FileUp className="w-4 h-4 text-orange-400" />
       <span className="text-sm text-white/60">{fileName}</span>
       <button
         type="button"
@@ -175,7 +175,7 @@ export function AIFileInput({
         <div className="relative">
           {/* Attach button */}
           <div
-            className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 flex items-center justify-center h-7 sm:h-8 w-7 sm:w-8 rounded-sm bg-white/[0.04] hover:bg-amber-500/[0.08] hover:cursor-pointer transition-colors"
+            className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 flex items-center justify-center h-7 sm:h-8 w-7 sm:w-8 rounded-sm bg-white/[0.04] hover:bg-orange-500/[0.08] hover:cursor-pointer transition-colors"
             onClick={() => fileInputRef.current?.click()}
           >
             <Paperclip className="w-3.5 sm:w-4 h-3.5 sm:h-4 transition-opacity transform scale-x-[-1] rotate-45 text-white/60" />
@@ -209,7 +209,7 @@ export function AIFileInput({
               'bg-[#0a0a0a] border-[0.5px] border-white/[0.06]',
               'text-white text-sm sm:text-base placeholder:text-white/40',
               'resize-none leading-[1.2] overflow-y-auto',
-              'focus:outline-none focus:border-amber-500/20 focus:ring-1 focus:ring-amber-500/20',
+              'focus:outline-none focus:border-orange-500/20 focus:ring-1 focus:ring-orange-500/20',
               'transition-colors'
             )}
             style={{ minHeight: `${minHeight}px`, maxHeight: `${maxHeight}px` }}
@@ -219,13 +219,13 @@ export function AIFileInput({
           <button
             onClick={handleSubmit}
             type="button"
-            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 rounded-sm bg-white/[0.04] hover:bg-amber-500/[0.08] py-1 px-1 transition-colors"
+            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 rounded-sm bg-white/[0.04] hover:bg-orange-500/[0.08] py-1 px-1 transition-colors"
           >
             <CornerRightUp
               className={cn(
                 'w-3.5 sm:w-4 h-3.5 sm:h-4 transition-opacity',
                 inputValue || selectedFile
-                  ? 'opacity-100 text-amber-400'
+                  ? 'opacity-100 text-orange-400'
                   : 'opacity-30 text-white/40'
               )}
             />

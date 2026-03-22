@@ -103,10 +103,10 @@ export function FirstWeekWidget() {
     };
 
     return (
-      <div className="border-[0.5px] border-amber-500/20 bg-amber-500/[0.02] rounded-sm p-5">
+      <div className="border-[0.5px] border-orange-500/20 bg-orange-500/[0.02] rounded-sm p-5">
         <div className="flex items-center gap-3 mb-4">
-          <div className="h-9 w-9 border-[0.5px] border-amber-500/30 bg-amber-500/[0.08] rounded-sm flex items-center justify-center flex-shrink-0">
-            <Sparkles className="h-4 w-4 text-amber-400" />
+          <div className="h-9 w-9 border-[0.5px] border-orange-500/30 bg-orange-500/[0.08] rounded-sm flex items-center justify-center flex-shrink-0">
+            <Sparkles className="h-4 w-4 text-orange-400" />
           </div>
           <div>
             <h3 className="text-sm font-light text-white tracking-tight">
@@ -121,7 +121,7 @@ export function FirstWeekWidget() {
         <button
           onClick={handleGenerateKickstart}
           disabled={generating}
-          className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-medium tracking-wide rounded-sm transition-colors bg-amber-500/[0.08] hover:bg-amber-500/[0.15] text-amber-300 border-[0.5px] border-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-medium tracking-wide rounded-sm transition-colors bg-orange-500/[0.08] hover:bg-orange-500/[0.15] text-orange-300 border-[0.5px] border-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {generating ? (
             <>
@@ -147,12 +147,12 @@ export function FirstWeekWidget() {
   if (allDone) return null;
 
   return (
-    <div className="border-[0.5px] border-amber-500/20 bg-amber-500/[0.02] rounded-sm overflow-hidden">
+    <div className="border-[0.5px] border-orange-500/20 bg-orange-500/[0.02] rounded-sm overflow-hidden">
       {/* Header */}
       <div className="px-5 py-4 flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 border-[0.5px] border-amber-500/30 bg-amber-500/[0.08] rounded-sm flex items-center justify-center flex-shrink-0">
-            <Sparkles className="h-4 w-4 text-amber-400" />
+          <div className="h-9 w-9 border-[0.5px] border-orange-500/30 bg-orange-500/[0.08] rounded-sm flex items-center justify-center flex-shrink-0">
+            <Sparkles className="h-4 w-4 text-orange-400" />
           </div>
           <div>
             <h3 className="text-sm font-light text-white tracking-tight">
@@ -165,7 +165,7 @@ export function FirstWeekWidget() {
         </div>
         <Link
           href="/dashboard/content/drafts"
-          className="flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 transition-colors flex-shrink-0"
+          className="flex items-center gap-1 text-[10px] text-orange-400 hover:text-orange-300 transition-colors flex-shrink-0"
         >
           View all
           <ArrowRight className="h-3 w-3" />
@@ -183,7 +183,7 @@ export function FirstWeekWidget() {
           </p>
         </div>
         <div className="px-4 py-3 text-center">
-          <p className="font-mono text-xl font-medium text-amber-400 tabular-nums">
+          <p className="font-mono text-xl font-medium text-orange-400 tabular-nums">
             {draftsCount}
           </p>
           <p className="text-[9px] uppercase tracking-[0.2em] text-white/50 mt-0.5">
@@ -243,7 +243,7 @@ export function FirstWeekWidget() {
                 'text-[9px] uppercase tracking-[0.15em] px-1.5 py-0.5 rounded-sm border-[0.5px] shrink-0',
                 post.status === 'scheduled'
                   ? 'bg-emerald-500/[0.08] text-emerald-400 border-emerald-500/20'
-                  : 'bg-amber-500/[0.08] text-amber-400 border-amber-500/20'
+                  : 'bg-orange-500/[0.08] text-orange-400 border-orange-500/20'
               )}
             >
               {post.status === 'scheduled' ? 'Scheduled' : 'Draft'}
@@ -262,7 +262,7 @@ export function FirstWeekWidget() {
       <div className="border-t-[0.5px] border-white/[0.06] p-5">
         <Link
           href="/dashboard/content/drafts"
-          className="flex items-center justify-center gap-2 w-full py-2.5 text-xs font-medium tracking-wide rounded-sm transition-colors bg-amber-500/[0.08] hover:bg-amber-500/[0.15] text-amber-300 border-[0.5px] border-amber-500/20"
+          className="flex items-center justify-center gap-2 w-full py-2.5 text-xs font-medium tracking-wide rounded-sm transition-colors bg-orange-500/[0.08] hover:bg-orange-500/[0.15] text-orange-300 border-[0.5px] border-orange-500/20"
         >
           <FileText className="h-3.5 w-3.5" />
           Review &amp; Publish Your First Posts

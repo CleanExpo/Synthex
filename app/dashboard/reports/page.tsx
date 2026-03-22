@@ -169,7 +169,7 @@ export default function ReportsPage() {
       {/* Custom Report Builder CTA */}
       <Link
         href="/dashboard/reports/builder"
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-amber-500/10 border-[0.5px] border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-colors text-sm"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20 text-orange-400 hover:bg-orange-500/20 transition-colors text-sm"
       >
         <Layout className="w-4 h-4" />
         Build Custom Report

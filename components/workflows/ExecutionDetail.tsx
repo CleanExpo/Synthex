@@ -21,7 +21,10 @@ import type {
 // ---------------------------------------------------------------------------
 
 function StatusBadge({ status }: { status: string }) {
-  const cfg: Record<string, { bg: string; text: string; border: string; label: string }> = {
+  const cfg: Record<
+    string,
+    { bg: string; text: string; border: string; label: string }
+  > = {
     pending: {
       bg: 'bg-gray-500/20',
       text: 'text-gray-400',
@@ -35,9 +38,9 @@ function StatusBadge({ status }: { status: string }) {
       label: 'Running',
     },
     waiting_approval: {
-      bg: 'bg-amber-500/20',
-      text: 'text-amber-400',
-      border: 'border-amber-500/30',
+      bg: 'bg-orange-500/20',
+      text: 'text-orange-400',
+      border: 'border-orange-500/30',
       label: 'Awaiting Approval',
     },
     completed: {
@@ -130,7 +133,7 @@ export function ExecutionDetail({
 
   // Steps awaiting approval
   const waitingSteps: StepExecution[] = (execution.stepExecutions ?? []).filter(
-    (s) => s.status === 'waiting_approval'
+    s => s.status === 'waiting_approval'
   );
 
   // -------------------------------------------------------------------------
@@ -138,16 +141,22 @@ export function ExecutionDetail({
   // -------------------------------------------------------------------------
 
   async function handleCancel() {
-    if (!window.confirm('Cancel this workflow execution? This cannot be undone.')) return;
+    if (
+      !window.confirm('Cancel this workflow execution? This cannot be undone.')
+    )
+      return;
     setCancelError(null);
     setCancelling(true);
     try {
-      const res = await fetch(`/api/workflows/executions/${execution.id}/cancel`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: 'Cancelled by user' }),
-      });
+      const res = await fetch(
+        `/api/workflows/executions/${execution.id}/cancel`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: 'Cancelled by user' }),
+        }
+      );
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? `Cancel failed (${res.status})`);
@@ -155,7 +164,9 @@ export function ExecutionDetail({
       onRefresh();
       onClose();
     } catch (err) {
-      setCancelError(err instanceof Error ? err.message : 'Cancellation failed');
+      setCancelError(
+        err instanceof Error ? err.message : 'Cancellation failed'
+      );
     } finally {
       setCancelling(false);
     }
@@ -176,7 +187,9 @@ export function ExecutionDetail({
       <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-white/10">
         <div className="flex flex-col gap-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-base font-semibold text-white truncate">{execution.title}</h2>
+            <h2 className="text-base font-semibold text-white truncate">
+              {execution.title}
+            </h2>
             <StatusBadge status={execution.status} />
           </div>
           <div className="flex items-center gap-1 text-xs text-gray-500">
@@ -196,14 +209,18 @@ export function ExecutionDetail({
 
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
-
         {/* Metadata */}
         <section className="space-y-2">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Details</h3>
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            Details
+          </h3>
           <div className="space-y-1.5">
             <MetaRow label="Started" value={formatDate(execution.startedAt)} />
             {execution.completedAt && (
-              <MetaRow label="Completed" value={formatDate(execution.completedAt)} />
+              <MetaRow
+                label="Completed"
+                value={formatDate(execution.completedAt)}
+              />
             )}
             <MetaRow
               label="Progress"
@@ -220,20 +237,24 @@ export function ExecutionDetail({
         {/* Approval actions — rendered before timeline for visibility */}
         {waitingSteps.length > 0 && (
           <section className="space-y-2">
-            <h3 className="text-xs font-semibold text-amber-500 uppercase tracking-wide">
+            <h3 className="text-xs font-semibold text-orange-500 uppercase tracking-wide">
               Pending Approvals ({waitingSteps.length})
             </h3>
             <div className="space-y-2">
-              {waitingSteps.map((step) => (
+              {waitingSteps.map(step => (
                 <div key={step.id} className="space-y-1">
                   <p className="text-xs text-gray-400">
-                    Step {step.stepIndex + 1}: <strong className="text-white">{step.stepName}</strong>
+                    Step {step.stepIndex + 1}:{' '}
+                    <strong className="text-white">{step.stepName}</strong>
                   </p>
                   <ApprovalActions
                     executionId={execution.id}
                     stepId={step.id}
                     onApproved={onRefresh}
-                    onRejected={() => { onRefresh(); onClose(); }}
+                    onRejected={() => {
+                      onRefresh();
+                      onClose();
+                    }}
                   />
                 </div>
               ))}

@@ -36,9 +36,9 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
     pulse: true,
   },
   waiting_approval: {
-    bg: 'bg-amber-500/20',
-    text: 'text-amber-400',
-    border: 'border-amber-500/30',
+    bg: 'bg-[#FF6B35]/20',
+    text: 'text-[#FF9A6C]',
+    border: 'border-[#FF6B35]/30',
     label: 'Awaiting Approval',
   },
   completed: {
@@ -144,7 +144,7 @@ function ExecutionCard({
         'w-full text-left rounded-xl border px-4 py-3 transition-all duration-150',
         'bg-white/[0.03] hover:bg-white/[0.06]',
         selected
-          ? 'border-amber-500/50 ring-1 ring-amber-500/30 bg-amber-500/5'
+          ? 'border-orange-500/50 ring-1 ring-orange-500/30 bg-orange-500/5'
           : 'border-white/10 hover:border-white/20'
       )}
     >
@@ -167,7 +167,7 @@ function ExecutionCard({
           </div>
           <div className="h-1 w-full rounded-full bg-white/10 overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-amber-500 to-blue-500 transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-orange-500 to-blue-500 transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>

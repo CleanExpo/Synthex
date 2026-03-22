@@ -12,14 +12,14 @@ interface ScoreGaugeProps {
 function getScoreColor(score: number): string {
   if (score >= 90) return 'text-green-400';
   if (score >= 70) return 'text-yellow-400';
-  if (score >= 50) return 'text-amber-400';
+  if (score >= 50) return 'text-orange-400';
   return 'text-red-400';
 }
 
 function getScoreBgGradient(score: number): string {
   if (score >= 90) return 'from-green-500/20 to-green-600/20';
   if (score >= 70) return 'from-yellow-500/20 to-yellow-600/20';
-  if (score >= 50) return 'from-amber-500/20 to-amber-600/20';
+  if (score >= 50) return 'from-orange-500/20 to-orange-600/20';
   return 'from-red-500/20 to-red-600/20';
 }
 

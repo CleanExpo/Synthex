@@ -95,7 +95,7 @@ export function TemplateSelector({
               <TabsTrigger
                 key={category.id}
                 value={category.id}
-                className="flex items-center gap-2 data-[state=active]:bg-amber-500/20"
+                className="flex items-center gap-2 data-[state=active]:bg-orange-500/20"
               >
                 <Icon className="h-4 w-4" />
                 <span className="hidden lg:inline">{category.label}</span>
@@ -113,8 +113,8 @@ export function TemplateSelector({
             variant="glass"
             className={`
               cursor-pointer transition-all duration-200
-              hover:scale-[1.02] hover:border-amber-500/50
-              ${hoveredTemplate === template.id ? 'ring-2 ring-amber-500' : ''}
+              hover:scale-[1.02] hover:border-orange-500/50
+              ${hoveredTemplate === template.id ? 'ring-2 ring-orange-500' : ''}
             `}
             onMouseEnter={() => setHoveredTemplate(template.id)}
             onMouseLeave={() => setHoveredTemplate(null)}
@@ -132,7 +132,7 @@ export function TemplateSelector({
                   </div>
                 </div>
                 {hoveredTemplate === template.id && (
-                  <ArrowRight className="h-5 w-5 text-amber-400 animate-pulse" />
+                  <ArrowRight className="h-5 w-5 text-orange-400 animate-pulse" />
                 )}
               </div>
             </CardHeader>
@@ -258,7 +258,7 @@ export function TemplatePreview({ template }: { template: ContentTemplate }) {
                 <Badge
                   key={tag}
                   variant="secondary"
-                  className="bg-amber-500/20"
+                  className="bg-orange-500/20"
                 >
                   {tag}
                 </Badge>
@@ -273,7 +273,7 @@ export function TemplatePreview({ template }: { template: ContentTemplate }) {
           <p className="text-sm font-semibold text-gray-300">Pro Tips:</p>
           {template.tips.map((tip, index) => (
             <div key={index} className="flex items-start gap-2">
-              <span className="text-amber-400">•</span>
+              <span className="text-orange-400">•</span>
               <p className="text-sm text-gray-400">{tip}</p>
             </div>
           ))}

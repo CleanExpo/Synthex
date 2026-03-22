@@ -297,7 +297,7 @@ export default function CompetitorsPage() {
           )}
           <button
             onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-sm bg-amber-500/20 border-[0.5px] border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors text-sm"
+            className="flex items-center gap-2 px-4 py-2 rounded-sm bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30 transition-colors text-sm"
           >
             <Plus className="h-4 w-4" />
             Add Competitor
@@ -312,13 +312,13 @@ export default function CompetitorsPage() {
             label: 'Competitors Tracked',
             value: activeCompetitors.length,
             icon: Users,
-            color: 'text-amber-400',
+            color: 'text-orange-400',
           },
           {
             label: 'Total Monitored',
             value: competitors.length,
             icon: BarChart3,
-            color: 'text-amber-400',
+            color: 'text-orange-400',
           },
           {
             label: 'High Priority Insights',
@@ -331,7 +331,7 @@ export default function CompetitorsPage() {
             value: unreadAlerts.length,
             icon: Bell,
             color:
-              unreadAlerts.length > 0 ? 'text-amber-400' : 'text-green-400',
+              unreadAlerts.length > 0 ? 'text-orange-400' : 'text-green-400',
           },
         ].map(stat => (
           <div
@@ -366,7 +366,7 @@ export default function CompetitorsPage() {
             </p>
             <button
               onClick={() => setShowAddForm(true)}
-              className="px-4 py-2 rounded-sm bg-amber-500/20 border-[0.5px] border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors text-sm"
+              className="px-4 py-2 rounded-sm bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30 transition-colors text-sm"
             >
               Add First Competitor
             </button>
@@ -386,7 +386,7 @@ export default function CompetitorsPage() {
                         href={comp.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1 mt-1"
+                        className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1 mt-1"
                       >
                         <ExternalLink className="h-3 w-3" />
                         {comp.website.replace(/^https?:\/\//, '')}
@@ -436,7 +436,7 @@ export default function CompetitorsPage() {
             Competitor Alerts
           </h2>
           {alerts.filter(a => !a.isRead).length > 0 && (
-            <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-sm tabular-nums">
+            <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-sm tabular-nums">
               {alerts.filter(a => !a.isRead).length} unread
             </span>
           )}
@@ -458,7 +458,7 @@ export default function CompetitorsPage() {
               <div
                 key={alert.id}
                 className={`border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4 flex items-start gap-3 transition-colors ${
-                  !alert.isRead ? 'border-l-2 border-l-amber-500/40' : ''
+                  !alert.isRead ? 'border-l-2 border-l-orange-500/40' : ''
                 }`}
               >
                 <div
@@ -514,7 +514,7 @@ export default function CompetitorsPage() {
                 {!alert.isRead && (
                   <button
                     onClick={() => handleMarkAlertRead(alert.id)}
-                    className="shrink-0 flex items-center gap-1 text-[10px] text-white/50 hover:text-amber-400 transition-colors px-2 py-1 rounded-sm bg-white/[0.02] border-[0.5px] border-white/[0.06]"
+                    className="shrink-0 flex items-center gap-1 text-[10px] text-white/50 hover:text-orange-400 transition-colors px-2 py-1 rounded-sm bg-white/[0.02] border-[0.5px] border-white/[0.06]"
                     title="Mark as read"
                   >
                     <Check className="h-3 w-3" />
@@ -609,7 +609,7 @@ export default function CompetitorsPage() {
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
                   placeholder="e.g. Acme Corp"
-                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-amber-500/50"
+                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-orange-500/50"
                 />
               </div>
               <div>
@@ -621,7 +621,7 @@ export default function CompetitorsPage() {
                   value={newTwitter}
                   onChange={e => setNewTwitter(e.target.value)}
                   placeholder="@username"
-                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-amber-500/50"
+                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-orange-500/50"
                 />
               </div>
               <div>
@@ -633,7 +633,7 @@ export default function CompetitorsPage() {
                   value={newInstagram}
                   onChange={e => setNewInstagram(e.target.value)}
                   placeholder="@username"
-                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-amber-500/50"
+                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-orange-500/50"
                 />
               </div>
               <div>
@@ -645,7 +645,7 @@ export default function CompetitorsPage() {
                   value={newLinkedin}
                   onChange={e => setNewLinkedin(e.target.value)}
                   placeholder="company-slug"
-                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-amber-500/50"
+                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-orange-500/50"
                 />
               </div>
               <div>
@@ -657,7 +657,7 @@ export default function CompetitorsPage() {
                   value={newWebsite}
                   onChange={e => setNewWebsite(e.target.value)}
                   placeholder="https://example.com"
-                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-amber-500/50"
+                  className="w-full px-3 py-2 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm text-white text-sm placeholder:text-white/50 focus:outline-none focus:border-orange-500/50"
                 />
               </div>
             </div>
@@ -672,7 +672,7 @@ export default function CompetitorsPage() {
               <button
                 onClick={handleAddCompetitor}
                 disabled={isAdding}
-                className="px-4 py-2 rounded-sm bg-amber-500/20 border-[0.5px] border-amber-500/30 text-amber-400 hover:bg-amber-500/30 text-sm disabled:opacity-50"
+                className="px-4 py-2 rounded-sm bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30 text-sm disabled:opacity-50"
               >
                 {isAdding ? 'Adding...' : 'Add Competitor'}
               </button>

@@ -10,7 +10,7 @@ export default function ReviewLoading() {
           <div className="h-4 w-20 bg-white/5 rounded" />
         </div>
         <div className="h-2 w-full bg-white/5 rounded-full">
-          <div className="h-2 w-full bg-amber-500/20 rounded-full" />
+          <div className="h-2 w-full bg-orange-500/20 rounded-full" />
         </div>
       </div>
 
@@ -33,7 +33,7 @@ export default function ReviewLoading() {
                   <div className="h-8 w-8 bg-white/5 rounded-lg" />
                   <div className="h-5 w-36 bg-white/5 rounded" />
                 </div>
-                <div className="h-4 w-12 bg-amber-500/10 rounded" />
+                <div className="h-4 w-12 bg-orange-500/10 rounded" />
               </div>
               <div className="h-4 w-3/4 bg-white/5 rounded" />
               <div className="h-4 w-1/2 bg-white/5 rounded" />
@@ -44,7 +44,7 @@ export default function ReviewLoading() {
         {/* Action buttons */}
         <div className="flex justify-between pt-4">
           <div className="h-10 w-24 bg-white/5 rounded-lg" />
-          <div className="h-11 w-44 bg-amber-500/10 rounded-lg" />
+          <div className="h-11 w-44 bg-orange-500/10 rounded-lg" />
         </div>
       </div>
     </div>

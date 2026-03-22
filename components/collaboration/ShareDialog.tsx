@@ -285,7 +285,7 @@ export function ShareDialog({
             onClick={() => setActiveTab('people')}
             className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
               activeTab === 'people'
-                ? 'text-white border-b-2 border-amber-500'
+                ? 'text-white border-b-2 border-orange-500'
                 : 'text-white/60 hover:text-white'
             }`}
           >
@@ -296,7 +296,7 @@ export function ShareDialog({
             onClick={() => setActiveTab('link')}
             className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
               activeTab === 'link'
-                ? 'text-white border-b-2 border-amber-500'
+                ? 'text-white border-b-2 border-orange-500'
                 : 'text-white/60 hover:text-white'
             }`}
           >
@@ -319,7 +319,7 @@ export function ShareDialog({
                       onChange={e => setSearchQuery(e.target.value)}
                       placeholder="Search people or enter email..."
                       aria-label="Search people or enter email"
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-0"
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0"
                     />
                     {isSearching && (
                       <Loader2 className="absolute right-3 top-2.5 w-4 h-4 text-white/40 animate-spin" />
@@ -331,7 +331,7 @@ export function ShareDialog({
                       setSelectedPermission(e.target.value as Permission)
                     }
                     aria-label="Permission level"
-                    className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-0"
+                    className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0"
                   >
                     {PERMISSION_OPTIONS.map(opt => (
                       <option key={opt.value} value={opt.value}>
@@ -350,7 +350,7 @@ export function ShareDialog({
                         onClick={() => handleShareWithUser(member)}
                         className="w-full flex items-center gap-3 p-3 hover:bg-white/5 transition-colors"
                       >
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center text-white text-sm font-medium">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-orange-500 flex items-center justify-center text-white text-sm font-medium">
                           {member.name?.charAt(0) || member.email.charAt(0)}
                         </div>
                         <div className="flex-1 text-left">
@@ -377,7 +377,7 @@ export function ShareDialog({
                       disabled={isLoading}
                       className="w-full flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
                     >
-                      <Mail className="w-5 h-5 text-amber-500" />
+                      <Mail className="w-5 h-5 text-orange-500" />
                       <span className="text-sm text-white">
                         Invite <strong>{searchQuery}</strong> via email
                       </span>
@@ -397,7 +397,7 @@ export function ShareDialog({
                         key={share.id}
                         className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-lg"
                       >
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center text-white text-sm">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-orange-500 flex items-center justify-center text-white text-sm">
                           {share.sharedWithEmail?.charAt(0) ||
                             share.sharedWithUserId?.charAt(0) ||
                             'L'}
@@ -467,7 +467,7 @@ export function ShareDialog({
                       setLinkPermission(e.target.value as Permission)
                     }
                     aria-label="Link permission"
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-0"
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0"
                   >
                     {PERMISSION_OPTIONS.map(opt => (
                       <option key={opt.value} value={opt.value}>
@@ -487,7 +487,7 @@ export function ShareDialog({
                     value={linkExpiration}
                     onChange={e => setLinkExpiration(e.target.value)}
                     aria-label="Expiration date and time"
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-0"
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0"
                   />
                 </div>
 
@@ -502,7 +502,7 @@ export function ShareDialog({
                     onChange={e => setLinkPassword(e.target.value)}
                     placeholder="Enter password..."
                     aria-label="Link password"
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-0"
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0"
                   />
                 </div>
 
@@ -518,7 +518,7 @@ export function ShareDialog({
                     placeholder="Unlimited"
                     min="1"
                     aria-label="Maximum views"
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-0"
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0"
                   />
                 </div>
 
@@ -526,7 +526,7 @@ export function ShareDialog({
                 <button
                   onClick={handleGenerateLink}
                   disabled={isLoading}
-                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-500 text-white font-medium rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
+                  className="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-500 text-white font-medium rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
                 >
                   {isLoading ? (
                     <Loader2 className="w-5 h-5 mx-auto animate-spin" />
@@ -537,9 +537,9 @@ export function ShareDialog({
 
                 {/* Generated Link */}
                 {generatedLink && (
-                  <div className="p-4 bg-white/5 border border-amber-500/30 rounded-lg space-y-2">
+                  <div className="p-4 bg-white/5 border border-orange-500/30 rounded-lg space-y-2">
                     <div className="flex items-center gap-2">
-                      <Link2 className="w-4 h-4 text-amber-500" />
+                      <Link2 className="w-4 h-4 text-orange-500" />
                       <span className="text-sm font-medium text-white">
                         Shareable Link
                       </span>
@@ -553,7 +553,7 @@ export function ShareDialog({
                       />
                       <button
                         onClick={() => handleCopyLink(generatedLink, 'main')}
-                        className="px-4 py-2 bg-amber-500/20 text-amber-500 rounded-lg hover:bg-amber-500/30 transition-colors"
+                        className="px-4 py-2 bg-orange-500/20 text-orange-500 rounded-lg hover:bg-orange-500/30 transition-colors"
                       >
                         {copiedId === 'main' ? (
                           <Check className="w-4 h-4" />
@@ -586,7 +586,7 @@ export function ShareDialog({
                           className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-lg"
                         >
                           <div className="flex items-center gap-3">
-                            <Link2 className="w-4 h-4 text-amber-500" />
+                            <Link2 className="w-4 h-4 text-orange-500" />
                             <div>
                               <p className="text-sm text-white capitalize">
                                 {share.permission} access

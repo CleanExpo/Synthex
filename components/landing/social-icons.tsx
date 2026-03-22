@@ -91,7 +91,7 @@ function SocialButton({ label, icon, onClick, className }: SocialButtonProps) {
         'inline-flex items-center justify-center',
         'h-10 w-10 rounded-sm',
         'border-[0.5px] border-white/[0.06] bg-white/[0.03]',
-        'hover:bg-amber-500/[0.08] hover:border-amber-500/20',
+        'hover:bg-orange-500/[0.08] hover:border-orange-500/20',
         'transition-all duration-300 cursor-pointer',
         'hover:scale-110',
         className

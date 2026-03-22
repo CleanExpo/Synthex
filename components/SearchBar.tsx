@@ -190,9 +190,9 @@ export function SearchBar({
     const colors = {
       content: 'bg-blue-500/20 text-blue-400',
       user: 'bg-green-500/20 text-green-400',
-      campaign: 'bg-amber-500/20 text-amber-400',
+      campaign: 'bg-orange-500/20 text-orange-400',
       template: 'bg-yellow-500/20 text-yellow-400',
-      analytics: 'bg-amber-500/20 text-amber-400',
+      analytics: 'bg-orange-500/20 text-orange-400',
     };
     return (
       colors[type as keyof typeof colors] || 'bg-gray-500/20 text-gray-400'
@@ -234,7 +234,7 @@ export function SearchBar({
               onClick={() => setShowFilterPanel(!showFilterPanel)}
               className={`p-1 hover:bg-white/10 rounded transition-colors ${
                 Object.keys(filters).length > 0
-                  ? 'text-amber-400'
+                  ? 'text-orange-400'
                   : 'text-gray-400'
               }`}
             >

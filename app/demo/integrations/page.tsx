@@ -70,7 +70,7 @@ export default function DemoIntegrationsPage() {
       description: 'Post photos, stories, and reels to Instagram',
       icon: Instagram,
       connected: false,
-      color: 'text-amber-500',
+      color: 'text-orange-500',
       permissions: ['Post content', 'View insights', 'Manage comments'],
     },
     {
@@ -168,12 +168,12 @@ export default function DemoIntegrationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-amber-950/20 to-gray-950">
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-orange-950/20 to-gray-950">
       {/* Demo Mode Banner */}
-      <div className="bg-amber-500/10 border border-amber-500/20 p-3">
+      <div className="bg-orange-500/10 border border-orange-500/20 p-3">
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
-          <Info className="w-4 h-4 text-amber-400" />
-          <p className="text-sm text-amber-400">
+          <Info className="w-4 h-4 text-orange-400" />
+          <p className="text-sm text-orange-400">
             Demo Mode: Test the integration UI without authentication. Your data
             won't be saved.
           </p>
@@ -194,28 +194,28 @@ export default function DemoIntegrationsPage() {
         <Card variant="glass" className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-amber-400" />
+              <Shield className="w-5 h-5 text-orange-400" />
               How Synthex Integrations Work
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3 text-sm text-gray-300">
               <p className="flex items-start gap-2">
-                <span className="text-amber-400 font-bold">1.</span>
+                <span className="text-orange-400 font-bold">1.</span>
                 Each user connects their own social media accounts using their
                 own API credentials
               </p>
               <p className="flex items-start gap-2">
-                <span className="text-amber-400 font-bold">2.</span>
+                <span className="text-orange-400 font-bold">2.</span>
                 Click "Connect" on any platform below to enter your API keys
               </p>
               <p className="flex items-start gap-2">
-                <span className="text-amber-400 font-bold">3.</span>
+                <span className="text-orange-400 font-bold">3.</span>
                 Your credentials are encrypted and stored securely in your
                 account
               </p>
               <p className="flex items-start gap-2">
-                <span className="text-amber-400 font-bold">4.</span>
+                <span className="text-orange-400 font-bold">4.</span>
                 Posts go directly from Synthex to your social media accounts
               </p>
             </div>
@@ -344,7 +344,7 @@ export default function DemoIntegrationsPage() {
                 You can revoke access at any time from this page
               </p>
               <p className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                <AlertCircle className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
                 Some features may require re-authentication after 30 days
               </p>
             </div>

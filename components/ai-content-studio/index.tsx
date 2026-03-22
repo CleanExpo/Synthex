@@ -186,7 +186,10 @@ export function AIContentStudio() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="border-amber-500 text-amber-400">
+          <Badge
+            variant="outline"
+            className="border-orange-500 text-orange-400"
+          >
             <Zap className="w-3 h-3 mr-1" />
             AI Powered
           </Badge>

@@ -58,7 +58,7 @@ export function AssigneeAvatars({
       {visible.map(assignee => (
         <Avatar key={assignee.id} className="w-7 h-7 border-2 border-slate-900">
           <AvatarImage src={assignee.avatar} alt={assignee.name} />
-          <AvatarFallback className="text-xs bg-amber-500/20 text-amber-300">
+          <AvatarFallback className="text-xs bg-orange-500/20 text-orange-300">
             {assignee.name
               .split(' ')
               .map(n => n[0])

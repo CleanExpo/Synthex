@@ -28,7 +28,7 @@ import { useContentPerformance } from '@/hooks/useContentPerformance';
 function ImpactBadge({ impact }: { impact: 'high' | 'medium' | 'low' }) {
   const styles = {
     high: 'bg-green-500/20 text-green-400 border-green-500/20',
-    medium: 'bg-amber-500/20 text-amber-400 border-amber-500/20',
+    medium: 'bg-orange-500/20 text-orange-400 border-orange-500/20',
     low: 'bg-white/[0.05] text-white/40 border-white/[0.06]',
   };
 
@@ -49,7 +49,7 @@ export function ContentPerformanceWidget() {
     return (
       <Card className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
         <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-amber-400" />
+          <Loader2 className="h-6 w-6 animate-spin text-orange-400" />
         </CardContent>
       </Card>
     );
@@ -60,7 +60,7 @@ export function ContentPerformanceWidget() {
       <Card className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
         <CardHeader>
           <CardTitle className="text-sm font-light text-white flex items-center gap-2">
-            <BarChart className="h-4 w-4 text-amber-400" />
+            <BarChart className="h-4 w-4 text-orange-400" />
             Content Performance
           </CardTitle>
         </CardHeader>
@@ -80,7 +80,7 @@ export function ContentPerformanceWidget() {
     <Card className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-light text-white flex items-center gap-2">
-          <BarChart className="h-4 w-4 text-amber-400" />
+          <BarChart className="h-4 w-4 text-orange-400" />
           Content Performance Patterns
         </CardTitle>
       </CardHeader>
@@ -113,7 +113,7 @@ export function ContentPerformanceWidget() {
               {patterns.bestDays.slice(0, 3).map(d => (
                 <Badge
                   key={d.day}
-                  className="bg-amber-500/10 text-amber-300 border-[0.5px] border-amber-500/20 text-xs"
+                  className="bg-orange-500/10 text-orange-300 border-[0.5px] border-orange-500/20 text-xs"
                 >
                   {d.day}
                 </Badge>
@@ -171,7 +171,7 @@ export function ContentPerformanceWidget() {
                     <ImpactBadge impact={insight.impact} />
                   </div>
                   <p className="text-xs text-white/40">{insight.description}</p>
-                  <p className="text-xs text-amber-400/80">
+                  <p className="text-xs text-orange-400/80">
                     {insight.recommendation}
                   </p>
                 </div>

@@ -60,8 +60,8 @@ const PLATFORMS: Platform[] = [
     id: 'instagram',
     label: 'Instagram',
     charLimit: 2200,
-    color: 'border-amber-500/30 bg-amber-500/5',
-    dotColor: 'bg-amber-400',
+    color: 'border-orange-500/30 bg-orange-500/5',
+    dotColor: 'bg-orange-400',
   },
   {
     id: 'tiktok',
@@ -95,8 +95,8 @@ const PLATFORMS: Platform[] = [
     id: 'reddit',
     label: 'Reddit',
     charLimit: 40000,
-    color: 'border-amber-500/30 bg-amber-500/5',
-    dotColor: 'bg-amber-400',
+    color: 'border-orange-500/30 bg-orange-500/5',
+    dotColor: 'bg-orange-400',
   },
   {
     id: 'threads',
@@ -235,7 +235,7 @@ function PlatformResultCard({ result }: PlatformResultCardProps) {
               {charLimit !== Infinity && (
                 <div className="h-1 w-full rounded-full bg-zinc-800">
                   <div
-                    className={`h-1 rounded-full transition-all ${isOverLimit ? 'bg-red-500' : 'bg-amber-500'}`}
+                    className={`h-1 rounded-full transition-all ${isOverLimit ? 'bg-red-500' : 'bg-orange-500'}`}
                     style={{ width: `${usagePercent}%` }}
                   />
                 </div>
@@ -414,7 +414,7 @@ export default function MultiFormatPage() {
       <Card className="bg-zinc-900/50 border border-zinc-800/50">
         <CardHeader className="pb-4">
           <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
-            <Layers className="h-4 w-4 text-amber-400" />
+            <Layers className="h-4 w-4 text-orange-400" />
             Content settings
           </CardTitle>
         </CardHeader>
@@ -437,7 +437,7 @@ export default function MultiFormatPage() {
                 if (e.key === 'Enter' && canGenerate) handleGenerate();
               }}
               placeholder="e.g. 5 productivity habits that changed my life"
-              className="w-full h-10 rounded-md px-3 text-sm text-white placeholder:text-zinc-600 bg-zinc-800/50 border border-zinc-700/50 focus:outline-none focus:ring-1 focus:ring-amber-500/60 focus:border-amber-500/40 transition-colors"
+              className="w-full h-10 rounded-md px-3 text-sm text-white placeholder:text-zinc-600 bg-zinc-800/50 border border-zinc-700/50 focus:outline-none focus:ring-1 focus:ring-orange-500/60 focus:border-orange-500/40 transition-colors"
             />
           </div>
 
@@ -445,7 +445,7 @@ export default function MultiFormatPage() {
           <div className="space-y-2">
             <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide">
               Platforms
-              <span className="ml-2 normal-case font-normal text-amber-400">
+              <span className="ml-2 normal-case font-normal text-orange-400">
                 {selectedIds.size} selected
               </span>
             </p>
@@ -457,7 +457,7 @@ export default function MultiFormatPage() {
                     key={platform.id}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm cursor-pointer select-none transition-colors ${
                       active
-                        ? 'bg-amber-600/20 border-amber-500/50 text-white'
+                        ? 'bg-orange-600/20 border-orange-500/50 text-white'
                         : 'bg-zinc-800/40 border-zinc-700/50 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
                     }`}
                   >
@@ -489,7 +489,7 @@ export default function MultiFormatPage() {
               id="tone-select"
               value={tone}
               onChange={e => setTone(e.target.value as Tone)}
-              className="h-10 rounded-md px-3 text-sm text-white bg-zinc-800/50 border border-zinc-700/50 focus:outline-none focus:ring-1 focus:ring-amber-500/60 focus:border-amber-500/40 transition-colors appearance-none cursor-pointer"
+              className="h-10 rounded-md px-3 text-sm text-white bg-zinc-800/50 border border-zinc-700/50 focus:outline-none focus:ring-1 focus:ring-orange-500/60 focus:border-orange-500/40 transition-colors appearance-none cursor-pointer"
             >
               {TONES.map(t => (
                 <option key={t.value} value={t.value} className="bg-zinc-900">
@@ -504,7 +504,7 @@ export default function MultiFormatPage() {
             <Button
               onClick={handleGenerate}
               disabled={!canGenerate}
-              className="bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-40 disabled:cursor-not-allowed px-5"
+              className="bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-40 disabled:cursor-not-allowed px-5"
             >
               {isGenerating ? (
                 <>
@@ -530,12 +530,12 @@ export default function MultiFormatPage() {
           <h2 className="text-sm font-medium text-zinc-400">
             Results
             {isGenerating && (
-              <span className="ml-2 text-amber-400">
+              <span className="ml-2 text-orange-400">
                 — generating
                 <span className="inline-flex ml-1 gap-0.5">
-                  <span className="w-1 h-1 rounded-full bg-amber-400 animate-bounce [animation-delay:0ms]" />
-                  <span className="w-1 h-1 rounded-full bg-amber-400 animate-bounce [animation-delay:150ms]" />
-                  <span className="w-1 h-1 rounded-full bg-amber-400 animate-bounce [animation-delay:300ms]" />
+                  <span className="w-1 h-1 rounded-full bg-orange-400 animate-bounce [animation-delay:0ms]" />
+                  <span className="w-1 h-1 rounded-full bg-orange-400 animate-bounce [animation-delay:150ms]" />
+                  <span className="w-1 h-1 rounded-full bg-orange-400 animate-bounce [animation-delay:300ms]" />
                 </span>
               </span>
             )}

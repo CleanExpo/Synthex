@@ -34,7 +34,7 @@ const emptyStateConfigs = {
     description:
       'Start creating engaging content for your social media channels',
     actionLabel: 'Generate First Content',
-    gradient: 'from-amber-500 to-amber-500',
+    gradient: 'from-orange-500 to-orange-500',
   },
   analytics: {
     icon: BarChart3,
@@ -42,7 +42,7 @@ const emptyStateConfigs = {
     description:
       'Once you start posting content, your analytics will appear here',
     actionLabel: 'View Sample Dashboard',
-    gradient: 'from-blue-500 to-amber-500',
+    gradient: 'from-blue-500 to-orange-500',
   },
   campaigns: {
     icon: Users,
@@ -57,7 +57,7 @@ const emptyStateConfigs = {
     description:
       'Plan and schedule your content to maintain consistent posting',
     actionLabel: 'Schedule Content',
-    gradient: 'from-amber-500 to-red-500',
+    gradient: 'from-orange-500 to-red-500',
   },
   search: {
     icon: Search,
@@ -71,7 +71,7 @@ const emptyStateConfigs = {
     title: 'Nothing here yet',
     description: 'Get started by adding your first item',
     actionLabel: 'Get Started',
-    gradient: 'from-amber-500 to-amber-500',
+    gradient: 'from-orange-500 to-orange-500',
   },
 };
 
@@ -122,11 +122,11 @@ export function EmptyState({
       {type === 'content' && (
         <div className="mt-8 grid grid-cols-2 gap-4 text-sm">
           <button className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
-            <Upload className="w-5 h-5 text-amber-400 mb-2 mx-auto" />
+            <Upload className="w-5 h-5 text-orange-400 mb-2 mx-auto" />
             <span className="text-gray-400">Import Content</span>
           </button>
           <button className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
-            <Sparkles className="w-5 h-5 text-amber-400 mb-2 mx-auto" />
+            <Sparkles className="w-5 h-5 text-orange-400 mb-2 mx-auto" />
             <span className="text-gray-400">Use AI Assistant</span>
           </button>
         </div>

@@ -13,7 +13,7 @@ export function SchedulerTab() {
         {/* Header */}
         <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06]">
           <div className="flex items-center gap-2 mb-0.5">
-            <Calendar className="h-3.5 w-3.5 text-amber-400" />
+            <Calendar className="h-3.5 w-3.5 text-orange-400" />
             <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
               Post Scheduler
             </span>
@@ -40,7 +40,7 @@ export function SchedulerTab() {
           {/* CTA */}
           <button
             onClick={() => router.push('/dashboard/content')}
-            className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-medium tracking-wide rounded-sm transition-colors bg-amber-500 hover:bg-amber-400 text-[#050505]"
+            className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-medium tracking-wide rounded-sm transition-colors bg-orange-500 hover:bg-orange-400 text-[#050505]"
           >
             <Plus className="h-3.5 w-3.5" />
             Schedule New Post

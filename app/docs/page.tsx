@@ -34,8 +34,8 @@ export default function DocsPage() {
 
           {/* Documentation Categories */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            <Card className="p-6 bg-white/[0.02] backdrop-blur-sm border border-amber-500/10 hover:border-amber-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group">
-              <Zap className="w-10 h-10 text-amber-400 mb-4 group-hover:text-amber-300 transition-colors" />
+            <Card className="p-6 bg-white/[0.02] backdrop-blur-sm border border-orange-500/10 hover:border-orange-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group">
+              <Zap className="w-10 h-10 text-orange-400 mb-4 group-hover:text-orange-300 transition-colors" />
               <h3 className="text-xl font-semibold text-white mb-2">
                 Getting Started
               </h3>
@@ -44,26 +44,26 @@ export default function DocsPage() {
               </p>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Account setup
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Connecting social accounts
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   First AI persona
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Your first post
                 </li>
               </ul>
             </Card>
 
-            <Card className="p-6 bg-white/[0.02] backdrop-blur-sm border border-amber-500/10 hover:border-amber-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group">
-              <BookOpen className="w-10 h-10 text-amber-400 mb-4 group-hover:text-amber-300 transition-colors" />
+            <Card className="p-6 bg-white/[0.02] backdrop-blur-sm border border-orange-500/10 hover:border-orange-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group">
+              <BookOpen className="w-10 h-10 text-orange-400 mb-4 group-hover:text-orange-300 transition-colors" />
               <h3 className="text-xl font-semibold text-white mb-2">
                 User Guide
               </h3>
@@ -72,26 +72,26 @@ export default function DocsPage() {
               </p>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Persona training
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Content generation
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Scheduling posts
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Analytics dashboard
                 </li>
               </ul>
             </Card>
 
-            <Card className="p-6 bg-white/[0.02] backdrop-blur-sm border border-amber-500/10 hover:border-amber-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group">
-              <Code className="w-10 h-10 text-amber-400 mb-4 group-hover:text-amber-300 transition-colors" />
+            <Card className="p-6 bg-white/[0.02] backdrop-blur-sm border border-orange-500/10 hover:border-orange-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group">
+              <Code className="w-10 h-10 text-orange-400 mb-4 group-hover:text-orange-300 transition-colors" />
               <h3 className="text-xl font-semibold text-white mb-2">
                 API Reference
               </h3>
@@ -100,26 +100,26 @@ export default function DocsPage() {
               </p>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Authentication
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Endpoints
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Rate limits
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Webhooks
                 </li>
               </ul>
             </Card>
 
-            <Card className="p-6 bg-white/[0.02] backdrop-blur-sm border border-amber-500/10 hover:border-amber-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group">
-              <Settings className="w-10 h-10 text-amber-400 mb-4 group-hover:text-amber-300 transition-colors" />
+            <Card className="p-6 bg-white/[0.02] backdrop-blur-sm border border-orange-500/10 hover:border-orange-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group">
+              <Settings className="w-10 h-10 text-orange-400 mb-4 group-hover:text-orange-300 transition-colors" />
               <h3 className="text-xl font-semibold text-white mb-2">
                 Advanced Features
               </h3>
@@ -128,26 +128,26 @@ export default function DocsPage() {
               </p>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Custom AI training
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Viral pattern analysis
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   A/B testing
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Automation workflows
                 </li>
               </ul>
             </Card>
 
-            <Card className="p-6 bg-white/[0.02] backdrop-blur-sm border border-amber-500/10 hover:border-amber-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group">
-              <Users className="w-10 h-10 text-amber-400 mb-4 group-hover:text-amber-300 transition-colors" />
+            <Card className="p-6 bg-white/[0.02] backdrop-blur-sm border border-orange-500/10 hover:border-orange-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group">
+              <Users className="w-10 h-10 text-orange-400 mb-4 group-hover:text-orange-300 transition-colors" />
               <h3 className="text-xl font-semibold text-white mb-2">
                 Team Collaboration
               </h3>
@@ -156,45 +156,45 @@ export default function DocsPage() {
               </p>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   User roles
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Approval workflows
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Client management
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   White-label options
                 </li>
               </ul>
             </Card>
 
-            <Card className="p-6 bg-white/[0.02] backdrop-blur-sm border border-amber-500/10 hover:border-amber-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group">
-              <Shield className="w-10 h-10 text-amber-400 mb-4 group-hover:text-amber-300 transition-colors" />
+            <Card className="p-6 bg-white/[0.02] backdrop-blur-sm border border-orange-500/10 hover:border-orange-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group">
+              <Shield className="w-10 h-10 text-orange-400 mb-4 group-hover:text-orange-300 transition-colors" />
               <h3 className="text-xl font-semibold text-white mb-2">
                 Security & Privacy
               </h3>
               <p className="text-gray-500 mb-4">How we protect your data</p>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Data encryption
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Privacy policy
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   GDPR compliance
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-orange-400 rounded-full" />
                   Security best practices
                 </li>
               </ul>
@@ -204,7 +204,7 @@ export default function DocsPage() {
       </section>
 
       {/* Popular Articles */}
-      <section className="py-20 px-6 bg-white/[0.01] border-y border-amber-500/10">
+      <section className="py-20 px-6 bg-white/[0.01] border-y border-orange-500/10">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-white mb-12">
             Popular Articles
@@ -220,13 +220,13 @@ export default function DocsPage() {
             ].map(article => (
               <Card
                 key={article}
-                className="p-4 bg-white/[0.02] backdrop-blur-sm border border-amber-500/10 hover:border-amber-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group"
+                className="p-4 bg-white/[0.02] backdrop-blur-sm border border-orange-500/10 hover:border-orange-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-gray-300 group-hover:text-white transition-colors">
                     {article}
                   </span>
-                  <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
+                  <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
                 </div>
               </Card>
             ))}
@@ -237,18 +237,18 @@ export default function DocsPage() {
       {/* Help Section */}
       <section className="py-20 px-6">
         <div className="container mx-auto">
-          <Card className="p-12 text-center max-w-2xl mx-auto bg-gradient-to-br from-amber-500/10 to-amber-600/5 backdrop-blur-sm border border-amber-500/20">
-            <HelpCircle className="w-16 h-16 text-amber-400 mx-auto mb-4" />
+          <Card className="p-12 text-center max-w-2xl mx-auto bg-gradient-to-br from-orange-500/10 to-orange-600/5 backdrop-blur-sm border border-orange-500/20">
+            <HelpCircle className="w-16 h-16 text-orange-400 mx-auto mb-4" />
             <h2 className="text-3xl font-bold text-white mb-4">Need Help?</h2>
             <p className="text-gray-400 mb-8">
               Can't find what you're looking for? Our support team is here to
               help.
             </p>
             <div className="flex justify-center space-x-4">
-              <Button className="bg-white/[0.05] border border-amber-500/30 text-white hover:bg-white/[0.1] hover:border-amber-500/50 transition-all">
+              <Button className="bg-white/[0.05] border border-orange-500/30 text-white hover:bg-white/[0.1] hover:border-orange-500/50 transition-all">
                 Contact Support
               </Button>
-              <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all">
+              <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all">
                 Join Community
               </Button>
             </div>

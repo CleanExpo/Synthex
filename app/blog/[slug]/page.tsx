@@ -460,7 +460,7 @@ export default function BlogPostPage() {
             <div className="flex items-center gap-4 mb-4">
               <Badge
                 variant="secondary"
-                className="bg-amber-500/10 text-amber-400 border-amber-500/20"
+                className="bg-orange-500/10 text-orange-400 border-orange-500/20"
               >
                 {post.category}
               </Badge>
@@ -487,7 +487,7 @@ export default function BlogPostPage() {
             {/* Author Info */}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-blue-500 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-blue-500 flex items-center justify-center">
                   <User className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -539,10 +539,10 @@ export default function BlogPostPage() {
           </div>
 
           {/* Featured Image Placeholder */}
-          <div className="w-full h-96 bg-gradient-to-br from-amber-600/20 to-blue-600/20 rounded-xl mb-12 flex items-center justify-center border border-gray-800">
+          <div className="w-full h-96 bg-gradient-to-br from-orange-600/20 to-blue-600/20 rounded-xl mb-12 flex items-center justify-center border border-gray-800">
             <div className="text-center">
-              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-amber-500/20 to-blue-500/20 flex items-center justify-center">
-                <Share2 className="h-12 w-12 text-amber-400" />
+              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-orange-500/20 to-blue-500/20 flex items-center justify-center">
+                <Share2 className="h-12 w-12 text-orange-400" />
               </div>
               <p className="text-gray-500">Featured Image</p>
             </div>
@@ -585,7 +585,7 @@ export default function BlogPostPage() {
               <div className="flex gap-4 justify-center">
                 <Button
                   onClick={() => router.push('/signup')}
-                  className="bg-gradient-to-r from-amber-600 to-blue-600 hover:from-amber-700 hover:to-blue-700"
+                  className="bg-gradient-to-r from-orange-600 to-blue-600 hover:from-orange-700 hover:to-blue-700"
                 >
                   Start Free Trial
                 </Button>

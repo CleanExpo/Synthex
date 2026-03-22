@@ -24,7 +24,7 @@ const CONNECTOR_DESCRIPTIONS: Record<string, string> = {
 const SOURCE_TYPE_COLORS: Record<string, string> = {
   government: 'text-emerald-400',
   academic: 'text-blue-400',
-  industry: 'text-amber-400',
+  industry: 'text-orange-400',
   web: 'text-slate-400',
 };
 

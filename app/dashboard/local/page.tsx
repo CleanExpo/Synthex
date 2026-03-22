@@ -81,7 +81,7 @@ function StarRating({
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map(star =>
         star <= rating ? (
-          <StarSolid key={star} className={`${iconClass} text-amber-400`} />
+          <StarSolid key={star} className={`${iconClass} text-orange-400`} />
         ) : (
           <Star key={star} className={`${iconClass} text-gray-600`} />
         )
@@ -95,7 +95,7 @@ function MetricCard({
   label,
   value,
   subtext,
-  iconColour = 'text-amber-400',
+  iconColour = 'text-orange-400',
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
@@ -104,7 +104,7 @@ function MetricCard({
   iconColour?: string;
 }) {
   return (
-    <Card className="bg-surface-base/80 border border-amber-500/10">
+    <Card className="bg-surface-base/80 border border-orange-500/10">
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div>
@@ -149,12 +149,12 @@ function RankChange({
 
 function ConnectCTA({ platform, label }: { platform: string; label: string }) {
   return (
-    <Card className="bg-surface-base/80 border border-amber-500/10">
+    <Card className="bg-surface-base/80 border border-orange-500/10">
       <CardContent className="p-12 text-center text-gray-400">
         <Globe className="h-10 w-10 mx-auto mb-3 opacity-30" />
         <p>Connect {label} to see real data</p>
         <Button
-          className="mt-4 bg-amber-600 hover:bg-amber-700 text-white"
+          className="mt-4 bg-orange-600 hover:bg-orange-700 text-white"
           onClick={() => {
             window.location.href = `/api/auth/oauth/${platform}?returnTo=/dashboard/local`;
           }}
@@ -341,7 +341,7 @@ export default function LocalPage() {
         {/* Page Header */}
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <MapPin className="h-7 w-7 text-amber-400" />
+            <MapPin className="h-7 w-7 text-orange-400" />
             Local SEO Dashboard
           </h1>
           <p className="text-gray-400 mt-1">
@@ -352,17 +352,17 @@ export default function LocalPage() {
 
         {/* Connect GBP Banner — only show when not connected */}
         {!hasGbp && !locationsLoading && (
-          <Card className="bg-gradient-to-r from-amber-500/10 to-blue-500/10 border border-amber-500/20">
+          <Card className="bg-gradient-to-r from-orange-500/10 to-blue-500/10 border border-orange-500/20">
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Info className="h-5 w-5 text-amber-400 flex-shrink-0" />
+                <Info className="h-5 w-5 text-orange-400 flex-shrink-0" />
                 <p className="text-sm text-gray-300">
                   Connect your Google Business Profile to see live data and
                   manage your listing directly.
                 </p>
               </div>
               <Button
-                className="bg-amber-600 hover:bg-amber-700 text-white flex-shrink-0"
+                className="bg-orange-600 hover:bg-orange-700 text-white flex-shrink-0"
                 onClick={() => {
                   window.location.href =
                     '/api/auth/oauth/googlebusiness?returnTo=/dashboard/local';
@@ -419,12 +419,12 @@ export default function LocalPage() {
               />
             ) : insightsLoading ? (
               <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 text-amber-400 animate-spin" />
+                <Loader2 className="h-6 w-6 text-orange-400 animate-spin" />
               </div>
             ) : (
               <>
                 {/* Rating highlight */}
-                <Card className="bg-surface-base/80 border border-amber-500/10">
+                <Card className="bg-surface-base/80 border border-orange-500/10">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-4">
                       <div className="text-4xl font-bold text-white">
@@ -472,7 +472,7 @@ export default function LocalPage() {
                     label="Direction requests"
                     value={insightsTotals.directionClicks}
                     subtext="Get directions taps"
-                    iconColour="text-amber-400"
+                    iconColour="text-orange-400"
                   />
                   <MetricCard
                     icon={Search}
@@ -489,7 +489,7 @@ export default function LocalPage() {
                         ? `${averageRating.toFixed(1)} average rating`
                         : 'No reviews yet'
                     }
-                    iconColour="text-amber-400"
+                    iconColour="text-orange-400"
                   />
                 </div>
               </>
@@ -519,7 +519,7 @@ export default function LocalPage() {
                       onClick={() => setRatingFilter(rating)}
                       className={`text-sm ${
                         ratingFilter === rating
-                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                          ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
                           : 'text-gray-400 hover:text-white'
                       }`}
                     >
@@ -531,14 +531,14 @@ export default function LocalPage() {
                 {/* Reviews list */}
                 {reviewsLoading ? (
                   <div className="flex justify-center py-8">
-                    <Loader2 className="h-6 w-6 text-amber-400 animate-spin" />
+                    <Loader2 className="h-6 w-6 text-orange-400 animate-spin" />
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {reviews.map(review => (
                       <Card
                         key={review.id}
-                        className="bg-surface-base/80 border border-amber-500/10"
+                        className="bg-surface-base/80 border border-orange-500/10"
                       >
                         <CardContent className="p-5">
                           <div className="flex items-start justify-between mb-3">
@@ -558,7 +558,7 @@ export default function LocalPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-amber-400 hover:text-amber-300"
+                              className="text-orange-400 hover:text-orange-300"
                               onClick={() => {
                                 setReplyingTo(
                                   replyingTo === review.id ? null : review.id
@@ -576,10 +576,10 @@ export default function LocalPage() {
 
                           {/* AI suggestion */}
                           {!review.replyText && review.aiSuggestion && (
-                            <div className="mt-3 rounded-lg bg-amber-500/10 border-[0.5px] border-amber-500/20 p-3">
+                            <div className="mt-3 rounded-lg bg-orange-500/10 border-[0.5px] border-orange-500/20 p-3">
                               <div className="flex items-center gap-1.5 mb-2">
-                                <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-                                <span className="text-xs font-medium text-amber-400">
+                                <Sparkles className="h-3.5 w-3.5 text-orange-400" />
+                                <span className="text-xs font-medium text-orange-400">
                                   AI Suggested Reply
                                 </span>
                               </div>
@@ -589,7 +589,7 @@ export default function LocalPage() {
                               <div className="flex items-center gap-2">
                                 <Button
                                   size="sm"
-                                  className="bg-amber-600 hover:bg-amber-700 text-white text-xs"
+                                  className="bg-orange-600 hover:bg-orange-700 text-white text-xs"
                                   onClick={() => {
                                     setReplyText(review.aiSuggestion!);
                                     setReplyingTo(review.id);
@@ -600,7 +600,7 @@ export default function LocalPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="text-amber-400 hover:text-amber-300 text-xs"
+                                  className="text-orange-400 hover:text-orange-300 text-xs"
                                   disabled={generatingFor === review.id}
                                   onClick={async () => {
                                     setGeneratingFor(review.id);
@@ -634,7 +634,7 @@ export default function LocalPage() {
                           {!review.replyText && !review.aiSuggestion && (
                             <button
                               type="button"
-                              className="mt-2 inline-flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition-colours disabled:opacity-50"
+                              className="mt-2 inline-flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 transition-colours disabled:opacity-50"
                               disabled={generatingFor === review.id}
                               onClick={async () => {
                                 setGeneratingFor(review.id);
@@ -668,8 +668,8 @@ export default function LocalPage() {
 
                           {/* Existing reply */}
                           {review.replyText && (
-                            <div className="mt-3 pl-4 border-l-2 border-amber-500/20">
-                              <p className="text-xs text-amber-400 mb-1">
+                            <div className="mt-3 pl-4 border-l-2 border-orange-500/20">
+                              <p className="text-xs text-orange-400 mb-1">
                                 Your reply:
                               </p>
                               <p className="text-sm text-gray-400">
@@ -703,7 +703,7 @@ export default function LocalPage() {
                                 </Button>
                                 <Button
                                   size="sm"
-                                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                                  className="bg-orange-600 hover:bg-orange-700 text-white"
                                   disabled={!replyText.trim()}
                                 >
                                   <Send className="h-3.5 w-3.5 mr-1.5" />
@@ -717,7 +717,7 @@ export default function LocalPage() {
                     ))}
 
                     {reviews.length === 0 && (
-                      <Card className="bg-surface-base/80 border border-amber-500/10">
+                      <Card className="bg-surface-base/80 border border-orange-500/10">
                         <CardContent className="p-12 text-center text-gray-400">
                           <Star className="h-10 w-10 mx-auto mb-3 opacity-30" />
                           <p>
@@ -743,10 +743,10 @@ export default function LocalPage() {
               />
             ) : insightsLoading ? (
               <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 text-amber-400 animate-spin" />
+                <Loader2 className="h-6 w-6 text-orange-400 animate-spin" />
               </div>
             ) : viewsChartData.length === 0 ? (
-              <Card className="bg-surface-base/80 border border-amber-500/10">
+              <Card className="bg-surface-base/80 border border-orange-500/10">
                 <CardContent className="p-12 text-center text-gray-400">
                   <TrendingUp className="h-10 w-10 mx-auto mb-3 opacity-30" />
                   <p>
@@ -758,10 +758,10 @@ export default function LocalPage() {
             ) : (
               <>
                 {/* Views line chart */}
-                <Card className="bg-surface-base/80 border border-amber-500/10">
+                <Card className="bg-surface-base/80 border border-orange-500/10">
                   <CardHeader>
                     <CardTitle className="text-lg text-white flex items-center gap-2">
-                      <Eye className="h-5 w-5 text-amber-400" />
+                      <Eye className="h-5 w-5 text-orange-400" />
                       Profile Views — Last 30 Days
                     </CardTitle>
                   </CardHeader>
@@ -807,10 +807,10 @@ export default function LocalPage() {
 
                 {/* Actions bar chart */}
                 {actionsChartData.length > 0 && (
-                  <Card className="bg-surface-base/80 border border-amber-500/10">
+                  <Card className="bg-surface-base/80 border border-orange-500/10">
                     <CardHeader>
                       <CardTitle className="text-lg text-white flex items-center gap-2">
-                        <BarChart3 className="h-5 w-5 text-amber-400" />
+                        <BarChart3 className="h-5 w-5 text-orange-400" />
                         Actions Breakdown
                       </CardTitle>
                     </CardHeader>
@@ -871,7 +871,7 @@ export default function LocalPage() {
                           Phone Calls
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-400">
-                          <div className="w-3 h-3 rounded-sm bg-amber-400" />
+                          <div className="w-3 h-3 rounded-sm bg-orange-400" />
                           Directions
                         </div>
                       </div>
@@ -890,17 +890,17 @@ export default function LocalPage() {
                 label="Google Search Console"
               />
             ) : (
-              <Card className="bg-surface-base/80 border border-amber-500/10">
+              <Card className="bg-surface-base/80 border border-orange-500/10">
                 <CardHeader>
                   <CardTitle className="text-lg text-white flex items-center gap-2">
-                    <Search className="h-5 w-5 text-amber-400" />
+                    <Search className="h-5 w-5 text-orange-400" />
                     Local Keyword Rankings
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {gscLoading ? (
                     <div className="flex justify-center py-8">
-                      <Loader2 className="h-6 w-6 text-amber-400 animate-spin" />
+                      <Loader2 className="h-6 w-6 text-orange-400 animate-spin" />
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
@@ -942,7 +942,7 @@ export default function LocalPage() {
                                       row.rank <= 3
                                         ? 'bg-emerald-500/20 text-emerald-400'
                                         : row.rank <= 10
-                                          ? 'bg-amber-500/20 text-amber-400'
+                                          ? 'bg-orange-500/20 text-orange-400'
                                           : 'bg-gray-500/20 text-gray-400'
                                     }
                                   >
@@ -980,7 +980,7 @@ export default function LocalPage() {
                   <h2 className="text-lg font-semibold text-white">
                     GBP Posts
                   </h2>
-                  <Button className="bg-amber-600 hover:bg-amber-700 text-white">
+                  <Button className="bg-orange-600 hover:bg-orange-700 text-white">
                     <Plus className="h-4 w-4 mr-2" />
                     Create Post
                   </Button>
@@ -988,10 +988,10 @@ export default function LocalPage() {
 
                 {postsLoading ? (
                   <div className="flex justify-center py-8">
-                    <Loader2 className="h-6 w-6 text-amber-400 animate-spin" />
+                    <Loader2 className="h-6 w-6 text-orange-400 animate-spin" />
                   </div>
                 ) : posts.length === 0 ? (
-                  <Card className="bg-surface-base/80 border border-amber-500/10">
+                  <Card className="bg-surface-base/80 border border-orange-500/10">
                     <CardContent className="p-12 text-center text-gray-400">
                       <Calendar className="h-10 w-10 mx-auto mb-3 opacity-30" />
                       <p>No GBP posts yet</p>
@@ -1005,18 +1005,18 @@ export default function LocalPage() {
                     {posts.map(post => (
                       <Card
                         key={post.id}
-                        className="bg-surface-base/80 border border-amber-500/10 hover:border-amber-500/20 transition-all"
+                        className="bg-surface-base/80 border border-orange-500/10 hover:border-orange-500/20 transition-all"
                       >
                         <CardContent className="p-5">
                           <div className="flex items-center justify-between mb-2">
-                            <Badge className="bg-amber-500/20 text-amber-400 text-xs">
+                            <Badge className="bg-orange-500/20 text-orange-400 text-xs">
                               {post.type || 'Update'}
                             </Badge>
                             <Badge
                               className={
                                 post.status === 'published'
                                   ? 'bg-emerald-500/20 text-emerald-400'
-                                  : 'bg-amber-500/20 text-amber-400'
+                                  : 'bg-orange-500/20 text-orange-400'
                               }
                             >
                               {post.status === 'published'
@@ -1052,7 +1052,7 @@ export default function LocalPage() {
                   schema
                 </p>
               </div>
-              <Button className="bg-amber-600 hover:bg-amber-700">
+              <Button className="bg-orange-600 hover:bg-orange-700">
                 <Plus className="h-4 w-4 mr-2" />
                 New Case Study
               </Button>
@@ -1063,7 +1063,7 @@ export default function LocalPage() {
                 {[1, 2].map(i => (
                   <Card
                     key={i}
-                    className="bg-surface-base/80 border border-amber-500/10"
+                    className="bg-surface-base/80 border border-orange-500/10"
                   >
                     <CardContent className="p-6 animate-pulse space-y-3">
                       <div className="h-6 bg-white/10 rounded w-2/3" />
@@ -1073,7 +1073,7 @@ export default function LocalPage() {
                 ))}
               </div>
             ) : caseStudies.length === 0 ? (
-              <Card className="bg-surface-base/80 border border-amber-500/10">
+              <Card className="bg-surface-base/80 border border-orange-500/10">
                 <CardContent className="p-12 text-center text-gray-400">
                   <Map className="h-12 w-12 mx-auto mb-3 opacity-30" />
                   <p>No case studies yet</p>
@@ -1087,7 +1087,7 @@ export default function LocalPage() {
                 {caseStudies.map(cs => (
                   <Card
                     key={cs.id}
-                    className="bg-surface-base/80 border border-amber-500/10 hover:border-amber-500/30 transition-all"
+                    className="bg-surface-base/80 border border-orange-500/10 hover:border-orange-500/30 transition-all"
                   >
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-3">
@@ -1105,7 +1105,7 @@ export default function LocalPage() {
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
-                        <MapPin className="h-4 w-4 text-amber-400" />
+                        <MapPin className="h-4 w-4 text-orange-400" />
                         <span>
                           {cs.suburb}, {cs.city}, {cs.state} {cs.postcode}
                         </span>
@@ -1117,7 +1117,7 @@ export default function LocalPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-amber-400"
+                          className="text-orange-400"
                         >
                           <Eye className="h-4 w-4 mr-1" /> View
                         </Button>

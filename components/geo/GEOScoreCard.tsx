@@ -25,21 +25,21 @@ const scoreDimensions = [
     label: 'Citability',
     icon: Eye,
     weight: '25%',
-    color: 'bg-amber-500',
+    color: 'bg-orange-500',
   },
   {
     key: 'structure',
     label: 'Structure',
     icon: Database,
     weight: '20%',
-    color: 'bg-amber-500',
+    color: 'bg-orange-500',
   },
   {
     key: 'multiModal',
     label: 'Multi-Modal',
     icon: Globe,
     weight: '15%',
-    color: 'bg-amber-500',
+    color: 'bg-orange-500',
   },
   {
     key: 'authority',
@@ -66,12 +66,12 @@ function getScoreTier(score: number): { label: string; color: string } {
   if (score >= 60)
     return {
       label: 'Good',
-      color: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+      color: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
     };
   if (score >= 40)
     return {
       label: 'Needs Work',
-      color: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+      color: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
     };
   return {
     label: 'Poor',
@@ -107,7 +107,7 @@ export function GEOScoreCard({ score, loading }: GEOScoreCardProps) {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-white flex items-center gap-2">
-            <Globe className="h-5 w-5 text-amber-400" />
+            <Globe className="h-5 w-5 text-orange-400" />
             GEO Score
           </CardTitle>
           <Badge className={tier.color}>{tier.label}</Badge>

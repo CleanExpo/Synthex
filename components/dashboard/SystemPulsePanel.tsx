@@ -91,14 +91,14 @@ function extractLatency(data: Record<string, unknown> | null): number | null {
 
 const STATUS_DOT: Record<ServiceStatus, string> = {
   ok: 'bg-emerald-400',
-  warn: 'bg-amber-400',
+  warn: 'bg-orange-400',
   error: 'bg-red-400',
   unknown: 'bg-white/20',
 };
 
 const STATUS_TEXT: Record<ServiceStatus, string> = {
   ok: 'text-emerald-400',
-  warn: 'text-amber-400',
+  warn: 'text-orange-400',
   error: 'text-red-400',
   unknown: 'text-white/50',
 };
@@ -312,7 +312,7 @@ export function SystemPulsePanel({ className }: { className?: string }) {
               </span>
               {services.some(s => s.status === 'warn') && (
                 <span>
-                  <span className="text-amber-400 font-mono font-medium tabular-nums">
+                  <span className="text-orange-400 font-mono font-medium tabular-nums">
                     {services.filter(s => s.status === 'warn').length}
                   </span>
                   <span className="text-white/50 ml-1">degraded</span>

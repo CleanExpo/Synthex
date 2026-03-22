@@ -226,7 +226,7 @@ export function ImageGenerator({
     >
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-white">
-          <ImageIcon className="h-5 w-5 text-amber-400" />
+          <ImageIcon className="h-5 w-5 text-orange-400" />
           Generate Image
         </CardTitle>
       </CardHeader>
@@ -249,7 +249,7 @@ export function ImageGenerator({
                 className={cn(
                   'w-full resize-none rounded-xl px-4 py-3 text-sm',
                   'bg-white/5 border border-white/10 text-white placeholder:text-gray-500',
-                  'focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50',
+                  'focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50',
                   'disabled:opacity-50 disabled:cursor-not-allowed',
                   'transition-colors duration-200',
                   isOverLimit && 'border-red-500/50 focus:ring-red-500/50'
@@ -284,7 +284,7 @@ export function ImageGenerator({
                     'border transition-all duration-200',
                     'disabled:opacity-50 disabled:cursor-not-allowed',
                     selectedStyle === id
-                      ? 'bg-amber-500/20 border-amber-500/50 text-amber-300'
+                      ? 'bg-orange-500/20 border-orange-500/50 text-orange-300'
                       : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
                   )}
                 >
@@ -381,7 +381,7 @@ export function ImageGenerator({
                   className={cn(
                     'w-full resize-none rounded-xl px-4 py-3 text-sm',
                     'bg-white/5 border border-white/10 text-white placeholder:text-gray-500',
-                    'focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50',
+                    'focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50',
                     'disabled:opacity-50 disabled:cursor-not-allowed'
                   )}
                 />
@@ -473,8 +473,8 @@ export function ImageGenerator({
             disabled={!canGenerate}
             className={cn(
               'w-full h-12 rounded-xl font-medium',
-              'bg-gradient-to-r from-amber-500 to-amber-600',
-              'hover:from-amber-400 hover:to-amber-500',
+              'bg-gradient-to-r from-orange-500 to-orange-600',
+              'hover:from-orange-400 hover:to-orange-500',
               'disabled:opacity-50 disabled:cursor-not-allowed',
               'transition-all duration-200'
             )}

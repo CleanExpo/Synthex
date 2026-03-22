@@ -168,7 +168,7 @@ export function PlatformHealth() {
     label,
     value,
     icon: Icon,
-    iconClass = 'text-amber-400',
+    iconClass = 'text-orange-400',
     description,
   }: {
     label: string;

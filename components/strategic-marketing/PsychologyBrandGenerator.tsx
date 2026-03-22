@@ -47,13 +47,13 @@ const PSYCHOLOGY_CATEGORIES = [
     id: 'cognitive',
     name: 'Cognitive Biases',
     icon: Brain,
-    color: 'from-amber-500 to-amber-600',
+    color: 'from-orange-500 to-orange-600',
   },
   {
     id: 'social',
     name: 'Social Psychology',
     icon: Users,
-    color: 'from-amber-400 to-amber-500',
+    color: 'from-orange-400 to-orange-500',
   },
   {
     id: 'behavioral',
@@ -65,13 +65,13 @@ const PSYCHOLOGY_CATEGORIES = [
     id: 'memory',
     name: 'Memory & Learning',
     icon: Sparkles,
-    color: 'from-yellow-500 to-amber-600',
+    color: 'from-yellow-500 to-orange-600',
   },
   {
     id: 'perception',
     name: 'Perception & Reality',
     icon: Target,
-    color: 'from-amber-500 to-amber-600',
+    color: 'from-orange-500 to-orange-600',
   },
 ];
 
@@ -244,7 +244,7 @@ export default function PsychologyBrandGenerator() {
                   animate={{ scale: step >= s ? 1 : 0.8 }}
                   className={`w-12 h-12 rounded-full flex items-center justify-center font-bold ${
                     step >= s
-                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white'
+                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white'
                       : 'bg-gray-700 text-gray-400'
                   }`}
                 >
@@ -252,7 +252,7 @@ export default function PsychologyBrandGenerator() {
                 </motion.div>
                 {s < 4 && (
                   <div
-                    className={`w-24 h-1 ${step > s ? 'bg-amber-500' : 'bg-gray-700'}`}
+                    className={`w-24 h-1 ${step > s ? 'bg-orange-500' : 'bg-gray-700'}`}
                   />
                 )}
               </React.Fragment>
@@ -268,7 +268,7 @@ export default function PsychologyBrandGenerator() {
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -100 }}
-              className="bg-surface-base/50 backdrop-blur-lg rounded-3xl p-8 border border-amber-500/20"
+              className="bg-surface-base/50 backdrop-blur-lg rounded-3xl p-8 border border-orange-500/20"
             >
               <h2 className="text-3xl font-bold text-white mb-6">
                 Tell us about your business
@@ -281,7 +281,7 @@ export default function PsychologyBrandGenerator() {
                   </label>
                   <input
                     type="text"
-                    className="w-full px-4 py-3 bg-surface-dark/50 border border-amber-500/30 rounded-xl text-white focus:border-amber-500 focus:outline-none"
+                    className="w-full px-4 py-3 bg-surface-dark/50 border border-orange-500/30 rounded-xl text-white focus:border-orange-500 focus:outline-none"
                     placeholder="e.g., SaaS, E-commerce, Consulting..."
                     value={formData.businessType}
                     onChange={e =>
@@ -295,7 +295,7 @@ export default function PsychologyBrandGenerator() {
                     Target Audience
                   </label>
                   <textarea
-                    className="w-full px-4 py-3 bg-surface-dark/50 border border-amber-500/30 rounded-xl text-white focus:border-amber-500 focus:outline-none"
+                    className="w-full px-4 py-3 bg-surface-dark/50 border border-orange-500/30 rounded-xl text-white focus:border-orange-500 focus:outline-none"
                     rows={3}
                     placeholder="Describe your ideal customers..."
                     onChange={e =>
@@ -337,8 +337,8 @@ export default function PsychologyBrandGenerator() {
                         }
                         className={`px-4 py-3 rounded-xl border transition-all ${
                           (formData.brandGoals as any[]).includes(goal)
-                            ? 'bg-amber-500 border-amber-500 text-white'
-                            : 'bg-surface-dark/50 border-amber-500/30 text-gray-300 hover:border-amber-500'
+                            ? 'bg-orange-500 border-orange-500 text-white'
+                            : 'bg-surface-dark/50 border-orange-500/30 text-gray-300 hover:border-orange-500'
                         }`}
                       >
                         {goal}
@@ -352,7 +352,7 @@ export default function PsychologyBrandGenerator() {
                   disabled={
                     !formData.businessType || formData.brandGoals.length === 0
                   }
-                  className="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-xl hover:from-amber-400 hover:to-amber-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl hover:from-orange-400 hover:to-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Continue to Psychology Selection
                 </button>
@@ -367,7 +367,7 @@ export default function PsychologyBrandGenerator() {
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -100 }}
-              className="bg-surface-base/50 backdrop-blur-lg rounded-3xl p-8 border border-amber-500/20"
+              className="bg-surface-base/50 backdrop-blur-lg rounded-3xl p-8 border border-orange-500/20"
             >
               <h2 className="text-3xl font-bold text-white mb-6">
                 Select Psychological Principles
@@ -403,13 +403,13 @@ export default function PsychologyBrandGenerator() {
                     onClick={() => handlePrincipleToggle(principle.name)}
                     className={`p-4 rounded-xl border transition-all text-left ${
                       formData.selectedPrinciples.includes(principle.name)
-                        ? 'bg-amber-500/20 border-amber-500 text-white'
-                        : 'bg-surface-dark/50 border-gray-700 text-gray-300 hover:border-amber-500/50'
+                        ? 'bg-orange-500/20 border-orange-500 text-white'
+                        : 'bg-surface-dark/50 border-gray-700 text-gray-300 hover:border-orange-500/50'
                     }`}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-semibold">{principle.name}</h3>
-                      <span className="text-xs px-2 py-1 bg-amber-500/20 rounded-full">
+                      <span className="text-xs px-2 py-1 bg-orange-500/20 rounded-full">
                         {principle.relevanceScore}%
                       </span>
                     </div>
@@ -430,7 +430,7 @@ export default function PsychologyBrandGenerator() {
                 <button
                   onClick={() => setStep(3)}
                   disabled={formData.selectedPrinciples.length === 0}
-                  className="flex-1 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-xl hover:from-amber-400 hover:to-amber-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl hover:from-orange-400 hover:to-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Continue to Tone Selection
                 </button>
@@ -445,7 +445,7 @@ export default function PsychologyBrandGenerator() {
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -100 }}
-              className="bg-surface-base/50 backdrop-blur-lg rounded-3xl p-8 border border-amber-500/20"
+              className="bg-surface-base/50 backdrop-blur-lg rounded-3xl p-8 border border-orange-500/20"
             >
               <h2 className="text-3xl font-bold text-white mb-6">
                 Final Details
@@ -470,8 +470,8 @@ export default function PsychologyBrandGenerator() {
                         }
                         className={`px-4 py-3 rounded-xl border transition-all ${
                           formData.tonePreference === tone
-                            ? 'bg-amber-500 border-amber-500 text-white'
-                            : 'bg-surface-dark/50 border-amber-500/30 text-gray-300 hover:border-amber-500'
+                            ? 'bg-orange-500 border-orange-500 text-white'
+                            : 'bg-surface-dark/50 border-orange-500/30 text-gray-300 hover:border-orange-500'
                         }`}
                       >
                         {tone}
@@ -485,7 +485,7 @@ export default function PsychologyBrandGenerator() {
                     Competitor Context (Optional)
                   </label>
                   <textarea
-                    className="w-full px-4 py-3 bg-surface-dark/50 border border-amber-500/30 rounded-xl text-white focus:border-amber-500 focus:outline-none"
+                    className="w-full px-4 py-3 bg-surface-dark/50 border border-orange-500/30 rounded-xl text-white focus:border-orange-500 focus:outline-none"
                     rows={3}
                     placeholder="Describe your main competitors..."
                     value={formData.competitorContext}
@@ -498,7 +498,7 @@ export default function PsychologyBrandGenerator() {
                   />
                 </div>
 
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6">
+                <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-6">
                   <h3 className="text-xl font-semibold text-white mb-3">
                     Summary
                   </h3>
@@ -532,7 +532,7 @@ export default function PsychologyBrandGenerator() {
                   <button
                     onClick={generateBrand}
                     disabled={!formData.tonePreference || loading}
-                    className="flex-1 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-xl hover:from-amber-400 hover:to-amber-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl hover:from-orange-400 hover:to-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <>
@@ -560,7 +560,7 @@ export default function PsychologyBrandGenerator() {
               className="space-y-8"
             >
               {/* Effectiveness Score */}
-              <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-3xl p-8 text-white">
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-3xl p-8 text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-3xl font-bold mb-2">
@@ -575,9 +575,9 @@ export default function PsychologyBrandGenerator() {
               </div>
 
               {/* Brand Names */}
-              <div className="bg-surface-base/50 backdrop-blur-lg rounded-3xl p-8 border border-amber-500/20">
+              <div className="bg-surface-base/50 backdrop-blur-lg rounded-3xl p-8 border border-orange-500/20">
                 <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                  <Award className="w-6 h-6 text-amber-400" />
+                  <Award className="w-6 h-6 text-orange-400" />
                   Brand Names
                 </h3>
                 <div className="grid gap-4">
@@ -587,18 +587,18 @@ export default function PsychologyBrandGenerator() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="bg-surface-dark/50 rounded-xl p-6 border border-amber-500/20"
+                      className="bg-surface-dark/50 rounded-xl p-6 border border-orange-500/20"
                     >
                       <div className="flex justify-between items-start mb-3">
                         <h4 className="text-2xl font-bold text-white">
                           {name.name}
                         </h4>
-                        <span className="px-3 py-1 bg-amber-500/20 text-amber-300 rounded-full text-sm">
+                        <span className="px-3 py-1 bg-orange-500/20 text-orange-300 rounded-full text-sm">
                           {name.memorabilityFactor}/10
                         </span>
                       </div>
                       <p className="text-gray-300 mb-2">
-                        <span className="font-semibold text-amber-400">
+                        <span className="font-semibold text-orange-400">
                           Trigger:
                         </span>{' '}
                         {name.psychologicalTrigger}
@@ -610,7 +610,7 @@ export default function PsychologyBrandGenerator() {
               </div>
 
               {/* Taglines */}
-              <div className="bg-surface-base/50 backdrop-blur-lg rounded-3xl p-8 border border-amber-500/20">
+              <div className="bg-surface-base/50 backdrop-blur-lg rounded-3xl p-8 border border-orange-500/20">
                 <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
                   <Sparkles className="w-6 h-6 text-yellow-400" />
                   Taglines
@@ -622,14 +622,14 @@ export default function PsychologyBrandGenerator() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="bg-surface-dark/50 rounded-xl p-6 border border-amber-500/20"
+                      className="bg-surface-dark/50 rounded-xl p-6 border border-orange-500/20"
                     >
                       <h4 className="text-xl font-bold text-white mb-3">
                         "{tagline.text}"
                       </h4>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <span className="text-amber-400 font-semibold">
+                          <span className="text-orange-400 font-semibold">
                             Target:
                           </span>
                           <p className="text-gray-300">
@@ -637,7 +637,7 @@ export default function PsychologyBrandGenerator() {
                           </p>
                         </div>
                         <div>
-                          <span className="text-amber-400 font-semibold">
+                          <span className="text-orange-400 font-semibold">
                             Emotion:
                           </span>
                           <p className="text-gray-300">
@@ -651,7 +651,7 @@ export default function PsychologyBrandGenerator() {
               </div>
 
               {/* Platform Metadata */}
-              <div className="bg-surface-base/50 backdrop-blur-lg rounded-3xl p-8 border border-amber-500/20">
+              <div className="bg-surface-base/50 backdrop-blur-lg rounded-3xl p-8 border border-orange-500/20">
                 <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
                   <Package className="w-6 h-6 text-green-400" />
                   Platform Optimization
@@ -663,27 +663,27 @@ export default function PsychologyBrandGenerator() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="bg-surface-dark/50 rounded-xl p-6 border border-amber-500/20"
+                      className="bg-surface-dark/50 rounded-xl p-6 border border-orange-500/20"
                     >
                       <h4 className="text-lg font-bold text-white mb-3 capitalize">
                         {pkg.platform}
                       </h4>
                       <div className="space-y-3 text-sm">
                         <div>
-                          <span className="text-amber-400 font-semibold">
+                          <span className="text-orange-400 font-semibold">
                             Title:
                           </span>
                           <p className="text-gray-300">{pkg.title}</p>
                         </div>
                         <div>
-                          <span className="text-amber-400 font-semibold">
+                          <span className="text-orange-400 font-semibold">
                             Keywords:
                           </span>
                           <div className="flex flex-wrap gap-2 mt-1">
                             {pkg.keywords.map((kw, i) => (
                               <span
                                 key={i}
-                                className="px-2 py-1 bg-amber-500/20 text-amber-300 rounded-full text-xs"
+                                className="px-2 py-1 bg-orange-500/20 text-orange-300 rounded-full text-xs"
                               >
                                 {kw}
                               </span>
@@ -691,7 +691,7 @@ export default function PsychologyBrandGenerator() {
                           </div>
                         </div>
                         <div>
-                          <span className="text-amber-400 font-semibold">
+                          <span className="text-orange-400 font-semibold">
                             Hashtags:
                           </span>
                           <p className="text-gray-300">
@@ -727,7 +727,7 @@ export default function PsychologyBrandGenerator() {
                 >
                   Generate Another Brand
                 </button>
-                <button className="flex-1 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-xl hover:from-amber-400 hover:to-amber-500 transition-all">
+                <button className="flex-1 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl hover:from-orange-400 hover:to-orange-500 transition-all">
                   Save & Deploy Brand
                 </button>
               </div>

@@ -62,13 +62,13 @@ function StepIcon({ stepType }: { stepType: string }) {
 function stepTypeColour(type: string): string {
   switch (type) {
     case 'ai':
-      return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+      return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
     case 'approval':
-      return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+      return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
     case 'action':
       return 'text-green-400 bg-green-500/10 border-green-500/20';
     case 'validation':
-      return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+      return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
     default:
       return 'text-gray-400 bg-gray-500/10 border-gray-500/20';
   }
@@ -163,7 +163,7 @@ export function AutonomousPageClient() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-amber-500" />
+          <Sparkles className="h-6 w-6 text-orange-500" />
           Autonomous
         </h1>
         <p className="text-sm text-gray-400 mt-1">
@@ -192,7 +192,7 @@ export function AutonomousPageClient() {
               placeholder="e.g., Create a LinkedIn campaign about AI in restoration, 5 posts, schedule next week"
               rows={4}
               maxLength={2000}
-              className="w-full rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-gray-500 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 resize-none"
+              className="w-full rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-gray-500 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 resize-none"
             />
             <span className="absolute bottom-2 right-3 text-[11px] text-gray-600 tabular-nums">
               {instruction.length}/2000
@@ -221,7 +221,7 @@ export function AutonomousPageClient() {
           <Button
             onClick={handleParse}
             disabled={loading || instruction.trim().length < 10}
-            className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white"
           >
             {loading ? (
               <>
@@ -260,7 +260,7 @@ export function AutonomousPageClient() {
               {parsed.intents.map(intent => (
                 <span
                   key={intent}
-                  className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 capitalize"
+                  className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20 capitalize"
                 >
                   {intent}
                 </span>
@@ -270,14 +270,14 @@ export function AutonomousPageClient() {
 
           {/* Warnings */}
           {parsed.warnings.length > 0 && (
-            <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 px-4 py-3 space-y-1">
-              <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+            <div className="rounded-lg bg-orange-500/10 border border-orange-500/20 px-4 py-3 space-y-1">
+              <p className="text-xs font-semibold text-orange-400 uppercase tracking-wider flex items-center gap-1.5">
                 <AlertTriangle className="h-3.5 w-3.5" />
                 Warnings
               </p>
               <ul className="space-y-0.5">
                 {parsed.warnings.map((w, i) => (
-                  <li key={i} className="text-sm text-amber-300/80">
+                  <li key={i} className="text-sm text-orange-300/80">
                     • {w}
                   </li>
                 ))}
@@ -394,7 +394,7 @@ export function AutonomousPageClient() {
             </Button>
             <Button
               onClick={() => router.push('/dashboard/workflows')}
-              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+              className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
             >
               View Workflows
               <ArrowRight className="h-4 w-4 ml-2" />

@@ -65,10 +65,10 @@ export default function PrivacyPage() {
       {/* Hero Section */}
       <section className="pt-12 pb-12 px-6">
         <div className="container mx-auto text-center">
-          <Shield className="w-16 h-16 text-amber-400 mx-auto mb-6" />
+          <Shield className="w-16 h-16 text-orange-400 mx-auto mb-6" />
           <h1 className="text-5xl font-bold text-white mb-4">
             Privacy{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-500">
               Policy
             </span>
           </h1>
@@ -83,37 +83,37 @@ export default function PrivacyPage() {
       {/* Key Points */}
       <section className="px-6 pb-12">
         <div className="container mx-auto">
-          <Card className="bg-surface-base/80 border border-amber-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
+          <Card className="bg-surface-base/80 border border-orange-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-white mb-6">
               Key Privacy Commitments
             </h2>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                <CheckCircle className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" />
                 <span className="text-gray-300">
                   We never sell your personal data to third parties
                 </span>
               </div>
               <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                <CheckCircle className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" />
                 <span className="text-gray-300">
                   Your content remains yours - we don't claim ownership
                 </span>
               </div>
               <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                <CheckCircle className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" />
                 <span className="text-gray-300">
                   You can delete your account and data at any time
                 </span>
               </div>
               <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                <CheckCircle className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" />
                 <span className="text-gray-300">
                   We use industry-standard encryption for all data
                 </span>
               </div>
               <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                <CheckCircle className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" />
                 <span className="text-gray-300">
                   We're GDPR and CCPA compliant
                 </span>
@@ -130,10 +130,10 @@ export default function PrivacyPage() {
             {sections.map((section, index) => (
               <Card
                 key={index}
-                className="bg-surface-base/80 border border-amber-500/20 backdrop-blur-sm p-6"
+                className="bg-surface-base/80 border border-orange-500/20 backdrop-blur-sm p-6"
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <section.icon className="w-8 h-8 text-amber-400" />
+                  <section.icon className="w-8 h-8 text-orange-400" />
                   <h3 className="text-xl font-semibold text-white">
                     {section.title}
                   </h3>
@@ -144,7 +144,7 @@ export default function PrivacyPage() {
                       key={idx}
                       className="text-gray-300 flex items-start gap-2"
                     >
-                      <span className="text-amber-400 mt-1">•</span>
+                      <span className="text-orange-400 mt-1">•</span>
                       <span>{item}</span>
                     </li>
                   ))}
@@ -158,14 +158,14 @@ export default function PrivacyPage() {
       {/* Additional Information */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="bg-surface-base/80 border border-amber-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
+          <Card className="bg-surface-base/80 border border-orange-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-white mb-6">
               Additional Information
             </h2>
 
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-amber-400 mb-2">
+                <h3 className="text-lg font-semibold text-orange-400 mb-2">
                   Cookies and Tracking
                 </h3>
                 <p className="text-gray-300">
@@ -177,7 +177,7 @@ export default function PrivacyPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-amber-400 mb-2">
+                <h3 className="text-lg font-semibold text-orange-400 mb-2">
                   Third-Party Services
                 </h3>
                 <p className="text-gray-300">
@@ -190,7 +190,7 @@ export default function PrivacyPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-amber-400 mb-2">
+                <h3 className="text-lg font-semibold text-orange-400 mb-2">
                   Data Retention
                 </h3>
                 <p className="text-gray-300">
@@ -202,7 +202,7 @@ export default function PrivacyPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-amber-400 mb-2">
+                <h3 className="text-lg font-semibold text-orange-400 mb-2">
                   Children's Privacy
                 </h3>
                 <p className="text-gray-300">
@@ -214,7 +214,7 @@ export default function PrivacyPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-amber-400 mb-2">
+                <h3 className="text-lg font-semibold text-orange-400 mb-2">
                   International Data Transfers
                 </h3>
                 <p className="text-gray-300">
@@ -232,8 +232,8 @@ export default function PrivacyPage() {
       {/* Contact Section */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="bg-gradient-to-br from-[#111111] to-[#1e293b] border border-amber-500/30 p-12 text-center max-w-3xl mx-auto">
-            <Mail className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+          <Card className="bg-gradient-to-br from-[#111111] to-[#1e293b] border border-orange-500/30 p-12 text-center max-w-3xl mx-auto">
+            <Mail className="w-12 h-12 text-orange-400 mx-auto mb-4" />
             <h2 className="text-3xl font-bold text-white mb-4">
               Questions About Privacy?
             </h2>
@@ -247,7 +247,7 @@ export default function PrivacyPage() {
               <p>Support: support@synthex.social</p>
               <p>Address: 100 Market St, San Francisco, CA 94105</p>
             </div>
-            <Button className="mt-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25">
+            <Button className="mt-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25">
               Contact Privacy Team
             </Button>
           </Card>

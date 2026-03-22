@@ -86,7 +86,7 @@ function TypeIcon({
     case 'error':
       return <XCircle className={cn(base, 'text-red-400')} />;
     default:
-      return <Info className={cn(base, 'text-amber-400')} />;
+      return <Info className={cn(base, 'text-orange-400')} />;
   }
 }
 
@@ -144,7 +144,7 @@ function NotificationRow({ item, onMarkRead }: NotificationRowProps) {
         </p>
       </div>
       {!item.read && (
-        <span className="mt-1.5 h-2 w-2 rounded-full bg-amber-500 shrink-0 animate-pulse" />
+        <span className="mt-1.5 h-2 w-2 rounded-full bg-orange-500 shrink-0 animate-pulse" />
       )}
     </button>
   );
@@ -252,12 +252,12 @@ export function NotificationCentre({
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.08] shrink-0">
             <div className="flex items-center gap-2">
-              <Bell className="h-4 w-4 text-amber-400" />
+              <Bell className="h-4 w-4 text-orange-400" />
               <h2 className="text-sm font-semibold text-white">
                 Notifications
               </h2>
               {(data?.unreadCount ?? 0) > 0 && (
-                <span className="ml-1 inline-flex items-center rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-medium text-amber-400">
+                <span className="ml-1 inline-flex items-center rounded-full bg-orange-500/20 px-2 py-0.5 text-[10px] font-medium text-orange-400">
                   {data?.unreadCount} unread
                 </span>
               )}

@@ -263,7 +263,7 @@ function CalendarPageContent() {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
           <p className="text-gray-400">Loading calendar...</p>
         </div>
       </div>
@@ -302,7 +302,7 @@ function CalendarPageContent() {
                 onClick={() => setViewMode('week')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   viewMode === 'week'
-                    ? 'bg-amber-500/20 text-amber-400'
+                    ? 'bg-orange-500/20 text-orange-400'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -313,7 +313,7 @@ function CalendarPageContent() {
                 onClick={() => setViewMode('month')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   viewMode === 'month'
-                    ? 'bg-amber-500/20 text-amber-400'
+                    ? 'bg-orange-500/20 text-orange-400'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -353,7 +353,7 @@ function CalendarPageContent() {
                 setScheduleDate(new Date(Date.now() + 60 * 60 * 1000));
                 setIsScheduleModalOpen(true);
               }}
-              className="bg-amber-500 hover:bg-amber-600 text-white"
+              className="bg-orange-500 hover:bg-orange-600 text-white"
             >
               <Plus className="h-4 w-4 mr-2" />
               Schedule Post
@@ -380,8 +380,8 @@ function CalendarPageContent() {
 
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-500/10 rounded-lg">
-              <Clock className="h-5 w-5 text-amber-400" />
+            <div className="p-2 bg-orange-500/10 rounded-lg">
+              <Clock className="h-5 w-5 text-orange-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-white">
@@ -422,8 +422,8 @@ function CalendarPageContent() {
 
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-500/10 rounded-lg">
-              <AlertTriangle className="h-5 w-5 text-amber-400" />
+            <div className="p-2 bg-orange-500/10 rounded-lg">
+              <AlertTriangle className="h-5 w-5 text-orange-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-white">
@@ -560,7 +560,7 @@ function CalendarPageContent() {
                   !scheduleForm.content ||
                   scheduleForm.platforms.length === 0
                 }
-                className="bg-amber-500 hover:bg-amber-600 text-white"
+                className="bg-orange-500 hover:bg-orange-600 text-white"
               >
                 {isSubmitting ? (
                   <>

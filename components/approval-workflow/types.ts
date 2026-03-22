@@ -64,7 +64,7 @@ export function getStatusColor(status: string) {
     case 'pending':
       return 'text-yellow-400';
     case 'revision':
-      return 'text-amber-400';
+      return 'text-orange-400';
     default:
       return 'text-gray-400';
   }
@@ -75,7 +75,7 @@ export function getPriorityColor(priority: string) {
     case 'urgent':
       return 'bg-red-500';
     case 'high':
-      return 'bg-amber-500';
+      return 'bg-orange-500';
     case 'medium':
       return 'bg-yellow-500';
     case 'low':

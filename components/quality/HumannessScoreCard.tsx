@@ -20,11 +20,11 @@ function gradeColour(grade: string): string {
     case 'A':
       return 'text-emerald-400';
     case 'B':
-      return 'text-amber-400';
+      return 'text-orange-400';
     case 'C':
-      return 'text-amber-400';
+      return 'text-orange-400';
     case 'D':
-      return 'text-amber-400';
+      return 'text-orange-400';
     case 'F':
       return 'text-red-400';
     default:
@@ -37,11 +37,11 @@ function gradeBg(grade: string): string {
     case 'A':
       return 'bg-emerald-500/20 border-emerald-500/30';
     case 'B':
-      return 'bg-amber-500/20 border-amber-500/30';
+      return 'bg-orange-500/20 border-orange-500/30';
     case 'C':
-      return 'bg-amber-500/20 border-amber-500/30';
+      return 'bg-orange-500/20 border-orange-500/30';
     case 'D':
-      return 'bg-amber-500/20 border-amber-500/30';
+      return 'bg-orange-500/20 border-orange-500/30';
     case 'F':
       return 'bg-red-500/20 border-red-500/30';
     default:
@@ -179,7 +179,7 @@ export function HumannessScoreCard({
           <p className="text-xs text-slate-500">
             {wordCount.toLocaleString()} words analysed
             {!result.fingerprint && (
-              <span className="ml-1 text-amber-500/70">
+              <span className="ml-1 text-orange-500/70">
                 · &lt;200 words — fingerprint unavailable
               </span>
             )}
@@ -251,10 +251,10 @@ export function HumannessScoreCard({
           {suggestions.map((suggestion, i) => (
             <div
               key={i}
-              className="flex items-start gap-2.5 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2"
+              className="flex items-start gap-2.5 bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2"
             >
-              <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-              <span className="text-sm text-amber-200">{suggestion}</span>
+              <AlertCircle className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
+              <span className="text-sm text-orange-200">{suggestion}</span>
             </div>
           ))}
         </div>

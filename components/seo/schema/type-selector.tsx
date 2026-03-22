@@ -37,7 +37,7 @@ export function TypeSelector({ value, onChange }: TypeSelectorProps) {
               className="text-white hover:bg-white/5"
             >
               <div className="flex items-center gap-2">
-                <type.icon className="w-4 h-4 text-amber-400" />
+                <type.icon className="w-4 h-4 text-orange-400" />
                 <span>{type.label}</span>
                 <span className="text-gray-500 text-xs">
                   - {type.description}

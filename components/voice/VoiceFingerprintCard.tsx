@@ -64,7 +64,7 @@ function MetricBar({
   value,
   subLabel,
   barPct,
-  barColour = 'bg-amber-500',
+  barColour = 'bg-orange-500',
 }: MetricBarProps) {
   return (
     <div className="space-y-1">
@@ -139,7 +139,7 @@ export function VoiceFingerprintCard({
             {fp.sampleSentenceCount} sentences
           </p>
         </div>
-        <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded-full flex-shrink-0">
+        <span className="text-xs bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-1 rounded-full flex-shrink-0">
           {fp.sampleWordCount} words
         </span>
       </div>
@@ -152,7 +152,7 @@ export function VoiceFingerprintCard({
           value={`${fp.sentenceLengths.mean} ±${fp.sentenceLengths.stdDev} words`}
           subLabel={`Min ${fp.sentenceLengths.min} / Max ${fp.sentenceLengths.max}`}
           barPct={(fp.sentenceLengths.mean / 40) * 100}
-          barColour="bg-amber-500"
+          barColour="bg-orange-500"
         />
 
         {/* Vocabulary Diversity */}
@@ -165,7 +165,7 @@ export function VoiceFingerprintCard({
             ttrPct >= 60
               ? 'bg-emerald-500'
               : ttrPct >= 40
-                ? 'bg-amber-500'
+                ? 'bg-orange-500'
                 : 'bg-slate-500'
           }
         />
@@ -180,7 +180,7 @@ export function VoiceFingerprintCard({
             fp.fleschReadingEase >= 70
               ? 'bg-emerald-500'
               : fp.fleschReadingEase >= 50
-                ? 'bg-amber-500'
+                ? 'bg-orange-500'
                 : 'bg-red-500'
           }
         />
@@ -199,7 +199,7 @@ export function VoiceFingerprintCard({
           label="Question Rate"
           value={`${fp.questionRate.toFixed(2)} per 100w`}
           barPct={Math.min(100, fp.questionRate * 20)}
-          barColour="bg-amber-500"
+          barColour="bg-orange-500"
         />
 
         {/* Em Dash Usage */}
@@ -210,7 +210,7 @@ export function VoiceFingerprintCard({
             fp.emDashRate > 1.0 ? 'High editorial style' : 'Low editorial style'
           }
           barPct={Math.min(100, fp.emDashRate * 20)}
-          barColour="bg-amber-500"
+          barColour="bg-orange-500"
         />
 
         {/* Adverb Density */}
@@ -219,7 +219,7 @@ export function VoiceFingerprintCard({
           value={`${fp.adverbDensity.toFixed(2)} per 100w`}
           subLabel={adverbLabel}
           barPct={Math.min(100, fp.adverbDensity * 10)}
-          barColour={fp.adverbDensity < 2 ? 'bg-emerald-500' : 'bg-amber-500'}
+          barColour={fp.adverbDensity < 2 ? 'bg-emerald-500' : 'bg-orange-500'}
         />
 
         {/* Passive Voice */}
@@ -233,7 +233,7 @@ export function VoiceFingerprintCard({
               ? 'bg-emerald-500'
               : passivePct > 30
                 ? 'bg-red-500'
-                : 'bg-amber-500'
+                : 'bg-orange-500'
           }
         />
       </div>

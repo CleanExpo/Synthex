@@ -49,7 +49,7 @@ export function DirectoryTemplateGrid({
           className={cn(
             'text-xs px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5',
             aiOnly
-              ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
+              ? 'bg-orange-500/30 text-orange-300 border border-orange-500/40'
               : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-transparent'
           )}
         >
@@ -132,7 +132,7 @@ export function DirectoryTemplateGrid({
                     {t.isFree ? 'Free' : 'Paid'}
                   </span>
                   {t.isAiIndexed && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-900/40 text-amber-300 flex items-center gap-1">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-orange-900/40 text-orange-300 flex items-center gap-1">
                       <Sparkles className="h-3 w-3" />
                       AI Indexed
                     </span>

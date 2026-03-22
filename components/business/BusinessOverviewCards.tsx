@@ -63,7 +63,7 @@ export function BusinessOverviewCards({
       case 'active':
         return 'bg-green-500/20 text-green-400 border-green-500/30';
       case 'past_due':
-        return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+        return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
       case 'cancelled':
         return 'bg-red-500/20 text-red-400 border-red-500/30';
       default:
@@ -76,10 +76,10 @@ export function BusinessOverviewCards({
       {/* Summary Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Businesses */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-              <Building className="h-4 w-4 text-amber-400" />
+              <Building className="h-4 w-4 text-orange-400" />
               Total Businesses
             </CardTitle>
           </CardHeader>
@@ -95,10 +95,10 @@ export function BusinessOverviewCards({
         </Card>
 
         {/* Total Campaigns */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-amber-400" />
+              <BarChart3 className="h-4 w-4 text-orange-400" />
               Total Campaigns
             </CardTitle>
           </CardHeader>
@@ -111,10 +111,10 @@ export function BusinessOverviewCards({
         </Card>
 
         {/* Total Engagement */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-amber-400" />
+              <TrendingUp className="h-4 w-4 text-orange-400" />
               Total Engagement
             </CardTitle>
           </CardHeader>
@@ -127,10 +127,10 @@ export function BusinessOverviewCards({
         </Card>
 
         {/* Monthly Spend */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-amber-400" />
+              <DollarSign className="h-4 w-4 text-orange-400" />
               Monthly Spend
             </CardTitle>
           </CardHeader>
@@ -150,7 +150,7 @@ export function BusinessOverviewCards({
           {overview.perBusiness.map(business => (
             <Card
               key={business.organizationId}
-              className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 hover:border-amber-500/20 transition-all"
+              className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 hover:border-orange-500/20 transition-all"
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
@@ -198,7 +198,7 @@ export function BusinessOverviewCards({
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Monthly</p>
-                    <p className="text-lg font-semibold text-amber-400 mt-1">
+                    <p className="text-lg font-semibold text-orange-400 mt-1">
                       {formatCurrency(business.monthlyRate)}
                     </p>
                   </div>

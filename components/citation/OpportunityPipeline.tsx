@@ -34,7 +34,7 @@ const SEVERITY: Record<string, SeverityConfig> = {
     label: 'Critical',
   },
   warning: {
-    chip: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+    chip: 'bg-orange-500/10 text-orange-400 border border-orange-500/20',
     icon: AlertTriangle,
     label: 'Warning',
   },
@@ -112,7 +112,7 @@ export function OpportunityPipeline({
             {/* Go link */}
             <Link
               href={item.href}
-              className="flex-shrink-0 text-xs text-amber-400 hover:text-amber-300 font-medium transition-colors whitespace-nowrap"
+              className="flex-shrink-0 text-xs text-orange-400 hover:text-orange-300 font-medium transition-colors whitespace-nowrap"
               aria-label={`Go to ${item.title}`}
             >
               Go →

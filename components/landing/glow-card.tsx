@@ -24,7 +24,7 @@ const GlowCard = React.forwardRef<HTMLDivElement, GlowCardProps>(
         transition={{ duration: 0.3, ease: 'easeOut' }}
         className={cn(
           'relative rounded-sm border-[0.5px] border-white/[0.06] bg-[#080e1a]',
-          'hover:border-amber-500/30 transition-colors duration-300',
+          'hover:border-orange-500/30 transition-colors duration-300',
           className
         )}
       >

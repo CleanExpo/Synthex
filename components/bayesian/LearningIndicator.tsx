@@ -12,7 +12,7 @@ interface LearningIndicatorProps {
 
 function getLearningState(
   totalObservations: number,
-  bestTarget: number | null,
+  bestTarget: number | null
 ): LearningState {
   if (totalObservations === 0) return 'cold';
   if (totalObservations >= 10 && bestTarget !== null) return 'optimised';
@@ -48,10 +48,11 @@ export function LearningIndicator({
   if (state === 'learning') {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-xs font-medium ${className}`}
+        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 text-xs font-medium ${className}`}
       >
         <TrendingUp className="h-3 w-3" />
-        AI is learning — {totalObservations} observation{totalObservations !== 1 ? 's' : ''}
+        AI is learning — {totalObservations} observation
+        {totalObservations !== 1 ? 's' : ''}
       </span>
     );
   }

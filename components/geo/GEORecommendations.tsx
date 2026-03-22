@@ -22,11 +22,11 @@ const priorityConfig = {
     icon: AlertTriangle,
   },
   high: {
-    color: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    color: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
     icon: Zap,
   },
   medium: {
-    color: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    color: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
     icon: TrendingUp,
   },
   low: {

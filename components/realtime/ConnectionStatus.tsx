@@ -47,8 +47,8 @@ const stateConfig = {
     pulse: false,
   },
   reconnecting: {
-    color: 'text-amber-400',
-    bgColor: 'bg-amber-400',
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-400',
     label: 'Reconnecting...',
     pulse: false,
   },

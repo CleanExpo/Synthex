@@ -113,7 +113,7 @@ export function PricingInteraction({
           >
             {label}
             {label === 'Yearly' && period === 0 && (
-              <span className="ml-1.5 text-[10px] text-amber-400/70 font-normal">
+              <span className="ml-1.5 text-[10px] text-orange-400/70 font-normal">
                 Save 25%
               </span>
             )}
@@ -141,7 +141,7 @@ export function PricingInteraction({
               'w-full flex justify-between cursor-pointer border-[0.5px] p-4 rounded-sm',
               'transition-colors duration-200',
               active === index
-                ? 'border-amber-500/20 bg-amber-500/[0.04]'
+                ? 'border-orange-500/20 bg-orange-500/[0.04]'
                 : 'border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.02]'
             )}
             onClick={() => handleChangePlan(index)}
@@ -154,7 +154,7 @@ export function PricingInteraction({
                   <span
                     className={cn(
                       'py-0.5 px-2 rounded-sm text-xs',
-                      'bg-amber-500/[0.08] border-[0.5px] border-amber-500/20 text-amber-400'
+                      'bg-orange-500/[0.08] border-[0.5px] border-orange-500/20 text-orange-400'
                     )}
                   >
                     {plan.badge}
@@ -183,7 +183,7 @@ export function PricingInteraction({
               }}
             >
               <div
-                className="size-2.5 rounded-full bg-amber-400"
+                className="size-2.5 rounded-full bg-orange-400"
                 style={{
                   opacity: active === index ? 1 : 0,
                   transition: 'opacity 0.3s',
@@ -198,8 +198,8 @@ export function PricingInteraction({
       <button
         className={cn(
           'rounded-sm text-sm font-semibold text-white w-full p-3',
-          'bg-amber-500/[0.08] border-[0.5px] border-amber-500/20',
-          'hover:bg-amber-500/[0.14] hover:border-amber-500/40',
+          'bg-orange-500/[0.08] border-[0.5px] border-orange-500/20',
+          'hover:bg-orange-500/[0.14] hover:border-orange-500/40',
           'active:scale-[0.98] transition-all duration-200'
         )}
       >

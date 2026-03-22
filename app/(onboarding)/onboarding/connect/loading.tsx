@@ -10,7 +10,7 @@ export default function ConnectLoading() {
           <div className="h-4 w-20 bg-white/5 rounded" />
         </div>
         <div className="h-2 w-full bg-white/5 rounded-full">
-          <div className="h-2 w-2/3 bg-amber-500/20 rounded-full" />
+          <div className="h-2 w-2/3 bg-orange-500/20 rounded-full" />
         </div>
       </div>
 
@@ -33,7 +33,7 @@ export default function ConnectLoading() {
                 <div className="h-4 w-24 bg-white/5 rounded" />
                 <div className="h-3 w-32 bg-white/5 rounded" />
               </div>
-              <div className="h-8 w-20 bg-amber-500/10 rounded-lg flex-shrink-0" />
+              <div className="h-8 w-20 bg-orange-500/10 rounded-lg flex-shrink-0" />
             </div>
           ))}
         </div>
@@ -41,7 +41,7 @@ export default function ConnectLoading() {
         {/* Action buttons */}
         <div className="flex justify-between pt-4">
           <div className="h-10 w-24 bg-white/5 rounded-lg" />
-          <div className="h-10 w-32 bg-amber-500/10 rounded-lg" />
+          <div className="h-10 w-32 bg-orange-500/10 rounded-lg" />
         </div>
       </div>
     </div>

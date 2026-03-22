@@ -94,7 +94,7 @@ const DEFAULT_INTEGRATIONS: Integration[] = [
     description: 'Post photos, stories, and reels to Instagram',
     icon: Instagram,
     connected: false,
-    color: 'text-amber-500',
+    color: 'text-orange-500',
     permissions: ['Post content', 'View insights', 'Manage comments'],
   },
   {
@@ -139,7 +139,7 @@ const DEFAULT_INTEGRATIONS: Integration[] = [
     description: 'Post content and engage with Reddit communities',
     icon: Reddit,
     connected: false,
-    color: 'text-amber-500',
+    color: 'text-orange-500',
     permissions: ['Submit posts', 'Read content', 'Manage profile'],
   },
   {
@@ -176,7 +176,7 @@ const DEFAULT_ANALYTICS_INTEGRATIONS: Integration[] = [
       'Web analytics: sessions, users, conversions, and campaign attribution',
     icon: BarChart2,
     connected: false,
-    color: 'text-amber-400',
+    color: 'text-orange-400',
     permissions: [
       'Read analytics data',
       'View conversions',
@@ -704,7 +704,7 @@ export default function IntegrationsPage() {
               You can revoke access at any time from this page
             </p>
             <p className="flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+              <AlertCircle className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
               Some features may require re-authentication after 30 days
             </p>
           </div>

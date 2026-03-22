@@ -37,7 +37,7 @@ export const platformConfigs: Record<string, PlatformConfig> = {
     name: 'Instagram',
     maxChars: 2200,
     features: ['hashtags', 'mentions', 'reels', 'stories', 'carousel'],
-    mockupBg: 'bg-gradient-to-br from-amber-600 to-amber-500',
+    mockupBg: 'bg-gradient-to-br from-orange-600 to-orange-500',
     textColor: 'text-white',
   },
   facebook: {

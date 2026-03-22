@@ -47,7 +47,7 @@ export function TaskListRow({
         onCheckedChange={checked =>
           onStatusChange(task.id, checked ? 'done' : 'todo')
         }
-        className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+        className="data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
       />
 
       <div className="flex-1 min-w-0">

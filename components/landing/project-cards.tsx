@@ -124,7 +124,7 @@ function ProjectCard({ project }: { project: Project }) {
       whileHover="hover"
       className={cn(
         'border-b border-[0.5px] border-white/[0.06] py-4 cursor-pointer',
-        'hover:bg-amber-500/[0.02] transition-colors duration-200'
+        'hover:bg-orange-500/[0.02] transition-colors duration-200'
       )}
       onClick={() => setIsExpanded(!isExpanded)}
     >
@@ -160,7 +160,7 @@ function ProjectCard({ project }: { project: Project }) {
                 className={cn(
                   'px-2 py-0.5 rounded-sm text-xs font-medium transition-all duration-200',
                   project.status === 'Paid'
-                    ? 'text-amber-400 bg-amber-500/[0.08] border-[0.5px] border-amber-500/20'
+                    ? 'text-orange-400 bg-orange-500/[0.08] border-[0.5px] border-orange-500/20'
                     : 'text-white/60 bg-white/[0.04] border-[0.5px] border-white/[0.06]'
                 )}
               >
@@ -201,7 +201,7 @@ function ProjectCard({ project }: { project: Project }) {
                         className={cn(
                           'px-4 py-2 text-white/60 rounded-sm text-sm font-medium cursor-pointer select-none',
                           'border-[0.5px] border-white/[0.06] bg-white/[0.03]',
-                          'hover:border-amber-500/20 hover:text-amber-400 transition-colors duration-200'
+                          'hover:border-orange-500/20 hover:text-orange-400 transition-colors duration-200'
                         )}
                       >
                         {category}
@@ -230,7 +230,7 @@ function ProjectCard({ project }: { project: Project }) {
                         damping: 25,
                       }}
                     >
-                      <MapPin className="w-4 h-4 text-amber-400/60" />
+                      <MapPin className="w-4 h-4 text-orange-400/60" />
                     </motion.div>
                     <span className="text-xs font-medium">
                       {project.location}
@@ -256,7 +256,7 @@ function ProjectCard({ project }: { project: Project }) {
           className={cn(
             'w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ml-3',
             'text-white/60 bg-white/[0.04] border-[0.5px] border-white/[0.06]',
-            'hover:border-amber-500/20 transition-colors duration-200'
+            'hover:border-orange-500/20 transition-colors duration-200'
           )}
         >
           <motion.div

@@ -95,13 +95,13 @@ export default function GBPReviewsPage() {
       <div>
         <Link
           href="/dashboard/google-business"
-          className="text-sm text-gray-400 hover:text-amber-400 flex items-center gap-1 mb-2 transition-colors"
+          className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Google Business
         </Link>
         <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <MessageSquare className="w-7 h-7 text-amber-400" />
+          <MessageSquare className="w-7 h-7 text-orange-400" />
           Review Management
         </h1>
         <p className="text-gray-400 mt-1">
@@ -129,7 +129,7 @@ export default function GBPReviewsPage() {
                 }}
                 className={`text-xs ${
                   ratingFilter === f
-                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+                    ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
                     : 'border-white/10 text-gray-400 hover:bg-white/5'
                 }`}
               >
@@ -145,21 +145,21 @@ export default function GBPReviewsPage() {
           {/* Reviews List */}
           {isLoading ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+              <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
             </div>
           ) : reviews.length > 0 ? (
             <div className="space-y-4">
               {reviews.map(review => (
                 <Card
                   key={review.id}
-                  className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10"
+                  className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10"
                 >
                   <CardContent className="p-5">
                     {/* Review Header */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-amber-500/10 rounded-full flex items-center justify-center">
-                          <span className="text-amber-400 font-bold text-sm">
+                        <div className="w-8 h-8 bg-orange-500/10 rounded-full flex items-center justify-center">
+                          <span className="text-orange-400 font-bold text-sm">
                             {(review.reviewerName || 'A')[0]}
                           </span>
                         </div>
@@ -178,7 +178,7 @@ export default function GBPReviewsPage() {
                             key={star}
                             className={`w-4 h-4 ${
                               star <= review.rating
-                                ? 'text-amber-400'
+                                ? 'text-orange-400'
                                 : 'text-gray-600'
                             }`}
                           />
@@ -195,8 +195,8 @@ export default function GBPReviewsPage() {
 
                     {/* Existing Reply */}
                     {review.replyText && (
-                      <div className="p-3 bg-white/5 rounded-lg mb-3 border-l-2 border-amber-500/30">
-                        <p className="text-xs text-amber-400 font-medium mb-1">
+                      <div className="p-3 bg-white/5 rounded-lg mb-3 border-l-2 border-orange-500/30">
+                        <p className="text-xs text-orange-400 font-medium mb-1">
                           Your reply
                         </p>
                         <p className="text-sm text-gray-300">
@@ -209,8 +209,8 @@ export default function GBPReviewsPage() {
                     {review.aiSuggestion &&
                       !review.replyText &&
                       replyingTo !== review.id && (
-                        <div className="p-3 bg-amber-500/5 rounded-lg mb-3 border-l-2 border-amber-500/20">
-                          <p className="text-xs text-amber-400 font-medium mb-1 flex items-center gap-1">
+                        <div className="p-3 bg-orange-500/5 rounded-lg mb-3 border-l-2 border-orange-500/20">
+                          <p className="text-xs text-orange-400 font-medium mb-1 flex items-center gap-1">
                             <Zap className="w-3 h-3" /> AI Suggestion
                           </p>
                           <p className="text-sm text-gray-300">
@@ -219,7 +219,7 @@ export default function GBPReviewsPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="mt-2 text-amber-400 hover:text-amber-300"
+                            className="mt-2 text-orange-400 hover:text-orange-300"
                             onClick={() => {
                               setReplyingTo(review.id);
                               setReplyText(review.aiSuggestion!);
@@ -244,7 +244,7 @@ export default function GBPReviewsPage() {
                             size="sm"
                             onClick={() => handleSendReply(review.id)}
                             disabled={sending || !replyText.trim()}
-                            className="bg-gradient-to-r from-amber-500 to-amber-600 text-white"
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white"
                           >
                             {sending ? (
                               <Loader2 className="w-3 h-3 animate-spin mr-1" />
@@ -281,7 +281,7 @@ export default function GBPReviewsPage() {
                           size="sm"
                           onClick={() => handleGenerateAI(review.id)}
                           disabled={generatingAI === review.id}
-                          className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                          className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
                         >
                           {generatingAI === review.id ? (
                             <Loader2 className="w-3 h-3 animate-spin mr-1" />

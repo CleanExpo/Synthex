@@ -105,7 +105,7 @@ export function ContentAndTrends({
                 className="flex items-center justify-between p-3 bg-white/5 rounded-lg"
               >
                 <div className="flex items-center gap-3">
-                  <Target className="w-4 h-4 text-amber-500" />
+                  <Target className="w-4 h-4 text-orange-500" />
                   <div>
                     <p className="font-medium">{trend.hashtag}</p>
                     <p className="text-sm text-gray-400">

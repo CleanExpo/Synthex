@@ -45,7 +45,7 @@ ${JSON.stringify(schema, null, 2)}
   };
 
   return (
-    <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-white">Generated Schema</CardTitle>
@@ -56,7 +56,7 @@ ${JSON.stringify(schema, null, 2)}
             variant="outline"
             size="sm"
             onClick={handleCopy}
-            className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+            className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
           >
             {copied ? (
               <>
@@ -86,7 +86,7 @@ ${JSON.stringify(schema, null, 2)}
             {/* Code Preview */}
             <div className="relative">
               <pre className="bg-black/30 p-4 rounded-lg overflow-auto max-h-[400px] text-sm">
-                <code className="text-amber-300">
+                <code className="text-orange-300">
                   {`<script type="application/ld+json">\n${JSON.stringify(
                     schema,
                     null,

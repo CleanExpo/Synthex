@@ -123,7 +123,7 @@ export function JournalistForm({
         value={form[key]}
         onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
         placeholder={placeholder}
-        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
       />
     </div>
   );
@@ -190,7 +190,7 @@ export function JournalistForm({
                   tier: e.target.value as JournalistFormData['tier'],
                 }))
               }
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50"
             >
               <option value="cold">Cold — No prior contact</option>
               <option value="warm">Warm — Some prior contact</option>
@@ -209,7 +209,7 @@ export function JournalistForm({
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               placeholder="Previous interactions, preferences, do's and don'ts..."
               rows={3}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 resize-none"
             />
           </div>
 
@@ -229,7 +229,7 @@ export function JournalistForm({
               disabled={
                 saving || !form.name || !form.outlet || !form.outletDomain
               }
-              className="flex-1 px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               {journalistId ? 'Save Changes' : 'Create Contact'}

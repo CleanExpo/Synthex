@@ -56,7 +56,7 @@ export function TestimonialCard({
       <div
         className={cn(
           'absolute opacity-10',
-          isFeatured ? 'text-amber-400' : 'text-white',
+          isFeatured ? 'text-orange-400' : 'text-white',
           isCompact ? 'top-2 right-2' : 'top-4 right-4'
         )}
       >
@@ -73,7 +73,7 @@ export function TestimonialCard({
                 className={cn(
                   'w-4 h-4',
                   i < testimonial.rating!
-                    ? 'fill-amber-400 text-amber-400'
+                    ? 'fill-orange-400 text-orange-400'
                     : 'text-slate-600'
                 )}
               />
@@ -117,7 +117,7 @@ export function TestimonialCard({
               className={cn(
                 'w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm',
                 isFeatured
-                  ? 'bg-gradient-to-br from-amber-500 to-amber-500 text-white'
+                  ? 'bg-gradient-to-br from-orange-500 to-orange-500 text-white'
                   : 'bg-white/10 text-white'
               )}
             >

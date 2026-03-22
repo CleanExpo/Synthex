@@ -121,7 +121,7 @@ export function CommandPalette() {
               onChange={e => setSearch(e.target.value)}
               placeholder="Type a command or search..."
               aria-label="Search commands"
-              className="flex-1 px-4 py-4 bg-transparent text-white placeholder-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-0"
+              className="flex-1 px-4 py-4 bg-transparent text-white placeholder-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-0"
             />
             <kbd className="px-2 py-1 text-xs bg-gray-800 rounded">ESC</kbd>
           </div>

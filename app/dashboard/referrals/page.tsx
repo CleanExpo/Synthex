@@ -59,8 +59,8 @@ function StatCard({
 }) {
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-5 flex items-start gap-4">
-      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-        <Icon className="w-5 h-5 text-amber-400" />
+      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+        <Icon className="w-5 h-5 text-orange-400" />
       </div>
       <div>
         <p className="text-2xl font-bold text-white tabular-nums">{value}</p>
@@ -171,7 +171,7 @@ export default function ReferralsPage() {
           </p>
           <button
             onClick={() => mutate()}
-            className="px-4 py-2 text-xs rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-colors"
+            className="px-4 py-2 text-xs rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/20 transition-colors"
           >
             Retry
           </button>
@@ -200,7 +200,7 @@ export default function ReferralsPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <Gift className="w-7 h-7 text-amber-400" />
+          <Gift className="w-7 h-7 text-orange-400" />
           Refer &amp; Earn
         </h1>
         <p className="text-slate-400 text-sm mt-1">
@@ -215,7 +215,7 @@ export default function ReferralsPage() {
           Your referral link
         </p>
         <div className="flex items-center gap-2">
-          <div className="flex-1 min-w-0 font-mono text-sm text-amber-300 bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 truncate">
+          <div className="flex-1 min-w-0 font-mono text-sm text-orange-300 bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 truncate">
             {referralLink}
           </div>
           <button
@@ -223,7 +223,7 @@ export default function ReferralsPage() {
             className={`flex-shrink-0 px-4 py-2.5 rounded-lg text-xs font-medium border transition-all ${
               copied
                 ? 'bg-green-500/20 border-green-500/30 text-green-400'
-                : 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
+                : 'bg-orange-500/10 border-orange-500/20 text-orange-400 hover:bg-orange-500/20'
             }`}
           >
             {copied ? 'Copied!' : 'Copy'}
@@ -269,12 +269,12 @@ export default function ReferralsPage() {
         </div>
         <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
           <div
-            className="h-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-500"
+            className="h-2 rounded-full bg-gradient-to-r from-orange-500 to-orange-400 transition-all duration-500"
             style={{ width: `${progressPct}%` }}
           />
         </div>
         {stats.rewardsEarned > 0 && (
-          <p className="text-xs text-amber-400">
+          <p className="text-xs text-orange-400">
             You&apos;ve earned{' '}
             <span className="font-semibold">
               {stats.rewardsEarned.toLocaleString()} AI credits
@@ -301,12 +301,12 @@ export default function ReferralsPage() {
             value={inviteEmail}
             onChange={e => setInviteEmail(e.target.value)}
             required
-            className="flex-1 min-w-0 text-sm bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40 transition-colors"
+            className="flex-1 min-w-0 text-sm bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-orange-500/40 transition-colors"
           />
           <button
             type="submit"
             disabled={inviting}
-            className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-medium bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-medium bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {inviting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             {inviting ? 'Sending…' : 'Send Invite'}
@@ -398,7 +398,7 @@ export default function ReferralsPage() {
                     r.status === 'converted'
                       ? 'bg-green-500/10 text-green-400 border border-green-500/20'
                       : r.status === 'signed_up'
-                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                        ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
                         : r.status === 'clicked'
                           ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
                           : 'bg-white/5 text-slate-500 border border-white/10'

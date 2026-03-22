@@ -25,9 +25,9 @@ export function BulkActionsBar({
   if (selectedCount === 0) return null;
 
   return (
-    <div className="flex items-center justify-between p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg mb-4">
+    <div className="flex items-center justify-between p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg mb-4">
       <div className="flex items-center gap-2">
-        <span className="text-sm text-amber-300">
+        <span className="text-sm text-orange-300">
           {selectedCount} user(s) selected
         </span>
         <Button

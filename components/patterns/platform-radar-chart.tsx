@@ -30,7 +30,7 @@ export function PlatformRadarChart() {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Platform Performance Matrix</span>
-          <Activity className="h-4 w-4 text-amber-500" />
+          <Activity className="h-4 w-4 text-orange-500" />
         </CardTitle>
         <CardDescription className="text-gray-400">
           Comparative analysis across platforms

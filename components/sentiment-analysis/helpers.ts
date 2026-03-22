@@ -25,7 +25,7 @@ export function getPriorityColor(priority: string) {
     case 'urgent':
       return 'bg-red-500';
     case 'high':
-      return 'bg-amber-500';
+      return 'bg-orange-500';
     case 'medium':
       return 'bg-yellow-500';
     default:

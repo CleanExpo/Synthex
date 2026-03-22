@@ -63,7 +63,7 @@ function InstagramCard({
           />
         ) : (
           /* Warm gradient fallback when image generation unavailable */
-          <div className="w-full h-full bg-gradient-to-br from-amber-900/40 via-charcoal-700 to-charcoal-800 flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-orange-900/40 via-charcoal-700 to-charcoal-800 flex items-center justify-center">
             <div className="text-center">
               <div className="text-4xl mb-2">{'\uD83D\uDCF8'}</div>
               <p className="text-white/50 text-xs">Image preview unavailable</p>
@@ -195,12 +195,12 @@ export function LiveDemoWidget() {
             placeholder="Your business name"
             maxLength={80}
             disabled={state === 'loading'}
-            className="flex-1 bg-charcoal-900/60 border border-white/[0.08] rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 focus:outline-none focus:border-amber-500/40 transition-colors disabled:opacity-50"
+            className="flex-1 bg-charcoal-900/60 border border-white/[0.08] rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 focus:outline-none focus:border-orange-500/40 transition-colors disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={!businessName.trim() || state === 'loading'}
-            className="bg-amber-500 text-charcoal-900 font-bold rounded-xl px-4 py-2.5 text-sm hover:bg-amber-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+            className="bg-orange-500 text-charcoal-900 font-bold rounded-xl px-4 py-2.5 text-sm hover:bg-orange-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
           >
             {state === 'loading' ? (
               <span className="w-4 h-4 border-2 border-charcoal-900/30 border-t-charcoal-900 rounded-full animate-spin block" />
@@ -247,7 +247,7 @@ export function LiveDemoWidget() {
         <div>
           <InstagramCard businessName={businessName} result={result} />
           <div className="flex items-center justify-between mt-3">
-            <p className="text-amber-400/70 text-xs">
+            <p className="text-orange-400/70 text-xs">
               {'\u2713'} Generated in {(result.durationMs / 1000).toFixed(1)}s
             </p>
             <button

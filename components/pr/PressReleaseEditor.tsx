@@ -165,7 +165,7 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
   };
 
   const inputClass =
-    'w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50';
+    'w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50';
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
@@ -421,7 +421,7 @@ export function PressReleaseEditor({
             setSelectedId(null);
             setShowNew(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-medium rounded-lg transition-colors"
         >
           <Plus className="h-4 w-4" />
           New Press Release
@@ -464,7 +464,7 @@ export function PressReleaseEditor({
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <FileText className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                    <FileText className="h-4 w-4 text-orange-400 flex-shrink-0" />
                     <span className="text-white text-sm font-medium truncate">
                       {release.headline}
                     </span>

@@ -58,7 +58,7 @@ const STATUS_CONFIG: Record<AwardStatus, { label: string; className: string }> =
     won: { label: 'Won', className: 'bg-emerald-900/60 text-emerald-300' },
     shortlisted: {
       label: 'Shortlisted',
-      className: 'bg-amber-900/60 text-amber-300',
+      className: 'bg-orange-900/60 text-orange-300',
     },
     'not-selected': {
       label: 'Not Selected',
@@ -244,7 +244,7 @@ export function AwardCard({
           className={cn(
             'flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors',
             nominationDraft
-              ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'
+              ? 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30'
               : 'bg-slate-700/60 text-slate-300 hover:bg-slate-600/60'
           )}
         >

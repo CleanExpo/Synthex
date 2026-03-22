@@ -58,17 +58,17 @@ function getFrequencyBadge(frequency: string): {
     case 'daily':
       return {
         label: 'Daily',
-        className: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+        className: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
       };
     case 'weekly':
       return {
         label: 'Weekly',
-        className: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+        className: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
       };
     case 'monthly':
       return {
         label: 'Monthly',
-        className: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+        className: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
       };
     default:
       return {
@@ -81,16 +81,16 @@ function getFrequencyBadge(frequency: string): {
 function getScoreColor(score: number | null): string {
   if (score === null) return 'text-gray-400';
   if (score >= 80) return 'text-emerald-400';
-  if (score >= 60) return 'text-amber-400';
-  if (score >= 40) return 'text-amber-400';
+  if (score >= 60) return 'text-orange-400';
+  if (score >= 40) return 'text-orange-400';
   return 'text-red-400';
 }
 
 function getScoreBg(score: number | null): string {
   if (score === null) return 'bg-gray-500/10';
   if (score >= 80) return 'bg-emerald-500/10';
-  if (score >= 60) return 'bg-amber-500/10';
-  if (score >= 40) return 'bg-amber-500/10';
+  if (score >= 60) return 'bg-orange-500/10';
+  if (score >= 40) return 'bg-orange-500/10';
   return 'bg-red-500/10';
 }
 
@@ -151,7 +151,7 @@ function ScheduledSitesTab({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
       </div>
     );
   }
@@ -171,7 +171,7 @@ function ScheduledSitesTab({
     <div className="space-y-6">
       {/* Add Site Form */}
       {showForm ? (
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/20">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/20">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">Add New Site</h3>
@@ -196,7 +196,7 @@ function ScheduledSitesTab({
                     onChange={e =>
                       setFormData(prev => ({ ...prev, url: e.target.value }))
                     }
-                    className="bg-white/5 border-amber-500/20"
+                    className="bg-white/5 border-orange-500/20"
                     required
                   />
                 </div>
@@ -211,7 +211,7 @@ function ScheduledSitesTab({
                     onChange={e =>
                       setFormData(prev => ({ ...prev, name: e.target.value }))
                     }
-                    className="bg-white/5 border-amber-500/20"
+                    className="bg-white/5 border-orange-500/20"
                     required
                   />
                 </div>
@@ -232,7 +232,7 @@ function ScheduledSitesTab({
                           | 'monthly',
                       }))
                     }
-                    className="w-full px-3 py-2 bg-white/5 border border-amber-500/20 rounded-md text-white"
+                    className="w-full px-3 py-2 bg-white/5 border border-orange-500/20 rounded-md text-white"
                   >
                     <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
@@ -269,7 +269,7 @@ function ScheduledSitesTab({
                 <Button
                   type="submit"
                   disabled={creating}
-                  className="bg-gradient-to-r from-amber-500 to-amber-600"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600"
                 >
                   {creating ? (
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -285,7 +285,7 @@ function ScheduledSitesTab({
       ) : (
         <Button
           onClick={() => setShowForm(true)}
-          className="bg-gradient-to-r from-amber-500 to-amber-600"
+          className="bg-gradient-to-r from-orange-500 to-orange-600"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Site
@@ -294,7 +294,7 @@ function ScheduledSitesTab({
 
       {/* Targets List */}
       {targets.length === 0 ? (
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-12 text-center">
             <Calendar className="w-12 h-12 text-gray-600 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-white mb-2">
@@ -305,7 +305,7 @@ function ScheduledSitesTab({
             </p>
             <Button
               onClick={() => setShowForm(true)}
-              className="bg-gradient-to-r from-amber-500 to-amber-600"
+              className="bg-gradient-to-r from-orange-500 to-orange-600"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Your First Site
@@ -319,7 +319,7 @@ function ScheduledSitesTab({
             return (
               <Card
                 key={target.id}
-                className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 hover:border-amber-500/30 transition-all"
+                className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 hover:border-orange-500/30 transition-all"
               >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
@@ -367,7 +367,7 @@ function ScheduledSitesTab({
                         size="sm"
                         onClick={() => onRunNow(target.url)}
                         disabled={auditRunning}
-                        className="border-amber-500/30 text-amber-400"
+                        className="border-orange-500/30 text-orange-400"
                       >
                         {auditRunning ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -421,7 +421,7 @@ function AuditHistoryTab({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
       </div>
     );
   }
@@ -434,7 +434,7 @@ function AuditHistoryTab({
         <select
           value={selectedUrl}
           onChange={e => onUrlChange(e.target.value)}
-          className="px-3 py-2 bg-white/5 border border-amber-500/20 rounded-md text-white"
+          className="px-3 py-2 bg-white/5 border border-orange-500/20 rounded-md text-white"
         >
           <option value="">All Sites</option>
           {urls.map(url => (
@@ -447,16 +447,16 @@ function AuditHistoryTab({
 
       {/* Trends Chart */}
       {selectedUrl && trends.length > 0 && (
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-amber-400" />
+              <Activity className="w-5 h-5 text-orange-400" />
               Score Trends (Last 30 Days)
             </h3>
             <div className="h-64">
               {trendsLoading ? (
                 <div className="flex items-center justify-center h-full">
-                  <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
+                  <Loader2 className="w-6 h-6 text-orange-400 animate-spin" />
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -517,7 +517,7 @@ function AuditHistoryTab({
       )}
 
       {/* History Table */}
-      <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
         <CardContent className="p-6">
           <h3 className="text-lg font-semibold text-white mb-4">
             Audit History
@@ -586,7 +586,7 @@ function AuditHistoryTab({
                                 className={`px-1.5 py-0.5 text-xs rounded ${
                                   issue.severity === 'critical'
                                     ? 'bg-red-500/20 text-red-400'
-                                    : 'bg-amber-500/20 text-amber-400'
+                                    : 'bg-orange-500/20 text-orange-400'
                                 }`}
                               >
                                 {issue.severity}
@@ -624,14 +624,14 @@ function AlertsTab({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
       </div>
     );
   }
 
   if (regressions.length === 0) {
     return (
-      <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
         <CardContent className="p-12 text-center">
           <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-white mb-2">
@@ -653,7 +653,7 @@ function AlertsTab({
           className={`bg-surface-base/80 backdrop-blur-xl border ${
             regression.severity === 'critical'
               ? 'border-red-500/30'
-              : 'border-amber-500/30'
+              : 'border-orange-500/30'
           }`}
         >
           <CardContent className="p-6">
@@ -664,14 +664,14 @@ function AlertsTab({
                   className={`p-3 rounded-xl ${
                     regression.severity === 'critical'
                       ? 'bg-red-500/20'
-                      : 'bg-amber-500/20'
+                      : 'bg-orange-500/20'
                   }`}
                 >
                   <TrendingDown
                     className={`w-6 h-6 ${
                       regression.severity === 'critical'
                         ? 'text-red-400'
-                        : 'text-amber-400'
+                        : 'text-orange-400'
                     }`}
                   />
                 </div>
@@ -685,7 +685,7 @@ function AlertsTab({
                       className={`px-2 py-0.5 text-xs font-medium rounded ${
                         regression.severity === 'critical'
                           ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                          : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                          : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
                       }`}
                     >
                       {regression.severity === 'critical'
@@ -723,7 +723,7 @@ function AlertsTab({
                               className={`w-3 h-3 ${
                                 issue.severity === 'critical'
                                   ? 'text-red-400'
-                                  : 'text-amber-400'
+                                  : 'text-orange-400'
                               }`}
                             />
                             <span className="text-gray-300">{issue.title}</span>
@@ -816,7 +816,7 @@ export default function ScheduledAuditsPage() {
 
       <div>
         <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-          <Calendar className="w-8 h-8 text-amber-400" />
+          <Calendar className="w-8 h-8 text-orange-400" />
           Scheduled Audits
         </h1>
         <p className="text-gray-400 mt-2">
@@ -831,7 +831,7 @@ export default function ScheduledAuditsPage() {
         description="Set up automated SEO audits that run on schedule and alert you when scores drop."
       >
         {/* Tabs */}
-        <div className="flex items-center gap-2 border-b border-amber-500/10 pb-4">
+        <div className="flex items-center gap-2 border-b border-orange-500/10 pb-4">
           {tabs.map(tab => (
             <Button
               key={tab.id}
@@ -839,7 +839,7 @@ export default function ScheduledAuditsPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 flex items-center gap-2 ${
                 activeTab === tab.id
-                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                  ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >

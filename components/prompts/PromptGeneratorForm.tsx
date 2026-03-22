@@ -28,11 +28,12 @@ interface PromptGeneratorFormProps {
 // ─── Category badge colours ───────────────────────────────────────────────────
 
 const CATEGORY_COLOURS: Record<PromptCategory, string> = {
-  'brand-awareness': 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-  'competitor-comparison': 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+  'brand-awareness': 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+  'competitor-comparison':
+    'bg-orange-500/20 text-orange-300 border-orange-500/30',
   'local-discovery': 'bg-green-500/20 text-green-300 border-green-500/30',
   'use-case': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-  'how-to': 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+  'how-to': 'bg-orange-500/20 text-orange-300 border-orange-500/30',
   'product-feature': 'bg-slate-500/20 text-slate-300 border-slate-500/30',
 };
 
@@ -205,7 +206,7 @@ export function PromptGeneratorForm({
             <select
               value={entityType}
               onChange={e => setEntityType(e.target.value)}
-              className="w-full h-9 rounded-md border border-white/20 bg-white/5 text-white text-sm px-3 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="w-full h-9 rounded-md border border-white/20 bg-white/5 text-white text-sm px-3 focus:outline-none focus:ring-1 focus:ring-orange-500"
             >
               <option value="brand">Brand</option>
               <option value="product">Product</option>
@@ -248,7 +249,7 @@ export function PromptGeneratorForm({
             type="submit"
             disabled={generating || !entityName.trim() || !topic.trim()}
             size="sm"
-            className="bg-amber-600 hover:bg-amber-500 text-white"
+            className="bg-orange-600 hover:bg-orange-500 text-white"
           >
             {generating ? (
               <>Generating…</>
@@ -273,7 +274,7 @@ export function PromptGeneratorForm({
                 className={cn(
                   'px-2.5 py-1 rounded-full text-xs border transition-colors',
                   categoryFilter === 'all'
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                    ? 'bg-orange-500/20 text-orange-300 border-orange-500/30'
                     : 'border-white/20 text-slate-400 hover:text-slate-300'
                 )}
               >

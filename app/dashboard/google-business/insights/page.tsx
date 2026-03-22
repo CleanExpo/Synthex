@@ -39,7 +39,7 @@ function MetricCard({
   return (
     <div className="p-4 bg-white/5 rounded-lg">
       <div className="flex items-center gap-2 mb-1">
-        <Icon className="w-4 h-4 text-amber-400" />
+        <Icon className="w-4 h-4 text-orange-400" />
         <span className="text-sm text-gray-400">{label}</span>
       </div>
       <p className="text-2xl font-bold text-white">{value}</p>
@@ -62,13 +62,13 @@ export default function GBPInsightsPage() {
       <div>
         <Link
           href="/dashboard/google-business"
-          className="text-sm text-gray-400 hover:text-amber-400 flex items-center gap-1 mb-2 transition-colors"
+          className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Google Business
         </Link>
         <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <TrendingUp className="w-7 h-7 text-amber-400" />
+          <TrendingUp className="w-7 h-7 text-orange-400" />
           Performance Insights
         </h1>
         <p className="text-gray-400 mt-1">
@@ -91,7 +91,7 @@ export default function GBPInsightsPage() {
                 onClick={() => setDays(d)}
                 className={`text-xs ${
                   days === d
-                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+                    ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
                     : 'border-white/10 text-gray-400 hover:bg-white/5'
                 }`}
               >
@@ -102,7 +102,7 @@ export default function GBPInsightsPage() {
 
           {isLoading ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+              <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
             </div>
           ) : (
             <>
@@ -137,7 +137,7 @@ export default function GBPInsightsPage() {
 
               {/* Trend Chart */}
               {trend.length > 0 && (
-                <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+                <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
                   <CardContent className="p-6">
                     <h2 className="text-lg font-semibold text-white mb-4">
                       Performance Trend

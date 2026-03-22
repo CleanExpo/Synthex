@@ -49,14 +49,14 @@ export const CATEGORY_BADGE_STYLES: Record<
 > = {
   design: {
     label: 'Design',
-    className: 'bg-amber-500/20 border-amber-500/30 text-amber-200',
+    className: 'bg-orange-500/20 border-orange-500/30 text-orange-200',
   },
   scheduling: {
     label: 'Scheduling',
-    className: 'bg-amber-500/20 border-amber-500/30 text-amber-200',
+    className: 'bg-orange-500/20 border-orange-500/30 text-orange-200',
   },
   automation: {
     label: 'Automation',
-    className: 'bg-amber-500/20 border-amber-500/30 text-amber-200',
+    className: 'bg-orange-500/20 border-orange-500/30 text-orange-200',
   },
 };

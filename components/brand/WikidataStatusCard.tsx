@@ -28,15 +28,15 @@ interface WikidataStatusCardProps {
 // ---------------------------------------------------------------------------
 
 const REQUIRED_PROPS = [
-  { id: 'P31',  label: 'Instance-of (entity type)' },
+  { id: 'P31', label: 'Instance-of (entity type)' },
   { id: 'P856', label: 'Official website URL' },
   { id: 'P571', label: 'Inception / founding date' },
 ];
 
 const RECOMMENDED_PROPS = [
-  { id: 'P159',  label: 'Headquarters location' },
-  { id: 'P112',  label: 'Founder' },
-  { id: 'P18',   label: 'Image / logo' },
+  { id: 'P159', label: 'Headquarters location' },
+  { id: 'P112', label: 'Founder' },
+  { id: 'P18', label: 'Image / logo' },
   { id: 'P2671', label: 'Google Knowledge Graph ID' },
 ];
 
@@ -46,21 +46,28 @@ const RECOMMENDED_PROPS = [
 
 function scoreColour(score: number): string {
   if (score >= 80) return 'text-green-400';
-  if (score >= 60) return 'text-amber-400';
+  if (score >= 60) return 'text-orange-400';
   return 'text-red-400';
 }
 
-function referenceStrength(count: number): { label: string; className: string } {
-  if (count >= 3) return { label: 'Strong',   className: 'text-green-400' };
-  if (count >= 1) return { label: 'Moderate', className: 'text-amber-400' };
-  return { label: 'Weak',   className: 'text-red-400' };
+function referenceStrength(count: number): {
+  label: string;
+  className: string;
+} {
+  if (count >= 3) return { label: 'Strong', className: 'text-green-400' };
+  if (count >= 1) return { label: 'Moderate', className: 'text-orange-400' };
+  return { label: 'Weak', className: 'text-red-400' };
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export function WikidataStatusCard({ result, loading, onCheck }: WikidataStatusCardProps) {
+export function WikidataStatusCard({
+  result,
+  loading,
+  onCheck,
+}: WikidataStatusCardProps) {
   return (
     <div className="bg-white/[0.03] border border-white/10 rounded-xl p-5 space-y-4">
       {/* Header */}
@@ -69,7 +76,7 @@ export function WikidataStatusCard({ result, loading, onCheck }: WikidataStatusC
         <button
           onClick={onCheck}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-300 rounded-lg transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-1.5 text-xs bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 text-orange-300 rounded-lg transition-colors disabled:opacity-50"
         >
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
           Check Wikidata
@@ -80,7 +87,10 @@ export function WikidataStatusCard({ result, loading, onCheck }: WikidataStatusC
       {!result && !loading && (
         <div className="py-6 text-center">
           <Info className="w-7 h-7 text-gray-500 mx-auto mb-2" />
-          <p className="text-xs text-gray-400">Click "Check Wikidata" to look up your entity Q-ID and property completeness.</p>
+          <p className="text-xs text-gray-400">
+            Click "Check Wikidata" to look up your entity Q-ID and property
+            completeness.
+          </p>
         </div>
       )}
 
@@ -95,27 +105,41 @@ export function WikidataStatusCard({ result, loading, onCheck }: WikidataStatusC
       {result && !loading && (
         <>
           {/* Found / Not Found */}
-          <div className={cn(
-            'flex items-center gap-3 p-3 rounded-lg border',
-            result.found
-              ? 'bg-green-500/10 border-green-500/20'
-              : 'bg-red-500/10 border-red-500/20'
-          )}>
+          <div
+            className={cn(
+              'flex items-center gap-3 p-3 rounded-lg border',
+              result.found
+                ? 'bg-green-500/10 border-green-500/20'
+                : 'bg-red-500/10 border-red-500/20'
+            )}
+          >
             {result.found ? (
               <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
             ) : (
               <XCircle className="w-5 h-5 text-red-400 shrink-0" />
             )}
             <div>
-              <p className={cn('text-sm font-medium', result.found ? 'text-green-300' : 'text-red-300')}>
-                {result.found ? `Found — ${result.qId}` : 'Not found on Wikidata'}
+              <p
+                className={cn(
+                  'text-sm font-medium',
+                  result.found ? 'text-green-300' : 'text-red-300'
+                )}
+              >
+                {result.found
+                  ? `Found — ${result.qId}`
+                  : 'Not found on Wikidata'}
               </p>
               {result.entityLabel && (
                 <p className="text-xs text-gray-400">{result.entityLabel}</p>
               )}
             </div>
             {result.found && (
-              <span className={cn('ml-auto text-3xl font-bold tabular-nums', scoreColour(result.score))}>
+              <span
+                className={cn(
+                  'ml-auto text-3xl font-bold tabular-nums',
+                  scoreColour(result.score)
+                )}
+              >
                 {result.score}
               </span>
             )}
@@ -124,19 +148,29 @@ export function WikidataStatusCard({ result, loading, onCheck }: WikidataStatusC
           {/* Properties Checklist */}
           <div className="space-y-3">
             <div>
-              <p className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">Required Properties</p>
+              <p className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
+                Required Properties
+              </p>
               <div className="space-y-1.5">
                 {REQUIRED_PROPS.map(prop => {
                   const present = result.presentProps.includes(prop.id);
                   return (
-                    <div key={prop.id} className="flex items-center gap-2 text-xs">
+                    <div
+                      key={prop.id}
+                      className="flex items-center gap-2 text-xs"
+                    >
                       {present ? (
                         <CheckCircle className="w-3.5 h-3.5 text-green-400 shrink-0" />
                       ) : (
                         <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
                       )}
-                      <span className={present ? 'text-gray-300' : 'text-gray-500'}>
-                        <span className="font-mono text-gray-500">{prop.id}</span> — {prop.label}
+                      <span
+                        className={present ? 'text-gray-300' : 'text-gray-500'}
+                      >
+                        <span className="font-mono text-gray-500">
+                          {prop.id}
+                        </span>{' '}
+                        — {prop.label}
                       </span>
                     </div>
                   );
@@ -145,19 +179,29 @@ export function WikidataStatusCard({ result, loading, onCheck }: WikidataStatusC
             </div>
 
             <div>
-              <p className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">Recommended Properties</p>
+              <p className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
+                Recommended Properties
+              </p>
               <div className="space-y-1.5">
                 {RECOMMENDED_PROPS.map(prop => {
                   const present = result.presentProps.includes(prop.id);
                   return (
-                    <div key={prop.id} className="flex items-center gap-2 text-xs">
+                    <div
+                      key={prop.id}
+                      className="flex items-center gap-2 text-xs"
+                    >
                       {present ? (
                         <CheckCircle className="w-3.5 h-3.5 text-green-400 shrink-0" />
                       ) : (
                         <XCircle className="w-3.5 h-3.5 text-gray-500 shrink-0" />
                       )}
-                      <span className={present ? 'text-gray-300' : 'text-gray-500'}>
-                        <span className="font-mono text-gray-500">{prop.id}</span> — {prop.label}
+                      <span
+                        className={present ? 'text-gray-300' : 'text-gray-500'}
+                      >
+                        <span className="font-mono text-gray-500">
+                          {prop.id}
+                        </span>{' '}
+                        — {prop.label}
                       </span>
                     </div>
                   );
@@ -170,18 +214,24 @@ export function WikidataStatusCard({ result, loading, onCheck }: WikidataStatusC
           {result.found && (
             <div className="flex items-center gap-2 text-xs">
               <span className="text-gray-500">References:</span>
-              <span className={referenceStrength(result.referenceCount).className}>
-                {result.referenceCount} — {referenceStrength(result.referenceCount).label}
+              <span
+                className={referenceStrength(result.referenceCount).className}
+              >
+                {result.referenceCount} —{' '}
+                {referenceStrength(result.referenceCount).label}
               </span>
             </div>
           )}
 
           {/* Recommendations */}
           {result.recommendations.length > 0 && (
-            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 space-y-1.5">
+            <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 space-y-1.5">
               {result.recommendations.map((rec, i) => (
-                <p key={i} className="text-xs text-amber-200 flex items-start gap-2">
-                  <span className="text-amber-400 mt-0.5">→</span>
+                <p
+                  key={i}
+                  className="text-xs text-orange-200 flex items-start gap-2"
+                >
+                  <span className="text-orange-400 mt-0.5">→</span>
                   {rec}
                 </p>
               ))}

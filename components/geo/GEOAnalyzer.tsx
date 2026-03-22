@@ -56,7 +56,7 @@ export function GEOAnalyzer({ initialContent }: GEOAnalyzerProps) {
       <Card className="bg-white/[0.02] border-white/[0.08]">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
-            <Search className="h-5 w-5 text-amber-400" />
+            <Search className="h-5 w-5 text-orange-400" />
             Content Analyzer
           </CardTitle>
         </CardHeader>
@@ -65,7 +65,7 @@ export function GEOAnalyzer({ initialContent }: GEOAnalyzerProps) {
             value={content}
             onChange={e => setContent(e.target.value)}
             placeholder="Paste your content here for GEO analysis..."
-            className="w-full h-48 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-gray-500 p-4 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+            className="w-full h-48 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-gray-500 p-4 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-orange-500/50"
           />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -87,7 +87,7 @@ export function GEOAnalyzer({ initialContent }: GEOAnalyzerProps) {
             <Button
               onClick={analyze}
               disabled={loading || content.length < 50}
-              className="bg-amber-600 hover:bg-amber-700"
+              className="bg-orange-600 hover:bg-orange-700"
             >
               {loading ? (
                 <RefreshCw className="h-4 w-4 animate-spin mr-2" />

@@ -132,7 +132,7 @@ export function ConnectDialog({
                     value={formValues[field] || ''}
                     onChange={e => handleFieldChange(field, e.target.value)}
                     placeholder={`Enter your ${fieldLabels[field] || field}`}
-                    className="w-full px-3 py-2 rounded-md bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 text-sm"
+                    className="w-full px-3 py-2 rounded-md bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 text-sm"
                   />
                 </div>
               ))}

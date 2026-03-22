@@ -32,7 +32,7 @@ interface SponsorListProps {
 const STATUS_COLORS: Record<SponsorStatus, string> = {
   lead: 'bg-gray-500/10 text-gray-400 border-gray-500/30',
   active: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
-  past: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
+  past: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
 };
 
 function formatCurrency(amount: number, currency: string = 'USD'): string {
@@ -91,7 +91,7 @@ function SponsorCard({
       className={cn(
         'bg-gray-900/50 border rounded-xl p-5 transition-all cursor-pointer group',
         isSelected
-          ? 'border-amber-500/50 ring-1 ring-amber-500/30'
+          ? 'border-orange-500/50 ring-1 ring-orange-500/30'
           : 'border-white/10 hover:border-white/20'
       )}
       onClick={onSelect}
@@ -107,7 +107,7 @@ function SponsorCard({
               className="w-12 h-12 rounded-full object-cover"
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-500/20 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-500/20 flex items-center justify-center">
               <Building className="h-6 w-6 text-white/50" />
             </div>
           )}

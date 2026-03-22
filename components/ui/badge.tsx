@@ -8,7 +8,7 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          'border-transparent bg-primary text-primary-foreground hover:bg-primary/80 dark:bg-amber-600 dark:text-white dark:hover:bg-amber-700',
+          'border-transparent bg-primary text-primary-foreground hover:bg-primary/80 dark:bg-orange-600 dark:text-white dark:hover:bg-orange-700',
         secondary:
           'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600',
         destructive:
@@ -20,13 +20,13 @@ const badgeVariants = cva(
         'glass-solid':
           'bg-slate-800/80 backdrop-blur-md border-white/[0.1] text-white hover:bg-slate-800/90',
         'glass-primary':
-          'bg-amber-500/20 backdrop-blur-md border-amber-500/30 text-amber-200 hover:bg-amber-500/30',
+          'bg-orange-500/20 backdrop-blur-md border-orange-500/30 text-orange-200 hover:bg-orange-500/30',
         'glass-secondary':
-          'bg-amber-500/20 backdrop-blur-md border-amber-500/30 text-amber-200 hover:bg-amber-500/30',
+          'bg-orange-500/20 backdrop-blur-md border-orange-500/30 text-orange-200 hover:bg-orange-500/30',
         'glass-success':
           'bg-emerald-500/20 backdrop-blur-md border-emerald-500/30 text-emerald-200 hover:bg-emerald-500/30',
         'glass-warning':
-          'bg-amber-500/20 backdrop-blur-md border-amber-500/30 text-amber-200 hover:bg-amber-500/30',
+          'bg-orange-500/20 backdrop-blur-md border-orange-500/30 text-orange-200 hover:bg-orange-500/30',
         'glass-destructive':
           'bg-red-500/20 backdrop-blur-md border-red-500/30 text-red-200 hover:bg-red-500/30',
         // Status badges with dot indicator styling
@@ -35,14 +35,14 @@ const badgeVariants = cva(
         'status-inactive':
           'bg-slate-500/20 border-slate-500/30 text-slate-300 before:content-[""] before:w-1.5 before:h-1.5 before:rounded-full before:bg-slate-400 before:mr-1.5',
         'status-pending':
-          'bg-amber-500/20 border-amber-500/30 text-amber-300 before:content-[""] before:w-1.5 before:h-1.5 before:rounded-full before:bg-amber-400 before:mr-1.5 before:animate-pulse',
+          'bg-orange-500/20 border-orange-500/30 text-orange-300 before:content-[""] before:w-1.5 before:h-1.5 before:rounded-full before:bg-orange-400 before:mr-1.5 before:animate-pulse',
         'status-error':
           'bg-red-500/20 border-red-500/30 text-red-300 before:content-[""] before:w-1.5 before:h-1.5 before:rounded-full before:bg-red-400 before:mr-1.5',
         // Premium gradient badges
         'gradient-primary':
-          'bg-gradient-to-r from-amber-500/30 to-amber-500/30 border-amber-500/30 text-white',
+          'bg-gradient-to-r from-orange-500/30 to-orange-500/30 border-orange-500/30 text-white',
         'gradient-secondary':
-          'bg-gradient-to-r from-amber-500/30 to-blue-500/30 border-amber-500/30 text-white',
+          'bg-gradient-to-r from-orange-500/30 to-blue-500/30 border-orange-500/30 text-white',
       },
       size: {
         default: 'px-2.5 py-0.5 text-xs',

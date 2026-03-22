@@ -76,14 +76,14 @@ const EXPERIMENT_TYPES: Array<{
     label: 'Meta Description',
     description: 'Test meta description variants for click-through improvement',
     icon: FileText,
-    colour: 'border-amber-500/40 text-amber-400 hover:bg-amber-500/10',
+    colour: 'border-orange-500/40 text-orange-400 hover:bg-orange-500/10',
   },
   {
     value: 'h1',
     label: 'H1 Heading',
     description: 'Test H1 variants for GEO citability and entity prominence',
     icon: Globe,
-    colour: 'border-amber-500/40 text-amber-400 hover:bg-amber-500/10',
+    colour: 'border-orange-500/40 text-orange-400 hover:bg-orange-500/10',
   },
   {
     value: 'schema',
@@ -98,7 +98,7 @@ const EXPERIMENT_TYPES: Array<{
     description:
       'Test content formatting, passage structure, author attribution',
     icon: Layers,
-    colour: 'border-amber-500/40 text-amber-400 hover:bg-amber-500/10',
+    colour: 'border-orange-500/40 text-orange-400 hover:bg-orange-500/10',
   },
   {
     value: 'internal-links',
@@ -192,7 +192,7 @@ export function ExperimentWizard({
                 step > s
                   ? 'bg-green-500 text-white'
                   : step === s
-                    ? 'bg-amber-500 text-white'
+                    ? 'bg-orange-500 text-white'
                     : 'bg-white/10 text-gray-400'
               )}
             >
@@ -315,7 +315,7 @@ export function ExperimentWizard({
                     className={cn(
                       'px-3 py-1.5 rounded-md text-xs font-medium transition-colors border',
                       metricToTrack === m.value
-                        ? 'bg-amber-500/20 border-amber-500/50 text-amber-300'
+                        ? 'bg-orange-500/20 border-orange-500/50 text-orange-300'
                         : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
                     )}
                   >
@@ -339,7 +339,7 @@ export function ExperimentWizard({
               Enter the current value and the variant you want to test.
             </p>
             {experimentType && (
-              <Badge className="mt-2 text-xs bg-amber-500/20 text-amber-300">
+              <Badge className="mt-2 text-xs bg-orange-500/20 text-orange-300">
                 Testing:{' '}
                 {EXPERIMENT_TYPES.find(t => t.value === experimentType)?.label}
               </Badge>
@@ -371,7 +371,7 @@ export function ExperimentWizard({
                 onChange={e => setVariantValue(e.target.value)}
                 placeholder="The new value you want to try..."
                 rows={3}
-                className="mt-1 bg-amber-500/5 border-amber-500/20 text-white resize-none"
+                className="mt-1 bg-orange-500/5 border-orange-500/20 text-white resize-none"
               />
             </div>
           </div>

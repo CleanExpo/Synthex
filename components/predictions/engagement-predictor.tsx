@@ -117,13 +117,13 @@ export function EngagementPredictor({
   );
 
   const selectClasses =
-    'w-full rounded-lg bg-white/5 border border-white/10 text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50';
+    'w-full rounded-lg bg-white/5 border border-white/10 text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50';
 
   return (
     <Card variant="glass">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2 text-white">
-          <Sparkles className="h-5 w-5 text-amber-400" />
+          <Sparkles className="h-5 w-5 text-orange-400" />
           Engagement Predictor
         </CardTitle>
       </CardHeader>
@@ -141,7 +141,7 @@ export function EngagementPredictor({
               placeholder="Enter your content to predict engagement..."
               rows={4}
               required
-              className="w-full rounded-lg bg-white/5 border border-white/10 text-white px-3 py-2 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 resize-none"
+              className="w-full rounded-lg bg-white/5 border border-white/10 text-white px-3 py-2 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 resize-none"
             />
           </div>
 
@@ -188,7 +188,7 @@ export function EngagementPredictor({
                 type="checkbox"
                 checked={hasMedia}
                 onChange={e => setHasMedia(e.target.checked)}
-                className="rounded border-white/20 bg-white/5 text-amber-500 focus:ring-amber-500/50"
+                className="rounded border-white/20 bg-white/5 text-orange-500 focus:ring-orange-500/50"
               />
               Has Media
             </label>
@@ -298,7 +298,7 @@ export function EngagementPredictor({
                       key={i}
                       className="flex items-start gap-2 text-sm text-slate-400"
                     >
-                      <span className="text-amber-400 mt-0.5">-</span>
+                      <span className="text-orange-400 mt-0.5">-</span>
                       <span>{rec}</span>
                     </li>
                   ))}

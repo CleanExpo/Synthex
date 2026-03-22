@@ -47,7 +47,7 @@ export function TrendPredictionsWidget() {
     return (
       <Card className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
         <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-amber-400" />
+          <Loader2 className="h-6 w-6 animate-spin text-orange-400" />
         </CardContent>
       </Card>
     );
@@ -58,7 +58,7 @@ export function TrendPredictionsWidget() {
       <Card className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
         <CardHeader>
           <CardTitle className="text-sm font-light text-white flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-amber-400" />
+            <TrendingUp className="h-4 w-4 text-orange-400" />
             Trend Predictions
           </CardTitle>
         </CardHeader>
@@ -76,7 +76,7 @@ export function TrendPredictionsWidget() {
     <Card className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-light text-white flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-amber-400" />
+          <TrendingUp className="h-4 w-4 text-orange-400" />
           Trend Predictions
         </CardTitle>
       </CardHeader>

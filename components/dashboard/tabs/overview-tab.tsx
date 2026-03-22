@@ -124,7 +124,7 @@ export function OverviewTab({ stats }: OverviewTabProps) {
         <AnimatedCard delay={0.2}>
           <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden h-full">
             <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06] flex items-center gap-2">
-              <Zap className="h-3.5 w-3.5 text-amber-400" />
+              <Zap className="h-3.5 w-3.5 text-orange-400" />
               <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
                 Trending Topics
               </span>
@@ -186,8 +186,8 @@ export function OverviewTab({ stats }: OverviewTabProps) {
                       className={cn(
                         'h-1.5 w-1.5 rounded-full shrink-0',
                         activity.type === 'milestone'
-                          ? 'bg-amber-400'
-                          : 'bg-amber-400'
+                          ? 'bg-orange-400'
+                          : 'bg-orange-400'
                       )}
                     />
                     <span className="text-xs text-white/60 line-clamp-1">

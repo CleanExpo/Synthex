@@ -2,7 +2,11 @@
 
 import { cn } from '@/lib/utils';
 import { CheckCircle, AlertTriangle, AlertCircle } from '@/components/icons';
-import type { SlopScanResult, SlopCategory, SlopMatch } from '@/lib/voice/types';
+import type {
+  SlopScanResult,
+  SlopCategory,
+  SlopMatch,
+} from '@/lib/voice/types';
 
 interface SlopScanResultsProps {
   result: SlopScanResult;
@@ -41,8 +45,8 @@ function severityStyles(severity: 'error' | 'warning') {
     };
   }
   return {
-    chip: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-    dot: 'bg-amber-400',
+    chip: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+    dot: 'bg-orange-400',
   };
 }
 
@@ -50,7 +54,11 @@ function severityStyles(severity: 'error' | 'warning') {
 // Overall severity badge
 // ---------------------------------------------------------------------------
 
-function OverallBadge({ severity }: { severity: SlopScanResult['overallSeverity'] }) {
+function OverallBadge({
+  severity,
+}: {
+  severity: SlopScanResult['overallSeverity'];
+}) {
   if (severity === 'clean') {
     return (
       <span className="inline-flex items-centre gap-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-full text-xs font-medium">
@@ -61,7 +69,7 @@ function OverallBadge({ severity }: { severity: SlopScanResult['overallSeverity'
   }
   if (severity === 'warning') {
     return (
-      <span className="inline-flex items-centre gap-1.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-full text-xs font-medium">
+      <span className="inline-flex items-centre gap-1.5 bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2.5 py-1 rounded-full text-xs font-medium">
         <AlertTriangle className="w-3.5 h-3.5" />
         Warning
       </span>
@@ -83,13 +91,25 @@ function MatchRow({ match }: { match: SlopMatch }) {
   const styles = severityStyles(match.severity);
   return (
     <div className="flex items-start gap-2.5 py-1.5">
-      <span className={cn('mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0', styles.dot)} />
+      <span
+        className={cn(
+          'mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0',
+          styles.dot
+        )}
+      />
       <div className="flex-1 min-w-0">
-        <span className={cn('inline text-xs font-mono px-1.5 py-0.5 rounded border', styles.chip)}>
+        <span
+          className={cn(
+            'inline text-xs font-mono px-1.5 py-0.5 rounded border',
+            styles.chip
+          )}
+        >
           &ldquo;{match.phrase}&rdquo;
         </span>
         {match.suggestion && (
-          <span className="ml-2 text-xs text-slate-500">→ {match.suggestion}</span>
+          <span className="ml-2 text-xs text-slate-500">
+            → {match.suggestion}
+          </span>
         )}
       </div>
     </div>
@@ -102,24 +122,28 @@ function MatchRow({ match }: { match: SlopMatch }) {
 
 export function SlopScanResults({ result, className }: SlopScanResultsProps) {
   // Group matches by category
-  const grouped = result.matches.reduce<Partial<Record<SlopCategory, SlopMatch[]>>>(
-    (acc, match) => {
-      if (!acc[match.category]) acc[match.category] = [];
-      acc[match.category]!.push(match);
-      return acc;
-    },
-    {}
-  );
+  const grouped = result.matches.reduce<
+    Partial<Record<SlopCategory, SlopMatch[]>>
+  >((acc, match) => {
+    if (!acc[match.category]) acc[match.category] = [];
+    acc[match.category]!.push(match);
+    return acc;
+  }, {});
 
   const densityColour =
     result.slopDensity === 0
       ? 'text-emerald-400'
       : result.slopDensity < 1
-        ? 'text-amber-400'
+        ? 'text-orange-400'
         : 'text-red-400';
 
   return (
-    <div className={cn('bg-white/5 border border-white/10 backdrop-blur-sm rounded-xl p-4 space-y-4', className)}>
+    <div
+      className={cn(
+        'bg-white/5 border border-white/10 backdrop-blur-sm rounded-xl p-4 space-y-4',
+        className
+      )}
+    >
       {/* Header bar */}
       <div className="flex items-centre justify-between flex-wrap gap-2">
         <div>
@@ -145,7 +169,7 @@ export function SlopScanResults({ result, className }: SlopScanResultsProps) {
           </span>
         )}
         {result.warningCount > 0 && (
-          <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full">
+          <span className="text-xs bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-full">
             {result.warningCount} warning{result.warningCount !== 1 ? 's' : ''}
           </span>
         )}
@@ -155,20 +179,26 @@ export function SlopScanResults({ result, className }: SlopScanResultsProps) {
       {result.overallSeverity === 'clean' && (
         <div className="flex items-centre gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3">
           <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-          <p className="text-sm text-emerald-300">No AI tell-phrases detected. Writing reads as authentically human.</p>
+          <p className="text-sm text-emerald-300">
+            No AI tell-phrases detected. Writing reads as authentically human.
+          </p>
         </div>
       )}
 
       {/* Grouped match list */}
       {result.totalMatches > 0 && (
         <div className="space-y-4 max-h-80 overflow-y-auto pr-1">
-          {CATEGORY_ORDER.filter((cat) => grouped[cat] && grouped[cat]!.length > 0).map((cat) => (
+          {CATEGORY_ORDER.filter(
+            cat => grouped[cat] && grouped[cat]!.length > 0
+          ).map(cat => (
             <div key={cat}>
               <div className="flex items-centre gap-2 mb-1">
                 <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
                   {CATEGORY_LABELS[cat]}
                 </span>
-                <span className="text-xs text-slate-600">({grouped[cat]!.length})</span>
+                <span className="text-xs text-slate-600">
+                  ({grouped[cat]!.length})
+                </span>
               </div>
               <div className="space-y-0.5 border-l border-white/5 pl-3">
                 {grouped[cat]!.map((match, i) => (
@@ -182,7 +212,8 @@ export function SlopScanResults({ result, className }: SlopScanResultsProps) {
 
       {/* Footer */}
       <p className="text-xs text-slate-600 pt-1 border-t border-white/5">
-        Powered by SLOP_PATTERNS_V1 · {CATEGORY_ORDER.length} categories · {result.totalMatches} total match{result.totalMatches !== 1 ? 'es' : ''}
+        Powered by SLOP_PATTERNS_V1 · {CATEGORY_ORDER.length} categories ·{' '}
+        {result.totalMatches} total match{result.totalMatches !== 1 ? 'es' : ''}
       </p>
     </div>
   );

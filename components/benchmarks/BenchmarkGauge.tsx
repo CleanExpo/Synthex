@@ -27,8 +27,8 @@ const RATING_COLORS = {
   good: { stroke: '#22c55e', text: 'text-green-400', bg: 'bg-green-500/10' },
   excellent: {
     stroke: '#ffb87b',
-    text: 'text-amber-400',
-    bg: 'bg-amber-500/10',
+    text: 'text-orange-400',
+    bg: 'bg-orange-500/10',
   },
 };
 

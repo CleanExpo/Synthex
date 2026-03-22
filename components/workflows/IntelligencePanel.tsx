@@ -42,7 +42,7 @@ async function fetcher(url: string): Promise<IntelligenceResponse> {
 function ConfidenceBar({ value, label }: { value: number; label: string }) {
   const pct = Math.round(value * 100);
   const colour =
-    pct >= 85 ? 'bg-emerald-500' : pct >= 75 ? 'bg-amber-500' : 'bg-rose-500';
+    pct >= 85 ? 'bg-emerald-500' : pct >= 75 ? 'bg-orange-500' : 'bg-rose-500';
 
   return (
     <div className="space-y-1">
@@ -54,7 +54,7 @@ function ConfidenceBar({ value, label }: { value: number; label: string }) {
             pct >= 85
               ? 'text-emerald-400'
               : pct >= 75
-                ? 'text-amber-400'
+                ? 'text-[#FF9A6C]'
                 : 'text-rose-400'
           )}
         >
@@ -98,14 +98,14 @@ function StepPatternCard({
       className={cn(
         'rounded-lg border p-3 space-y-2',
         pattern.isLowPerforming
-          ? 'border-amber-500/20 bg-amber-500/5'
+          ? 'border-[#FF6B35]/20 bg-[#FF6B35]/5'
           : 'border-white/10 bg-white/5'
       )}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
           {pattern.isLowPerforming ? (
-            <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+            <AlertTriangle className="h-3.5 w-3.5 text-[#FF9A6C] shrink-0" />
           ) : (
             <CheckCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
           )}
@@ -130,7 +130,7 @@ function StepPatternCard({
         <div className="space-y-2">
           <button
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition-colours"
+            className="flex items-center gap-1 text-xs text-[#FF9A6C] hover:text-[#FFD60A] transition-colours"
           >
             {expanded ? (
               <ChevronUp className="h-3 w-3" />
@@ -157,7 +157,7 @@ function StepPatternCard({
                   size="sm"
                   onClick={handleApply}
                   disabled={applying}
-                  className="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30"
+                  className="text-xs bg-[#FF6B35]/20 hover:bg-[#FF6B35]/30 text-[#FFD60A] border border-[#FF6B35]/30"
                 >
                   {applying ? (
                     <Loader2 className="h-3 w-3 mr-1 animate-spin" />
@@ -240,7 +240,7 @@ export function IntelligencePanel({
               analysis.overallAvgConfidence >= 0.85
                 ? 'text-emerald-400'
                 : analysis.overallAvgConfidence >= 0.7
-                  ? 'text-amber-400'
+                  ? 'text-[#FF9A6C]'
                   : 'text-rose-400'
             )}
           >
@@ -252,7 +252,7 @@ export function IntelligencePanel({
           className={cn(
             'rounded-lg border p-3 text-center',
             analysis.lowPerformingCount > 0
-              ? 'border-amber-500/20 bg-amber-500/5'
+              ? 'border-[#FF6B35]/20 bg-[#FF6B35]/5'
               : 'border-white/10 bg-white/5'
           )}
         >
@@ -260,7 +260,7 @@ export function IntelligencePanel({
             className={cn(
               'text-xl font-bold tabular-nums',
               analysis.lowPerformingCount > 0
-                ? 'text-amber-400'
+                ? 'text-[#FF9A6C]'
                 : 'text-emerald-400'
             )}
           >
@@ -274,7 +274,7 @@ export function IntelligencePanel({
       {analysis.patterns.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-amber-400" />
+            <TrendingUp className="h-4 w-4 text-[#FF9A6C]" />
             <h3 className="text-sm font-medium text-white/80">
               Step Performance
             </h3>

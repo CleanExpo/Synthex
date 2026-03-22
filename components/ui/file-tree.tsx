@@ -180,7 +180,7 @@ const TreeIndicator = forwardRef<
       dir={direction}
       ref={ref}
       className={cn(
-        'h-full w-px bg-white/[0.06] absolute left-1.5 rtl:right-1.5 py-3 rounded-md hover:bg-amber-500/20 duration-300 ease-in-out',
+        'h-full w-px bg-white/[0.06] absolute left-1.5 rtl:right-1.5 py-3 rounded-md hover:bg-orange-500/20 duration-300 ease-in-out',
         className
       )}
       {...props}
@@ -231,7 +231,7 @@ export const Folder = forwardRef<HTMLDivElement, FolderProps>(
         <AccordionPrimitive.Trigger
           className={cn(
             'flex items-center gap-1.5 text-sm rounded-sm px-1 py-0.5 w-full text-left',
-            isSelect && isSelectable && 'bg-amber-500/[0.06]',
+            isSelect && isSelectable && 'bg-orange-500/[0.06]',
             isSelectable
               ? 'cursor-pointer text-white/60 hover:text-white'
               : 'cursor-not-allowed opacity-50 text-white/50',
@@ -242,7 +242,7 @@ export const Folder = forwardRef<HTMLDivElement, FolderProps>(
         >
           {expandedItems?.includes(value as string)
             ? (openIcon ?? (
-                <FolderOpenIcon className="size-4 text-amber-400/70 shrink-0" />
+                <FolderOpenIcon className="size-4 text-orange-400/70 shrink-0" />
               ))
             : (closeIcon ?? (
                 <FolderIcon className="size-4 text-white/40 shrink-0" />
@@ -308,7 +308,7 @@ export const File = forwardRef<
           aria-label="File"
           className={cn(
             'flex items-center gap-1.5 cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 rounded-sm px-1 py-0.5 w-full text-left duration-200 ease-in-out',
-            isSelected && isSelectable && 'bg-amber-500/[0.06] text-white',
+            isSelected && isSelectable && 'bg-orange-500/[0.06] text-white',
             !isSelected &&
               isSelectable &&
               'text-white/60 hover:text-white hover:bg-white/[0.02]',

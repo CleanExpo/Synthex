@@ -53,7 +53,7 @@ export function NotificationsTab({
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10">
               <div className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-amber-500" />
+                <Mail className="w-5 h-5 text-orange-500" />
                 <div>
                   <p className="font-medium text-white">Email Notifications</p>
                   <p className="text-sm text-slate-400">
@@ -70,7 +70,7 @@ export function NotificationsTab({
 
             <div className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10">
               <div className="flex items-center gap-3">
-                <Bell className="w-5 h-5 text-amber-500" />
+                <Bell className="w-5 h-5 text-orange-500" />
                 <div>
                   <p className="font-medium text-white">Push Notifications</p>
                   <p className="text-sm text-slate-400">
@@ -87,7 +87,7 @@ export function NotificationsTab({
 
             <div className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10">
               <div className="flex items-center gap-3">
-                <Smartphone className="w-5 h-5 text-amber-500" />
+                <Smartphone className="w-5 h-5 text-orange-500" />
                 <div>
                   <p className="font-medium text-white">SMS Notifications</p>
                   <p className="text-sm text-slate-400">

@@ -54,7 +54,7 @@ const defaultStats: Stat[] = [
     change: 0.3,
     changeType: 'increase',
     icon: Heart,
-    color: 'text-amber-400',
+    color: 'text-orange-400',
     sparkline: [30, 35, 40, 38, 42, 45, 43, 47, 45, 48],
   },
   {
@@ -72,7 +72,7 @@ const defaultStats: Stat[] = [
     change: 5,
     changeType: 'increase',
     icon: Target,
-    color: 'text-amber-400',
+    color: 'text-orange-400',
     sparkline: [70, 72, 75, 78, 80, 82, 85, 88, 90, 92],
   },
 ];
@@ -86,7 +86,7 @@ const tickerStats = [
 
 function Sparkline({
   data,
-  color = 'text-amber-400',
+  color = 'text-orange-400',
 }: {
   data: number[];
   color?: string;
@@ -251,7 +251,7 @@ export function StatsTickker() {
 
   return (
     <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-full">
-      <Icon className="h-4 w-4 text-amber-400" />
+      <Icon className="h-4 w-4 text-orange-400" />
       <span className="text-sm text-gray-400">{stat.label}:</span>
       <span className="text-sm font-semibold text-white">{stat.value}</span>
     </div>

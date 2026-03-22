@@ -14,7 +14,7 @@ interface CROScoreCardProps {
 function getBarColor(value: number, max: number): string {
   const pct = value / max;
   if (pct >= 0.8) return 'bg-emerald-500';
-  if (pct >= 0.5) return 'bg-amber-500';
+  if (pct >= 0.5) return 'bg-orange-500';
   return 'bg-red-500';
 }
 
@@ -39,11 +39,11 @@ export function CROScoreCard({ score, issues }: CROScoreCardProps) {
   void issues;
 
   return (
-    <Card className="bg-white/5 border-amber-500/10 backdrop-blur-sm">
+    <Card className="bg-white/5 border-orange-500/10 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="text-white text-sm font-medium flex items-center justify-between">
           CRO Readiness
-          <span className="text-2xl font-bold text-amber-400">
+          <span className="text-2xl font-bold text-orange-400">
             {score.total}
           </span>
         </CardTitle>
@@ -74,7 +74,7 @@ export function CROScoreCard({ score, issues }: CROScoreCardProps) {
             {lowestDims
               .filter(d => d.value / d.max < 0.6)
               .map(d => (
-                <p key={d.label} className="text-xs text-amber-400">
+                <p key={d.label} className="text-xs text-orange-400">
                   Improve {d.label.toLowerCase()}
                 </p>
               ))}

@@ -42,7 +42,7 @@ function ConnectionStatus({
       case 'CONNECTING':
         return 'bg-yellow-500';
       case 'CLOSING':
-        return 'bg-amber-500';
+        return 'bg-orange-500';
       case 'CLOSED':
       default:
         return 'bg-red-500';

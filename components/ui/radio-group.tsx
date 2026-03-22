@@ -30,16 +30,16 @@ const radioGroupItemVariants = cva(
         'glass-solid':
           'border border-white/[0.15] bg-slate-800/80 backdrop-blur-md data-[state=checked]:bg-slate-600 data-[state=checked]:border-white/[0.25]',
         'glass-primary':
-          'border border-amber-500/30 bg-amber-500/10 backdrop-blur-md data-[state=checked]:bg-amber-500/30 data-[state=checked]:border-amber-500/50',
+          'border border-orange-500/30 bg-orange-500/10 backdrop-blur-md data-[state=checked]:bg-orange-500/30 data-[state=checked]:border-orange-500/50',
         'glass-secondary':
-          'border border-amber-500/30 bg-amber-500/10 backdrop-blur-md data-[state=checked]:bg-amber-500/30 data-[state=checked]:border-amber-500/50',
+          'border border-orange-500/30 bg-orange-500/10 backdrop-blur-md data-[state=checked]:bg-orange-500/30 data-[state=checked]:border-orange-500/50',
         'glass-success':
           'border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-md data-[state=checked]:bg-emerald-500/30 data-[state=checked]:border-emerald-500/50',
         // Gradient variants
         'gradient-primary':
-          'border border-amber-500/30 bg-white/[0.03] backdrop-blur-md data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-amber-500/50 data-[state=checked]:to-amber-500/50 data-[state=checked]:border-transparent',
+          'border border-orange-500/30 bg-white/[0.03] backdrop-blur-md data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-orange-500/50 data-[state=checked]:to-orange-500/50 data-[state=checked]:border-transparent',
         'gradient-secondary':
-          'border border-amber-500/30 bg-white/[0.03] backdrop-blur-md data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-amber-500/50 data-[state=checked]:to-blue-500/50 data-[state=checked]:border-transparent',
+          'border border-orange-500/30 bg-white/[0.03] backdrop-blur-md data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-orange-500/50 data-[state=checked]:to-blue-500/50 data-[state=checked]:border-transparent',
       },
       size: {
         default: 'h-4 w-4',
@@ -60,8 +60,8 @@ const radioGroupIndicatorVariants = cva('flex items-center justify-center', {
       default: 'text-current',
       glass: 'text-white',
       'glass-solid': 'text-white',
-      'glass-primary': 'text-amber-300',
-      'glass-secondary': 'text-amber-300',
+      'glass-primary': 'text-orange-300',
+      'glass-secondary': 'text-orange-300',
       'glass-success': 'text-emerald-300',
       'gradient-primary': 'text-white',
       'gradient-secondary': 'text-white',

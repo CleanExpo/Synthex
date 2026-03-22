@@ -49,7 +49,7 @@ function HealthGauge({ score }: { score: number }) {
     if (s >= 60)
       return { ring: 'text-green-400', bg: 'bg-green-400/20', label: 'Good' };
     if (s >= 40)
-      return { ring: 'text-amber-400', bg: 'bg-amber-400/20', label: 'Fair' };
+      return { ring: 'text-orange-400', bg: 'bg-orange-400/20', label: 'Fair' };
     return { ring: 'text-red-400', bg: 'bg-red-400/20', label: 'Poor' };
   };
   const { ring, label } = getColour(score);
@@ -82,7 +82,7 @@ function cwvStatus(
 function CWVDot({ status }: { status: CWVStatus }) {
   const colours: Record<CWVStatus, string> = {
     pass: 'bg-emerald-400',
-    'needs-improvement': 'bg-amber-400',
+    'needs-improvement': 'bg-orange-400',
     fail: 'bg-red-400',
     unknown: 'bg-gray-600',
   };
@@ -174,7 +174,7 @@ export function SiteHealthCard({
       <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center">
         <p className="text-gray-400 text-sm">
           No site URL configured. Add your website URL in{' '}
-          <a href="/dashboard/settings" className="text-amber-400 underline">
+          <a href="/dashboard/settings" className="text-orange-400 underline">
             profile settings
           </a>{' '}
           to enable site health monitoring.
@@ -194,7 +194,7 @@ export function SiteHealthCard({
         <button
           onClick={handleCheckNow}
           disabled={checking}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-orange-500/20 text-orange-300 hover:bg-orange-500/30 transition-colors disabled:opacity-50"
         >
           <ArrowPathIcon
             className={`w-3.5 h-3.5 ${checking ? 'animate-spin' : ''}`}

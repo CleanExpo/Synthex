@@ -80,10 +80,10 @@ export default function ForgotPasswordPage() {
         />
 
         {/* Glow Effects */}
-        <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-[150px] pointer-events-none" />
-        <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-amber-400/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
 
-        <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 shadow-2xl shadow-amber-500/5">
+        <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 shadow-2xl shadow-orange-500/5">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center border border-green-500/20">
               <CheckCircle className="h-6 w-6 text-green-400" />
@@ -93,12 +93,12 @@ export default function ForgotPasswordPage() {
             </CardTitle>
             <CardDescription className="text-gray-400 mt-2">
               We've sent password reset instructions to{' '}
-              <span className="text-amber-400 font-medium">{email}</span>
+              <span className="text-orange-400 font-medium">{email}</span>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Alert className="bg-amber-500/10 border-amber-500/20">
-              <AlertCircle className="h-4 w-4 text-amber-400" />
+            <Alert className="bg-orange-500/10 border-orange-500/20">
+              <AlertCircle className="h-4 w-4 text-orange-400" />
               <AlertDescription className="text-gray-300">
                 If you don't see the email, check your spam folder or try
                 resending it.
@@ -108,7 +108,7 @@ export default function ForgotPasswordPage() {
             <div className="space-y-3">
               <Button
                 onClick={() => router.push('/login')}
-                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25 transition-all hover:shadow-amber-500/40"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40"
               >
                 Return to Login
               </Button>
@@ -119,7 +119,7 @@ export default function ForgotPasswordPage() {
                   setIsSubmitted(false);
                   setEmail('');
                 }}
-                className="w-full border-amber-500/20 bg-transparent text-gray-300 hover:bg-amber-500/10 hover:text-white hover:border-amber-500/40"
+                className="w-full border-orange-500/20 bg-transparent text-gray-300 hover:bg-orange-500/10 hover:text-white hover:border-orange-500/40"
               >
                 Try Different Email
               </Button>
@@ -129,7 +129,7 @@ export default function ForgotPasswordPage() {
               Didn't receive the email?{' '}
               <button
                 onClick={handleSubmit}
-                className="text-amber-400 hover:text-amber-300 font-medium transition-colors"
+                className="text-orange-400 hover:text-orange-300 font-medium transition-colors"
                 disabled={isLoading}
               >
                 Resend
@@ -157,14 +157,14 @@ export default function ForgotPasswordPage() {
       />
 
       {/* Glow Effects */}
-      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-amber-400/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
 
-      <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 shadow-2xl shadow-amber-500/5">
+      <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 shadow-2xl shadow-orange-500/5">
         <CardHeader>
           <Link
             href="/login"
-            className="inline-flex items-center text-sm text-gray-400 hover:text-amber-400 transition mb-4"
+            className="inline-flex items-center text-sm text-gray-400 hover:text-orange-400 transition mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Login
@@ -178,7 +178,7 @@ export default function ForgotPasswordPage() {
             </span>
           </div>
 
-          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-amber-300 bg-clip-text text-transparent">
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-300 bg-clip-text text-transparent">
             Reset Your Password
           </CardTitle>
           <CardDescription className="text-gray-400">
@@ -209,7 +209,7 @@ export default function ForgotPasswordPage() {
                   placeholder="name@example.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="pl-10 bg-surface-dark/50 border-amber-500/20 focus:border-amber-500/50 focus:ring-amber-500/20 text-white placeholder:text-gray-500"
+                  className="pl-10 bg-surface-dark/50 border-orange-500/20 focus:border-orange-500/50 focus:ring-orange-500/20 text-white placeholder:text-gray-500"
                   required
                   disabled={isLoading}
                 />
@@ -218,7 +218,7 @@ export default function ForgotPasswordPage() {
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25 transition-all hover:shadow-amber-500/40"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -237,7 +237,7 @@ export default function ForgotPasswordPage() {
               Remember your password?{' '}
               <Link
                 href="/login"
-                className="text-amber-400 hover:text-amber-300 font-medium transition-colors"
+                className="text-orange-400 hover:text-orange-300 font-medium transition-colors"
               >
                 Sign in
               </Link>
@@ -246,7 +246,7 @@ export default function ForgotPasswordPage() {
               Don't have an account?{' '}
               <Link
                 href="/signup"
-                className="text-amber-400 hover:text-amber-300 font-medium transition-colors"
+                className="text-orange-400 hover:text-orange-300 font-medium transition-colors"
               >
                 Sign up
               </Link>

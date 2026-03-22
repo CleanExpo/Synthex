@@ -25,7 +25,7 @@ interface AgentMeta {
 const AGENT_META: Record<AgentType, AgentMeta> = {
   sentinel: {
     Icon: Shield,
-    colour: 'text-amber-400 bg-amber-500/10',
+    colour: 'text-orange-400 bg-orange-500/10',
     label: 'Sentinel',
   },
   healing: {
@@ -35,12 +35,12 @@ const AGENT_META: Record<AgentType, AgentMeta> = {
   },
   quality: {
     Icon: Sparkles,
-    colour: 'text-amber-400 bg-amber-500/10',
+    colour: 'text-orange-400 bg-orange-500/10',
     label: 'Quality Gate',
   },
   prompt: {
     Icon: Brain,
-    colour: 'text-amber-400 bg-amber-500/10',
+    colour: 'text-orange-400 bg-orange-500/10',
     label: 'Prompt Intel',
   },
   backlink: {
@@ -50,7 +50,7 @@ const AGENT_META: Record<AgentType, AgentMeta> = {
   },
   experiment: {
     Icon: Beaker,
-    colour: 'text-amber-400 bg-amber-500/10',
+    colour: 'text-orange-400 bg-orange-500/10',
     label: 'Experiment',
   },
 };

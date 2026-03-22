@@ -118,7 +118,7 @@ export class ErrorBoundary extends Component<
                 <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
                   <Button
                     onClick={() => window.location.reload()}
-                    className="bg-gradient-to-r from-amber-500 to-amber-600 text-white"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Try Again
@@ -126,7 +126,7 @@ export class ErrorBoundary extends Component<
                   <Button
                     onClick={() => (window.location.href = '/')}
                     variant="outline"
-                    className="border-amber-400/50 text-amber-400 hover:bg-amber-400/10"
+                    className="border-orange-400/50 text-orange-400 hover:bg-orange-400/10"
                   >
                     <Home className="w-4 h-4 mr-2" />
                     Go Home

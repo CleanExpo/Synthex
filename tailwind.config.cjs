@@ -67,14 +67,26 @@ module.exports = {
         warning: 'rgb(var(--color-warning) / <alpha-value>)',
         error: 'rgb(var(--color-error) / <alpha-value>)',
         info: 'rgb(var(--color-info) / <alpha-value>)',
-        // Warm Charcoal (Phase 126 marketing site)
+        // Deep Space Dark (candy palette base — replaces brown charcoal)
         charcoal: {
-          950: '#0d0b09',
-          900: '#1a1612', // page background
-          800: '#241f1a', // card/surface
-          700: '#2e2722',
-          600: '#3d342c',
-          500: '#4a3f36',
+          950: '#050508',
+          900: '#0A0A12', // page background
+          800: '#12121E', // card/surface
+          700: '#1A1A2A',
+          600: '#252536',
+          500: '#353548',
+        },
+        // Candy Colors (primary palette)
+        candy: {
+          yellow: '#FFD60A',
+          'yellow-light': '#FFF176',
+          orange: '#FF6B35',
+          'orange-light': '#FF9A6C',
+          red: '#FF3B5C',
+          'red-light': '#FF7A8F',
+          green: '#34D399',
+          'green-light': '#6EE7B7',
+          pink: '#F472B6',
         },
         // App Surface Colors (dark theme backgrounds — tokens prevent inline hex)
         surface: {
@@ -135,7 +147,13 @@ module.exports = {
         'glass-inset': 'var(--glass-inset)',
         'glow-primary': 'var(--glow-primary)',
         'glow-primary-lg': 'var(--glow-primary-lg)',
-        'glow-amber': 'var(--glow-amber)',
+        'glow-orange': '0 0 20px rgba(255, 107, 53, 0.4)',
+        'glow-yellow': '0 0 20px rgba(255, 214, 10, 0.4)',
+        'glow-red': '0 0 20px rgba(255, 59, 92, 0.4)',
+        'glow-green': '0 0 20px rgba(52, 211, 153, 0.4)',
+        'glow-candy':
+          '0 0 30px rgba(255, 107, 53, 0.3), 0 0 20px rgba(255, 214, 10, 0.2)',
+        'glow-pink': '0 0 20px rgba(244, 114, 182, 0.4)',
       },
       fontFamily: {
         sans: ['var(--font-sans)'],

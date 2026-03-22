@@ -88,7 +88,7 @@ export default function RoadmapPage() {
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold text-white mb-6">
               Product{' '}
-              <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
                 Roadmap
               </span>
             </h1>
@@ -104,10 +104,10 @@ export default function RoadmapPage() {
                 key={idx}
                 className={`bg-surface-base/80 p-6 ${
                   quarter.status === 'completed'
-                    ? 'border-amber-500/50'
+                    ? 'border-orange-500/50'
                     : quarter.status === 'in-progress'
-                      ? 'border-amber-400/50 animate-pulse-glow'
-                      : 'border-amber-500/10'
+                      ? 'border-orange-400/50 animate-pulse-glow'
+                      : 'border-orange-500/10'
                 }`}
               >
                 <div className="mb-6">
@@ -117,9 +117,9 @@ export default function RoadmapPage() {
                   <div
                     className={`inline-flex items-center px-3 py-1 rounded-full text-xs ${
                       quarter.status === 'completed'
-                        ? 'bg-amber-500/20 text-amber-400'
+                        ? 'bg-orange-500/20 text-orange-400'
                         : quarter.status === 'in-progress'
-                          ? 'bg-amber-400/20 text-amber-300'
+                          ? 'bg-orange-400/20 text-orange-300'
                           : 'bg-gray-500/20 text-gray-400'
                     }`}
                   >
@@ -139,9 +139,9 @@ export default function RoadmapPage() {
                         <div
                           className={`mt-1 ${
                             item.status === 'completed'
-                              ? 'text-amber-500'
+                              ? 'text-orange-500'
                               : item.status === 'in-progress'
-                                ? 'text-amber-400'
+                                ? 'text-orange-400'
                                 : 'text-gray-500'
                           }`}
                         >
@@ -169,9 +169,9 @@ export default function RoadmapPage() {
                         <Icon
                           className={`w-4 h-4 ${
                             item.status === 'completed'
-                              ? 'text-amber-500'
+                              ? 'text-orange-500'
                               : item.status === 'in-progress'
-                                ? 'text-amber-400'
+                                ? 'text-orange-400'
                                 : 'text-gray-500'
                           }`}
                         />
@@ -184,7 +184,7 @@ export default function RoadmapPage() {
           </div>
 
           <div className="mt-16">
-            <Card className="bg-surface-base/80 border-amber-500/10 p-8 text-center">
+            <Card className="bg-surface-base/80 border-orange-500/10 p-8 text-center">
               <h2 className="text-3xl font-bold text-white mb-4">
                 Have a Feature Request?
               </h2>
@@ -193,7 +193,7 @@ export default function RoadmapPage() {
                 ideas and help shape the future of our platform.
               </p>
               <Link href="/signup">
-                <Button className="bg-gradient-to-r from-amber-500 to-amber-600 text-white">
+                <Button className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
                   Submit Feature Request
                 </Button>
               </Link>

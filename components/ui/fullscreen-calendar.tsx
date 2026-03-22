@@ -164,7 +164,7 @@ export function FullScreenCalendar({
           />
 
           <Button
-            className="w-full gap-2 md:w-auto bg-amber-500/[0.08] border-[0.5px] border-amber-500/20 text-amber-400 hover:bg-amber-500/[0.15] rounded-sm text-xs"
+            className="w-full gap-2 md:w-auto bg-orange-500/[0.08] border-[0.5px] border-orange-500/20 text-orange-400 hover:bg-orange-500/[0.15] rounded-sm text-xs"
             onClick={onNewEvent}
           >
             <PlusCircle size={14} strokeWidth={2} />
@@ -199,7 +199,7 @@ export function FullScreenCalendar({
                   dayIdx === 0 && colStartClasses[getDay(day)],
                   !isSameMonth(day, firstDayCurrentMonth) && 'opacity-40',
                   'relative flex flex-col border-b border-r border-white/[0.06] hover:bg-white/[0.02] focus:z-10 cursor-pointer transition-colors',
-                  isEqual(day, selectedDay) && 'bg-amber-500/[0.04]'
+                  isEqual(day, selectedDay) && 'bg-orange-500/[0.04]'
                 )}
               >
                 <header className="flex items-center justify-between p-2.5">
@@ -209,10 +209,10 @@ export function FullScreenCalendar({
                       'flex h-7 w-7 items-center justify-center rounded-full text-xs transition-colors',
                       isToday(day) &&
                         !isEqual(day, selectedDay) &&
-                        'text-amber-400 font-semibold',
+                        'text-orange-400 font-semibold',
                       isEqual(day, selectedDay) &&
                         isToday(day) &&
-                        'bg-amber-500 text-white font-semibold',
+                        'bg-orange-500 text-white font-semibold',
                       isEqual(day, selectedDay) &&
                         !isToday(day) &&
                         'bg-white/10 text-white font-semibold',
@@ -234,7 +234,7 @@ export function FullScreenCalendar({
                         {d.events.slice(0, 1).map(event => (
                           <div
                             key={event.id}
-                            className="flex flex-col items-start gap-1 rounded-sm border-[0.5px] border-amber-500/20 bg-amber-500/[0.06] p-2 text-xs leading-tight"
+                            className="flex flex-col items-start gap-1 rounded-sm border-[0.5px] border-orange-500/20 bg-orange-500/[0.06] p-2 text-xs leading-tight"
                           >
                             <p className="font-medium leading-none text-white">
                               {event.name}
@@ -245,7 +245,7 @@ export function FullScreenCalendar({
                           </div>
                         ))}
                         {d.events.length > 1 && (
-                          <div className="text-xs text-amber-400/70">
+                          <div className="text-xs text-orange-400/70">
                             +{d.events.length - 1} more
                           </div>
                         )}
@@ -266,7 +266,7 @@ export function FullScreenCalendar({
                 className={cn(
                   !isSameMonth(day, firstDayCurrentMonth) && 'opacity-40',
                   'flex h-14 flex-col border-b border-r border-white/[0.06] px-3 py-2 hover:bg-white/[0.02] focus:z-10 transition-colors',
-                  isEqual(day, selectedDay) && 'bg-amber-500/[0.04]'
+                  isEqual(day, selectedDay) && 'bg-orange-500/[0.04]'
                 )}
               >
                 <time
@@ -275,10 +275,10 @@ export function FullScreenCalendar({
                     'ml-auto flex size-6 items-center justify-center rounded-full text-xs',
                     isToday(day) &&
                       !isEqual(day, selectedDay) &&
-                      'text-amber-400 font-semibold',
+                      'text-orange-400 font-semibold',
                     isEqual(day, selectedDay) &&
                       isToday(day) &&
-                      'bg-amber-500 text-white font-semibold',
+                      'bg-orange-500 text-white font-semibold',
                     isEqual(day, selectedDay) &&
                       !isToday(day) &&
                       'bg-white/10 text-white font-semibold',
@@ -297,7 +297,7 @@ export function FullScreenCalendar({
                         date.events.map(event => (
                           <span
                             key={event.id}
-                            className="mx-0.5 mt-1 h-1.5 w-1.5 rounded-full bg-amber-400/60"
+                            className="mx-0.5 mt-1 h-1.5 w-1.5 rounded-full bg-orange-400/60"
                           />
                         ))
                       )}

@@ -81,7 +81,7 @@ export function ChatInput({
             className={cn(
               'w-full resize-none rounded-xl px-4 py-3 text-sm',
               'bg-white/5 border border-white/10 text-white placeholder:text-gray-500',
-              'focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50',
+              'focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50',
               'disabled:opacity-50 disabled:cursor-not-allowed',
               'transition-colors duration-200',
               isOverLimit && 'border-red-500/50 focus:ring-red-500/50'
@@ -97,12 +97,12 @@ export function ChatInput({
           aria-label="Send message"
           className={cn(
             'h-11 w-11 rounded-xl shrink-0',
-            'bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/30',
+            'bg-orange-500/20 border border-orange-500/30 hover:bg-orange-500/30',
             'disabled:opacity-50 disabled:cursor-not-allowed',
             'transition-colors duration-200'
           )}
         >
-          <Send className="h-4 w-4 text-amber-400" />
+          <Send className="h-4 w-4 text-orange-400" />
         </Button>
       </div>
 

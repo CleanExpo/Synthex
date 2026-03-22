@@ -339,14 +339,14 @@ export default function ActivityStreamSVG() {
 
       {/* Stats display */}
       <div className="absolute top-8 left-1/2 -translate-x-1/2 text-center">
-        <p className="text-amber-400 font-bold text-lg">LIVE ACTIVITY</p>
-        <p className="text-amber-300/70 text-sm">
+        <p className="text-orange-400 font-bold text-lg">LIVE ACTIVITY</p>
+        <p className="text-orange-300/70 text-sm">
           {activityCount.toLocaleString()} actions/min
         </p>
       </div>
 
       {/* Activity feed overlay */}
-      <div className="absolute top-4 right-4 w-64 bg-black/70 backdrop-blur-xl rounded-xl p-4 border border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+      <div className="absolute top-4 right-4 w-64 bg-black/70 backdrop-blur-xl rounded-xl p-4 border border-orange-500/30 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
         <h3 className="text-white font-bold mb-3 text-sm flex items-center gap-2">
           <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
           Real-Time Activity

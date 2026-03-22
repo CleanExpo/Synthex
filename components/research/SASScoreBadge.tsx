@@ -13,9 +13,12 @@ export function SASScoreBadge({ score, size = 'md' }: SASScoreBadgeProps) {
     return <Badge className="bg-gray-500/20 text-gray-400">SAS: N/A</Badge>;
   }
 
-  const color = score >= 7 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-    : score >= 5 ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-    : 'bg-red-500/20 text-red-400 border-red-500/30';
+  const color =
+    score >= 7
+      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+      : score >= 5
+        ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+        : 'bg-red-500/20 text-red-400 border-red-500/30';
 
   const sizeClasses = {
     sm: 'text-xs px-2 py-0.5',

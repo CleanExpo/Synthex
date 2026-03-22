@@ -40,7 +40,7 @@ const errorConfigs = {
     title: 'Bad Request',
     message:
       'The request could not be understood. Please check your input and try again.',
-    color: 'text-amber-400',
+    color: 'text-orange-400',
   },
   401: {
     icon: Shield,
@@ -77,13 +77,13 @@ const errorConfigs = {
     title: 'Bad Gateway',
     message:
       "We're having trouble connecting to our servers. Please try again.",
-    color: 'text-amber-400',
+    color: 'text-orange-400',
   },
   503: {
     icon: Database,
     title: 'Service Unavailable',
     message: 'Our service is temporarily unavailable. Please check back soon.',
-    color: 'text-amber-400',
+    color: 'text-orange-400',
   },
 };
 
@@ -216,7 +216,7 @@ export function MaintenancePage() {
       >
         <Card variant="glass" className="p-8 text-center">
           <motion.div variants={popIn} className="mb-6 flex justify-center">
-            <div className="p-4 rounded-full bg-white/5 text-amber-400">
+            <div className="p-4 rounded-full bg-white/5 text-orange-400">
               <Database className="h-16 w-16" />
             </div>
           </motion.div>

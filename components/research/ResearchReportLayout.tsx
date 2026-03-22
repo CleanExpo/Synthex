@@ -185,7 +185,7 @@ export function ResearchReportLayout({
           <main className="prose prose-invert prose-orange max-w-none">
             {/* Executive Summary */}
             <section className="mb-12 rounded-xl bg-white/5 border border-white/10 p-6">
-              <h2 className="mt-0 text-xl font-semibold text-amber-400">
+              <h2 className="mt-0 text-xl font-semibold text-orange-400">
                 Executive Summary
               </h2>
               <p
@@ -208,14 +208,14 @@ export function ResearchReportLayout({
                     className="rounded-xl bg-white/5 border border-white/10 p-6"
                   >
                     <div className="flex items-start gap-4">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-sm font-bold text-amber-400">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-500/20 text-sm font-bold text-orange-400">
                         {index + 1}
                       </span>
                       <div>
                         <h3 className="mt-0 text-lg font-semibold text-white">
                           {finding.title}
                         </h3>
-                        <p className="mt-1 text-2xl font-bold text-amber-400">
+                        <p className="mt-1 text-2xl font-bold text-orange-400">
                           {finding.statistic}
                         </p>
                         <p className="mt-2 text-gray-300">
@@ -325,7 +325,7 @@ export function ResearchReportLayout({
                 <h2 className="text-2xl font-semibold text-white mb-4">
                   Expert Commentary
                 </h2>
-                <blockquote className="rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/20 p-6">
+                <blockquote className="rounded-xl bg-gradient-to-r from-orange-500/10 to-orange-600/10 border border-orange-500/20 p-6">
                   <p className="text-lg italic text-gray-200 mb-4">
                     &ldquo;{expertCommentary.quote}&rdquo;
                   </p>
@@ -381,7 +381,7 @@ export function ResearchReportLayout({
                     {source.url ? (
                       <a
                         href={source.url}
-                        className="text-amber-400 hover:text-amber-300 transition-colors"
+                        className="text-orange-400 hover:text-orange-300 transition-colors"
                         target="_blank"
                         rel="noopener noreferrer"
                       >

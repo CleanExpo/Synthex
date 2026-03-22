@@ -314,7 +314,7 @@ export function OptimizedAvatar({
   if (!src || error) {
     return (
       <div
-        className={`flex items-center justify-center bg-gradient-to-br from-amber-500 to-amber-500 text-white font-semibold rounded-full ${className}`}
+        className={`flex items-center justify-center bg-gradient-to-br from-orange-500 to-orange-500 text-white font-semibold rounded-full ${className}`}
         style={{ width: size, height: size }}
       >
         {fallback || alt.charAt(0).toUpperCase()}

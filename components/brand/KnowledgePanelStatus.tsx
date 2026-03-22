@@ -30,7 +30,7 @@ interface KnowledgePanelStatusProps {
 
 function confidenceColour(confidence: number): string {
   if (confidence >= 0.7) return 'text-green-400';
-  if (confidence >= 0.4) return 'text-amber-400';
+  if (confidence >= 0.4) return 'text-orange-400';
   return 'text-red-400';
 }
 
@@ -60,7 +60,7 @@ export function KnowledgePanelStatus({
           className={cn(
             'flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg transition-colors',
             hasApiKey
-              ? 'bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-300 disabled:opacity-50'
+              ? 'bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 text-orange-300 disabled:opacity-50'
               : 'bg-gray-500/10 border border-gray-500/20 text-gray-500 cursor-not-allowed'
           )}
         >
@@ -126,7 +126,7 @@ export function KnowledgePanelStatus({
               {result.kgmid && (
                 <div className="text-xs">
                   <span className="text-gray-500">KGMID: </span>
-                  <code className="font-mono text-amber-300">
+                  <code className="font-mono text-orange-300">
                     {result.kgmid}
                   </code>
                 </div>
@@ -151,7 +151,7 @@ export function KnowledgePanelStatus({
               {result.types.map((type, i) => (
                 <span
                   key={i}
-                  className="text-xs px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-full"
+                  className="text-xs px-2 py-0.5 bg-orange-500/10 border border-orange-500/20 text-orange-300 rounded-full"
                 >
                   {type.replace('schema:', '')}
                 </span>

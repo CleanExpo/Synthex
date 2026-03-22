@@ -202,7 +202,7 @@ export function StreakCounter({ compact = false }: { compact?: boolean }) {
     return (
       <button className="flex items-center gap-2 px-3 py-2 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg hover:bg-white/5 transition-colors">
         <Flame
-          className={`h-5 w-5 ${streakData.currentStreak > 0 ? 'text-amber-400' : 'text-gray-400'}`}
+          className={`h-5 w-5 ${streakData.currentStreak > 0 ? 'text-orange-400' : 'text-gray-400'}`}
         />
         <span className="font-bold text-white">{streakData.currentStreak}</span>
         <span className="text-xs text-gray-400">day streak</span>
@@ -217,14 +217,14 @@ export function StreakCounter({ compact = false }: { compact?: boolean }) {
           <div
             className={`p-3 rounded-xl bg-gradient-to-br ${
               streakData.currentStreak > 0
-                ? 'from-amber-500/20 to-red-500/20'
+                ? 'from-orange-500/20 to-red-500/20'
                 : 'from-gray-500/20 to-gray-600/20'
             }`}
           >
             <Flame
               className={`h-6 w-6 ${
                 streakData.currentStreak > 0
-                  ? 'text-amber-400'
+                  ? 'text-orange-400'
                   : 'text-gray-400'
               }`}
             />
@@ -268,7 +268,7 @@ export function StreakCounter({ compact = false }: { compact?: boolean }) {
         </div>
 
         <div className="text-center p-3 bg-white/5 rounded-lg">
-          <Star className="h-5 w-5 text-amber-400 mx-auto mb-1" />
+          <Star className="h-5 w-5 text-orange-400 mx-auto mb-1" />
           <p className="text-xl font-bold text-white">Lv.{streakData.level}</p>
           <p className="text-xs text-gray-400">Level</p>
         </div>
@@ -282,13 +282,13 @@ export function StreakCounter({ compact = false }: { compact?: boolean }) {
 
       {/* Daily Challenge */}
       {!streakData.todayCompleted && (
-        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+        <div className="p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-amber-400" />
+              <Target className="h-5 w-5 text-orange-400" />
               <span className="font-medium text-white">Today's Challenge</span>
             </div>
-            <span className="text-xs text-amber-400">+10 points</span>
+            <span className="text-xs text-orange-400">+10 points</span>
           </div>
           <p className="text-sm text-gray-300 mb-3">
             Create and publish at least one piece of content
@@ -325,7 +325,7 @@ export function FloatingStreak() {
   return (
     <div className="fixed top-20 right-6 z-40">
       <div className="flex items-center gap-2 px-3 py-2 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-full shadow-lg">
-        <Flame className="h-4 w-4 text-amber-400 animate-pulse" />
+        <Flame className="h-4 w-4 text-orange-400 animate-pulse" />
         <span className="text-sm font-bold text-white">
           {streakData.currentStreak}
         </span>

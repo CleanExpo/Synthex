@@ -256,7 +256,7 @@ export function WorkflowsPageClient() {
               {/* Left: execution list */}
               <div className="space-y-2">
                 {filterStatus && (
-                  <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5">
+                  <p className="text-xs text-[#FF9A6C] bg-[#FF6B35]/10 border border-[#FF6B35]/20 rounded-lg px-3 py-1.5">
                     Showing: <strong>{filterStatus.replace('_', ' ')}</strong>{' '}
                     executions
                   </p>
@@ -307,7 +307,7 @@ export function WorkflowsPageClient() {
                       className={cn(
                         'text-xs px-3 py-1.5 rounded-full border transition-colours',
                         t.id === selectedTemplateId
-                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                          ? 'bg-[#FF6B35]/20 text-[#FFD60A] border-[#FF6B35]/30'
                           : 'bg-white/5 text-white/50 border-white/10 hover:border-white/20'
                       )}
                     >

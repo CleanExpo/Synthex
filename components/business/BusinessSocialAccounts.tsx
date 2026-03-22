@@ -48,9 +48,9 @@ const PLATFORM_META: Record<
   instagram: {
     name: 'Instagram',
     icon: Instagram,
-    color: 'text-amber-400',
-    bgColor: 'bg-amber-500/10',
-    borderColor: 'border-amber-500/20',
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-500/10',
+    borderColor: 'border-orange-500/20',
   },
   facebook: {
     name: 'Facebook',
@@ -83,9 +83,9 @@ const PLATFORM_META: Record<
   reddit: {
     name: 'Reddit',
     icon: Link2,
-    color: 'text-amber-400',
-    bgColor: 'bg-amber-500/10',
-    borderColor: 'border-amber-500/20',
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-500/10',
+    borderColor: 'border-orange-500/20',
   },
   threads: {
     name: 'Threads',
@@ -217,7 +217,7 @@ export function BusinessSocialAccounts({
                     {conn.isExpired || conn.needsRefresh ? (
                       <Badge
                         variant="outline"
-                        className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs"
+                        className="bg-orange-500/20 text-orange-400 border-orange-500/30 text-xs"
                       >
                         <AlertCircle className="h-3 w-3 mr-1" />
                         Refresh
@@ -279,12 +279,12 @@ export function BusinessSocialAccounts({
       )}
 
       {/* Quick connect CTA */}
-      <div className="pt-2 border-t border-amber-500/10">
+      <div className="pt-2 border-t border-orange-500/10">
         <Button
           variant="outline"
           size="sm"
           onClick={() => onConnectPlatform(organizationId)}
-          className="bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20 hover:border-amber-500/30"
+          className="bg-orange-500/10 border-orange-500/20 text-orange-400 hover:bg-orange-500/20 hover:border-orange-500/30"
         >
           <Link2 className="h-3 w-3 mr-2" />
           Manage All Connections

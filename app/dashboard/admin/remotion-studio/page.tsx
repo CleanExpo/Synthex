@@ -133,8 +133,8 @@ export default function RemotionStudioPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-amber-500/10">
-            <Video className="h-6 w-6 text-amber-400" />
+          <div className="p-2 rounded-lg bg-orange-500/10">
+            <Video className="h-6 w-6 text-orange-400" />
           </div>
           <div>
             <h1 className="text-xl font-semibold text-white">
@@ -145,7 +145,10 @@ export default function RemotionStudioPage() {
             </p>
           </div>
         </div>
-        <Badge variant="outline" className="border-amber-500/30 text-amber-400">
+        <Badge
+          variant="outline"
+          className="border-orange-500/30 text-orange-400"
+        >
           God Mode
         </Badge>
       </div>
@@ -198,7 +201,7 @@ export default function RemotionStudioPage() {
                   type="text"
                   value={editProps.title}
                   onChange={e => handleTitleChange(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50"
+                  className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
                 />
               </div>
               <div>
@@ -216,7 +219,7 @@ export default function RemotionStudioPage() {
                     type="text"
                     value={editProps.brandColour || '#f59e0b'}
                     onChange={e => handleBrandColourChange(e.target.value)}
-                    className="flex-1 bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-amber-500/50"
+                    className="flex-1 bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-orange-500/50"
                   />
                 </div>
               </div>
@@ -233,7 +236,7 @@ export default function RemotionStudioPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 text-xs text-amber-400 hover:text-amber-300"
+                  className="h-7 text-xs text-orange-400 hover:text-orange-300"
                   onClick={handleAddScene}
                 >
                   <Plus className="h-3 w-3 mr-1" />
@@ -265,14 +268,14 @@ export default function RemotionStudioPage() {
                     value={scene.text}
                     onChange={e => handleSceneTextChange(i, e.target.value)}
                     placeholder="Scene text"
-                    className="w-full bg-white/5 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500/50"
                   />
                   <input
                     type="text"
                     value={scene.subtitle || ''}
                     onChange={e => handleSceneSubtitleChange(i, e.target.value)}
                     placeholder="Subtitle (optional)"
-                    className="w-full bg-white/5 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white/60 focus:outline-none focus:border-amber-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white/60 focus:outline-none focus:border-orange-500/50"
                   />
                 </div>
               ))}
@@ -286,7 +289,7 @@ export default function RemotionStudioPage() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Play className="h-4 w-4 text-amber-400" />
+                  <Play className="h-4 w-4 text-orange-400" />
                   <CardTitle className="text-sm">Preview</CardTitle>
                 </div>
                 <CardDescription className="text-[11px]">

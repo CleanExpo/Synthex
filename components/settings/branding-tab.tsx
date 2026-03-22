@@ -266,7 +266,7 @@ export function BrandingTab({
       <Card variant="glass">
         <CardContent className="py-12">
           <div className="flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+            <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
             <p className="text-slate-400">Loading branding configuration...</p>
           </div>
         </CardContent>
@@ -280,7 +280,7 @@ export function BrandingTab({
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Palette className="w-5 h-5 text-amber-400" />
+            <Palette className="w-5 h-5 text-orange-400" />
             Brand Identity
           </CardTitle>
           <CardDescription>
@@ -418,7 +418,7 @@ export function BrandingTab({
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Globe className="w-5 h-5 text-amber-400" />
+            <Globe className="w-5 h-5 text-orange-400" />
             Custom Domain
           </CardTitle>
           <CardDescription>
@@ -448,7 +448,7 @@ export function BrandingTab({
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Link2 className="w-5 h-5 text-amber-400" />
+              <Link2 className="w-5 h-5 text-orange-400" />
               Footer Links
             </CardTitle>
             <CardDescription>
@@ -528,7 +528,7 @@ export function BrandingTab({
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Upload className="w-5 h-5 text-amber-400" />
+            <Upload className="w-5 h-5 text-orange-400" />
             Custom CSS
           </CardTitle>
           <CardDescription>

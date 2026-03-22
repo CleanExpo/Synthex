@@ -265,7 +265,7 @@ export default function BioPageEditor({ params }: PageProps) {
   if (isLoading && !currentPage) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
     );
   }
@@ -534,7 +534,7 @@ export default function BioPageEditor({ params }: PageProps) {
                     className={cn(
                       'w-10 h-10',
                       existing &&
-                        'bg-amber-500/20 border-amber-500/50 text-amber-400'
+                        'bg-orange-500/20 border-orange-500/50 text-orange-400'
                     )}
                     title={platform.label}
                   >

@@ -58,7 +58,7 @@ const providerConfig = {
   demo: {
     name: 'Demo Mode',
     icon: Key,
-    color: 'text-amber-400',
+    color: 'text-orange-400',
     description: 'Demo authentication',
   },
 };
@@ -226,7 +226,7 @@ function AccountsSettingsPageContent() {
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Shield className="h-5 w-5 mr-2 text-amber-400" />
+            <Shield className="h-5 w-5 mr-2 text-orange-400" />
             Your Authentication Methods
           </CardTitle>
           <CardDescription className="text-white/40">
@@ -236,7 +236,7 @@ function AccountsSettingsPageContent() {
         <CardContent className="space-y-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-amber-400" />
+              <Loader2 className="h-6 w-6 animate-spin text-orange-400" />
               <span className="ml-2 text-white/40">Loading accounts...</span>
             </div>
           ) : accounts.length === 0 ? (
@@ -264,7 +264,7 @@ function AccountsSettingsPageContent() {
                       <p className="text-white font-medium flex items-center">
                         {config?.name || account.provider}
                         {account.isPrimary && (
-                          <span className="ml-2 text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-sm">
+                          <span className="ml-2 text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-sm">
                             Primary
                           </span>
                         )}
@@ -322,7 +322,7 @@ function AccountsSettingsPageContent() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Link2 className="h-5 w-5 mr-2 text-amber-400" />
+              <Link2 className="h-5 w-5 mr-2 text-orange-400" />
               Link Additional Accounts
             </CardTitle>
             <CardDescription className="text-white/40">
@@ -377,12 +377,12 @@ function AccountsSettingsPageContent() {
       )}
 
       {/* Security Notice */}
-      <Card variant="glass" className="border-amber-500/30">
+      <Card variant="glass" className="border-orange-500/30">
         <CardContent className="pt-6">
           <div className="flex items-start space-x-3">
-            <AlertCircle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="h-5 w-5 text-orange-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-amber-300 font-medium">Security Notice</p>
+              <p className="text-orange-300 font-medium">Security Notice</p>
               <p className="text-sm text-white/40 mt-1">
                 Make sure to keep at least one authentication method active at
                 all times. If you unlink all methods, you may lose access to

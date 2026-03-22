@@ -155,13 +155,13 @@ export default function ApiReferencePage() {
       {/* Hero Section */}
       <section className="pt-12 pb-16 px-6">
         <div className="container mx-auto text-center">
-          <div className="inline-flex items-center bg-amber-500/10 border border-amber-500/20 rounded-full px-4 py-2 mb-6">
-            <Code2 className="w-4 h-4 text-amber-400 mr-2" />
-            <span className="text-amber-300 text-sm">Developer Resources</span>
+          <div className="inline-flex items-center bg-orange-500/10 border border-orange-500/20 rounded-full px-4 py-2 mb-6">
+            <Code2 className="w-4 h-4 text-orange-400 mr-2" />
+            <span className="text-orange-300 text-sm">Developer Resources</span>
           </div>
           <h1 className="text-5xl font-bold text-white mb-6">
             API{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
               Reference
             </span>
           </h1>
@@ -174,7 +174,7 @@ export default function ApiReferencePage() {
             <Link href="/docs">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white px-8 shadow-lg shadow-amber-500/25"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-8 shadow-lg shadow-orange-500/25"
               >
                 <BookOpen className="w-5 h-5 mr-2" />
                 View Full Docs
@@ -184,7 +184,7 @@ export default function ApiReferencePage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-amber-500/30 text-white hover:bg-amber-500/10 px-8"
+                className="border-orange-500/30 text-white hover:bg-orange-500/10 px-8"
               >
                 Get API Key
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -201,9 +201,9 @@ export default function ApiReferencePage() {
             {features.map((feature, index) => (
               <Card
                 key={index}
-                className="bg-surface-base/60 backdrop-blur-xl border border-amber-500/10 p-6 hover:border-amber-500/30 transition-all"
+                className="bg-surface-base/60 backdrop-blur-xl border border-orange-500/10 p-6 hover:border-orange-500/30 transition-all"
               >
-                <feature.icon className="w-10 h-10 text-amber-400 mb-4" />
+                <feature.icon className="w-10 h-10 text-orange-400 mb-4" />
                 <h3 className="text-lg font-semibold text-white mb-2">
                   {feature.title}
                 </h3>
@@ -215,7 +215,7 @@ export default function ApiReferencePage() {
       </section>
 
       {/* API Endpoints */}
-      <section className="py-20 px-6 bg-surface-base/50 border-y border-amber-500/10">
+      <section className="py-20 px-6 bg-surface-base/50 border-y border-orange-500/10">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-white mb-4">
             API Endpoints
@@ -228,19 +228,19 @@ export default function ApiReferencePage() {
             {apiEndpoints.map((category, index) => (
               <Card
                 key={index}
-                className="bg-surface-base/60 backdrop-blur-xl border border-amber-500/10 overflow-hidden"
+                className="bg-surface-base/60 backdrop-blur-xl border border-orange-500/10 overflow-hidden"
               >
-                <div className="flex items-center gap-3 px-6 py-4 border-b border-amber-500/10 bg-amber-500/5">
-                  <category.icon className="w-5 h-5 text-amber-400" />
+                <div className="flex items-center gap-3 px-6 py-4 border-b border-orange-500/10 bg-orange-500/5">
+                  <category.icon className="w-5 h-5 text-orange-400" />
                   <h3 className="text-lg font-semibold text-white">
                     {category.category}
                   </h3>
                 </div>
-                <div className="divide-y divide-amber-500/10">
+                <div className="divide-y divide-orange-500/10">
                   {category.endpoints.map((endpoint, idx) => (
                     <div
                       key={idx}
-                      className="px-6 py-4 hover:bg-amber-500/5 transition-colors"
+                      className="px-6 py-4 hover:bg-orange-500/5 transition-colors"
                     >
                       <div className="flex items-start gap-4">
                         <span
@@ -248,9 +248,9 @@ export default function ApiReferencePage() {
                             endpoint.method === 'GET'
                               ? 'bg-emerald-500/20 text-emerald-400'
                               : endpoint.method === 'POST'
-                                ? 'bg-amber-500/20 text-amber-400'
+                                ? 'bg-orange-500/20 text-orange-400'
                                 : endpoint.method === 'PUT'
-                                  ? 'bg-amber-500/20 text-amber-400'
+                                  ? 'bg-orange-500/20 text-orange-400'
                                   : 'bg-red-500/20 text-red-400'
                           }`}
                         >
@@ -285,10 +285,10 @@ export default function ApiReferencePage() {
           </p>
 
           <div className="max-w-3xl mx-auto">
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10 overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-amber-500/10 bg-amber-500/5">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-orange-500/10 bg-orange-500/5">
                 <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                <div className="w-3 h-3 rounded-full bg-amber-500/80" />
+                <div className="w-3 h-3 rounded-full bg-orange-500/80" />
                 <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
                 <span className="ml-4 text-gray-500 text-sm font-mono">
                   generate-content.js
@@ -325,7 +325,7 @@ console.log(content);
       {/* CTA */}
       <section className="py-20 px-6">
         <div className="container mx-auto">
-          <div className="bg-gradient-to-br from-amber-500/10 to-amber-600/10 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-12 text-center">
+          <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 backdrop-blur-xl border border-orange-500/20 rounded-2xl p-12 text-center">
             <h2 className="text-3xl font-bold text-white mb-4">
               Ready to Build?
             </h2>
@@ -337,7 +337,7 @@ console.log(content);
               <Link href="/signup">
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white px-10 shadow-lg shadow-amber-500/25"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-10 shadow-lg shadow-orange-500/25"
                 >
                   Get API Key
                   <ArrowRight className="ml-2" />
@@ -347,7 +347,7 @@ console.log(content);
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-amber-500/30 text-white hover:bg-amber-500/10 px-10"
+                  className="border-orange-500/30 text-white hover:bg-orange-500/10 px-10"
                 >
                   Read Documentation
                 </Button>

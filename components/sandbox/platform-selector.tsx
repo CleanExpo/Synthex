@@ -29,7 +29,7 @@ export function PlatformSelector({
               onClick={() => onSelect(key)}
               className={`p-3 rounded-lg border transition-all ${
                 selected === key
-                  ? 'bg-amber-500/20 border-amber-500'
+                  ? 'bg-orange-500/20 border-orange-500'
                   : 'bg-white/5 border-white/10 hover:bg-white/10'
               }`}
             >

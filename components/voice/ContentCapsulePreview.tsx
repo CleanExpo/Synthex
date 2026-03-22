@@ -30,14 +30,14 @@ function extractabilityLabel(score: number): {
   if (pct >= 60)
     return {
       label: 'Good',
-      colour: 'text-amber-400',
-      ring: 'border-amber-500/50',
+      colour: 'text-orange-400',
+      ring: 'border-orange-500/50',
     };
   if (pct >= 40)
     return {
       label: 'Fair',
-      colour: 'text-amber-400',
-      ring: 'border-amber-500/50',
+      colour: 'text-orange-400',
+      ring: 'border-orange-500/50',
     };
   return { label: 'Poor', colour: 'text-red-400', ring: 'border-red-500/50' };
 }
@@ -110,7 +110,7 @@ export function ContentCapsulePreview({
             className={cn(
               'flex-1 text-sm py-1.5 rounded-md transition-colors font-medium',
               view === v
-                ? 'bg-amber-500/20 text-amber-300'
+                ? 'bg-orange-500/20 text-orange-300'
                 : 'text-slate-400 hover:text-slate-200'
             )}
           >
@@ -136,10 +136,10 @@ export function ContentCapsulePreview({
           <div className="space-y-4">
             {/* Core claim */}
             <div className="space-y-1">
-              <span className="text-xs font-medium text-amber-400 uppercase tracking-wider">
+              <span className="text-xs font-medium text-orange-400 uppercase tracking-wider">
                 Core Claim
               </span>
-              <p className="text-sm text-white leading-relaxed bg-white/3 rounded-lg p-3 border border-amber-500/10">
+              <p className="text-sm text-white leading-relaxed bg-white/3 rounded-lg p-3 border border-orange-500/10">
                 {result.coreClaim}
               </p>
             </div>
@@ -156,7 +156,7 @@ export function ContentCapsulePreview({
                       key={i}
                       className="flex items-start gap-2 text-sm text-slate-300"
                     >
-                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-500/10 text-amber-400 text-xs flex items-centre justify-centre mt-0.5 font-medium">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-orange-500/10 text-orange-400 text-xs flex items-centre justify-centre mt-0.5 font-medium">
                         {i + 1}
                       </span>
                       <span>{point}</span>

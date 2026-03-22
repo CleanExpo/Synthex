@@ -91,7 +91,7 @@ function getRoleIcon(roleName: string, isSystem: boolean) {
   if (name.includes('viewer') || name.includes('read')) {
     return <Eye className="h-5 w-5 text-gray-400" />;
   }
-  return <Shield className="h-5 w-5 text-amber-400" />;
+  return <Shield className="h-5 w-5 text-orange-400" />;
 }
 
 function getRoleColor(roleName: string): string {
@@ -105,7 +105,7 @@ function getRoleColor(roleName: string): string {
   if (name.includes('viewer') || name.includes('read')) {
     return 'text-gray-400';
   }
-  return 'text-amber-400';
+  return 'text-orange-400';
 }
 
 function formatPermissionLabel(permission: string): string {
@@ -158,7 +158,7 @@ function RoleCard({ role, onEdit, onDelete, onViewUsers }: RoleCardProps) {
             {role.isSystem && (
               <Badge
                 variant="outline"
-                className="text-xs bg-amber-500/10 text-amber-400 border-amber-500/30"
+                className="text-xs bg-orange-500/10 text-orange-400 border-orange-500/30"
               >
                 System
               </Badge>
@@ -332,7 +332,7 @@ function RoleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-surface-base/95 border-amber-500/20 backdrop-blur-xl sm:max-w-2xl max-h-[90vh]">
+      <DialogContent className="bg-surface-base/95 border-orange-500/20 backdrop-blur-xl sm:max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="text-white">
             {role ? 'Edit Role' : 'Create New Role'}
@@ -443,7 +443,7 @@ function RoleDialog({
                                 onClick={() => togglePermission(permission)}
                                 className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
                                   selectedPermissions.has(permission)
-                                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                    ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
                                     : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
                                 }`}
                               >
@@ -476,7 +476,7 @@ function RoleDialog({
           <Button
             onClick={handleSave}
             disabled={!isValid || isSubmitting}
-            className="bg-amber-500 hover:bg-amber-600"
+            className="bg-orange-500 hover:bg-orange-600"
           >
             {isSubmitting ? (
               <>
@@ -571,10 +571,10 @@ function UserSearchDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="bg-surface-base/95 border-amber-500/20 backdrop-blur-xl sm:max-w-md">
+      <DialogContent className="bg-surface-base/95 border-orange-500/20 backdrop-blur-xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2">
-            <UserPlus className="h-5 w-5 text-amber-400" />
+            <UserPlus className="h-5 w-5 text-orange-400" />
             Add user to &quot;{role.name}&quot;
           </DialogTitle>
           <DialogDescription className="text-gray-400">
@@ -597,7 +597,7 @@ function UserSearchDialog({
           <ScrollArea className="h-[260px]">
             {loading ? (
               <div className="flex items-center justify-center py-10">
-                <Loader2 className="h-5 w-5 text-amber-400 animate-spin" />
+                <Loader2 className="h-5 w-5 text-orange-400 animate-spin" />
               </div>
             ) : filtered.length === 0 ? (
               <div className="text-center py-10 text-gray-400 text-sm">
@@ -619,7 +619,7 @@ function UserSearchDialog({
                         {member.avatar && (
                           <AvatarImage src={member.avatar} alt={member.name} />
                         )}
-                        <AvatarFallback className="bg-amber-500/20 text-amber-400 text-sm">
+                        <AvatarFallback className="bg-orange-500/20 text-orange-400 text-sm">
                           {member.name.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -631,7 +631,7 @@ function UserSearchDialog({
                       </div>
                     </div>
                     {assigning === member.id ? (
-                      <Loader2 className="h-4 w-4 text-amber-400 animate-spin flex-shrink-0" />
+                      <Loader2 className="h-4 w-4 text-orange-400 animate-spin flex-shrink-0" />
                     ) : (
                       <UserPlus className="h-4 w-4 text-gray-600 flex-shrink-0" />
                     )}
@@ -688,7 +688,7 @@ function RoleUsersDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-surface-base/95 border-amber-500/20 backdrop-blur-xl sm:max-w-lg max-h-[80vh]">
+      <DialogContent className="bg-surface-base/95 border-orange-500/20 backdrop-blur-xl sm:max-w-lg max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2">
             {getRoleIcon(role.name, role.isSystem)}
@@ -703,7 +703,7 @@ function RoleUsersDialog({
         <div className="py-4">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 text-amber-400 animate-spin" />
+              <Loader2 className="h-6 w-6 text-orange-400 animate-spin" />
             </div>
           ) : users.length === 0 ? (
             <div className="text-center py-8">
@@ -723,7 +723,7 @@ function RoleUsersDialog({
                         {user.avatar && (
                           <AvatarImage src={user.avatar} alt={user.name} />
                         )}
-                        <AvatarFallback className="bg-amber-500/20 text-amber-400 text-sm">
+                        <AvatarFallback className="bg-orange-500/20 text-orange-400 text-sm">
                           {user.name.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -741,7 +741,7 @@ function RoleUsersDialog({
                           {formatRelativeTime(user.grantedAt)}
                         </div>
                         {user.expiresAt && (
-                          <div className="text-amber-400">
+                          <div className="text-orange-400">
                             Expires {formatRelativeTime(user.expiresAt)}
                           </div>
                         )}
@@ -770,7 +770,7 @@ function RoleUsersDialog({
         <DialogFooter>
           <Button
             onClick={onAddUser}
-            className="bg-amber-500 hover:bg-amber-600"
+            className="bg-orange-500 hover:bg-orange-600"
           >
             <UserPlus className="h-4 w-4 mr-2" />
             Add User
@@ -817,7 +817,7 @@ function DeleteDialog({
         </DialogHeader>
 
         {role.userCount > 0 && (
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-sm text-amber-300">
+          <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 text-sm text-orange-300">
             <strong>Warning:</strong> {role.userCount} user
             {role.userCount !== 1 ? 's have' : ' has'} this role. They will lose
             access to permissions granted by this role.
@@ -864,8 +864,8 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
     <Card variant="glass">
       <CardContent className="py-16">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 mb-4">
-            <Shield className="w-8 h-8 text-amber-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 mb-4">
+            <Shield className="w-8 h-8 text-orange-400" />
           </div>
           <h3 className="text-lg font-medium text-white mb-2">
             No custom roles yet
@@ -876,7 +876,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
           </p>
           <Button
             onClick={onCreate}
-            className="bg-amber-500 hover:bg-amber-600"
+            className="bg-orange-500 hover:bg-orange-600"
           >
             <Plus className="h-4 w-4 mr-2" />
             Create Custom Role
@@ -1032,8 +1032,8 @@ export default function RolesPage() {
       {/* Page Header */}
       <div className="flex items-start justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20">
-            <Shield className="h-6 w-6 text-amber-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+            <Shield className="h-6 w-6 text-orange-400" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-white">Role Management</h1>
@@ -1056,7 +1056,7 @@ export default function RolesPage() {
           </Button>
           <Button
             onClick={handleCreateRole}
-            className="bg-amber-500 hover:bg-amber-600"
+            className="bg-orange-500 hover:bg-orange-600"
           >
             <Plus className="h-4 w-4 mr-2" />
             Create Role
@@ -1091,7 +1091,7 @@ export default function RolesPage() {
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+          <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
         </div>
       )}
 
@@ -1102,7 +1102,7 @@ export default function RolesPage() {
           {systemRoles.length > 0 && (
             <div className="mb-8">
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Crown className="h-5 w-5 text-amber-400" />
+                <Crown className="h-5 w-5 text-orange-400" />
                 System Roles
               </h2>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -1123,7 +1123,7 @@ export default function RolesPage() {
           {customRoles.length > 0 && (
             <div className="mb-8">
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Shield className="h-5 w-5 text-amber-400" />
+                <Shield className="h-5 w-5 text-orange-400" />
                 Custom Roles
               </h2>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

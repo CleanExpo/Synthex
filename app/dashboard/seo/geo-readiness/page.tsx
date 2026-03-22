@@ -101,12 +101,12 @@ function getTierBadge(tier: string): { label: string; className: string } {
     case 'almost':
       return {
         label: 'Almost Ready',
-        className: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+        className: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
       };
     case 'needs-work':
       return {
         label: 'Needs Work',
-        className: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+        className: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
       };
     default:
       return {
@@ -118,30 +118,30 @@ function getTierBadge(tier: string): { label: string; className: string } {
 
 function getScoreColor(score: number): string {
   if (score >= 80) return 'text-emerald-400';
-  if (score >= 60) return 'text-amber-400';
-  if (score >= 40) return 'text-amber-400';
+  if (score >= 60) return 'text-orange-400';
+  if (score >= 40) return 'text-orange-400';
   return 'text-red-400';
 }
 
 function getScoreBg(score: number): string {
   if (score >= 80) return 'bg-emerald-500/10';
-  if (score >= 60) return 'bg-amber-500/10';
-  if (score >= 40) return 'bg-amber-500/10';
+  if (score >= 60) return 'bg-orange-500/10';
+  if (score >= 40) return 'bg-orange-500/10';
   return 'bg-red-500/10';
 }
 
 function getScoreRing(score: number): string {
   if (score >= 80) return 'border-emerald-500/40';
-  if (score >= 60) return 'border-amber-500/40';
-  if (score >= 40) return 'border-amber-500/40';
+  if (score >= 60) return 'border-orange-500/40';
+  if (score >= 40) return 'border-orange-500/40';
   return 'border-red-500/40';
 }
 
 function getBarColor(colorName: string): string {
   const colors: Record<string, string> = {
-    cyan: 'bg-amber-500',
-    purple: 'bg-amber-500',
-    amber: 'bg-amber-500',
+    cyan: 'bg-orange-500',
+    purple: 'bg-orange-500',
+    amber: 'bg-orange-500',
     emerald: 'bg-emerald-500',
     rose: 'bg-rose-500',
   };
@@ -178,11 +178,11 @@ function ReadinessCheckTab({
   return (
     <div className="space-y-6">
       {/* Input Form */}
-      <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
         <CardContent className="p-6">
           <div className="mb-4">
             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-              <Globe className="w-5 h-5 text-amber-400" />
+              <Globe className="w-5 h-5 text-orange-400" />
               Check GEO Readiness
             </h2>
             <p className="text-sm text-gray-400 mt-1">
@@ -196,7 +196,7 @@ function ReadinessCheckTab({
                 value={content}
                 onChange={e => setContent(e.target.value)}
                 placeholder="Paste your content here (minimum 50 characters)..."
-                className="w-full h-48 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-amber-500/40 resize-none"
+                className="w-full h-48 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-orange-500/40 resize-none"
               />
               <div className="flex justify-between mt-2 text-xs text-gray-500">
                 <span>{wordCount} words</span>
@@ -224,7 +224,7 @@ function ReadinessCheckTab({
                 <select
                   value={platform}
                   onChange={e => setPlatform(e.target.value)}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-amber-500/40"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-orange-500/40"
                 >
                   {PLATFORMS.map(p => (
                     <option
@@ -242,7 +242,7 @@ function ReadinessCheckTab({
             <Button
               type="submit"
               disabled={loading || content.trim().length < 50}
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
             >
               {loading ? (
                 <>
@@ -276,7 +276,7 @@ function ReadinessResults({ result }: { result: GeoReadinessResult }) {
   const tierBadge = getTierBadge(result.readinessTier);
 
   return (
-    <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
       <CardContent className="p-6 space-y-6">
         {/* Overall Score */}
         <div className="flex items-center justify-between">
@@ -394,7 +394,7 @@ function PassagesTab({ result }: { result: GeoReadinessResult | null }) {
 
   if (!result || result.citablePassages.length === 0) {
     return (
-      <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
         <CardContent className="p-6">
           <div className="text-center py-12">
             <FileText className="w-12 h-12 text-gray-600 mx-auto mb-4" />
@@ -416,12 +416,12 @@ function PassagesTab({ result }: { result: GeoReadinessResult | null }) {
     : result.citablePassages;
 
   return (
-    <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-              <FileText className="w-5 h-5 text-amber-400" />
+              <FileText className="w-5 h-5 text-orange-400" />
               Citable Passages
             </h2>
             <p className="text-sm text-gray-400 mt-1">
@@ -434,7 +434,7 @@ function PassagesTab({ result }: { result: GeoReadinessResult | null }) {
             onClick={() => setShowOptimalOnly(!showOptimalOnly)}
             className={`text-xs ${
               showOptimalOnly
-                ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+                ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
                 : 'border-white/10 text-gray-400 hover:bg-white/5'
             }`}
           >
@@ -466,12 +466,12 @@ function PassagesTab({ result }: { result: GeoReadinessResult | null }) {
                   </span>
                 )}
                 {passage.answerFirst && (
-                  <span className="px-2 py-1 text-xs bg-amber-500/10 text-amber-400 rounded border border-amber-500/20">
+                  <span className="px-2 py-1 text-xs bg-orange-500/10 text-orange-400 rounded border border-orange-500/20">
                     Answer-First
                   </span>
                 )}
                 {passage.hasCitation && (
-                  <span className="px-2 py-1 text-xs bg-amber-500/10 text-amber-400 rounded border border-amber-500/20">
+                  <span className="px-2 py-1 text-xs bg-orange-500/10 text-orange-400 rounded border border-orange-500/20">
                     Cited
                   </span>
                 )}
@@ -506,10 +506,10 @@ function TrendsTab({
 
   if (loading && trends.length === 0) {
     return (
-      <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
         <CardContent className="p-6">
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+            <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
           </div>
         </CardContent>
       </Card>
@@ -518,7 +518,7 @@ function TrendsTab({
 
   if (trends.length === 0) {
     return (
-      <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
         <CardContent className="p-6">
           <div className="text-center py-12">
             <TrendingUp className="w-12 h-12 text-gray-600 mx-auto mb-4" />
@@ -558,11 +558,11 @@ function TrendsTab({
   ];
 
   return (
-    <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
       <CardContent className="p-6">
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-amber-400" />
+            <TrendingUp className="w-5 h-5 text-orange-400" />
             Score Trends
           </h2>
           <p className="text-sm text-gray-400 mt-1">
@@ -665,10 +665,10 @@ function HistoryTab({
 
   if (loading && history.length === 0) {
     return (
-      <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
         <CardContent className="p-6">
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+            <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
           </div>
         </CardContent>
       </Card>
@@ -677,7 +677,7 @@ function HistoryTab({
 
   if (history.length === 0) {
     return (
-      <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
         <CardContent className="p-6">
           <div className="text-center py-12">
             <Activity className="w-12 h-12 text-gray-600 mx-auto mb-4" />
@@ -694,11 +694,11 @@ function HistoryTab({
   }
 
   return (
-    <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
       <CardContent className="p-6">
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-            <Activity className="w-5 h-5 text-amber-400" />
+            <Activity className="w-5 h-5 text-orange-400" />
             Analysis History
           </h2>
           <p className="text-sm text-gray-400 mt-1">
@@ -827,13 +827,13 @@ export default function GeoReadinessPage() {
         <div>
           <Link
             href="/dashboard/seo"
-            className="text-sm text-gray-400 hover:text-amber-400 flex items-center gap-1 mb-2 transition-colors"
+            className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to SEO Tools
           </Link>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Globe className="w-8 h-8 text-amber-400" />
+            <Globe className="w-8 h-8 text-orange-400" />
             GEO Readiness
           </h1>
           <p className="text-gray-400 mt-2">
@@ -857,7 +857,7 @@ export default function GeoReadinessPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 ${
                 activeTab === tab.id
-                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                  ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >

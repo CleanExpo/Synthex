@@ -178,7 +178,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="mb-6 rounded-2xl border border-amber-500/20 bg-amber-500/[0.03] overflow-hidden">
+    <div className="mb-6 rounded-2xl border border-orange-500/20 bg-orange-500/[0.03] overflow-hidden">
       {/* Toggle header */}
       <button
         type="button"
@@ -186,7 +186,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
         className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/[0.03] transition-colors"
       >
         <div className="flex items-center gap-2.5">
-          <Sparkles className="h-4 w-4 text-amber-400" />
+          <Sparkles className="h-4 w-4 text-orange-400" />
           <span className="text-sm font-semibold text-white">
             Generate with AI
           </span>
@@ -215,7 +215,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
                 value={brandName}
                 onChange={e => setBrandName(e.target.value)}
                 placeholder="Acme Corp"
-                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
               />
             </div>
 
@@ -227,7 +227,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
               <select
                 value={category}
                 onChange={e => setCategory(e.target.value)}
-                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50"
               >
                 <option value="funding">Funding</option>
                 <option value="product">Product</option>
@@ -248,7 +248,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
               onChange={e => setAngle(e.target.value)}
               placeholder="e.g. Series A funding round of $5M AUD to accelerate product development"
               rows={2}
-              className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50 resize-none"
+              className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/50 resize-none"
             />
           </div>
 
@@ -265,7 +265,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
               onChange={e => setKeyFacts(e.target.value)}
               placeholder={`$5M AUD raised in Series A\n3 lead investors: XYZ Ventures, ABC Capital\nProduct launches Q2 2026\n2,000 customers in ANZ region`}
               rows={4}
-              className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50 resize-none font-mono"
+              className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/50 resize-none font-mono"
             />
           </div>
 
@@ -279,7 +279,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
               value={targetAudience}
               onChange={e => setTargetAudience(e.target.value)}
               placeholder="e.g. B2B SaaS founders and tech journalists in Australia"
-              className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+              className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
             />
           </div>
 
@@ -295,7 +295,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
                 value={quoteName}
                 onChange={e => setQuoteName(e.target.value)}
                 placeholder="Jane Smith, CEO"
-                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
               />
             </div>
 
@@ -309,7 +309,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
                 value={quoteText}
                 onChange={e => setQuoteText(e.target.value)}
                 placeholder="This investment validates our vision for..."
-                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                className="w-full rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
               />
             </div>
           </div>
@@ -327,7 +327,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
             type="button"
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold text-black transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold text-black transition-colors"
           >
             {isGenerating ? (
               <>
@@ -349,7 +349,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
                 <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                   Generated Preview
                   {!generated.isAIGenerated && (
-                    <span className="ml-2 text-amber-400 normal-case font-normal">
+                    <span className="ml-2 text-orange-400 normal-case font-normal">
                       (template fallback — no AI key configured)
                     </span>
                   )}

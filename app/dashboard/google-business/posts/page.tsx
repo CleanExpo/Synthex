@@ -50,7 +50,7 @@ export default function GBPPostsPage() {
       <div>
         <Link
           href="/dashboard/google-business"
-          className="text-sm text-gray-400 hover:text-amber-400 flex items-center gap-1 mb-2 transition-colors"
+          className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Google Business
@@ -58,7 +58,7 @@ export default function GBPPostsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-              <Globe className="w-7 h-7 text-amber-400" />
+              <Globe className="w-7 h-7 text-orange-400" />
               Google Posts
             </h1>
             <p className="text-gray-400 mt-1">
@@ -68,7 +68,7 @@ export default function GBPPostsPage() {
           {hasLocations && (
             <Button
               onClick={() => setShowForm(!showForm)}
-              className="bg-gradient-to-r from-amber-500 to-amber-600 text-white"
+              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
               New Post
@@ -86,7 +86,7 @@ export default function GBPPostsPage() {
       )}
 
       {showForm && primaryLocation && (
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <h2 className="text-lg font-semibold text-white mb-4">
               Create New Post
@@ -121,7 +121,7 @@ export default function GBPPostsPage() {
                   size="sm"
                   onClick={handleCreatePost}
                   disabled={creating || !summary.trim()}
-                  className="bg-gradient-to-r from-amber-500 to-amber-600 text-white"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white"
                 >
                   {creating ? (
                     <Loader2 className="w-3 h-3 animate-spin mr-1" />
@@ -146,7 +146,7 @@ export default function GBPPostsPage() {
           </p>
           <Button
             onClick={() => setShowForm(true)}
-            className="bg-gradient-to-r from-amber-500 to-amber-600 text-white"
+            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Your First Post

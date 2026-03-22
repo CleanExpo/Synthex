@@ -174,8 +174,8 @@ function SentinelPageContent() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {/* Page Header */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
-            <ShieldExclamation className="w-5 h-5 text-amber-400" />
+          <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+            <ShieldExclamation className="w-5 h-5 text-orange-400" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white">
@@ -270,7 +270,7 @@ function SentinelPageContent() {
                     onClick={() => setSeverityFilter(opt.value)}
                     className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
                       severityFilter === opt.value
-                        ? 'bg-amber-500/30 text-amber-300'
+                        ? 'bg-orange-500/30 text-orange-300'
                         : 'bg-white/5 text-gray-400 hover:bg-white/10'
                     }`}
                   >
@@ -306,7 +306,7 @@ function SentinelPageContent() {
                   onClick={() => setDayRange(opt.value)}
                   className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
                     dayRange === opt.value
-                      ? 'bg-amber-500/30 text-amber-300'
+                      ? 'bg-orange-500/30 text-orange-300'
                       : 'bg-white/5 text-gray-400 hover:bg-white/10'
                   }`}
                 >

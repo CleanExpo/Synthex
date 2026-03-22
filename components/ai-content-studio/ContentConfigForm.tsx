@@ -63,7 +63,7 @@ export function ContentConfigForm({
     <Card variant="glass">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Wand2 className="w-5 h-5 text-amber-500" />
+          <Wand2 className="w-5 h-5 text-orange-500" />
           Content Configuration
         </CardTitle>
         <CardDescription>Customize your AI-generated content</CardDescription>
@@ -73,14 +73,14 @@ export function ContentConfigForm({
         {!loadingBusinesses && businesses.length > 1 && (
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
-              <Building className="w-4 h-4 text-amber-500" />
+              <Building className="w-4 h-4 text-orange-500" />
               Creating for
             </Label>
             <Select
               value={selectedBusinessId}
               onValueChange={setSelectedBusinessId}
             >
-              <SelectTrigger className="bg-white/5 border-amber-500/10">
+              <SelectTrigger className="bg-white/5 border-orange-500/10">
                 <SelectValue placeholder="Select a business" />
               </SelectTrigger>
               <SelectContent>
@@ -98,11 +98,11 @@ export function ContentConfigForm({
         )}
 
         {!loadingBusinesses && businesses.length === 1 && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/5 border border-amber-500/10 text-sm text-gray-300">
-            <Building className="w-4 h-4 text-amber-500 shrink-0" />
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-orange-500/5 border border-orange-500/10 text-sm text-gray-300">
+            <Building className="w-4 h-4 text-orange-500 shrink-0" />
             <span>
               Creating for{' '}
-              <span className="font-medium text-amber-400">
+              <span className="font-medium text-orange-400">
                 {businesses[0].displayName || businesses[0].organizationName}
               </span>
             </span>

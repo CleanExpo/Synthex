@@ -112,7 +112,7 @@ export default function CompetitorPagesPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Target className="w-8 h-8 text-amber-400" />
+            <Target className="w-8 h-8 text-orange-400" />
             Competitor Pages
           </h1>
           <p className="text-gray-400 mt-1">
@@ -127,7 +127,7 @@ export default function CompetitorPagesPage() {
         description="Create SEO-optimized 'X vs Y' comparisons and 'alternatives to X' pages with structured data and keyword targeting."
       >
         {/* Input */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
@@ -157,7 +157,7 @@ export default function CompetitorPagesPage() {
             <Button
               onClick={handleGenerate}
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25"
             >
               {isLoading ? (
                 <>
@@ -180,7 +180,7 @@ export default function CompetitorPagesPage() {
             {results.map((page, index) => (
               <Card
                 key={index}
-                className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10"
+                className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10"
               >
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -189,8 +189,8 @@ export default function CompetitorPagesPage() {
                         <span
                           className={`px-2 py-0.5 text-xs rounded-full ${
                             page.type === 'comparison'
-                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                              ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
+                              : 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
                           }`}
                         >
                           {page.type === 'comparison'
@@ -202,7 +202,7 @@ export default function CompetitorPagesPage() {
                       <p className="text-gray-400 text-sm mt-1">
                         {page.metaDescription}
                       </p>
-                      <p className="text-amber-400/60 text-xs mt-1 font-mono">
+                      <p className="text-orange-400/60 text-xs mt-1 font-mono">
                         /{page.slug}
                       </p>
                     </div>
@@ -210,7 +210,7 @@ export default function CompetitorPagesPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => copySchema(index)}
-                      className="border-amber-500/30 text-amber-400"
+                      className="border-orange-500/30 text-orange-400"
                     >
                       {copiedIndex === index ? (
                         <>
@@ -230,7 +230,7 @@ export default function CompetitorPagesPage() {
                   {/* Content Outline */}
                   <div>
                     <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-amber-400" />
+                      <FileText className="w-4 h-4 text-orange-400" />
                       Content Outline
                     </h4>
                     <div className="space-y-1.5">
@@ -240,7 +240,7 @@ export default function CompetitorPagesPage() {
                           className={`p-2 bg-white/5 rounded ${section.type === 'h3' ? 'ml-4' : ''}`}
                         >
                           <p className="text-white text-sm font-medium">
-                            <span className="text-amber-400/50 text-xs mr-2">
+                            <span className="text-orange-400/50 text-xs mr-2">
                               {section.type.toUpperCase()}
                             </span>
                             {section.heading}
@@ -256,7 +256,7 @@ export default function CompetitorPagesPage() {
                   {/* Target Keywords */}
                   <div>
                     <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-amber-400" />
+                      <TrendingUp className="w-4 h-4 text-orange-400" />
                       Target Keywords
                     </h4>
                     <div className="flex flex-wrap gap-2">

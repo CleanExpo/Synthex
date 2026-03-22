@@ -69,7 +69,7 @@ function entityTypeBadgeClass(entityType: string): string {
     case 'organization':
       return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
     case 'person':
-      return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+      return 'bg-orange-500/20 text-orange-300 border-orange-500/30';
     case 'local-business':
       return 'bg-green-500/20 text-green-300 border-green-500/30';
     default:
@@ -93,7 +93,7 @@ function entityTypeLabel(entityType: string): string {
 function scoreColour(score: number | null | undefined): string {
   if (score === null || score === undefined) return 'text-gray-500';
   if (score >= 80) return 'text-green-400';
-  if (score >= 60) return 'text-amber-400';
+  if (score >= 60) return 'text-orange-400';
   return 'text-red-400';
 }
 
@@ -267,7 +267,7 @@ export function BrandIdentityCard({
         {onCheckWikidata && (
           <button
             onClick={onCheckWikidata}
-            className="px-3 py-1.5 text-xs bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-300 rounded-lg transition-colors"
+            className="px-3 py-1.5 text-xs bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 text-orange-300 rounded-lg transition-colors"
           >
             Check Wikidata
           </button>
@@ -275,7 +275,7 @@ export function BrandIdentityCard({
         {onCheckKG && (
           <button
             onClick={onCheckKG}
-            className="px-3 py-1.5 text-xs bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-300 rounded-lg transition-colors"
+            className="px-3 py-1.5 text-xs bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 text-orange-300 rounded-lg transition-colors"
           >
             Check Knowledge Graph
           </button>

@@ -19,7 +19,13 @@
 import { useState, useCallback } from 'react';
 import useSWR from 'swr';
 import { toast } from 'sonner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -82,7 +88,7 @@ interface VaultApiResponse {
 // =============================================================================
 
 function fetchJson(url: string) {
-  return fetch(url, { credentials: 'include' }).then((r) => r.json());
+  return fetch(url, { credentials: 'include' }).then(r => r.json());
 }
 
 // =============================================================================
@@ -120,7 +126,9 @@ function getExpiryBadge(expiresAt: string | null): React.ReactNode {
 
   const now = new Date();
   const expiry = new Date(expiresAt);
-  const daysUntil = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const daysUntil = Math.ceil(
+    (expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+  );
 
   if (daysUntil < 0) {
     return <Badge variant="destructive">Expired</Badge>;
@@ -130,7 +138,7 @@ function getExpiryBadge(expiresAt: string | null): React.ReactNode {
   }
   if (daysUntil <= 30) {
     return (
-      <Badge variant="outline" className="border-amber-500 text-amber-500">
+      <Badge variant="outline" className="border-orange-500 text-orange-500">
         Expires in {daysUntil}d
       </Badge>
     );
@@ -186,13 +194,16 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
     ? `/api/admin/vault?organizationId=${organizationId}${filterType !== 'all' ? `&secretType=${filterType}` : ''}${filterProvider !== 'all' ? `&provider=${filterProvider}` : ''}`
     : null;
 
-  const { data, isLoading, mutate } = useSWR<VaultApiResponse>(swrKey, fetchJson);
+  const { data, isLoading, mutate } = useSWR<VaultApiResponse>(
+    swrKey,
+    fetchJson
+  );
 
   const secrets = data?.secrets ?? [];
 
   // Client-side search
   const filteredSecrets = secrets.filter(
-    (s) =>
+    s =>
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (s.provider ?? '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -232,7 +243,9 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
               provider: formData.provider || undefined,
               value: formData.value,
               description: formData.description || undefined,
-              expiresAt: formData.expiresAt ? new Date(formData.expiresAt).toISOString() : undefined,
+              expiresAt: formData.expiresAt
+                ? new Date(formData.expiresAt).toISOString()
+                : undefined,
               isRotatable: formData.isRotatable,
             }),
           });
@@ -268,7 +281,8 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
 
   const handleDelete = useCallback(
     async (secret: VaultSecret) => {
-      if (!confirm(`Delete secret "${secret.name}"? This will deactivate it.`)) return;
+      if (!confirm(`Delete secret "${secret.name}"? This will deactivate it.`))
+        return;
 
       try {
         const res = await fetch('/api/admin/vault', {
@@ -294,7 +308,12 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
   }, []);
 
   const handleSeedAll = useCallback(async () => {
-    if (!confirm('Seed platform AI keys (OpenRouter, OpenAI, etc.) into ALL businesses? Existing secrets will not be overwritten.')) return;
+    if (
+      !confirm(
+        'Seed platform AI keys (OpenRouter, OpenAI, etc.) into ALL businesses? Existing secrets will not be overwritten.'
+      )
+    )
+      return;
     setIsSeeding(true);
     try {
       const res = await fetch('/api/admin/vault/seed-all', {
@@ -342,7 +361,8 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
                 Vault Secrets
               </CardTitle>
               <CardDescription>
-                Encrypted credentials for AI agent operations and platform integrations
+                Encrypted credentials for AI agent operations and platform
+                integrations
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -352,7 +372,9 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
                 onClick={() => mutate()}
                 disabled={isLoading}
               >
-                <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`}
+                />
                 Refresh
               </Button>
               <Button
@@ -362,7 +384,9 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
                 disabled={isSeeding}
                 title="Seed platform AI keys into all businesses"
               >
-                <Zap className={`h-4 w-4 mr-1 ${isSeeding ? 'animate-pulse' : ''}`} />
+                <Zap
+                  className={`h-4 w-4 mr-1 ${isSeeding ? 'animate-pulse' : ''}`}
+                />
                 {isSeeding ? 'Seeding...' : 'Seed All'}
               </Button>
               <Button
@@ -391,7 +415,7 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
                 type="text"
                 placeholder="Search secrets..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 text-sm rounded-md border border-input bg-background"
               />
             </div>
@@ -405,7 +429,9 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="api_key">API Key</SelectItem>
                 <SelectItem value="oauth_token">OAuth Token</SelectItem>
-                <SelectItem value="oauth_refresh_token">Refresh Token</SelectItem>
+                <SelectItem value="oauth_refresh_token">
+                  Refresh Token
+                </SelectItem>
                 <SelectItem value="env_var">Env Var</SelectItem>
                 <SelectItem value="custom">Custom</SelectItem>
               </SelectContent>
@@ -429,22 +455,29 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
 
           {/* Stats bar */}
           <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
-            <span>{filteredSecrets.length} secret{filteredSecrets.length !== 1 ? 's' : ''}</span>
-            {secrets.filter((s) => {
+            <span>
+              {filteredSecrets.length} secret
+              {filteredSecrets.length !== 1 ? 's' : ''}
+            </span>
+            {secrets.filter(s => {
               if (!s.expiresAt) return false;
               const days = Math.ceil(
-                (new Date(s.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+                (new Date(s.expiresAt).getTime() - Date.now()) /
+                  (1000 * 60 * 60 * 24)
               );
               return days <= 7 && days >= 0;
             }).length > 0 && (
               <Badge variant="destructive" className="text-xs">
-                {secrets.filter((s) => {
-                  if (!s.expiresAt) return false;
-                  const days = Math.ceil(
-                    (new Date(s.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-                  );
-                  return days <= 7 && days >= 0;
-                }).length}{' '}
+                {
+                  secrets.filter(s => {
+                    if (!s.expiresAt) return false;
+                    const days = Math.ceil(
+                      (new Date(s.expiresAt).getTime() - Date.now()) /
+                        (1000 * 60 * 60 * 24)
+                    );
+                    return days <= 7 && days >= 0;
+                  }).length
+                }{' '}
                 expiring soon
               </Badge>
             )}
@@ -453,7 +486,7 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
           {/* Table */}
           {isLoading ? (
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
+              {[1, 2, 3].map(i => (
                 <div
                   key={i}
                   className="h-16 rounded-lg bg-muted/50 animate-pulse"
@@ -472,7 +505,7 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
             </div>
           ) : (
             <div className="space-y-2">
-              {filteredSecrets.map((secret) => (
+              {filteredSecrets.map(secret => (
                 <div
                   key={secret.id}
                   className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-card/50 hover:bg-card/80 transition-colors"
@@ -480,7 +513,9 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
                   {/* Left: Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium truncate">{secret.name}</span>
+                      <span className="font-medium truncate">
+                        {secret.name}
+                      </span>
                       <Badge variant="secondary" className="text-xs shrink-0">
                         {TYPE_LABELS[secret.secretType] ?? secret.secretType}
                       </Badge>
@@ -512,7 +547,8 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
                         Used {formatRelativeTime(secret.lastUsedAt)}
                       </span>
                       <span>
-                        {secret.usageCount} use{secret.usageCount !== 1 ? 's' : ''}
+                        {secret.usageCount} use
+                        {secret.usageCount !== 1 ? 's' : ''}
                       </span>
                       <span className="text-muted-foreground/60">
                         {secret.source}

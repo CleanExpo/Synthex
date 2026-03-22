@@ -61,7 +61,7 @@ export function VisualGallery({ initialAssets }: VisualGalleryProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-white flex items-center gap-2">
-            <ImageIcon className="h-5 w-5 text-amber-400" />
+            <ImageIcon className="h-5 w-5 text-orange-400" />
             Visual Library
           </CardTitle>
           <Button
@@ -114,7 +114,7 @@ export function VisualGallery({ initialAssets }: VisualGalleryProps) {
                     </Badge>
                     {asset.qualityScore && (
                       <span
-                        className={`text-xs font-medium ${asset.qualityScore >= 70 ? 'text-emerald-400' : 'text-amber-400'}`}
+                        className={`text-xs font-medium ${asset.qualityScore >= 70 ? 'text-emerald-400' : 'text-orange-400'}`}
                       >
                         Q: {asset.qualityScore}
                       </span>

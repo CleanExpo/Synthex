@@ -70,7 +70,7 @@ function billingBadgeClass(status: string): string {
     case 'active':
       return 'bg-green-500/10 text-green-400 border-green-500/20';
     case 'past_due':
-      return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+      return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
     case 'cancelled':
       return 'bg-red-500/10 text-red-400 border-red-500/20';
     default:
@@ -130,7 +130,7 @@ export function AllBusinessesDashboard() {
         <Button
           size="sm"
           variant="outline"
-          className="border-amber-500/20 text-amber-400 hover:bg-amber-500/10"
+          className="border-orange-500/20 text-orange-400 hover:bg-orange-500/10"
           onClick={() => router.push('/dashboard/businesses')}
         >
           Manage Businesses
@@ -185,8 +185,8 @@ export function AllBusinessesDashboard() {
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-blue-500/20 border border-amber-500/20">
-            <Building2 className="h-5 w-5 text-amber-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-blue-500/20 border border-orange-500/20">
+            <Building2 className="h-5 w-5 text-orange-400" />
           </div>
           <div>
             <h2 className="text-base font-semibold text-white">
@@ -201,7 +201,7 @@ export function AllBusinessesDashboard() {
         <Button
           size="sm"
           variant="ghost"
-          className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 text-xs h-7"
+          className="text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 text-xs h-7"
           onClick={() => router.push('/dashboard/businesses')}
         >
           Manage
@@ -216,15 +216,15 @@ export function AllBusinessesDashboard() {
             label: 'Businesses',
             value: businesses.length,
             icon: Building2,
-            colour: 'text-amber-400',
-            bg: 'bg-amber-500/10',
+            colour: 'text-orange-400',
+            bg: 'bg-orange-500/10',
           },
           {
             label: 'Campaigns',
             value: totalCampaigns,
             icon: Briefcase,
-            colour: 'text-amber-400',
-            bg: 'bg-amber-500/10',
+            colour: 'text-orange-400',
+            bg: 'bg-orange-500/10',
           },
           {
             label: 'Posts',
@@ -275,7 +275,7 @@ export function AllBusinessesDashboard() {
               className={cn(
                 'rounded-xl border p-4 space-y-4 transition-colors',
                 business.isActive
-                  ? 'border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-blue-500/5'
+                  ? 'border-orange-500/30 bg-gradient-to-br from-orange-500/5 to-blue-500/5'
                   : 'border-white/[0.08] bg-white/[0.02] hover:border-white/[0.14]'
               )}
             >
@@ -285,13 +285,13 @@ export function AllBusinessesDashboard() {
                   <div
                     className={cn(
                       'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
-                      business.isActive ? 'bg-amber-500/20' : 'bg-white/[0.06]'
+                      business.isActive ? 'bg-orange-500/20' : 'bg-white/[0.06]'
                     )}
                   >
                     <Building2
                       className={cn(
                         'h-4 w-4',
-                        business.isActive ? 'text-amber-400' : 'text-gray-400'
+                        business.isActive ? 'text-orange-400' : 'text-gray-400'
                       )}
                     />
                   </div>
@@ -358,7 +358,7 @@ export function AllBusinessesDashboard() {
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  className="flex-1 h-8 text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 hover:border-amber-500/30 transition-all"
+                  className="flex-1 h-8 text-xs bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 border border-orange-500/20 hover:border-orange-500/30 transition-all"
                   onClick={() =>
                     handleGenerateContent(business.organizationId, displayName)
                   }
@@ -388,7 +388,7 @@ export function AllBusinessesDashboard() {
         {activePlatforms} platform connection{activePlatforms !== 1 ? 's' : ''}{' '}
         active across all businesses ·{' '}
         <button
-          className="text-amber-500 hover:text-amber-400 transition-colors"
+          className="text-orange-500 hover:text-orange-400 transition-colors"
           onClick={() => router.push('/dashboard/businesses')}
         >
           Manage all businesses →

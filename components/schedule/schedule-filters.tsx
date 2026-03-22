@@ -87,7 +87,7 @@ function ViewModeToggle({ viewMode, onChange }: ViewModeToggleProps) {
           onClick={() => onChange(mode)}
           className={`px-3 py-1.5 rounded text-sm transition-all flex items-center gap-2 ${
             viewMode === mode
-              ? 'bg-amber-500/20 text-amber-400'
+              ? 'bg-orange-500/20 text-orange-400'
               : 'text-slate-400 hover:text-white'
           }`}
         >

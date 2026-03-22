@@ -11,7 +11,7 @@ interface Props {
 
 const STATUS_COLOURS: Record<string, string> = {
   green: 'bg-emerald-400',
-  yellow: 'bg-amber-400',
+  yellow: 'bg-orange-400',
   red: 'bg-red-400',
 };
 

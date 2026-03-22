@@ -35,7 +35,7 @@ const CITABLE_LABELS: Record<
 function getDimColor(value: number, max: number): string {
   const pct = value / max;
   if (pct >= 0.8) return 'text-emerald-400 bg-emerald-500/10';
-  if (pct >= 0.5) return 'text-amber-400 bg-amber-500/10';
+  if (pct >= 0.5) return 'text-orange-400 bg-orange-500/10';
   return 'text-red-400 bg-red-500/10';
 }
 
@@ -57,7 +57,7 @@ export function LLMCitationFitnessCard({
   void issues;
 
   return (
-    <Card className="bg-white/5 border-amber-500/10 backdrop-blur-sm">
+    <Card className="bg-white/5 border-orange-500/10 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="text-white text-sm font-medium flex items-center justify-between">
           LLM Citation Fitness
@@ -94,7 +94,7 @@ export function LLMCitationFitnessCard({
                     dim.value / dim.max >= 0.8
                       ? 'bg-emerald-500'
                       : dim.value / dim.max >= 0.5
-                        ? 'bg-amber-500'
+                        ? 'bg-orange-500'
                         : 'bg-red-500'
                   }`}
                   style={{ width: `${(dim.value / dim.max) * 100}%` }}
@@ -110,7 +110,7 @@ export function LLMCitationFitnessCard({
             {weakest
               .filter(d => d.value / d.max < 0.6)
               .map(d => (
-                <p key={d.key} className="text-xs text-amber-400">
+                <p key={d.key} className="text-xs text-orange-400">
                   {d.label} needs improvement
                 </p>
               ))}

@@ -127,12 +127,12 @@ export function RewriteModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-centre justify-centre z-50 p-4">
-      <div className="bg-[#111111] border border-amber-500/10 rounded-xl p-6 w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl">
+      <div className="bg-[#111111] border border-orange-500/10 rounded-xl p-6 w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl">
         {/* Header */}
         <div className="flex items-centre justify-between mb-4 flex-shrink-0">
           <div>
             <h2 className="text-base font-semibold text-white">
-              Improving: <span className="text-amber-400">{tacticLabel}</span>
+              Improving: <span className="text-orange-400">{tacticLabel}</span>
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
               {isStreaming
@@ -168,7 +168,7 @@ export function RewriteModal({
             <div className="bg-white/5 rounded-lg p-4 font-mono text-sm text-slate-300 leading-relaxed whitespace-pre-wrap min-h-[200px]">
               {rewrittenContent}
               {isStreaming && (
-                <span className="inline-block w-0.5 h-4 bg-amber-400 animate-pulse ml-0.5 align-text-bottom" />
+                <span className="inline-block w-0.5 h-4 bg-orange-400 animate-pulse ml-0.5 align-text-bottom" />
               )}
               {!rewrittenContent && !isStreaming && !error && (
                 <span className="text-slate-600 not-italic font-sans">
@@ -190,7 +190,7 @@ export function RewriteModal({
           <button
             onClick={() => onAccept(rewrittenContent)}
             disabled={isStreaming || !isDone || !rewrittenContent}
-            className="bg-amber-600 hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="bg-orange-600 hover:bg-orange-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           >
             ✓ Accept
           </button>

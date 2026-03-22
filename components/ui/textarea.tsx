@@ -8,16 +8,16 @@ const textareaVariants = cva(
     variants: {
       variant: {
         default:
-          'border border-input bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus-visible:ring-amber-500/50',
+          'border border-input bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus-visible:ring-orange-500/50',
         // Premium Glassmorphism variants
         glass:
           'bg-white/[0.03] backdrop-blur-md border border-white/[0.08] text-white placeholder:text-white/40 focus:bg-white/[0.06] focus:border-white/[0.15] focus:ring-2 focus:ring-white/[0.1]',
         'glass-solid':
           'bg-slate-900/80 backdrop-blur-md border border-white/[0.08] text-white placeholder:text-white/40 focus:bg-slate-900/90 focus:border-white/[0.15] focus:ring-2 focus:ring-white/[0.1]',
         'glass-primary':
-          'bg-amber-500/10 backdrop-blur-md border border-amber-500/20 text-white placeholder:text-amber-200/40 focus:bg-amber-500/15 focus:border-amber-500/40 focus:ring-2 focus:ring-amber-500/20',
+          'bg-orange-500/10 backdrop-blur-md border border-orange-500/20 text-white placeholder:text-orange-200/40 focus:bg-orange-500/15 focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/20',
         'glass-secondary':
-          'bg-amber-500/10 backdrop-blur-md border border-amber-500/20 text-white placeholder:text-amber-200/40 focus:bg-amber-500/15 focus:border-amber-500/40 focus:ring-2 focus:ring-amber-500/20',
+          'bg-orange-500/10 backdrop-blur-md border border-orange-500/20 text-white placeholder:text-orange-200/40 focus:bg-orange-500/15 focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/20',
       },
       resize: {
         none: 'resize-none',

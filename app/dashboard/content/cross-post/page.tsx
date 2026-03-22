@@ -72,8 +72,8 @@ const PLATFORMS: Platform[] = [
     id: 'instagram',
     label: 'Instagram',
     charLimit: 2200,
-    color: 'border-amber-500/30 bg-amber-500/5',
-    dotColor: 'bg-amber-400',
+    color: 'border-orange-500/30 bg-orange-500/5',
+    dotColor: 'bg-orange-400',
   },
   {
     id: 'tiktok',
@@ -107,8 +107,8 @@ const PLATFORMS: Platform[] = [
     id: 'reddit',
     label: 'Reddit',
     charLimit: 40000,
-    color: 'border-amber-500/30 bg-amber-500/5',
-    dotColor: 'bg-amber-400',
+    color: 'border-orange-500/30 bg-orange-500/5',
+    dotColor: 'bg-orange-400',
   },
   {
     id: 'threads',
@@ -251,7 +251,7 @@ function CharDiffPill({ diff }: { diff: number }) {
       className={`text-xs px-2 py-0.5 rounded-full border ${
         added
           ? 'text-blue-400 border-blue-500/30 bg-blue-500/10'
-          : 'text-amber-400 border-amber-500/30 bg-amber-500/10'
+          : 'text-orange-400 border-orange-500/30 bg-orange-500/10'
       }`}
     >
       {label}
@@ -376,7 +376,7 @@ function PlatformAdaptationCard({
                 <div className="h-1 w-full rounded-full bg-zinc-800">
                   <div
                     className={`h-1 rounded-full transition-all ${
-                      isOverLimit ? 'bg-red-500' : 'bg-amber-500'
+                      isOverLimit ? 'bg-red-500' : 'bg-orange-500'
                     }`}
                     style={{ width: `${usagePercent}%` }}
                   />
@@ -405,7 +405,7 @@ function OptionToggle({ label, active, onToggle }: OptionToggleProps) {
     <label
       className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm cursor-pointer select-none transition-colors ${
         active
-          ? 'bg-amber-600/20 border-amber-500/50 text-white'
+          ? 'bg-orange-600/20 border-orange-500/50 text-white'
           : 'bg-zinc-800/40 border-zinc-700/50 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
       }`}
     >
@@ -418,7 +418,7 @@ function OptionToggle({ label, active, onToggle }: OptionToggleProps) {
       {/* Simple toggle dot */}
       <span
         className={`inline-block h-1.5 w-1.5 rounded-full ${
-          active ? 'bg-amber-400' : 'bg-zinc-600'
+          active ? 'bg-orange-400' : 'bg-zinc-600'
         }`}
       />
       {label}
@@ -630,7 +630,7 @@ export default function CrossPostPage() {
       <Card className="bg-zinc-900/50 border border-zinc-800/50">
         <CardHeader className="pb-4">
           <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
-            <Send className="h-4 w-4 text-amber-400" />
+            <Send className="h-4 w-4 text-orange-400" />
             Your Content
           </CardTitle>
         </CardHeader>
@@ -650,7 +650,7 @@ export default function CrossPostPage() {
               value={content}
               onChange={e => setContent(e.target.value)}
               placeholder="Paste or type your existing post here. The AI will adapt it for each platform's character limits, hashtag conventions, and audience norms."
-              className="w-full rounded-md px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 bg-zinc-800/50 border border-zinc-700/50 focus:outline-none focus:ring-1 focus:ring-amber-500/60 focus:border-amber-500/40 transition-colors resize-y min-h-[120px]"
+              className="w-full rounded-md px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 bg-zinc-800/50 border border-zinc-700/50 focus:outline-none focus:ring-1 focus:ring-orange-500/60 focus:border-orange-500/40 transition-colors resize-y min-h-[120px]"
             />
             <p className="text-xs text-zinc-500 text-right">
               {content.length.toLocaleString()} characters
@@ -661,7 +661,7 @@ export default function CrossPostPage() {
           <div className="space-y-2">
             <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide">
               Target platforms
-              <span className="ml-2 normal-case font-normal text-amber-400">
+              <span className="ml-2 normal-case font-normal text-orange-400">
                 {selectedIds.size} selected
               </span>
             </p>
@@ -673,7 +673,7 @@ export default function CrossPostPage() {
                     key={platform.id}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm cursor-pointer select-none transition-colors ${
                       active
-                        ? 'bg-amber-600/20 border-amber-500/50 text-white'
+                        ? 'bg-orange-600/20 border-orange-500/50 text-white'
                         : 'bg-zinc-800/40 border-zinc-700/50 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
                     }`}
                   >
@@ -724,7 +724,7 @@ export default function CrossPostPage() {
             <Button
               onClick={handleAdapt}
               disabled={!canAdapt}
-              className="bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-40 disabled:cursor-not-allowed px-5"
+              className="bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-40 disabled:cursor-not-allowed px-5"
             >
               {isAdapting ? (
                 <>
@@ -750,12 +750,12 @@ export default function CrossPostPage() {
           <h2 className="text-sm font-medium text-zinc-400">
             Platform Adaptations
             {isAdapting && (
-              <span className="ml-2 text-amber-400">
+              <span className="ml-2 text-orange-400">
                 — adapting
                 <span className="inline-flex ml-1 gap-0.5">
-                  <span className="w-1 h-1 rounded-full bg-amber-400 animate-bounce [animation-delay:0ms]" />
-                  <span className="w-1 h-1 rounded-full bg-amber-400 animate-bounce [animation-delay:150ms]" />
-                  <span className="w-1 h-1 rounded-full bg-amber-400 animate-bounce [animation-delay:300ms]" />
+                  <span className="w-1 h-1 rounded-full bg-orange-400 animate-bounce [animation-delay:0ms]" />
+                  <span className="w-1 h-1 rounded-full bg-orange-400 animate-bounce [animation-delay:150ms]" />
+                  <span className="w-1 h-1 rounded-full bg-orange-400 animate-bounce [animation-delay:300ms]" />
                 </span>
               </span>
             )}

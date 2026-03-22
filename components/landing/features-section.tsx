@@ -310,7 +310,7 @@ const DottedWorldMap = () => {
     }
   }
   return (
-    <svg viewBox="0 0 120 55" className="w-full h-auto text-amber-400/20">
+    <svg viewBox="0 0 120 55" className="w-full h-auto text-orange-400/20">
       {dots.map((d, i) => (
         <circle key={i} cx={d.cx} cy={d.cy} r={0.4} fill="currentColor" />
       ))}
@@ -407,19 +407,19 @@ const feedMessages: FeedMessage[] = [
     title: 'Campaign Published',
     time: '1m ago',
     content: 'Your Q4 Instagram campaign is now live.',
-    gradient: 'from-amber-400 to-amber-300',
+    gradient: 'from-orange-400 to-orange-300',
   },
   {
     title: 'AI Copy Generated',
     time: '3m ago',
     content: '8 post variants generated for review.',
-    gradient: 'from-amber-500 to-amber-400',
+    gradient: 'from-orange-500 to-orange-400',
   },
   {
     title: 'Billing Updated',
     time: '6m ago',
     content: 'Your Pro subscription renewed successfully.',
-    gradient: 'from-amber-500 to-amber-400',
+    gradient: 'from-orange-500 to-orange-400',
   },
   {
     title: 'Integration Connected',
@@ -431,13 +431,13 @@ const feedMessages: FeedMessage[] = [
     title: 'Analytics Report',
     time: '12m ago',
     content: 'Dashboard insights updated with latest metrics.',
-    gradient: 'from-amber-400 to-amber-500',
+    gradient: 'from-orange-400 to-orange-500',
   },
   {
     title: 'Weekly Recap',
     time: '15m ago',
     content: "Here's what your team accomplished this week.",
-    gradient: 'from-amber-400 to-amber-500',
+    gradient: 'from-orange-400 to-orange-500',
   },
 ];
 
@@ -452,7 +452,7 @@ const ActivityFeed = () => {
             className={cn(
               'flex gap-3 items-start p-3 rounded-sm cursor-pointer',
               'border-[0.5px] border-white/[0.06] bg-white/[0.02]',
-              'hover:bg-amber-500/[0.04] transition-colors duration-200',
+              'hover:bg-orange-500/[0.04] transition-colors duration-200',
               'opacity-0'
             )}
             style={{
@@ -501,7 +501,7 @@ function FeatureCard({
       className={cn(
         'relative flex flex-col gap-3 p-4 transition-colors duration-200',
         'border-[0.5px] border-white/[0.06] bg-[#0a1628]',
-        'hover:bg-amber-500/[0.03]'
+        'hover:bg-orange-500/[0.03]'
       )}
     >
       <div className="flex items-center gap-4">
@@ -533,7 +533,7 @@ function FeatureCard({
           'hover:-rotate-45 transition-transform duration-200 bg-[#0a1628]'
         )}
       >
-        <ArrowRight className="w-4 h-4 text-amber-400" />
+        <ArrowRight className="w-4 h-4 text-orange-400" />
       </div>
     </div>
   );
@@ -552,7 +552,7 @@ export function FeaturesSection() {
     <section className="py-24 bg-[#080e1a]">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">
-          <p className="text-sm font-semibold text-amber-400 uppercase tracking-widest mb-3">
+          <p className="text-sm font-semibold text-orange-400 uppercase tracking-widest mb-3">
             Platform Highlights
           </p>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
@@ -573,7 +573,7 @@ export function FeaturesSection() {
           )}
         >
           <div className="flex items-center gap-2 text-sm text-white/40 mb-4">
-            <MapPin className="w-4 h-4 text-amber-400" />
+            <MapPin className="w-4 h-4 text-orange-400" />
             Synthex Analytics
           </div>
           <h3 className="text-xl font-normal text-white">
@@ -588,10 +588,10 @@ export function FeaturesSection() {
               className={cn(
                 'absolute top-16 left-1/2 -translate-x-1/2 z-10',
                 'px-3 py-1 bg-[#0a1628] text-white rounded-sm text-xs font-medium shadow',
-                'flex items-center gap-2 border-[0.5px] border-amber-500/20'
+                'flex items-center gap-2 border-[0.5px] border-orange-500/20'
               )}
             >
-              <span className="text-amber-400">●</span> Last connection from AU
+              <span className="text-orange-400">●</span> Last connection from AU
             </div>
             <DottedWorldMap />
           </div>
@@ -606,7 +606,7 @@ export function FeaturesSection() {
         >
           <div>
             <span className="text-xs flex items-center gap-2 text-white/40">
-              <GalleryVerticalEnd className="w-4 h-4 text-amber-400" />
+              <GalleryVerticalEnd className="w-4 h-4 text-orange-400" />
               {featuredCasestudy.tags}
             </span>
             <h3 className="text-xl font-normal text-white mt-2">
@@ -629,7 +629,7 @@ export function FeaturesSection() {
           )}
         >
           <div className="flex items-center gap-2 text-sm text-white/40 mb-4">
-            <Activity className="w-4 h-4 text-amber-400" />
+            <Activity className="w-4 h-4 text-orange-400" />
             Synthex Analytics
           </div>
           <h3 className="text-xl font-normal text-white">
@@ -644,13 +644,13 @@ export function FeaturesSection() {
         {/* 4. FEATURE CARDS — Bottom Right */}
         <div className="grid sm:grid-cols-2 border-[0.5px] border-white/[0.06]">
           <FeatureCard
-            icon={<Files className="w-4 h-4 text-amber-400" />}
+            icon={<Files className="w-4 h-4 text-orange-400" />}
             title="AI-Generated Content"
             subtitle="Ready to publish blocks"
             description="Drop AI-generated copy directly into any campaign with one click."
           />
           <FeatureCard
-            icon={<Flower className="w-4 h-4 text-amber-400" />}
+            icon={<Flower className="w-4 h-4 text-orange-400" />}
             title="Brand Customisation"
             subtitle="Customise with ease"
             description="Design your campaigns exactly the way you want with full flexibility."

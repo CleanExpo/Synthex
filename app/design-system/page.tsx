@@ -10,13 +10,13 @@ export default function DesignSystemPage() {
     <MarketingLayout currentPage="design-system" showFooter={true}>
       <div className="min-h-screen text-white">
         {/* Header */}
-        <header className="sticky top-20 z-40 border-b border-amber-500/10 bg-surface-dark/80 backdrop-blur-xl">
+        <header className="sticky top-20 z-40 border-b border-orange-500/10 bg-surface-dark/80 backdrop-blur-xl">
           <div className="mx-auto max-w-7xl px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600" />
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600" />
                 <span className="text-xl font-bold">SYNTHEX Design System</span>
-                <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-300">
+                <span className="rounded-full bg-orange-500/20 px-2 py-0.5 text-xs font-medium text-orange-300">
                   v4.0
                 </span>
               </div>
@@ -27,7 +27,7 @@ export default function DesignSystemPage() {
                     onClick={() => setActiveTab(tab)}
                     className={`rounded-lg px-4 py-2 text-sm font-medium capitalize transition-all ${
                       activeTab === tab
-                        ? 'bg-amber-500/20 text-amber-300'
+                        ? 'bg-orange-500/20 text-orange-300'
                         : 'text-white/60 hover:bg-white/5 hover:text-white'
                     }`}
                   >
@@ -103,7 +103,7 @@ export default function DesignSystemPage() {
                   {[3, 6, 10, 14, 18].map(opacity => (
                     <div
                       key={opacity}
-                      className="relative overflow-hidden rounded-xl border border-amber-500/10 p-6"
+                      className="relative overflow-hidden rounded-xl border border-orange-500/10 p-6"
                       style={{
                         background: `rgba(255, 184, 123, ${opacity / 100})`,
                       }}
@@ -162,8 +162,8 @@ export default function DesignSystemPage() {
               {/* Display Headlines */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Display Headlines</h3>
-                <div className="space-y-4 rounded-2xl border border-amber-500/10 bg-surface-dark/50 p-8">
-                  <div className="border-b border-amber-500/10 pb-4">
+                <div className="space-y-4 rounded-2xl border border-orange-500/10 bg-surface-dark/50 p-8">
+                  <div className="border-b border-orange-500/10 pb-4">
                     <span className="mb-2 block text-xs text-white/40">
                       display-xl - 72px - Black (900)
                     </span>
@@ -171,7 +171,7 @@ export default function DesignSystemPage() {
                       AI Marketing
                     </h1>
                   </div>
-                  <div className="border-b border-amber-500/10 pb-4">
+                  <div className="border-b border-orange-500/10 pb-4">
                     <span className="mb-2 block text-xs text-white/40">
                       display-lg - 60px - Bold (700)
                     </span>
@@ -194,7 +194,7 @@ export default function DesignSystemPage() {
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Section Headlines</h3>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-xl border border-amber-500/10 bg-surface-dark/50 p-6">
+                  <div className="rounded-xl border border-orange-500/10 bg-surface-dark/50 p-6">
                     <span className="mb-2 block text-xs text-white/40">
                       heading-xl - 36px
                     </span>
@@ -202,13 +202,13 @@ export default function DesignSystemPage() {
                       Features Overview
                     </h2>
                   </div>
-                  <div className="rounded-xl border border-amber-500/10 bg-surface-dark/50 p-6">
+                  <div className="rounded-xl border border-orange-500/10 bg-surface-dark/50 p-6">
                     <span className="mb-2 block text-xs text-white/40">
                       heading-lg - 30px
                     </span>
                     <h2 className="text-3xl font-semibold">How It Works</h2>
                   </div>
-                  <div className="rounded-xl border border-amber-500/10 bg-surface-dark/50 p-6">
+                  <div className="rounded-xl border border-orange-500/10 bg-surface-dark/50 p-6">
                     <span className="mb-2 block text-xs text-white/40">
                       heading-md - 24px
                     </span>
@@ -216,7 +216,7 @@ export default function DesignSystemPage() {
                       Content Generation
                     </h3>
                   </div>
-                  <div className="rounded-xl border border-amber-500/10 bg-surface-dark/50 p-6">
+                  <div className="rounded-xl border border-orange-500/10 bg-surface-dark/50 p-6">
                     <span className="mb-2 block text-xs text-white/40">
                       heading-sm - 20px
                     </span>
@@ -229,7 +229,7 @@ export default function DesignSystemPage() {
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Body Text</h3>
                 <div className="space-y-4">
-                  <div className="rounded-xl border border-amber-500/10 bg-surface-dark/50 p-6">
+                  <div className="rounded-xl border border-orange-500/10 bg-surface-dark/50 p-6">
                     <span className="mb-2 block text-xs text-white/40">
                       body-lg - 18px - Gray 300
                     </span>
@@ -239,7 +239,7 @@ export default function DesignSystemPage() {
                       all platforms.
                     </p>
                   </div>
-                  <div className="rounded-xl border border-amber-500/10 bg-surface-dark/50 p-6">
+                  <div className="rounded-xl border border-orange-500/10 bg-surface-dark/50 p-6">
                     <span className="mb-2 block text-xs text-white/40">
                       body-md - 16px - Gray 400
                     </span>
@@ -249,7 +249,7 @@ export default function DesignSystemPage() {
                       your audience.
                     </p>
                   </div>
-                  <div className="rounded-xl border border-amber-500/10 bg-surface-dark/50 p-6">
+                  <div className="rounded-xl border border-orange-500/10 bg-surface-dark/50 p-6">
                     <span className="mb-2 block text-xs text-white/40">
                       body-sm - 14px - Gray 500
                     </span>
@@ -263,8 +263,8 @@ export default function DesignSystemPage() {
               {/* Gradient Text */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Gradient Text</h3>
-                <div className="rounded-2xl border border-amber-500/10 bg-surface-dark/50 p-8">
-                  <h1 className="bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 bg-clip-text text-6xl font-bold tracking-tight text-transparent">
+                <div className="rounded-2xl border border-orange-500/10 bg-surface-dark/50 p-8">
+                  <h1 className="bg-gradient-to-r from-orange-400 via-orange-300 to-orange-500 bg-clip-text text-6xl font-bold tracking-tight text-transparent">
                     Next-Gen Marketing
                   </h1>
                 </div>
@@ -276,13 +276,13 @@ export default function DesignSystemPage() {
                   Pill Headlines (Reference Style)
                 </h3>
                 <div className="flex flex-wrap gap-4">
-                  <span className="rounded-lg bg-surface-dark px-6 py-3 text-3xl font-black uppercase tracking-tight text-white border border-amber-500/20">
+                  <span className="rounded-lg bg-surface-dark px-6 py-3 text-3xl font-black uppercase tracking-tight text-white border border-orange-500/20">
                     AI Marketing
                   </span>
                   <span className="rounded-lg bg-white px-6 py-3 text-3xl font-black uppercase tracking-tight text-surface-dark">
                     Agency Guide
                   </span>
-                  <span className="rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 text-3xl font-black uppercase tracking-tight text-white">
+                  <span className="rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-3xl font-black uppercase tracking-tight text-white">
                     SYNTHEX
                   </span>
                 </div>
@@ -303,18 +303,18 @@ export default function DesignSystemPage() {
               {/* Buttons */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Buttons</h3>
-                <div className="rounded-2xl border border-amber-500/10 bg-surface-dark/50 p-8">
+                <div className="rounded-2xl border border-orange-500/10 bg-surface-dark/50 p-8">
                   <div className="flex flex-wrap gap-4">
-                    <button className="rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 transition-all hover:from-amber-400 hover:to-amber-500 hover:shadow-amber-500/40">
+                    <button className="rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-500/25 transition-all hover:from-orange-400 hover:to-orange-500 hover:shadow-orange-500/40">
                       Primary Button
                     </button>
-                    <button className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-amber-500/20">
+                    <button className="rounded-lg border border-orange-500/20 bg-orange-500/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-orange-500/20">
                       Secondary
                     </button>
-                    <button className="rounded-lg border border-amber-500/30 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-amber-500/10">
+                    <button className="rounded-lg border border-orange-500/30 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-orange-500/10">
                       Outline
                     </button>
-                    <button className="rounded-lg px-6 py-3 text-sm font-semibold text-gray-400 transition-all hover:bg-amber-500/10 hover:text-white">
+                    <button className="rounded-lg px-6 py-3 text-sm font-semibold text-gray-400 transition-all hover:bg-orange-500/10 hover:text-white">
                       Ghost
                     </button>
                     <button className="rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-red-500/25 transition-all hover:from-red-500 hover:to-red-600">
@@ -322,13 +322,13 @@ export default function DesignSystemPage() {
                     </button>
                   </div>
                   <div className="mt-6 flex flex-wrap gap-4">
-                    <button className="rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 text-sm font-semibold text-white">
+                    <button className="rounded-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-sm font-semibold text-white">
                       Pill Button
                     </button>
-                    <button className="rounded-lg bg-amber-600 px-4 py-2 text-xs font-semibold text-white">
+                    <button className="rounded-lg bg-orange-600 px-4 py-2 text-xs font-semibold text-white">
                       Small
                     </button>
-                    <button className="rounded-lg bg-amber-600 px-8 py-4 text-base font-semibold text-white">
+                    <button className="rounded-lg bg-orange-600 px-8 py-4 text-base font-semibold text-white">
                       Large
                     </button>
                   </div>
@@ -338,15 +338,15 @@ export default function DesignSystemPage() {
               {/* Pills & Badges */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Pills & Badges</h3>
-                <div className="flex flex-wrap gap-3 rounded-2xl border border-amber-500/10 bg-surface-dark/50 p-8">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-medium text-gray-300 backdrop-blur-md">
+                <div className="flex flex-wrap gap-3 rounded-2xl border border-orange-500/10 bg-surface-dark/50 p-8">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-500/20 bg-orange-500/10 px-3 py-1 text-xs font-medium text-gray-300 backdrop-blur-md">
                     New Feature
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-300">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-500/30 bg-orange-500/15 px-3 py-1 text-xs font-medium text-orange-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
                     AI Powered
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/15 px-3 py-1 text-xs font-medium text-amber-300">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-400/30 bg-orange-400/15 px-3 py-1 text-xs font-medium text-orange-300">
                     Beta
                   </span>
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/15 px-3 py-1 text-xs font-medium text-red-300">
@@ -364,10 +364,10 @@ export default function DesignSystemPage() {
                 <h3 className="text-xl font-semibold">Cards</h3>
                 <div className="grid gap-6 md:grid-cols-3">
                   {/* Basic Card */}
-                  <div className="rounded-xl border border-amber-500/10 bg-surface-base p-6 transition-all hover:border-amber-500/30">
-                    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20">
+                  <div className="rounded-xl border border-orange-500/10 bg-surface-base p-6 transition-all hover:border-orange-500/30">
+                    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/20">
                       <svg
-                        className="h-5 w-5 text-amber-400"
+                        className="h-5 w-5 text-orange-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -387,10 +387,10 @@ export default function DesignSystemPage() {
                   </div>
 
                   {/* Glass Card */}
-                  <div className="rounded-xl border border-amber-500/10 bg-amber-500/5 p-6 backdrop-blur-xl transition-all hover:border-amber-500/30 hover:bg-amber-500/10">
-                    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20">
+                  <div className="rounded-xl border border-orange-500/10 bg-orange-500/5 p-6 backdrop-blur-xl transition-all hover:border-orange-500/30 hover:bg-orange-500/10">
+                    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/20">
                       <svg
-                        className="h-5 w-5 text-amber-400"
+                        className="h-5 w-5 text-orange-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -410,8 +410,8 @@ export default function DesignSystemPage() {
                   </div>
 
                   {/* Premium Card */}
-                  <div className="group relative rounded-xl border border-amber-500/30 bg-amber-500/5 p-6 shadow-lg shadow-amber-500/10 backdrop-blur-xl transition-all hover:-translate-y-1 hover:border-amber-500/50 hover:shadow-amber-500/20">
-                    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-600">
+                  <div className="group relative rounded-xl border border-orange-500/30 bg-orange-500/5 p-6 shadow-lg shadow-orange-500/10 backdrop-blur-xl transition-all hover:-translate-y-1 hover:border-orange-500/50 hover:shadow-orange-500/20">
+                    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-orange-600">
                       <svg
                         className="h-5 w-5 text-white"
                         fill="none"
@@ -468,7 +468,7 @@ export default function DesignSystemPage() {
               {/* Inputs */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Inputs</h3>
-                <div className="grid gap-4 rounded-2xl border border-amber-500/10 bg-surface-dark/50 p-8 md:grid-cols-2">
+                <div className="grid gap-4 rounded-2xl border border-orange-500/10 bg-surface-dark/50 p-8 md:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-400">
                       Standard Input
@@ -476,7 +476,7 @@ export default function DesignSystemPage() {
                     <input
                       type="text"
                       placeholder="Enter your email..."
-                      className="w-full rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-white placeholder-gray-500 transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                      className="w-full rounded-lg border border-orange-500/20 bg-orange-500/5 px-4 py-3 text-sm text-white placeholder-gray-500 transition-all focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                     />
                   </div>
                   <div>
@@ -486,7 +486,7 @@ export default function DesignSystemPage() {
                     <input
                       type="text"
                       placeholder="Search anything..."
-                      className="w-full rounded-xl border border-amber-500/20 bg-amber-500/5 px-5 py-4 text-base text-white placeholder-gray-500 transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                      className="w-full rounded-xl border border-orange-500/20 bg-orange-500/5 px-5 py-4 text-base text-white placeholder-gray-500 transition-all focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                     />
                   </div>
                 </div>
@@ -495,31 +495,31 @@ export default function DesignSystemPage() {
               {/* Avatars */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Avatars</h3>
-                <div className="flex items-center gap-6 rounded-2xl border border-amber-500/10 bg-surface-dark/50 p-8">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-amber-500/30 bg-gradient-to-br from-amber-500 to-amber-600 text-xs font-bold">
+                <div className="flex items-center gap-6 rounded-2xl border border-orange-500/10 bg-surface-dark/50 p-8">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-orange-500/30 bg-gradient-to-br from-orange-500 to-orange-600 text-xs font-bold">
                     SM
                   </div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-500/30 bg-gradient-to-br from-amber-400 to-amber-500 text-sm font-bold">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-orange-500/30 bg-gradient-to-br from-orange-400 to-orange-500 text-sm font-bold">
                     MD
                   </div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-amber-500/30 bg-gradient-to-br from-amber-500 to-amber-600 text-base font-bold">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-orange-500/30 bg-gradient-to-br from-orange-500 to-orange-600 text-base font-bold">
                     LG
                   </div>
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-amber-500/30 bg-gradient-to-br from-amber-400 to-amber-600 text-lg font-bold">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-orange-500/30 bg-gradient-to-br from-orange-400 to-orange-600 text-lg font-bold">
                     XL
                   </div>
                   {/* Avatar Group */}
                   <div className="flex -space-x-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface-dark bg-amber-500 text-xs font-bold">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface-dark bg-orange-500 text-xs font-bold">
                       JD
                     </div>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface-dark bg-amber-600 text-xs font-bold">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface-dark bg-orange-600 text-xs font-bold">
                       AK
                     </div>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface-dark bg-amber-400 text-xs font-bold">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface-dark bg-orange-400 text-xs font-bold">
                       MR
                     </div>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface-dark bg-amber-500/30 text-xs font-bold">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface-dark bg-orange-500/30 text-xs font-bold">
                       +5
                     </div>
                   </div>
@@ -545,13 +545,13 @@ export default function DesignSystemPage() {
                 <h3 className="text-xl font-semibold">
                   Particle Dispersion Effect
                 </h3>
-                <div className="relative h-80 overflow-hidden rounded-2xl border border-amber-500/10 bg-gradient-to-br from-[#050505] to-[#111111]">
+                <div className="relative h-80 overflow-hidden rounded-2xl border border-orange-500/10 bg-gradient-to-br from-[#050505] to-[#111111]">
                   {/* Particles */}
                   <div className="absolute inset-0">
                     {[...Array(30)].map((_, i) => (
                       <div
                         key={i}
-                        className="absolute h-1 w-1 animate-pulse rounded-full bg-amber-400/40"
+                        className="absolute h-1 w-1 animate-pulse rounded-full bg-orange-400/40"
                         style={{
                           left: `${Math.random() * 100}%`,
                           top: `${Math.random() * 100}%`,
@@ -572,7 +572,7 @@ export default function DesignSystemPage() {
                   {/* Content */}
                   <div className="relative flex h-full items-center justify-center">
                     <div className="text-center">
-                      <h3 className="bg-gradient-to-r from-white via-amber-200 to-white bg-clip-text text-4xl font-bold text-transparent">
+                      <h3 className="bg-gradient-to-r from-white via-orange-200 to-white bg-clip-text text-4xl font-bold text-transparent">
                         Particle Field
                       </h3>
                       <p className="mt-2 text-gray-400">
@@ -587,13 +587,13 @@ export default function DesignSystemPage() {
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Glow Effects</h3>
                 <div className="grid gap-6 md:grid-cols-3">
-                  <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-8 text-center shadow-lg shadow-amber-500/20">
-                    <span className="text-sm font-medium text-amber-300">
+                  <div className="rounded-xl border border-orange-500/30 bg-orange-500/5 p-8 text-center shadow-lg shadow-orange-500/20">
+                    <span className="text-sm font-medium text-orange-300">
                       Primary Glow
                     </span>
                   </div>
-                  <div className="rounded-xl border border-amber-400/30 bg-amber-400/5 p-8 text-center shadow-lg shadow-amber-400/20">
-                    <span className="text-sm font-medium text-amber-300">
+                  <div className="rounded-xl border border-orange-400/30 bg-orange-400/5 p-8 text-center shadow-lg shadow-orange-400/20">
+                    <span className="text-sm font-medium text-orange-300">
                       Secondary Glow
                     </span>
                   </div>
@@ -648,19 +648,19 @@ export default function DesignSystemPage() {
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Animations</h3>
                 <div className="grid gap-6 md:grid-cols-4">
-                  <div className="flex flex-col items-center gap-4 rounded-xl border border-amber-500/10 bg-surface-dark/50 p-6">
-                    <div className="h-12 w-12 animate-pulse rounded-lg bg-amber-500/50" />
+                  <div className="flex flex-col items-center gap-4 rounded-xl border border-orange-500/10 bg-surface-dark/50 p-6">
+                    <div className="h-12 w-12 animate-pulse rounded-lg bg-orange-500/50" />
                     <span className="text-xs text-gray-400">Pulse</span>
                   </div>
-                  <div className="flex flex-col items-center gap-4 rounded-xl border border-amber-500/10 bg-surface-dark/50 p-6">
-                    <div className="h-12 w-12 animate-bounce rounded-lg bg-amber-400/50" />
+                  <div className="flex flex-col items-center gap-4 rounded-xl border border-orange-500/10 bg-surface-dark/50 p-6">
+                    <div className="h-12 w-12 animate-bounce rounded-lg bg-orange-400/50" />
                     <span className="text-xs text-gray-400">Bounce</span>
                   </div>
-                  <div className="flex flex-col items-center gap-4 rounded-xl border border-amber-500/10 bg-surface-dark/50 p-6">
-                    <div className="h-12 w-12 animate-spin rounded-lg border-2 border-amber-500/50 border-t-amber-300" />
+                  <div className="flex flex-col items-center gap-4 rounded-xl border border-orange-500/10 bg-surface-dark/50 p-6">
+                    <div className="h-12 w-12 animate-spin rounded-lg border-2 border-orange-500/50 border-t-orange-300" />
                     <span className="text-xs text-gray-400">Spin</span>
                   </div>
-                  <div className="flex flex-col items-center gap-4 rounded-xl border border-amber-500/10 bg-surface-dark/50 p-6">
+                  <div className="flex flex-col items-center gap-4 rounded-xl border border-orange-500/10 bg-surface-dark/50 p-6">
                     <div className="h-12 w-12 animate-ping rounded-full bg-green-500/50" />
                     <span className="text-xs text-gray-400">Ping</span>
                   </div>
@@ -671,13 +671,13 @@ export default function DesignSystemPage() {
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Hover Effects</h3>
                 <div className="grid gap-6 md:grid-cols-3">
-                  <div className="cursor-pointer rounded-xl border border-amber-500/10 bg-amber-500/5 p-8 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-amber-500/20">
+                  <div className="cursor-pointer rounded-xl border border-orange-500/10 bg-orange-500/5 p-8 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-orange-500/20">
                     <span className="text-sm font-medium">Lift Effect</span>
                   </div>
-                  <div className="cursor-pointer rounded-xl border border-amber-500/10 bg-amber-500/5 p-8 text-center transition-all duration-300 hover:scale-105">
+                  <div className="cursor-pointer rounded-xl border border-orange-500/10 bg-orange-500/5 p-8 text-center transition-all duration-300 hover:scale-105">
                     <span className="text-sm font-medium">Scale Effect</span>
                   </div>
-                  <div className="cursor-pointer rounded-xl border border-amber-500/10 bg-amber-500/5 p-8 text-center transition-all duration-300 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/20">
+                  <div className="cursor-pointer rounded-xl border border-orange-500/10 bg-orange-500/5 p-8 text-center transition-all duration-300 hover:border-orange-500/50 hover:shadow-lg hover:shadow-orange-500/20">
                     <span className="text-sm font-medium">Glow Effect</span>
                   </div>
                 </div>
@@ -701,7 +701,7 @@ function ColorSwatch({
   desc: string;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-amber-500/10">
+    <div className="overflow-hidden rounded-xl border border-orange-500/10">
       <div className="h-20" style={{ backgroundColor: color }} />
       <div className="bg-surface-base p-3">
         <p className="font-medium">{name}</p>
@@ -724,7 +724,7 @@ function ColorChip({
   return (
     <div className="text-center">
       <div
-        className="mx-auto mb-1 h-10 w-10 rounded-lg border border-amber-500/10"
+        className="mx-auto mb-1 h-10 w-10 rounded-lg border border-orange-500/10"
         style={{ backgroundColor: color }}
       />
       <span className={`text-xs ${light ? 'text-gray-600' : 'text-gray-400'}`}>
@@ -746,7 +746,7 @@ function StatCard({
   positive: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-amber-500/10 bg-amber-500/5 p-6 backdrop-blur-lg">
+    <div className="rounded-xl border border-orange-500/10 bg-orange-500/5 p-6 backdrop-blur-lg">
       <p className="text-sm font-medium uppercase tracking-wide text-gray-400">
         {label}
       </p>

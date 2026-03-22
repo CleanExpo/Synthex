@@ -22,11 +22,11 @@ function gradeColour(grade: string): string {
     case 'A':
       return 'text-emerald-400';
     case 'B':
-      return 'text-amber-400';
+      return 'text-orange-400';
     case 'C':
-      return 'text-amber-400';
+      return 'text-orange-400';
     case 'D':
-      return 'text-amber-400';
+      return 'text-orange-400';
     case 'F':
       return 'text-red-400';
     default:
@@ -39,11 +39,11 @@ function gradeBg(grade: string): string {
     case 'A':
       return 'bg-emerald-500/20 border-emerald-500/30';
     case 'B':
-      return 'bg-amber-500/20 border-amber-500/30';
+      return 'bg-orange-500/20 border-orange-500/30';
     case 'C':
-      return 'bg-amber-500/20 border-amber-500/30';
+      return 'bg-orange-500/20 border-orange-500/30';
     case 'D':
-      return 'bg-amber-500/20 border-amber-500/30';
+      return 'bg-orange-500/20 border-orange-500/30';
     case 'F':
       return 'bg-red-500/20 border-red-500/30';
     default:
@@ -72,14 +72,14 @@ const PILLAR_CONFIG: Record<PillarKey, PillarConf> = {
   expertise: {
     label: 'Expertise',
     Icon: BookOpen,
-    barColour: 'bg-amber-500',
-    ringColour: 'border-amber-500/30 bg-amber-500/10',
+    barColour: 'bg-orange-500',
+    ringColour: 'border-orange-500/30 bg-orange-500/10',
   },
   authority: {
     label: 'Authority',
     Icon: Award,
-    barColour: 'bg-amber-500',
-    ringColour: 'border-amber-500/30 bg-amber-500/10',
+    barColour: 'bg-orange-500',
+    ringColour: 'border-orange-500/30 bg-orange-500/10',
   },
   trust: {
     label: 'Trust',
@@ -150,10 +150,10 @@ function PillarCard({
         <div className="space-y-1 border-t border-white/10 pt-2">
           {dimension.missing.map((item, i) => (
             <div key={i} className="flex items-start gap-1.5">
-              <span className="text-amber-400 mt-0.5 flex-shrink-0 text-xs">
+              <span className="text-orange-400 mt-0.5 flex-shrink-0 text-xs">
                 •
               </span>
-              <span className="text-xs text-amber-200/70 leading-tight">
+              <span className="text-xs text-orange-200/70 leading-tight">
                 {item}
               </span>
             </div>

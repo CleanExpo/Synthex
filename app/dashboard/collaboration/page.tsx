@@ -72,7 +72,7 @@ function getActivityIcon(type: string) {
     case 'post_published':
       return <Send className="h-4 w-4 text-green-400" />;
     case 'post_scheduled':
-      return <Calendar className="h-4 w-4 text-amber-400" />;
+      return <Calendar className="h-4 w-4 text-orange-400" />;
     case 'post_edited':
       return <Edit className="h-4 w-4 text-yellow-400" />;
     case 'post_deleted':
@@ -83,7 +83,7 @@ function getActivityIcon(type: string) {
       return <User className="h-4 w-4 text-blue-400" />;
     case 'comment_received':
     case 'comment':
-      return <MessageSquare className="h-4 w-4 text-amber-400" />;
+      return <MessageSquare className="h-4 w-4 text-orange-400" />;
     case 'mention':
       return <Bell className="h-4 w-4 text-yellow-400" />;
     case 'team_member_joined':
@@ -91,7 +91,7 @@ function getActivityIcon(type: string) {
     case 'team_member_action':
       return <Activity className="h-4 w-4 text-blue-400" />;
     case 'system_alert':
-      return <AlertTriangle className="h-4 w-4 text-amber-400" />;
+      return <AlertTriangle className="h-4 w-4 text-orange-400" />;
     case 'campaign_started':
       return <CheckCircle className="h-4 w-4 text-green-400" />;
     case 'campaign_ended':
@@ -117,7 +117,7 @@ function getActivityColor(type: string): string {
     case 'post_scheduled':
     case 'comment_received':
     case 'comment':
-      return 'border-amber-500/30 bg-amber-500/10';
+      return 'border-orange-500/30 bg-orange-500/10';
     case 'post_edited':
     case 'mention':
     case 'milestone_reached':
@@ -125,7 +125,7 @@ function getActivityColor(type: string): string {
     case 'post_deleted':
       return 'border-red-500/30 bg-red-500/10';
     case 'system_alert':
-      return 'border-amber-500/30 bg-amber-500/10';
+      return 'border-orange-500/30 bg-orange-500/10';
     case 'campaign_ended':
       return 'border-gray-500/30 bg-gray-500/10';
     default:
@@ -149,7 +149,7 @@ function getPermissionBadge(permission: string) {
       );
     case 'comment':
       return (
-        <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30">
+        <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30">
           Comment
         </Badge>
       );
@@ -184,7 +184,7 @@ function ActivityTab() {
   if (loading && activities.length === 0) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
       </div>
     );
   }
@@ -204,11 +204,11 @@ function ActivityTab() {
 
   if (activities.length === 0) {
     return (
-      <Card className="bg-white/5 border-amber-500/10">
+      <Card className="bg-white/5 border-orange-500/10">
         <CardContent className="py-16">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 mb-4">
-              <Activity className="w-8 h-8 text-amber-400" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 mb-4">
+              <Activity className="w-8 h-8 text-orange-400" />
             </div>
             <h3 className="text-lg font-medium text-white mb-2">
               No recent activity
@@ -244,7 +244,7 @@ function ActivityTab() {
         {activities.map(activity => (
           <Card
             key={activity.id}
-            className="bg-white/5 border-amber-500/10 hover:bg-white/10 transition-colors cursor-pointer"
+            className="bg-white/5 border-orange-500/10 hover:bg-white/10 transition-colors cursor-pointer"
           >
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
@@ -314,11 +314,11 @@ function CommentsTab() {
   // In a real implementation, we'd have a separate API endpoint for "all comments"
 
   return (
-    <Card className="bg-white/5 border-amber-500/10">
+    <Card className="bg-white/5 border-orange-500/10">
       <CardContent className="py-16">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 mb-4">
-            <MessageSquare className="w-8 h-8 text-amber-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 mb-4">
+            <MessageSquare className="w-8 h-8 text-orange-400" />
           </div>
           <h3 className="text-lg font-medium text-white mb-2">
             No comments yet
@@ -370,7 +370,7 @@ function SharesTab() {
   if (loading && shares.length === 0) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
       </div>
     );
   }
@@ -429,11 +429,11 @@ function SharesTab() {
       </div>
 
       {shares.length === 0 ? (
-        <Card className="bg-white/5 border-amber-500/10">
+        <Card className="bg-white/5 border-orange-500/10">
           <CardContent className="py-16">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 mb-4">
-                <Share2 className="w-8 h-8 text-amber-400" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 mb-4">
+                <Share2 className="w-8 h-8 text-orange-400" />
               </div>
               <h3 className="text-lg font-medium text-white mb-2">
                 Nothing shared yet
@@ -451,13 +451,13 @@ function SharesTab() {
           {shares.map(share => (
             <Card
               key={share.id}
-              className="bg-white/5 border-amber-500/10 hover:bg-white/10 transition-colors"
+              className="bg-white/5 border-orange-500/10 hover:bg-white/10 transition-colors"
             >
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                      <FileText className="h-4 w-4 text-amber-400" />
+                    <div className="p-2 rounded-lg bg-orange-500/10 border border-orange-500/30">
+                      <FileText className="h-4 w-4 text-orange-400" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-white capitalize">
@@ -491,7 +491,7 @@ function SharesTab() {
                 </div>
 
                 {share.expiresAt && (
-                  <div className="flex items-center gap-1 text-xs text-amber-400 mb-3">
+                  <div className="flex items-center gap-1 text-xs text-orange-400 mb-3">
                     <Clock className="w-3 h-3" />
                     Expires {formatRelativeTime(share.expiresAt)}
                   </div>
@@ -561,8 +561,8 @@ export default function CollaborationPage() {
       {/* Page Header */}
       <div className="flex items-start justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20">
-            <Users className="h-6 w-6 text-amber-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+            <Users className="h-6 w-6 text-orange-400" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-white">

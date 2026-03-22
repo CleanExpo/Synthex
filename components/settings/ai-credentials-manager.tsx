@@ -39,8 +39,8 @@ const PROVIDERS = [
     name: 'OpenRouter',
     description: 'Required — powers all AI features via 100+ models',
     placeholder: 'sk-or-v1-...',
-    color: 'text-amber-400',
-    bgColor: 'bg-amber-500/20',
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-500/20',
     required: true,
   },
   {
@@ -48,8 +48,8 @@ const PROVIDERS = [
     name: 'Anthropic',
     description: 'Claude models (Haiku, Sonnet, Opus)',
     placeholder: 'sk-ant-...',
-    color: 'text-amber-400',
-    bgColor: 'bg-amber-500/20',
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-500/20',
     required: false,
   },
   {
@@ -235,12 +235,12 @@ export function AICredentialsManager() {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="flex items-center gap-2">
-            <Key className="w-5 h-5 text-amber-400" />
+            <Key className="w-5 h-5 text-orange-400" />
             AI Provider Keys
           </CardTitle>
           <CardDescription>
             Add your API keys to power AI features.{' '}
-            <strong className="text-amber-400">OpenRouter is required</strong>{' '}
+            <strong className="text-orange-400">OpenRouter is required</strong>{' '}
             to get started — it gives you access to 100+ models with a single
             key. All keys are encrypted at rest and never exposed.
           </CardDescription>
@@ -272,10 +272,10 @@ export function AICredentialsManager() {
                     onClick={() => setSelectedProvider(provider.id)}
                     className={`p-3 rounded-lg border text-left transition-all ${
                       selectedProvider === provider.id
-                        ? 'border-amber-500/50 bg-amber-500/10'
+                        ? 'border-orange-500/50 bg-orange-500/10'
                         : provider.required &&
                             !existingProviders.has(provider.id)
-                          ? 'border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50'
+                          ? 'border-orange-500/30 bg-orange-500/5 hover:border-orange-500/50'
                           : 'border-white/10 bg-white/5 hover:border-white/20'
                     }`}
                   >
@@ -283,7 +283,7 @@ export function AICredentialsManager() {
                       {provider.name}
                       {provider.required &&
                         !existingProviders.has(provider.id) && (
-                          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 uppercase tracking-wide">
+                          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300 uppercase tracking-wide">
                             Required
                           </span>
                         )}
@@ -316,7 +316,7 @@ export function AICredentialsManager() {
                       'Enter your API key'
                     }
                     aria-label="API key"
-                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-0 font-mono text-sm"
+                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0 font-mono text-sm"
                     autoComplete="off"
                   />
                   <p className="text-xs text-slate-500 mt-1">
@@ -335,7 +335,7 @@ export function AICredentialsManager() {
                       value={selectedModel}
                       onChange={e => setSelectedModel(e.target.value)}
                       aria-label="Default model"
-                      className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-0 text-sm"
+                      className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-orange-500/50 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-0 text-sm"
                     >
                       <optgroup label="Premium">
                         {OPENROUTER_MODELS.filter(
@@ -398,12 +398,12 @@ export function AICredentialsManager() {
           </div>
         ) : credentials.length === 0 && !showAddForm ? (
           <div className="text-center py-8">
-            <Key className="w-8 h-8 text-amber-500 mx-auto mb-2" />
+            <Key className="w-8 h-8 text-orange-500 mx-auto mb-2" />
             <p className="text-slate-400 text-sm font-medium">
               No AI provider keys configured
             </p>
             <p className="text-slate-500 text-xs mt-1 max-w-sm mx-auto">
-              Add your <strong className="text-amber-400">OpenRouter</strong>{' '}
+              Add your <strong className="text-orange-400">OpenRouter</strong>{' '}
               API key to unlock all AI features. One key gives you access to
               GPT-4o, Claude, Gemini, and 100+ other models.
             </p>
@@ -432,7 +432,7 @@ export function AICredentialsManager() {
                     className={`w-10 h-10 rounded-lg ${config?.bgColor || 'bg-white/10'} flex items-center justify-center`}
                   >
                     <Key
-                      className={`w-5 h-5 ${config?.color || 'text-amber-500'}`}
+                      className={`w-5 h-5 ${config?.color || 'text-orange-500'}`}
                     />
                   </div>
                   <div>

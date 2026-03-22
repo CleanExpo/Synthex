@@ -14,8 +14,8 @@ const progressVariants = cva(
         // Premium Glassmorphism variants
         glass: 'bg-white/[0.08] backdrop-blur-md',
         'glass-solid': 'bg-slate-800/80 backdrop-blur-md',
-        'glass-primary': 'bg-amber-500/20 backdrop-blur-md',
-        'glass-secondary': 'bg-amber-500/20 backdrop-blur-md',
+        'glass-primary': 'bg-orange-500/20 backdrop-blur-md',
+        'glass-secondary': 'bg-orange-500/20 backdrop-blur-md',
         'glass-success': 'bg-emerald-500/20 backdrop-blur-md',
       },
       size: {
@@ -36,18 +36,18 @@ const progressVariants = cva(
 const progressIndicatorVariants = cva('h-full w-full flex-1 transition-all', {
   variants: {
     variant: {
-      default: 'bg-primary dark:bg-amber-600',
+      default: 'bg-primary dark:bg-orange-600',
       glass: 'bg-white/40',
       'glass-solid': 'bg-slate-500',
-      'glass-primary': 'bg-amber-500/70',
-      'glass-secondary': 'bg-amber-500/70',
+      'glass-primary': 'bg-orange-500/70',
+      'glass-secondary': 'bg-orange-500/70',
       'glass-success': 'bg-emerald-500/70',
       // Gradient variants
-      'gradient-primary': 'bg-gradient-to-r from-amber-500 to-amber-500',
-      'gradient-secondary': 'bg-gradient-to-r from-amber-500 to-blue-500',
-      'gradient-success': 'bg-gradient-to-r from-emerald-500 to-amber-500',
+      'gradient-primary': 'bg-gradient-to-r from-orange-500 to-orange-500',
+      'gradient-secondary': 'bg-gradient-to-r from-orange-500 to-blue-500',
+      'gradient-success': 'bg-gradient-to-r from-emerald-500 to-orange-500',
       'gradient-rainbow':
-        'bg-gradient-to-r from-amber-500 via-amber-500 via-amber-500 via-amber-500 to-amber-500',
+        'bg-gradient-to-r from-orange-500 via-orange-500 via-orange-500 via-orange-500 to-orange-500',
     },
     animated: {
       true: 'animate-pulse',

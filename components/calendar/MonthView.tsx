@@ -63,8 +63,8 @@ function DroppableDayCell({
         min-h-[100px] p-1.5 border-r border-b border-white/5
         transition-colors duration-150 group relative
         ${isCurrentMonth ? 'bg-gray-900/30' : 'bg-gray-900/10'}
-        ${isOver ? 'bg-amber-500/10 ring-1 ring-inset ring-amber-500/30' : ''}
-        ${isToday ? 'ring-1 ring-inset ring-amber-500/50' : ''}
+        ${isOver ? 'bg-orange-500/10 ring-1 ring-inset ring-orange-500/30' : ''}
+        ${isToday ? 'ring-1 ring-inset ring-orange-500/50' : ''}
       `}
     >
       {/* Day Number */}
@@ -72,7 +72,7 @@ function DroppableDayCell({
         <span
           className={`
             text-xs font-medium px-1.5 py-0.5 rounded-full
-            ${isToday ? 'bg-amber-500 text-white' : isCurrentMonth ? 'text-gray-300' : 'text-gray-600'}
+            ${isToday ? 'bg-orange-500 text-white' : isCurrentMonth ? 'text-gray-300' : 'text-gray-600'}
           `}
         >
           {date.getDate()}
@@ -104,7 +104,7 @@ function DroppableDayCell({
 
         {/* Overflow indicator */}
         {overflowCount > 0 && (
-          <div className="text-xs text-gray-400 px-1.5 py-0.5 hover:text-amber-400 cursor-pointer transition-colors">
+          <div className="text-xs text-gray-400 px-1.5 py-0.5 hover:text-orange-400 cursor-pointer transition-colors">
             +{overflowCount} more
           </div>
         )}

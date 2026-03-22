@@ -19,8 +19,8 @@ const sheetOverlayVariants = cva(
         default: 'bg-background/80 backdrop-blur-sm',
         glass: 'bg-black/40 backdrop-blur-md',
         'glass-solid': 'bg-slate-950/60 backdrop-blur-lg',
-        'glass-primary': 'bg-amber-950/40 backdrop-blur-md',
-        'glass-secondary': 'bg-amber-950/40 backdrop-blur-md',
+        'glass-primary': 'bg-orange-950/40 backdrop-blur-md',
+        'glass-secondary': 'bg-orange-950/40 backdrop-blur-md',
       },
     },
     defaultVariants: {
@@ -58,9 +58,9 @@ const sheetContentVariants = cva(
         'glass-solid':
           'bg-slate-900/95 backdrop-blur-xl border border-white/[0.08] text-white',
         'glass-primary':
-          'bg-amber-500/10 backdrop-blur-xl border border-amber-500/20 text-white',
+          'bg-orange-500/10 backdrop-blur-xl border border-orange-500/20 text-white',
         'glass-secondary':
-          'bg-amber-500/10 backdrop-blur-xl border border-amber-500/20 text-white',
+          'bg-orange-500/10 backdrop-blur-xl border border-orange-500/20 text-white',
       },
       side: {
         top: 'inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top',
@@ -86,8 +86,8 @@ const sheetCloseVariants = cva(
         default: 'data-[state=open]:bg-secondary',
         glass: 'text-white hover:bg-white/10',
         'glass-solid': 'text-white hover:bg-white/10',
-        'glass-primary': 'text-amber-200 hover:bg-amber-500/20',
-        'glass-secondary': 'text-amber-200 hover:bg-amber-500/20',
+        'glass-primary': 'text-orange-200 hover:bg-orange-500/20',
+        'glass-secondary': 'text-orange-200 hover:bg-orange-500/20',
       },
     },
     defaultVariants: {

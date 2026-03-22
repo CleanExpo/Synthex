@@ -44,7 +44,7 @@ function getROIBadgeStyles(roi: number): string {
   if (roi < 50) return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30';
   if (roi < 100)
     return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
-  return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+  return 'bg-orange-500/10 text-orange-400 border-orange-500/30';
 }
 
 function LoadingSkeleton() {
@@ -133,7 +133,7 @@ function PlatformCard({ platform, currency }: PlatformCardProps) {
         </div>
         <div className="pt-2 border-t border-white/5 flex items-center justify-between text-sm">
           <span className="text-gray-400">ROI/Hour</span>
-          <span className="text-amber-400 font-medium">
+          <span className="text-orange-400 font-medium">
             {formatCurrency(platform.roiPerHour, currency)}/hr
           </span>
         </div>

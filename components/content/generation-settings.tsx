@@ -135,7 +135,7 @@ export function GenerationSettings({
               }
             }}
             className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-              multiPlatformEnabled ? 'bg-amber-500' : 'bg-white/10'
+              multiPlatformEnabled ? 'bg-orange-500' : 'bg-white/10'
             }`}
           >
             <span
@@ -169,17 +169,17 @@ export function GenerationSettings({
                   onClick={() => handlePlatformToggle(key)}
                   className={`relative p-3 rounded-lg border transition-all ${
                     isSelected
-                      ? 'bg-amber-500/20 border-amber-500'
+                      ? 'bg-orange-500/20 border-orange-500'
                       : 'bg-white/5 border-white/10 hover:bg-white/10'
                   }`}
                 >
                   {multiPlatformEnabled && isSelected && (
                     <span className="absolute top-1 right-1">
-                      <Check className="h-3 w-3 text-amber-400" />
+                      <Check className="h-3 w-3 text-orange-400" />
                     </span>
                   )}
                   {isPrimary && (
-                    <span className="absolute top-1 left-1 text-[8px] font-bold text-amber-400 leading-none">
+                    <span className="absolute top-1 left-1 text-[8px] font-bold text-orange-400 leading-none">
                       1st
                     </span>
                   )}
@@ -284,7 +284,7 @@ export function GenerationSettings({
                 onClick={() => onTargetLengthChange(length)}
                 className={`py-2 px-4 rounded-lg border capitalize transition-all ${
                   targetLength === length
-                    ? 'bg-amber-500/20 border-amber-500'
+                    ? 'bg-orange-500/20 border-orange-500'
                     : 'bg-white/5 border-white/10 hover:bg-white/10'
                 }`}
               >
@@ -301,7 +301,7 @@ export function GenerationSettings({
               type="checkbox"
               checked={includeHashtags}
               onChange={e => onIncludeHashtagsChange(e.target.checked)}
-              className="rounded border-gray-600 text-amber-500 focus:ring-amber-500"
+              className="rounded border-gray-600 text-orange-500 focus:ring-orange-500"
             />
             <Hash className="h-4 w-4 text-gray-400" />
             <span className="text-sm text-white">Include Hashtags</span>
@@ -311,7 +311,7 @@ export function GenerationSettings({
               type="checkbox"
               checked={includeEmojis}
               onChange={e => onIncludeEmojisChange(e.target.checked)}
-              className="rounded border-gray-600 text-amber-500 focus:ring-amber-500"
+              className="rounded border-gray-600 text-orange-500 focus:ring-orange-500"
             />
             <Smile className="h-4 w-4 text-gray-400" />
             <span className="text-sm text-white">Include Emojis</span>

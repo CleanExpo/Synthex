@@ -23,7 +23,7 @@ export function TaskStatsGrid({ stats }: { stats: TaskStats }) {
           <CardTitle className="text-sm font-medium text-slate-400">
             Total Tasks
           </CardTitle>
-          <ListTodo className="h-4 w-4 text-amber-500" />
+          <ListTodo className="h-4 w-4 text-orange-500" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">{stats.total}</div>

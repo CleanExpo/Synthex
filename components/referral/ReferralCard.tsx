@@ -82,8 +82,8 @@ export default function ReferralCard() {
     <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 backdrop-blur-sm">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20">
-          <Gift className="h-4 w-4 text-amber-400" />
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/20">
+          <Gift className="h-4 w-4 text-orange-400" />
         </div>
         <div>
           <h3 className="text-sm font-semibold text-white">Refer & Earn</h3>
@@ -131,7 +131,7 @@ export default function ReferralCard() {
           size="sm"
           disabled={!inviteEmail.trim() || sending}
           onClick={handleSendInvite}
-          className="shrink-0 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 text-xs"
+          className="shrink-0 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 text-xs"
         >
           {sending ? 'Sending...' : 'Invite'}
         </Button>
@@ -151,7 +151,7 @@ export default function ReferralCard() {
             <p className="text-[10px] text-gray-500">Signed Up</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-amber-400">
+            <p className="text-lg font-bold text-orange-400">
               {stats.rewardsEarned}
             </p>
             <p className="text-[10px] text-gray-500">Credits Earned</p>

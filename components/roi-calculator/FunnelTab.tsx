@@ -38,8 +38,8 @@ export function FunnelTab({ funnelData }: FunnelTabProps) {
               <div key={stage.name} className="relative">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
-                      <span className="text-xs font-bold text-amber-400">
+                    <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center">
+                      <span className="text-xs font-bold text-orange-400">
                         {index + 1}
                       </span>
                     </div>

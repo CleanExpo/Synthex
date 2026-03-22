@@ -18,11 +18,11 @@ import { CATEGORY_CONFIG } from '@/lib/prompts/types';
 // ─── Colour map (matches PromptCard) ────────────────────────────────────────
 
 const CATEGORY_BAR_COLOURS: Record<PromptCategory, string> = {
-  'brand-awareness': 'bg-amber-500',
-  'competitor-comparison': 'bg-amber-500',
+  'brand-awareness': 'bg-orange-500',
+  'competitor-comparison': 'bg-orange-500',
   'local-discovery': 'bg-green-500',
   'use-case': 'bg-blue-500',
-  'how-to': 'bg-amber-500',
+  'how-to': 'bg-orange-500',
   'product-feature': 'bg-slate-500',
 };
 
@@ -86,7 +86,7 @@ function DonutRing({
       {/* Legend */}
       <div className="flex gap-4 text-xs text-slate-400">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+          <span className="w-2 h-2 rounded-full bg-orange-400 inline-block" />
           {mentionedCount} mentioned
         </span>
         <span className="flex items-center gap-1">
@@ -157,9 +157,11 @@ function GapRecommendations({ gaps }: { gaps: PromptGapAnalysis['gaps'] }) {
         return (
           <div
             key={gap.category}
-            className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3"
+            className="rounded-lg border border-orange-500/20 bg-orange-500/5 p-3"
           >
-            <p className="text-xs font-semibold text-amber-300 mb-1">{label}</p>
+            <p className="text-xs font-semibold text-orange-300 mb-1">
+              {label}
+            </p>
             <p className="text-xs text-slate-400 leading-relaxed">
               {gap.recommendation}
             </p>
@@ -198,7 +200,7 @@ export function PromptGapChart({ analysis, className }: PromptGapChartProps) {
           </p>
           <p className="text-xs text-slate-400">
             Brand mentioned in{' '}
-            <strong className="text-amber-400">
+            <strong className="text-orange-400">
               {analysis.mentionedCount}
             </strong>{' '}
             of them ({Math.round(analysis.coverageRate)}% coverage)

@@ -140,7 +140,7 @@ export default function AuthorityPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Shield className="h-7 w-7 text-amber-400" />
+            <Shield className="h-7 w-7 text-orange-400" />
             Authority Engine
           </h1>
           <p className="text-gray-400 mt-1">
@@ -166,10 +166,10 @@ export default function AuthorityPage() {
             hasAddon={hasAddon}
             featureName="Deep Claim Validation"
           >
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-amber-400" />
+                  <Shield className="h-5 w-5 text-orange-400" />
                   Content Analyser
                 </CardTitle>
               </CardHeader>
@@ -178,7 +178,7 @@ export default function AuthorityPage() {
                   value={content}
                   onChange={e => setContent(e.target.value)}
                   placeholder="Paste your content here to analyse claims and generate citations..."
-                  className="w-full min-h-[200px] bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-slate-300 placeholder-slate-500 focus:outline-none focus:border-amber-500/50 resize-y"
+                  className="w-full min-h-[200px] bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-slate-300 placeholder-slate-500 focus:outline-none focus:border-orange-500/50 resize-y"
                 />
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-500">
@@ -187,7 +187,7 @@ export default function AuthorityPage() {
                   <button
                     onClick={handleAnalyze}
                     disabled={isAnalyzing || content.length < 50}
-                    className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:bg-amber-900 disabled:text-amber-400 text-white text-sm font-medium transition-colors flex items-center gap-2"
+                    className="px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 disabled:bg-orange-900 disabled:text-orange-400 text-white text-sm font-medium transition-colors flex items-center gap-2"
                   >
                     {isAnalyzing && (
                       <RefreshCw className="h-4 w-4 animate-spin" />
@@ -212,7 +212,7 @@ export default function AuthorityPage() {
               />
 
               {result.claims.length > 0 && (
-                <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+                <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
                   <CardHeader>
                     <CardTitle className="text-white text-lg">
                       Claim Validation ({result.claimsFound} claims)
@@ -227,7 +227,7 @@ export default function AuthorityPage() {
               )}
 
               {result.recommendations.length > 0 && (
-                <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+                <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
                   <CardHeader>
                     <CardTitle className="text-white text-lg">
                       Recommendations
@@ -247,7 +247,7 @@ export default function AuthorityPage() {
                                   rec.priority === 'high'
                                     ? 'bg-red-500/20 text-red-400'
                                     : rec.priority === 'medium'
-                                      ? 'bg-amber-500/20 text-amber-400'
+                                      ? 'bg-orange-500/20 text-orange-400'
                                       : 'bg-slate-500/20 text-slate-400'
                                 }`}
                               >
@@ -292,10 +292,10 @@ export default function AuthorityPage() {
               ].map(({ title, desc }) => (
                 <Card
                   key={title}
-                  className="bg-surface-base/80 border border-amber-500/10"
+                  className="bg-surface-base/80 border border-orange-500/10"
                 >
                   <CardContent className="p-4">
-                    <Shield className="h-8 w-8 text-amber-400 mb-3" />
+                    <Shield className="h-8 w-8 text-orange-400 mb-3" />
                     <h3 className="text-white font-medium text-sm">{title}</h3>
                     <p className="text-gray-400 text-xs mt-1">{desc}</p>
                   </CardContent>
@@ -308,7 +308,7 @@ export default function AuthorityPage() {
         {/* Citations Tab */}
         <TabsContent value="citations" className="mt-4">
           {result ? (
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
               <CardHeader>
                 <CardTitle className="text-white text-lg">
                   Generated Citations ({result.citations.length})
@@ -319,7 +319,7 @@ export default function AuthorityPage() {
               </CardContent>
             </Card>
           ) : (
-            <Card className="bg-surface-base/80 border border-amber-500/10">
+            <Card className="bg-surface-base/80 border border-orange-500/10">
               <CardContent className="p-12 text-center text-gray-400">
                 <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 <p>No citations yet</p>
@@ -333,7 +333,7 @@ export default function AuthorityPage() {
 
         {/* Sources Tab */}
         <TabsContent value="sources" className="mt-4">
-          <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+          <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
             <CardHeader>
               <CardTitle className="text-white text-lg">
                 Source Connectors
@@ -355,10 +355,10 @@ export default function AuthorityPage() {
         {/* Design Audit Tab */}
         <TabsContent value="design-audit" className="space-y-4 mt-4">
           <AuthorityFeatureGate hasAddon={hasAddon} featureName="Design Audit">
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-amber-400" />
+                  <BarChart3 className="h-5 w-5 text-orange-400" />
                   Design Audit
                 </CardTitle>
               </CardHeader>
@@ -369,7 +369,7 @@ export default function AuthorityPage() {
                     onClick={() => setDesignAuditMode('url')}
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       designAuditMode === 'url'
-                        ? 'bg-amber-600 text-white'
+                        ? 'bg-orange-600 text-white'
                         : 'bg-white/5 text-slate-400 hover:text-white'
                     }`}
                   >
@@ -379,7 +379,7 @@ export default function AuthorityPage() {
                     onClick={() => setDesignAuditMode('content')}
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       designAuditMode === 'content'
-                        ? 'bg-amber-600 text-white'
+                        ? 'bg-orange-600 text-white'
                         : 'bg-white/5 text-slate-400 hover:text-white'
                     }`}
                   >
@@ -393,14 +393,14 @@ export default function AuthorityPage() {
                     value={designAuditUrl}
                     onChange={e => setDesignAuditUrl(e.target.value)}
                     placeholder="https://example.com/page-to-audit"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-slate-300 placeholder-slate-500 focus:outline-none focus:border-amber-500/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-slate-300 placeholder-slate-500 focus:outline-none focus:border-orange-500/50"
                   />
                 ) : (
                   <textarea
                     value={designAuditContent}
                     onChange={e => setDesignAuditContent(e.target.value)}
                     placeholder="Paste your page content or HTML here..."
-                    className="w-full min-h-[180px] bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-slate-300 placeholder-slate-500 focus:outline-none focus:border-amber-500/50 resize-y"
+                    className="w-full min-h-[180px] bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-slate-300 placeholder-slate-500 focus:outline-none focus:border-orange-500/50 resize-y"
                   />
                 )}
 
@@ -408,7 +408,7 @@ export default function AuthorityPage() {
                   <button
                     onClick={handleDesignAudit}
                     disabled={isDesignAuditDisabled}
-                    className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:bg-amber-900 disabled:text-amber-400 text-white text-sm font-medium transition-colors flex items-center gap-2"
+                    className="px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 disabled:bg-orange-900 disabled:text-orange-400 text-white text-sm font-medium transition-colors flex items-center gap-2"
                   >
                     {isAuditRunning && (
                       <RefreshCw className="h-4 w-4 animate-spin" />
@@ -423,7 +423,7 @@ export default function AuthorityPage() {
             {designAuditResult && (
               <div className="space-y-4">
                 {/* Overall score banner */}
-                <Card className="bg-white/5 border-amber-500/10 backdrop-blur-sm">
+                <Card className="bg-white/5 border-orange-500/10 backdrop-blur-sm">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
                       <p className="text-sm text-slate-400">
@@ -462,7 +462,7 @@ export default function AuthorityPage() {
 
                 {/* Recommendations */}
                 {designAuditResult.recommendations.length > 0 && (
-                  <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+                  <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
                     <CardHeader>
                       <CardTitle className="text-white text-lg">
                         Recommendations
@@ -481,7 +481,7 @@ export default function AuthorityPage() {
                                   rec.priority === 'high'
                                     ? 'bg-red-500/20 text-red-400'
                                     : rec.priority === 'medium'
-                                      ? 'bg-amber-500/20 text-amber-400'
+                                      ? 'bg-orange-500/20 text-orange-400'
                                       : 'bg-slate-500/20 text-slate-400'
                                 }`}
                               >
@@ -509,7 +509,7 @@ export default function AuthorityPage() {
 
                 {/* Issues list */}
                 {designAuditResult.issues.length > 0 && (
-                  <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+                  <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
                     <CardHeader>
                       <CardTitle className="text-white text-lg">
                         Issues ({designAuditResult.issues.length})
@@ -527,7 +527,7 @@ export default function AuthorityPage() {
                                 issue.type === 'error'
                                   ? 'bg-red-500/20 text-red-400'
                                   : issue.type === 'warning'
-                                    ? 'bg-amber-500/20 text-amber-400'
+                                    ? 'bg-orange-500/20 text-orange-400'
                                     : 'bg-blue-500/20 text-blue-400'
                               }`}
                             >

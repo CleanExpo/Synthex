@@ -30,7 +30,7 @@ export function NavBar() {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-          <div className="w-7 h-7 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
+          <div className="w-7 h-7 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
             <span className="text-charcoal-900 font-black text-xs">S</span>
           </div>
           <span className="text-white font-black tracking-[0.15em] text-sm uppercase hidden sm:block">
@@ -61,7 +61,7 @@ export function NavBar() {
           </Link>
           <Link
             href="/signup"
-            className="bg-amber-500 text-charcoal-900 font-bold rounded-full px-5 py-2 text-sm hover:bg-amber-400 hover:-translate-y-0.5 transition-all duration-200"
+            className="bg-orange-500 text-charcoal-900 font-bold rounded-full px-5 py-2 text-sm hover:bg-orange-400 hover:-translate-y-0.5 transition-all duration-200"
           >
             Get started
           </Link>
@@ -122,7 +122,7 @@ export function NavBar() {
             <Link
               href="/signup"
               onClick={() => setMobileOpen(false)}
-              className="block py-2.5 text-center bg-amber-500 text-charcoal-900 font-bold rounded-full text-sm"
+              className="block py-2.5 text-center bg-orange-500 text-charcoal-900 font-bold rounded-full text-sm"
             >
               Get started
             </Link>

@@ -11,7 +11,7 @@ interface CitationListProps {
 const SOURCE_COLORS: Record<string, string> = {
   government: 'bg-emerald-500/20 text-emerald-300',
   academic: 'bg-blue-500/20 text-blue-300',
-  industry: 'bg-amber-500/20 text-amber-300',
+  industry: 'bg-orange-500/20 text-orange-300',
   web: 'bg-slate-500/20 text-slate-300',
 };
 

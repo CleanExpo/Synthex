@@ -74,7 +74,7 @@ export function SidebarGroup({
           <Icon
             className={cn(
               'w-3.5 h-3.5',
-              hasActiveItem ? 'text-amber-400/60' : 'text-white/40'
+              hasActiveItem ? 'text-orange-400/60' : 'text-white/40'
             )}
           />
           <span>{label}</span>
@@ -109,7 +109,7 @@ export function SidebarGroup({
               >
                 {/* Active indicator dot */}
                 {isActive ? (
-                  <div className="w-1 h-1 rounded-full bg-amber-400 flex-shrink-0" />
+                  <div className="w-1 h-1 rounded-full bg-orange-400 flex-shrink-0" />
                 ) : (
                   <ItemIcon className="w-3.5 h-3.5 flex-shrink-0 text-white/40" />
                 )}

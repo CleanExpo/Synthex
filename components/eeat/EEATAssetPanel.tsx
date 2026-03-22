@@ -25,7 +25,7 @@ function priorityClass(priority: EEATAssetPriority): string {
     case 'high':
       return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
     case 'medium':
-      return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
+      return 'bg-orange-500/20 text-orange-400 border border-orange-500/30';
     case 'low':
       return 'bg-gray-500/20 text-gray-400 border border-gray-500/30';
   }
@@ -68,7 +68,7 @@ function AssetCard({ asset }: { asset: EEATAsset }) {
       <button
         type="button"
         onClick={() => setOpen(prev => !prev)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-amber-500"
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-orange-500"
       >
         {/* Priority badge */}
         <span
@@ -108,7 +108,7 @@ function AssetCard({ asset }: { asset: EEATAsset }) {
             type="button"
             onClick={handleCopy}
             className={cn(
-              'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500',
+              'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
               copied
                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                 : 'bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white'
@@ -175,7 +175,7 @@ export function EEATAssetPanel({
             </p>
           )}
         </div>
-        <span className="text-xs px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-medium">
+        <span className="text-xs px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 font-medium">
           +{totalImpact} estimated pts
         </span>
       </div>

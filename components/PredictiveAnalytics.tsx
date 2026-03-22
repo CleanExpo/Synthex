@@ -462,8 +462,8 @@ export function PredictiveAnalytics() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20">
-            <BarChart3 className="h-6 w-6 text-amber-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+            <BarChart3 className="h-6 w-6 text-orange-400" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">
@@ -689,7 +689,7 @@ export function PredictiveAnalytics() {
                         <Activity className="h-4 w-4 text-yellow-400" />
                       )}
                       {anomaly.type === 'outlier' && (
-                        <AlertCircle className="h-4 w-4 text-amber-400" />
+                        <AlertCircle className="h-4 w-4 text-orange-400" />
                       )}
                       <span className="font-medium text-white text-sm">
                         {anomaly.metric}
@@ -725,8 +725,8 @@ export function PredictiveAnalytics() {
                     </span>
                   </div>
 
-                  <div className="mt-2 p-2 bg-amber-500/10 rounded flex items-start gap-2">
-                    <Info className="h-3 w-3 text-amber-400 mt-0.5" />
+                  <div className="mt-2 p-2 bg-orange-500/10 rounded flex items-start gap-2">
+                    <Info className="h-3 w-3 text-orange-400 mt-0.5" />
                     <p className="text-xs text-gray-300">{anomaly.action}</p>
                   </div>
                 </div>
@@ -740,7 +740,7 @@ export function PredictiveAnalytics() {
       <Card variant="glass">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-amber-400" />
+            <Sparkles className="h-5 w-5 text-orange-400" />
             <CardTitle>AI-Powered Insights</CardTitle>
           </div>
         </CardHeader>
@@ -783,7 +783,7 @@ export function PredictiveAnalytics() {
                     </p>
                     {prediction.recommendations.map((rec, i) => (
                       <div key={i} className="flex items-start gap-1 mb-1">
-                        <ChevronRight className="h-3 w-3 text-amber-400 mt-0.5" />
+                        <ChevronRight className="h-3 w-3 text-orange-400 mt-0.5" />
                         <span className="text-xs text-gray-300">{rec}</span>
                       </div>
                     ))}

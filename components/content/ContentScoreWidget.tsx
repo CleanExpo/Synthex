@@ -64,7 +64,7 @@ function ScoreGauge({ score }: { score: number }) {
 
 function DimensionBar({ label, score }: { label: string; score: number }) {
   const colour =
-    score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-amber-500' : 'bg-red-500';
+    score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-orange-500' : 'bg-red-500';
 
   return (
     <div className="space-y-1">
@@ -102,7 +102,7 @@ export function ContentScoreWidget({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-light text-white flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-amber-400" />
+            <Sparkles className="h-4 w-4 text-orange-400" />
             Content Quality Score
           </CardTitle>
           <Button
@@ -124,7 +124,7 @@ export function ContentScoreWidget({
       <CardContent className="space-y-4">
         {isLoading && !score ? (
           <div className="flex items-center justify-center py-6">
-            <Loader2 className="h-6 w-6 animate-spin text-amber-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-orange-400" />
           </div>
         ) : score ? (
           <>
@@ -168,7 +168,7 @@ export function ContentScoreWidget({
                 <ul className="space-y-1">
                   {score.topSuggestions.map((suggestion, i) => (
                     <li key={i} className="text-xs text-white/50 flex gap-2">
-                      <span className="text-amber-400 shrink-0">•</span>
+                      <span className="text-orange-400 shrink-0">•</span>
                       {suggestion}
                     </li>
                   ))}

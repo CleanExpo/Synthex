@@ -15,7 +15,7 @@ export function FooterSection() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-            <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
+            <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
               <span className="text-charcoal-900 font-black text-[10px]">
                 S
               </span>
@@ -31,7 +31,7 @@ export function FooterSection() {
               <Link
                 key={href}
                 href={href}
-                className="text-[11px] font-medium text-white/50 hover:text-amber-400 transition-colors"
+                className="text-[11px] font-medium text-white/50 hover:text-orange-400 transition-colors"
               >
                 {label}
               </Link>

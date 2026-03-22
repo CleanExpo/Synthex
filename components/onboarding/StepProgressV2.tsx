@@ -26,9 +26,9 @@ export function StepProgressV2({ currentStep }: { currentStep: number }) {
               className={cn(
                 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold transition-colors',
                 step.id < currentStep
-                  ? 'bg-amber-500 text-white'
+                  ? 'bg-orange-500 text-white'
                   : step.id === currentStep
-                    ? 'bg-amber-500/20 border border-amber-500 text-amber-400'
+                    ? 'bg-orange-500/20 border border-orange-500 text-orange-400'
                     : 'bg-white/5 border border-white/10 text-gray-500'
               )}
             >
@@ -37,7 +37,7 @@ export function StepProgressV2({ currentStep }: { currentStep: number }) {
             <span
               className={cn(
                 'text-xs font-medium hidden sm:block',
-                step.id === currentStep ? 'text-amber-400' : 'text-gray-500'
+                step.id === currentStep ? 'text-orange-400' : 'text-gray-500'
               )}
             >
               {step.name}
@@ -47,7 +47,7 @@ export function StepProgressV2({ currentStep }: { currentStep: number }) {
             <div
               className={cn(
                 'flex-1 h-px max-w-[40px]',
-                step.id < currentStep ? 'bg-amber-500' : 'bg-white/10'
+                step.id < currentStep ? 'bg-orange-500' : 'bg-white/10'
               )}
             />
           )}

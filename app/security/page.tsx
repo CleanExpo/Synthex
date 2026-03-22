@@ -151,13 +151,13 @@ export default function SecurityPage() {
       {/* Hero Section */}
       <section className="pt-12 pb-20 px-6">
         <div className="container mx-auto text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-amber-500/10 rounded-full mb-6">
-            <Shield className="w-10 h-10 text-amber-400" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-orange-500/10 rounded-full mb-6">
+            <Shield className="w-10 h-10 text-orange-400" />
           </div>
           <h1 className="text-6xl font-bold text-white mb-6 heading-serif">
             Security at
             <br />
-            <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
               SYNTHEX
             </span>
           </h1>
@@ -172,9 +172,9 @@ export default function SecurityPage() {
             {securityHighlights.map((stat, index) => (
               <div
                 key={index}
-                className="bg-[#0d1f35]/80 border border-amber-500/10 backdrop-blur-sm rounded-xl p-6 text-center"
+                className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-6 text-center"
               >
-                <div className="text-3xl font-bold bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent mb-2">
+                <div className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent mb-2">
                   {stat.value}
                 </div>
                 <div className="text-gray-400">{stat.label}</div>
@@ -189,7 +189,7 @@ export default function SecurityPage() {
         <div className="container mx-auto">
           <h2 className="text-4xl font-bold text-center text-white mb-12 heading-serif">
             Enterprise-Grade{' '}
-            <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
               Security
             </span>
           </h2>
@@ -197,9 +197,9 @@ export default function SecurityPage() {
             {securityFeatures.map((feature, index) => (
               <div
                 key={index}
-                className="bg-[#0d1f35]/80 border border-amber-500/10 backdrop-blur-sm rounded-xl p-8 hover:scale-105 hover:border-amber-500/30 transition-all duration-300"
+                className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-8 hover:scale-105 hover:border-orange-500/30 transition-all duration-300"
               >
-                <feature.icon className="w-12 h-12 text-amber-400 mb-4" />
+                <feature.icon className="w-12 h-12 text-orange-400 mb-4" />
                 <h3 className="text-2xl font-semibold text-white mb-3">
                   {feature.title}
                 </h3>
@@ -213,11 +213,11 @@ export default function SecurityPage() {
       {/* Data Protection */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <div className="bg-[#0d1f35]/80 border border-amber-500/10 backdrop-blur-sm rounded-2xl p-12">
+          <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-2xl p-12">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold text-white mb-4 heading-serif">
                 Data{' '}
-                <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
                   Protection
                 </span>
               </h2>
@@ -230,9 +230,9 @@ export default function SecurityPage() {
               {dataProtectionPrinciples.map((principle, index) => (
                 <div
                   key={index}
-                  className="bg-surface-dark/60 border border-amber-500/10 rounded-xl p-6 text-center"
+                  className="bg-surface-dark/60 border border-orange-500/10 rounded-xl p-6 text-center"
                 >
-                  <principle.icon className="w-10 h-10 text-amber-400 mx-auto mb-4" />
+                  <principle.icon className="w-10 h-10 text-orange-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-white mb-2">
                     {principle.title}
                   </h3>
@@ -251,7 +251,7 @@ export default function SecurityPage() {
         <div className="container mx-auto">
           <h2 className="text-4xl font-bold text-center text-white mb-4 heading-serif">
             Secure{' '}
-            <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
               Infrastructure
             </span>
           </h2>
@@ -263,19 +263,19 @@ export default function SecurityPage() {
             {infrastructureDetails.map((detail, index) => (
               <div
                 key={index}
-                className="bg-[#0d1f35]/80 border border-amber-500/10 backdrop-blur-sm rounded-xl p-6 hover:border-amber-500/30 transition-colors"
+                className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-6 hover:border-orange-500/30 transition-colors"
               >
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-amber-500/10 rounded-lg flex items-center justify-center">
-                      <detail.icon className="w-6 h-6 text-amber-400" />
+                    <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center">
+                      <detail.icon className="w-6 h-6 text-orange-400" />
                     </div>
                   </div>
                   <div className="flex-grow">
                     <h3 className="text-xl font-semibold text-white mb-1">
                       {detail.component}
                     </h3>
-                    <p className="text-amber-400 mb-2">{detail.provider}</p>
+                    <p className="text-orange-400 mb-2">{detail.provider}</p>
                     <p className="text-gray-400 text-sm">{detail.security}</p>
                   </div>
                 </div>
@@ -288,13 +288,13 @@ export default function SecurityPage() {
       {/* Authentication & Access Control */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <div className="bg-[#0d1f35]/80 border border-amber-500/10 backdrop-blur-sm rounded-2xl p-12">
+          <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-2xl p-12">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-4xl font-bold text-white mb-6 heading-serif">
                   Authentication &
                   <br />
-                  <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
                     Access Control
                   </span>
                 </h2>
@@ -306,16 +306,16 @@ export default function SecurityPage() {
                 <div className="space-y-3">
                   {authenticationFeatures.map((feature, index) => (
                     <div key={index} className="flex items-center gap-3">
-                      <CheckCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                      <CheckCircle className="w-5 h-5 text-orange-400 flex-shrink-0" />
                       <span className="text-gray-300">{feature}</span>
                     </div>
                   ))}
                 </div>
               </div>
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-amber-400/10 rounded-2xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-orange-400/10 rounded-2xl"></div>
                 <div className="relative p-8">
-                  <Key className="w-full h-64 text-amber-400/30" />
+                  <Key className="w-full h-64 text-orange-400/30" />
                 </div>
               </div>
             </div>
@@ -328,7 +328,7 @@ export default function SecurityPage() {
         <div className="container mx-auto">
           <h2 className="text-4xl font-bold text-center text-white mb-12 heading-serif">
             Compliance &{' '}
-            <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
               Certifications
             </span>
           </h2>
@@ -336,10 +336,10 @@ export default function SecurityPage() {
             {certifications.map((cert, index) => (
               <div
                 key={index}
-                className="bg-[#0d1f35]/80 border border-amber-500/10 backdrop-blur-sm rounded-xl p-6 text-center hover:transform hover:scale-105 hover:border-amber-500/30 transition-all duration-300"
+                className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-6 text-center hover:transform hover:scale-105 hover:border-orange-500/30 transition-all duration-300"
               >
-                <div className="w-16 h-16 bg-gradient-to-br from-amber-500/20 to-amber-400/10 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <cert.icon className="w-8 h-8 text-amber-400" />
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-500/20 to-orange-400/10 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <cert.icon className="w-8 h-8 text-orange-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-1">
                   {cert.name}
@@ -348,8 +348,8 @@ export default function SecurityPage() {
                 <span
                   className={`inline-block px-3 py-1 text-xs rounded-full border ${
                     cert.status === 'Certified' || cert.status === 'Compliant'
-                      ? 'bg-amber-500/20 text-amber-400 border-amber-500/20'
-                      : 'bg-amber-500/20 text-amber-400 border-amber-500/20'
+                      ? 'bg-orange-500/20 text-orange-400 border-orange-500/20'
+                      : 'bg-orange-500/20 text-orange-400 border-orange-500/20'
                   }`}
                 >
                   {cert.status}
@@ -363,17 +363,17 @@ export default function SecurityPage() {
       {/* Responsible Disclosure */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <div className="bg-gradient-to-r from-[#0d1f35] to-[#050505] border border-amber-500/20 backdrop-blur-sm rounded-2xl p-12 relative overflow-hidden">
+          <div className="bg-gradient-to-r from-[#0d1f35] to-[#050505] border border-orange-500/20 backdrop-blur-sm rounded-2xl p-12 relative overflow-hidden">
             {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-amber-400/10 to-amber-500/5 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-orange-400/10 to-orange-500/5 pointer-events-none" />
 
             <div className="relative z-10">
               <div className="flex items-center justify-center mb-6">
-                <Mail className="w-12 h-12 text-amber-400" />
+                <Mail className="w-12 h-12 text-orange-400" />
               </div>
               <h2 className="text-4xl font-bold text-white mb-4 text-center">
                 Responsible{' '}
-                <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
                   Disclosure
                 </span>
               </h2>
@@ -382,16 +382,16 @@ export default function SecurityPage() {
                 security vulnerability, please report it responsibly to help us
                 protect our users.
               </p>
-              <div className="bg-surface-dark/60 border border-amber-500/20 rounded-xl p-8 max-w-2xl mx-auto">
+              <div className="bg-surface-dark/60 border border-orange-500/20 rounded-xl p-8 max-w-2xl mx-auto">
                 <h3 className="text-xl font-semibold text-white mb-4">
                   Report Security Issues
                 </h3>
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                    <Mail className="w-5 h-5 text-orange-400 flex-shrink-0" />
                     <a
                       href="mailto:security@synthex.social"
-                      className="text-amber-400 hover:text-amber-300 transition-colors"
+                      className="text-orange-400 hover:text-orange-300 transition-colors"
                     >
                       security@synthex.social
                     </a>
@@ -401,8 +401,8 @@ export default function SecurityPage() {
                     vulnerability. We aim to respond within 48 hours.
                   </p>
                 </div>
-                <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
-                  <p className="text-amber-300 text-sm">
+                <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
+                  <p className="text-orange-300 text-sm">
                     <strong>Bug Bounty Program:</strong> We offer rewards for
                     qualifying security disclosures. Payments range from $100 to
                     $5,000 depending on severity and impact.
@@ -417,14 +417,14 @@ export default function SecurityPage() {
       {/* CTA Section */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <div className="bg-gradient-to-r from-[#0d1f35] to-[#050505] border border-amber-500/20 backdrop-blur-sm rounded-2xl p-12 text-center relative overflow-hidden">
+          <div className="bg-gradient-to-r from-[#0d1f35] to-[#050505] border border-orange-500/20 backdrop-blur-sm rounded-2xl p-12 text-center relative overflow-hidden">
             {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-amber-400/10 to-amber-500/5 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-orange-400/10 to-orange-500/5 pointer-events-none" />
 
             <div className="relative z-10">
               <h2 className="text-4xl font-bold text-white mb-4">
                 Ready to Experience{' '}
-                <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
                   Secure AI Marketing?
                 </span>
               </h2>
@@ -434,7 +434,7 @@ export default function SecurityPage() {
               </p>
               <div className="flex justify-center gap-4 flex-wrap">
                 <Link href="/signup">
-                  <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white px-8 py-3 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all">
+                  <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-8 py-3 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all">
                     Start Free Trial
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
@@ -442,7 +442,7 @@ export default function SecurityPage() {
                 <Link href="/contact">
                   <Button
                     variant="outline"
-                    className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10 hover:border-amber-400 px-8 py-3 transition-all"
+                    className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400 px-8 py-3 transition-all"
                   >
                     Contact Security Team
                   </Button>

@@ -261,7 +261,7 @@ function statusClasses(status: Project['status']): string {
   if (status === 'Active')
     return 'bg-emerald-500/[0.15] text-emerald-300 border-emerald-500/20';
   if (status === 'In Progress')
-    return 'bg-amber-500/[0.15] text-amber-300 border-amber-500/20';
+    return 'bg-orange-500/[0.15] text-orange-300 border-orange-500/20';
   return 'bg-white/[0.04] text-white/40 border-white/[0.06]';
 }
 
@@ -296,13 +296,13 @@ export function ContributorsTable() {
             placeholder="Filter by technology…"
             value={techFilter}
             onChange={e => setTechFilter(e.target.value)}
-            className="w-44 bg-[#0a0a0a] border-[0.5px] border-white/[0.06] text-white placeholder:text-white/40 rounded-sm text-sm focus-visible:ring-amber-500/20"
+            className="w-44 bg-[#0a0a0a] border-[0.5px] border-white/[0.06] text-white placeholder:text-white/40 rounded-sm text-sm focus-visible:ring-orange-500/20"
           />
           <Input
             placeholder="Filter by status…"
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="w-44 bg-[#0a0a0a] border-[0.5px] border-white/[0.06] text-white placeholder:text-white/40 rounded-sm text-sm focus-visible:ring-amber-500/20"
+            className="w-44 bg-[#0a0a0a] border-[0.5px] border-white/[0.06] text-white placeholder:text-white/40 rounded-sm text-sm focus-visible:ring-orange-500/20"
           />
         </div>
 
@@ -391,7 +391,7 @@ export function ContributorsTable() {
                         href={project.repo}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-amber-400 hover:text-amber-300 transition-colors text-xs"
+                        className="text-orange-400 hover:text-orange-300 transition-colors text-xs"
                       >
                         {project.repo.replace('https://', '')}
                       </a>
@@ -424,7 +424,7 @@ export function ContributorsTable() {
                                     src={contributor.avatar}
                                     alt={contributor.name}
                                   />
-                                  <AvatarFallback className="bg-amber-500/[0.08] text-amber-400 text-xs border-[0.5px] border-amber-500/20">
+                                  <AvatarFallback className="bg-orange-500/[0.08] text-orange-400 text-xs border-[0.5px] border-orange-500/20">
                                     {contributor.name[0]}
                                   </AvatarFallback>
                                 </Avatar>
@@ -436,7 +436,7 @@ export function ContributorsTable() {
                                 <p className="text-[11px] text-white/40">
                                   {contributor.email}
                                 </p>
-                                <p className="text-[11px] text-amber-400 italic">
+                                <p className="text-[11px] text-orange-400 italic">
                                   {contributor.role}
                                 </p>
                               </TooltipContent>

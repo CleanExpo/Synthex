@@ -131,9 +131,9 @@ export function HealthScoreWidget() {
 
   if (isLoading) {
     return (
-      <Card className="bg-surface-base/80 border border-amber-500/10">
+      <Card className="bg-surface-base/80 border border-orange-500/10">
         <CardContent className="p-6 flex items-center justify-center">
-          <Loader2 className="w-5 h-5 text-amber-400 animate-spin" />
+          <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
         </CardContent>
       </Card>
     );
@@ -141,7 +141,7 @@ export function HealthScoreWidget() {
 
   if (error) {
     return (
-      <Card className="bg-surface-base/80 border border-amber-500/10">
+      <Card className="bg-surface-base/80 border border-orange-500/10">
         <CardContent className="p-6">
           <p className="text-xs text-red-400">
             Unable to load health score. Please try again later.
@@ -166,7 +166,7 @@ export function HealthScoreWidget() {
     : null;
 
   return (
-    <Card className="bg-surface-base/80 border border-amber-500/10">
+    <Card className="bg-surface-base/80 border border-orange-500/10">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg text-white flex items-center justify-between">
           <span>User Health Score</span>

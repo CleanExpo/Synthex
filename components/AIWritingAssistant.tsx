@@ -209,8 +209,8 @@ export function AIWritingAssistant({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20">
-              <Wand2 className="h-5 w-5 text-amber-400" />
+            <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+              <Wand2 className="h-5 w-5 text-orange-400" />
             </div>
             <div>
               <CardTitle>AI Writing Assistant</CardTitle>
@@ -513,7 +513,7 @@ function CompactAIAssistant({
 }) {
   return (
     <div className="flex items-center gap-2 p-2 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg">
-      <Wand2 className="h-4 w-4 text-amber-400" />
+      <Wand2 className="h-4 w-4 text-orange-400" />
       <span className="text-sm text-gray-400">AI Assistant</span>
       <Button
         size="sm"

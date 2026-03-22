@@ -189,7 +189,7 @@ export default function AffiliatesPage() {
               setEditingLink(null);
               setShowLinkForm(true);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/20 border-[0.5px] border-amber-500/30 text-amber-400 hover:bg-amber-500/30 rounded-sm transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30 rounded-sm transition-colors"
           >
             <Plus className="h-4 w-4" />
             Add Link
@@ -358,7 +358,7 @@ export default function AffiliatesPage() {
                   {selectedLink.shortCode && (
                     <div>
                       <span className="text-white/50">Short URL:</span>
-                      <span className="text-amber-400 ml-2">
+                      <span className="text-orange-400 ml-2">
                         /go/{selectedLink.shortCode}
                       </span>
                     </div>
@@ -376,7 +376,7 @@ export default function AffiliatesPage() {
                         {selectedLink.keywords.map(kw => (
                           <span
                             key={kw}
-                            className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-sm"
+                            className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded-sm"
                           >
                             {kw}
                           </span>
@@ -400,7 +400,7 @@ export default function AffiliatesPage() {
                     onClick={() =>
                       window.open(selectedLink.affiliateUrl, '_blank')
                     }
-                    className="flex-1 px-3 py-2 text-sm text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 rounded-sm transition-colors text-center"
+                    className="flex-1 px-3 py-2 text-sm text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 rounded-sm transition-colors text-center"
                   >
                     Open URL
                   </button>

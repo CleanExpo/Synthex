@@ -30,7 +30,7 @@ const severityConfig: Record<
   },
   medium: {
     label: 'Medium',
-    className: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    className: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
   },
   low: {
     label: 'Low',
@@ -92,7 +92,7 @@ export function AnomalyAlerts() {
     return (
       <Card className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
         <CardContent className="p-6 flex items-center justify-center">
-          <Loader2 className="w-5 h-5 text-amber-400 animate-spin" />
+          <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
         </CardContent>
       </Card>
     );
@@ -122,9 +122,9 @@ export function AnomalyAlerts() {
     <Card className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg text-white flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-amber-400" />
+          <AlertTriangle className="w-5 h-5 text-orange-400" />
           Anomaly Alerts
-          <Badge className="bg-amber-500/20 text-amber-400 text-xs ml-1">
+          <Badge className="bg-orange-500/20 text-orange-400 text-xs ml-1">
             {total}
           </Badge>
         </CardTitle>

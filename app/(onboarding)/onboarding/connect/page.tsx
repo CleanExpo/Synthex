@@ -65,7 +65,7 @@ const PLATFORM_LIST: PlatformConfig[] = [
     label: 'Instagram',
     icon: '📸',
     description: 'Photos, Reels, Stories',
-    colour: 'from-amber-500 to-amber-600',
+    colour: 'from-orange-500 to-orange-600',
   },
   {
     id: 'facebook',
@@ -114,7 +114,7 @@ const PLATFORM_LIST: PlatformConfig[] = [
     label: 'Reddit',
     icon: '🤖',
     description: 'Posts, Comments',
-    colour: 'from-amber-500 to-amber-600',
+    colour: 'from-orange-500 to-orange-600',
   },
   {
     id: 'threads',
@@ -350,7 +350,7 @@ function ConnectPageInner() {
           You can always add more later from the dashboard.
         </p>
         {connectedCount > 0 && (
-          <p className="text-sm text-amber-400">
+          <p className="text-sm text-orange-400">
             {connectedCount} platform{connectedCount !== 1 ? 's' : ''} connected
           </p>
         )}
@@ -380,7 +380,7 @@ function ConnectPageInner() {
                 connected
                   ? 'bg-green-500/5 border-green-500/20'
                   : detected
-                    ? 'bg-amber-500/5 border-amber-500/20'
+                    ? 'bg-orange-500/5 border-orange-500/20'
                     : 'bg-surface-base/80 border-white/5 hover:border-white/10'
               )}
             >
@@ -395,7 +395,7 @@ function ConnectPageInner() {
                       {detected && !connected && (
                         <Badge
                           variant="outline"
-                          className="text-[10px] px-1 py-0 bg-amber-500/10 text-amber-400 border-amber-500/20"
+                          className="text-[10px] px-1 py-0 bg-orange-500/10 text-orange-400 border-orange-500/20"
                         >
                           Detected
                         </Badge>
@@ -434,7 +434,7 @@ function ConnectPageInner() {
                       onClick={() => handleConnect(platform.id)}
                       disabled={connecting || connectingId !== null}
                       className={cn(
-                        'text-xs h-8 border-amber-500/20 hover:bg-amber-500/10 hover:border-amber-500/30',
+                        'text-xs h-8 border-orange-500/20 hover:bg-orange-500/10 hover:border-orange-500/30',
                         connecting && 'opacity-70'
                       )}
                     >
@@ -517,7 +517,7 @@ function ConnectPageInner() {
                         onClick={() => handleConnect(platform.id)}
                         disabled={connecting || connectingId !== null}
                         className={cn(
-                          'text-xs h-8 border-amber-500/20 hover:bg-amber-500/10 hover:border-amber-500/30',
+                          'text-xs h-8 border-orange-500/20 hover:bg-orange-500/10 hover:border-orange-500/30',
                           connecting && 'opacity-70'
                         )}
                       >
@@ -545,7 +545,7 @@ function ConnectPageInner() {
       {/* Loading indicator */}
       {loadingConnections && (
         <div className="flex justify-center py-4">
-          <Loader2 className="w-5 h-5 text-amber-400 animate-spin" />
+          <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
         </div>
       )}
 
@@ -576,7 +576,7 @@ function ConnectPageInner() {
             size="lg"
             onClick={handleFinish}
             disabled={finishing}
-            className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all disabled:opacity-50 px-8"
+            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all disabled:opacity-50 px-8"
           >
             {finishing ? (
               <>
@@ -602,7 +602,7 @@ export default function ConnectPage() {
     <Suspense
       fallback={
         <div className="flex items-center justify-center min-h-[50vh]">
-          <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
+          <Loader2 className="w-6 h-6 text-orange-400 animate-spin" />
         </div>
       }
     >

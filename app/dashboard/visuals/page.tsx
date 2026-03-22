@@ -97,7 +97,7 @@ export default function VisualsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-              <ImageIcon className="h-7 w-7 text-amber-400" />
+              <ImageIcon className="h-7 w-7 text-orange-400" />
               Visual Library
             </h1>
             <p className="text-gray-400 mt-1">
@@ -106,7 +106,7 @@ export default function VisualsPage() {
           </div>
           <Button
             onClick={() => setShowGenerate(!showGenerate)}
-            className="bg-amber-600 hover:bg-amber-700"
+            className="bg-orange-600 hover:bg-orange-700"
           >
             <Sparkles className="h-4 w-4 mr-2" />
             Generate Visual
@@ -114,7 +114,7 @@ export default function VisualsPage() {
         </div>
 
         {showGenerate && (
-          <Card className="bg-surface-base/80 border border-amber-500/10">
+          <Card className="bg-surface-base/80 border border-orange-500/10">
             <CardContent className="p-6 space-y-4">
               <select
                 value={genForm.type}
@@ -141,7 +141,7 @@ export default function VisualsPage() {
                 <Button
                   onClick={generate}
                   disabled={generating || genForm.prompt.length < 10}
-                  className="bg-amber-600 hover:bg-amber-700"
+                  className="bg-orange-600 hover:bg-orange-700"
                 >
                   {generating ? (
                     <>
@@ -167,7 +167,7 @@ export default function VisualsPage() {
             ))}
           </div>
         ) : assets.length === 0 ? (
-          <Card className="bg-surface-base/80 border border-amber-500/10">
+          <Card className="bg-surface-base/80 border border-orange-500/10">
             <CardContent className="p-12 text-center text-gray-400">
               <ImageIcon className="h-12 w-12 mx-auto mb-3 opacity-30" />
               <p>No visuals generated yet</p>
@@ -181,7 +181,7 @@ export default function VisualsPage() {
             {assets.map(asset => (
               <Card
                 key={asset.id}
-                className="bg-surface-base/80 border border-amber-500/10 overflow-hidden group hover:border-amber-500/30 transition-all"
+                className="bg-surface-base/80 border border-orange-500/10 overflow-hidden group hover:border-orange-500/30 transition-all"
               >
                 <div className="aspect-video bg-white/5 relative">
                   <NextImage
@@ -195,7 +195,7 @@ export default function VisualsPage() {
                     asset.qualityScore !== undefined && (
                       <div className="absolute top-2 right-2">
                         <Badge
-                          className={`${asset.qualityScore >= 70 ? 'bg-emerald-500/80' : 'bg-amber-500/80'} text-white text-xs`}
+                          className={`${asset.qualityScore >= 70 ? 'bg-emerald-500/80' : 'bg-orange-500/80'} text-white text-xs`}
                         >
                           Q: {asset.qualityScore}
                         </Badge>

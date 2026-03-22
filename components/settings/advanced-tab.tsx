@@ -150,7 +150,7 @@ export function AdvancedTab({
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Beaker className="w-4 h-4 text-amber-500" />
+                <Beaker className="w-4 h-4 text-orange-500" />
                 <div>
                   <Label className="text-white">Beta Features</Label>
                   <p className="text-sm text-slate-400">

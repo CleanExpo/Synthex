@@ -19,7 +19,7 @@ const RUN_TYPE_ICONS: Record<string, string> = {
 const STATUS_COLOURS: Record<string, string> = {
   running: 'text-cyan-400',
   completed: 'text-emerald-400',
-  partial: 'text-amber-400',
+  partial: 'text-orange-400',
   failed: 'text-red-400',
 };
 

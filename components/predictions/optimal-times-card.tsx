@@ -62,20 +62,20 @@ function getMethodologyLabel(
     case 'hybrid':
       return {
         label: 'Your data + industry',
-        color: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+        color: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
       };
     case 'industry':
     default:
       return {
         label: 'Industry averages',
-        color: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+        color: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
       };
   }
 }
 
 function getScoreBarColor(score: number): string {
   if (score >= 80) return 'bg-emerald-500';
-  if (score >= 60) return 'bg-amber-500';
+  if (score >= 60) return 'bg-orange-500';
   if (score >= 40) return 'bg-yellow-500';
   return 'bg-red-500';
 }
@@ -116,7 +116,7 @@ export function OptimalTimesCard({ data, isLoading }: OptimalTimesCardProps) {
     <Card variant="glass">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2 text-white">
-          <Clock className="h-5 w-5 text-amber-400" />
+          <Clock className="h-5 w-5 text-orange-400" />
           Best Posting Times
         </CardTitle>
       </CardHeader>

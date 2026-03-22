@@ -53,7 +53,7 @@ function CwvHistoryChart({ history }: { history: CwvHistoryEntry[] }) {
           Run your first SEO audit to start tracking Core Web Vitals over time.
         </p>
         <Link href="/dashboard/seo/audit">
-          <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500">
+          <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500">
             Run First Audit
           </Button>
         </Link>
@@ -137,13 +137,13 @@ function CwvHistoryChart({ history }: { history: CwvHistoryEntry[] }) {
       </ResponsiveContainer>
       <div className="flex items-center justify-center gap-6 text-xs text-gray-400">
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-0.5 bg-amber-500 rounded" /> LCP (seconds)
+          <span className="w-3 h-0.5 bg-orange-500 rounded" /> LCP (seconds)
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-0.5 bg-amber-500 rounded" /> CLS
+          <span className="w-3 h-0.5 bg-orange-500 rounded" /> CLS
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-0.5 bg-amber-500 rounded" /> INP (ms)
+          <span className="w-3 h-0.5 bg-orange-500 rounded" /> INP (ms)
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-0.5 bg-green-500 rounded opacity-30" /> Good
@@ -194,7 +194,7 @@ function MobileParitySection({
         <Button
           type="submit"
           disabled={loading || !url.trim()}
-          className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white"
+          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -366,7 +366,7 @@ function RobotsTxtSection({
         <Button
           type="submit"
           disabled={loading || !url.trim()}
-          className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white"
+          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white"
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -412,7 +412,7 @@ function RobotsTxtSection({
           {/* AI Bot Access */}
           <div className="p-4 bg-white/5 rounded-lg space-y-3">
             <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2">
-              <Bot className="w-4 h-4 text-amber-400" />
+              <Bot className="w-4 h-4 text-orange-400" />
               AI Bot Access
             </h4>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -458,7 +458,7 @@ function RobotsTxtSection({
                 {result.directives.map(
                   (directive: RobotsTxtDirective, i: number) => (
                     <div key={i} className="p-3 bg-white/5 rounded-lg text-sm">
-                      <span className="font-mono text-amber-400">
+                      <span className="font-mono text-orange-400">
                         User-agent: {directive.userAgent}
                       </span>
                       {directive.rules.map((rule, j) => (
@@ -510,7 +510,7 @@ function RobotsTxtSection({
                     <p className="text-xs text-gray-400 mt-1">
                       {issue.description}
                     </p>
-                    <p className="text-xs text-amber-400 mt-1">
+                    <p className="text-xs text-orange-400 mt-1">
                       {issue.recommendation}
                     </p>
                   </div>
@@ -563,13 +563,13 @@ export default function TechnicalSEOPage() {
         <div>
           <Link
             href="/dashboard/seo"
-            className="text-sm text-gray-400 hover:text-amber-400 flex items-center gap-1 mb-2 transition-colors"
+            className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to SEO Tools
           </Link>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Settings className="w-8 h-8 text-amber-400" />
+            <Settings className="w-8 h-8 text-orange-400" />
             Technical SEO
           </h1>
           <p className="text-gray-400 mt-2">
@@ -585,12 +585,12 @@ export default function TechnicalSEOPage() {
         description="Access Core Web Vitals monitoring, mobile parity analysis, and robots.txt validation tools."
       >
         {/* CWV History */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-amber-400" />
+                  <Activity className="w-5 h-5 text-orange-400" />
                   Core Web Vitals History
                 </h2>
                 <p className="text-sm text-gray-400 mt-1">
@@ -602,7 +602,7 @@ export default function TechnicalSEOPage() {
                 size="sm"
                 onClick={refreshCwvHistory}
                 disabled={cwvHistoryLoading}
-                className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
               >
                 <RefreshCw
                   className={`w-4 h-4 mr-1 ${cwvHistoryLoading ? 'animate-spin' : ''}`}
@@ -616,7 +616,7 @@ export default function TechnicalSEOPage() {
               </div>
             ) : cwvHistoryLoading && cwvHistory.length === 0 ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+                <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
               </div>
             ) : (
               <CwvHistoryChart history={cwvHistory} />
@@ -625,11 +625,11 @@ export default function TechnicalSEOPage() {
         </Card>
 
         {/* Mobile Parity Checker */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Monitor className="w-5 h-5 text-amber-400" />
+                <Monitor className="w-5 h-5 text-orange-400" />
                 Mobile Parity Checker
               </h2>
               <p className="text-sm text-gray-400 mt-1">
@@ -647,11 +647,11 @@ export default function TechnicalSEOPage() {
         </Card>
 
         {/* Robots.txt Validator */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <FileSearch className="w-5 h-5 text-amber-400" />
+                <FileSearch className="w-5 h-5 text-orange-400" />
                 Robots.txt Validator
               </h2>
               <p className="text-sm text-gray-400 mt-1">

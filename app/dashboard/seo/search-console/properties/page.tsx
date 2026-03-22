@@ -37,7 +37,7 @@ export default function GSCPropertiesPage() {
       <div>
         <Link
           href="/dashboard/seo/search-console"
-          className="text-sm text-gray-400 hover:text-amber-400 flex items-center gap-1 mb-2 transition-colors"
+          className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Search Console
@@ -45,7 +45,7 @@ export default function GSCPropertiesPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-              <Globe className="w-7 h-7 text-amber-400" />
+              <Globe className="w-7 h-7 text-orange-400" />
               GSC Properties
             </h1>
             <p className="text-gray-400 mt-1">
@@ -57,7 +57,7 @@ export default function GSCPropertiesPage() {
               onClick={handleSync}
               disabled={syncing}
               variant="outline"
-              className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+              className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
             >
               {syncing ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -80,19 +80,19 @@ export default function GSCPropertiesPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+          <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
         </div>
       ) : (
         <div className="grid gap-4">
           {properties.map(property => (
             <Card
               key={property.id}
-              className="bg-surface-base/80 backdrop-blur-xl border border-amber-500/10"
+              className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10"
             >
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Globe className="w-5 h-5 text-amber-400" />
+                    <Globe className="w-5 h-5 text-orange-400" />
                     <div>
                       <p className="text-white font-medium">
                         {property.siteUrl}
@@ -106,7 +106,7 @@ export default function GSCPropertiesPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {property.isPrimary && (
-                      <span className="flex items-center gap-1 px-2 py-1 bg-amber-500/10 text-amber-400 rounded-full text-xs font-medium">
+                      <span className="flex items-center gap-1 px-2 py-1 bg-orange-500/10 text-orange-400 rounded-full text-xs font-medium">
                         <Star className="w-3 h-3" />
                         Primary
                       </span>

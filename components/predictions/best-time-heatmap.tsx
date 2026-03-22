@@ -58,10 +58,10 @@ function formatHour(hour: number): string {
 function getScoreColor(score: number | undefined): string {
   if (score === undefined || score === 0) return 'bg-slate-800/30';
   if (score <= 20) return 'bg-slate-800/50';
-  if (score <= 40) return 'bg-amber-900/40';
-  if (score <= 60) return 'bg-amber-700/50';
-  if (score <= 80) return 'bg-amber-500/60';
-  return 'bg-amber-400/80';
+  if (score <= 40) return 'bg-orange-900/40';
+  if (score <= 60) return 'bg-orange-700/50';
+  if (score <= 80) return 'bg-orange-500/60';
+  return 'bg-orange-400/80';
 }
 
 function buildScoreMap(slots: OptimalTimeSlot[]): Map<string, OptimalTimeSlot> {
@@ -207,7 +207,7 @@ export function BestTimeHeatmap({ slots, isLoading }: BestTimeHeatmapProps) {
                   return (
                     <div
                       key={hour}
-                      className={`h-5 mx-px rounded-sm cursor-pointer transition-all duration-150 hover:ring-1 hover:ring-amber-400/60 hover:brightness-125 ${colorClass}`}
+                      className={`h-5 mx-px rounded-sm cursor-pointer transition-all duration-150 hover:ring-1 hover:ring-orange-400/60 hover:brightness-125 ${colorClass}`}
                       onMouseEnter={e =>
                         handleCellMouseEnter(e, day, hour, slot)
                       }
@@ -225,10 +225,10 @@ export function BestTimeHeatmap({ slots, isLoading }: BestTimeHeatmapProps) {
           <span className="text-[10px] text-slate-500">Low activity</span>
           <div className="flex items-center gap-0.5">
             <div className="w-4 h-2.5 rounded-sm bg-slate-800/50" />
-            <div className="w-4 h-2.5 rounded-sm bg-amber-900/40" />
-            <div className="w-4 h-2.5 rounded-sm bg-amber-700/50" />
-            <div className="w-4 h-2.5 rounded-sm bg-amber-500/60" />
-            <div className="w-4 h-2.5 rounded-sm bg-amber-400/80" />
+            <div className="w-4 h-2.5 rounded-sm bg-orange-900/40" />
+            <div className="w-4 h-2.5 rounded-sm bg-orange-700/50" />
+            <div className="w-4 h-2.5 rounded-sm bg-orange-500/60" />
+            <div className="w-4 h-2.5 rounded-sm bg-orange-400/80" />
           </div>
           <span className="text-[10px] text-slate-500">High activity</span>
         </div>
@@ -243,7 +243,7 @@ export function BestTimeHeatmap({ slots, isLoading }: BestTimeHeatmapProps) {
               <p className="text-slate-300 font-medium">
                 {DAY_FULL[tooltip.day]}, {formatHour(tooltip.hour)}
               </p>
-              <p className="text-amber-400">
+              <p className="text-orange-400">
                 Score: <span className="text-white">{tooltip.score}</span>
               </p>
               <p className="text-slate-400">

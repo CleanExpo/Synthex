@@ -104,7 +104,7 @@ export default function AuthorsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-              <Users className="h-7 w-7 text-amber-400" />
+              <Users className="h-7 w-7 text-orange-400" />
               Author Profiles
             </h1>
             <p className="text-gray-400 mt-1">
@@ -113,7 +113,7 @@ export default function AuthorsPage() {
           </div>
           <Button
             onClick={() => setShowCreate(!showCreate)}
-            className="bg-amber-600 hover:bg-amber-700"
+            className="bg-orange-600 hover:bg-orange-700"
           >
             <Plus className="h-4 w-4 mr-2" />
             New Author
@@ -122,7 +122,7 @@ export default function AuthorsPage() {
 
         {/* Create Form */}
         {showCreate && (
-          <Card className="bg-surface-base/80 border border-amber-500/10">
+          <Card className="bg-surface-base/80 border border-orange-500/10">
             <CardContent className="p-6 space-y-4">
               <input
                 value={newAuthor.name}
@@ -157,7 +157,7 @@ export default function AuthorsPage() {
                   disabled={
                     creating || !newAuthor.name || newAuthor.bio.length < 50
                   }
-                  className="bg-amber-600 hover:bg-amber-700"
+                  className="bg-orange-600 hover:bg-orange-700"
                 >
                   {creating ? 'Creating...' : 'Create Author'}
                 </Button>
@@ -172,7 +172,7 @@ export default function AuthorsPage() {
             {[1, 2].map(i => (
               <Card
                 key={i}
-                className="bg-surface-base/80 border border-amber-500/10"
+                className="bg-surface-base/80 border border-orange-500/10"
               >
                 <CardContent className="p-6 animate-pulse space-y-3">
                   <div className="h-6 bg-white/10 rounded w-1/3" />
@@ -183,7 +183,7 @@ export default function AuthorsPage() {
             ))}
           </div>
         ) : authors.length === 0 ? (
-          <Card className="bg-surface-base/80 border border-amber-500/10">
+          <Card className="bg-surface-base/80 border border-orange-500/10">
             <CardContent className="p-12 text-center text-gray-400">
               <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
               <p>No author profiles yet</p>
@@ -197,7 +197,7 @@ export default function AuthorsPage() {
             {authors.map(author => (
               <Card
                 key={author.id}
-                className="bg-surface-base/80 border border-amber-500/10 hover:border-amber-500/30 transition-all"
+                className="bg-surface-base/80 border border-orange-500/10 hover:border-orange-500/30 transition-all"
               >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-3">

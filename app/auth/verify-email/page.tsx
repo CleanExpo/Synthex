@@ -108,17 +108,17 @@ function VerifyEmailContent() {
         />
 
         {/* Glow effects */}
-        <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-[150px] pointer-events-none" />
-        <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-amber-400/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
 
-        <Card className="relative z-10 w-full max-w-md bg-zinc-900/90 backdrop-blur-xl border border-amber-900/20 shadow-2xl shadow-amber-500/5">
+        <Card className="relative z-10 w-full max-w-md bg-zinc-900/90 backdrop-blur-xl border border-orange-900/20 shadow-2xl shadow-orange-500/5">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 flex items-center justify-center">
-                <CheckCircle className="h-8 w-8 text-amber-400" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 flex items-center justify-center">
+                <CheckCircle className="h-8 w-8 text-orange-400" />
               </div>
             </div>
-            <CardTitle className="text-2xl text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300">
+            <CardTitle className="text-2xl text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
               Email Verified!
             </CardTitle>
             <CardDescription className="text-gray-400">
@@ -131,7 +131,7 @@ function VerifyEmailContent() {
             </p>
             <Button
               onClick={() => router.push('/onboarding')}
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-medium shadow-lg shadow-amber-500/25 transition-all hover:shadow-amber-500/40"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40"
             >
               Continue Setup
             </Button>
@@ -157,17 +157,17 @@ function VerifyEmailContent() {
       />
 
       {/* Glow effects */}
-      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-amber-400/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
 
-      <Card className="relative z-10 w-full max-w-md bg-zinc-900/90 backdrop-blur-xl border border-amber-900/20 shadow-2xl shadow-amber-500/5">
+      <Card className="relative z-10 w-full max-w-md bg-zinc-900/90 backdrop-blur-xl border border-orange-900/20 shadow-2xl shadow-orange-500/5">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 flex items-center justify-center">
-              <Mail className="h-8 w-8 text-amber-400" />
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 flex items-center justify-center">
+              <Mail className="h-8 w-8 text-orange-400" />
             </div>
           </div>
-          <CardTitle className="text-2xl text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300">
+          <CardTitle className="text-2xl text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
             Verify Your Email
           </CardTitle>
           <CardDescription className="text-gray-400">
@@ -191,7 +191,7 @@ function VerifyEmailContent() {
                 placeholder="Enter verification code"
                 value={code}
                 onChange={e => setCode(e.target.value)}
-                className="text-center text-lg tracking-wider bg-white/5 border-amber-500/20 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20"
+                className="text-center text-lg tracking-wider bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
                 maxLength={64}
               />
               <p className="text-xs text-gray-500 mt-2">
@@ -202,7 +202,7 @@ function VerifyEmailContent() {
             <Button
               onClick={() => verifyEmail(code)}
               disabled={verifying || !code}
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-medium shadow-lg shadow-amber-500/25 transition-all hover:shadow-amber-500/40"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40"
             >
               {verifying ? (
                 <>
@@ -244,7 +244,7 @@ function VerifyEmailContent() {
                     }
                   }}
                   disabled={resending}
-                  className="text-amber-400 hover:text-amber-300 transition-colors disabled:opacity-50 inline-flex items-center gap-1"
+                  className="text-orange-400 hover:text-orange-300 transition-colors disabled:opacity-50 inline-flex items-center gap-1"
                 >
                   {resending && <RefreshCw className="h-3 w-3 animate-spin" />}
                   {resending ? 'Sending...' : 'Resend code'}
@@ -256,7 +256,7 @@ function VerifyEmailContent() {
               <Button
                 variant="ghost"
                 onClick={() => router.push('/login')}
-                className="text-sm text-gray-400 hover:text-amber-400 transition-colors"
+                className="text-sm text-gray-400 hover:text-orange-400 transition-colors"
               >
                 Back to Login
               </Button>

@@ -80,7 +80,7 @@ export function TrainingUpload({
               onClick={() => setSelectedContentType(type.type)}
               className={`p-3 rounded-lg border transition-all ${
                 selectedContentType === type.type
-                  ? 'bg-amber-500/20 border-amber-500'
+                  ? 'bg-orange-500/20 border-orange-500'
                   : 'bg-white/5 border-white/10 hover:bg-white/10'
               }`}
             >
@@ -94,7 +94,7 @@ export function TrainingUpload({
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${
             dragActive
-              ? 'border-amber-500 bg-amber-500/10'
+              ? 'border-orange-500 bg-orange-500/10'
               : 'border-white/20 bg-white/5'
           }`}
           onDragEnter={handleDrag}

@@ -34,7 +34,7 @@ export function TimelineView({
         return (
           <div
             key={day.toISOString()}
-            className="border-l-2 border-amber-500/30 pl-4"
+            className="border-l-2 border-orange-500/30 pl-4"
           >
             <h3 className="font-medium text-lg mb-3">
               {format(day, 'EEEE, MMM d')}

@@ -20,9 +20,9 @@ interface ParallelExecutionWidgetProps {
 function statusColour(status: string): string {
   switch (status) {
     case 'running':
-      return 'bg-amber-500';
+      return 'bg-[#FF6B35]';
     case 'waiting_approval':
-      return 'bg-amber-500';
+      return 'bg-[#FF6B35]';
     case 'completed':
       return 'bg-emerald-500';
     case 'failed':
@@ -74,7 +74,7 @@ export function ParallelExecutionWidget({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Loader2 className="h-4 w-4 text-amber-400 animate-spin" />
+          <Loader2 className="h-4 w-4 text-[#FF9A6C] animate-spin" />
           <span className="text-sm font-medium text-white/90">
             Parallel Executions
           </span>
@@ -88,7 +88,7 @@ export function ParallelExecutionWidget({
       <div className="space-y-1">
         <div className="h-2 rounded-full bg-white/10 overflow-hidden">
           <div
-            className="h-full bg-amber-500 transition-all duration-500"
+            className="h-full bg-[#FF6B35] transition-all duration-500"
             style={{ width: `${slotPct}%` }}
           />
         </div>
@@ -117,9 +117,9 @@ export function ParallelExecutionWidget({
                   className={cn(
                     'text-[10px] px-1.5 py-0.5 rounded-full border',
                     exec.status === 'running' &&
-                      'bg-amber-500/20 text-amber-300 border-amber-500/30',
+                      'bg-[#FF6B35]/20 text-[#FFD60A] border-[#FF6B35]/30',
                     exec.status === 'waiting_approval' &&
-                      'bg-amber-500/20 text-amber-300 border-amber-500/30',
+                      'bg-[#FF6B35]/20 text-[#FFD60A] border-[#FF6B35]/30',
                     exec.status === 'pending' &&
                       'bg-slate-500/20 text-slate-300 border-slate-500/30'
                   )}
@@ -154,7 +154,7 @@ export function ParallelExecutionWidget({
       {/* CTA */}
       <Link
         href="/dashboard/workflows"
-        className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colours"
+        className="flex items-center gap-1.5 text-xs text-[#FF9A6C] hover:text-[#FFD60A] transition-colours"
       >
         <GitBranch className="h-3 w-3" />
         View all workflows

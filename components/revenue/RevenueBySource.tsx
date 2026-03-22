@@ -49,7 +49,7 @@ function LoadingSkeleton() {
   return (
     <div className="bg-gray-900/50 border border-white/10 rounded-xl p-5">
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-8 h-8 bg-amber-500/10 rounded-lg animate-pulse" />
+        <div className="w-8 h-8 bg-orange-500/10 rounded-lg animate-pulse" />
         <div className="w-28 h-5 bg-white/5 rounded animate-pulse" />
       </div>
       <div className="h-[200px] flex items-center justify-center">
@@ -132,8 +132,8 @@ export function RevenueBySource({
       )}
     >
       <div className="flex items-center gap-2 mb-4">
-        <div className="p-2 bg-amber-500/10 rounded-lg">
-          <PieChartIcon className="w-4 h-4 text-amber-400" />
+        <div className="p-2 bg-orange-500/10 rounded-lg">
+          <PieChartIcon className="w-4 h-4 text-orange-400" />
         </div>
         <h3 className="font-medium text-white">By Source</h3>
       </div>

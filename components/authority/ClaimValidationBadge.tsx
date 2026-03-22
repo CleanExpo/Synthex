@@ -26,13 +26,13 @@ export function ClaimValidationBadge({ claim }: ClaimValidationBadgeProps) {
         {claim.verified ? (
           <CheckCircle className="h-4 w-4 text-emerald-400 mt-0.5 shrink-0" />
         ) : (
-          <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
+          <AlertTriangle className="h-4 w-4 text-orange-400 mt-0.5 shrink-0" />
         )}
         <div className="flex-1 min-w-0">
           <p className="text-sm text-slate-300 line-clamp-2">{claim.text}</p>
           <div className="flex items-center gap-2 mt-1">
             <span
-              className={`text-xs font-medium ${claim.verified ? 'text-emerald-400' : 'text-amber-400'}`}
+              className={`text-xs font-medium ${claim.verified ? 'text-emerald-400' : 'text-orange-400'}`}
             >
               {claim.verified ? 'Verified' : 'Unverified'}
             </span>
@@ -66,7 +66,7 @@ export function ClaimValidationBadge({ claim }: ClaimValidationBadgeProps) {
                   href={source.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1"
+                  className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1"
                   onClick={e => e.stopPropagation()}
                 >
                   {source.sourceName} <ExternalLink className="h-3 w-3" />

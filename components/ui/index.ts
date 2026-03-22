@@ -102,7 +102,7 @@ export const glassStyles = {
   button:
     'bg-white/[0.05] backdrop-blur-md border border-white/[0.1] hover:bg-white/[0.1]',
   buttonPrimary:
-    'bg-gradient-to-r from-amber-500/20 to-amber-600/20 backdrop-blur-md border border-amber-500/30',
+    'bg-gradient-to-r from-orange-500/20 to-orange-600/20 backdrop-blur-md border border-orange-500/30',
 } as const;
 
 // Spacing scale

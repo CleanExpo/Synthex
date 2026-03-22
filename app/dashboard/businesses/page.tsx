@@ -64,10 +64,10 @@ export default function BusinessesPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-amber-500/10 rounded-lg animate-pulse" />
-            <div className="w-48 h-8 bg-amber-500/10 rounded animate-pulse" />
+            <div className="w-8 h-8 bg-orange-500/10 rounded-lg animate-pulse" />
+            <div className="w-48 h-8 bg-orange-500/10 rounded animate-pulse" />
           </div>
-          <div className="w-40 h-10 bg-amber-500/10 rounded-lg animate-pulse" />
+          <div className="w-40 h-10 bg-orange-500/10 rounded-lg animate-pulse" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
@@ -86,7 +86,7 @@ export default function BusinessesPage() {
   if (!user?.isMultiBusinessOwner) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Card className="max-w-md bg-surface-base/80 border border-amber-500/10">
+        <Card className="max-w-md bg-surface-base/80 border border-orange-500/10">
           <CardContent className="p-8 text-center space-y-4">
             <div className="w-16 h-16 bg-red-500/10 rounded-sm flex items-center justify-center mx-auto border-[0.5px] border-red-500/20">
               <Building className="w-8 h-8 text-red-400" />
@@ -102,7 +102,7 @@ export default function BusinessesPage() {
             </div>
             <Button
               onClick={() => router.push('/dashboard')}
-              className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-[0.5px] border-amber-500/30"
+              className="bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border-[0.5px] border-orange-500/30"
             >
               Return to Dashboard
             </Button>
@@ -117,8 +117,8 @@ export default function BusinessesPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-amber-500/10 rounded-sm flex items-center justify-center border-[0.5px] border-amber-500/20">
-            <Building className="w-5 h-5 text-amber-400" />
+          <div className="w-10 h-10 bg-orange-500/10 rounded-sm flex items-center justify-center border-[0.5px] border-orange-500/20">
+            <Building className="w-5 h-5 text-orange-400" />
           </div>
           <div>
             <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-1 block">
@@ -134,7 +134,7 @@ export default function BusinessesPage() {
         </div>
         <Button
           onClick={() => setCreateDialogOpen(true)}
-          className="bg-amber-500/20 border-[0.5px] border-amber-500/30 text-amber-400 hover:bg-amber-500/30"
+          className="bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30"
         >
           <Plus className="w-4 h-4 mr-2" />
           Create Business
@@ -154,7 +154,7 @@ export default function BusinessesPage() {
       ) : overview ? (
         <BusinessOverviewCards overview={overview} />
       ) : (
-        <Card className="bg-surface-base/80 border border-amber-500/10">
+        <Card className="bg-surface-base/80 border border-orange-500/10">
           <CardContent className="p-8 text-center">
             <p className="text-white/40">No overview data available</p>
           </CardContent>

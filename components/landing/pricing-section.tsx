@@ -152,11 +152,11 @@ export function PricingSection({
           ref={switchRef as React.RefObject<HTMLButtonElement>}
           checked={!isMonthly}
           onCheckedChange={handleToggle}
-          className="data-[state=checked]:bg-amber-500 data-[state=unchecked]:bg-white/10"
+          className="data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-white/10"
         />
         <span className="text-sm font-medium text-white/60">
           Annual{' '}
-          <span className="inline-flex items-center bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-full text-xs px-2.5 py-0.5 font-semibold ml-1">
+          <span className="inline-flex items-center bg-orange-500/10 text-orange-400 border border-orange-500/30 rounded-full text-xs px-2.5 py-0.5 font-semibold ml-1">
             Save 20%
           </span>
         </span>
@@ -188,7 +188,7 @@ export function PricingSection({
             className={cn(
               'rounded-2xl border p-6 text-center flex flex-col relative',
               plan.isPopular
-                ? 'border-amber-500/40 bg-amber-500/[0.04] shadow-2xl shadow-amber-500/10 ring-1 ring-amber-500/20'
+                ? 'border-orange-500/40 bg-orange-500/[0.04] shadow-2xl shadow-orange-500/10 ring-1 ring-orange-500/20'
                 : 'border-white/[0.08] bg-charcoal-800/60 shadow-lg shadow-black/30',
               !plan.isPopular && 'mt-5'
             )}
@@ -196,7 +196,7 @@ export function PricingSection({
             {/* Most Popular badge */}
             {plan.isPopular && (
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                <span className="inline-flex items-center gap-1 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-full text-xs px-3 py-1 font-semibold whitespace-nowrap">
+                <span className="inline-flex items-center gap-1 bg-orange-500/10 text-orange-400 border border-orange-500/30 rounded-full text-xs px-3 py-1 font-semibold whitespace-nowrap">
                   <Star className="h-3 w-3 fill-current" />
                   Most Popular
                 </span>
@@ -257,7 +257,7 @@ export function PricingSection({
               <ul className="mt-5 gap-2 flex flex-col text-left">
                 {plan.features.map((feature, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <Check className="h-4 w-4 text-orange-400 mt-0.5 flex-shrink-0" />
                     <span className="text-gray-300 text-sm">{feature}</span>
                   </li>
                 ))}
@@ -272,8 +272,8 @@ export function PricingSection({
                   'group relative w-full gap-2 overflow-hidden text-sm font-semibold tracking-tight rounded-full py-3',
                   'transition-all duration-300',
                   plan.isPopular
-                    ? 'bg-amber-500 text-charcoal-900 border-amber-500 hover:bg-amber-400 hover:border-amber-400'
-                    : 'bg-transparent text-white border-white/20 hover:border-amber-500/50 hover:bg-amber-500/[0.08] hover:text-amber-300'
+                    ? 'bg-orange-500 text-charcoal-900 border-orange-500 hover:bg-orange-400 hover:border-orange-400'
+                    : 'bg-transparent text-white border-white/20 hover:border-orange-500/50 hover:bg-orange-500/[0.08] hover:text-orange-300'
                 )}
               >
                 {plan.buttonText}

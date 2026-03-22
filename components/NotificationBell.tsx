@@ -79,7 +79,7 @@ export function NotificationBell() {
       case 'error':
         return 'border-red-500/20 bg-red-500/5';
       default:
-        return 'border-amber-500/20 bg-amber-500/5';
+        return 'border-orange-500/20 bg-orange-500/5';
     }
   };
 
@@ -102,7 +102,7 @@ export function NotificationBell() {
           )}
         />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-amber-500 text-[10px] font-medium text-white flex items-center justify-center animate-in zoom-in duration-300">
+          <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-orange-500 text-[10px] font-medium text-white flex items-center justify-center animate-in zoom-in duration-300">
             {unreadCount}
           </span>
         )}
@@ -131,7 +131,7 @@ export function NotificationBell() {
                   key={notification.id}
                   className={cn(
                     'p-4 border-b border-white/5 hover:bg-white/5 transition-all duration-200 cursor-pointer',
-                    !notification.read && 'bg-amber-500/5',
+                    !notification.read && 'bg-orange-500/5',
                     getTypeStyles(notification.type)
                   )}
                   onClick={() =>
@@ -157,14 +157,14 @@ export function NotificationBell() {
                       {notification.action && (
                         <a
                           href={notification.action.url}
-                          className="text-xs text-amber-400 hover:text-amber-300 mt-2 inline-block"
+                          className="text-xs text-orange-400 hover:text-orange-300 mt-2 inline-block"
                         >
                           {notification.action.label} →
                         </a>
                       )}
                     </div>
                     {!notification.read && (
-                      <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
                     )}
                   </div>
                 </div>
@@ -183,7 +183,7 @@ export function NotificationBell() {
               </Button>
               <Button
                 variant="ghost"
-                className="flex-1 text-xs text-amber-400 hover:text-amber-300"
+                className="flex-1 text-xs text-orange-400 hover:text-orange-300"
                 onClick={() => {
                   setIsOpen(false);
                   setCentreOpen(true);
@@ -198,7 +198,7 @@ export function NotificationBell() {
             <div className="p-3 border-t border-white/10">
               <Button
                 variant="ghost"
-                className="w-full text-xs text-amber-400 hover:text-amber-300"
+                className="w-full text-xs text-orange-400 hover:text-orange-300"
                 onClick={() => {
                   setIsOpen(false);
                   setCentreOpen(true);

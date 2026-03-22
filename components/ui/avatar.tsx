@@ -15,16 +15,16 @@ const avatarVariants = cva(
         glass: 'ring-2 ring-white/20',
         'glass-solid': 'ring-2 ring-white/30 shadow-lg',
         'glass-primary':
-          'ring-2 ring-amber-500/50 shadow-[0_0_15px_rgba(255,184,123,0.3)]',
+          'ring-2 ring-orange-500/50 shadow-[0_0_15px_rgba(255,184,123,0.3)]',
         'glass-secondary':
-          'ring-2 ring-amber-500/50 shadow-[0_0_15px_rgba(255,184,123,0.3)]',
+          'ring-2 ring-orange-500/50 shadow-[0_0_15px_rgba(255,184,123,0.3)]',
         'glass-success':
           'ring-2 ring-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.3)]',
         // Gradient ring variants
         'gradient-primary':
-          'ring-2 ring-amber-500 shadow-[0_0_20px_rgba(255,184,123,0.4)]',
+          'ring-2 ring-orange-500 shadow-[0_0_20px_rgba(255,184,123,0.4)]',
         'gradient-secondary':
-          'ring-2 ring-amber-500 shadow-[0_0_20px_rgba(255,184,123,0.4)]',
+          'ring-2 ring-orange-500 shadow-[0_0_20px_rgba(255,184,123,0.4)]',
       },
       size: {
         default: 'h-10 w-10',
@@ -50,13 +50,13 @@ const avatarFallbackVariants = cva(
         default: 'bg-muted dark:bg-slate-800 dark:text-slate-200',
         glass: 'bg-white/[0.08] backdrop-blur-md text-white',
         'glass-solid': 'bg-slate-800/80 backdrop-blur-md text-white',
-        'glass-primary': 'bg-amber-500/20 backdrop-blur-md text-amber-200',
-        'glass-secondary': 'bg-amber-500/20 backdrop-blur-md text-amber-200',
+        'glass-primary': 'bg-orange-500/20 backdrop-blur-md text-orange-200',
+        'glass-secondary': 'bg-orange-500/20 backdrop-blur-md text-orange-200',
         'glass-success': 'bg-emerald-500/20 backdrop-blur-md text-emerald-200',
         'gradient-primary':
-          'bg-gradient-to-br from-amber-500 to-amber-500 text-white',
+          'bg-gradient-to-br from-orange-500 to-orange-500 text-white',
         'gradient-secondary':
-          'bg-gradient-to-br from-amber-500 to-blue-500 text-white',
+          'bg-gradient-to-br from-orange-500 to-blue-500 text-white',
       },
       size: {
         default: 'text-sm',

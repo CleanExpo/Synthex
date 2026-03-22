@@ -84,7 +84,7 @@ export function NominationEditor({
               'flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors',
               isRegenerating
                 ? 'opacity-50 cursor-not-allowed bg-slate-700/40 text-slate-500'
-                : 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'
+                : 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30'
             )}
           >
             <RefreshCw
@@ -100,7 +100,7 @@ export function NominationEditor({
         value={text}
         onChange={e => handleChange(e.target.value)}
         rows={12}
-        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-sm text-slate-200 placeholder-slate-600 resize-y focus:outline-none focus:ring-1 focus:ring-amber-500/50 font-mono leading-relaxed"
+        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-sm text-slate-200 placeholder-slate-600 resize-y focus:outline-none focus:ring-1 focus:ring-orange-500/50 font-mono leading-relaxed"
         placeholder="Nomination text will appear here…"
       />
     </div>

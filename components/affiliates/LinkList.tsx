@@ -112,7 +112,7 @@ function LinkCard({
       className={cn(
         'bg-gray-900/50 border rounded-xl p-5 transition-all cursor-pointer group',
         isSelected
-          ? 'border-amber-500/50 ring-1 ring-amber-500/30'
+          ? 'border-orange-500/50 ring-1 ring-orange-500/30'
           : 'border-white/10 hover:border-white/20'
       )}
       onClick={onSelect}
@@ -127,7 +127,7 @@ function LinkCard({
             className="w-16 h-16 rounded-lg object-cover"
           />
         ) : (
-          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/20 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20 flex items-center justify-center">
             <ImageIcon className="h-6 w-6 text-white/40" />
           </div>
         )}
@@ -159,7 +159,7 @@ function LinkCard({
             </span>
           )}
           {link.autoInsert && (
-            <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-amber-500/20 text-amber-400 rounded-full">
+            <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-orange-500/20 text-orange-400 rounded-full">
               <Zap className="h-3 w-3" />
               Auto
             </span>

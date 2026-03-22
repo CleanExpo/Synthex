@@ -13,7 +13,7 @@ export function FloatingParticles() {
       {[...Array(30)].map((_, i) => (
         <div
           key={i}
-          className="absolute w-1 h-1 bg-amber-400/30 rounded-full animate-float"
+          className="absolute w-1 h-1 bg-orange-400/30 rounded-full animate-float"
           style={{
             left: `${(sr(i * 4) * 100).toFixed(4)}%`,
             top: `${(sr(i * 4 + 1) * 100).toFixed(4)}%`,

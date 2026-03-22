@@ -57,7 +57,7 @@ function Tab({ text, selected, setSelected, discount = false }: TabProps) {
           className={cn(
             'relative z-10 whitespace-nowrap text-[10px] font-medium px-1.5 py-0.5 rounded-sm border-[0.5px]',
             selected
-              ? 'bg-amber-500/[0.08] border-amber-500/20 text-amber-400'
+              ? 'bg-orange-500/[0.08] border-orange-500/20 text-orange-400'
               : 'bg-white/[0.04] border-white/[0.06] text-white/40'
           )}
         >
@@ -85,9 +85,9 @@ function PricingCard({ tier, paymentFrequency }: PricingCardProps) {
       className={cn(
         'relative flex flex-col gap-6 overflow-hidden p-5 rounded-sm border-[0.5px] transition-all duration-200',
         isHighlighted
-          ? 'bg-amber-500/[0.06] border-amber-500/20'
+          ? 'bg-orange-500/[0.06] border-orange-500/20'
           : 'bg-[#050505] border-white/[0.06] hover:border-white/10',
-        isPopular && 'ring-1 ring-amber-500/30'
+        isPopular && 'ring-1 ring-orange-500/30'
       )}
     >
       {/* Grid pattern overlay for highlighted card */}
@@ -100,13 +100,13 @@ function PricingCard({ tier, paymentFrequency }: PricingCardProps) {
         <h2
           className={cn(
             'text-base font-medium capitalize',
-            isHighlighted ? 'text-amber-400' : 'text-white'
+            isHighlighted ? 'text-orange-400' : 'text-white'
           )}
         >
           {tier.name}
         </h2>
         {isPopular && (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-sm bg-amber-500/[0.08] border-[0.5px] border-amber-500/20 text-amber-400">
+          <span className="text-[10px] font-medium px-2 py-0.5 rounded-sm bg-orange-500/[0.08] border-[0.5px] border-orange-500/20 text-orange-400">
             Most Popular
           </span>
         )}
@@ -140,7 +140,7 @@ function PricingCard({ tier, paymentFrequency }: PricingCardProps) {
               <span
                 className={cn(
                   'text-3xl font-semibold',
-                  isHighlighted ? 'text-amber-400' : 'text-white'
+                  isHighlighted ? 'text-orange-400' : 'text-white'
                 )}
               >
                 {price}
@@ -164,7 +164,7 @@ function PricingCard({ tier, paymentFrequency }: PricingCardProps) {
               <BadgeCheck
                 className={cn(
                   'h-4 w-4 shrink-0',
-                  isHighlighted ? 'text-amber-400' : 'text-amber-400/60'
+                  isHighlighted ? 'text-orange-400' : 'text-orange-400/60'
                 )}
               />
               {feature}
@@ -178,7 +178,7 @@ function PricingCard({ tier, paymentFrequency }: PricingCardProps) {
         className={cn(
           'relative z-10 w-full py-2 px-4 rounded-sm text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2',
           isHighlighted
-            ? 'bg-amber-500/[0.12] border-[0.5px] border-amber-500/30 text-amber-400 hover:bg-amber-500/[0.20]'
+            ? 'bg-orange-500/[0.12] border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/[0.20]'
             : 'bg-white/[0.04] border-[0.5px] border-white/[0.06] text-white hover:bg-white/[0.08] hover:border-white/10'
         )}
       >

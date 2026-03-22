@@ -14,10 +14,10 @@ const labelVariants = cva(
         // Premium Glassmorphism variants
         glass: 'text-white/90',
         'glass-muted': 'text-white/60',
-        'glass-primary': 'text-amber-200',
-        'glass-secondary': 'text-amber-200',
+        'glass-primary': 'text-orange-200',
+        'glass-secondary': 'text-orange-200',
         'glass-success': 'text-emerald-200',
-        'glass-warning': 'text-amber-200',
+        'glass-warning': 'text-orange-200',
         'glass-destructive': 'text-red-200',
       },
       size: {

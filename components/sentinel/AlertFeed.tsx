@@ -44,9 +44,9 @@ const SEVERITY_CONFIG = {
     label: 'Critical',
   },
   warning: {
-    containerClass: 'border-amber-500/30 bg-amber-500/5',
-    iconClass: 'text-amber-400',
-    badgeClass: 'bg-amber-500/20 text-amber-300',
+    containerClass: 'border-orange-500/30 bg-orange-500/5',
+    iconClass: 'text-orange-400',
+    badgeClass: 'bg-orange-500/20 text-orange-300',
     label: 'Warning',
   },
   info: {
@@ -78,10 +78,13 @@ function MetricChange({
   changePercent: number | null;
   alertType: string;
 }) {
-  if (metric === null || previousValue === null || currentValue === null) return null;
+  if (metric === null || previousValue === null || currentValue === null)
+    return null;
 
-  const isPositiveBad = alertType === 'ranking-drop' || alertType === 'crawl-error-spike';
-  const change = changePercent !== null ? Math.abs(changePercent).toFixed(0) : null;
+  const isPositiveBad =
+    alertType === 'ranking-drop' || alertType === 'crawl-error-spike';
+  const change =
+    changePercent !== null ? Math.abs(changePercent).toFixed(0) : null;
   const increased = currentValue > previousValue;
   const isBad = isPositiveBad ? increased : !increased;
 
@@ -104,11 +107,14 @@ function MetricChange({
   };
 
   return (
-    <div className={`mt-2 text-sm font-mono ${isBad ? 'text-red-400' : 'text-emerald-400'}`}>
+    <div
+      className={`mt-2 text-sm font-mono ${isBad ? 'text-red-400' : 'text-emerald-400'}`}
+    >
       {label}: {fmtVal(previousValue)} → {fmtVal(currentValue)}
       {change && (
         <span className="ml-2 text-xs opacity-80">
-          ({increased ? '+' : '-'}{change}%)
+          ({increased ? '+' : '-'}
+          {change}%)
         </span>
       )}
     </div>
@@ -117,18 +123,26 @@ function MetricChange({
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('en-AU', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
-export function AlertFeed({ alerts, onAcknowledge, loading = false }: AlertFeedProps) {
+export function AlertFeed({
+  alerts,
+  onAcknowledge,
+  loading = false,
+}: AlertFeedProps) {
   const [acknowledging, setAcknowledging] = useState<Set<string>>(new Set());
 
   const handleAcknowledge = async (id: string) => {
-    setAcknowledging((prev) => new Set(prev).add(id));
+    setAcknowledging(prev => new Set(prev).add(id));
     try {
       await onAcknowledge(id);
     } finally {
-      setAcknowledging((prev) => {
+      setAcknowledging(prev => {
         const next = new Set(prev);
         next.delete(id);
         return next;
@@ -139,7 +153,7 @@ export function AlertFeed({ alerts, onAcknowledge, loading = false }: AlertFeedP
   if (loading) {
     return (
       <div className="space-y-3">
-        {[1, 2, 3].map((i) => (
+        {[1, 2, 3].map(i => (
           <div key={i} className="h-24 rounded-lg bg-white/5 animate-pulse" />
         ))}
       </div>
@@ -150,7 +164,9 @@ export function AlertFeed({ alerts, onAcknowledge, loading = false }: AlertFeedP
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <CheckCircleIcon className="w-12 h-12 text-emerald-400 mb-3" />
-        <p className="text-lg font-medium text-white">No alerts — your site is healthy</p>
+        <p className="text-lg font-medium text-white">
+          No alerts — your site is healthy
+        </p>
         <p className="text-sm text-gray-400 mt-1">
           Sentinel will notify you when regressions are detected.
         </p>
@@ -160,7 +176,7 @@ export function AlertFeed({ alerts, onAcknowledge, loading = false }: AlertFeedP
 
   return (
     <div className="space-y-3">
-      {alerts.map((alert) => {
+      {alerts.map(alert => {
         const config =
           SEVERITY_CONFIG[alert.severity as keyof typeof SEVERITY_CONFIG] ??
           SEVERITY_CONFIG.info;
@@ -175,13 +191,19 @@ export function AlertFeed({ alerts, onAcknowledge, loading = false }: AlertFeedP
           >
             <div className="flex items-start gap-3">
               {/* Severity icon */}
-              <AlertCircle className={`w-5 h-5 mt-0.5 flex-shrink-0 ${config.iconClass}`} />
+              <AlertCircle
+                className={`w-5 h-5 mt-0.5 flex-shrink-0 ${config.iconClass}`}
+              />
 
               <div className="flex-1 min-w-0">
                 {/* Header row */}
                 <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <span className="font-medium text-white text-sm">{alert.title}</span>
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${config.badgeClass}`}>
+                  <span className="font-medium text-white text-sm">
+                    {alert.title}
+                  </span>
+                  <span
+                    className={`px-2 py-0.5 rounded text-xs font-medium ${config.badgeClass}`}
+                  >
                     {config.label}
                   </span>
                   <span className="px-2 py-0.5 rounded text-xs bg-white/10 text-gray-300">
@@ -190,7 +212,9 @@ export function AlertFeed({ alerts, onAcknowledge, loading = false }: AlertFeedP
                 </div>
 
                 {/* Description */}
-                <p className="text-sm text-gray-300 leading-relaxed">{alert.description}</p>
+                <p className="text-sm text-gray-300 leading-relaxed">
+                  {alert.description}
+                </p>
 
                 {/* Metric change */}
                 <MetricChange
@@ -203,14 +227,18 @@ export function AlertFeed({ alerts, onAcknowledge, loading = false }: AlertFeedP
 
                 {/* Footer */}
                 <div className="flex items-center justify-between mt-3">
-                  <span className="text-xs text-gray-500">{formatDate(alert.createdAt)}</span>
+                  <span className="text-xs text-gray-500">
+                    {formatDate(alert.createdAt)}
+                  </span>
                   {!alert.acknowledged && (
                     <button
                       onClick={() => handleAcknowledge(alert.id)}
                       disabled={acknowledging.has(alert.id)}
                       className="text-xs px-3 py-1 rounded bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white transition-colors disabled:opacity-50"
                     >
-                      {acknowledging.has(alert.id) ? 'Acknowledging...' : 'Acknowledge'}
+                      {acknowledging.has(alert.id)
+                        ? 'Acknowledging...'
+                        : 'Acknowledge'}
                     </button>
                   )}
                   {alert.acknowledged && (

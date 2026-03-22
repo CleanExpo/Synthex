@@ -14,7 +14,7 @@ import type { CompetitorVisibility } from '@/lib/prompts/types';
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 interface CompetitorVisibilityTableProps {
-  competitors: CompetitorVisibility[]
+  competitors: CompetitorVisibility[];
 }
 
 // ─── Mention rate badge ───────────────────────────────────────────────────────
@@ -22,12 +22,16 @@ interface CompetitorVisibilityTableProps {
 function MentionRateBadge({ rate }: { rate: number }) {
   const pct = Math.round(rate);
   const colour =
-    pct >= 60 ? 'text-red-400 bg-red-500/10' :
-    pct >= 30 ? 'text-amber-400 bg-amber-500/10' :
-    'text-slate-400 bg-white/5';
+    pct >= 60
+      ? 'text-red-400 bg-red-500/10'
+      : pct >= 30
+        ? 'text-orange-400 bg-orange-500/10'
+        : 'text-slate-400 bg-white/5';
 
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colour}`}>
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colour}`}
+    >
       {pct}%
     </span>
   );
@@ -46,11 +50,15 @@ function AvgPosition({ pos }: { pos: number }) {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function CompetitorVisibilityTable({ competitors }: CompetitorVisibilityTableProps) {
+export function CompetitorVisibilityTable({
+  competitors,
+}: CompetitorVisibilityTableProps) {
   if (competitors.length === 0) {
     return (
       <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center">
-        <p className="text-sm text-slate-400">No competitor mentions detected yet.</p>
+        <p className="text-sm text-slate-400">
+          No competitor mentions detected yet.
+        </p>
         <p className="text-xs text-slate-500 mt-1">
           Test more prompts to surface competitor visibility data.
         </p>
@@ -81,7 +89,9 @@ export function CompetitorVisibilityTable({ competitors }: CompetitorVisibilityT
           {competitors.map((comp, idx) => (
             <tr
               key={comp.competitor}
-              className={idx < competitors.length - 1 ? 'border-b border-white/5' : ''}
+              className={
+                idx < competitors.length - 1 ? 'border-b border-white/5' : ''
+              }
             >
               <td className="px-4 py-3">
                 <span className="font-medium text-slate-200 capitalize">

@@ -14,13 +14,13 @@ interface DesignAuditCardProps {
 function getBarColor(value: number, max: number): string {
   const pct = value / max;
   if (pct >= 0.8) return 'bg-emerald-500';
-  if (pct >= 0.5) return 'bg-amber-500';
+  if (pct >= 0.5) return 'bg-orange-500';
   return 'bg-red-500';
 }
 
 const SEVERITY_COLORS: Record<string, string> = {
   error: 'text-red-400',
-  warning: 'text-amber-400',
+  warning: 'text-orange-400',
   info: 'text-blue-400',
 };
 
@@ -35,11 +35,11 @@ export function DesignAuditCard({ score, issues }: DesignAuditCardProps) {
   ];
 
   return (
-    <Card className="bg-white/5 border-amber-500/10 backdrop-blur-sm">
+    <Card className="bg-white/5 border-orange-500/10 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="text-white text-sm font-medium flex items-center justify-between">
           Design Quality
-          <span className="text-2xl font-bold text-amber-400">
+          <span className="text-2xl font-bold text-orange-400">
             {score.total}
           </span>
         </CardTitle>

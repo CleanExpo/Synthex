@@ -58,8 +58,8 @@ export function BrandVoicePageClient() {
                 </div>
               </div>
               <div className="flex gap-3">
-                <div className="h-6 w-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-amber-400">2</span>
+                <div className="h-6 w-6 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-orange-400">2</span>
                 </div>
                 <div>
                   <p className="font-medium text-white/80">Quality scoring</p>
@@ -70,8 +70,8 @@ export function BrandVoicePageClient() {
                 </div>
               </div>
               <div className="flex gap-3">
-                <div className="h-6 w-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-amber-400">3</span>
+                <div className="h-6 w-6 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-orange-400">3</span>
                 </div>
                 <div>
                   <p className="font-medium text-white/80">Confidence gate</p>
@@ -82,8 +82,8 @@ export function BrandVoicePageClient() {
                 </div>
               </div>
               <div className="flex gap-3">
-                <div className="h-6 w-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-amber-400">4</span>
+                <div className="h-6 w-6 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-orange-400">4</span>
                 </div>
                 <div>
                   <p className="font-medium text-white/80">Human decision</p>

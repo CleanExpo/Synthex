@@ -38,7 +38,7 @@ export function VideoScriptPreview({ script }: VideoScriptPreviewProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h4 className="text-white font-medium flex items-center gap-2">
-          <FileText className="w-4 h-4 text-amber-400" />
+          <FileText className="w-4 h-4 text-orange-400" />
           Script Preview
         </h4>
         <div className="flex items-center gap-1 text-xs text-gray-500">
@@ -49,8 +49,8 @@ export function VideoScriptPreview({ script }: VideoScriptPreviewProps) {
 
       {/* Hook */}
       {script.hook && (
-        <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
-          <span className="text-xs font-medium text-amber-400 uppercase tracking-wide">
+        <div className="p-3 rounded-lg bg-orange-500/5 border border-orange-500/10">
+          <span className="text-xs font-medium text-orange-400 uppercase tracking-wide">
             Opening Hook
           </span>
           <p className="text-white text-sm mt-1">{script.hook}</p>

@@ -218,10 +218,10 @@ export function MediaAttacher({
                     alt="Uploading"
                     className="h-full w-full object-cover opacity-40"
                   />
-                  <Loader2 className="absolute h-5 w-5 text-amber-400 animate-spin" />
+                  <Loader2 className="absolute h-5 w-5 text-orange-400 animate-spin" />
                 </>
               ) : (
-                <Loader2 className="h-5 w-5 text-amber-400 animate-spin" />
+                <Loader2 className="h-5 w-5 text-orange-400 animate-spin" />
               )}
             </div>
           ))}
@@ -245,7 +245,7 @@ export function MediaAttacher({
             py-5 cursor-pointer transition-all
             ${
               isDragOver
-                ? 'border-amber-400 bg-amber-500/10'
+                ? 'border-orange-400 bg-orange-500/10'
                 : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]'
             }
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}

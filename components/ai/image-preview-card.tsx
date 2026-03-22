@@ -128,7 +128,7 @@ export function ImagePreviewCard({
         'relative rounded-xl overflow-hidden group',
         'bg-white/5 border border-white/10',
         'transition-all duration-300',
-        isHovered && 'border-amber-500/30 shadow-lg shadow-amber-500/10',
+        isHovered && 'border-orange-500/30 shadow-lg shadow-orange-500/10',
         className
       )}
       onMouseEnter={() => setIsHovered(true)}

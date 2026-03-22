@@ -75,11 +75,11 @@ function gradeColour(grade: string): string {
     case 'A':
       return 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30';
     case 'B':
-      return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
+      return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
     case 'C':
-      return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
+      return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
     case 'D':
-      return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
+      return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
     case 'F':
       return 'text-red-400 bg-red-500/20 border-red-500/30';
     default:
@@ -105,7 +105,7 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'px-4 py-2 text-sm font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500',
+        'px-4 py-2 text-sm font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
         active
           ? 'bg-white/10 text-white'
           : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -190,7 +190,7 @@ function ScoreTab({
           onChange={e => setText(e.target.value)}
           placeholder="Paste your content here to run an E-E-A-T audit across Experience, Expertise, Authority, and Trust..."
           rows={8}
-          className="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-600 text-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-y"
+          className="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-600 text-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-y"
         />
       </div>
 
@@ -201,7 +201,7 @@ function ScoreTab({
           type="checkbox"
           checked={generateAssets}
           onChange={e => setGenerateAssets(e.target.checked)}
-          className="w-4 h-4 accent-amber-500"
+          className="w-4 h-4 accent-orange-500"
         />
         <label htmlFor="generate-assets" className="text-sm text-slate-300">
           Generate asset plan (templates to fix gaps)
@@ -214,10 +214,10 @@ function ScoreTab({
         onClick={runAudit}
         disabled={loading || !text.trim()}
         className={cn(
-          'w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500',
+          'w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
           loading || !text.trim()
             ? 'bg-white/5 text-slate-500 cursor-not-allowed'
-            : 'bg-amber-600 hover:bg-amber-500 text-white cursor-pointer'
+            : 'bg-orange-600 hover:bg-orange-500 text-white cursor-pointer'
         )}
       >
         <Award className="w-4 h-4" />
@@ -338,7 +338,7 @@ function HistoryTab() {
             <button
               type="button"
               onClick={() => setExpanded(isOpen ? null : record.id)}
-              className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-amber-500"
+              className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-orange-500"
             >
               <span
                 className={cn(
@@ -414,8 +414,8 @@ function EEATBuilderPageContent() {
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Page header */}
       <div className="flex items-start gap-3">
-        <div className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-500/30 flex-shrink-0">
-          <Award className="w-6 h-6 text-amber-400" />
+        <div className="p-2.5 rounded-xl bg-orange-500/20 border border-orange-500/30 flex-shrink-0">
+          <Award className="w-6 h-6 text-orange-400" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">E-E-A-T Builder</h1>

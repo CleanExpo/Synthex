@@ -93,12 +93,12 @@ export function SmartSuggestions({
 
   const getTypeColor = (type: ContentSuggestion['type']) => {
     const colors = {
-      trending: 'text-amber-400',
+      trending: 'text-orange-400',
       seasonal: 'text-green-400',
       performance: 'text-blue-400',
       gap: 'text-yellow-400',
-      viral: 'text-amber-400',
-      evergreen: 'text-amber-400',
+      viral: 'text-orange-400',
+      evergreen: 'text-orange-400',
     };
     return colors[type] || 'text-gray-400';
   };
@@ -145,7 +145,7 @@ export function SmartSuggestions({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Brain className="h-6 w-6 text-amber-400" />
+          <Brain className="h-6 w-6 text-orange-400" />
           <div>
             <h2 className="text-xl font-semibold text-white">
               Smart Suggestions
@@ -268,7 +268,7 @@ export function SmartSuggestions({
                 <div className="space-y-1">
                   {suggestion.reasoning.slice(0, 2).map((reason, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <span className="text-amber-400 text-xs">•</span>
+                      <span className="text-orange-400 text-xs">•</span>
                       <span className="text-xs text-gray-400">{reason}</span>
                     </div>
                   ))}
@@ -278,7 +278,7 @@ export function SmartSuggestions({
                 {suggestion.hashtags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {suggestion.hashtags.slice(0, 3).map(tag => (
-                      <span key={tag} className="text-xs text-amber-400">
+                      <span key={tag} className="text-xs text-orange-400">
                         {tag}
                       </span>
                     ))}
@@ -331,7 +331,7 @@ function CompactSuggestions({
             className="w-full p-3 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] hover:bg-white/5 rounded-lg transition-colors text-left"
           >
             <div className="flex items-center gap-3">
-              <Icon className="h-4 w-4 text-amber-400 flex-shrink-0" />
+              <Icon className="h-4 w-4 text-orange-400 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">
                   {suggestion.title}
@@ -358,10 +358,10 @@ export function SuggestionCards() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {/* Time-based suggestion */}
-      <Card variant="glass" className="border-amber-500/30">
+      <Card variant="glass" className="border-orange-500/30">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-amber-400" />
+            <Clock className="h-5 w-5 text-orange-400" />
             <CardTitle className="text-base">Perfect Timing</CardTitle>
           </div>
         </CardHeader>
@@ -418,7 +418,7 @@ export function IdeaScorer({ idea }: { idea: string }) {
   const getScoreColor = () => {
     if (score >= 80) return 'text-green-400';
     if (score >= 60) return 'text-yellow-400';
-    if (score >= 40) return 'text-amber-400';
+    if (score >= 40) return 'text-orange-400';
     return 'text-red-400';
   };
 
