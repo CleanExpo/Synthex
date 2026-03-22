@@ -347,7 +347,7 @@ Join the national network building a stronger restoration industry.
     brandName: 'Synthex',
     tagline: 'AI-Powered Marketing Automation',
     industry: 'Marketing Technology',
-    brandColour: '#f59e0b', // amber-500
+    brandColour: '#FF6B35', // candy orange
     websiteUrl: 'synthex.social',
     valueProps: [
       'AI Content Generation Across 9 Platforms',
@@ -428,7 +428,7 @@ Built for businesses and agencies ready to scale their social presence intellige
     brandName: 'RestoreAssist',
     tagline: 'AI-Powered Restoration Intelligence',
     industry: 'Restoration Technology',
-    brandColour: '#0891B2', // amber-600
+    brandColour: '#E55A2B', // candy orange dark
     websiteUrl: 'restoreassist.com.au',
     valueProps: [
       'AI-Powered Job Estimation & Scoping',
@@ -495,7 +495,7 @@ Purpose-built for the restoration industry. Less paperwork, more restoration.
     brandName: 'Unite Group',
     tagline: "Building Tomorrow's Technology Solutions",
     industry: 'Technology Holdings',
-    brandColour: '#d97706', // amber-600
+    brandColour: '#E55A2B', // candy orange dark
     websiteUrl: 'unite-group.in',
     valueProps: [
       'Innovation Portfolio Across Multiple Industries',

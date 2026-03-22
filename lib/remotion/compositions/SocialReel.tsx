@@ -149,7 +149,7 @@ function ProgressBar({ brandColour }: { brandColour: string }) {
 export function SocialReel({
   title,
   scenes,
-  brandColour = '#f59e0b', // amber-500
+  brandColour = '#f59e0b', // orange-500
   showProgress = true,
 }: SocialReelProps) {
   let frameOffset = 0;
