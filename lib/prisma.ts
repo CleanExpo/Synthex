@@ -99,7 +99,12 @@ const createPrismaClient = (): PrismaClient => {
   const user = url.username;
   const password = decodeURIComponent(url.password);
 
-  logger.info('Prisma connecting to database', { host, port, database, mode: 'adapter-pg + scram-patch' });
+  logger.info('Prisma connecting to database', {
+    host,
+    port,
+    database,
+    mode: 'adapter-pg + scram-patch',
+  });
 
   const pool = new Pool({
     host,
@@ -115,7 +120,7 @@ const createPrismaClient = (): PrismaClient => {
     connectionTimeoutMillis: 10000,
   });
 
-  pool.on('error', (err) => {
+  pool.on('error', err => {
     console.error('[Prisma] Pool error:', err.message);
     globalForPrisma.prismaMetrics.errors++;
   });
@@ -132,8 +137,11 @@ const createPrismaClient = (): PrismaClient => {
 
   if (process.env.NODE_ENV !== 'production') {
     client.$on('query' as never, (e: { duration: number; query: string }) => {
-      if (e.duration > 1000) {
-        console.warn(`[Prisma] Slow query (${e.duration}ms):`, e.query);
+      if (e.duration > 100) {
+        console.warn(
+          `[SLOW QUERY] ${e.duration}ms:`,
+          e.query.substring(0, 200)
+        );
       }
     });
   }
@@ -150,7 +158,9 @@ const getPrismaClient = (): PrismaClient | null => {
   }
 
   if (!process.env.DATABASE_URL) {
-    console.warn('[Prisma] DATABASE_URL not configured, skipping client creation');
+    console.warn(
+      '[Prisma] DATABASE_URL not configured, skipping client creation'
+    );
     return null;
   }
 
@@ -205,7 +215,11 @@ export async function checkDatabaseHealth(): Promise<{
   try {
     const c = getPrismaClient();
     if (!c) {
-      return { healthy: false, latency: 0, error: 'Prisma client not initialized' };
+      return {
+        healthy: false,
+        latency: 0,
+        error: 'Prisma client not initialized',
+      };
     }
 
     await c.$queryRaw`SELECT 1`;

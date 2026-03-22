@@ -366,6 +366,26 @@ class PerformanceMonitor {
 
     console.warn(`[PERF_ALERT] ${type}:`, JSON.stringify(alert));
 
+    // Send to Slack for server errors in production (fire-and-forget)
+    if (
+      process.env.NODE_ENV === 'production' &&
+      process.env.ALERT_SLACK_WEBHOOK_URL
+    ) {
+      if (type === 'SERVER_ERROR' || type === 'HIGH_MEMORY') {
+        import('@/lib/alerts/notification-channels')
+          .then(({ AlertManager }) => {
+            AlertManager.getInstance()
+              .error(
+                `[PERF] ${type}`,
+                JSON.stringify(data),
+                'performance-monitor'
+              )
+              .catch(() => {});
+          })
+          .catch(() => {});
+      }
+    }
+
     // Store alert for later retrieval
     this.storeAlert(alert).catch(console.error);
   }
@@ -404,13 +424,15 @@ class PerformanceMonitor {
     ]);
 
     // Calculate API stats
-    const responseTimes = apiMetrics.map((m) => m.responseTime).sort((a, b) => a - b);
+    const responseTimes = apiMetrics
+      .map(m => m.responseTime)
+      .sort((a, b) => a - b);
     const totalRequests = apiMetrics.length;
-    const errors = apiMetrics.filter((m) => m.statusCode >= 400).length;
+    const errors = apiMetrics.filter(m => m.statusCode >= 400).length;
 
     // Endpoint aggregation
     const endpointStats = new Map<string, { times: number[]; count: number }>();
-    apiMetrics.forEach((m) => {
+    apiMetrics.forEach(m => {
       const key = `${m.method} ${m.endpoint}`;
       const stat = endpointStats.get(key) || { times: [], count: 0 };
       stat.times.push(m.responseTime);
@@ -429,18 +451,20 @@ class PerformanceMonitor {
 
     // Status code distribution
     const statusCodes: Record<string, number> = {};
-    apiMetrics.forEach((m) => {
+    apiMetrics.forEach(m => {
       const group = `${Math.floor(m.statusCode / 100)}xx`;
       statusCodes[group] = (statusCodes[group] || 0) + 1;
     });
 
     // System stats
-    const memoryUsages = systemMetrics.map((m) => m.memory.heapUsedPercent);
+    const memoryUsages = systemMetrics.map(m => m.memory.heapUsedPercent);
 
     // Database stats
-    const queryTimes = dbMetrics.map((m) => m.queryTime);
-    const slowQueries = dbMetrics.filter((m) => m.queryTime > this.thresholds.slowQueryTime).length;
-    const cachedQueries = dbMetrics.filter((m) => m.cached).length;
+    const queryTimes = dbMetrics.map(m => m.queryTime);
+    const slowQueries = dbMetrics.filter(
+      m => m.queryTime > this.thresholds.slowQueryTime
+    ).length;
+    const cachedQueries = dbMetrics.filter(m => m.cached).length;
 
     return {
       period: `${periodMinutes} minutes`,
@@ -448,7 +472,10 @@ class PerformanceMonitor {
       endTime,
       api: {
         totalRequests,
-        averageResponseTime: totalRequests > 0 ? responseTimes.reduce((a, b) => a + b, 0) / totalRequests : 0,
+        averageResponseTime:
+          totalRequests > 0
+            ? responseTimes.reduce((a, b) => a + b, 0) / totalRequests
+            : 0,
         p50: this.percentile(responseTimes, 50),
         p90: this.percentile(responseTimes, 90),
         p95: this.percentile(responseTimes, 95),
@@ -458,14 +485,22 @@ class PerformanceMonitor {
         statusCodeDistribution: statusCodes,
       },
       system: {
-        avgMemoryUsage: memoryUsages.length > 0 ? memoryUsages.reduce((a, b) => a + b, 0) / memoryUsages.length : 0,
-        peakMemoryUsage: memoryUsages.length > 0 ? Math.max(...memoryUsages) : 0,
+        avgMemoryUsage:
+          memoryUsages.length > 0
+            ? memoryUsages.reduce((a, b) => a + b, 0) / memoryUsages.length
+            : 0,
+        peakMemoryUsage:
+          memoryUsages.length > 0 ? Math.max(...memoryUsages) : 0,
       },
       database: {
         totalQueries: dbMetrics.length,
-        avgQueryTime: queryTimes.length > 0 ? queryTimes.reduce((a, b) => a + b, 0) / queryTimes.length : 0,
+        avgQueryTime:
+          queryTimes.length > 0
+            ? queryTimes.reduce((a, b) => a + b, 0) / queryTimes.length
+            : 0,
         slowQueries,
-        cacheHitRate: dbMetrics.length > 0 ? (cachedQueries / dbMetrics.length) * 100 : 0,
+        cacheHitRate:
+          dbMetrics.length > 0 ? (cachedQueries / dbMetrics.length) * 100 : 0,
       },
     };
   }
@@ -476,7 +511,10 @@ class PerformanceMonitor {
     return arr[Math.max(0, index)];
   }
 
-  private async getAPIMetrics(startTime: number, endTime: number): Promise<APIMetrics[]> {
+  private async getAPIMetrics(
+    startTime: number,
+    endTime: number
+  ): Promise<APIMetrics[]> {
     try {
       const redis = getRedisClient();
       const keys = await this.getMetricKeys('perf:api:', startTime, endTime);
@@ -486,23 +524,34 @@ class PerformanceMonitor {
         const data = await redis.get(key);
         if (data) {
           const metrics = JSON.parse(data) as APIMetrics[];
-          allMetrics.push(...metrics.filter((m) => m.timestamp >= startTime && m.timestamp <= endTime));
+          allMetrics.push(
+            ...metrics.filter(
+              m => m.timestamp >= startTime && m.timestamp <= endTime
+            )
+          );
         }
       }
 
       // Include buffer metrics
       allMetrics.push(
-        ...this.metricsBuffer.filter((m) => m.timestamp >= startTime && m.timestamp <= endTime)
+        ...this.metricsBuffer.filter(
+          m => m.timestamp >= startTime && m.timestamp <= endTime
+        )
       );
 
       return allMetrics;
     } catch (error) {
       console.error('Failed to get API metrics:', error);
-      return this.metricsBuffer.filter((m) => m.timestamp >= startTime && m.timestamp <= endTime);
+      return this.metricsBuffer.filter(
+        m => m.timestamp >= startTime && m.timestamp <= endTime
+      );
     }
   }
 
-  private async getSystemMetrics(startTime: number, endTime: number): Promise<SystemMetrics[]> {
+  private async getSystemMetrics(
+    startTime: number,
+    endTime: number
+  ): Promise<SystemMetrics[]> {
     try {
       const redis = getRedisClient();
       const keys = await this.getMetricKeys('perf:system:', startTime, endTime);
@@ -512,22 +561,33 @@ class PerformanceMonitor {
         const data = await redis.get(key);
         if (data) {
           const metrics = JSON.parse(data) as SystemMetrics[];
-          allMetrics.push(...metrics.filter((m) => m.timestamp >= startTime && m.timestamp <= endTime));
+          allMetrics.push(
+            ...metrics.filter(
+              m => m.timestamp >= startTime && m.timestamp <= endTime
+            )
+          );
         }
       }
 
       allMetrics.push(
-        ...this.systemMetricsBuffer.filter((m) => m.timestamp >= startTime && m.timestamp <= endTime)
+        ...this.systemMetricsBuffer.filter(
+          m => m.timestamp >= startTime && m.timestamp <= endTime
+        )
       );
 
       return allMetrics;
     } catch (error) {
       console.error('Failed to get system metrics:', error);
-      return this.systemMetricsBuffer.filter((m) => m.timestamp >= startTime && m.timestamp <= endTime);
+      return this.systemMetricsBuffer.filter(
+        m => m.timestamp >= startTime && m.timestamp <= endTime
+      );
     }
   }
 
-  private async getDatabaseMetrics(startTime: number, endTime: number): Promise<DatabaseMetrics[]> {
+  private async getDatabaseMetrics(
+    startTime: number,
+    endTime: number
+  ): Promise<DatabaseMetrics[]> {
     try {
       const redis = getRedisClient();
       const keys = await this.getMetricKeys('perf:db:', startTime, endTime);
@@ -537,22 +597,34 @@ class PerformanceMonitor {
         const data = await redis.get(key);
         if (data) {
           const metrics = JSON.parse(data) as DatabaseMetrics[];
-          allMetrics.push(...metrics.filter((m) => m.timestamp >= startTime && m.timestamp <= endTime));
+          allMetrics.push(
+            ...metrics.filter(
+              m => m.timestamp >= startTime && m.timestamp <= endTime
+            )
+          );
         }
       }
 
       allMetrics.push(
-        ...this.dbMetricsBuffer.filter((m) => m.timestamp >= startTime && m.timestamp <= endTime)
+        ...this.dbMetricsBuffer.filter(
+          m => m.timestamp >= startTime && m.timestamp <= endTime
+        )
       );
 
       return allMetrics;
     } catch (error) {
       console.error('Failed to get database metrics:', error);
-      return this.dbMetricsBuffer.filter((m) => m.timestamp >= startTime && m.timestamp <= endTime);
+      return this.dbMetricsBuffer.filter(
+        m => m.timestamp >= startTime && m.timestamp <= endTime
+      );
     }
   }
 
-  private async getMetricKeys(prefix: string, startTime: number, endTime: number): Promise<string[]> {
+  private async getMetricKeys(
+    prefix: string,
+    startTime: number,
+    endTime: number
+  ): Promise<string[]> {
     // Generate potential keys for the time range
     const keys: string[] = [];
     const startSlot = Math.floor(startTime / (5 * 60 * 1000));

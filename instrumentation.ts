@@ -13,6 +13,33 @@
  * @see https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
  */
 
+/**
+ * onRequestError — fires on every unhandled server-side error in production.
+ *
+ * Uses dynamic import so AlertManager is never loaded at cold-start time.
+ * Never throws — an uncaught throw here would crash the Lambda.
+ */
+export async function onRequestError(
+  error: unknown,
+  _request: unknown,
+  _context: unknown
+): Promise<void> {
+  if (process.env.NODE_ENV !== 'production') return;
+  if (!process.env.ALERT_SLACK_WEBHOOK_URL) return;
+
+  try {
+    const { AlertManager } = await import('@/lib/alerts/notification-channels');
+    const msg = error instanceof Error ? error.message : String(error);
+    AlertManager.getInstance()
+      .error('Unhandled server error', msg, 'instrumentation/onRequestError')
+      .catch(() => {
+        // fire-and-forget — never let a failed alert propagate
+      });
+  } catch {
+    // Never throw from onRequestError
+  }
+}
+
 export async function register() {
   // Only validate in Node.js runtime (not Edge — env vars may be incomplete there)
   if (process.env.NEXT_RUNTIME !== 'nodejs') {
@@ -49,9 +76,8 @@ export async function register() {
   // register() MUST NOT throw — a throw causes an unhandled rejection that kills
   // the Lambda process before it can handle any request (Phase 114-02 root cause).
   try {
-    const { EnvValidator, SecurityLevel } = await import(
-      '@/lib/security/env-validator'
-    );
+    const { EnvValidator, SecurityLevel } =
+      await import('@/lib/security/env-validator');
 
     const validator = EnvValidator.getInstance();
 
@@ -60,14 +86,14 @@ export async function register() {
 
     // Separate CRITICAL errors from non-critical
     const criticalErrors = result.errors.filter(
-      (e) => e.securityLevel === SecurityLevel.CRITICAL
+      e => e.securityLevel === SecurityLevel.CRITICAL
     );
     const nonCriticalErrors = result.errors.filter(
-      (e) => e.securityLevel !== SecurityLevel.CRITICAL
+      e => e.securityLevel !== SecurityLevel.CRITICAL
     );
 
     // Log summary
-    console.log(
+    console.info(
       `[env-validator] Validated ${result.summary.configured.length}/${result.summary.totalRequired + result.summary.totalOptional} env vars`
     );
 
@@ -95,8 +121,8 @@ export async function register() {
         );
       }
       console.error(
-        `[env-validator] ${criticalErrors.length} critical env var(s) missing or invalid (${criticalErrors.map((e) => e.key).join(', ')}). ` +
-        `Server is starting anyway — individual requests will fail. Fix these immediately.`
+        `[env-validator] ${criticalErrors.length} critical env var(s) missing or invalid (${criticalErrors.map(e => e.key).join(', ')}). ` +
+          `Server is starting anyway — individual requests will fail. Fix these immediately.`
       );
       // DO NOT throw — return gracefully so the Lambda process stays alive.
       return;
@@ -104,7 +130,9 @@ export async function register() {
 
     // All critical vars present
     if (result.isValid) {
-      console.log('[env-validator] All required environment variables validated successfully');
+      console.info(
+        '[env-validator] All required environment variables validated successfully'
+      );
     } else {
       console.warn(
         `[env-validator] Server starting with ${nonCriticalErrors.length} non-critical validation issue(s)`
@@ -113,9 +141,16 @@ export async function register() {
   } catch (validationError) {
     // Catch any unexpected error in the validation logic itself.
     // Log and continue — never propagate.
-    const msg = validationError instanceof Error ? validationError.message : String(validationError);
-    console.error(`[env-validator] Validation module failed to load or run: ${msg}`);
-    console.error('[env-validator] Skipping env validation — server will start but may be misconfigured.');
+    const msg =
+      validationError instanceof Error
+        ? validationError.message
+        : String(validationError);
+    console.error(
+      `[env-validator] Validation module failed to load or run: ${msg}`
+    );
+    console.error(
+      '[env-validator] Skipping env validation — server will start but may be misconfigured.'
+    );
   }
 
   // NOTE: Database connectivity check intentionally omitted from instrumentation.ts.
