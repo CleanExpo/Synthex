@@ -83,7 +83,14 @@ function extractBusinessName(html: string, url: string): string {
 
   try {
     const hostname = new URL(url).hostname.replace(/^www\./, '');
-    return hostname.split('.')[0].replace(/-/g, ' ');
+    const raw = hostname.split('.')[0].replace(/-/g, ' ');
+    // Try to detect word boundaries in slugs: "disasterrecovery" → "Disaster Recovery"
+    // Insert space before runs of capitals or known word transitions
+    const spaced = raw
+      .replace(/([a-z])([A-Z])/g, '$1 $2') // camelCase
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2') // ABCDef → ABC Def
+      .replace(/\b\w/g, c => c.toUpperCase()); // title-case each word
+    return spaced || 'Your Business';
   } catch {
     return 'Your Business';
   }
@@ -184,7 +191,7 @@ async function generateCaption(
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 200, temperature: 0.85 },
+            generationConfig: { maxOutputTokens: 400, temperature: 0.85 },
           }),
         }
       );

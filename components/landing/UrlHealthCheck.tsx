@@ -129,6 +129,49 @@ function OverallScore({
   );
 }
 
+/* ── Unreachable-site panel ──────────────────────────────────────────── */
+function UnreachablePanel({
+  result,
+  onReset,
+}: {
+  result: AnalyzeResult;
+  onReset: () => void;
+}) {
+  return (
+    <div className="bg-[#0a0a12] border border-amber-500/20 rounded-2xl p-8 text-center space-y-4 animate-fade-in">
+      <div className="text-4xl">🔒</div>
+      <div>
+        <p className="text-white/80 font-semibold text-base mb-2">
+          Site couldn&apos;t be read
+        </p>
+        <p className="text-white/40 text-sm leading-relaxed max-w-md mx-auto">
+          <strong className="text-white/60">{result.businessName}</strong>{' '}
+          appears to block automated access (Cloudflare, server-side rendering,
+          etc.). We can&apos;t score what we can&apos;t see.
+        </p>
+      </div>
+      <div className="flex flex-wrap justify-center gap-3 pt-2">
+        <button
+          onClick={onReset}
+          className="bg-white/[0.06] hover:bg-white/[0.10] text-white/60 font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Try a different URL
+        </button>
+        <a
+          href="/sign-up"
+          className="bg-amber-500 hover:bg-amber-400 text-charcoal-900 font-bold text-sm px-5 py-2.5 rounded-xl transition-colors"
+        >
+          Sign up for premium scan →
+        </a>
+      </div>
+      <p className="text-white/20 text-xs">
+        Synthex premium uses a headless browser to scan protected sites &mdash;
+        no bots blocked.
+      </p>
+    </div>
+  );
+}
+
 /* ── Result panel ────────────────────────────────────────────────────── */
 function ResultPanel({ result }: { result: AnalyzeResult }) {
   const seoTips = [
@@ -413,7 +456,13 @@ export function UrlHealthCheck() {
           </div>
         )}
 
-        {state === 'result' && result && <ResultPanel result={result} />}
+        {state === 'result' &&
+          result &&
+          (result.loadedOk ? (
+            <ResultPanel result={result} />
+          ) : (
+            <UnreachablePanel result={result} onReset={reset} />
+          ))}
       </div>
     </section>
   );

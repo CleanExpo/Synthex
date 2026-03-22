@@ -12,60 +12,54 @@ const QUICK_DEMOS = [
   { label: 'Gym', emoji: '💪', url: 'https://www.f45training.com' },
 ];
 
-/** Instagram card skeleton shimmer */
+/** Instagram card skeleton */
 function InstagramSkeleton() {
   return (
     <div className="bg-charcoal-800 border border-white/[0.06] rounded-2xl overflow-hidden">
       <div className="w-full h-44 bg-charcoal-700 relative overflow-hidden">
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/[0.05] to-transparent" />
+        <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/[0.05] to-transparent" />
       </div>
       <div className="p-4 space-y-2">
-        <div className="h-3 bg-charcoal-700 rounded-full w-1/3 relative overflow-hidden">
-          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite_0.2s] bg-gradient-to-r from-transparent via-white/[0.05] to-transparent" />
-        </div>
-        <div className="h-3 bg-charcoal-700 rounded-full w-full relative overflow-hidden">
-          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite_0.3s] bg-gradient-to-r from-transparent via-white/[0.05] to-transparent" />
-        </div>
-        <div className="h-3 bg-charcoal-700 rounded-full w-4/5 relative overflow-hidden">
-          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite_0.4s] bg-gradient-to-r from-transparent via-white/[0.05] to-transparent" />
-        </div>
+        <div className="h-3 bg-charcoal-700 rounded-full w-1/3" />
+        <div className="h-3 bg-charcoal-700 rounded-full w-full" />
+        <div className="h-3 bg-charcoal-700 rounded-full w-4/5" />
       </div>
     </div>
   );
 }
 
-/** Business-type emoji */
 function getEmoji(name: string): string {
-  const lower = name.toLowerCase();
-  if (
-    lower.includes('cafe') ||
-    lower.includes('coffee') ||
-    lower.includes('food')
-  )
+  const l = name.toLowerCase();
+  if (l.includes('cafe') || l.includes('coffee') || l.includes('starbucks'))
     return '☕';
   if (
-    lower.includes('tradie') ||
-    lower.includes('plumb') ||
-    lower.includes('electr') ||
-    lower.includes('build')
+    l.includes('tradie') ||
+    l.includes('plumb') ||
+    l.includes('electr') ||
+    l.includes('build') ||
+    l.includes('hipages')
   )
     return '🔨';
   if (
-    lower.includes('salon') ||
-    lower.includes('hair') ||
-    lower.includes('beauty')
+    l.includes('salon') ||
+    l.includes('hair') ||
+    l.includes('beauty') ||
+    l.includes('toni')
   )
     return '💇';
-  if (lower.includes('gym') || lower.includes('fit') || lower.includes('sport'))
-    return '💪';
-  if (lower.includes('clean') || lower.includes('restore')) return '✨';
-  if (lower.includes('retail') || lower.includes('fashion')) return '🛍️';
-  if (lower.includes('dental') || lower.includes('health')) return '🏥';
-  if (lower.includes('tech') || lower.includes('software')) return '💻';
+  if (l.includes('gym') || l.includes('fit') || l.includes('f45')) return '💪';
+  if (l.includes('clean') || l.includes('restor') || l.includes('disaster'))
+    return '✨';
+  if (l.includes('retail') || l.includes('fashion')) return '🛍️';
+  if (l.includes('dental') || l.includes('health')) return '🏥';
+  if (l.includes('tech') || l.includes('software')) return '💻';
   return '🏢';
 }
 
-/** Rendered Instagram card with graceful image loading */
+/**
+ * Instagram card — note: overflow-hidden is on image only, not the whole card,
+ * so the caption can never be clipped by the container.
+ */
 function InstagramCard({
   businessName,
   imageUrl,
@@ -83,11 +77,12 @@ function InstagramCard({
   const showShimmer = !!imageUrl && !imgLoaded && !imgError;
 
   return (
-    <div className="bg-charcoal-800 border border-white/[0.06] rounded-2xl overflow-hidden animate-[fade-in_0.4s_ease-out_forwards]">
-      {/* Image area */}
-      <div className="w-full h-44 bg-charcoal-700 relative overflow-hidden">
+    /* No overflow-hidden here — caption must never be clipped */
+    <div className="bg-charcoal-800 border border-white/[0.06] rounded-2xl animate-fade-in">
+      {/* Image — overflow-hidden only here, for rounded top corners */}
+      <div className="w-full h-44 bg-charcoal-700 relative overflow-hidden rounded-t-2xl">
         {showShimmer && (
-          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/[0.05] to-transparent" />
+          <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/[0.05] to-transparent" />
         )}
         {imageUrl && !imgError && (
           <img
@@ -108,8 +103,8 @@ function InstagramCard({
         )}
       </div>
 
-      {/* Caption */}
-      <div className="p-4">
+      {/* Caption — deliberately unconstrained */}
+      <div className="p-4 rounded-b-2xl">
         <p className="text-white/50 text-xs font-semibold mb-1.5">@{handle}</p>
         <p className="text-white/80 text-sm leading-relaxed">{caption}</p>
       </div>
@@ -117,100 +112,73 @@ function InstagramCard({
   );
 }
 
-/** Single score bar with label + tip */
-function ScoreBar({
-  label,
-  score,
-  tip,
-}: {
-  label: string;
-  score: number;
-  tip: string;
-}) {
-  const barColor =
-    score >= 70
-      ? 'bg-green-500'
-      : score >= 40
-        ? 'bg-amber-500'
-        : 'bg-red-500/80';
-  const textColor =
-    score >= 70
-      ? 'text-green-400'
-      : score >= 40
-        ? 'text-amber-400'
-        : 'text-red-400';
-
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between">
-        <span className="text-white/60 text-xs">{label}</span>
-        <span className={`text-xs font-bold ${textColor}`}>{score}/100</span>
-      </div>
-      <div className="w-full h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-700 ease-out ${barColor}`}
-          style={{ width: `${score}%` }}
-        />
-      </div>
-      <p className="text-white/30 text-[10px] leading-tight">{tip}</p>
-    </div>
-  );
-}
-
-/** Inline health check panel — shows under the Instagram card */
-function HealthPanel({ result }: { result: AnalyzeResult }) {
-  const seoTip = !result.hasTitle
-    ? 'Add a descriptive page title tag'
-    : !result.hasDescription
-      ? 'Add a meta description to improve click-through rates'
-      : 'SEO basics look solid ✓';
-
-  const presenceTip = !result.hasSocialLinks
-    ? 'Add links to your Instagram / Facebook'
-    : !result.hasPhone
-      ? 'Add a phone number so customers can call you'
-      : 'Contact details are visible ✓';
-
-  const brandTip =
-    result.scores.brand < 40
-      ? 'Add Open Graph tags and a schema.org business listing'
-      : result.scores.brand < 70
-        ? 'Add schema.org LocalBusiness markup for better visibility'
-        : 'Brand signals are strong ✓';
-
-  const overallColor =
-    result.scores.overall >= 70
-      ? 'bg-green-500/10 text-green-400 border-green-500/20'
-      : result.scores.overall >= 40
-        ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-        : 'bg-red-500/10 text-red-400 border-red-500/20';
-
-  return (
-    <div className="mt-3 bg-charcoal-900/60 border border-white/[0.06] rounded-xl p-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-white/50 text-[11px] font-semibold uppercase tracking-wider">
-          Website Health Check
+/**
+ * Compact score row — shows 4 numbers inline.
+ * Fits inside the hero without forcing vertical overflow.
+ * When site couldn't be fetched, shows a clear warning instead of bogus 0/100.
+ */
+function ScoreSummary({ result }: { result: AnalyzeResult }) {
+  // Site unreachable — showing 0/100 everywhere would be misleading
+  if (!result.loadedOk) {
+    return (
+      <div className="mt-3 bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 space-y-1.5">
+        <p className="text-amber-400/80 text-xs font-semibold">
+          ⚠&nbsp; Couldn&apos;t read this site
         </p>
-        <span
-          className={`text-xs font-bold px-2 py-0.5 rounded-full border ${overallColor}`}
-        >
-          {result.scores.overall}/100
-        </span>
+        <p className="text-white/35 text-[11px] leading-relaxed">
+          This site appears to block automated access (common with Cloudflare,
+          etc.). The AI post above was generated from the domain name only —
+          scores unavailable.
+        </p>
+        <p className="text-white/25 text-[10px]">
+          Try{' '}
+          <button
+            className="text-amber-400/60 hover:text-amber-400/80 transition-colors underline-offset-2 underline"
+            onClick={() => {
+              /* handled by parent via chip */
+            }}
+          >
+            starbucks.com.au
+          </button>{' '}
+          to see a live score, or sign up to scan protected sites.
+        </p>
       </div>
-      <ScoreBar label="SEO" score={result.scores.seo} tip={seoTip} />
-      <ScoreBar
-        label="Online Presence"
-        score={result.scores.presence}
-        tip={presenceTip}
-      />
-      <ScoreBar
-        label="Brand Signals"
-        score={result.scores.brand}
-        tip={brandTip}
-      />
-      <p className="text-[10px] text-white/25 pt-1 border-t border-white/[0.04]">
-        Sign up free for your full report with prioritised recommendations.
-      </p>
+    );
+  }
+
+  const col = (s: number) =>
+    s >= 70 ? 'text-green-400' : s >= 40 ? 'text-amber-400' : 'text-red-400';
+
+  const items = [
+    { label: 'SEO', score: result.scores.seo },
+    { label: 'Presence', score: result.scores.presence },
+    { label: 'Brand', score: result.scores.brand },
+    { label: 'Overall', score: result.scores.overall },
+  ];
+
+  return (
+    <div className="mt-3 bg-charcoal-900/60 border border-white/[0.06] rounded-xl p-3">
+      <div className="flex items-center justify-around">
+        {items.map(({ label, score }, i) => (
+          <div key={label} className="flex items-center gap-3">
+            <div className="text-center">
+              <p className={`text-lg font-bold leading-none ${col(score)}`}>
+                {score}
+              </p>
+              <p className="text-white/30 text-[9px] mt-0.5">{label}</p>
+            </div>
+            {i < items.length - 1 && (
+              <div className="w-px h-7 bg-white/[0.06]" />
+            )}
+          </div>
+        ))}
+      </div>
+      <a
+        href="#health-check"
+        className="block text-center text-white/25 hover:text-amber-400/60 text-[10px] mt-2 transition-colors"
+      >
+        See full health report with tips &darr;
+      </a>
     </div>
   );
 }
@@ -222,7 +190,7 @@ function DemoBadge({ model }: { model?: string }) {
       <div className="flex items-center gap-2 mt-2">
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-400/70">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400/60 inline-block" />
-          Sample preview &middot; Sign up for live AI generation
+          Sample preview &middot; sign up for live AI generation
         </span>
       </div>
     );
@@ -263,7 +231,7 @@ function DemoBadge({ model }: { model?: string }) {
 }
 
 /** ─────────────────────────────────────────────────────────────────────────
- *  Main widget
+ *  Main export
  * ───────────────────────────────────────────────────────────────────────── */
 export function LiveDemoWidget() {
   const [url, setUrl] = useState('');
@@ -274,14 +242,13 @@ export function LiveDemoWidget() {
 
   const runAnalyze = async (targetUrl: string) => {
     if (!targetUrl.trim() || state === 'loading') return;
-
     const normalised = targetUrl.trim().startsWith('http')
       ? targetUrl.trim()
       : `https://${targetUrl.trim()}`;
 
     setState('loading');
     setResult(null);
-    const startMs = Date.now();
+    const t0 = Date.now();
 
     try {
       const res = await fetch('/api/demo/analyze', {
@@ -289,17 +256,9 @@ export function LiveDemoWidget() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: normalised }),
       });
-
-      if (res.status === 429) {
-        // Rate limited — surface a friendly message
-        setState('error');
-        return;
-      }
-
-      if (!res.ok) throw new Error('analyze failed');
-
+      if (!res.ok) throw new Error('failed');
       const data = (await res.json()) as AnalyzeResult;
-      setDurationMs(Date.now() - startMs);
+      setDurationMs(Date.now() - t0);
       setResult(data);
       setState('result');
     } catch {
@@ -325,23 +284,20 @@ export function LiveDemoWidget() {
   };
 
   return (
-    <div className="bg-charcoal-800/50 border border-white/[0.06] rounded-2xl p-6 backdrop-blur-sm">
+    <div className="bg-charcoal-800/50 border border-white/[0.06] rounded-2xl p-5 backdrop-blur-sm">
       {/* Header */}
       <div className="mb-4">
-        <p className="text-white/40 text-xs uppercase tracking-wider font-semibold mb-1">
+        <p className="text-white/40 text-[10px] uppercase tracking-wider font-semibold mb-0.5">
           Free demo
         </p>
-        <h3 className="text-white font-bold text-base">
-          Paste your website URL
-        </h3>
-        <p className="text-white/35 text-xs mt-0.5">
-          We read your site and generate a real AI post&nbsp;+&nbsp;health check
-          instantly
+        <h3 className="text-white font-bold text-sm">Paste your website URL</h3>
+        <p className="text-white/30 text-[11px] mt-0.5">
+          AI reads your site &amp; generates a branded post + health check
         </p>
       </div>
 
       {/* URL input */}
-      <form onSubmit={handleSubmit} className="mb-4">
+      <form onSubmit={handleSubmit} className="mb-3">
         <div className="flex gap-2">
           <input
             ref={inputRef}
@@ -350,15 +306,15 @@ export function LiveDemoWidget() {
             onChange={e => setUrl(e.target.value)}
             placeholder="https://yourbusiness.com.au"
             disabled={state === 'loading'}
-            className="flex-1 bg-charcoal-900/60 border border-white/[0.08] rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/25 focus:outline-none focus:border-amber-500/40 transition-colors disabled:opacity-50"
+            className="flex-1 bg-charcoal-900/60 border border-white/[0.08] rounded-xl px-3 py-2 text-white text-xs placeholder-white/25 focus:outline-none focus:border-amber-500/40 transition-colors disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={!url.trim() || state === 'loading'}
-            className="bg-amber-500 text-charcoal-900 font-bold rounded-xl px-4 py-2.5 text-sm hover:bg-amber-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+            className="bg-amber-500 text-charcoal-900 font-bold rounded-xl px-3 py-2 text-xs hover:bg-amber-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
           >
             {state === 'loading' ? (
-              <span className="w-4 h-4 border-2 border-charcoal-900/30 border-t-charcoal-900 rounded-full animate-spin block" />
+              <span className="w-3.5 h-3.5 border-2 border-charcoal-900/30 border-t-charcoal-900 rounded-full animate-spin block" />
             ) : (
               '→'
             )}
@@ -367,48 +323,48 @@ export function LiveDemoWidget() {
       </form>
 
       {/* Quick-demo chips */}
-      <div className="flex flex-wrap gap-2 mb-5">
+      <div className="flex flex-wrap gap-1.5 mb-4">
         {QUICK_DEMOS.map(({ label, emoji, url: demoUrl }) => (
           <button
             key={label}
             type="button"
             onClick={() => handleChip(demoUrl)}
             disabled={state === 'loading'}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-charcoal-700/60 border border-white/[0.06] text-white/50 hover:text-white hover:border-white/10 text-xs font-medium transition-all disabled:opacity-40"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-charcoal-700/60 border border-white/[0.06] text-white/45 hover:text-white hover:border-white/10 text-[11px] font-medium transition-all disabled:opacity-40"
           >
             <span>{emoji}</span>
-            <span>Try {label}</span>
+            <span>{label}</span>
           </button>
         ))}
       </div>
 
-      {/* ── Content states ── */}
+      {/* ── States ── */}
       {state === 'idle' && (
-        <div className="text-center py-8 text-white/30 text-sm">
-          Paste any website URL above, or try a quick demo
+        <div className="text-center py-6 text-white/25 text-xs">
+          Paste any website URL, or try a quick demo above
         </div>
       )}
 
       {state === 'loading' && (
         <div>
           <InstagramSkeleton />
-          <p className="text-center text-white/40 text-xs mt-3 animate-pulse">
-            Reading your website&hellip; generating AI post&hellip;
+          <p className="text-center text-white/35 text-[11px] mt-2 animate-pulse">
+            Reading your website&hellip;
           </p>
         </div>
       )}
 
       {state === 'error' && (
-        <div className="text-center py-8">
-          <p className="text-red-400/70 text-sm mb-2">
+        <div className="text-center py-6">
+          <p className="text-red-400/70 text-sm mb-1.5">
             Couldn&apos;t reach that URL
           </p>
           <p className="text-white/30 text-xs">
-            Double-check the address, or try one of the quick demos above.
+            Check the address, or try a quick demo above.
           </p>
           <button
             onClick={handleReset}
-            className="mt-3 text-white/50 hover:text-white/70 text-xs transition-colors"
+            className="mt-3 text-white/45 hover:text-white/65 text-xs transition-colors"
           >
             Try again &rarr;
           </button>
@@ -422,22 +378,21 @@ export function LiveDemoWidget() {
             imageUrl={result.imageUrl}
             caption={result.caption}
           />
-          <HealthPanel result={result} />
-          <div className="flex items-center justify-between mt-3">
-            <p className="text-amber-400/70 text-xs">
-              ✓ Analysed in {(durationMs / 1000).toFixed(1)}s &middot;{' '}
-              {result.industry}
+          <ScoreSummary result={result} />
+          <div className="flex items-center justify-between mt-2.5">
+            <p className="text-amber-400/60 text-[10px]">
+              ✓ {(durationMs / 1000).toFixed(1)}s &middot; {result.industry}
             </p>
             <button
               onClick={handleReset}
-              className="text-white/50 hover:text-white/70 text-xs transition-colors"
+              className="text-white/40 hover:text-white/60 text-[10px] transition-colors"
             >
               Try another &rarr;
             </button>
           </div>
           <DemoBadge model={result.model} />
-          <p className="text-[10px] text-white/40 mt-1.5 leading-relaxed">
-            Sign up to unlock Claude, GPT-4 &amp; Gemini Pro with your own brand
+          <p className="text-[10px] text-white/35 mt-1 leading-relaxed">
+            Sign up to unlock Claude, GPT-4 &amp; Gemini Pro with your brand
             voice.
           </p>
         </div>
