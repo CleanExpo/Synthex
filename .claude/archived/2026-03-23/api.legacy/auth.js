@@ -8,10 +8,12 @@ import { supabase, db, auth } from '../src/lib/supabase.js';
 
 // Helper function to get client IP
 function getClientIP(req) {
-  return req.headers['x-forwarded-for'] || 
-         req.headers['x-real-ip'] || 
-         req.connection.remoteAddress || 
-         '127.0.0.1';
+  return (
+    req.headers['x-forwarded-for'] ||
+    req.headers['x-real-ip'] ||
+    req.connection.remoteAddress ||
+    '127.0.0.1'
+  );
 }
 
 // Helper function to validate email
@@ -26,7 +28,10 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, X-CSRF-Token'
+  );
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -56,7 +61,7 @@ export default async function handler(req, res) {
             res.status(400).json({ error: 'Invalid action' });
         }
         break;
-      
+
       case 'GET':
         switch (action) {
           case 'me':
@@ -67,7 +72,7 @@ export default async function handler(req, res) {
             res.status(400).json({ error: 'Invalid action' });
         }
         break;
-      
+
       default:
         res.status(405).json({ error: 'Method not allowed' });
     }
@@ -75,7 +80,10 @@ export default async function handler(req, res) {
     console.error('Auth API error:', error);
     res.status(500).json({
       error: 'Authentication failed',
-      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      message:
+        process.env.NODE_ENV === 'development'
+          ? error.message
+          : 'Internal server error',
     });
   }
 }
@@ -85,34 +93,34 @@ async function handleSignup(req, res) {
   const { email, password, fullName, company } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ 
-      error: 'Email and password are required' 
+    return res.status(400).json({
+      error: 'Email and password are required',
     });
   }
 
   if (!isValidEmail(email)) {
-    return res.status(400).json({ 
-      error: 'Invalid email format' 
+    return res.status(400).json({
+      error: 'Invalid email format',
     });
   }
 
   // Validate password
   const passwordValidation = authService.validatePassword(password);
   if (!passwordValidation.isValid) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'Password validation failed',
-      details: passwordValidation.errors
+      details: passwordValidation.errors,
     });
   }
 
   // Rate limiting
   const clientIP = getClientIP(req);
   const rateLimit = authService.checkRateLimit(clientIP, 'signup');
-  
+
   if (!rateLimit.allowed) {
     return res.status(429).json({
       error: rateLimit.message,
-      resetTime: rateLimit.resetTime
+      resetTime: rateLimit.resetTime,
     });
   }
 
@@ -120,7 +128,7 @@ async function handleSignup(req, res) {
     // Sign up with Supabase
     const { data, error } = await auth.signUp(email, password, {
       full_name: fullName,
-      company: company
+      company: company,
     });
 
     if (error) {
@@ -128,14 +136,14 @@ async function handleSignup(req, res) {
     }
 
     res.status(201).json({
-      message: 'User created successfully. Please check your email for verification.',
+      message:
+        'User created successfully. Please check your email for verification.',
       user: {
         id: data.user.id,
         email: data.user.email,
-        emailConfirmed: data.user.email_confirmed_at !== null
-      }
+        emailConfirmed: data.user.email_confirmed_at !== null,
+      },
     });
-
   } catch (error) {
     console.error('Signup error:', error);
     res.status(500).json({ error: 'Failed to create user' });
@@ -147,19 +155,19 @@ async function handleLogin(req, res) {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ 
-      error: 'Email and password are required' 
+    return res.status(400).json({
+      error: 'Email and password are required',
     });
   }
 
   // Rate limiting
   const clientIP = getClientIP(req);
   const rateLimit = authService.checkRateLimit(clientIP, 'login');
-  
+
   if (!rateLimit.allowed) {
     return res.status(429).json({
       error: rateLimit.message,
-      resetTime: rateLimit.resetTime
+      resetTime: rateLimit.resetTime,
     });
   }
 
@@ -178,26 +186,28 @@ async function handleLogin(req, res) {
     const authResponse = authService.createAuthResponse({
       id: data.user.id,
       email: data.user.email,
-      ...profile
+      ...profile,
     });
 
     // Set secure cookie
     const isProduction = process.env.NODE_ENV === 'production';
-    res.setHeader('Set-Cookie', `token=${authResponse.token}; ${
-      Object.entries(authService.getCookieOptions(isProduction))
+    res.setHeader(
+      'Set-Cookie',
+      `token=${authResponse.token}; ${Object.entries(
+        authService.getCookieOptions(isProduction)
+      )
         .map(([key, value]) => `${key}=${value}`)
-        .join('; ')
-    }`);
+        .join('; ')}`
+    );
 
     res.json({
       message: 'Login successful',
       ...authResponse,
       supabaseSession: {
         accessToken: data.session.access_token,
-        refreshToken: data.session.refresh_token
-      }
+        refreshToken: data.session.refresh_token,
+      },
     });
-
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Login failed' });
@@ -230,7 +240,7 @@ async function handleRefreshToken(req, res) {
   try {
     // Refresh Supabase session
     const { data, error } = await supabase.auth.refreshSession({
-      refresh_token: refreshToken
+      refresh_token: refreshToken,
     });
 
     if (error) {
@@ -244,11 +254,10 @@ async function handleRefreshToken(req, res) {
     const authResponse = authService.createAuthResponse({
       id: data.user.id,
       email: data.user.email,
-      ...profile
+      ...profile,
     });
 
     res.json(authResponse);
-
   } catch (error) {
     console.error('Token refresh error:', error);
     res.status(500).json({ error: 'Token refresh failed' });
@@ -266,24 +275,26 @@ async function handleResetPassword(req, res) {
   // Rate limiting
   const clientIP = getClientIP(req);
   const rateLimit = authService.checkRateLimit(clientIP, 'resetPassword');
-  
+
   if (!rateLimit.allowed) {
     return res.status(429).json({
       error: rateLimit.message,
-      resetTime: rateLimit.resetTime
+      resetTime: rateLimit.resetTime,
     });
   }
 
   try {
     await auth.resetPassword(email);
-    
-    res.json({ 
-      message: 'If an account with that email exists, a password reset link has been sent.' 
+
+    res.json({
+      message:
+        'If an account with that email exists, a password reset link has been sent.',
     });
   } catch (error) {
     console.error('Password reset error:', error);
-    res.json({ 
-      message: 'If an account with that email exists, a password reset link has been sent.' 
+    res.json({
+      message:
+        'If an account with that email exists, a password reset link has been sent.',
     });
   }
 }
@@ -299,16 +310,16 @@ async function handleUpdatePassword(req, res) {
   // Validate password
   const passwordValidation = authService.validatePassword(newPassword);
   if (!passwordValidation.isValid) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'Password validation failed',
-      details: passwordValidation.errors
+      details: passwordValidation.errors,
     });
   }
 
   try {
     // Update password with Supabase
     const { error } = await supabase.auth.updateUser({
-      password: newPassword
+      password: newPassword,
     });
 
     if (error) {
@@ -316,7 +327,6 @@ async function handleUpdatePassword(req, res) {
     }
 
     res.json({ message: 'Password updated successfully' });
-
   } catch (error) {
     console.error('Password update error:', error);
     res.status(500).json({ error: 'Password update failed' });
@@ -327,21 +337,20 @@ async function handleUpdatePassword(req, res) {
 async function handleGetCurrentUser(req, res) {
   try {
     const user = await auth.getCurrentUser();
-    
+
     if (!user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
     const profile = await db.users.getProfile(user.id);
-    
+
     res.json({
       user: {
         id: user.id,
         email: user.email,
-        ...profile
-      }
+        ...profile,
+      },
     });
-
   } catch (error) {
     console.error('Get current user error:', error);
     res.status(500).json({ error: 'Failed to get user' });
@@ -359,18 +368,17 @@ async function handleVerifyEmail(req, res) {
   try {
     const { data, error } = await supabase.auth.verifyOtp({
       token_hash: token,
-      type: type || 'signup'
+      type: type || 'signup',
     });
 
     if (error) {
       return res.status(400).json({ error: error.message });
     }
 
-    res.json({ 
+    res.json({
       message: 'Email verified successfully',
-      user: data.user
+      user: data.user,
     });
-
   } catch (error) {
     console.error('Email verification error:', error);
     res.status(500).json({ error: 'Email verification failed' });

@@ -38,7 +38,7 @@ export default async function handler(req, res) {
     if (!rateLimit.allowed) {
       return res.status(429).json({
         error: rateLimit.message,
-        resetTime: rateLimit.resetTime
+        resetTime: rateLimit.resetTime,
       });
     }
 
@@ -67,14 +67,16 @@ export default async function handler(req, res) {
     res.json({
       success: true,
       data: result,
-      creditsRemaining: rateLimit.remaining
+      creditsRemaining: rateLimit.remaining,
     });
-
   } catch (error) {
     console.error('AI API error:', error);
     res.status(500).json({
       error: 'AI processing failed',
-      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      message:
+        process.env.NODE_ENV === 'development'
+          ? error.message
+          : 'Internal server error',
     });
   }
 }
@@ -87,7 +89,11 @@ async function handleOptimize(params, userId) {
     throw new Error('Platform and content are required');
   }
 
-  const result = await aiService.generateOptimizedContent(platform, content, options);
+  const result = await aiService.generateOptimizedContent(
+    platform,
+    content,
+    options
+  );
 
   // Save optimized content if user wants to
   if (options.save) {
@@ -97,7 +103,7 @@ async function handleOptimize(params, userId) {
       optimizedContent: result.optimizedContent,
       score: calculateOptimizationScore(result),
       hashtags: result.hashtags,
-      suggestions: result.suggestions
+      suggestions: result.suggestions,
     });
   }
 
@@ -113,11 +119,11 @@ async function handleGenerateHashtags(params) {
   }
 
   const hashtags = await aiService.generateHashtags(content, platform, count);
-  
+
   return {
     hashtags,
     count: hashtags.length,
-    platform
+    platform,
   };
 }
 
@@ -130,12 +136,12 @@ async function handleGenerateIdeas(params) {
   }
 
   const ideas = await aiService.generateContentIdeas(platform, topic, count);
-  
+
   return {
     ideas,
     count: ideas.length,
     platform,
-    topic
+    topic,
   };
 }
 
@@ -148,12 +154,12 @@ async function handleAnalyze(params) {
   }
 
   const analysis = await aiService.analyzeContent(content, platform);
-  
+
   return {
     ...analysis,
     platform,
     contentLength: content.length,
-    wordCount: content.split(/\s+/).length
+    wordCount: content.split(/\s+/).length,
   };
 }
 
@@ -161,10 +167,13 @@ async function handleAnalyze(params) {
 async function trackAIUsage(userId, action, platform) {
   try {
     await db.analytics.trackOptimization(userId, platform || 'ai', 0);
-    
+
     // Update feature usage
-    const usage = await db.features?.updateUsage?.(userId, `ai_${action}`, platform);
-    
+    const usage = await db.features?.updateUsage?.(
+      userId,
+      `ai_${action}`,
+      platform
+    );
   } catch (error) {
     console.error('Failed to track AI usage:', error);
     // Don't throw error for tracking failures
@@ -177,10 +186,10 @@ function calculateOptimizationScore(result) {
 
   // AI-generated content gets bonus
   if (result.aiGenerated) score += 10;
-  
+
   // Hashtags bonus
   if (result.hashtags && result.hashtags.length > 0) score += 10;
-  
+
   // Suggestions indicate analysis depth
   if (result.suggestions && result.suggestions.length > 0) score += 10;
 

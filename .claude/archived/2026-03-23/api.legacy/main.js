@@ -8,12 +8,14 @@ const realEndpoints = require('./real-endpoints');
 const app = express();
 
 // Enable CORS for all origins
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  })
+);
 
 // Parse JSON bodies
 app.use(express.json());
@@ -43,8 +45,8 @@ app.use('/api/*', (req, res) => {
       analytics: ['/api/analytics', '/api/analytics/platforms/:platform'],
       settings: ['/api/settings'],
       team: ['/api/team', '/api/team/invite'],
-      notifications: ['/api/notifications']
-    }
+      notifications: ['/api/notifications'],
+    },
   });
 });
 

@@ -11,7 +11,7 @@ let app;
 try {
   // Load the Express app
   app = require('../dist/index.js');
-  
+
   // Vercel expects a default export function for serverless
   if (typeof app === 'object' && app.handle) {
     // Express app detected
@@ -27,7 +27,7 @@ try {
   }
 } catch (error) {
   console.error('Failed to initialize app:', error);
-  
+
   // Fallback handler for errors
   module.exports = (req, res) => {
     const errorDetails = {
@@ -35,15 +35,15 @@ try {
       message: 'The application failed to start properly.',
       path: req.url,
       method: req.method,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-    
+
     // Add detailed error in development
     if (process.env.NODE_ENV === 'development') {
       errorDetails.details = error.message;
       errorDetails.stack = error.stack;
     }
-    
+
     res.status(500).json(errorDetails);
   };
 }

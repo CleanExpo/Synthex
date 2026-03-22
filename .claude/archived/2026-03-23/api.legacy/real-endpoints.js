@@ -11,7 +11,8 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 // JWT Secret - should be in environment variable
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET =
+  process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
@@ -21,7 +22,7 @@ const authenticateToken = (req, res, next) => {
   if (!token) {
     return res.status(401).json({
       success: false,
-      message: 'Authentication required'
+      message: 'Authentication required',
     });
   }
 
@@ -29,7 +30,7 @@ const authenticateToken = (req, res, next) => {
     if (err) {
       return res.status(403).json({
         success: false,
-        message: 'Invalid or expired token'
+        message: 'Invalid or expired token',
       });
     }
     req.user = user;
@@ -38,12 +39,12 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Helper function to generate JWT token
-const generateToken = (user) => {
+const generateToken = user => {
   return jwt.sign(
-    { 
-      userId: user.id, 
+    {
+      userId: user.id,
       email: user.email,
-      name: user.name 
+      name: user.name,
     },
     JWT_SECRET,
     { expiresIn: '24h' }
@@ -61,19 +62,19 @@ router.post('/auth/register', async (req, res) => {
     if (!email || !password || !name) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required'
+        message: 'All fields are required',
       });
     }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
 
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'User already exists with this email'
+        message: 'User already exists with this email',
       });
     }
 
@@ -89,9 +90,9 @@ router.post('/auth/register', async (req, res) => {
         preferences: {
           theme: 'light',
           notifications: true,
-          language: 'en'
-        }
-      }
+          language: 'en',
+        },
+      },
     });
 
     // Create audit log
@@ -102,8 +103,8 @@ router.post('/auth/register', async (req, res) => {
         resourceId: user.id,
         userId: user.id,
         category: 'auth',
-        outcome: 'success'
-      }
+        outcome: 'success',
+      },
     });
 
     res.json({
@@ -112,14 +113,14 @@ router.post('/auth/register', async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name
-      }
+        name: user.name,
+      },
     });
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({
       success: false,
-      message: 'Registration failed'
+      message: 'Registration failed',
     });
   }
 });
@@ -132,19 +133,19 @@ router.post('/auth/login', async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required'
+        message: 'Email and password are required',
       });
     }
 
     // Find user
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
 
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Invalid credentials',
       });
     }
 
@@ -158,20 +159,20 @@ router.post('/auth/login', async (req, res) => {
           resource: 'authentication',
           userId: user.id,
           category: 'auth',
-          outcome: 'failure'
-        }
+          outcome: 'failure',
+        },
       });
 
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Invalid credentials',
       });
     }
 
     // Update last login
     await prisma.user.update({
       where: { id: user.id },
-      data: { lastLogin: new Date() }
+      data: { lastLogin: new Date() },
     });
 
     // Create audit log
@@ -181,8 +182,8 @@ router.post('/auth/login', async (req, res) => {
         resource: 'authentication',
         userId: user.id,
         category: 'auth',
-        outcome: 'success'
-      }
+        outcome: 'success',
+      },
     });
 
     // Generate token
@@ -196,15 +197,17 @@ router.post('/auth/login', async (req, res) => {
         email: user.email,
         name: user.name,
         role: 'admin',
-        avatar: user.avatar || `https://ui-avatars.com/api/?name=${user.name}&background=6366f1&color=fff`
+        avatar:
+          user.avatar ||
+          `https://ui-avatars.com/api/?name=${user.name}&background=6366f1&color=fff`,
       },
-      message: 'Login successful'
+      message: 'Login successful',
     });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
       success: false,
-      message: 'Login failed'
+      message: 'Login failed',
     });
   }
 });
@@ -213,13 +216,13 @@ router.post('/auth/login', async (req, res) => {
 router.get('/auth/verify', authenticateToken, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
-      where: { id: req.user.userId }
+      where: { id: req.user.userId },
     });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
@@ -230,13 +233,13 @@ router.get('/auth/verify', authenticateToken, async (req, res) => {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: 'admin'
-      }
+        role: 'admin',
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Verification failed'
+      message: 'Verification failed',
     });
   }
 });
@@ -250,17 +253,17 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
     // Get real statistics from database
     const [campaigns, posts, notifications] = await Promise.all([
       prisma.campaign.count({ where: { userId } }),
-      prisma.post.findMany({ 
+      prisma.post.findMany({
         where: { campaign: { userId } },
-        include: { campaign: true }
+        include: { campaign: true },
       }),
-      prisma.notification.count({ 
-        where: { userId, read: false } 
-      })
+      prisma.notification.count({
+        where: { userId, read: false },
+      }),
     ]);
 
     const activeCampaigns = await prisma.campaign.count({
-      where: { userId, status: 'active' }
+      where: { userId, status: 'active' },
     });
 
     const scheduledPosts = posts.filter(p => p.status === 'scheduled').length;
@@ -269,7 +272,12 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
     // Calculate engagement (would be from real analytics in production)
     const engagement = posts.reduce((acc, post) => {
       const analytics = post.analytics || {};
-      return acc + (analytics.likes || 0) + (analytics.shares || 0) + (analytics.comments || 0);
+      return (
+        acc +
+        (analytics.likes || 0) +
+        (analytics.shares || 0) +
+        (analytics.comments || 0)
+      );
     }, 0);
 
     res.json({
@@ -286,26 +294,26 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
           growth: 12.5, // Would be calculated from historical data
           likes: Math.floor(engagement * 0.5),
           shares: Math.floor(engagement * 0.3),
-          comments: Math.floor(engagement * 0.2)
+          comments: Math.floor(engagement * 0.2),
         },
         reach: {
           total: publishedPosts * 1000, // Simplified calculation
           growth: 8.3,
           organic: publishedPosts * 750,
-          paid: publishedPosts * 250
+          paid: publishedPosts * 250,
         },
         followers: {
           total: 15234, // Would come from connected social accounts
           growth: 5.7,
-          new: 823
-        }
-      }
+          new: 823,
+        },
+      },
     });
   } catch (error) {
     console.error('Dashboard stats error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to load dashboard statistics'
+      message: 'Failed to load dashboard statistics',
     });
   }
 });
@@ -317,9 +325,9 @@ router.get('/campaigns', authenticateToken, async (req, res) => {
     const campaigns = await prisma.campaign.findMany({
       where: { userId: req.user.userId },
       include: {
-        posts: true
+        posts: true,
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
 
     const formattedCampaigns = campaigns.map(campaign => ({
@@ -331,19 +339,19 @@ router.get('/campaigns', authenticateToken, async (req, res) => {
       posts: campaign.posts.length,
       engagement: campaign.analytics?.engagement || 0,
       createdAt: campaign.createdAt,
-      updatedAt: campaign.updatedAt
+      updatedAt: campaign.updatedAt,
     }));
 
     res.json({
       success: true,
       data: formattedCampaigns,
-      total: campaigns.length
+      total: campaigns.length,
     });
   } catch (error) {
     console.error('Get campaigns error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to load campaigns'
+      message: 'Failed to load campaigns',
     });
   }
 });
@@ -359,20 +367,20 @@ router.post('/campaigns', authenticateToken, async (req, res) => {
         platform: platform || 'instagram',
         status: 'draft',
         settings: settings || {},
-        userId: req.user.userId
-      }
+        userId: req.user.userId,
+      },
     });
 
     res.json({
       success: true,
       data: campaign,
-      message: 'Campaign created successfully'
+      message: 'Campaign created successfully',
     });
   } catch (error) {
     console.error('Create campaign error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to create campaign'
+      message: 'Failed to create campaign',
     });
   }
 });
@@ -382,29 +390,29 @@ router.get('/campaigns/:id', authenticateToken, async (req, res) => {
     const campaign = await prisma.campaign.findFirst({
       where: {
         id: req.params.id,
-        userId: req.user.userId
+        userId: req.user.userId,
       },
       include: {
-        posts: true
-      }
+        posts: true,
+      },
     });
 
     if (!campaign) {
       return res.status(404).json({
         success: false,
-        message: 'Campaign not found'
+        message: 'Campaign not found',
       });
     }
 
     res.json({
       success: true,
-      data: campaign
+      data: campaign,
     });
   } catch (error) {
     console.error('Get campaign error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to load campaign'
+      message: 'Failed to load campaign',
     });
   }
 });
@@ -413,21 +421,21 @@ router.put('/campaigns/:id', authenticateToken, async (req, res) => {
   try {
     const campaign = await prisma.campaign.update({
       where: {
-        id: req.params.id
+        id: req.params.id,
       },
-      data: req.body
+      data: req.body,
     });
 
     res.json({
       success: true,
       data: campaign,
-      message: 'Campaign updated successfully'
+      message: 'Campaign updated successfully',
     });
   } catch (error) {
     console.error('Update campaign error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update campaign'
+      message: 'Failed to update campaign',
     });
   }
 });
@@ -436,19 +444,19 @@ router.delete('/campaigns/:id', authenticateToken, async (req, res) => {
   try {
     await prisma.campaign.delete({
       where: {
-        id: req.params.id
-      }
+        id: req.params.id,
+      },
     });
 
     res.json({
       success: true,
-      message: 'Campaign deleted successfully'
+      message: 'Campaign deleted successfully',
     });
   } catch (error) {
     console.error('Delete campaign error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to delete campaign'
+      message: 'Failed to delete campaign',
     });
   }
 });
@@ -458,20 +466,23 @@ router.delete('/campaigns/:id', authenticateToken, async (req, res) => {
 router.post('/content/generate', authenticateToken, async (req, res) => {
   try {
     const { prompt, platform, tone, length } = req.body;
-    
+
     // Here you would integrate with actual AI API (OpenAI, Anthropic, etc.)
     // For now, we'll use a template system
-    
+
     const templates = {
-      professional: "Excited to share: {prompt}. This represents a significant milestone in our journey. #innovation #growth",
-      casual: "Hey everyone! 👋 {prompt} - pretty cool, right? Let us know what you think! 🚀",
-      friendly: "We're thrilled about {prompt}! 🌟 Can't wait to hear your thoughts on this. Drop a comment below! 💬"
+      professional:
+        'Excited to share: {prompt}. This represents a significant milestone in our journey. #innovation #growth',
+      casual:
+        'Hey everyone! 👋 {prompt} - pretty cool, right? Let us know what you think! 🚀',
+      friendly:
+        "We're thrilled about {prompt}! 🌟 Can't wait to hear your thoughts on this. Drop a comment below! 💬",
     };
-    
+
     const selectedTone = tone || 'professional';
     const template = templates[selectedTone] || templates.professional;
     const content = template.replace('{prompt}', prompt || 'our latest update');
-    
+
     // Log API usage
     await prisma.apiUsage.create({
       data: {
@@ -480,10 +491,10 @@ router.post('/content/generate', authenticateToken, async (req, res) => {
         tokens: content.length,
         cost: 0,
         status: 'success',
-        userId: req.user.userId
-      }
+        userId: req.user.userId,
+      },
     });
-    
+
     res.json({
       success: true,
       data: {
@@ -491,14 +502,14 @@ router.post('/content/generate', authenticateToken, async (req, res) => {
         platform: platform || 'instagram',
         tone: selectedTone,
         length: content.length,
-        hashtags: content.match(/#\w+/g) || []
-      }
+        hashtags: content.match(/#\w+/g) || [],
+      },
     });
   } catch (error) {
     console.error('Content generation error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to generate content'
+      message: 'Failed to generate content',
     });
   }
 });
@@ -508,35 +519,35 @@ router.post('/content/generate', authenticateToken, async (req, res) => {
 router.get('/posts', authenticateToken, async (req, res) => {
   try {
     const { status, platform, limit = 10 } = req.query;
-    
+
     const where = {
       campaign: {
-        userId: req.user.userId
-      }
+        userId: req.user.userId,
+      },
     };
-    
+
     if (status) where.status = status;
     if (platform) where.platform = platform;
-    
+
     const posts = await prisma.post.findMany({
       where,
       include: {
-        campaign: true
+        campaign: true,
       },
       take: parseInt(limit),
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
-    
+
     res.json({
       success: true,
       data: posts,
-      total: posts.length
+      total: posts.length,
     });
   } catch (error) {
     console.error('Get posts error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to load posts'
+      message: 'Failed to load posts',
     });
   }
 });
@@ -544,42 +555,42 @@ router.get('/posts', authenticateToken, async (req, res) => {
 router.post('/posts', authenticateToken, async (req, res) => {
   try {
     const { content, platform, campaignId, scheduledAt } = req.body;
-    
+
     // Verify campaign belongs to user
     const campaign = await prisma.campaign.findFirst({
       where: {
         id: campaignId,
-        userId: req.user.userId
-      }
+        userId: req.user.userId,
+      },
     });
-    
+
     if (!campaign) {
       return res.status(404).json({
         success: false,
-        message: 'Campaign not found'
+        message: 'Campaign not found',
       });
     }
-    
+
     const post = await prisma.post.create({
       data: {
         content: content || '',
         platform: platform || campaign.platform,
         status: scheduledAt ? 'scheduled' : 'draft',
         scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
-        campaignId
-      }
+        campaignId,
+      },
     });
-    
+
     res.json({
       success: true,
       data: post,
-      message: 'Post created successfully'
+      message: 'Post created successfully',
     });
   } catch (error) {
     console.error('Create post error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to create post'
+      message: 'Failed to create post',
     });
   }
 });
@@ -587,42 +598,42 @@ router.post('/posts', authenticateToken, async (req, res) => {
 router.post('/posts/schedule', authenticateToken, async (req, res) => {
   try {
     const { content, platform, campaignId, scheduledFor } = req.body;
-    
+
     // Verify campaign belongs to user
     const campaign = await prisma.campaign.findFirst({
       where: {
         id: campaignId,
-        userId: req.user.userId
-      }
+        userId: req.user.userId,
+      },
     });
-    
+
     if (!campaign) {
       return res.status(404).json({
         success: false,
-        message: 'Campaign not found'
+        message: 'Campaign not found',
       });
     }
-    
+
     const post = await prisma.post.create({
       data: {
         content: content || '',
         platform: platform || campaign.platform,
         status: 'scheduled',
         scheduledAt: new Date(scheduledFor),
-        campaignId
-      }
+        campaignId,
+      },
     });
-    
+
     res.json({
       success: true,
       data: post,
-      message: 'Post scheduled successfully'
+      message: 'Post scheduled successfully',
     });
   } catch (error) {
     console.error('Schedule post error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to schedule post'
+      message: 'Failed to schedule post',
     });
   }
 });
@@ -634,23 +645,23 @@ router.get('/notifications', authenticateToken, async (req, res) => {
     const notifications = await prisma.notification.findMany({
       where: { userId: req.user.userId },
       orderBy: { createdAt: 'desc' },
-      take: 20
+      take: 20,
     });
-    
+
     const unreadCount = await prisma.notification.count({
-      where: { userId: req.user.userId, read: false }
+      where: { userId: req.user.userId, read: false },
     });
-    
+
     res.json({
       success: true,
       data: notifications,
-      unreadCount
+      unreadCount,
     });
   } catch (error) {
     console.error('Get notifications error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to load notifications'
+      message: 'Failed to load notifications',
     });
   }
 });
@@ -659,18 +670,18 @@ router.post('/notifications/:id/read', authenticateToken, async (req, res) => {
   try {
     await prisma.notification.update({
       where: { id: req.params.id },
-      data: { read: true }
+      data: { read: true },
     });
-    
+
     res.json({
       success: true,
-      message: 'Notification marked as read'
+      message: 'Notification marked as read',
     });
   } catch (error) {
     console.error('Mark notification read error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to mark notification as read'
+      message: 'Failed to mark notification as read',
     });
   }
 });
@@ -681,9 +692,9 @@ router.get('/settings', authenticateToken, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      include: { organization: true }
+      include: { organization: true },
     });
-    
+
     res.json({
       success: true,
       data: {
@@ -691,25 +702,25 @@ router.get('/settings', authenticateToken, async (req, res) => {
           name: user.name,
           email: user.email,
           timezone: user.preferences?.timezone || 'America/New_York',
-          language: user.preferences?.language || 'en'
+          language: user.preferences?.language || 'en',
         },
         notifications: user.preferences?.notifications || {
           emailNotifications: true,
           pushNotifications: false,
-          campaignAlerts: true
+          campaignAlerts: true,
         },
         organization: user.organization,
         apiKeys: {
           openrouter: !!user.openrouterApiKey,
-          anthropic: !!user.anthropicApiKey
-        }
-      }
+          anthropic: !!user.anthropicApiKey,
+        },
+      },
     });
   } catch (error) {
     console.error('Get settings error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to load settings'
+      message: 'Failed to load settings',
     });
   }
 });
@@ -717,44 +728,44 @@ router.get('/settings', authenticateToken, async (req, res) => {
 router.put('/settings', authenticateToken, async (req, res) => {
   try {
     const { general, notifications, apiKeys } = req.body;
-    
+
     const updateData = {};
-    
+
     if (general) {
       if (general.name) updateData.name = general.name;
       updateData.preferences = {
         ...updateData.preferences,
         timezone: general.timezone,
-        language: general.language
+        language: general.language,
       };
     }
-    
+
     if (notifications) {
       updateData.preferences = {
         ...updateData.preferences,
-        notifications
+        notifications,
       };
     }
-    
+
     if (apiKeys) {
       if (apiKeys.openrouter) updateData.openrouterApiKey = apiKeys.openrouter;
       if (apiKeys.anthropic) updateData.anthropicApiKey = apiKeys.anthropic;
     }
-    
+
     const user = await prisma.user.update({
       where: { id: req.user.userId },
-      data: updateData
+      data: updateData,
     });
-    
+
     res.json({
       success: true,
-      message: 'Settings updated successfully'
+      message: 'Settings updated successfully',
     });
   } catch (error) {
     console.error('Update settings error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update settings'
+      message: 'Failed to update settings',
     });
   }
 });
@@ -765,19 +776,19 @@ router.get('/health', async (req, res) => {
   try {
     // Check database connection
     await prisma.$queryRaw`SELECT 1`;
-    
+
     res.json({
       success: true,
       status: 'healthy',
       timestamp: new Date().toISOString(),
       version: '2.0.0',
-      database: 'connected'
+      database: 'connected',
     });
   } catch (error) {
     res.status(503).json({
       success: false,
       status: 'unhealthy',
-      error: 'Database connection failed'
+      error: 'Database connection failed',
     });
   }
 });
@@ -796,8 +807,8 @@ router.get('/', (req, res) => {
       content: ['/content/generate'],
       posts: ['/posts', '/posts/schedule'],
       notifications: ['/notifications'],
-      settings: ['/settings']
-    }
+      settings: ['/settings'],
+    },
   });
 });
 

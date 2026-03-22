@@ -19,7 +19,7 @@ let systemMetrics = {
   apiCalls: {
     optimize: 0,
     ai: 0,
-    auth: 0
+    auth: 0,
   },
   platformUsage: {
     instagram: 0,
@@ -29,59 +29,62 @@ let systemMetrics = {
     tiktok: 0,
     pinterest: 0,
     youtube: 0,
-    reddit: 0
+    reddit: 0,
   },
   performanceMetrics: {
     avgResponseTime: 0,
     maxResponseTime: 0,
-    responseTimes: []
-  }
+    responseTimes: [],
+  },
 };
 
 // Middleware to track metrics
 export function trackMetrics(req, res, next) {
   const startTime = Date.now();
   systemMetrics.requestCount++;
-  
+
   // Track user activity
   const userId = authService.getUserIdFromRequest(req);
   if (userId) {
     systemMetrics.activeUsers.add(userId);
   }
-  
+
   // Track API endpoint usage
   const path = req.url.split('?')[0];
   if (path.includes('/optimize')) systemMetrics.apiCalls.optimize++;
   if (path.includes('/ai')) systemMetrics.apiCalls.ai++;
   if (path.includes('/auth')) systemMetrics.apiCalls.auth++;
-  
+
   // Override res.end to track response time
   const originalEnd = res.end;
-  res.end = function(...args) {
+  res.end = function (...args) {
     const responseTime = Date.now() - startTime;
-    
+
     // Update performance metrics
     systemMetrics.performanceMetrics.responseTimes.push(responseTime);
     if (systemMetrics.performanceMetrics.responseTimes.length > 100) {
       systemMetrics.performanceMetrics.responseTimes.shift();
     }
-    
-    const avgTime = systemMetrics.performanceMetrics.responseTimes.reduce((a, b) => a + b, 0) / 
-                   systemMetrics.performanceMetrics.responseTimes.length;
+
+    const avgTime =
+      systemMetrics.performanceMetrics.responseTimes.reduce(
+        (a, b) => a + b,
+        0
+      ) / systemMetrics.performanceMetrics.responseTimes.length;
     systemMetrics.performanceMetrics.avgResponseTime = Math.round(avgTime);
     systemMetrics.performanceMetrics.maxResponseTime = Math.max(
-      systemMetrics.performanceMetrics.maxResponseTime, 
+      systemMetrics.performanceMetrics.maxResponseTime,
       responseTime
     );
-    
+
     // Track errors
     if (res.statusCode >= 400) {
       systemMetrics.errorCount++;
     }
-    
+
     originalEnd.apply(res, args);
   };
-  
+
   if (next) next();
 }
 
@@ -104,11 +107,11 @@ export default async function handler(req, res) {
 
   try {
     const { type = 'all', timeframe = '24h' } = req.query;
-    
+
     // Check cache first
     const cacheKey = `${type}-${timeframe}`;
     const cachedData = metricsCache.get(cacheKey);
-    
+
     if (cachedData && Date.now() - cachedData.timestamp < CACHE_DURATION) {
       return res.json(cachedData.data);
     }
@@ -137,16 +140,18 @@ export default async function handler(req, res) {
     // Cache the result
     metricsCache.set(cacheKey, {
       data: metrics,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     res.json(metrics);
-
   } catch (error) {
     console.error('Metrics API error:', error);
     res.status(500).json({
       error: 'Failed to fetch metrics',
-      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      message:
+        process.env.NODE_ENV === 'development'
+          ? error.message
+          : 'Internal server error',
     });
   }
 }
@@ -154,8 +159,10 @@ export default async function handler(req, res) {
 // Get system metrics
 async function getSystemMetrics() {
   const uptime = Date.now() - systemMetrics.startTime;
-  const errorRate = systemMetrics.requestCount > 0 ? 
-    (systemMetrics.errorCount / systemMetrics.requestCount) * 100 : 0;
+  const errorRate =
+    systemMetrics.requestCount > 0
+      ? (systemMetrics.errorCount / systemMetrics.requestCount) * 100
+      : 0;
 
   return {
     system: {
@@ -168,14 +175,14 @@ async function getSystemMetrics() {
       memoryUsage: process.memoryUsage(),
       cpuUsage: process.cpuUsage(),
       nodeVersion: process.version,
-      environment: process.env.NODE_ENV || 'development'
+      environment: process.env.NODE_ENV || 'development',
     },
     apis: systemMetrics.apiCalls,
     platforms: systemMetrics.platformUsage,
     performance: {
       ...systemMetrics.performanceMetrics,
-      uptime: Math.round(uptime / 1000)
-    }
+      uptime: Math.round(uptime / 1000),
+    },
   };
 }
 
@@ -183,18 +190,13 @@ async function getSystemMetrics() {
 async function getUserMetrics(timeframe) {
   try {
     const timeFilter = getTimeFilter(timeframe);
-    
+
     // Get user statistics
-    const [
-      totalUsers,
-      activeUsers,
-      newUsers,
-      userGrowth
-    ] = await Promise.all([
+    const [totalUsers, activeUsers, newUsers, userGrowth] = await Promise.all([
       getTotalUsers(),
       getActiveUsers(timeFilter),
       getNewUsers(timeFilter),
-      getUserGrowth(timeframe)
+      getUserGrowth(timeframe),
     ]);
 
     return {
@@ -203,8 +205,8 @@ async function getUserMetrics(timeframe) {
         active: activeUsers,
         new: newUsers,
         growth: userGrowth,
-        retention: await getUserRetention(timeframe)
-      }
+        retention: await getUserRetention(timeframe),
+      },
     };
   } catch (error) {
     console.error('User metrics error:', error);
@@ -216,17 +218,17 @@ async function getUserMetrics(timeframe) {
 async function getContentMetrics(timeframe) {
   try {
     const timeFilter = getTimeFilter(timeframe);
-    
+
     const [
       totalContent,
       contentByPlatform,
       topPerformingContent,
-      averageScore
+      averageScore,
     ] = await Promise.all([
       getTotalContent(timeFilter),
       getContentByPlatform(timeFilter),
       getTopPerformingContent(timeFilter),
-      getAverageOptimizationScore(timeFilter)
+      getAverageOptimizationScore(timeFilter),
     ]);
 
     return {
@@ -234,28 +236,26 @@ async function getContentMetrics(timeframe) {
         total: totalContent,
         byPlatform: contentByPlatform,
         topPerforming: topPerformingContent,
-        averageScore: Math.round(averageScore * 10) / 10
-      }
+        averageScore: Math.round(averageScore * 10) / 10,
+      },
     };
   } catch (error) {
     console.error('Content metrics error:', error);
-    return { content: { total: 0, byPlatform: {}, topPerforming: [], averageScore: 0 } };
+    return {
+      content: { total: 0, byPlatform: {}, topPerforming: [], averageScore: 0 },
+    };
   }
 }
 
 // Get performance metrics
 async function getPerformanceMetrics(timeframe) {
   const timeFilter = getTimeFilter(timeframe);
-  
+
   try {
-    const [
-      apiLatency,
-      errorRates,
-      throughput
-    ] = await Promise.all([
+    const [apiLatency, errorRates, throughput] = await Promise.all([
       getAPILatency(timeFilter),
       getErrorRates(timeFilter),
-      getThroughput(timeFilter)
+      getThroughput(timeFilter),
     ]);
 
     return {
@@ -264,8 +264,8 @@ async function getPerformanceMetrics(timeframe) {
         apiLatency,
         errorRates,
         throughput,
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     };
   } catch (error) {
     console.error('Performance metrics error:', error);
@@ -279,7 +279,7 @@ async function getAllMetrics(timeframe) {
     getSystemMetrics(),
     getUserMetrics(timeframe),
     getContentMetrics(timeframe),
-    getPerformanceMetrics(timeframe)
+    getPerformanceMetrics(timeframe),
   ]);
 
   return {
@@ -288,7 +288,7 @@ async function getAllMetrics(timeframe) {
     ...content,
     ...performance,
     timestamp: Date.now(),
-    timeframe
+    timeframe,
   };
 }
 
@@ -298,7 +298,7 @@ async function getTotalUsers() {
     const { count, error } = await db.supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true });
-    
+
     return error ? 0 : count;
   } catch (error) {
     return 0;
@@ -311,7 +311,7 @@ async function getActiveUsers(timeFilter) {
       .from('analytics')
       .select('user_id', { count: 'exact', head: true })
       .gte('timestamp', timeFilter);
-    
+
     return error ? systemMetrics.activeUsers.size : count;
   } catch (error) {
     return systemMetrics.activeUsers.size;
@@ -324,7 +324,7 @@ async function getNewUsers(timeFilter) {
       .from('profiles')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', timeFilter);
-    
+
     return error ? 0 : count;
   } catch (error) {
     return 0;
@@ -335,13 +335,15 @@ async function getUserGrowth(timeframe) {
   try {
     const now = new Date();
     const current = getTimeFilter(timeframe);
-    const previous = new Date(current.getTime() - (now.getTime() - current.getTime()));
-    
+    const previous = new Date(
+      current.getTime() - (now.getTime() - current.getTime())
+    );
+
     const [currentUsers, previousUsers] = await Promise.all([
       getNewUsers(current),
-      getNewUsers(previous)
+      getNewUsers(previous),
     ]);
-    
+
     if (previousUsers === 0) return 100;
     return Math.round(((currentUsers - previousUsers) / previousUsers) * 100);
   } catch (error) {
@@ -354,7 +356,7 @@ async function getUserRetention(timeframe) {
   try {
     const activeUsers = await getActiveUsers(getTimeFilter(timeframe));
     const totalUsers = await getTotalUsers();
-    
+
     return totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0;
   } catch (error) {
     return 0;
@@ -367,7 +369,7 @@ async function getTotalContent(timeFilter) {
       .from('optimized_content')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', timeFilter);
-    
+
     return error ? 0 : count;
   } catch (error) {
     return 0;
@@ -380,14 +382,14 @@ async function getContentByPlatform(timeFilter) {
       .from('optimized_content')
       .select('platform')
       .gte('created_at', timeFilter);
-    
+
     if (error) return {};
-    
+
     const platformCounts = {};
     data.forEach(item => {
       platformCounts[item.platform] = (platformCounts[item.platform] || 0) + 1;
     });
-    
+
     return platformCounts;
   } catch (error) {
     return {};
@@ -402,7 +404,7 @@ async function getTopPerformingContent(timeFilter) {
       .gte('created_at', timeFilter)
       .order('score', { ascending: false })
       .limit(5);
-    
+
     return error ? [] : data;
   } catch (error) {
     return [];
@@ -415,9 +417,9 @@ async function getAverageOptimizationScore(timeFilter) {
       .from('optimized_content')
       .select('score')
       .gte('created_at', timeFilter);
-    
+
     if (error || !data.length) return 0;
-    
+
     const total = data.reduce((sum, item) => sum + (item.score || 0), 0);
     return total / data.length;
   } catch (error) {
@@ -430,36 +432,42 @@ async function getAPILatency(timeFilter) {
   return {
     average: systemMetrics.performanceMetrics.avgResponseTime,
     max: systemMetrics.performanceMetrics.maxResponseTime,
-    current: systemMetrics.performanceMetrics.responseTimes.slice(-1)[0] || 0
+    current: systemMetrics.performanceMetrics.responseTimes.slice(-1)[0] || 0,
   };
 }
 
 async function getErrorRates(timeFilter) {
   const total = systemMetrics.requestCount;
   const errors = systemMetrics.errorCount;
-  
+
   return {
     total: errors,
     rate: total > 0 ? Math.round((errors / total) * 10000) / 100 : 0,
     by4xx: Math.round(errors * 0.7), // Approximate
-    by5xx: Math.round(errors * 0.3)  // Approximate
+    by5xx: Math.round(errors * 0.3), // Approximate
   };
 }
 
 async function getThroughput(timeFilter) {
   const uptime = (Date.now() - systemMetrics.startTime) / 1000; // seconds
-  
+
   return {
-    requestsPerSecond: uptime > 0 ? Math.round((systemMetrics.requestCount / uptime) * 100) / 100 : 0,
-    requestsPerMinute: uptime > 0 ? Math.round((systemMetrics.requestCount / uptime) * 60 * 100) / 100 : 0,
-    totalRequests: systemMetrics.requestCount
+    requestsPerSecond:
+      uptime > 0
+        ? Math.round((systemMetrics.requestCount / uptime) * 100) / 100
+        : 0,
+    requestsPerMinute:
+      uptime > 0
+        ? Math.round((systemMetrics.requestCount / uptime) * 60 * 100) / 100
+        : 0,
+    totalRequests: systemMetrics.requestCount,
   };
 }
 
 // Utility functions
 function getTimeFilter(timeframe) {
   const now = new Date();
-  
+
   switch (timeframe) {
     case '1h':
       return new Date(now.getTime() - 60 * 60 * 1000);
@@ -481,7 +489,7 @@ function formatUptime(milliseconds) {
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
-  
+
   if (days > 0) return `${days}d ${hours % 24}h ${minutes % 60}m`;
   if (hours > 0) return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
   if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
@@ -496,14 +504,17 @@ export function trackPlatformUsage(platform) {
 }
 
 // Clean up old metrics periodically
-setInterval(() => {
-  // Clear old cache entries
-  for (const [key, value] of metricsCache.entries()) {
-    if (Date.now() - value.timestamp > CACHE_DURATION * 2) {
-      metricsCache.delete(key);
+setInterval(
+  () => {
+    // Clear old cache entries
+    for (const [key, value] of metricsCache.entries()) {
+      if (Date.now() - value.timestamp > CACHE_DURATION * 2) {
+        metricsCache.delete(key);
+      }
     }
-  }
-  
-  // Reset active users set every hour
-  systemMetrics.activeUsers.clear();
-}, 60 * 60 * 1000);
+
+    // Reset active users set every hour
+    systemMetrics.activeUsers.clear();
+  },
+  60 * 60 * 1000
+);

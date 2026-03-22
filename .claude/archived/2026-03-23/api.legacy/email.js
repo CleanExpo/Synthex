@@ -32,7 +32,10 @@ export default async function handler(req, res) {
     console.error('Email API error:', error);
     res.status(500).json({
       error: 'Email service failed',
-      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      message:
+        process.env.NODE_ENV === 'development'
+          ? error.message
+          : 'Internal server error',
     });
   }
 }
@@ -67,17 +70,17 @@ async function handleSendEmail(req, res) {
   if (result.success) {
     // Track email sending
     await trackEmailUsage(type, params.userEmail);
-    
+
     return res.json({
       success: true,
       messageId: result.messageId,
-      message: 'Email sent successfully'
+      message: 'Email sent successfully',
     });
   } else {
     return res.status(500).json({
       success: false,
       error: result.error,
-      retry: result.retry
+      retry: result.retry,
     });
   }
 }
@@ -86,17 +89,17 @@ async function handleSendEmail(req, res) {
 async function handleEmailStatus(req, res) {
   const status = emailService.getQueueStatus();
   const connectionTest = await emailService.testConnection();
-  
+
   res.json({
     service: {
       configured: status.isConfigured,
       connection: connectionTest.success,
       queue: {
         length: status.queueLength,
-        processing: status.isProcessing
-      }
+        processing: status.isProcessing,
+      },
     },
-    stats: await getEmailStats()
+    stats: await getEmailStats(),
   });
 }
 
@@ -109,8 +112,8 @@ async function handleWelcomeEmail(params) {
   }
 
   return await emailService.sendWelcomeEmail(
-    userEmail, 
-    userName, 
+    userEmail,
+    userName,
     dashboardUrl || 'https://synthex.social/dashboard'
   );
 }
@@ -136,7 +139,9 @@ async function handleNotificationEmail(params) {
   const { userEmail, userName, title, content, actionUrl, actionText } = params;
 
   if (!userEmail || !userName || !title || !content) {
-    throw new Error('User email, name, title, and content are required for notification email');
+    throw new Error(
+      'User email, name, title, and content are required for notification email'
+    );
   }
 
   return await emailService.sendNotificationEmail(
@@ -153,7 +158,9 @@ async function handleCustomEmail(params) {
   const { to, subject, html, text, priority } = params;
 
   if (!to || !subject || (!html && !text)) {
-    throw new Error('Recipient, subject, and content (html or text) are required');
+    throw new Error(
+      'Recipient, subject, and content (html or text) are required'
+    );
   }
 
   return await emailService.sendEmail({
@@ -162,7 +169,7 @@ async function handleCustomEmail(params) {
     html,
     text,
     priority: priority || 'normal',
-    template: 'custom'
+    template: 'custom',
   });
 }
 
@@ -179,14 +186,13 @@ async function trackEmailUsage(emailType, userEmail) {
     if (user?.id) {
       // Track in analytics
       await db.analytics.trackOptimization(user.id, 'email', 0);
-      
+
       // Update feature usage
       await db.features?.updateUsage?.(user.id, `email_${emailType}`, 'email');
     }
 
     // Log email sending
     console.log(`Email sent: ${emailType} to ${userEmail}`);
-
   } catch (error) {
     console.error('Failed to track email usage:', error);
     // Don't throw error for tracking failures
@@ -201,21 +207,23 @@ async function getEmailStats() {
       .from('analytics')
       .select('*')
       .eq('platform', 'email')
-      .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .gte(
+        'timestamp',
+        new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      )
       .order('timestamp', { ascending: false });
 
     return {
       last24Hours: emailStats?.length || 0,
       totalSent: 0, // Would need separate tracking for total
-      queueStatus: emailService.getQueueStatus()
+      queueStatus: emailService.getQueueStatus(),
     };
-
   } catch (error) {
     console.error('Failed to get email stats:', error);
     return {
       last24Hours: 0,
       totalSent: 0,
-      queueStatus: emailService.getQueueStatus()
+      queueStatus: emailService.getQueueStatus(),
     };
   }
 }

@@ -17,13 +17,13 @@ let healthMetrics = {
   connections: {
     database: 'unknown',
     redis: 'unknown',
-    external_apis: 'unknown'
+    external_apis: 'unknown',
   },
   features: {
     optimizers: false,
     monitoring: false,
-    authentication: false
-  }
+    authentication: false,
+  },
 };
 
 // Update metrics
@@ -31,13 +31,13 @@ function updateHealthMetrics() {
   healthMetrics.uptime = process.uptime();
   healthMetrics.timestamp = new Date().toISOString();
   healthMetrics.memory = process.memoryUsage();
-  
+
   // Check feature flags
   healthMetrics.features = {
     optimizers: process.env.REACT_APP_OPTIMIZERS === 'true',
     monitoring: process.env.ANALYTICS_ENABLED === 'true',
     authentication: !!process.env.JWT_SECRET,
-    glassmorphicUI: process.env.REACT_APP_GLASSMORPHIC === 'true'
+    glassmorphicUI: process.env.REACT_APP_GLASSMORPHIC === 'true',
   };
 }
 
@@ -75,11 +75,11 @@ async function testExternalAPIs() {
   const apis = {
     anthropic: !!process.env.ANTHROPIC_API_KEY,
     openai: !!process.env.OPENAI_API_KEY,
-    supabase: !!process.env.NEXT_PUBLIC_SUPABASE_URL
+    supabase: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
   };
-  
+
   const configuredCount = Object.values(apis).filter(Boolean).length;
-  
+
   if (configuredCount === 0) return 'not_configured';
   if (configuredCount < 2) return 'partial';
   return 'configured';
@@ -88,41 +88,50 @@ async function testExternalAPIs() {
 // Get detailed health status
 async function getDetailedHealth() {
   updateHealthMetrics();
-  
+
   // Test connections
   const [dbStatus, redisStatus, apiStatus] = await Promise.all([
     testDatabaseConnection(),
     testRedisConnection(),
-    testExternalAPIs()
+    testExternalAPIs(),
   ]);
-  
+
   healthMetrics.connections = {
     database: dbStatus,
     redis: redisStatus,
-    external_apis: apiStatus
+    external_apis: apiStatus,
   };
-  
+
   // Determine overall status
   let status = 'healthy';
-  
-  if (healthMetrics.memory && healthMetrics.memory.heapUsed / healthMetrics.memory.heapTotal > 0.9) {
+
+  if (
+    healthMetrics.memory &&
+    healthMetrics.memory.heapUsed / healthMetrics.memory.heapTotal > 0.9
+  ) {
     status = 'warning';
   }
-  
+
   if (dbStatus === 'error' || healthMetrics.uptime < 30) {
     status = 'unhealthy';
   }
-  
+
   return {
     status,
     ...healthMetrics,
     checks: {
-      memory_usage: healthMetrics.memory ? 
-        Math.round((healthMetrics.memory.heapUsed / healthMetrics.memory.heapTotal) * 100) : 0,
+      memory_usage: healthMetrics.memory
+        ? Math.round(
+            (healthMetrics.memory.heapUsed / healthMetrics.memory.heapTotal) *
+              100
+          )
+        : 0,
       uptime_minutes: Math.round(healthMetrics.uptime / 60),
       environment_configured: process.env.NODE_ENV === 'production',
-      feature_flags_enabled: Object.values(healthMetrics.features).some(Boolean)
-    }
+      feature_flags_enabled: Object.values(healthMetrics.features).some(
+        Boolean
+      ),
+    },
   };
 }
 
@@ -133,25 +142,31 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
+
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
-  
+
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
-  
+
   try {
     const detailed = req.query.detailed === 'true';
-    
+
     if (detailed) {
       const health = await getDetailedHealth();
-      res.status(health.status === 'healthy' ? 200 : 
-                health.status === 'warning' ? 200 : 503)
-         .json(health);
+      res
+        .status(
+          health.status === 'healthy'
+            ? 200
+            : health.status === 'warning'
+              ? 200
+              : 503
+        )
+        .json(health);
     } else {
       // Simple health check
       updateHealthMetrics();
@@ -160,7 +175,7 @@ export default async function handler(req, res) {
         timestamp: healthMetrics.timestamp,
         uptime: Math.round(healthMetrics.uptime),
         version: healthMetrics.version,
-        environment: healthMetrics.environment
+        environment: healthMetrics.environment,
       });
     }
   } catch (error) {
@@ -169,7 +184,10 @@ export default async function handler(req, res) {
       status: 'error',
       message: 'Health check failed',
       timestamp: new Date().toISOString(),
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal error'
+      error:
+        process.env.NODE_ENV === 'development'
+          ? error.message
+          : 'Internal error',
     });
   }
 }

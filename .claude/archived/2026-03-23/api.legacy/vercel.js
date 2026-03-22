@@ -8,20 +8,19 @@ let app;
 try {
   // Load the compiled Express app
   const appModule = require('../dist/index.js');
-  
+
   // Handle both default export and direct export
   app = appModule.default || appModule;
-  
+
   if (typeof app !== 'function') {
     throw new Error('Invalid app export - expected Express app function');
   }
-  
+
   console.log('✅ Successfully loaded Express app for Vercel');
-  
 } catch (error) {
   console.error('❌ Failed to load application:', error.message);
   console.error('Stack:', error.stack);
-  
+
   // Fallback error handler
   app = (req, res) => {
     res.status(500).json({
@@ -32,8 +31,8 @@ try {
         error: error.message,
         stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
         nodeVersion: process.version,
-        platform: process.platform
-      }
+        platform: process.platform,
+      },
     });
   };
 }
