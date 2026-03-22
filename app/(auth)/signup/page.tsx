@@ -3,17 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import {
   Mail,
   Lock,
@@ -28,8 +17,9 @@ import {
   RefreshCw,
   Key,
 } from '@/components/icons';
-import { SynthexLogo } from '@/components/marketing/MarketingLayout';
+import { SynthexLogo } from '@/components/landing/synthex-logo';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 /** Shape of per-field validation details returned by the signup API */
 interface ValidationDetail {
@@ -54,8 +44,6 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [rateLimitSeconds, setRateLimitSeconds] = useState(0);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // UNI-632: Track email verification state to show inline message
   const [verificationEmail, setVerificationEmail] = useState<string | null>(
     null
   );
@@ -73,7 +61,6 @@ export default function SignupPage() {
       }
       return;
     }
-
     countdownRef.current = setInterval(() => {
       setRateLimitSeconds(prev => {
         if (prev <= 1) {
@@ -86,7 +73,6 @@ export default function SignupPage() {
         return prev - 1;
       });
     }, 1000);
-
     return () => {
       if (countdownRef.current) {
         clearInterval(countdownRef.current);
@@ -98,9 +84,7 @@ export default function SignupPage() {
   const formatCountdown = useCallback((seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    if (mins > 0) {
-      return `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
+    if (mins > 0) return `${mins}:${secs.toString().padStart(2, '0')}`;
     return `${secs}s`;
   }, []);
 
@@ -116,14 +100,12 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFieldErrors({});
-
     if (rateLimitSeconds > 0) return;
 
     if (formData.password !== formData.confirmPassword) {
       setFieldErrors({ confirmPassword: 'Passwords do not match' });
       return;
     }
-
     if (passwordStrength < 2) {
       setFieldErrors({
         password:
@@ -133,7 +115,6 @@ export default function SignupPage() {
     }
 
     setIsLoading(true);
-
     try {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
@@ -153,22 +134,15 @@ export default function SignupPage() {
 
       if (response.status === 429) {
         const retryAfterHeader = response.headers.get('Retry-After');
-        let seconds = 60; // sensible default
-
+        let seconds = 60;
         if (retryAfterHeader) {
           const parsed = parseInt(retryAfterHeader, 10);
-          if (!Number.isNaN(parsed) && parsed > 0) {
-            seconds = parsed;
-          }
+          if (!Number.isNaN(parsed) && parsed > 0) seconds = parsed;
         } else if (data.retryAfter) {
-          // Fallback: parse ISO timestamp from response body
           const resetTime = new Date(data.retryAfter).getTime();
           const remaining = Math.ceil((resetTime - Date.now()) / 1000);
-          if (remaining > 0) {
-            seconds = remaining;
-          }
+          if (remaining > 0) seconds = remaining;
         }
-
         setRateLimitSeconds(seconds);
         toast.error(
           `Too many attempts. Please wait ${Math.ceil(seconds / 60)} minute${Math.ceil(seconds / 60) !== 1 ? 's' : ''} before trying again.`
@@ -177,35 +151,24 @@ export default function SignupPage() {
       }
 
       if (!response.ok) {
-        // UNI-629: Surface field-level validation errors from the API.
-        // The signup API returns { error: string, details?: Array<{ field, message }> }
-        // when Zod validation fails (status 400).
         if (data.details && Array.isArray(data.details)) {
           const errors: Record<string, string> = {};
           for (const issue of data.details as ValidationDetail[]) {
-            if (issue.field) {
-              errors[issue.field] = issue.message;
-            }
+            if (issue.field) errors[issue.field] = issue.message;
           }
           if (Object.keys(errors).length > 0) {
             setFieldErrors(errors);
           } else {
-            // details array exists but no field-level errors — show generic
             toast.error(data.error || 'Registration failed. Please try again.');
           }
         } else {
-          // No details array (e.g. 409 duplicate email, 500 server error)
           toast.error(data.error || 'Registration failed. Please try again.');
         }
         return;
       }
 
-      // UNI-632: After successful signup, check the requiresVerification flag.
-      // If true, show an inline "Check your email" message with the user's
-      // email displayed, instead of immediately redirecting.
       if (data.requiresVerification) {
         setVerificationEmail(formData.email);
-        // Do NOT redirect — show inline verification message
       } else {
         toast.success('Account created successfully!');
         router.push('/onboarding');
@@ -220,13 +183,10 @@ export default function SignupPage() {
   const handleGoogleSignup = async () => {
     setIsLoading(true);
     try {
-      // Use custom OAuth route with PKCE (same as login) — ensures JWT is set
-      // and onboarding redirect works correctly via callback handler
       const response = await fetch('/api/auth/oauth/google', {
         credentials: 'include',
       });
       const data = await response.json();
-
       if (!response.ok) {
         if (data.error?.includes('not configured')) {
           toast.error(
@@ -236,7 +196,6 @@ export default function SignupPage() {
         }
         throw new Error(data.error || 'Failed to initiate Google signup');
       }
-
       if (data.authorizationUrl) {
         window.location.href = data.authorizationUrl;
       } else {
@@ -259,11 +218,7 @@ export default function SignupPage() {
         method: 'POST',
         credentials: 'include',
       });
-      if (response.ok) {
-        setResendStatus('sent');
-      } else {
-        setResendStatus('error');
-      }
+      setResendStatus(response.ok ? 'sent' : 'error');
     } catch {
       setResendStatus('error');
     } finally {
@@ -271,15 +226,14 @@ export default function SignupPage() {
     }
   };
 
-  const getPasswordStrengthColor = () => {
-    if (passwordStrength === 0) return 'bg-gray-600';
-    if (passwordStrength === 1) return 'bg-red-500';
-    if (passwordStrength === 2) return 'bg-yellow-500';
-    if (passwordStrength === 3) return 'bg-orange-500';
-    return 'bg-green-500';
+  const getStrengthColor = () => {
+    if (passwordStrength <= 1) return 'bg-red-500/60';
+    if (passwordStrength === 2) return 'bg-amber-500/60';
+    if (passwordStrength === 3) return 'bg-amber-400/80';
+    return 'bg-emerald-500/60';
   };
 
-  const getPasswordStrengthText = () => {
+  const getStrengthLabel = () => {
     if (passwordStrength === 0) return '';
     if (passwordStrength === 1) return 'Weak';
     if (passwordStrength === 2) return 'Fair';
@@ -289,161 +243,145 @@ export default function SignupPage() {
 
   const isSubmitDisabled = isLoading || rateLimitSeconds > 0;
 
-  // UNI-632: If email verification is required, render the verification
-  // message instead of the signup form. This gives the user clear feedback
-  // that their account was created and they should check their email.
+  // ── Email verification state ──────────────────────────────────────────────
   if (verificationEmail) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface-dark px-4 py-8 relative overflow-hidden">
-        {/* Deep Navy Gradient Background */}
-        <div className="fixed inset-0 bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]" />
-
-        {/* Subtle Grid Pattern */}
+      <div className="min-h-screen flex items-center justify-center bg-[#050508] px-4 relative overflow-hidden">
         <div
-          className="fixed inset-0 opacity-[0.02]"
+          className="fixed inset-0 opacity-[0.025]"
           style={{
-            backgroundImage: `linear-gradient(rgba(255, 184, 123, 0.3) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(255, 184, 123, 0.3) 1px, transparent 1px)`,
-            backgroundSize: '50px 50px',
+            backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)`,
+            backgroundSize: '32px 32px',
           }}
         />
+        <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-amber-500/[0.03] rounded-full blur-[120px] pointer-events-none" />
 
-        {/* Glow Effects */}
-        <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
-        <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="relative z-10 w-full max-w-sm">
+          <div className="flex flex-col items-center gap-3 mb-8">
+            <SynthexLogo className="w-9 h-9 opacity-90" />
+            <span className="text-[10px] font-light tracking-[0.3em] text-white/50 uppercase">
+              Synthex
+            </span>
+          </div>
 
-        <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 shadow-2xl shadow-orange-500/5">
-          <CardHeader className="space-y-1">
-            <div className="flex items-center justify-center mb-4">
-              <SynthexLogo className="w-12 h-12" />
-            </div>
-            <div className="flex items-center justify-center mb-2">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 flex items-center justify-center">
-                <Mail className="w-8 h-8 text-orange-400" />
+          <div className="bg-[#0a0a12] border-[0.5px] border-white/[0.06] rounded-sm p-8">
+            {/* Mail icon */}
+            <div className="flex justify-center mb-6">
+              <div className="w-12 h-12 flex items-center justify-center border-[0.5px] border-amber-500/20 bg-amber-500/[0.04] rounded-sm">
+                <Mail className="w-5 h-5 text-amber-500/70" />
               </div>
             </div>
-            <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
+            <h1 className="text-lg font-light text-white mb-1 text-center">
               Check your email
-            </CardTitle>
-            <CardDescription className="text-center text-gray-400 space-y-2">
-              <span className="block">
-                Your account has been created. We sent a verification email to:
-              </span>
-              <span className="block text-orange-300 font-medium">
-                {verificationEmail}
-              </span>
-              <span className="block text-xs text-gray-500 mt-2">
-                Click the link in the email to verify your account. Check your
-                spam folder if you don&apos;t see it.
-              </span>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* UNI-632: Allow user to continue to onboarding without waiting
-                for email verification (since email verification is not fully
-                wired yet). This prevents blocking the user flow. */}
-            <Button
-              onClick={() => router.push('/onboarding')}
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40"
-            >
-              Continue to onboarding
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleResendVerification}
-              disabled={resendLoading || resendStatus === 'sent'}
-              className="w-full border-orange-500/20 text-gray-300 hover:bg-orange-500/10 hover:text-white"
-            >
-              {resendLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
-                </>
-              ) : resendStatus === 'sent' ? (
-                <>
-                  <CheckCircle className="mr-2 h-4 w-4 text-orange-400" />
-                  Verification email sent
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Resend verification email
-                </>
-              )}
-            </Button>
+            </h1>
+            <p className="text-xs text-white/40 text-center mb-1">
+              Your account has been created. We sent a verification link to:
+            </p>
+            <p className="text-xs text-amber-500/80 text-center font-medium mb-6">
+              {verificationEmail}
+            </p>
+            <p className="text-[10px] text-white/30 text-center mb-6 leading-relaxed">
+              Click the link in the email to verify your account. Check your
+              spam folder if you don&apos;t see it.
+            </p>
+
+            <div className="space-y-2">
+              <button
+                onClick={() => router.push('/onboarding')}
+                className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-medium rounded-sm bg-amber-500 hover:bg-amber-400 text-[#050508] transition-colors"
+              >
+                Continue to onboarding
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={resendLoading || resendStatus === 'sent'}
+                className="w-full flex items-center justify-center gap-2 py-2.5 text-xs text-white/50 hover:text-white/70 bg-white/[0.02] hover:bg-white/[0.04] border-[0.5px] border-white/[0.06] hover:border-white/[0.12] rounded-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {resendLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : resendStatus === 'sent' ? (
+                  <CheckCircle className="w-3.5 h-3.5 text-amber-500/70" />
+                ) : (
+                  <RefreshCw className="w-3.5 h-3.5" />
+                )}
+                {resendStatus === 'sent'
+                  ? 'Verification email sent'
+                  : 'Resend verification email'}
+              </button>
+            </div>
+
             {resendStatus === 'error' && (
-              <p className="text-center text-xs text-red-400">
+              <p className="text-[10px] text-red-400/70 text-center mt-3">
                 Failed to resend. Please try again.
               </p>
             )}
-            <p className="text-center text-xs text-gray-500">
-              You can verify your email later from your account settings
+            <p className="text-[10px] text-white/50 text-center mt-4">
+              You can verify your email later from account settings.
             </p>
-          </CardContent>
-          <CardFooter>
-            <p className="text-center text-sm text-gray-400 w-full">
-              Wrong email?{' '}
-              <button
-                type="button"
-                onClick={() => setVerificationEmail(null)}
-                className="text-orange-400 hover:text-orange-300 transition-colors"
-              >
-                Go back
-              </button>
-            </p>
-          </CardFooter>
-        </Card>
+          </div>
+
+          <p className="text-center text-[10px] text-white/30 mt-5">
+            Wrong email?{' '}
+            <button
+              type="button"
+              onClick={() => setVerificationEmail(null)}
+              className="text-amber-500/70 hover:text-amber-500/90 transition-colors"
+            >
+              Go back
+            </button>
+          </p>
+        </div>
       </div>
     );
   }
 
+  // ── Sign up form ──────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-dark px-4 py-8 relative overflow-hidden">
-      {/* Deep Navy Gradient Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]" />
-
-      {/* Subtle Grid Pattern */}
+    <div className="min-h-screen flex items-center justify-center bg-[#050508] px-4 py-10 relative overflow-hidden">
+      {/* Subtle dot grid */}
       <div
-        className="fixed inset-0 opacity-[0.02]"
+        className="fixed inset-0 opacity-[0.025]"
         style={{
-          backgroundImage: `linear-gradient(rgba(255, 184, 123, 0.3) 1px, transparent 1px),
-                          linear-gradient(90deg, rgba(255, 184, 123, 0.3) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px',
+          backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)`,
+          backgroundSize: '32px 32px',
         }}
       />
+      <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-amber-500/[0.03] rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Glow Effects */}
-      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="relative z-10 w-full max-w-sm">
+        {/* Logo + wordmark */}
+        <div className="flex flex-col items-center gap-3 mb-8">
+          <SynthexLogo className="w-9 h-9 opacity-90" />
+          <span className="text-[10px] font-light tracking-[0.3em] text-white/50 uppercase">
+            Synthex
+          </span>
+        </div>
 
-      {/* Card Container */}
-      <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 shadow-2xl shadow-orange-500/5">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <SynthexLogo className="w-12 h-12" />
-          </div>
-          <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
+        <div className="bg-[#0a0a12] border-[0.5px] border-white/[0.06] rounded-sm p-8">
+          <h1 className="text-lg font-light text-white mb-1">
             Create your account
-          </CardTitle>
-          <CardDescription className="text-center text-gray-400">
+          </h1>
+          <p className="text-xs text-white/40 mb-6">
             {inviteOnly
-              ? 'Enter your invite code to create an account'
+              ? 'Enter your invite code to get started'
               : 'Start automating your social media in minutes'}
-          </CardDescription>
-          {/* Rate limit cooldown banner */}
+          </p>
+
+          {/* Rate limit banner */}
           {rateLimitSeconds > 0 && (
-            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-              <div className="flex items-start gap-2">
-                <Clock className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-red-300 font-medium">
+            <div className="mb-5 p-3.5 bg-red-500/[0.04] border-[0.5px] border-red-500/20 rounded-sm">
+              <div className="flex items-start gap-2.5">
+                <Clock className="w-4 h-4 text-red-400/70 flex-shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="text-xs text-white/70 font-medium">
                     Too many attempts
                   </p>
-                  <p className="text-xs text-red-200/80 mt-1">
-                    Please wait{' '}
-                    <span className="font-mono font-semibold text-red-300">
+                  <p className="text-xs text-white/40">
+                    Wait{' '}
+                    <span className="font-mono text-white/60">
                       {formatCountdown(rateLimitSeconds)}
                     </span>{' '}
                     before trying again.
@@ -452,18 +390,20 @@ export default function SignupPage() {
               </div>
             </div>
           )}
-        </CardHeader>
-        <CardContent className="space-y-4">
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Invite code field — shown only during invite-only soft launch */}
+            {/* Invite code */}
             {inviteOnly && (
-              <div className="space-y-2">
-                <Label htmlFor="inviteCode" className="text-gray-300">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="inviteCode"
+                  className="text-[10px] uppercase tracking-[0.1em] text-white/50"
+                >
                   Invite Code
-                </Label>
+                </label>
                 <div className="relative">
-                  <Key className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
-                  <Input
+                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                  <input
                     id="inviteCode"
                     type="text"
                     placeholder="SX-XXXXXX"
@@ -474,7 +414,13 @@ export default function SignupPage() {
                         inviteCode: e.target.value.toUpperCase(),
                       })
                     }
-                    className={`pl-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 uppercase tracking-wider font-mono ${fieldErrors.inviteCode ? 'border-red-500/60' : ''}`}
+                    className={cn(
+                      'w-full pl-9 pr-3 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/80 placeholder:text-white/40 rounded-sm uppercase font-mono tracking-widest',
+                      'focus:outline-none focus:border-amber-500/30 transition-colors',
+                      fieldErrors.inviteCode
+                        ? 'border-red-500/30'
+                        : 'border-white/[0.06]'
+                    )}
                     required
                     disabled={isSubmitDisabled}
                     maxLength={20}
@@ -482,15 +428,15 @@ export default function SignupPage() {
                   />
                 </div>
                 {fieldErrors.inviteCode && (
-                  <p className="text-xs text-red-400">
+                  <p className="text-[10px] text-red-400/70">
                     {fieldErrors.inviteCode}
                   </p>
                 )}
-                <p className="text-xs text-gray-500">
-                  Don&apos;t have an invite code?{' '}
+                <p className="text-[10px] text-white/30">
+                  No invite?{' '}
                   <Link
                     href="/"
-                    className="text-orange-400 hover:text-orange-300 transition-colors"
+                    className="text-amber-500/60 hover:text-amber-500/80 transition-colors"
                   >
                     Request access
                   </Link>
@@ -498,37 +444,53 @@ export default function SignupPage() {
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-gray-300">
+            {/* Full name */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="name"
+                className="text-[10px] uppercase tracking-[0.1em] text-white/50"
+              >
                 Full Name
-              </Label>
+              </label>
               <div className="relative">
-                <User className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
-                <Input
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                <input
                   id="name"
                   type="text"
-                  placeholder="John Doe"
+                  placeholder="Jane Smith"
                   value={formData.name}
                   onChange={e =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className={`pl-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.name ? 'border-red-500/60' : ''}`}
+                  className={cn(
+                    'w-full pl-9 pr-3 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/80 placeholder:text-white/40 rounded-sm',
+                    'focus:outline-none focus:border-amber-500/30 transition-colors',
+                    fieldErrors.name
+                      ? 'border-red-500/30'
+                      : 'border-white/[0.06]'
+                  )}
                   required
                   disabled={isSubmitDisabled}
                 />
               </div>
               {fieldErrors.name && (
-                <p className="text-xs text-red-400">{fieldErrors.name}</p>
+                <p className="text-[10px] text-red-400/70">
+                  {fieldErrors.name}
+                </p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-300">
+            {/* Email */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="email"
+                className="text-[10px] uppercase tracking-[0.1em] text-white/50"
+              >
                 Email
-              </Label>
+              </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
-                <Input
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                <input
                   id="email"
                   type="email"
                   placeholder="you@example.com"
@@ -536,23 +498,35 @@ export default function SignupPage() {
                   onChange={e =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  className={`pl-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.email ? 'border-red-500/60' : ''}`}
+                  className={cn(
+                    'w-full pl-9 pr-3 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/80 placeholder:text-white/40 rounded-sm',
+                    'focus:outline-none focus:border-amber-500/30 transition-colors',
+                    fieldErrors.email
+                      ? 'border-red-500/30'
+                      : 'border-white/[0.06]'
+                  )}
                   required
                   disabled={isSubmitDisabled}
                 />
               </div>
               {fieldErrors.email && (
-                <p className="text-xs text-red-400">{fieldErrors.email}</p>
+                <p className="text-[10px] text-red-400/70">
+                  {fieldErrors.email}
+                </p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-300">
+            {/* Password */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="password"
+                className="text-[10px] uppercase tracking-[0.1em] text-white/50"
+              >
                 Password
-              </Label>
+              </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
-                <Input
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
@@ -561,63 +535,79 @@ export default function SignupPage() {
                     setFormData({ ...formData, password: e.target.value });
                     calculatePasswordStrength(e.target.value);
                   }}
-                  className={`pl-10 pr-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.password ? 'border-red-500/60' : ''}`}
+                  className={cn(
+                    'w-full pl-9 pr-10 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/80 placeholder:text-white/40 rounded-sm',
+                    'focus:outline-none focus:border-amber-500/30 transition-colors',
+                    fieldErrors.password
+                      ? 'border-red-500/30'
+                      : 'border-white/[0.06]'
+                  )}
                   required
                   disabled={isSubmitDisabled}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
+                    <EyeOff className="w-3.5 h-3.5" />
                   ) : (
-                    <Eye className="w-4 h-4" />
+                    <Eye className="w-3.5 h-3.5" />
                   )}
                 </button>
               </div>
+              {/* Strength meter */}
               {formData.password && (
                 <div className="space-y-1">
-                  <div className="flex space-x-1">
+                  <div className="flex gap-1">
                     {[1, 2, 3, 4].map(level => (
                       <div
                         key={level}
-                        className={`h-1 flex-1 rounded ${
+                        className={cn(
+                          'h-0.5 flex-1 rounded-full transition-all',
                           level <= passwordStrength
-                            ? getPasswordStrengthColor()
-                            : 'bg-gray-700'
-                        }`}
+                            ? getStrengthColor()
+                            : 'bg-white/[0.06]'
+                        )}
                       />
                     ))}
                   </div>
-                  <p className="text-xs text-gray-400">
-                    Password strength:{' '}
-                    <span
-                      className={
-                        passwordStrength >= 3
-                          ? 'text-orange-400'
-                          : 'text-yellow-400'
-                      }
-                    >
-                      {getPasswordStrengthText()}
-                    </span>
-                  </p>
+                  {getStrengthLabel() && (
+                    <p className="text-[10px] text-white/30">
+                      Strength:{' '}
+                      <span
+                        className={
+                          passwordStrength >= 3
+                            ? 'text-amber-500/70'
+                            : 'text-white/50'
+                        }
+                      >
+                        {getStrengthLabel()}
+                      </span>
+                    </p>
+                  )}
                 </div>
               )}
               {fieldErrors.password && (
-                <p className="text-xs text-red-400">{fieldErrors.password}</p>
+                <p className="text-[10px] text-red-400/70">
+                  {fieldErrors.password}
+                </p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-gray-300">
+            {/* Confirm password */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="confirmPassword"
+                className="text-[10px] uppercase tracking-[0.1em] text-white/50"
+              >
                 Confirm Password
-              </Label>
+              </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
-                <Input
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                <input
                   id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="••••••••"
@@ -628,126 +618,137 @@ export default function SignupPage() {
                       confirmPassword: e.target.value,
                     })
                   }
-                  className={`pl-10 pr-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 ${fieldErrors.confirmPassword ? 'border-red-500/60' : ''}`}
+                  className={cn(
+                    'w-full pl-9 pr-10 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/80 placeholder:text-white/40 rounded-sm',
+                    'focus:outline-none focus:border-amber-500/30 transition-colors',
+                    fieldErrors.confirmPassword
+                      ? 'border-red-500/30'
+                      : 'border-white/[0.06]'
+                  )}
                   required
                   disabled={isSubmitDisabled}
                 />
                 {formData.confirmPassword &&
                 formData.password === formData.confirmPassword ? (
-                  <CheckCircle className="absolute right-3 top-3 w-4 h-4 text-orange-500" />
+                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-amber-500/70" />
                 ) : (
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-3 text-gray-500 hover:text-gray-300 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
                     aria-label={
                       showConfirmPassword ? 'Hide password' : 'Show password'
                     }
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="w-4 h-4" />
+                      <EyeOff className="w-3.5 h-3.5" />
                     ) : (
-                      <Eye className="w-4 h-4" />
+                      <Eye className="w-3.5 h-3.5" />
                     )}
                   </button>
                 )}
               </div>
               {fieldErrors.confirmPassword && (
-                <p className="text-xs text-red-400">
+                <p className="text-[10px] text-red-400/70">
                   {fieldErrors.confirmPassword}
                 </p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <label className="flex items-center space-x-2 text-sm">
-                <input
-                  type="checkbox"
-                  className="rounded border-gray-600 bg-white/5 text-orange-500 focus:ring-orange-500/20"
-                  required
-                />
-                <span className="text-gray-400">
-                  I agree to the{' '}
-                  <Link
-                    href="/terms"
-                    className="text-orange-400 hover:text-orange-300 transition-colors"
-                  >
-                    Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link
-                    href="/privacy"
-                    className="text-orange-400 hover:text-orange-300 transition-colors"
-                  >
-                    Privacy Policy
-                  </Link>
-                </span>
-              </label>
-            </div>
+            {/* ToS */}
+            <label className="flex items-start gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                className="mt-0.5 w-3 h-3 rounded-sm border-[0.5px] border-white/[0.15] bg-white/[0.02] text-amber-500 focus:ring-0 focus:ring-offset-0"
+                required
+              />
+              <span className="text-[10px] text-white/40 group-hover:text-white/60 transition-colors leading-relaxed">
+                I agree to the{' '}
+                <Link
+                  href="/terms"
+                  className="text-amber-500/60 hover:text-amber-500/80 transition-colors"
+                >
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link
+                  href="/privacy"
+                  className="text-amber-500/60 hover:text-amber-500/80 transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+              </span>
+            </label>
 
-            <Button
+            {/* Submit */}
+            <button
               type="submit"
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitDisabled}
+              className={cn(
+                'w-full py-2.5 text-xs font-medium rounded-sm transition-all',
+                'bg-amber-500 hover:bg-amber-400 text-[#050508]',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+                'flex items-center justify-center gap-2'
+              )}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating account...
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Creating account…
                 </>
               ) : rateLimitSeconds > 0 ? (
                 <>
-                  <Clock className="mr-2 h-4 w-4" />
+                  <Clock className="w-3.5 h-3.5" />
                   Wait {formatCountdown(rateLimitSeconds)}
                 </>
               ) : (
                 'Create account'
               )}
-            </Button>
+            </button>
           </form>
 
-          {/* Google OAuth — hidden during invite-only mode to avoid threading
-              invite codes through the OAuth flow. Re-enable for public launch. */}
+          {/* Google OAuth — hidden in invite-only mode */}
           {!inviteOnly && (
             <>
-              <div className="relative">
+              <div className="relative my-5">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-orange-500/10" />
+                  <span className="w-full border-t border-white/[0.06]" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-surface-base px-2 text-gray-500">
-                    Or continue with
+                <div className="relative flex justify-center">
+                  <span className="bg-[#0a0a12] px-3 text-[10px] uppercase tracking-[0.15em] text-white/50">
+                    or
                   </span>
                 </div>
               </div>
 
-              <div className="w-full">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full bg-white/5 border-orange-500/20 text-white hover:bg-orange-500/10 hover:border-orange-500/40 transition-all"
-                  onClick={handleGoogleSignup}
-                  disabled={isLoading}
-                >
-                  <Chrome className="mr-2 h-4 w-4" />
-                  Continue with Google
-                </Button>
-              </div>
+              <button
+                type="button"
+                onClick={handleGoogleSignup}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2.5 py-2.5 text-xs text-white/60 hover:text-white/80 bg-white/[0.02] hover:bg-white/[0.04] border-[0.5px] border-white/[0.06] hover:border-white/[0.12] rounded-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Chrome className="w-3.5 h-3.5" />
+                )}
+                Continue with Google
+              </button>
             </>
           )}
-        </CardContent>
-        <CardFooter>
-          <p className="text-center text-sm text-gray-400 w-full">
-            Already have an account?{' '}
-            <Link
-              href="/login"
-              className="text-orange-400 hover:text-orange-300 transition-colors"
-            >
-              Sign in
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-[10px] text-white/30 mt-5">
+          Already have an account?{' '}
+          <Link
+            href="/login"
+            className="text-amber-500/70 hover:text-amber-500/90 transition-colors"
+          >
+            Sign in
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
