@@ -3,17 +3,6 @@
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import {
   Mail,
   Lock,
@@ -24,8 +13,9 @@ import {
   EyeOff,
   Clock,
 } from '@/components/icons';
-import { SynthexLogo } from '@/components/marketing/MarketingLayout';
+import { SynthexLogo } from '@/components/landing/synthex-logo';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 /** Map provider keys to human-readable display names */
 const PROVIDER_DISPLAY_NAMES: Record<string, string> = {
@@ -51,10 +41,7 @@ function LoginContent() {
   const [oauthHint, setOauthHint] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [rateLimitSeconds, setRateLimitSeconds] = useState(0);
   const [formError, setFormError] = useState<string | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -68,7 +55,6 @@ function LoginContent() {
       }
       return;
     }
-
     countdownRef.current = setInterval(() => {
       setRateLimitSeconds(prev => {
         if (prev <= 1) {
@@ -81,7 +67,6 @@ function LoginContent() {
         return prev - 1;
       });
     }, 1000);
-
     return () => {
       if (countdownRef.current) {
         clearInterval(countdownRef.current);
@@ -93,9 +78,7 @@ function LoginContent() {
   const formatCountdown = useCallback((seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    if (mins > 0) {
-      return `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
+    if (mins > 0) return `${mins}:${secs.toString().padStart(2, '0')}`;
     return `${secs}s`;
   }, []);
 
@@ -116,7 +99,6 @@ function LoginContent() {
       toast.error(decodeURIComponent(error));
     }
 
-    // Handle successful auth redirect
     if (searchParams.get('auth') === 'success') {
       toast.success('Welcome back!');
       router.push('/dashboard');
@@ -125,7 +107,6 @@ function LoginContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (rateLimitSeconds > 0) return;
 
     setIsLoading(true);
@@ -133,7 +114,6 @@ function LoginContent() {
     setFormError(null);
 
     try {
-      // Use unified auth endpoint
       const response = await fetch('/api/auth/unified-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -149,35 +129,22 @@ function LoginContent() {
 
       if (response.status === 429) {
         const retryAfterHeader = response.headers.get('Retry-After');
-        let seconds = 60; // sensible default
-
+        let seconds = 60;
         if (retryAfterHeader) {
           const parsed = parseInt(retryAfterHeader, 10);
-          if (!Number.isNaN(parsed) && parsed > 0) {
-            seconds = parsed;
-          }
+          if (!Number.isNaN(parsed) && parsed > 0) seconds = parsed;
         } else if (data.retryAfter) {
-          // Fallback: parse ISO timestamp from response body
           const resetTime = new Date(data.retryAfter).getTime();
           const remaining = Math.ceil((resetTime - Date.now()) / 1000);
-          if (remaining > 0) {
-            seconds = remaining;
-          }
+          if (remaining > 0) seconds = remaining;
         }
-
         setRateLimitSeconds(seconds);
-        // Rate-limit feedback is shown via the inline countdown banner (lines 282–300).
-        // No toast needed — firing both is redundant.
         return;
       }
 
       if (!response.ok || !data.success) {
-        // UNI-630: When an OAuth provider hint is returned, show the inline
-        // banner instead of a generic/misleading toast. The banner provides
-        // a direct "Sign in with <Provider>" action.
         if (data.existingProvider) {
           setOauthHint(data.existingProvider as string);
-          // No toast — the inline OAuth hint banner is more helpful
         } else {
           const errorMessage = data.error || 'Invalid email or password';
           setFormError(errorMessage);
@@ -186,8 +153,6 @@ function LoginContent() {
         return;
       }
 
-      // Store user profile data in localStorage for UI components (non-sensitive)
-      // Auth tokens are now stored in httpOnly cookies (security fix UNI-523)
       if (data.user && typeof window !== 'undefined') {
         localStorage.setItem(
           'user',
@@ -214,14 +179,11 @@ function LoginContent() {
   const handleGoogleLogin = async () => {
     setOauthLoading(true);
     try {
-      // Use our new OAuth route with PKCE
       const response = await fetch('/api/auth/oauth/google', {
         credentials: 'include',
       });
       const data = await response.json();
-
       if (!response.ok) {
-        // Handle configuration issues gracefully
         if (data.error?.includes('not configured')) {
           toast.error(
             'Google login is not configured. Please contact support.'
@@ -230,15 +192,12 @@ function LoginContent() {
         }
         throw new Error(data.error || 'Failed to initiate Google login');
       }
-
       if (data.authorizationUrl) {
-        // Redirect to Google OAuth
         window.location.href = data.authorizationUrl;
       } else {
         throw new Error('No authorization URL received');
       }
     } catch (error) {
-      console.error('Google login error:', error);
       toast.error(
         error instanceof Error ? error.message : 'Failed to connect with Google'
       );
@@ -248,72 +207,63 @@ function LoginContent() {
 
   const dismissAccountExistsError = () => {
     setAccountExistsError(null);
-    // Clear URL params
     router.replace('/login');
   };
 
   const isSubmitDisabled = isLoading || rateLimitSeconds > 0;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-dark px-4 relative overflow-hidden">
-      {/* Deep Navy Gradient Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]" />
-
-      {/* Subtle Grid Pattern */}
+    <div className="min-h-screen flex items-center justify-center bg-[#050508] px-4 relative overflow-hidden">
+      {/* Subtle dot grid */}
       <div
-        className="fixed inset-0 opacity-[0.02]"
+        className="fixed inset-0 opacity-[0.025]"
         style={{
-          backgroundImage: `linear-gradient(rgba(255, 184, 123, 0.3) 1px, transparent 1px),
-                          linear-gradient(90deg, rgba(255, 184, 123, 0.3) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px',
+          backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)`,
+          backgroundSize: '32px 32px',
         }}
       />
+      {/* Ambient glow */}
+      <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-amber-500/[0.03] rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Glow Effects */}
-      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
+      {/* Panel */}
+      <div className="relative z-10 w-full max-w-sm">
+        {/* Logo + wordmark */}
+        <div className="flex flex-col items-center gap-3 mb-8">
+          <SynthexLogo className="w-9 h-9 opacity-90" />
+          <span className="text-[10px] font-light tracking-[0.3em] text-white/50 uppercase">
+            Synthex
+          </span>
+        </div>
 
-      {/* Card Container */}
-      <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 shadow-2xl shadow-orange-500/5">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <SynthexLogo className="w-12 h-12" />
-          </div>
-          <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">
-            Welcome back
-          </CardTitle>
-          <CardDescription className="text-center text-gray-400">
-            Enter your credentials to access your dashboard
-          </CardDescription>
-          {/* Account exists error message */}
+        <div className="bg-[#0a0a12] border-[0.5px] border-white/[0.06] rounded-sm p-8">
+          <h1 className="text-lg font-light text-white mb-1">Welcome back</h1>
+          <p className="text-xs text-white/40 mb-6">
+            Sign in to your account to continue
+          </p>
+
+          {/* Account exists error */}
           {accountExistsError && (
-            <div className="mt-4 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-orange-300 font-medium">
+            <div className="mb-5 p-3.5 bg-amber-500/[0.04] border-[0.5px] border-amber-500/20 rounded-sm">
+              <div className="flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-amber-500/70 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-1">
+                  <p className="text-xs text-white/70 font-medium">
                     Account already exists
                   </p>
-                  <p className="text-xs text-orange-200/80 mt-1">
-                    An account with <strong>{accountExistsError.email}</strong>{' '}
-                    already exists using{' '}
+                  <p className="text-xs text-white/40 leading-relaxed">
+                    <strong className="text-white/60">
+                      {accountExistsError.email}
+                    </strong>{' '}
+                    is registered via{' '}
                     {getProviderDisplayName(
                       accountExistsError.existingProvider
                     )}
-                    .
-                  </p>
-                  <p className="text-xs text-orange-200/80 mt-1">
-                    Sign in with{' '}
-                    {getProviderDisplayName(
-                      accountExistsError.existingProvider
-                    )}{' '}
-                    first, then link{' '}
-                    {getProviderDisplayName(accountExistsError.newProvider)}{' '}
-                    from your account settings.
+                    . Sign in with that provider, then link others from
+                    settings.
                   </p>
                   <button
                     onClick={dismissAccountExistsError}
-                    className="text-xs text-orange-400 hover:text-orange-300 mt-2 underline"
+                    className="text-[10px] text-amber-500/60 hover:text-amber-500/80 transition-colors uppercase tracking-[0.1em]"
                   >
                     Dismiss
                   </button>
@@ -321,18 +271,19 @@ function LoginContent() {
               </div>
             </div>
           )}
-          {/* Rate limit cooldown banner */}
+
+          {/* Rate limit banner */}
           {rateLimitSeconds > 0 && (
-            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-              <div className="flex items-start gap-2">
-                <Clock className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-red-300 font-medium">
+            <div className="mb-5 p-3.5 bg-red-500/[0.04] border-[0.5px] border-red-500/20 rounded-sm">
+              <div className="flex items-start gap-2.5">
+                <Clock className="w-4 h-4 text-red-400/70 flex-shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="text-xs text-white/70 font-medium">
                     Too many attempts
                   </p>
-                  <p className="text-xs text-red-200/80 mt-1">
-                    Please wait{' '}
-                    <span className="font-mono font-semibold text-red-300">
+                  <p className="text-xs text-white/40">
+                    Wait{' '}
+                    <span className="font-mono text-white/60">
                       {formatCountdown(rateLimitSeconds)}
                     </span>{' '}
                     before trying again.
@@ -341,27 +292,26 @@ function LoginContent() {
               </div>
             </div>
           )}
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* aria-live region: announces login errors to screen readers */}
+
+          {/* aria-live error */}
           {formError && (
-            <p
-              id="login-form-error"
-              role="alert"
-              aria-live="assertive"
-              className="sr-only"
-            >
+            <p role="alert" aria-live="assertive" className="sr-only">
               {formError}
             </p>
           )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-300">
+            {/* Email */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="email"
+                className="text-[10px] uppercase tracking-[0.1em] text-white/50"
+              >
                 Email
-              </Label>
+              </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
-                <Input
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                <input
                   id="email"
                   type="email"
                   placeholder="you@example.com"
@@ -370,23 +320,38 @@ function LoginContent() {
                     setFormData({ ...formData, email: e.target.value });
                     setFormError(null);
                   }}
-                  className="pl-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
-                  aria-label="Email address"
+                  className={cn(
+                    'w-full pl-9 pr-3 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/80 placeholder:text-white/40 rounded-sm',
+                    'focus:outline-none focus:border-amber-500/30 transition-colors',
+                    formError ? 'border-red-500/30' : 'border-white/[0.06]'
+                  )}
                   aria-required="true"
                   aria-invalid={!!formError}
-                  aria-describedby={formError ? 'login-form-error' : undefined}
                   required
                   disabled={isSubmitDisabled}
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-300">
-                Password
-              </Label>
+
+            {/* Password */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="password"
+                  className="text-[10px] uppercase tracking-[0.1em] text-white/50"
+                >
+                  Password
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-[10px] text-amber-500/60 hover:text-amber-500/80 transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
-                <Input
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
@@ -395,157 +360,150 @@ function LoginContent() {
                     setFormData({ ...formData, password: e.target.value });
                     setFormError(null);
                   }}
-                  className="pl-10 pr-10 bg-white/5 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
-                  aria-invalid={!!formError}
+                  className={cn(
+                    'w-full pl-9 pr-10 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/80 placeholder:text-white/40 rounded-sm',
+                    'focus:outline-none focus:border-amber-500/30 transition-colors',
+                    formError ? 'border-red-500/30' : 'border-white/[0.06]'
+                  )}
                   required
                   disabled={isSubmitDisabled}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
+                    <EyeOff className="w-3.5 h-3.5" />
                   ) : (
-                    <Eye className="w-4 h-4" />
+                    <Eye className="w-3.5 h-3.5" />
                   )}
                 </button>
               </div>
+              {formError && (
+                <p className="text-[10px] text-red-400/70 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                  {formError}
+                </p>
+              )}
             </div>
-            <div className="flex items-center justify-between">
-              <label className="flex items-center space-x-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={e => setRememberMe(e.target.checked)}
-                  className="rounded border-gray-600 bg-white/5 text-orange-500 focus:ring-orange-500/20"
-                />
-                <span className="text-gray-400">Remember me</span>
-              </label>
-              <Link
-                href="/forgot-password"
-                className="text-sm text-orange-400 hover:text-orange-300 transition-colors"
-              >
-                Forgot password?
-              </Link>
-            </div>
-            <Button
+
+            {/* Remember me */}
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={e => setRememberMe(e.target.checked)}
+                className="w-3 h-3 rounded-sm border-[0.5px] border-white/[0.15] bg-white/[0.02] text-amber-500 focus:ring-0 focus:ring-offset-0"
+              />
+              <span className="text-[10px] text-white/40 group-hover:text-white/60 transition-colors">
+                Remember me
+              </span>
+            </label>
+
+            {/* Submit */}
+            <button
               type="submit"
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitDisabled}
+              className={cn(
+                'w-full py-2.5 text-xs font-medium rounded-sm transition-all',
+                'bg-amber-500 hover:bg-amber-400 text-[#050508]',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+                'flex items-center justify-center gap-2'
+              )}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Signing in…
                 </>
               ) : rateLimitSeconds > 0 ? (
                 <>
-                  <Clock className="mr-2 h-4 w-4" />
+                  <Clock className="w-3.5 h-3.5" />
                   Wait {formatCountdown(rateLimitSeconds)}
                 </>
               ) : (
                 'Sign in'
               )}
-            </Button>
+            </button>
           </form>
 
-          {/* UNI-630: Provider-specific OAuth hint banner
-              Shown when a user who signed up with an OAuth provider (e.g. Google)
-              attempts to log in with email/password. Replaces the misleading
-              "Invalid email or password" toast with actionable guidance. */}
+          {/* OAuth hint banner */}
           {oauthHint && (
-            <div className="p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-orange-200 font-medium">
-                    This email is linked to a{' '}
-                    {getProviderDisplayName(oauthHint)} account
-                  </p>
-                  <p className="text-xs text-orange-200/70 mt-1">
-                    You signed up with {getProviderDisplayName(oauthHint)}{' '}
-                    instead of a password. Use the button below to sign in.
-                  </p>
+            <div className="mt-4 p-3.5 bg-amber-500/[0.04] border-[0.5px] border-amber-500/20 rounded-sm">
+              <div className="flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-amber-500/70 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-2">
+                  <div>
+                    <p className="text-xs text-white/70 font-medium">
+                      This email is linked to{' '}
+                      {getProviderDisplayName(oauthHint)}
+                    </p>
+                    <p className="text-[10px] text-white/40 mt-0.5 leading-relaxed">
+                      You signed up with {getProviderDisplayName(oauthHint)}{' '}
+                      instead of a password. Use the button below to sign in.
+                    </p>
+                  </div>
                   {oauthHint === 'google' && (
-                    <Button
+                    <button
                       type="button"
-                      size="sm"
                       onClick={handleGoogleLogin}
                       disabled={oauthLoading}
-                      className="mt-2 bg-orange-500/20 border border-orange-500/30 text-orange-200 hover:bg-orange-500/30 hover:text-white text-xs"
+                      className="flex items-center gap-2 px-3 py-2 text-[10px] tracking-wide rounded-sm transition-colors bg-white/[0.03] border-[0.5px] border-white/[0.08] text-white/60 hover:text-white/80 hover:border-white/[0.15] disabled:opacity-50"
                     >
                       {oauthLoading ? (
-                        <>
-                          <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
-                          Connecting...
-                        </>
+                        <Loader2 className="w-3 h-3 animate-spin" />
                       ) : (
-                        <>
-                          <Chrome className="mr-1.5 h-3 w-3" />
-                          Sign in with Google instead
-                        </>
+                        <Chrome className="w-3 h-3" />
                       )}
-                    </Button>
-                  )}
-                  {oauthHint !== 'google' && (
-                    <p className="text-xs text-orange-300 mt-2">
-                      Please use the {getProviderDisplayName(oauthHint)} sign-in
-                      option.
-                    </p>
+                      Sign in with Google instead
+                    </button>
                   )}
                 </div>
               </div>
             </div>
           )}
 
-          <div className="relative">
+          {/* Divider */}
+          <div className="relative my-5">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-orange-500/10" />
+              <span className="w-full border-t border-white/[0.06]" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-surface-base px-2 text-gray-500">
-                Or continue with
+            <div className="relative flex justify-center">
+              <span className="bg-[#0a0a12] px-3 text-[10px] uppercase tracking-[0.15em] text-white/50">
+                or
               </span>
             </div>
           </div>
 
-          <div className="w-full">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full bg-white/5 border-orange-500/20 text-white hover:bg-orange-500/10 hover:border-orange-500/40 transition-all"
-              onClick={handleGoogleLogin}
-              disabled={isLoading || oauthLoading}
-            >
-              {oauthLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Connecting to Google...
-                </>
-              ) : (
-                <>
-                  <Chrome className="mr-2 h-4 w-4" />
-                  Continue with Google
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <p className="text-center text-sm text-gray-400 w-full">
-            Don't have an account?{' '}
-            <Link
-              href="/signup"
-              className="text-orange-400 hover:text-orange-300 transition-colors"
-            >
-              Sign up
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
+          {/* Google OAuth */}
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={isLoading || oauthLoading}
+            className="w-full flex items-center justify-center gap-2.5 py-2.5 text-xs text-white/60 hover:text-white/80 bg-white/[0.02] hover:bg-white/[0.04] border-[0.5px] border-white/[0.06] hover:border-white/[0.12] rounded-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {oauthLoading ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Chrome className="w-3.5 h-3.5" />
+            )}
+            Continue with Google
+          </button>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-[10px] text-white/30 mt-5">
+          Don&apos;t have an account?{' '}
+          <Link
+            href="/signup"
+            className="text-amber-500/70 hover:text-amber-500/90 transition-colors"
+          >
+            Create one
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

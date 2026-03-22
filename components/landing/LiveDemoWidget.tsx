@@ -279,7 +279,7 @@ export function LiveDemoWidget() {
             </button>
           </div>
           <DemoBadge model={result.model} tier={result.tier} />
-          <p className="text-[10px] text-white/25 mt-1.5 leading-relaxed">
+          <p className="text-[10px] text-white/50 mt-1.5 leading-relaxed">
             Sign up to unlock Claude, GPT-4 &amp; Gemini Pro with your own brand
             voice.
           </p>
