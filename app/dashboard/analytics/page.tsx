@@ -68,6 +68,13 @@ const ContentPerformanceWidget = dynamic(
     })),
   { ssr: false }
 );
+const SentimentAnalysis = dynamic(
+  () =>
+    import('@/components/SentimentAnalysis').then(m => ({
+      default: m.SentimentAnalysis,
+    })),
+  { ssr: false }
+);
 const TrendPredictionsWidget = dynamic(
   () =>
     import('@/components/analytics/TrendPredictionsWidget').then(m => ({
@@ -298,6 +305,7 @@ export default function AnalyticsPage() {
       <AnalyticsStats data={displayData} growth={performanceData?.growth} />
 
       <AnomalyAlerts />
+      <SentimentAnalysis />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <EngagementChart data={chartEngagementData} />

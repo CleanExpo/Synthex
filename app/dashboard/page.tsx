@@ -31,6 +31,14 @@ const AICommandCentre = dynamic(
   { ssr: false }
 );
 
+const HealthScoreWidget = dynamic(
+  () =>
+    import('@/components/dashboard/HealthScoreWidget').then(m => ({
+      default: m.HealthScoreWidget,
+    })),
+  { ssr: false }
+);
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -307,7 +315,10 @@ export default function DashboardPage() {
           </div>
         ) : (
           /* ── Returning user flow — AI Command Centre ─────────────────── */
-          <AICommandCentre />
+          <>
+            <HealthScoreWidget />
+            <AICommandCentre />
+          </>
         )}
       </div>
     </ErrorBoundary>
