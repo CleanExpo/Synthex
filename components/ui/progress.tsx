@@ -17,6 +17,8 @@ const progressVariants = cva(
         'glass-primary': 'bg-orange-500/20 backdrop-blur-md',
         'glass-secondary': 'bg-orange-500/20 backdrop-blur-md',
         'glass-success': 'bg-emerald-500/20 backdrop-blur-md',
+        // Candy track variant
+        candy: 'bg-white/[0.06] backdrop-blur-md',
       },
       size: {
         default: 'h-4',
@@ -33,32 +35,38 @@ const progressVariants = cva(
   }
 );
 
-const progressIndicatorVariants = cva('h-full w-full flex-1 transition-all', {
-  variants: {
-    variant: {
-      default: 'bg-primary dark:bg-orange-600',
-      glass: 'bg-white/40',
-      'glass-solid': 'bg-slate-500',
-      'glass-primary': 'bg-orange-500/70',
-      'glass-secondary': 'bg-orange-500/70',
-      'glass-success': 'bg-emerald-500/70',
-      // Gradient variants
-      'gradient-primary': 'bg-gradient-to-r from-orange-500 to-orange-500',
-      'gradient-secondary': 'bg-gradient-to-r from-orange-500 to-blue-500',
-      'gradient-success': 'bg-gradient-to-r from-emerald-500 to-orange-500',
-      'gradient-rainbow':
-        'bg-gradient-to-r from-orange-500 via-orange-500 via-orange-500 via-orange-500 to-orange-500',
+const progressIndicatorVariants = cva(
+  'h-full w-full flex-1 transition-all shadow-[0_0_12px_rgba(255,107,53,0.3)]',
+  {
+    variants: {
+      variant: {
+        default: 'bg-primary dark:bg-orange-600',
+        glass: 'bg-white/40',
+        'glass-solid': 'bg-slate-500',
+        'glass-primary': 'bg-orange-500/70',
+        'glass-secondary': 'bg-orange-500/70',
+        'glass-success': 'bg-emerald-500/70',
+        // Gradient variants
+        'gradient-primary': 'bg-gradient-to-r from-orange-500 to-orange-500',
+        'gradient-secondary': 'bg-gradient-to-r from-orange-500 to-blue-500',
+        'gradient-success': 'bg-gradient-to-r from-emerald-500 to-orange-500',
+        'gradient-rainbow':
+          'bg-gradient-to-r from-orange-500 via-orange-500 via-orange-500 via-orange-500 to-orange-500',
+        // Candy gradient variants
+        candy:
+          'bg-gradient-to-r from-[#FF6B35] via-[#FFD60A] to-[#34D399] shadow-[0_0_20px_rgba(255,107,53,0.4)]',
+      },
+      animated: {
+        true: 'animate-pulse',
+        false: '',
+      },
     },
-    animated: {
-      true: 'animate-pulse',
-      false: '',
+    defaultVariants: {
+      variant: 'default',
+      animated: false,
     },
-  },
-  defaultVariants: {
-    variant: 'default',
-    animated: false,
-  },
-});
+  }
+);
 
 export interface ProgressProps
   extends
@@ -99,9 +107,11 @@ const Progress = React.forwardRef<
           ? 'glass-secondary'
           : variant === 'glass-success'
             ? 'glass-success'
-            : variant === 'glass' || variant === 'glass-solid'
-              ? 'glass'
-              : 'default');
+            : variant === 'candy'
+              ? 'candy'
+              : variant === 'glass' || variant === 'glass-solid'
+                ? 'glass'
+                : 'default');
 
     return (
       <ProgressPrimitive.Root

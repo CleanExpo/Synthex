@@ -47,11 +47,21 @@ const heroTextVariants = {
 /** Hero section — 55/45 asymmetric layout with LiveDemoWidget */
 export function HeroSection() {
   return (
-    <section className="relative min-h-[100dvh] flex items-center pt-24 pb-16 overflow-hidden">
-      {/* Warm ambient glow */}
-      <div className="absolute top-1/3 -left-48 w-[600px] h-[600px] bg-orange-500/[0.04] blur-[200px] rounded-full pointer-events-none" />
-      <div className="absolute top-1/2 right-0 w-[400px] h-[400px] bg-orange-500/[0.03] blur-[150px] rounded-full pointer-events-none" />
+    <>
+      <style jsx>{`
+        @keyframes gradientShift {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
 
+<<<<<<< HEAD
       <div className="max-w-7xl mx-auto px-6 relative z-10 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-12 items-center">
           {/* Left — copy */}
@@ -119,8 +129,152 @@ export function HeroSection() {
           >
             <LiveDemoWidget />
           </motion.div>
+=======
+        .gradient-text {
+          background: linear-gradient(
+            90deg,
+            #ff6b35,
+            #ffd60a,
+            #ff3b5c,
+            #f472b6,
+            #ff6b35
+          );
+          background-size: 200% 100%;
+          animation: gradientShift 6s ease infinite;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .candy-glow-text {
+          text-shadow:
+            0 0 40px rgba(255, 107, 53, 0.5),
+            0 0 80px rgba(255, 107, 53, 0.3);
+        }
+
+        @keyframes floatParticles {
+          0%,
+          100% {
+            transform: translateY(0px) translateX(0px);
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          90% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(-100px) translateX(50px);
+            opacity: 0;
+          }
+        }
+
+        .particle {
+          animation: floatParticles 8s ease-in-out infinite;
+          position: absolute;
+          border-radius: 50%;
+        }
+
+        .candy-gradient-btn {
+          background: linear-gradient(135deg, #ff6b35 0%, #ff3b5c 100%);
+          box-shadow: 0 0 30px rgba(255, 107, 53, 0.4);
+        }
+
+        .candy-gradient-btn:hover {
+          box-shadow:
+            0 0 50px rgba(255, 107, 53, 0.6),
+            0 0 80px rgba(255, 59, 92, 0.4);
+        }
+
+        .glass-morphism-btn {
+          backdrop-filter: blur(10px);
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-morphism-btn:hover {
+          background: rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+        }
+      `}</style>
+
+      <section className="relative min-h-[100dvh] flex items-center pt-24 pb-16 overflow-hidden">
+        {/* Premium mesh gradient background */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Deep purple to orange mesh */}
+          <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-purple-900/20 via-orange-500/10 to-transparent blur-[150px] rounded-full" />
+          <div className="absolute top-1/2 right-0 w-[600px] h-[400px] bg-gradient-to-bl from-pink-500/15 via-orange-400/10 to-transparent blur-[150px] rounded-full" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-gradient-to-t from-orange-500/10 to-transparent blur-[120px] rounded-full" />
         </div>
-      </div>
-    </section>
+
+        {/* Floating particles */}
+        {[0, 1, 2, 3, 4, 5].map(i => (
+          <div
+            key={`particle-${i}`}
+            className="particle"
+            style={{
+              width: `${Math.random() * 8 + 4}px`,
+              height: `${Math.random() * 8 + 4}px`,
+              background: ['#FF6B35', '#FFD60A', '#FF3B5C', '#F472B6'][i % 4],
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${i * 1.3}s`,
+            }}
+          />
+        ))}
+
+        {/* Warm ambient glow - enhanced */}
+        <div className="absolute top-1/3 -left-48 w-[600px] h-[600px] bg-orange-500/[0.08] blur-[200px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 right-0 w-[400px] h-[400px] bg-orange-500/[0.06] blur-[150px] rounded-full pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-12 items-center">
+            {/* Left — copy */}
+            <div>
+              <EyebrowPill>AI-native social media</EyebrowPill>
+
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.05] mb-6">
+                The social media platform that{' '}
+                <em className="gradient-text candy-glow-text not-italic">
+                  works for you
+                </em>
+              </h1>
+
+              <p className="text-lg text-white/50 max-w-lg leading-relaxed mb-10">
+                AI generates posts in seconds. You approve. Synthex handles the
+                rest — scheduling, engagement, and analytics across every
+                channel.
+              </p>
+
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href="/signup"
+                  className="candy-gradient-btn inline-flex items-center justify-center gap-2 px-8 py-3.5 text-charcoal-900 font-bold rounded-full hover:-translate-y-0.5 transition-all duration-200 text-sm"
+                >
+                  Start free
+                </Link>
+                <Link
+                  href="/features"
+                  className="glass-morphism-btn inline-flex items-center justify-center gap-2 px-8 py-3.5 text-white rounded-full hover:-translate-y-0.5 transition-all duration-200 text-sm font-medium"
+                >
+                  See it work
+                </Link>
+              </div>
+
+              <SocialProofRow />
+            </div>
+
+            {/* Right — LiveDemoWidget */}
+            <div>
+              <LiveDemoWidget />
+            </div>
+          </div>
+>>>>>>> d103a1ca (feat: candy visual overhaul, sidebar declutter, branded content wiring)
+        </div>
+      </section>
+    </>
   );
 }

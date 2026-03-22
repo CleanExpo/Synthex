@@ -17,8 +17,8 @@ const dialogOverlayVariants = cva(
     variants: {
       variant: {
         default: 'bg-black/80',
-        glass: 'bg-black/60 backdrop-blur-sm',
-        'glass-heavy': 'bg-black/40 backdrop-blur-md',
+        glass: 'bg-black/60 backdrop-blur-xl',
+        'glass-heavy': 'bg-black/40 backdrop-blur-xl',
       },
     },
     defaultVariants: {
@@ -36,7 +36,7 @@ const dialogContentVariants = cva(
           'border bg-background dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100',
         // Premium Glassmorphism variants
         glass:
-          'bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_8px_32px_rgba(0,0,0,0.3)]',
+          'bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_8px_32px_rgba(0,0,0,0.3)] relative before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-orange-500/0 before:via-orange-500/40 before:to-orange-500/0',
         'glass-solid':
           'bg-slate-900/90 backdrop-blur-xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset,0_8px_32px_rgba(0,0,0,0.4)]',
         'glass-gradient':

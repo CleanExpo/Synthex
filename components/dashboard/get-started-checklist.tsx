@@ -12,7 +12,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { QuickPostModal } from '@/components/dashboard/QuickPostModal';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
@@ -66,7 +65,6 @@ export function GetStartedChecklist({
   className,
 }: GetStartedChecklistProps) {
   const [dismissed, setDismissed] = useState<boolean>(true);
-  const [quickPostOpen, setQuickPostOpen] = useState(false);
   const router = useRouter();
 
   const prevConnections = useRef(hasConnections);
@@ -155,7 +153,7 @@ export function GetStartedChecklist({
         title: 'Create your first post',
         description:
           'Write a quick post right here — choose a platform, write, and schedule.',
-        href: '#quick-post',
+        href: '/dashboard/content',
         icon: Sparkles,
         completed: hasContent,
       },
@@ -238,15 +236,7 @@ export function GetStartedChecklist({
         {steps.map(step => (
           <Link
             key={step.id}
-            href={step.href === '#quick-post' ? '#' : step.href}
-            onClick={
-              step.href === '#quick-post' && !step.completed
-                ? e => {
-                    e.preventDefault();
-                    setQuickPostOpen(true);
-                  }
-                : undefined
-            }
+            href={step.href}
             className={cn(
               'flex items-center gap-3 px-6 py-4 transition-all group',
               step.completed
@@ -306,8 +296,6 @@ export function GetStartedChecklist({
           </button>
         </div>
       )}
-
-      <QuickPostModal open={quickPostOpen} onOpenChange={setQuickPostOpen} />
     </div>
   );
 }

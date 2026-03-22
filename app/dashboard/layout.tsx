@@ -61,6 +61,12 @@ import {
   Newspaper,
   ShieldExclamation,
   Gift,
+  Wand2,
+  Star,
+  Lock,
+  Cpu,
+  BadgeCheck,
+  Megaphone,
 } from '@/components/icons';
 import { AIPMFloatingButton } from '@/components/ai-pm';
 import { KeyboardHints } from '@/components/dashboard/keyboard-hints';
@@ -100,34 +106,27 @@ const sidebarGroups: Array<{
   defaultOpen?: boolean;
 }> = [
   {
-    id: 'command-centre',
-    icon: CommandLine,
-    label: 'COMMAND CENTRE',
+    id: 'home',
+    icon: Home,
+    label: 'HOME',
     defaultOpen: true,
     items: [
+      { icon: Home, label: 'Dashboard', href: '/dashboard' },
+      { icon: Grid, label: 'Unified View', href: '/dashboard/unified' },
       {
         icon: CommandLine,
         label: 'Citation Dashboard',
         href: '/dashboard/citation',
       },
-    ],
-  },
-  {
-    id: 'main',
-    icon: Home,
-    label: 'MAIN',
-    defaultOpen: true,
-    items: [
-      { icon: Home, label: 'Dashboard', href: '/dashboard' },
-      { icon: Grid, label: 'Unified View', href: '/dashboard/unified' },
       { icon: Globe, label: 'Platforms', href: '/dashboard/platforms' },
       { icon: Gift, label: 'Referrals', href: '/dashboard/referrals' },
     ],
   },
   {
-    id: 'content-ai',
+    id: 'content',
     icon: Sparkles,
-    label: 'CONTENT & AI',
+    label: 'CONTENT',
+    defaultOpen: true,
     items: [
       {
         icon: Sparkles,
@@ -135,29 +134,8 @@ const sidebarGroups: Array<{
         href: '/dashboard/creative-suite',
       },
       { icon: FileText, label: 'Content', href: '/dashboard/content' },
-      { icon: File, label: 'Drafts', href: '/dashboard/content/drafts' },
       { icon: MessageSquare, label: 'AI Chat', href: '/dashboard/ai-chat' },
       { icon: Image, label: 'AI Images', href: '/dashboard/ai-images' },
-      {
-        icon: Sparkles,
-        label: 'Optimizer',
-        href: '/dashboard/content/optimize',
-      },
-      {
-        icon: Layers,
-        label: 'Multi-format',
-        href: '/dashboard/content/multi-format',
-      },
-      {
-        icon: Repeat,
-        label: 'Repurposer',
-        href: '/dashboard/content/repurpose',
-      },
-      {
-        icon: Send,
-        label: 'Cross-Post',
-        href: '/dashboard/content/cross-post',
-      },
       { icon: BookOpen, label: 'Library', href: '/dashboard/content/library' },
       { icon: Palette, label: 'Sandbox', href: '/dashboard/sandbox' },
     ],
@@ -166,6 +144,7 @@ const sidebarGroups: Array<{
     id: 'planning',
     icon: Calendar,
     label: 'PLANNING',
+    defaultOpen: true,
     items: [
       { icon: Calendar, label: 'Calendar', href: '/dashboard/calendar' },
       { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
@@ -177,6 +156,7 @@ const sidebarGroups: Array<{
     id: 'analytics',
     icon: BarChart3,
     label: 'ANALYTICS',
+    defaultOpen: true,
     items: [
       { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
       { icon: Lightbulb, label: 'Predictions', href: '/dashboard/predictions' },
@@ -210,16 +190,9 @@ const sidebarGroups: Array<{
     label: 'BUSINESS INTEL',
     items: [
       { icon: Users, label: 'Audience', href: '/dashboard/audience' },
-      {
-        icon: TrendingUp,
-        label: 'Viral Patterns',
-        href: '/dashboard/patterns',
-      },
       { icon: Target, label: 'Competitors', href: '/dashboard/competitors' },
       { icon: Bell, label: 'Listening', href: '/dashboard/listening' },
-      { icon: Brain, label: 'Psychology', href: '/dashboard/psychology' },
       { icon: Beaker, label: 'Experiments', href: '/dashboard/experiments' },
-      { icon: Brain, label: 'Optimisation', href: '/dashboard/optimisation' },
       {
         icon: TrendingUp,
         label: 'Forecasting',
@@ -228,39 +201,35 @@ const sidebarGroups: Array<{
     ],
   },
   {
-    id: 'seo-research',
+    id: 'seo',
     icon: Search,
-    label: 'SEO & RESEARCH',
+    label: 'SEO',
     items: [
       { icon: Search, label: 'SEO Tools', href: '/dashboard/seo' },
       { icon: Globe, label: 'GEO Analysis', href: '/dashboard/geo' },
       { icon: Zap, label: 'GEO Optimiser', href: '/dashboard/geo/optimiser' },
-      { icon: Mic, label: 'Voice Engine', href: '/dashboard/voice' },
-      { icon: Shield, label: 'Quality Gate', href: '/dashboard/quality' },
-      { icon: Award, label: 'E-E-A-T Builder', href: '/dashboard/eeat' },
-      { icon: Building2, label: 'Brand Builder', href: '/dashboard/brand' },
-      { icon: Shield, label: 'Authority', href: '/dashboard/authority' },
       { icon: Map, label: 'Local SEO', href: '/dashboard/local' },
       {
-        icon: Map,
+        icon: Building2,
         label: 'Google Business',
         href: '/dashboard/google-business',
       },
+      { icon: BadgeCheck, label: 'E-E-A-T Builder', href: '/dashboard/eeat' },
+      { icon: Shield, label: 'Quality Gate', href: '/dashboard/quality' },
+    ],
+  },
+  {
+    id: 'authority-pr',
+    icon: Megaphone,
+    label: 'AUTHORITY & PR',
+    items: [
+      { icon: Building2, label: 'Brand Builder', href: '/dashboard/brand' },
+      { icon: Shield, label: 'Authority', href: '/dashboard/authority' },
       {
         icon: ShieldExclamation,
         label: 'Sentinel',
         href: '/dashboard/sentinel',
       },
-      { icon: Users, label: 'Authors', href: '/dashboard/authors' },
-      { icon: Database, label: 'Research', href: '/dashboard/research' },
-      { icon: Link2, label: 'Link in Bio', href: '/dashboard/bio' },
-    ],
-  },
-  {
-    id: 'pr-manager',
-    icon: Newspaper,
-    label: 'PR MANAGER',
-    items: [
       { icon: Newspaper, label: 'PR Manager', href: '/dashboard/pr' },
       { icon: Award, label: 'Awards & Directories', href: '/dashboard/awards' },
       {
@@ -269,28 +238,24 @@ const sidebarGroups: Array<{
         href: '/dashboard/backlinks',
       },
       {
-        icon: Sparkles,
+        icon: Wand2,
         label: 'Prompt Intelligence',
         href: '/dashboard/prompts',
       },
     ],
   },
   {
-    id: 'media',
-    icon: Video,
-    label: 'MEDIA',
+    id: 'research-media',
+    icon: Database,
+    label: 'RESEARCH & MEDIA',
     items: [
+      { icon: Database, label: 'Research', href: '/dashboard/research' },
+      { icon: Users, label: 'Authors', href: '/dashboard/authors' },
+      { icon: Link2, label: 'Link in Bio', href: '/dashboard/bio' },
+      { icon: Mic, label: 'Voice Engine', href: '/dashboard/voice' },
       { icon: Video, label: 'Video', href: '/dashboard/video' },
       { icon: Image, label: 'Visuals', href: '/dashboard/visuals' },
-      { icon: Brain, label: 'Personas', href: '/dashboard/personas' },
-    ],
-  },
-  {
-    id: 'web-projects',
-    icon: Globe,
-    label: 'WEB PROJECTS',
-    items: [
-      { icon: Globe, label: 'Projects', href: '/dashboard/web-projects' },
+      { icon: Cpu, label: 'Personas', href: '/dashboard/personas' },
     ],
   },
   {
@@ -304,17 +269,17 @@ const sidebarGroups: Array<{
         label: 'Workflows',
         href: '/dashboard/workflows',
       },
-      { icon: Shield, label: 'Brand Voice', href: '/dashboard/brand-voice' },
-      { icon: Lightbulb, label: 'AI Insights', href: '/dashboard/insights' },
+      { icon: Lock, label: 'Brand Voice', href: '/dashboard/brand-voice' },
+      { icon: Star, label: 'AI Insights', href: '/dashboard/insights' },
     ],
   },
   {
     id: 'team-admin',
-    icon: Shield,
+    icon: Users,
     label: 'TEAM & ADMIN',
     items: [
       { icon: Users, label: 'Team', href: '/dashboard/team' },
-      { icon: Shield, label: 'Roles', href: '/dashboard/roles' },
+      { icon: Lock, label: 'Roles', href: '/dashboard/roles' },
       {
         icon: MessageSquare,
         label: 'Collaboration',
@@ -327,17 +292,13 @@ const sidebarGroups: Array<{
         label: 'Approvals',
         href: '/dashboard/approvals',
       },
+      { icon: Globe, label: 'Projects', href: '/dashboard/web-projects' },
       { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
     ],
   },
 ];
 
-const STARTER_GROUP_IDS = new Set([
-  'main',
-  'content-ai',
-  'planning',
-  'analytics',
-]);
+const STARTER_GROUP_IDS = new Set(['home', 'content', 'planning', 'analytics']);
 const SIDEBAR_EXPANDED_KEY = 'sidebar-show-all-groups';
 
 const MOBILE_NAV_ITEMS: NavItem[] = [

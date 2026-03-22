@@ -43,6 +43,9 @@ const badgeVariants = cva(
           'bg-gradient-to-r from-orange-500/30 to-orange-500/30 border-orange-500/30 text-white',
         'gradient-secondary':
           'bg-gradient-to-r from-orange-500/30 to-blue-500/30 border-orange-500/30 text-white',
+        // Candy variants
+        candy:
+          'bg-gradient-to-r from-[#FF6B35] to-[#FFD60A] border-transparent text-[#0A0A12] font-semibold shadow-[0_0_12px_rgba(255,107,53,0.3)]',
       },
       size: {
         default: 'px-2.5 py-0.5 text-xs',

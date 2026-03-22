@@ -484,7 +484,7 @@ const ActivityFeed = () => {
   );
 };
 
-// ---- Feature card ----
+// ---- Feature card with premium candy styling ----
 function FeatureCard({
   icon,
   title,
@@ -499,10 +499,29 @@ function FeatureCard({
   return (
     <div
       className={cn(
-        'relative flex flex-col gap-3 p-4 transition-colors duration-200',
-        'border-[0.5px] border-white/[0.06] bg-[#0a1628]',
-        'hover:bg-orange-500/[0.03]'
+        'relative flex flex-col gap-3 p-4 transition-all duration-300',
+        'rounded-lg overflow-hidden group'
       )}
+      style={{
+        background:
+          'linear-gradient(135deg, rgba(18,18,30,0.6) 0%, rgba(26,15,35,0.5) 100%)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255,107,53,0.2)',
+      }}
+      onMouseEnter={e => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.background =
+          'linear-gradient(135deg, rgba(255,107,53,0.1) 0%, rgba(244,114,182,0.08) 100%)';
+        el.style.boxShadow = '0 0 30px rgba(255,107,53,0.3)';
+        el.style.borderColor = 'rgba(255,214,10,0.4)';
+      }}
+      onMouseLeave={e => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.background =
+          'linear-gradient(135deg, rgba(18,18,30,0.6) 0%, rgba(26,15,35,0.5) 100%)';
+        el.style.boxShadow = 'none';
+        el.style.borderColor = 'rgba(255,107,53,0.2)';
+      }}
     >
       <div className="flex items-center gap-4">
         <div>
@@ -525,13 +544,19 @@ function FeatureCard({
         )}
       />
 
-      {/* Arrow icon */}
+      {/* Arrow icon with candy glow */}
       <div
         className={cn(
-          'absolute bottom-2 right-2 p-3 flex items-center gap-2',
-          'border-[0.5px] border-white/[0.06] rounded-full z-10',
-          'hover:-rotate-45 transition-transform duration-200 bg-[#0a1628]'
+          'absolute bottom-2 right-2 p-3 flex items-center gap-2 z-10',
+          'rounded-full transition-all duration-300',
+          'group-hover:-rotate-45'
         )}
+        style={{
+          background:
+            'linear-gradient(135deg, rgba(255,107,53,0.2) 0%, rgba(255,214,10,0.15) 100%)',
+          border: '1px solid rgba(255,107,53,0.4)',
+          boxShadow: '0 0 15px rgba(255,107,53,0.3)',
+        }}
       >
         <ArrowRight className="w-4 h-4 text-orange-400" />
       </div>

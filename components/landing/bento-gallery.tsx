@@ -5,6 +5,27 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// CSS for floating animation and gradient borders
+const styles = `
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+  }
+  .float-animation {
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes gradientShift {
+    0% { border-color: rgba(255, 107, 53, 0.4); }
+    25% { border-color: rgba(255, 214, 10, 0.4); }
+    50% { border-color: rgba(52, 211, 153, 0.4); }
+    75% { border-color: rgba(244, 114, 182, 0.4); }
+    100% { border-color: rgba(255, 107, 53, 0.4); }
+  }
+  .gradient-border-hover:hover {
+    animation: gradientShift 3s ease infinite;
+  }
+`;
+
 // MediaItemType defines the structure of a media item
 interface MediaItemType {
   id: number;
@@ -252,9 +273,13 @@ const GalleryModal = ({
         className="fixed z-50 left-1/2 bottom-4 -translate-x-1/2 touch-none"
       >
         <motion.div
-          className="relative rounded-sm bg-orange-500/[0.08] backdrop-blur-xl
-                     border-[0.5px] border-orange-500/20 shadow-lg
-                     cursor-grab active:cursor-grabbing"
+          className="relative rounded-sm backdrop-blur-xl cursor-grab active:cursor-grabbing"
+          style={{
+            background:
+              'linear-gradient(135deg, rgba(255,107,53,0.1) 0%, rgba(244,114,182,0.08) 100%)',
+            border: '1px solid rgba(255,107,53,0.4)',
+            boxShadow: '0 0 30px rgba(255,107,53,0.3)',
+          }}
         >
           <div className="flex items-center -space-x-2 px-3 py-2">
             {mediaItems.map((item, index) => (
@@ -264,19 +289,24 @@ const GalleryModal = ({
                   e.stopPropagation();
                   setSelectedItem(item);
                 }}
+                className={cn(
+                  'relative group w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex-shrink-0',
+                  'rounded-sm overflow-hidden cursor-pointer hover:z-20'
+                )}
                 style={{
                   zIndex:
                     selectedItem.id === item.id
                       ? 30
                       : mediaItems.length - index,
+                  border:
+                    selectedItem.id === item.id
+                      ? '2px solid #FF6B35'
+                      : '1px solid rgba(255,107,53,0.2)',
+                  boxShadow:
+                    selectedItem.id === item.id
+                      ? '0 0 15px rgba(255,107,53,0.6)'
+                      : 'none',
                 }}
-                className={cn(
-                  'relative group w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex-shrink-0',
-                  'rounded-sm overflow-hidden cursor-pointer hover:z-20',
-                  selectedItem.id === item.id
-                    ? 'ring-2 ring-orange-400/70 shadow-lg'
-                    : 'hover:ring-2 hover:ring-white/30'
-                )}
                 initial={{ rotate: index % 2 === 0 ? -15 : 15 }}
                 animate={{
                   scale: selectedItem.id === item.id ? 1.2 : 1,
@@ -334,6 +364,13 @@ const InteractiveBentoGallery: React.FC<InteractiveBentoGalleryProps> = ({
   const [items, setItems] = useState(mediaItems);
   const [isDragging, setIsDragging] = useState(false);
 
+  useEffect(() => {
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = styles;
+    document.head.appendChild(styleSheet);
+    return () => styleSheet.remove();
+  }, []);
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8 text-center">
@@ -384,8 +421,8 @@ const InteractiveBentoGallery: React.FC<InteractiveBentoGalleryProps> = ({
                 key={item.id}
                 layoutId={`media-${item.id}`}
                 className={cn(
-                  'relative overflow-hidden rounded-sm cursor-move',
-                  'border-[0.5px] border-white/[0.06]',
+                  'relative overflow-hidden rounded-sm cursor-move group',
+                  'gradient-border-hover',
                   item.span
                 )}
                 onClick={() => !isDragging && setSelectedItem(item)}
@@ -423,6 +460,13 @@ const InteractiveBentoGallery: React.FC<InteractiveBentoGalleryProps> = ({
                     setItems(newItems);
                   }
                 }}
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgba(18,18,30,0.6) 0%, rgba(26,15,35,0.5) 100%)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,107,53,0.3)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                }}
               >
                 <MediaItem
                   item={item}
@@ -445,6 +489,19 @@ const InteractiveBentoGallery: React.FC<InteractiveBentoGalleryProps> = ({
                     </p>
                   </div>
                 </motion.div>
+
+                {/* Candy glow effect on hover */}
+                <motion.div
+                  className="absolute inset-0 pointer-events-none"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                  style={{
+                    background:
+                      'linear-gradient(135deg, rgba(255,107,53,0.1) 0%, rgba(244,114,182,0.08) 100%)',
+                    boxShadow: 'inset 0 0 20px rgba(255,107,53,0.3)',
+                  }}
+                />
               </motion.div>
             ))}
           </motion.div>

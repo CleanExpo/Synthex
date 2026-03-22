@@ -8,14 +8,16 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-orange-500 text-[#050505] hover:bg-orange-400',
+        default:
+          'bg-white/[0.03] backdrop-blur-sm border border-white/[0.08] text-white/80 hover:bg-white/[0.06] hover:border-white/[0.12] hover:shadow-lg',
         destructive:
           'bg-red-500/20 border-[0.5px] border-red-500/30 text-red-300 hover:bg-red-500/30',
         outline:
           'border-[0.5px] border-white/[0.08] bg-white/[0.02] text-white/60 hover:bg-white/[0.05] hover:text-white/80',
         secondary:
           'border-[0.5px] border-white/[0.06] bg-white/[0.02] text-white/60 hover:bg-white/[0.04] hover:text-white/80',
-        ghost: 'text-white/60 hover:text-white/80 hover:bg-white/[0.04]',
+        ghost:
+          'text-orange-400 hover:text-orange-300 hover:bg-orange-500/[0.08] border border-orange-500/[0.2]',
         link: 'text-orange-400 underline-offset-4 hover:underline',
         // Scientific Luxury glass variants
         glass:
@@ -30,6 +32,9 @@ const buttonVariants = cva(
           'border-[0.5px] border-emerald-500/20 bg-emerald-500/[0.08] text-emerald-300 hover:bg-emerald-500/[0.15]',
         'premium-primary': 'bg-orange-500 text-[#050505] hover:bg-orange-400',
         'premium-secondary': 'bg-orange-500 text-[#050505] hover:bg-orange-400',
+        // Candy variants
+        candy:
+          'bg-gradient-to-r from-[#FF6B35] to-[#FF3B5C] text-white font-semibold hover:shadow-[0_0_20px_rgba(255,107,53,0.4)] transition-all duration-300',
       },
       size: {
         default: 'h-9 px-4 py-2',
