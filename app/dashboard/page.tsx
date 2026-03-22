@@ -20,6 +20,7 @@ import {
   FirstWeekWidget,
 } from '@/components/dashboard';
 import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
+import { AutopilotBanner } from '@/components/dashboard/AutopilotBanner';
 import { AllBusinessesDashboard } from '@/components/business/AllBusinessesDashboard';
 
 // AI Command Centre — replaces returning-user widget soup (Phase 132)
@@ -291,6 +292,14 @@ export default function DashboardPage() {
           onToggleNotifications={() => setShowNotifications(!showNotifications)}
           isNewUser={isNewUser}
         />
+
+        {/* First-run Autopilot onboarding banner */}
+        {!isAllBusinessesMode && (
+          <AutopilotBanner
+            hasNoPlatforms={stats !== null && stats.connectedPlatforms === 0}
+            autopilotInactive={isNewUser}
+          />
+        )}
 
         {/* All-businesses mode */}
         {isAllBusinessesMode ? (
