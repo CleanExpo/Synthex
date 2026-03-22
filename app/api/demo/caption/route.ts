@@ -16,7 +16,7 @@ const RequestSchema = z.object({
 
 /** Sample captions by business name keyword — guaranteed last-resort fallback */
 const SAMPLE_CAPTIONS: Record<string, string> = {
-  carsi: `Training Australia's best — because clean isn't just a look, it's a health standard. Whether you're new to the industry or levelling up your certification, CARSI has the course for you. #RestorationTraining #CleaningScience`,
+  restoration: `Training Australia's best — because clean isn't just a look, it's a health standard. Whether you're new to the industry or levelling up your certification, CARSI has the course for you. #RestorationTraining #CleaningScience`,
   cafe: `Freshly brewed and ready to make your morning. Stop by and let us fuel your day the right way — good coffee, good vibes. #CoffeeCulture #MorningRitual`,
   tradie: `Quality workmanship on every job, no matter the size. When you need it done right the first time, you know who to call. #TradesmanLife #BuiltToLast`,
   salon: `Because you deserve to look and feel your best. Book in with us this week and walk out a new you. #HairSalon #SalonLife`,

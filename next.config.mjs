@@ -129,6 +129,16 @@ const nextConfig = {
     ],
   },
 
+  // Fix: Next.js 16.2.0 bug – console-file.js has an unconditional top-level
+  // require('../dev/browser-logs/file-logger') even though the function that
+  // uses it is guarded by NODE_ENV === 'development'. NFT dead-code analysis
+  // excludes the dev folder from the Lambda bundle, causing every Lambda to
+  // crash on cold start with "Cannot find module '../dev/browser-logs/file-logger'".
+  // Force-include the folder so Node.js can resolve the require at runtime.
+  outputFileTracingIncludes: {
+    '*': ['./node_modules/next/dist/server/dev/browser-logs/**'],
+  },
+
   // Comprehensive exclusions to speed up build tracing (moved from experimental in Next.js 15)
   outputFileTracingExcludes: {
     '*': [

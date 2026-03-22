@@ -13,7 +13,6 @@ interface DemoResult {
 }
 
 const INDUSTRY_CHIPS = [
-  { label: 'CARSI', emoji: '\uD83E\uDDEA' },
   { label: 'Cafe', emoji: '\u2615' },
   { label: 'Tradie', emoji: '\uD83D\uDD28' },
   { label: 'Salon', emoji: '\uD83D\uDC87' },
