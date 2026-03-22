@@ -11,7 +11,7 @@
  */
 
 import { randomUUID } from 'crypto';
-import { createClient, SupabaseClient } from '@getSupabase()/getSupabase()-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
 // Lazy Supabase client — avoids crash during Next.js build when env vars are missing
@@ -354,7 +354,7 @@ class AnomalyDetector {
       metricType: MetricType;
     }
   ): Promise<Anomaly | null> {
-    const values = historicalData.map((d) => d.value);
+    const values = historicalData.map((d: any) => d.value);
     const mean = this.calculateMean(values);
     const stdDev = this.calculateStdDev(values, mean);
     const zScore = stdDev > 0 ? (dataPoint.value - mean) / stdDev : 0;
@@ -691,7 +691,7 @@ class AnomalyDetector {
 
       if (error) throw error;
 
-      return (data || []).map((d) => ({
+      return (data || []).map((d: any) => ({
         value: d.value,
         timestamp: new Date(d.recorded_at),
       }));
@@ -732,7 +732,7 @@ class AnomalyDetector {
 
       if (error) throw error;
 
-      return (data || []).map((d) => ({
+      return (data || []).map((d: any) => ({
         value: d.value,
         timestamp: new Date(d.recorded_at),
       }));
@@ -936,7 +936,7 @@ class AnomalyDetector {
 
       if (error) throw error;
 
-      const anomalies: Anomaly[] = (data || []).map((d) => ({
+      const anomalies: Anomaly[] = (data || []).map((d: any) => ({
         id: d.id,
         userId: d.user_id,
         accountId: d.account_id,
@@ -1096,10 +1096,10 @@ class AnomalyDetector {
       // Calculate trend
       const midPoint = new Date(Date.now() - (days / 2) * 24 * 60 * 60 * 1000);
       const firstHalf = anomalies.filter(
-        (a) => new Date(a.detected_at) < midPoint
+        (a: any) => new Date(a.detected_at) < midPoint
       ).length;
       const secondHalf = anomalies.filter(
-        (a) => new Date(a.detected_at) >= midPoint
+        (a: any) => new Date(a.detected_at) >= midPoint
       ).length;
 
       let trend: 'increasing' | 'decreasing' | 'stable' = 'stable';
