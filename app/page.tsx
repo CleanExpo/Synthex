@@ -12,6 +12,7 @@ import { IntelligenceSection } from '@/components/landing/intelligence-section';
 import { Testimonials } from '@/components/landing/testimonials';
 import { FAQSection } from '@/components/landing/faq-section';
 import { buildFaqSchemaJson } from '@/lib/seo/faq-data';
+import { UrlHealthCheck } from '@/components/landing/UrlHealthCheck';
 import { CTASection } from '@/components/landing/cta-section';
 import { FooterSection } from '@/components/landing/footer-section';
 
@@ -37,6 +38,9 @@ export default function HomePage() {
 
       {/* Deployment Pipeline */}
       <HowItWorks />
+
+      {/* Free URL Health Check */}
+      <UrlHealthCheck />
 
       {/* Unified Social Intelligence */}
       <IntelligenceSection />
