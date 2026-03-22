@@ -84,27 +84,54 @@ import { cn } from '@/lib/utils';
 import { WebSocketProvider } from '@/components/WebSocketProvider';
 import { BusinessSwitcher } from '@/components/business';
 import { useUser } from '@/hooks/use-user';
-import {
-  SidebarGroup,
-  type SidebarItem,
-} from '@/components/dashboard/SidebarGroup';
 import { SynthexLogo } from '@/components/landing/synthex-logo';
 import { BottomMenu } from '@/components/landing/bottom-menu';
 import type { NavItem } from '@/components/landing/bottom-menu';
 import { useRouter } from 'next/navigation';
 import { ModeProvider } from '@/components/providers/mode-provider';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarSeparator,
+  SidebarTrigger,
+  useSidebar,
+} from '@/components/ui/sidebar';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
-// ============================================================================
+// ---------------------------------------------------------------------------
 // SIDEBAR GROUPS
-// ============================================================================
+// ---------------------------------------------------------------------------
 
-const sidebarGroups: Array<{
+interface SidebarNavItem {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  href: string;
+}
+
+interface SidebarNavGroup {
   id: string;
   icon: React.ComponentType<{ className?: string }>;
   label: string;
-  items: SidebarItem[];
+  items: SidebarNavItem[];
   defaultOpen?: boolean;
-}> = [
+}
+
+const sidebarGroups: SidebarNavGroup[] = [
   {
     id: 'home',
     icon: Home,
@@ -335,19 +362,105 @@ function getMobileActiveId(pathname: string): string {
   return 'home';
 }
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// ---------------------------------------------------------------------------
+// COLLAPSIBLE SIDEBAR NAV GROUP (uses Shadcn SidebarGroup)
+// ---------------------------------------------------------------------------
+
+function NavGroup({ group }: { group: SidebarNavGroup }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
+  const [isOpen, setIsOpen] = useState(group.defaultOpen ?? false);
+
+  useEffect(() => {
+    const isActive = group.items.some(
+      (item) =>
+        pathname === item.href || pathname.startsWith(item.href + '/')
+    );
+    if (isActive) setIsOpen(true);
+  }, [pathname, group.items]);
+
+  // Collapsed state: show only group icon linking to first item
+  if (isCollapsed) {
+    const firstHref = group.items[0]?.href ?? '/dashboard';
+    return (
+      <SidebarMenuItem>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <SidebarMenuButton asChild size="sm">
+              <Link href={firstHref}>
+                <group.icon className="h-4 w-4" />
+              </Link>
+            </SidebarMenuButton>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="bg-[#0a0a12] border-white/10 text-white/70 text-xs">
+            {group.label}
+          </TooltipContent>
+        </Tooltip>
+      </SidebarMenuItem>
+    );
+  }
+
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel
+        className="flex items-center gap-2 cursor-pointer select-none text-[10px] tracking-[0.2em] uppercase text-white/25 hover:text-white/40 transition-colors px-3 py-1.5"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <group.icon className="h-3 w-3 flex-shrink-0" />
+        <span className="flex-1">{group.label}</span>
+        <ChevronDown
+          className={cn(
+            'h-3 w-3 transition-transform',
+            !isOpen && '-rotate-90'
+          )}
+        />
+      </SidebarGroupLabel>
+      {isOpen && (
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {group.items.map((item) => {
+              const isActive =
+                pathname === item.href ||
+                pathname.startsWith(item.href + '/');
+              return (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive}
+                    size="sm"
+                    className={cn(
+                      'text-white/50 hover:text-white hover:bg-white/[0.04] rounded-sm transition-all',
+                      isActive &&
+                        'text-amber-500 bg-amber-500/[0.06] hover:text-amber-400'
+                    )}
+                  >
+                    <Link href={item.href}>
+                      <item.icon className="h-3.5 w-3.5 flex-shrink-0" />
+                      <span className="text-xs">{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      )}
+    </SidebarGroup>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// DASHBOARD SIDEBAR (uses Shadcn Sidebar shell)
+// ---------------------------------------------------------------------------
+
+function DashboardSidebar() {
+  const pathname = usePathname();
+  const { state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
+  const user = useUser();
+
   const [showAllGroups, setShowAllGroups] = useState(false);
-  const [searchValue, setSearchValue] = useState('');
-  const { user } = useUser();
-  useTokenRefresh();
 
   useEffect(() => {
     const stored = localStorage.getItem(SIDEBAR_EXPANDED_KEY);
@@ -363,10 +476,10 @@ export default function DashboardLayout({
   useEffect(() => {
     if (showAllGroups) return;
     const isInHiddenGroup = sidebarGroups.some(
-      g =>
+      (g) =>
         !STARTER_GROUP_IDS.has(g.id) &&
         g.items.some(
-          item => pathname === item.href || pathname.startsWith(item.href + '/')
+          (item) => pathname === item.href || pathname.startsWith(item.href + '/')
         )
     );
     if (isInHiddenGroup) {
@@ -382,161 +495,147 @@ export default function DashboardLayout({
           id: 'businesses',
           icon: Building,
           label: 'BUSINESSES',
-          defaultOpen: false,
-          items: [
-            {
-              icon: Building,
-              label: 'Businesses',
-              href: '/dashboard/businesses',
-            },
-          ],
+          defaultOpen: true,
+          items: [],
         },
         ...sidebarGroups.slice(1),
       ]
     : sidebarGroups;
 
-  const visibleGroups = dynamicSidebarGroups.filter(
-    g => showAllGroups || STARTER_GROUP_IDS.has(g.id)
-  );
+  const visibleGroups = showAllGroups
+    ? dynamicSidebarGroups
+    : dynamicSidebarGroups.filter(
+        (g) => STARTER_GROUP_IDS.has(g.id) || g.id === 'businesses'
+      );
 
   const hiddenGroupCount = dynamicSidebarGroups.filter(
-    g => !STARTER_GROUP_IDS.has(g.id) && g.id !== 'businesses'
+    (g) => !STARTER_GROUP_IDS.has(g.id) && g.id !== 'businesses'
   ).length;
+
+  return (
+    <Sidebar
+      collapsible="icon"
+      className="border-r border-[0.5px] border-white/[0.06] bg-[#0a0a12] [&>div]:bg-[#0a0a12]"
+    >
+      {/* Logo Header */}
+      <SidebarHeader className="border-b border-[0.5px] border-white/[0.06] h-14 flex-row items-center justify-between">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2.5 group"
+        >
+          <SynthexLogo className="w-7 h-7 flex-shrink-0 opacity-90 group-hover:opacity-100 transition-opacity" />
+          {!isCollapsed && (
+            <span className="text-xs font-light tracking-[0.2em] text-white uppercase">
+              Synthex
+            </span>
+          )}
+        </Link>
+        {!isCollapsed && (
+          <SidebarTrigger className="text-white/30 hover:text-white/60 transition-colors h-6 w-6" />
+        )}
+      </SidebarHeader>
+
+      {/* Navigation Content */}
+      <SidebarContent className="scrollbar-thin">
+        <TooltipProvider delayDuration={0}>
+          {isCollapsed ? (
+            <SidebarMenu className="py-3 px-2 gap-1">
+              {visibleGroups.map((group) => (
+                <NavGroup key={group.id} group={group} />
+              ))}
+            </SidebarMenu>
+          ) : (
+            <>
+              {visibleGroups.map((group) =>
+                group.id === 'businesses' ? (
+                  <SidebarGroup key="businesses">
+                    <SidebarGroupLabel className="text-[10px] tracking-[0.2em] uppercase text-white/25 px-3 py-1.5">
+                      <Building className="h-3 w-3 mr-2" />
+                      BUSINESSES
+                    </SidebarGroupLabel>
+                    <SidebarGroupContent className="px-2">
+                      <BusinessSwitcher />
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                ) : (
+                  <NavGroup key={group.id} group={group} />
+                )
+              )}
+
+              {/* Show More / Less */}
+              <button
+                onClick={toggleShowAllGroups}
+                aria-expanded={showAllGroups}
+                className="w-full flex items-center gap-2 px-3 py-2 mt-2 text-[10px] tracking-[0.2em] uppercase text-white/25 hover:text-white/50 hover:bg-white/[0.02] rounded-sm transition-colors"
+              >
+                <ChevronDown
+                  className={cn(
+                    'w-3 h-3 transition-transform flex-shrink-0',
+                    showAllGroups && 'rotate-180'
+                  )}
+                />
+                {showAllGroups
+                  ? 'Show less'
+                  : `Show ${hiddenGroupCount} more sections`}
+              </button>
+            </>
+          )}
+        </TooltipProvider>
+      </SidebarContent>
+
+      {/* Footer */}
+      <SidebarFooter className="border-t border-[0.5px] border-white/[0.06] p-2">
+        {!isCollapsed && (
+          <div className="flex items-center gap-2 px-2 py-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span className="text-[10px] text-white/30">Online</span>
+          </div>
+        )}
+      </SidebarFooter>
+
+      <SidebarRail />
+    </Sidebar>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// MAIN LAYOUT
+// ---------------------------------------------------------------------------
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+  const router = useRouter();
+  useTokenRefresh();
+  const user = useUser();
+  const [searchValue, setSearchValue] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <ModeProvider>
       <WebSocketProvider autoConnect showConnectionStatus={false}>
-        <div className="min-h-screen bg-[#050508]">
+        <SidebarProvider
+          defaultOpen={true}
+          className="min-h-screen bg-[#050508]"
+        >
           {/* Mobile Menu */}
           <MobileMenu />
 
           {/* Desktop Sidebar */}
-          <aside
-            className={cn(
-              'hidden md:flex fixed left-0 top-0 z-40 h-screen flex-col transition-all duration-300',
-              'bg-[#0a0a12] border-r border-[0.5px] border-white/[0.06]',
-              sidebarCollapsed ? 'w-14' : 'w-60'
-            )}
-          >
-            {/* Logo */}
-            <div
-              className={cn(
-                'flex h-14 items-center border-b border-[0.5px] border-white/[0.06] flex-shrink-0',
-                sidebarCollapsed
-                  ? 'justify-center px-0'
-                  : 'justify-between px-4'
-              )}
-            >
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-2.5 group"
-              >
-                <SynthexLogo className="w-7 h-7 flex-shrink-0 opacity-90 group-hover:opacity-100 transition-opacity" />
-                {!sidebarCollapsed && (
-                  <span className="text-xs font-light tracking-[0.2em] text-white uppercase">
-                    Synthex
-                  </span>
-                )}
-              </Link>
-              {!sidebarCollapsed && (
-                <button
-                  onClick={() => setSidebarCollapsed(true)}
-                  className="hidden lg:flex p-1 text-white/25 hover:text-white/60 transition-colors rounded-sm"
-                  aria-label="Collapse sidebar"
-                >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                </button>
-              )}
-              {sidebarCollapsed && (
-                <button
-                  onClick={() => setSidebarCollapsed(false)}
-                  className="absolute -right-3 top-5 flex items-center justify-center w-6 h-6 bg-[#0a0a12] border border-[0.5px] border-white/[0.1] rounded-sm text-white/40 hover:text-white/70 transition-colors"
-                  aria-label="Expand sidebar"
-                >
-                  <ChevronRight className="h-3 w-3" />
-                </button>
-              )}
-            </div>
+          <DashboardSidebar />
 
-            {/* Navigation */}
-            <nav className="flex-1 min-h-0 overflow-y-auto py-3 scrollbar-thin">
-              {sidebarCollapsed ? (
-                // Collapsed: icon-only links per group
-                <div className="flex flex-col items-center gap-1 px-2">
-                  {visibleGroups.map(group => (
-                    <Link
-                      key={group.id}
-                      href={group.items[0]?.href ?? '/dashboard'}
-                      className="flex items-center justify-center w-9 h-9 text-white/30 hover:text-white/70 hover:bg-white/[0.04] rounded-sm transition-all"
-                      aria-label={group.label}
-                      title={group.label}
-                    >
-                      <group.icon className="h-4 w-4" />
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                // Expanded: full sidebar groups
-                <div className="px-2 space-y-0.5">
-                  {visibleGroups.map(group => (
-                    <SidebarGroup
-                      key={group.id}
-                      id={group.id}
-                      icon={group.icon}
-                      label={group.label}
-                      items={group.items}
-                      defaultOpen={group.defaultOpen}
-                    />
-                  ))}
-
-                  {/* Show More / Less */}
-                  <button
-                    onClick={toggleShowAllGroups}
-                    aria-expanded={showAllGroups}
-                    className="w-full flex items-center gap-2 px-3 py-2 mt-2 text-[10px] tracking-[0.2em] uppercase text-white/25 hover:text-white/50 hover:bg-white/[0.02] rounded-sm transition-colors"
-                  >
-                    <ChevronDown
-                      className={cn(
-                        'w-3 h-3 transition-transform flex-shrink-0',
-                        showAllGroups && 'rotate-180'
-                      )}
-                    />
-                    {showAllGroups
-                      ? 'Show Less'
-                      : `${hiddenGroupCount} More Sections`}
-                  </button>
-                </div>
-              )}
-            </nav>
-
-            {/* Help */}
-            <div className="border-t border-[0.5px] border-white/[0.06] p-3 flex-shrink-0">
-              <Link
-                href="/dashboard/help"
-                className={cn(
-                  'flex items-center gap-2.5 text-white/30 hover:text-white/60 hover:bg-white/[0.03] rounded-sm px-2 py-2 transition-all text-xs',
-                  sidebarCollapsed && 'justify-center px-0'
-                )}
-              >
-                <HelpCircle className="h-4 w-4 flex-shrink-0" />
-                {!sidebarCollapsed && (
-                  <span className="tracking-wide">Help & Support</span>
-                )}
-              </Link>
-            </div>
-          </aside>
-
-          {/* Main Content */}
-          <div
-            className={cn(
-              'transition-all duration-300',
-              sidebarCollapsed ? 'lg:pl-14' : 'lg:pl-60'
-            )}
-          >
-            {/* Top Header */}
-            <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-[#0a0a12]/95 backdrop-blur-md border-b border-[0.5px] border-white/[0.06] px-4 md:px-6">
-              {/* Left: mobile toggle + search */}
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col min-h-screen">
+            {/* Top Header Bar */}
+            <header className="sticky top-0 z-30 flex items-center justify-between h-14 border-b border-[0.5px] border-white/[0.06] bg-[#050508]/80 backdrop-blur-sm px-4 md:px-6">
               <div className="flex items-center gap-3">
+                {/* Sidebar toggle for collapsed state */}
+                <SidebarTrigger className="hidden md:flex text-white/30 hover:text-white/60 transition-colors h-6 w-6" />
+
+                {/* Mobile menu toggle */}
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   className="lg:hidden p-1.5 text-white/40 hover:text-white transition-colors rounded-sm"
@@ -552,69 +651,43 @@ export default function DashboardLayout({
                     type="search"
                     placeholder="Search..."
                     value={searchValue}
-                    onChange={e => setSearchValue(e.target.value)}
+                    onChange={(e) => setSearchValue(e.target.value)}
                     aria-label="Search"
-                    className="w-40 sm:w-52 md:w-64 pl-8 pr-3 py-1.5 text-xs bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/70 placeholder:text-white/20 rounded-sm focus:outline-none focus:border-white/20 focus:bg-white/[0.04] transition-all"
+                    className="w-40 sm:w-52 md:w-64 pl-8 pr-3 py-1.5 text-xs bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/70 placeholder:text-white/20 rounded-sm focus:outline-none focus:border-amber-500/30 transition-colors"
                   />
                 </div>
-
-                {/* Command palette hint */}
-                <kbd
-                  onClick={() =>
-                    window.dispatchEvent(new Event('openCommandPalette'))
-                  }
-                  className="hidden md:inline-flex items-center gap-1 px-2 py-1 text-[10px] text-white/40 border border-white/[0.08] rounded-sm bg-white/[0.02] cursor-pointer hover:bg-white/[0.04] hover:text-white/50 transition-colors"
-                >
-                  <span>&#8984;</span>K
-                </kbd>
               </div>
 
-              {/* Right: business switcher, notifications, user */}
               <div className="flex items-center gap-3">
-                {user?.isMultiBusinessOwner && <BusinessSwitcher />}
-
                 <NotificationBell />
 
-                {/* User dropdown */}
+                {/* User Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button
-                      className="flex items-center gap-2 p-1 rounded-sm hover:bg-white/[0.04] transition-colors"
-                      aria-label="User menu"
-                    >
-                      <Avatar className="h-7 w-7 rounded-sm">
-                        {user?.avatar && (
-                          <AvatarImage
-                            src={user.avatar}
-                            alt={user.name || 'User'}
-                          />
-                        )}
-                        <AvatarFallback className="rounded-sm bg-orange-500/20 text-orange-400 text-xs font-mono">
-                          {user?.name?.[0]?.toUpperCase() ||
-                            user?.email?.[0]?.toUpperCase() ||
-                            'U'}
+                    <button className="flex items-center gap-2 p-1 rounded-sm hover:bg-white/[0.04] transition-colors">
+                      <Avatar className="h-7 w-7">
+                        <AvatarImage src={user?.avatarUrl} />
+                        <AvatarFallback className="bg-amber-500/10 text-amber-500 text-xs">
+                          {user?.name
+                            ?.split(' ')
+                            .map((n: string) => n[0])
+                            .join('')
+                            .toUpperCase() ?? 'U'}
                         </AvatarFallback>
                       </Avatar>
                       {user?.name && (
-                        <span className="hidden md:block text-xs text-white/50 max-w-[100px] truncate">
+                        <span className="hidden md:inline text-xs text-white/60">
                           {user.name}
                         </span>
                       )}
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
-                    className="w-52 bg-[#0a0a12] border-[0.5px] border-white/[0.1] rounded-sm shadow-xl shadow-black/40"
                     align="end"
+                    className="w-48 bg-[#0a0a12] border-white/[0.08] rounded-sm"
                   >
-                    <DropdownMenuLabel className="font-normal px-3 py-2">
-                      <div className="flex flex-col gap-0.5">
-                        <p className="text-xs font-medium text-white">
-                          {user?.name || 'User'}
-                        </p>
-                        <p className="text-[10px] text-white/40 truncate">
-                          {user?.email || ''}
-                        </p>
-                      </div>
+                    <DropdownMenuLabel className="text-xs text-white/40 font-normal">
+                      {user?.email ?? 'Account'}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator className="bg-white/[0.06]" />
                     <DropdownMenuItem asChild>
@@ -637,7 +710,7 @@ export default function DashboardLayout({
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link
-                        href="/dashboard/billing"
+                        href="/dashboard/settings?tab=billing"
                         className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm"
                       >
                         <CreditCard className="h-3.5 w-3.5" />
@@ -645,29 +718,13 @@ export default function DashboardLayout({
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-white/[0.06]" />
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem>
                       <button
-                        onClick={async () => {
-                          try {
-                            await fetch('/api/auth/logout', {
-                              method: 'POST',
-                              credentials: 'include',
-                            });
-                          } catch {
-                            // best effort
-                          }
-                          document.cookie =
-                            'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-                          document.cookie =
-                            'user-info=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-                          localStorage.removeItem('user');
-                          localStorage.removeItem('token-expires-at');
-                          window.location.href = '/login';
-                        }}
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs text-red-400/80 hover:text-red-400 w-full cursor-pointer rounded-sm"
+                        onClick={() => router.push('/api/auth/signout')}
+                        className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-white/40 hover:text-red-400 cursor-pointer rounded-sm"
                       >
                         <LogOut className="h-3.5 w-3.5" />
-                        Sign Out
+                        Sign out
                       </button>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -692,8 +749,8 @@ export default function DashboardLayout({
             className="md:hidden"
             items={MOBILE_NAV_ITEMS}
             activeId={getMobileActiveId(pathname)}
-            onSelect={id => {
-              const item = MOBILE_NAV_ITEMS.find(i => i.id === id);
+            onSelect={(id) => {
+              const item = MOBILE_NAV_ITEMS.find((i) => i.id === id);
               if (item?.href) router.push(item.href);
             }}
           />
@@ -706,7 +763,7 @@ export default function DashboardLayout({
 
           {/* Product Tour — triggers on first dashboard visit after onboarding */}
           <ProductTour />
-        </div>
+        </SidebarProvider>
       </WebSocketProvider>
     </ModeProvider>
   );
