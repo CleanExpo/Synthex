@@ -230,3 +230,12 @@ public/audio/
 
 # MCP config — contains API keys, never commit
 .mcp.json
+
+# Session scratch files (temp outputs from Claude Code sessions)
+commit-msg.txt
+do-commit.sh
+git-status.txt
+git-status-err.txt
+tsc-out.txt
+vercel-deploy.txt
+vercel-deploy2.txt
