@@ -406,7 +406,7 @@ function NavGroup({ group }: { group: SidebarNavGroup }) {
   return (
     <SidebarGroup>
       <SidebarGroupLabel
-        className="flex items-center gap-2 cursor-pointer select-none text-[10px] tracking-[0.2em] uppercase text-white/25 hover:text-white/40 transition-colors px-3 py-1.5"
+        className="flex items-center gap-2 cursor-pointer select-none text-[10px] tracking-[0.2em] uppercase text-white/50 hover:text-white/70 transition-colors px-3 py-1.5"
         onClick={() => setIsOpen(!isOpen)}
       >
         <group.icon className="h-3 w-3 flex-shrink-0" />
@@ -529,7 +529,7 @@ function DashboardSidebar() {
           )}
         </Link>
         {!isCollapsed && (
-          <SidebarTrigger className="text-white/30 hover:text-white/60 transition-colors h-6 w-6" />
+          <SidebarTrigger className="text-white/50 hover:text-white/80 transition-colors h-6 w-6" />
         )}
       </SidebarHeader>
 
@@ -547,7 +547,7 @@ function DashboardSidebar() {
               {visibleGroups.map(group =>
                 group.id === 'businesses' ? (
                   <SidebarGroup key="businesses">
-                    <SidebarGroupLabel className="text-[10px] tracking-[0.2em] uppercase text-white/25 px-3 py-1.5">
+                    <SidebarGroupLabel className="text-[10px] tracking-[0.2em] uppercase text-white/50 px-3 py-1.5">
                       <Building className="h-3 w-3 mr-2" />
                       BUSINESSES
                     </SidebarGroupLabel>
@@ -564,7 +564,7 @@ function DashboardSidebar() {
               <button
                 onClick={toggleShowAllGroups}
                 aria-expanded={showAllGroups}
-                className="w-full flex items-center gap-2 px-3 py-2 mt-2 text-[10px] tracking-[0.2em] uppercase text-white/25 hover:text-white/50 hover:bg-white/[0.02] rounded-sm transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-2 mt-2 text-[10px] tracking-[0.2em] uppercase text-white/50 hover:text-white/70 hover:bg-white/[0.02] rounded-sm transition-colors"
               >
                 <ChevronDown
                   className={cn(
@@ -586,7 +586,7 @@ function DashboardSidebar() {
         {!isCollapsed && (
           <div className="flex items-center gap-2 px-2 py-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span className="text-[10px] text-white/30">Online</span>
+            <span className="text-[10px] text-white/50">Online</span>
           </div>
         )}
       </SidebarFooter>
@@ -631,7 +631,7 @@ export default function DashboardLayout({
             <header className="sticky top-0 z-30 flex items-center justify-between h-14 border-b border-[0.5px] border-white/[0.06] bg-[#050508]/80 backdrop-blur-sm px-4 md:px-6">
               <div className="flex items-center gap-3">
                 {/* Sidebar toggle for collapsed state */}
-                <SidebarTrigger className="hidden md:flex text-white/30 hover:text-white/60 transition-colors h-6 w-6" />
+                <SidebarTrigger className="hidden md:flex text-white/50 hover:text-white/80 transition-colors h-6 w-6" />
 
                 {/* Mobile menu toggle */}
                 <button
@@ -644,14 +644,14 @@ export default function DashboardLayout({
 
                 {/* Search */}
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/25 pointer-events-none" />
+                  <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/40 pointer-events-none" />
                   <input
                     type="search"
                     placeholder="Search..."
                     value={searchValue}
                     onChange={e => setSearchValue(e.target.value)}
                     aria-label="Search"
-                    className="w-40 sm:w-52 md:w-64 pl-8 pr-3 py-1.5 text-xs bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/70 placeholder:text-white/20 rounded-sm focus:outline-none focus:border-amber-500/30 transition-colors"
+                    className="w-40 sm:w-52 md:w-64 pl-8 pr-3 py-1.5 text-xs bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/70 placeholder:text-white/40 rounded-sm focus:outline-none focus:border-amber-500/30 transition-colors"
                   />
                 </div>
               </div>

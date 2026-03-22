@@ -200,9 +200,6 @@
     "zod": "^3.25.76",
     "zustand": "^4.4.0"
   },
-  "prisma": {
-    "seed": "node prisma/seed.js"
-  },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
     "@babel/preset-env": "^7.28.6",

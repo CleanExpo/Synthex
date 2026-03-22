@@ -36,7 +36,7 @@ export function AnalyticsTab() {
             <div className="md:col-span-2 order-2 md:order-1">
               <div className="h-48 sm:h-64 border-[0.5px] border-white/[0.04] bg-white/[0.01] rounded-sm flex items-center justify-center">
                 <div className="text-center px-4">
-                  <BarChart3 className="h-8 w-8 mx-auto mb-3 text-white/10" />
+                  <BarChart3 className="h-8 w-8 mx-auto mb-3 text-white/40" />
                   <p className="text-xs text-white/70">Engagement Over Time</p>
                   <p className="text-[10px] text-white/70 mt-1">
                     Chart visualisation connected to backend
