@@ -1,229 +1,205 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import NextImage from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  Image as ImageIcon,
-  Plus,
-  RefreshCw,
-  Sparkles,
-} from '@/components/icons';
-import { GEOFeatureGate } from '@/components/geo/GEOFeatureGate';
+/**
+ * /dashboard/visuals
+ *
+ * Visual content performance — image/video engagement analytics.
+ * Wired to /api/dashboard/visuals via SWR.
+ */
 
-interface VisualAsset {
-  id: number;
-  type: string;
-  imageUrl: string;
+import useSWR from 'swr';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, Image, Video, BarChart3 } from 'lucide-react';
+
+interface VisualItem {
+  id: string;
+  type: 'image' | 'video' | 'carousel' | 'reel';
+  platform: string;
   thumbnailUrl?: string;
-  qualityScore?: number;
-  altText?: string;
-  caption?: string;
-  status: string;
-  createdAt: string;
+  title?: string;
+  publishedAt: string;
+  views: number;
+  engagement: number;
+  engagementRate: number;
+  saves: number;
+  shares: number;
 }
 
+interface VisualsData {
+  totalVisuals: number;
+  avgEngagementRate: number;
+  topPerforming: VisualItem[];
+  byType: Array<{ type: string; count: number; avgEngagement: number }>;
+  byPlatform: Array<{ platform: string; count: number; avgEngagement: number }>;
+  recommendations: string[];
+}
+
+async function fetcher(url: string): Promise<VisualsData> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to load visuals data (${res.status})`);
+  return res.json();
+}
+
+const TYPE_ICON = {
+  image: Image,
+  video: Video,
+  carousel: BarChart3,
+  reel: Video,
+};
+
 export default function VisualsPage() {
-  const [assets, setAssets] = useState<VisualAsset[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showGenerate, setShowGenerate] = useState(false);
-  const [genForm, setGenForm] = useState({ type: 'diagram', prompt: '' });
-  const [generating, setGenerating] = useState(false);
+  const { data, error, isLoading } = useSWR<VisualsData>(
+    '/api/dashboard/visuals',
+    fetcher,
+    { refreshInterval: 300_000 }
+  );
 
-  useEffect(() => {
-    fetchAssets();
-  }, []);
+  if (isLoading) {
+    return (
+      <div className="animate-pulse space-y-6">
+        <div className="border-b border-white/[0.06] pb-6">
+          <div className="h-4 w-32 bg-white/[0.05] rounded-sm mb-3" />
+          <div className="h-8 w-48 bg-white/[0.05] rounded-sm" />
+        </div>
+        <div className="grid grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+              <div className="h-4 w-20 bg-white/[0.05] rounded-sm mb-2" />
+              <div className="h-8 w-16 bg-white/[0.05] rounded-sm" />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm aspect-square" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-  const fetchAssets = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch('/api/visuals?limit=30', {
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAssets(data.assets || []);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (error) {
+    return (
+      <Alert variant="destructive" className="border-red-500/30 bg-red-500/10">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>Failed to load visuals data. {error.message}</AlertDescription>
+      </Alert>
+    );
+  }
 
-  const generate = async () => {
-    if (genForm.prompt.length < 10) return;
-    setGenerating(true);
-    try {
-      const res = await fetch('/api/visuals/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(genForm),
-      });
-      if (res.ok) {
-        setShowGenerate(false);
-        setGenForm({ type: 'diagram', prompt: '' });
-        fetchAssets();
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  const typeLabels: Record<string, string> = {
-    diagram: 'Diagram',
-    plot: 'Data Plot',
-    infographic: 'Infographic',
-    before_after: 'Before/After',
-  };
+  if (!data) return null;
 
   return (
-    <GEOFeatureGate
-      feature="Visual Library"
-      requiredPlan="professional"
-      description="Generate publication-quality academic diagrams and data visualizations with Paper Banana AI."
-      benefits={[
-        'AI-generated concept diagrams and data plots',
-        'Before/after comparison galleries',
-        'Quality evaluation with Critic agent scoring',
-      ]}
-    >
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-              <ImageIcon className="h-7 w-7 text-orange-400" />
-              Visual Library
-            </h1>
-            <p className="text-gray-400 mt-1">
-              Paper Banana AI-generated academic diagrams and visualizations
-            </p>
-          </div>
-          <Button
-            onClick={() => setShowGenerate(!showGenerate)}
-            className="bg-orange-600 hover:bg-orange-700"
-          >
-            <Sparkles className="h-4 w-4 mr-2" />
-            Generate Visual
-          </Button>
-        </div>
-
-        {showGenerate && (
-          <Card className="bg-surface-base/80 border border-orange-500/10">
-            <CardContent className="p-6 space-y-4">
-              <select
-                value={genForm.type}
-                onChange={e => setGenForm({ ...genForm, type: e.target.value })}
-                className="bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm w-full"
-              >
-                <option value="diagram">Concept Diagram</option>
-                <option value="plot">Data Plot</option>
-                <option value="infographic">Infographic</option>
-                <option value="before_after">Before/After Comparison</option>
-              </select>
-              <textarea
-                value={genForm.prompt}
-                onChange={e =>
-                  setGenForm({ ...genForm, prompt: e.target.value })
-                }
-                placeholder="Describe the visual you want to generate..."
-                className="w-full h-24 bg-white/5 border border-white/10 text-white rounded-lg px-4 py-2 text-sm placeholder:text-gray-500 resize-y"
-              />
-              <div className="flex justify-end gap-2">
-                <Button variant="ghost" onClick={() => setShowGenerate(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={generate}
-                  disabled={generating || genForm.prompt.length < 10}
-                  className="bg-orange-600 hover:bg-orange-700"
-                >
-                  {generating ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                      Generating...
-                    </>
-                  ) : (
-                    'Generate'
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map(i => (
-              <div
-                key={i}
-                className="aspect-video bg-white/5 rounded-lg animate-pulse"
-              />
-            ))}
-          </div>
-        ) : assets.length === 0 ? (
-          <Card className="bg-surface-base/80 border border-orange-500/10">
-            <CardContent className="p-12 text-center text-gray-400">
-              <ImageIcon className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p>No visuals generated yet</p>
-              <p className="text-sm mt-1">
-                Use Paper Banana to create publication-quality diagrams
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {assets.map(asset => (
-              <Card
-                key={asset.id}
-                className="bg-surface-base/80 border border-orange-500/10 overflow-hidden group hover:border-orange-500/30 transition-all"
-              >
-                <div className="aspect-video bg-white/5 relative">
-                  <NextImage
-                    src={asset.thumbnailUrl || asset.imageUrl}
-                    alt={asset.altText || ''}
-                    className="w-full h-full object-cover"
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                  />
-                  {asset.qualityScore !== null &&
-                    asset.qualityScore !== undefined && (
-                      <div className="absolute top-2 right-2">
-                        <Badge
-                          className={`${asset.qualityScore >= 70 ? 'bg-emerald-500/80' : 'bg-orange-500/80'} text-white text-xs`}
-                        >
-                          Q: {asset.qualityScore}
-                        </Badge>
-                      </div>
-                    )}
-                </div>
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between">
-                    <Badge className="bg-white/5 text-gray-400 text-xs">
-                      {typeLabels[asset.type] || asset.type}
-                    </Badge>
-                    <Badge
-                      className={`text-xs ${asset.status === 'approved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-400'}`}
-                    >
-                      {asset.status}
-                    </Badge>
-                  </div>
-                  {asset.caption && (
-                    <p className="text-xs text-gray-500 mt-1 line-clamp-1">
-                      {asset.caption}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+    <div className="space-y-8">
+      <div className="border-b border-white/[0.06] pb-6">
+        <p className="text-xs uppercase tracking-widest text-white/40 mb-2">Content</p>
+        <h1 className="text-2xl font-semibold text-white">Visual Performance</h1>
       </div>
-    </GEOFeatureGate>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+          <p className="text-xs text-white/40 mb-2">Total Visuals</p>
+          <p className="text-2xl font-semibold text-white">{data.totalVisuals.toLocaleString()}</p>
+        </div>
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+          <p className="text-xs text-white/40 mb-2">Avg Engagement Rate</p>
+          <p className="text-2xl font-semibold text-amber-400">{data.avgEngagementRate.toFixed(2)}%</p>
+        </div>
+        {data.byType.slice(0, 2).map((type, i) => (
+          <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+            <p className="text-xs text-white/40 mb-2 capitalize">{type.type}s</p>
+            <p className="text-2xl font-semibold text-white">{type.count}</p>
+            <p className="text-xs text-white/30 mt-1">{type.avgEngagement.toFixed(1)}% avg eng.</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Platform breakdown */}
+      {data.byPlatform.length > 0 && (
+        <div className="border-[0.5px] border-white/[0.06] rounded-sm overflow-hidden">
+          <div className="border-b border-white/[0.06] p-4">
+            <h2 className="text-sm font-medium text-white">By Platform</h2>
+          </div>
+          {data.byPlatform.map((p, i) => (
+            <div key={i} className="border-b border-white/[0.04] p-4 flex items-center justify-between hover:bg-white/[0.01] transition-colors">
+              <p className="text-sm text-white capitalize">{p.platform}</p>
+              <div className="flex items-center gap-4">
+                <span className="text-xs text-white/40">{p.count} visuals</span>
+                <span className="text-sm font-medium text-amber-400">{p.avgEngagement.toFixed(1)}%</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Top performing visuals */}
+      {data.topPerforming.length > 0 && (
+        <div>
+          <h2 className="text-sm font-medium text-white mb-4">Top Performing</h2>
+          <div className="grid grid-cols-2 gap-4">
+            {data.topPerforming.map((visual) => {
+              const Icon = TYPE_ICON[visual.type] ?? Image;
+              return (
+                <div key={visual.id} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden hover:border-amber-500/20 transition-colors">
+                  {visual.thumbnailUrl ? (
+                    <div className="aspect-video bg-white/[0.03] relative">
+                      <img
+                        src={visual.thumbnailUrl}
+                        alt={visual.title ?? 'Visual'}
+                        className="w-full h-full object-cover opacity-80"
+                      />
+                    </div>
+                  ) : (
+                    <div className="aspect-video bg-white/[0.03] flex items-center justify-center">
+                      <Icon className="h-8 w-8 text-white/10" />
+                    </div>
+                  )}
+                  <div className="p-3">
+                    {visual.title && (
+                      <p className="text-xs text-white/70 mb-2 line-clamp-1">{visual.title}</p>
+                    )}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <p className="text-[10px] text-white/30">Views</p>
+                        <p className="text-xs font-medium text-white">{visual.views.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-white/30">Eng. Rate</p>
+                        <p className="text-xs font-medium text-amber-400">{visual.engagementRate.toFixed(1)}%</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-white/30">Saves</p>
+                        <p className="text-xs font-medium text-white">{visual.saves.toLocaleString()}</p>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-white/20 mt-2 flex items-center gap-1">
+                      <span className="capitalize">{visual.platform}</span>
+                      <span>·</span>
+                      <span className="capitalize">{visual.type}</span>
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Recommendations */}
+      {data.recommendations.length > 0 && (
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+          <h2 className="text-sm font-medium text-white mb-3">Visual Strategy Tips</h2>
+          <ul className="space-y-2">
+            {data.recommendations.map((rec, i) => (
+              <li key={i} className="text-sm text-white/50 flex gap-2">
+                <span className="text-amber-500/60 flex-shrink-0">→</span>
+                {rec}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }

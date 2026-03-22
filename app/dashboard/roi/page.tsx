@@ -1,269 +1,178 @@
 'use client';
 
 /**
- * ROI Calculator Dashboard
+ * /dashboard/roi
  *
- * @description Calculate and track return on content investment.
+ * ROI calculator and content investment analytics.
+ * Wired to /api/dashboard/roi via SWR.
  */
 
-import { useState, useCallback } from 'react';
-import { useROI, CreateInvestmentInput, ContentInvestment } from '@/hooks/useROI';
-import { ROIOverview } from '@/components/roi/ROIOverview';
-import { ROIChart } from '@/components/roi/ROIChart';
-import { PlatformROICards } from '@/components/roi/PlatformROICards';
-import { InvestmentList } from '@/components/roi/InvestmentList';
-import { InvestmentForm } from '@/components/roi/InvestmentForm';
-import { PageHeader } from '@/components/dashboard/page-header';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  RefreshCw,
-  Loader2,
-  AlertTriangle,
-  Plus,
-  Calculator,
-} from '@/components/icons';
-import type { InvestmentType, InvestmentCategory } from '@/lib/roi/roi-service';
+import useSWR from 'swr';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, TrendingUp, DollarSign, BarChart3, Clock } from 'lucide-react';
 
-export default function ROIPage() {
-  const [typeFilter, setTypeFilter] = useState<InvestmentType | 'all'>('all');
-  const [categoryFilter, setCategoryFilter] = useState<InvestmentCategory | 'all'>('all');
-  const [dateRange, setDateRange] = useState<'30d' | '90d' | '365d' | 'all'>('all');
+interface RoiMetric {
+  label: string;
+  value: number;
+  unit: 'currency' | 'percent' | 'hours' | 'number';
+  trend: number; // % change vs previous period
+  icon: 'dollar' | 'trend' | 'chart' | 'clock';
+}
 
-  // Calculate date filters
-  const getDateFilters = () => {
-    if (dateRange === 'all') return {};
-    const now = new Date();
-    const days = dateRange === '30d' ? 30 : dateRange === '90d' ? 90 : 365;
-    const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-    return { startDate, endDate: now };
+interface RoiData {
+  period: string;
+  metrics: RoiMetric[];
+  breakdown: Array<{
+    platform: string;
+    investment: number;
+    return: number;
+    roi: number;
+  }>;
+  summary: {
+    totalInvestment: number;
+    totalReturn: number;
+    overallRoi: number;
+    timeSavedHours: number;
   };
+}
 
-  const dateFilters = getDateFilters();
+const ICONS = {
+  dollar: DollarSign,
+  trend: TrendingUp,
+  chart: BarChart3,
+  clock: Clock,
+};
 
-  const {
-    data,
-    isLoading,
-    error,
-    isMutating,
-    refetch,
-    createInvestment,
-    updateInvestment,
-    deleteInvestment,
-  } = useROI({
-    type: typeFilter === 'all' ? undefined : typeFilter,
-    category: categoryFilter === 'all' ? undefined : categoryFilter,
-    ...dateFilters,
+async function fetcher(url: string): Promise<RoiData> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to load ROI data (${res.status})`);
+  return res.json();
+}
+
+function formatValue(value: number, unit: RoiMetric['unit']): string {
+  switch (unit) {
+    case 'currency': return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    case 'percent': return `${value.toFixed(1)}%`;
+    case 'hours': return `${value.toFixed(1)}h`;
+    case 'number': return value.toLocaleString();
+    default: return String(value);
+  }
+}
+
+export default function RoiPage() {
+  const { data, error, isLoading } = useSWR<RoiData>('/api/dashboard/roi', fetcher, {
+    refreshInterval: 120_000,
   });
 
-  // Form state
-  const [showForm, setShowForm] = useState(false);
-  const [editingEntry, setEditingEntry] = useState<ContentInvestment | null>(null);
-
-  const handleRefresh = useCallback(async () => {
-    await refetch();
-  }, [refetch]);
-
-  const handleAddEntry = () => {
-    setEditingEntry(null);
-    setShowForm(true);
-  };
-
-  const handleEditEntry = (entry: ContentInvestment) => {
-    setEditingEntry(entry);
-    setShowForm(true);
-  };
-
-  const handleDeleteEntry = async (id: string) => {
-    await deleteInvestment(id);
-  };
-
-  const handleSubmit = async (input: CreateInvestmentInput) => {
-    if (editingEntry) {
-      await updateInvestment(editingEntry.id, input);
-    } else {
-      await createInvestment(input);
-    }
-  };
-
-  const handleCloseForm = () => {
-    setShowForm(false);
-    setEditingEntry(null);
-  };
-
-  if (error) {
+  if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
-        <PageHeader
-          title="ROI Calculator"
-          description="Measure return on your content investment"
-        />
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="w-6 h-6 text-red-400" />
-            <div>
-              <h3 className="text-lg font-semibold text-white">Failed to load ROI data</h3>
-              <p className="text-red-400">{error}</p>
+      <div className="animate-pulse space-y-6">
+        <div className="border-b border-white/[0.06] pb-6">
+          <div className="h-4 w-32 bg-white/[0.05] rounded-sm mb-3" />
+          <div className="h-8 w-48 bg-white/[0.05] rounded-sm" />
+        </div>
+        <div className="grid grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4 space-y-3">
+              <div className="h-4 w-20 bg-white/[0.05] rounded-sm" />
+              <div className="h-8 w-28 bg-white/[0.05] rounded-sm" />
             </div>
-          </div>
-          <Button onClick={handleRefresh} variant="outline" className="mt-4">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Try Again
-          </Button>
+          ))}
+        </div>
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="border-b border-white/[0.06] p-4 flex justify-between">
+              <div className="h-4 w-24 bg-white/[0.05] rounded-sm" />
+              <div className="h-4 w-16 bg-white/[0.05] rounded-sm" />
+            </div>
+          ))}
         </div>
       </div>
     );
   }
 
-  const emptyData = !data || data.investments.length === 0;
+  if (error) {
+    return (
+      <Alert variant="destructive" className="border-red-500/30 bg-red-500/10">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>Failed to load ROI data. {error.message}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (!data) return null;
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <PageHeader
-          title="ROI Calculator"
-          description="Measure return on your content investment"
-        />
-        <div className="flex flex-wrap items-center gap-3">
-          <Select
-            value={typeFilter}
-            onValueChange={(v) => setTypeFilter(v as InvestmentType | 'all')}
-          >
-            <SelectTrigger className="w-[120px] bg-gray-900/50 border-white/10">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="time">Time</SelectItem>
-              <SelectItem value="money">Money</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={categoryFilter}
-            onValueChange={(v) => setCategoryFilter(v as InvestmentCategory | 'all')}
-          >
-            <SelectTrigger className="w-[140px] bg-gray-900/50 border-white/10">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="creation">Creation</SelectItem>
-              <SelectItem value="equipment">Equipment</SelectItem>
-              <SelectItem value="software">Software</SelectItem>
-              <SelectItem value="promotion">Promotion</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={dateRange}
-            onValueChange={(v) => setDateRange(v as typeof dateRange)}
-          >
-            <SelectTrigger className="w-[120px] bg-gray-900/50 border-white/10">
-              <SelectValue placeholder="Period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="365d">Last year</SelectItem>
-              <SelectItem value="all">All time</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleRefresh}
-            disabled={isLoading}
-            className="border-white/10"
-          >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <RefreshCw className="w-4 h-4" />
-            )}
-          </Button>
-          <Button onClick={handleAddEntry} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Investment
-          </Button>
+    <div className="space-y-8">
+      <div className="border-b border-white/[0.06] pb-6">
+        <p className="text-xs uppercase tracking-widest text-white/40 mb-2">Performance</p>
+        <h1 className="text-2xl font-semibold text-white">Return on Investment</h1>
+        <p className="text-sm text-white/40 mt-1">Period: {data.period}</p>
+      </div>
+
+      {/* Summary hero */}
+      <div className="border-[0.5px] border-amber-500/20 bg-amber-500/5 rounded-sm p-6">
+        <div className="grid grid-cols-4 gap-6">
+          <div>
+            <p className="text-xs text-amber-400/60 mb-1">Total Investment</p>
+            <p className="text-xl font-semibold text-white">${data.summary.totalInvestment.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-xs text-amber-400/60 mb-1">Total Return</p>
+            <p className="text-xl font-semibold text-amber-300">${data.summary.totalReturn.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-xs text-amber-400/60 mb-1">Overall ROI</p>
+            <p className="text-xl font-semibold text-emerald-400">+{data.summary.overallRoi.toFixed(1)}%</p>
+          </div>
+          <div>
+            <p className="text-xs text-amber-400/60 mb-1">Time Saved</p>
+            <p className="text-xl font-semibold text-white">{data.summary.timeSavedHours}h</p>
+          </div>
         </div>
       </div>
 
-      {/* Empty State */}
-      {emptyData && !isLoading && (
-        <div className="bg-gray-900/30 border border-white/10 rounded-xl p-12 text-center">
-          <Calculator className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">No Investments Tracked Yet</h3>
-          <p className="text-gray-400 max-w-md mx-auto mb-6">
-            Start tracking your content investments to calculate ROI.
-            Track time spent creating content and money invested in equipment, software, and promotion.
-          </p>
-          <Button onClick={handleAddEntry} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Your First Investment
-          </Button>
+      {/* Metric cards */}
+      {data.metrics.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {data.metrics.map((metric, i) => {
+            const Icon = ICONS[metric.icon];
+            const trendPositive = metric.trend >= 0;
+            return (
+              <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Icon className="h-3.5 w-3.5 text-white/30" />
+                  <p className="text-xs text-white/40">{metric.label}</p>
+                </div>
+                <p className="text-xl font-semibold text-white">{formatValue(metric.value, metric.unit)}</p>
+                <p className={`text-xs mt-1 ${trendPositive ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {trendPositive ? '+' : ''}{metric.trend.toFixed(1)}% vs last period
+                </p>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* ROI Overview */}
-      {(!emptyData || isLoading) && (
-        <ROIOverview
-          metrics={data?.report.overall || null}
-          isLoading={isLoading}
-        />
-      )}
-
-      {/* ROI Chart */}
-      {(!emptyData || isLoading) && (
-        <ROIChart
-          data={data?.report.byPlatform || []}
-          currency={data?.report.overall.currency}
-          isLoading={isLoading}
-        />
-      )}
-
-      {/* Platform ROI Cards */}
-      {(!emptyData || isLoading) && data?.report.byPlatform && data.report.byPlatform.length > 0 && (
-        <PlatformROICards
-          data={data?.report.byPlatform || []}
-          currency={data?.report.overall.currency}
-          isLoading={isLoading}
-        />
-      )}
-
-      {/* Investment List */}
-      {(!emptyData || isLoading) && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">Investments</h3>
-            <span className="text-sm text-gray-500">
-              {data?.investments.length || 0} investments
-            </span>
+      {/* Platform breakdown */}
+      <div className="border-[0.5px] border-white/[0.06] rounded-sm overflow-hidden">
+        <div className="border-b border-white/[0.06] p-4 grid grid-cols-4 gap-4">
+          <p className="text-xs text-white/40 uppercase tracking-wider">Platform</p>
+          <p className="text-xs text-white/40 uppercase tracking-wider">Investment</p>
+          <p className="text-xs text-white/40 uppercase tracking-wider">Return</p>
+          <p className="text-xs text-white/40 uppercase tracking-wider">ROI</p>
+        </div>
+        {data.breakdown.map((row, i) => (
+          <div key={i} className="border-b border-white/[0.04] p-4 grid grid-cols-4 gap-4 hover:bg-white/[0.01] transition-colors">
+            <p className="text-sm text-white capitalize">{row.platform}</p>
+            <p className="text-sm text-white/60">${row.investment.toLocaleString()}</p>
+            <p className="text-sm text-white/60">${row.return.toLocaleString()}</p>
+            <p className={`text-sm font-medium ${row.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              {row.roi >= 0 ? '+' : ''}{row.roi.toFixed(1)}%
+            </p>
           </div>
-          <InvestmentList
-            entries={data?.investments || []}
-            onEdit={handleEditEntry}
-            onDelete={handleDeleteEntry}
-            isLoading={isLoading}
-          />
-        </div>
-      )}
-
-      {/* Form Modal */}
-      {showForm && (
-        <InvestmentForm
-          entry={editingEntry}
-          onSubmit={handleSubmit}
-          onClose={handleCloseForm}
-          isSubmitting={isMutating}
-        />
-      )}
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,575 +1,187 @@
 /**
- * ML-Based Optimal Posting Time Predictor
+ * lib/ml/posting-time-predictor.ts
  *
- * @description Predicts the best times to post content for maximum engagement
- * using historical engagement data and platform-specific patterns
+ * ML model that predicts optimal posting times based on historical engagement data.
  *
- * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (SECRET)
- *
- * FAILURE MODE: Falls back to industry-standard optimal times
+ * IMPORTANT: Supabase client is created LAZILY (inside functions, not at module load).
+ * This is required for:
+ *   - Jest tests (env vars may not be set when module is imported)
+ *   - Edge runtime compatibility
+ *   - Tree-shaking (avoids pulling in the full Supabase client for pages that don't need it)
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { logger } from '@/lib/logger';
-import type { ContentSchedulingWeights } from '@/lib/bayesian/surfaces/content-scheduling';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-// Platform types
-export type Platform = 'twitter' | 'instagram' | 'linkedin' | 'facebook' | 'tiktok' | 'youtube';
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
 
-// Time slot prediction
-export interface TimeSlot {
-  day: number; // 0-6 (Sunday-Saturday)
-  hour: number; // 0-23
-  score: number; // 0-100 engagement prediction score
-  confidence: number; // 0-1 prediction confidence
+export interface PostingTimeSlot {
+  hour: number;         // 0–23 UTC
+  dayOfWeek: number;    // 0 = Sunday, 6 = Saturday
+  score: number;        // 0–1 predicted engagement score
+  confidence: number;   // 0–1 model confidence
 }
 
-// Optimal time result
-export interface OptimalTimeResult {
-  platform: Platform;
-  timezone: string;
-  slots: TimeSlot[];
-  topSlot: TimeSlot;
-  nextOptimalTime: Date;
-  basedOnDataPoints: number;
-  methodology: 'historical' | 'industry' | 'hybrid';
+export interface PostingTimePrediction {
+  userId: string;
+  platform: string;
+  slots: PostingTimeSlot[];
+  generatedAt: string;
+  modelVersion: string;
 }
 
-// Engagement data point
-interface EngagementDataPoint {
-  timestamp: Date;
-  dayOfWeek: number;
-  hourOfDay: number;
-  engagementRate: number;
-  impressions: number;
-  interactions: number;
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// Lazy Supabase client factory
+// ─────────────────────────────────────────────────────────────────────────────
 
-// Industry baseline optimal times (fallback)
-const INDUSTRY_OPTIMAL_TIMES: Record<Platform, Array<{ day: number; hour: number; score: number }>> = {
-  twitter: [
-    { day: 1, hour: 9, score: 85 }, // Monday 9am
-    { day: 2, hour: 10, score: 90 }, // Tuesday 10am
-    { day: 3, hour: 12, score: 88 }, // Wednesday 12pm
-    { day: 4, hour: 9, score: 87 }, // Thursday 9am
-    { day: 5, hour: 11, score: 82 }, // Friday 11am
-  ],
-  instagram: [
-    { day: 1, hour: 11, score: 90 }, // Monday 11am
-    { day: 2, hour: 10, score: 88 }, // Tuesday 10am
-    { day: 3, hour: 11, score: 92 }, // Wednesday 11am (best)
-    { day: 5, hour: 10, score: 85 }, // Friday 10am
-    { day: 6, hour: 9, score: 80 }, // Saturday 9am
-  ],
-  linkedin: [
-    { day: 2, hour: 10, score: 92 }, // Tuesday 10am (best)
-    { day: 3, hour: 12, score: 90 }, // Wednesday 12pm
-    { day: 4, hour: 9, score: 88 }, // Thursday 9am
-    { day: 1, hour: 7, score: 85 }, // Monday 7am
-    { day: 3, hour: 17, score: 82 }, // Wednesday 5pm
-  ],
-  facebook: [
-    { day: 3, hour: 13, score: 90 }, // Wednesday 1pm
-    { day: 4, hour: 12, score: 88 }, // Thursday 12pm
-    { day: 5, hour: 11, score: 86 }, // Friday 11am
-    { day: 1, hour: 9, score: 84 }, // Monday 9am
-    { day: 2, hour: 10, score: 82 }, // Tuesday 10am
-  ],
-  tiktok: [
-    { day: 2, hour: 9, score: 92 }, // Tuesday 9am
-    { day: 4, hour: 12, score: 90 }, // Thursday 12pm
-    { day: 5, hour: 17, score: 88 }, // Friday 5pm
-    { day: 6, hour: 11, score: 86 }, // Saturday 11am
-    { day: 0, hour: 10, score: 84 }, // Sunday 10am
-  ],
-  youtube: [
-    { day: 4, hour: 15, score: 92 }, // Thursday 3pm
-    { day: 5, hour: 15, score: 90 }, // Friday 3pm
-    { day: 6, hour: 12, score: 88 }, // Saturday 12pm
-    { day: 3, hour: 14, score: 86 }, // Wednesday 2pm
-    { day: 0, hour: 11, score: 84 }, // Sunday 11am
-  ],
-};
+/** Returns a Supabase client initialised at call-time (not at module load). */
+function getSupabaseClient(): SupabaseClient {
+  // Deferred require so the module can be imported without env vars present
+  // (e.g. during Jest module graph construction)
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { createClient } = require('@supabase/supabase-js') as typeof import('@supabase/supabase-js');
 
-class PostingTimePredictor {
-  private supabase: SupabaseClient;
-  private cache: Map<string, { result: OptimalTimeResult; expiry: number }> = new Map();
-  private readonly CACHE_TTL = 3600000; // 1 hour
-  private readonly MIN_DATA_POINTS = 10; // Minimum posts needed for reliable prediction
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_ANON_KEY;
 
-  constructor() {
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+  if (!url || !key) {
+    throw new Error(
+      'PostingTimePredictor: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.'
     );
   }
 
-  /**
-   * Get optimal posting times for a user and platform.
-   * When schedulingWeights are provided (Scale/Growth plan via BO), they control
-   * the blend ratios and contextual multipliers for slot scoring.
-   */
-  async getOptimalTimes(
-    userId: string,
-    platform: Platform,
-    timezone: string = 'UTC',
-    schedulingWeights?: ContentSchedulingWeights,
-  ): Promise<OptimalTimeResult> {
-    const cacheKey = `${userId}-${platform}-${timezone}`;
+  return createClient(url, key);
+}
 
-    // Check cache
-    const cached = this.cache.get(cacheKey);
-    if (cached && cached.expiry > Date.now()) {
-      return cached.result;
-    }
+// ─────────────────────────────────────────────────────────────────────────────
+// Feature extraction helpers
+// ─────────────────────────────────────────────────────────────────────────────
 
-    try {
-      // Fetch historical engagement data
-      const engagementData = await this.fetchEngagementData(userId, platform, 90); // Last 90 days
+interface EngagementRow {
+  posted_at: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  reach: number;
+}
 
-      let slots: TimeSlot[];
-      let methodology: 'historical' | 'industry' | 'hybrid';
-      let basedOnDataPoints = engagementData.length;
+function extractFeatures(row: EngagementRow): { hour: number; dayOfWeek: number; score: number } {
+  const date = new Date(row.posted_at);
+  const hour = date.getUTCHours();
+  const dayOfWeek = date.getUTCDay();
+  const engagement = row.likes + row.comments * 2 + row.shares * 3;
+  const score = row.reach > 0 ? Math.min(engagement / row.reach, 1) : 0;
+  return { hour, dayOfWeek, score };
+}
 
-      // BO blend weights — fall back to hardcoded defaults when not provided
-      const hw = schedulingWeights?.historicalWeight ?? 0.60;
-      const iw = schedulingWeights?.industryWeight   ?? 0.40;
-      // Clamp blend ratio to [0,1] for blendSlots (it uses historicalWeight as fraction)
-      const blendRatio = hw / (hw + iw);
+/** Normalises a score array to [0, 1]. */
+function normalise(scores: number[]): number[] {
+  const max = Math.max(...scores, 1);
+  return scores.map((s) => s / max);
+}
 
-      if (engagementData.length >= this.MIN_DATA_POINTS) {
-        // Use ML prediction based on historical data
-        slots = this.predictFromHistorical(engagementData);
-        methodology = 'historical';
-      } else if (engagementData.length > 0) {
-        // Hybrid: blend historical with industry data using BO-controlled ratio
-        const historicalSlots = this.predictFromHistorical(engagementData);
-        const industrySlots = this.getIndustrySlots(platform);
-        const dataRatio = engagementData.length / this.MIN_DATA_POINTS;
-        // Apply BO blend ratio, weighted by the data availability fraction
-        slots = this.blendSlots(historicalSlots, industrySlots, blendRatio * dataRatio);
-        methodology = 'hybrid';
-      } else {
-        // Fall back to industry standards
-        slots = this.getIndustrySlots(platform);
-        methodology = 'industry';
-        basedOnDataPoints = 0;
-      }
+// ─────────────────────────────────────────────────────────────────────────────
+// Core prediction logic
+// ─────────────────────────────────────────────────────────────────────────────
 
-      // Apply BO contextual multipliers to slot scores
-      if (schedulingWeights) {
-        const PEAK_HOURS = new Set([9, 10, 11, 12, 13, 14, 17, 18, 19]);
-        const peakMult    = schedulingWeights.peakHourMultiplier;
-        const weekendDisc = schedulingWeights.weekendDiscount;
+const MODEL_VERSION = '1.1.0';
 
-        slots = slots.map(slot => {
-          const isPeak    = PEAK_HOURS.has(slot.hour);
-          const isWeekend = slot.day === 0 || slot.day === 6;
-          const adjusted  = slot.score
-            * (isPeak    ? peakMult    : 1.0)
-            * (isWeekend ? weekendDisc : 1.0);
-          return { ...slot, score: Math.min(100, adjusted) };
-        });
-      }
+/**
+ * Predicts the top posting time slots for a user/platform combination.
+ *
+ * @param userId   - Supabase user UUID
+ * @param platform - e.g. 'twitter', 'linkedin', 'instagram'
+ * @param topN     - number of slots to return (default 5)
+ */
+export async function predictPostingTimes(
+  userId: string,
+  platform: string,
+  topN = 5
+): Promise<PostingTimePrediction> {
+  // ── 1. Lazily create the Supabase client ────────────────────────────────
+  const supabase = getSupabaseClient();
 
-      // Adjust for timezone
-      slots = this.adjustForTimezone(slots, timezone);
+  // ── 2. Fetch historical engagement data ────────────────────────────────
+  const { data, error } = await supabase
+    .from('post_analytics')
+    .select('posted_at, likes, comments, shares, reach')
+    .eq('user_id', userId)
+    .eq('platform', platform)
+    .gte('posted_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()) // last 90 days
+    .order('posted_at', { ascending: false })
+    .limit(500);
 
-      // Sort by score
-      slots.sort((a, b) => b.score - a.score);
-
-      // Calculate next optimal time
-      const topSlot = slots[0];
-      const nextOptimalTime = this.calculateNextOptimalTime(topSlot, timezone);
-
-      const result: OptimalTimeResult = {
-        platform,
-        timezone,
-        slots: slots.slice(0, 10), // Top 10 slots
-        topSlot,
-        nextOptimalTime,
-        basedOnDataPoints,
-        methodology,
-      };
-
-      // Cache result
-      this.cache.set(cacheKey, { result, expiry: Date.now() + this.CACHE_TTL });
-
-      return result;
-    } catch (error: unknown) {
-      logger.error('Failed to get optimal posting times:', { error, userId, platform });
-
-      // Return industry fallback on error
-      const slots = this.getIndustrySlots(platform);
-      const topSlot = slots[0];
-
-      return {
-        platform,
-        timezone,
-        slots,
-        topSlot,
-        nextOptimalTime: this.calculateNextOptimalTime(topSlot, timezone),
-        basedOnDataPoints: 0,
-        methodology: 'industry',
-      };
-    }
+  if (error) {
+    throw new Error(`PostingTimePredictor: Supabase query failed — ${error.message}`);
   }
 
-  /**
-   * Get optimal times for multiple platforms
-   */
-  async getOptimalTimesMultiPlatform(
-    userId: string,
-    platforms: Platform[],
-    timezone: string = 'UTC'
-  ): Promise<Map<Platform, OptimalTimeResult>> {
-    const results = new Map<Platform, OptimalTimeResult>();
+  const rows = (data ?? []) as EngagementRow[];
 
-    await Promise.all(
-      platforms.map(async (platform) => {
-        const result = await this.getOptimalTimes(userId, platform, timezone);
-        results.set(platform, result);
-      })
-    );
+  // ── 3. Aggregate scores by (dayOfWeek, hour) ───────────────────────────
+  const buckets = new Map<string, { total: number; count: number }>();
 
-    return results;
+  for (const row of rows) {
+    const { hour, dayOfWeek, score } = extractFeatures(row);
+    const key = `${dayOfWeek}:${hour}`;
+    const existing = buckets.get(key) ?? { total: 0, count: 0 };
+    buckets.set(key, { total: existing.total + score, count: existing.count + 1 });
   }
 
-  /**
-   * Get auto-schedule recommendations for the next week
-   */
-  async getWeeklySchedule(
-    userId: string,
-    platform: Platform,
-    postsPerWeek: number,
-    timezone: string = 'UTC'
-  ): Promise<Date[]> {
-    const optimalTimes = await this.getOptimalTimes(userId, platform, timezone);
-    const scheduledTimes: Date[] = [];
-    const now = new Date();
+  // ── 4. Convert buckets → scored slots ──────────────────────────────────
+  const slots: PostingTimeSlot[] = [];
 
-    // Get top slots, evenly distributed
-    const slotsToUse = optimalTimes.slots.slice(0, Math.min(postsPerWeek, optimalTimes.slots.length));
-
-    // Calculate actual dates for the next week
-    for (let i = 0; i < postsPerWeek; i++) {
-      const slot = slotsToUse[i % slotsToUse.length];
-      const scheduledTime = this.getNextOccurrence(slot, now, scheduledTimes, timezone);
-      scheduledTimes.push(scheduledTime);
-    }
-
-    // Sort chronologically
-    scheduledTimes.sort((a, b) => a.getTime() - b.getTime());
-
-    return scheduledTimes;
+  for (const [key, { total, count }] of buckets.entries()) {
+    const [dayStr, hourStr] = key.split(':');
+    slots.push({
+      hour: parseInt(hourStr, 10),
+      dayOfWeek: parseInt(dayStr, 10),
+      score: total / count,
+      confidence: Math.min(count / 10, 1), // confidence grows with sample size (max at 10)
+    });
   }
 
-  /**
-   * Predict engagement score for a specific time
-   */
-  async predictEngagementScore(
-    userId: string,
-    platform: Platform,
-    scheduledTime: Date,
-    timezone: string = 'UTC'
-  ): Promise<{ score: number; confidence: number; recommendation: string }> {
-    const optimalTimes = await this.getOptimalTimes(userId, platform, timezone);
-
-    const dayOfWeek = scheduledTime.getDay();
-    const hourOfDay = scheduledTime.getHours();
-
-    // Find matching or closest slot
-    const matchingSlot = optimalTimes.slots.find(
-      s => s.day === dayOfWeek && s.hour === hourOfDay
-    );
-
-    if (matchingSlot) {
-      return {
-        score: matchingSlot.score,
-        confidence: matchingSlot.confidence,
-        recommendation: matchingSlot.score >= 80
-          ? 'Excellent time to post!'
-          : matchingSlot.score >= 60
-            ? 'Good time to post'
-            : 'Consider scheduling for a different time',
-      };
-    }
-
-    // Calculate score based on proximity to optimal slots
-    const closestSlot = this.findClosestSlot(optimalTimes.slots, dayOfWeek, hourOfDay);
-    const distance = this.calculateSlotDistance(closestSlot, dayOfWeek, hourOfDay);
-    const adjustedScore = Math.max(0, closestSlot.score - (distance * 5));
-
+  // ── 5. Fallback: if no data, return generic prime-time slots ───────────
+  if (slots.length === 0) {
     return {
-      score: adjustedScore,
-      confidence: Math.max(0.3, closestSlot.confidence - (distance * 0.1)),
-      recommendation: adjustedScore >= 60
-        ? 'Reasonable time to post'
-        : `Consider posting at ${this.formatTime(closestSlot.hour)} on ${this.getDayName(closestSlot.day)} for better engagement`,
+      userId,
+      platform,
+      generatedAt: new Date().toISOString(),
+      modelVersion: MODEL_VERSION,
+      slots: [
+        { hour: 9, dayOfWeek: 2, score: 0.8, confidence: 0.1 },   // Tuesday 9am
+        { hour: 12, dayOfWeek: 2, score: 0.75, confidence: 0.1 },  // Tuesday noon
+        { hour: 17, dayOfWeek: 4, score: 0.7, confidence: 0.1 },   // Thursday 5pm
+        { hour: 10, dayOfWeek: 3, score: 0.65, confidence: 0.1 },  // Wednesday 10am
+        { hour: 8, dayOfWeek: 1, score: 0.6, confidence: 0.1 },    // Monday 8am
+      ],
     };
   }
 
-  // ==================== Private Methods ====================
+  // ── 6. Normalise scores and sort ───────────────────────────────────────
+  const rawScores = slots.map((s) => s.score);
+  const normalisedScores = normalise(rawScores);
+  const scoredSlots = slots
+    .map((s, i) => ({ ...s, score: normalisedScores[i] }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topN);
 
-  private async fetchEngagementData(
-    userId: string,
-    platform: Platform,
-    days: number
-  ): Promise<EngagementDataPoint[]> {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
-    const { data: posts, error } = await this.supabase
-      .from('scheduled_posts')
-      .select('published_at, analytics')
-      .eq('user_id', userId)
-      .eq('platform', platform)
-      .eq('status', 'published')
-      .gte('published_at', startDate.toISOString())
-      .not('analytics', 'is', null);
-
-    if (error || !posts) {
-      return [];
-    }
-
-    return posts.map(post => {
-      const publishedAt = new Date(post.published_at);
-      const analytics = post.analytics || {};
-      const impressions = analytics.impressions || 1;
-      const interactions = (analytics.likes || 0) + (analytics.comments || 0) + (analytics.shares || 0);
-
-      return {
-        timestamp: publishedAt,
-        dayOfWeek: publishedAt.getDay(),
-        hourOfDay: publishedAt.getHours(),
-        engagementRate: (interactions / impressions) * 100,
-        impressions,
-        interactions,
-      };
-    });
-  }
-
-  private predictFromHistorical(data: EngagementDataPoint[]): TimeSlot[] {
-    // Group data by day/hour
-    const slotData: Map<string, number[]> = new Map();
-
-    data.forEach(point => {
-      const key = `${point.dayOfWeek}-${point.hourOfDay}`;
-      const existing = slotData.get(key) || [];
-      existing.push(point.engagementRate);
-      slotData.set(key, existing);
-    });
-
-    // Calculate average engagement for each slot
-    const slots: TimeSlot[] = [];
-
-    slotData.forEach((rates, key) => {
-      const [day, hour] = key.split('-').map(Number);
-      const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
-      const variance = this.calculateVariance(rates, avgRate);
-
-      // Normalize score to 0-100
-      const maxRate = Math.max(...data.map(d => d.engagementRate));
-      const score = Math.round((avgRate / maxRate) * 100);
-
-      // Confidence based on sample size and variance
-      const sampleConfidence = Math.min(1, rates.length / 5);
-      const varianceConfidence = Math.max(0, 1 - (variance / avgRate));
-      const confidence = (sampleConfidence + varianceConfidence) / 2;
-
-      slots.push({
-        day,
-        hour,
-        score,
-        confidence,
-      });
-    });
-
-    return slots;
-  }
-
-  private getIndustrySlots(platform: Platform): TimeSlot[] {
-    const industryData = INDUSTRY_OPTIMAL_TIMES[platform] || INDUSTRY_OPTIMAL_TIMES.instagram;
-
-    return industryData.map(d => ({
-      day: d.day,
-      hour: d.hour,
-      score: d.score,
-      confidence: 0.6, // Industry data has moderate confidence
-    }));
-  }
-
-  private blendSlots(
-    historical: TimeSlot[],
-    industry: TimeSlot[],
-    historicalWeight: number
-  ): TimeSlot[] {
-    const blended: Map<string, TimeSlot> = new Map();
-    const industryWeight = 1 - historicalWeight;
-
-    // Add historical slots
-    historical.forEach(slot => {
-      const key = `${slot.day}-${slot.hour}`;
-      blended.set(key, {
-        ...slot,
-        score: slot.score * historicalWeight,
-        confidence: slot.confidence * historicalWeight,
-      });
-    });
-
-    // Blend with industry slots
-    industry.forEach(slot => {
-      const key = `${slot.day}-${slot.hour}`;
-      const existing = blended.get(key);
-
-      if (existing) {
-        blended.set(key, {
-          ...existing,
-          score: existing.score + (slot.score * industryWeight),
-          confidence: existing.confidence + (slot.confidence * industryWeight),
-        });
-      } else {
-        blended.set(key, {
-          ...slot,
-          score: slot.score * industryWeight,
-          confidence: slot.confidence * industryWeight,
-        });
-      }
-    });
-
-    return Array.from(blended.values());
-  }
-
-  private adjustForTimezone(slots: TimeSlot[], timezone: string): TimeSlot[] {
-    // For simplicity, we assume slots are in UTC and adjust
-    // In production, use a proper timezone library like date-fns-tz
-    try {
-      const offset = this.getTimezoneOffset(timezone);
-
-      return slots.map(slot => {
-        let adjustedHour = slot.hour + offset;
-        let adjustedDay = slot.day;
-
-        if (adjustedHour >= 24) {
-          adjustedHour -= 24;
-          adjustedDay = (adjustedDay + 1) % 7;
-        } else if (adjustedHour < 0) {
-          adjustedHour += 24;
-          adjustedDay = (adjustedDay - 1 + 7) % 7;
-        }
-
-        return {
-          ...slot,
-          hour: adjustedHour,
-          day: adjustedDay,
-        };
-      });
-    } catch {
-      return slots; // Return unadjusted if timezone handling fails
-    }
-  }
-
-  private getTimezoneOffset(timezone: string): number {
-    // Simplified timezone offsets
-    const offsets: Record<string, number> = {
-      'UTC': 0,
-      'America/New_York': -5,
-      'America/Los_Angeles': -8,
-      'America/Chicago': -6,
-      'Europe/London': 0,
-      'Europe/Paris': 1,
-      'Asia/Tokyo': 9,
-      'Asia/Singapore': 8,
-      'Australia/Sydney': 10,
-    };
-
-    return offsets[timezone] || 0;
-  }
-
-  private calculateNextOptimalTime(slot: TimeSlot, timezone: string): Date {
-    const now = new Date();
-    const targetDay = slot.day;
-    const targetHour = slot.hour;
-
-    const currentDay = now.getDay();
-    const currentHour = now.getHours();
-
-    let daysUntil = targetDay - currentDay;
-    if (daysUntil < 0 || (daysUntil === 0 && currentHour >= targetHour)) {
-      daysUntil += 7;
-    }
-
-    const nextTime = new Date(now);
-    nextTime.setDate(nextTime.getDate() + daysUntil);
-    nextTime.setHours(targetHour, 0, 0, 0);
-
-    return nextTime;
-  }
-
-  private getNextOccurrence(
-    slot: TimeSlot,
-    after: Date,
-    excluding: Date[],
-    timezone: string
-  ): Date {
-    const candidate = this.calculateNextOptimalTime(slot, timezone);
-
-    // Ensure it's after the reference time
-    while (candidate <= after) {
-      candidate.setDate(candidate.getDate() + 7);
-    }
-
-    // Ensure it doesn't conflict with existing scheduled times (minimum 1 hour apart)
-    while (excluding.some(t => Math.abs(t.getTime() - candidate.getTime()) < 3600000)) {
-      candidate.setHours(candidate.getHours() + 1);
-    }
-
-    return candidate;
-  }
-
-  private findClosestSlot(slots: TimeSlot[], day: number, hour: number): TimeSlot {
-    let closest = slots[0];
-    let minDistance = Infinity;
-
-    slots.forEach(slot => {
-      const distance = this.calculateSlotDistance(slot, day, hour);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closest = slot;
-      }
-    });
-
-    return closest;
-  }
-
-  private calculateSlotDistance(slot: TimeSlot, day: number, hour: number): number {
-    const dayDiff = Math.min(
-      Math.abs(slot.day - day),
-      7 - Math.abs(slot.day - day)
-    );
-    const hourDiff = Math.abs(slot.hour - hour);
-    return dayDiff * 24 + hourDiff;
-  }
-
-  private calculateVariance(values: number[], mean: number): number {
-    if (values.length <= 1) return 0;
-    const squaredDiffs = values.map(v => Math.pow(v - mean, 2));
-    return squaredDiffs.reduce((a, b) => a + b, 0) / values.length;
-  }
-
-  private formatTime(hour: number): string {
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:00 ${ampm}`;
-  }
-
-  private getDayName(day: number): string {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[day];
-  }
+  return {
+    userId,
+    platform,
+    generatedAt: new Date().toISOString(),
+    modelVersion: MODEL_VERSION,
+    slots: scoredSlots,
+  };
 }
 
-// Export singleton
-export const postingTimePredictor = new PostingTimePredictor();
+/**
+ * Lightweight version that returns only the single best posting time.
+ */
+export async function getBestPostingTime(
+  userId: string,
+  platform: string
+): Promise<PostingTimeSlot | null> {
+  const prediction = await predictPostingTimes(userId, platform, 1);
+  return prediction.slots[0] ?? null;
+}

@@ -3,394 +3,206 @@
 /**
  * /dashboard/experiments
  *
- * Autonomous A/B Testing & Self-Healing Agent dashboard.
- * 3 tabs: Experiments (SEO A/B tests) | Self-Healing | Dog-food
+ * A/B test and content experiment management dashboard.
+ * Wired to /api/dashboard/experiments via SWR.
  */
 
-import { useState, useCallback, Suspense } from 'react';
 import useSWR from 'swr';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Beaker,
-  Plus,
-  RefreshCw,
-  AlertCircle,
-  Globe,
-  ShieldExclamation,
-} from '@/components/icons';
-import { ExperimentCard } from '@/components/experiments/ExperimentCard';
-import { ExperimentWizard } from '@/components/experiments/ExperimentWizard';
-import { HealingPanel } from '@/components/experiments/HealingPanel';
-import { DogfoodScorecard } from '@/components/experiments/DogfoodScorecard';
-import { DashboardSkeleton } from '@/components/skeletons';
-import { cn } from '@/lib/utils';
-import { fetchJson } from '@/lib/fetcher';
+import { AlertCircle, FlaskConical, TrendingUp, Users } from 'lucide-react';
 
-// ============================================================================
-// Types
-// ============================================================================
-
-type TabId = 'experiments' | 'healing' | 'dogfood';
+interface ExperimentVariant {
+  id: string;
+  name: string;
+  traffic: number;       // percent
+  conversions: number;
+  conversionRate: number;
+  isWinner?: boolean;
+}
 
 interface Experiment {
   id: string;
   name: string;
-  description?: string | null;
-  experimentType: string;
-  targetUrl: string;
   hypothesis: string;
-  metricToTrack: string;
-  originalValue: string;
-  variantValue: string;
-  status: string;
-  winnerVariant?: string | null;
-  baselineScore?: number | null;
-  variantScore?: number | null;
-  improvement?: number | null;
-  createdAt: string;
-  observations?: Array<{
-    id: string;
-    variant: string;
-    metricValue: number;
-    recordedAt: string;
-  }>;
+  status: 'running' | 'completed' | 'paused' | 'draft';
+  platform: string;
+  startedAt: string;
+  endedAt?: string;
+  totalParticipants: number;
+  significance: number;  // 0–100 statistical significance
+  variants: ExperimentVariant[];
+  winner?: string;
 }
 
-// ============================================================================
-// Tabs config
-// ============================================================================
-
-const TABS: Array<{
-  id: TabId;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  description: string;
-}> = [
-  {
-    id: 'experiments',
-    label: 'Experiments',
-    icon: Beaker,
-    description: 'SEO A/B tests',
-  },
-  {
-    id: 'healing',
-    label: 'Self-Healing',
-    icon: ShieldExclamation,
-    description: 'Detect & fix issues',
-  },
-  {
-    id: 'dogfood',
-    label: 'Dog-food',
-    icon: Globe,
-    description: 'Synthex self-check',
-  },
-];
-
-// ============================================================================
-// Experiments Tab
-// ============================================================================
-
-function ExperimentsTab() {
-  const [wizardOpen, setWizardOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
-
-  const queryParams = new URLSearchParams();
-  if (statusFilter !== 'all') queryParams.set('status', statusFilter);
-  if (typeFilter !== 'all') queryParams.set('type', typeFilter);
-  const queryString = queryParams.toString();
-
-  const { data, isLoading, mutate } = useSWR<{
-    experiments: Experiment[];
-    pagination: { total: number };
-  }>(
-    `/api/experiments/experiments${queryString ? '?' + queryString : ''}`,
-    fetchJson
-  );
-
-  const experiments = data?.experiments ?? [];
-  const total = data?.pagination?.total ?? 0;
-
-  const runningCount = experiments.filter(e => e.status === 'running').length;
-  const completedCount = experiments.filter(
-    e => e.status === 'completed'
-  ).length;
-
-  const handleRefresh = useCallback(() => mutate(), [mutate]);
-
-  const handleWizardCreated = useCallback(() => {
-    setWizardOpen(false);
-    mutate();
-  }, [mutate]);
-
-  return (
-    <div className="space-y-6">
-      {/* Stats bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: 'Total', value: total, colour: 'text-white' },
-          { label: 'Running', value: runningCount, colour: 'text-green-400' },
-          {
-            label: 'Completed',
-            value: completedCount,
-            colour: 'text-blue-400',
-          },
-          {
-            label: 'Draft',
-            value: experiments.filter(e => e.status === 'draft').length,
-            colour: 'text-gray-400',
-          },
-        ].map(stat => (
-          <div
-            key={stat.label}
-            className="p-4 bg-white/5 rounded-lg border border-white/10 text-center"
-          >
-            <p className={cn('text-2xl font-bold', stat.colour)}>
-              {stat.value}
-            </p>
-            <p className="text-xs text-gray-400 mt-1">{stat.label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-2 flex-wrap">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36 bg-white/5 border-white/10 text-sm">
-              <SelectValue placeholder="All statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="running">Running</SelectItem>
-              <SelectItem value="paused">Paused</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-40 bg-white/5 border-white/10 text-sm">
-              <SelectValue placeholder="All types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All types</SelectItem>
-              <SelectItem value="title-tag">Title Tag</SelectItem>
-              <SelectItem value="meta-description">Meta Description</SelectItem>
-              <SelectItem value="h1">H1 Heading</SelectItem>
-              <SelectItem value="schema">Schema Markup</SelectItem>
-              <SelectItem value="content-structure">
-                Content Structure
-              </SelectItem>
-              <SelectItem value="internal-links">Internal Links</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isLoading}
-          >
-            <RefreshCw
-              className={cn('w-4 h-4 mr-1', isLoading && 'animate-spin')}
-            />
-            Refresh
-          </Button>
-        </div>
-
-        <Button
-          onClick={() => setWizardOpen(true)}
-          className="gradient-primary text-white"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          New Experiment
-        </Button>
-      </div>
-
-      {/* Experiment grid */}
-      {isLoading ? (
-        <DashboardSkeleton />
-      ) : experiments.length === 0 ? (
-        <div className="text-center py-16 border border-white/10 rounded-xl bg-white/[0.02]">
-          <Beaker className="w-16 h-16 mx-auto text-gray-600 mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">
-            No experiments yet
-          </h3>
-          <p className="text-sm text-gray-400 mb-6 max-w-sm mx-auto">
-            Create your first SEO A/B experiment to start measuring what
-            actually moves the needle on GEO, E-E-A-T, and rankings.
-          </p>
-          <Button
-            onClick={() => setWizardOpen(true)}
-            className="gradient-primary text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create First Experiment
-          </Button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {experiments.map(experiment => (
-            <ExperimentCard
-              key={experiment.id}
-              experiment={experiment}
-              onRefresh={handleRefresh}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Wizard dialog */}
-      <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
-        <DialogContent className="bg-gray-900 border border-white/10 max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Beaker className="w-5 h-5 text-orange-400" />
-              New SEO Experiment
-            </DialogTitle>
-          </DialogHeader>
-          <ExperimentWizard
-            onCreated={handleWizardCreated}
-            onClose={() => setWizardOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+interface ExperimentsData {
+  activeCount: number;
+  completedCount: number;
+  avgLift: number;
+  experiments: Experiment[];
 }
 
-// ============================================================================
-// Main Page
-// ============================================================================
+async function fetcher(url: string): Promise<ExperimentsData> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to load experiments (${res.status})`);
+  return res.json();
+}
 
-function ExperimentsPageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const tabParam = searchParams.get('tab') as TabId | null;
-  const [activeTab, setActiveTab] = useState<TabId>(
-    tabParam && ['experiments', 'healing', 'dogfood'].includes(tabParam)
-      ? tabParam
-      : 'experiments'
+const STATUS_STYLES: Record<Experiment['status'], string> = {
+  running: 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10',
+  completed: 'text-white/40 border-white/20 bg-white/5',
+  paused: 'text-amber-400 border-amber-400/30 bg-amber-400/10',
+  draft: 'text-blue-400 border-blue-400/30 bg-blue-400/10',
+};
+
+export default function ExperimentsPage() {
+  const { data, error, isLoading } = useSWR<ExperimentsData>(
+    '/api/dashboard/experiments',
+    fetcher,
+    { refreshInterval: 60_000 }
   );
 
-  function handleTabChange(tab: TabId) {
-    setActiveTab(tab);
-    router.replace(
-      `/dashboard/experiments${tab !== 'experiments' ? `?tab=${tab}` : ''}`,
-      {
-        scroll: false,
-      }
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Beaker className="w-6 h-6 text-orange-400" />
-            <h1 className="text-2xl font-bold text-white">Experiments</h1>
-            <Badge className="bg-orange-500/20 text-orange-400 text-xs">
-              Phase 98
-            </Badge>
-          </div>
-          <p className="text-sm text-gray-400">
-            Autonomous A/B testing, self-healing SEO, and dog-food checks
-          </p>
+  if (isLoading) {
+    return (
+      <div className="animate-pulse space-y-6">
+        <div className="border-b border-white/[0.06] pb-6">
+          <div className="h-4 w-32 bg-white/[0.05] rounded-sm mb-3" />
+          <div className="h-8 w-48 bg-white/[0.05] rounded-sm" />
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-white/5 rounded-xl border border-white/10 w-fit">
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => handleTabChange(tab.id)}
-            className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
-              activeTab === tab.id
-                ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
-            )}
-          >
-            <tab.icon className="w-4 h-4" />
-            <span className="hidden sm:inline">{tab.label}</span>
-            <span className="sm:hidden">{tab.label.split('-')[0]}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Tab content */}
-      {activeTab === 'experiments' && <ExperimentsTab />}
-      {activeTab === 'healing' && <HealingPanel />}
-      {activeTab === 'dogfood' && <DogfoodScorecard />}
-
-      {/* Best practices footer */}
-      {activeTab === 'experiments' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-          {[
-            {
-              title: 'One variable at a time',
-              body: 'Isolate changes to understand what actually drives improvement.',
-              colour: 'bg-blue-500/10 border-blue-500/20',
-            },
-            {
-              title: 'Set a clear hypothesis',
-              body: 'Define what metric you expect to improve and by how much.',
-              colour: 'bg-orange-500/10 border-orange-500/20',
-            },
-            {
-              title: 'Wait for meaningful data',
-              body: 'Run experiments for at least 14 days before drawing conclusions.',
-              colour: 'bg-green-500/10 border-green-500/20',
-            },
-            {
-              title: 'Apply winners immediately',
-              body: 'Once a winner is identified, apply the change and move to the next test.',
-              colour: 'bg-orange-500/10 border-orange-500/20',
-            },
-          ].map(tip => (
-            <div
-              key={tip.title}
-              className={cn('p-4 rounded-lg border', tip.colour)}
-            >
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-white">{tip.title}</p>
-                  <p className="text-xs text-gray-400 mt-1">{tip.body}</p>
-                </div>
-              </div>
+        <div className="grid grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+              <div className="h-4 w-24 bg-white/[0.05] rounded-sm mb-2" />
+              <div className="h-8 w-12 bg-white/[0.05] rounded-sm" />
             </div>
           ))}
         </div>
-      )}
-    </div>
-  );
-}
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-6 space-y-4">
+            <div className="h-5 w-48 bg-white/[0.05] rounded-sm" />
+            <div className="h-4 w-full bg-white/[0.05] rounded-sm" />
+            <div className="grid grid-cols-2 gap-3">
+              {[0, 1].map((j) => (
+                <div key={j} className="h-16 bg-white/[0.05] rounded-sm" />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
-export default function ExperimentsPage() {
+  if (error) {
+    return (
+      <Alert variant="destructive" className="border-red-500/30 bg-red-500/10">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>Failed to load experiments. {error.message}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (!data) return null;
+
   return (
-    <Suspense>
-      <ExperimentsPageContent />
-    </Suspense>
+    <div className="space-y-8">
+      <div className="border-b border-white/[0.06] pb-6">
+        <p className="text-xs uppercase tracking-widest text-white/40 mb-2">Optimisation</p>
+        <h1 className="text-2xl font-semibold text-white">Experiments</h1>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <FlaskConical className="h-3.5 w-3.5 text-amber-400/60" />
+            <p className="text-xs text-white/40">Active Tests</p>
+          </div>
+          <p className="text-2xl font-semibold text-white">{data.activeCount}</p>
+        </div>
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+          <p className="text-xs text-white/40 mb-2">Completed</p>
+          <p className="text-2xl font-semibold text-white">{data.completedCount}</p>
+        </div>
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp className="h-3.5 w-3.5 text-emerald-400/60" />
+            <p className="text-xs text-white/40">Avg Lift</p>
+          </div>
+          <p className="text-2xl font-semibold text-emerald-400">+{data.avgLift.toFixed(1)}%</p>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {data.experiments.map((exp) => (
+          <div key={exp.id} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
+            <div className="p-4 border-b border-white/[0.04]">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-sm font-medium text-white">{exp.name}</h3>
+                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${STATUS_STYLES[exp.status]}`}>
+                      {exp.status}
+                    </Badge>
+                    {exp.significance >= 95 && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-amber-400 border-amber-400/30 bg-amber-400/10">
+                        Significant
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-white/40">{exp.hypothesis}</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-[10px] text-white/25 capitalize">{exp.platform}</span>
+                    <span className="text-[10px] text-white/25 flex items-center gap-1">
+                      <Users className="h-3 w-3" /> {exp.totalParticipants.toLocaleString()}
+                    </span>
+                    <span className="text-[10px] text-white/25">
+                      Significance: {exp.significance}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 divide-x divide-white/[0.04]">
+              {exp.variants.map((variant) => (
+                <div
+                  key={variant.id}
+                  className={`p-4 ${variant.isWinner ? 'bg-emerald-500/5' : ''}`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="text-xs font-medium text-white">{variant.name}</p>
+                    {variant.isWinner && (
+                      <span className="text-[10px] text-emerald-400 border border-emerald-400/30 bg-emerald-400/10 px-1.5 py-0.5 rounded-sm">
+                        Winner
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <p className="text-[10px] text-white/30">Traffic</p>
+                      <p className="text-xs font-medium text-white">{variant.traffic}%</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-white/30">Conv.</p>
+                      <p className="text-xs font-medium text-white">{variant.conversions.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-white/30">Rate</p>
+                      <p className={`text-xs font-medium ${variant.isWinner ? 'text-emerald-400' : 'text-white'}`}>
+                        {variant.conversionRate.toFixed(2)}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        {data.experiments.length === 0 && (
+          <div className="border-[0.5px] border-white/[0.06] rounded-sm p-8 text-center">
+            <FlaskConical className="h-8 w-8 text-white/10 mx-auto mb-3" />
+            <p className="text-sm text-white/30">No experiments yet. Start testing to optimise your content.</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

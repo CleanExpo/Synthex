@@ -1,451 +1,217 @@
 'use client';
 
 /**
- * Sponsor CRM Dashboard
+ * /dashboard/sponsors
  *
- * @description Manage brand relationships, track deals, and monitor deliverables.
+ * Sponsorship opportunities, active deals, and revenue tracking.
+ * Wired to /api/dashboard/sponsors via SWR.
  */
 
-import { useState, useCallback } from 'react';
-import { PageHeader } from '@/components/dashboard/page-header';
-import { DashboardEmptyState } from '@/components/dashboard/empty-state';
-import { PipelineOverview } from '@/components/sponsors/PipelineOverview';
-import { SponsorList } from '@/components/sponsors/SponsorList';
-import { SponsorForm } from '@/components/sponsors/SponsorForm';
-import { DealList } from '@/components/sponsors/DealList';
-import { DealForm } from '@/components/sponsors/DealForm';
-import { DeliverableForm } from '@/components/sponsors/DeliverableForm';
-import { useSponsorCRM } from '@/hooks/useSponsorCRM';
-import type {
-  Sponsor,
-  SponsorDeal,
-  DealDeliverable,
-  SponsorStatus,
-  DealStage,
-  CreateSponsorInput,
-  UpdateSponsorInput,
-  CreateDealInput,
-  UpdateDealInput,
-  CreateDeliverableInput,
-  UpdateDeliverableInput,
-} from '@/hooks/useSponsorCRM';
-import { SPONSOR_STATUSES, STATUS_LABELS } from '@/hooks/useSponsorCRM';
-import { cn } from '@/lib/utils';
-import { Plus, Briefcase, X, RefreshCw } from '@/components/icons';
+import useSWR from 'swr';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { AlertCircle, Building2, DollarSign, Calendar, ExternalLink } from 'lucide-react';
 
-export default function SponsorCRMPage() {
-  // CRM data hook
-  const {
-    sponsors,
-    pipeline,
-    isLoading,
-    error,
-    isMutating,
-    refetch,
-    createSponsor,
-    updateSponsor,
-    deleteSponsor,
-    createDeal,
-    updateDeal,
-    deleteDeal,
-    createDeliverable,
-    updateDeliverable,
-    deleteDeliverable,
-  } = useSponsorCRM();
+interface SponsorDeal {
+  id: string;
+  companyName: string;
+  logoUrl?: string;
+  dealValue: number;
+  currency: string;
+  status: 'active' | 'pending' | 'completed' | 'negotiating';
+  startDate: string;
+  endDate?: string;
+  platform: string;
+  deliverables: string[];
+  contactEmail?: string;
+}
 
-  // Filters
-  const [statusFilter, setStatusFilter] = useState<SponsorStatus | 'all'>(
-    'all'
-  );
-  const [stageFilter, setStageFilter] = useState<DealStage | null>(null);
+interface SponsorsData {
+  totalRevenue: number;
+  activeDeals: number;
+  pendingDeals: number;
+  avgDealValue: number;
+  deals: SponsorDeal[];
+  opportunities: Array<{
+    id: string;
+    companyName: string;
+    estimatedValue: number;
+    matchScore: number;
+    industry: string;
+  }>;
+}
 
-  // Selection state
-  const [selectedSponsor, setSelectedSponsor] = useState<Sponsor | null>(null);
+async function fetcher(url: string): Promise<SponsorsData> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to load sponsors data (${res.status})`);
+  return res.json();
+}
 
-  // Modal state
-  const [showSponsorForm, setShowSponsorForm] = useState(false);
-  const [showDealForm, setShowDealForm] = useState(false);
-  const [showDeliverableForm, setShowDeliverableForm] = useState(false);
+const STATUS_STYLES: Record<SponsorDeal['status'], string> = {
+  active: 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10',
+  pending: 'text-amber-400 border-amber-400/30 bg-amber-400/10',
+  completed: 'text-white/40 border-white/20 bg-white/5',
+  negotiating: 'text-blue-400 border-blue-400/30 bg-blue-400/10',
+};
 
-  // Editing state
-  const [editingSponsor, setEditingSponsor] = useState<Sponsor | null>(null);
-  const [editingDeal, setEditingDeal] = useState<SponsorDeal | null>(null);
-  const [editingDeliverable, setEditingDeliverable] =
-    useState<DealDeliverable | null>(null);
-  const [currentDeal, setCurrentDeal] = useState<SponsorDeal | null>(null);
-
-  // Filter sponsors
-  const filteredSponsors = sponsors.filter(sponsor => {
-    if (statusFilter !== 'all' && sponsor.status !== statusFilter) return false;
-    return true;
-  });
-
-  // Handle sponsor form
-  const handleSponsorSubmit = useCallback(
-    async (data: CreateSponsorInput | UpdateSponsorInput) => {
-      try {
-        if (editingSponsor) {
-          await updateSponsor(editingSponsor.id, data);
-        } else {
-          await createSponsor(data as CreateSponsorInput);
-        }
-        setShowSponsorForm(false);
-        setEditingSponsor(null);
-      } catch (err) {
-        console.error('Failed to save sponsor:', err);
-      }
-    },
-    [editingSponsor, createSponsor, updateSponsor]
+export default function SponsorsPage() {
+  const { data, error, isLoading } = useSWR<SponsorsData>(
+    '/api/dashboard/sponsors',
+    fetcher,
+    { refreshInterval: 60_000 }
   );
 
-  // Handle deal form
-  const handleDealSubmit = useCallback(
-    async (data: CreateDealInput | UpdateDealInput) => {
-      try {
-        if (editingDeal && selectedSponsor) {
-          await updateDeal(selectedSponsor.id, editingDeal.id, data);
-        } else if (selectedSponsor) {
-          await createDeal(selectedSponsor.id, data as CreateDealInput);
-        }
-        setShowDealForm(false);
-        setEditingDeal(null);
-      } catch (err) {
-        console.error('Failed to save deal:', err);
-      }
-    },
-    [selectedSponsor, editingDeal, createDeal, updateDeal]
-  );
-
-  // Handle deliverable form
-  const handleDeliverableSubmit = useCallback(
-    async (data: CreateDeliverableInput | UpdateDeliverableInput) => {
-      try {
-        if (editingDeliverable && selectedSponsor && currentDeal) {
-          await updateDeliverable(
-            selectedSponsor.id,
-            currentDeal.id,
-            editingDeliverable.id,
-            data
-          );
-        } else if (selectedSponsor && currentDeal) {
-          await createDeliverable(
-            selectedSponsor.id,
-            currentDeal.id,
-            data as CreateDeliverableInput
-          );
-        }
-        setShowDeliverableForm(false);
-        setEditingDeliverable(null);
-        setCurrentDeal(null);
-      } catch (err) {
-        console.error('Failed to save deliverable:', err);
-      }
-    },
-    [
-      selectedSponsor,
-      currentDeal,
-      editingDeliverable,
-      createDeliverable,
-      updateDeliverable,
-    ]
-  );
-
-  // Handle delete sponsor
-  const handleDeleteSponsor = useCallback(
-    async (sponsor: Sponsor) => {
-      if (
-        !confirm(
-          `Delete "${sponsor.name}"? This will remove all associated deals and deliverables.`
-        )
-      ) {
-        return;
-      }
-      try {
-        await deleteSponsor(sponsor.id);
-        if (selectedSponsor?.id === sponsor.id) {
-          setSelectedSponsor(null);
-        }
-      } catch (err) {
-        console.error('Failed to delete sponsor:', err);
-      }
-    },
-    [deleteSponsor, selectedSponsor]
-  );
-
-  // Handle delete deal
-  const handleDeleteDeal = useCallback(
-    async (deal: SponsorDeal) => {
-      if (!selectedSponsor) return;
-      if (
-        !confirm(
-          `Delete deal "${deal.title}"? This will remove all associated deliverables.`
-        )
-      ) {
-        return;
-      }
-      try {
-        await deleteDeal(selectedSponsor.id, deal.id);
-      } catch (err) {
-        console.error('Failed to delete deal:', err);
-      }
-    },
-    [selectedSponsor, deleteDeal]
-  );
-
-  // Handle toggle deliverable status
-  const handleToggleDeliverableStatus = useCallback(
-    async (deal: SponsorDeal, deliverableId: string) => {
-      if (!selectedSponsor) return;
-      const deliverable = deal.deliverables?.find(d => d.id === deliverableId);
-      if (!deliverable) return;
-
-      const newStatus =
-        deliverable.status === 'approved' ? 'pending' : 'approved';
-      try {
-        await updateDeliverable(selectedSponsor.id, deal.id, deliverableId, {
-          status: newStatus,
-        });
-      } catch (err) {
-        console.error('Failed to toggle deliverable status:', err);
-      }
-    },
-    [selectedSponsor, updateDeliverable]
-  );
-
-  // Error state
-  if (error) {
+  if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 text-center">
-          <p className="text-red-400 mb-4">
-            Failed to load sponsor data: {error}
-          </p>
-          <button
-            onClick={refetch}
-            className="flex items-center gap-2 mx-auto px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Retry
-          </button>
+      <div className="animate-pulse space-y-6">
+        <div className="border-b border-white/[0.06] pb-6">
+          <div className="h-4 w-32 bg-white/[0.05] rounded-sm mb-3" />
+          <div className="h-8 w-48 bg-white/[0.05] rounded-sm" />
         </div>
+        <div className="grid grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+              <div className="h-4 w-20 bg-white/[0.05] rounded-sm mb-2" />
+              <div className="h-8 w-24 bg-white/[0.05] rounded-sm" />
+            </div>
+          ))}
+        </div>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+            <div className="h-5 w-40 bg-white/[0.05] rounded-sm mb-3" />
+            <div className="h-4 w-full bg-white/[0.05] rounded-sm" />
+          </div>
+        ))}
       </div>
     );
   }
 
+  if (error) {
+    return (
+      <Alert variant="destructive" className="border-red-500/30 bg-red-500/10">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>Failed to load sponsors data. {error.message}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (!data) return null;
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <PageHeader
-          title="Sponsor CRM"
-          description="Manage brand relationships, track deals, and monitor deliverables"
-        />
-        <button
-          onClick={() => {
-            setEditingSponsor(null);
-            setShowSponsorForm(true);
-          }}
-          className="flex items-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-medium transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Add Sponsor
-        </button>
+    <div className="space-y-8">
+      <div className="border-b border-white/[0.06] pb-6">
+        <p className="text-xs uppercase tracking-widest text-white/40 mb-2">Monetisation</p>
+        <h1 className="text-2xl font-semibold text-white">Sponsorships</h1>
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-white/50">Status:</span>
-          <div className="flex items-center gap-1 bg-gray-900/50 border border-white/10 rounded-lg p-1">
-            <button
-              onClick={() => setStatusFilter('all')}
-              className={cn(
-                'px-3 py-1.5 text-sm rounded-md transition-colors',
-                statusFilter === 'all'
-                  ? 'bg-white/10 text-white'
-                  : 'text-white/50 hover:text-white'
-              )}
-            >
-              All
-            </button>
-            {SPONSOR_STATUSES.map(status => (
-              <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                className={cn(
-                  'px-3 py-1.5 text-sm rounded-md transition-colors',
-                  statusFilter === status
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/50 hover:text-white'
-                )}
-              >
-                {STATUS_LABELS[status]}
-              </button>
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <DollarSign className="h-3.5 w-3.5 text-amber-400/60" />
+            <p className="text-xs text-white/40">Total Revenue</p>
+          </div>
+          <p className="text-xl font-semibold text-amber-400">
+            ${data.totalRevenue.toLocaleString()}
+          </p>
+        </div>
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Building2 className="h-3.5 w-3.5 text-emerald-400/60" />
+            <p className="text-xs text-white/40">Active Deals</p>
+          </div>
+          <p className="text-xl font-semibold text-white">{data.activeDeals}</p>
+        </div>
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Calendar className="h-3.5 w-3.5 text-white/30" />
+            <p className="text-xs text-white/40">Pending</p>
+          </div>
+          <p className="text-xl font-semibold text-white">{data.pendingDeals}</p>
+        </div>
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <DollarSign className="h-3.5 w-3.5 text-white/30" />
+            <p className="text-xs text-white/40">Avg Deal Value</p>
+          </div>
+          <p className="text-xl font-semibold text-white">${data.avgDealValue.toLocaleString()}</p>
+        </div>
+      </div>
+
+      {/* Active deals */}
+      <div>
+        <h2 className="text-sm font-medium text-white mb-4">Active & Pending Deals</h2>
+        <div className="space-y-3">
+          {data.deals.filter((d) => d.status !== 'completed').map((deal) => (
+            <div key={deal.id} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4 hover:border-amber-500/20 transition-colors">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-sm font-medium text-white">{deal.companyName}</h3>
+                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${STATUS_STYLES[deal.status]}`}>
+                      {deal.status}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-white/30">
+                    {deal.platform} · {new Date(deal.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                    {deal.endDate && ` → ${new Date(deal.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
+                  </p>
+                  {deal.deliverables.length > 0 && (
+                    <p className="text-xs text-white/25 mt-1">{deal.deliverables.join(' · ')}</p>
+                  )}
+                </div>
+                <div className="text-right flex-shrink-0 ml-4">
+                  <p className="text-sm font-semibold text-amber-400">
+                    ${deal.dealValue.toLocaleString()} {deal.currency}
+                  </p>
+                  {deal.contactEmail && (
+                    <a
+                      href={`mailto:${deal.contactEmail}`}
+                      className="text-xs text-white/25 hover:text-white/50 flex items-center gap-1 justify-end mt-1"
+                    >
+                      <ExternalLink className="h-3 w-3" /> Contact
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+          {data.deals.filter((d) => d.status !== 'completed').length === 0 && (
+            <div className="border-[0.5px] border-white/[0.06] rounded-sm p-8 text-center">
+              <p className="text-sm text-white/30">No active deals at this time.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Opportunities */}
+      {data.opportunities.length > 0 && (
+        <div>
+          <h2 className="text-sm font-medium text-white mb-4">Suggested Opportunities</h2>
+          <div className="space-y-2">
+            {data.opportunities.map((opp) => (
+              <div key={opp.id} className="border-[0.5px] border-white/[0.04] rounded-sm p-4 flex items-center justify-between hover:border-white/[0.08] transition-colors">
+                <div>
+                  <p className="text-sm text-white/80">{opp.companyName}</p>
+                  <p className="text-xs text-white/30">{opp.industry}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-xs text-white/40">Est. Value</p>
+                    <p className="text-sm font-medium text-white/70">${opp.estimatedValue.toLocaleString()}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-white/40">Match</p>
+                    <p className={`text-sm font-medium ${opp.matchScore >= 80 ? 'text-emerald-400' : opp.matchScore >= 60 ? 'text-amber-400' : 'text-white/40'}`}>
+                      {opp.matchScore}%
+                    </p>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
-      </div>
-
-      {/* Pipeline Overview */}
-      <PipelineOverview
-        pipeline={pipeline}
-        onStageClick={setStageFilter}
-        selectedStage={stageFilter}
-        isLoading={isLoading}
-      />
-
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Sponsor List */}
-        <div
-          className={cn(selectedSponsor ? 'lg:col-span-1' : 'lg:col-span-3')}
-        >
-          {!isLoading && filteredSponsors.length === 0 ? (
-            <DashboardEmptyState
-              icon={Briefcase}
-              title="No sponsors yet"
-              description="Start by adding your first brand partner"
-              action={{
-                label: 'Add Sponsor',
-                onClick: () => {
-                  setEditingSponsor(null);
-                  setShowSponsorForm(true);
-                },
-              }}
-            />
-          ) : (
-            <SponsorList
-              sponsors={filteredSponsors}
-              onSelect={setSelectedSponsor}
-              onEdit={sponsor => {
-                setEditingSponsor(sponsor);
-                setShowSponsorForm(true);
-              }}
-              onDelete={handleDeleteSponsor}
-              selectedId={selectedSponsor?.id}
-              isLoading={isLoading}
-            />
-          )}
-        </div>
-
-        {/* Selected Sponsor Panel */}
-        {selectedSponsor && (
-          <div className="lg:col-span-2 space-y-6">
-            {/* Panel Header */}
-            <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-white">
-                  {selectedSponsor.name}
-                </h3>
-                {selectedSponsor.company && (
-                  <p className="text-sm text-white/50">
-                    {selectedSponsor.company}
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    setEditingDeal(null);
-                    setShowDealForm(true);
-                  }}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 rounded-lg text-sm transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Deal
-                </button>
-                <button
-                  onClick={() => setSelectedSponsor(null)}
-                  className="p-2 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Deals List */}
-            <div>
-              <h4 className="text-sm font-medium text-white/70 mb-3">Deals</h4>
-              <DealList
-                deals={selectedSponsor.deals ?? []}
-                sponsorId={selectedSponsor.id}
-                onEdit={deal => {
-                  setEditingDeal(deal);
-                  setShowDealForm(true);
-                }}
-                onDelete={handleDeleteDeal}
-                onAddDeliverable={deal => {
-                  setCurrentDeal(deal);
-                  setEditingDeliverable(null);
-                  setShowDeliverableForm(true);
-                }}
-                onEditDeliverable={(deal, deliverableId) => {
-                  const deliverable = deal.deliverables?.find(
-                    d => d.id === deliverableId
-                  );
-                  if (deliverable) {
-                    setCurrentDeal(deal);
-                    setEditingDeliverable(deliverable);
-                    setShowDeliverableForm(true);
-                  }
-                }}
-                onDeleteDeliverable={async (deal, deliverableId) => {
-                  if (!confirm('Delete this deliverable?')) return;
-                  try {
-                    await deleteDeliverable(
-                      selectedSponsor.id,
-                      deal.id,
-                      deliverableId
-                    );
-                  } catch (err) {
-                    console.error('Failed to delete deliverable:', err);
-                  }
-                }}
-                onToggleDeliverableStatus={(deal, deliverableId) =>
-                  handleToggleDeliverableStatus(deal, deliverableId)
-                }
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Sponsor Form Modal */}
-      <SponsorForm
-        isOpen={showSponsorForm}
-        onClose={() => {
-          setShowSponsorForm(false);
-          setEditingSponsor(null);
-        }}
-        onSubmit={handleSponsorSubmit}
-        sponsor={editingSponsor}
-        isLoading={isMutating}
-      />
-
-      {/* Deal Form Modal */}
-      <DealForm
-        isOpen={showDealForm}
-        onClose={() => {
-          setShowDealForm(false);
-          setEditingDeal(null);
-        }}
-        onSubmit={handleDealSubmit}
-        deal={editingDeal}
-        isLoading={isMutating}
-      />
-
-      {/* Deliverable Form Modal */}
-      <DeliverableForm
-        isOpen={showDeliverableForm}
-        onClose={() => {
-          setShowDeliverableForm(false);
-          setEditingDeliverable(null);
-          setCurrentDeal(null);
-        }}
-        onSubmit={handleDeliverableSubmit}
-        deliverable={editingDeliverable}
-        isLoading={isMutating}
-      />
+      )}
     </div>
   );
 }
