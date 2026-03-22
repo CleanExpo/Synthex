@@ -1,7 +1,7 @@
 /**
  * AutopilotBanner Component Tests
  *
- * Tests for the first-run onboarding banner â€” dismiss behaviour,
+ * Tests for the first-run onboarding banner Ã¢â‚¬â€ dismiss behaviour,
  * visibility conditions, step-indicator logic, and design-system
  * compliance (amber-only palette, Scientific Luxury aesthetic).
  *
@@ -112,26 +112,18 @@ describe('AutopilotBanner', () => {
   });
 
   describe('Dismiss behaviour', () => {
-    beforeEach(() => {
-      const store: Record<string, string> = {};
-      global.localStorage = {
-        getItem: jest.fn((key: string) => store[key] ?? null) as typeof localStorage.getItem,
-        setItem: jest.fn((key: string, value: string) => { store[key] = value; }) as typeof localStorage.setItem,
-        removeItem: jest.fn((key: string) => { delete store[key]; }) as typeof localStorage.removeItem,
-        clear: jest.fn(() => { Object.keys(store).forEach(k => delete store[k]); }) as typeof localStorage.clear,
-        length: 0,
-        key: jest.fn() as typeof localStorage.key,
-      };
-    });
-
     it('should persist dismiss state to localStorage', () => {
+      const setItemSpy = jest.spyOn(Storage.prototype, 'setItem');
       localStorage.setItem(DISMISSED_KEY, 'true');
-      expect(localStorage.setItem).toHaveBeenCalledWith(DISMISSED_KEY, 'true');
+      expect(setItemSpy).toHaveBeenCalledWith(DISMISSED_KEY, 'true');
+      setItemSpy.mockRestore();
     });
 
     it('should read dismiss state from localStorage on mount', () => {
+      const getItemSpy = jest.spyOn(Storage.prototype, 'getItem');
       localStorage.getItem(DISMISSED_KEY);
-      expect(localStorage.getItem).toHaveBeenCalledWith(DISMISSED_KEY);
+      expect(getItemSpy).toHaveBeenCalledWith(DISMISSED_KEY);
+      getItemSpy.mockRestore();
     });
 
     it('should treat stored "true" as dismissed', () => {
@@ -212,21 +204,21 @@ describe('AutopilotBanner', () => {
 });
 
 describe('AutopilotBanner integration scenarios', () => {
-  it('new user with no platforms â€” should show platform step', () => {
+  it('new user with no platforms Ã¢â‚¬â€ should show platform step', () => {
     expect(shouldShowBanner(true, false, true, true)).toBe(true);
     expect(getActivePlatformStep(true)).toBe(true);
   });
 
-  it('user with platforms but inactive autopilot â€” should show autopilot step', () => {
+  it('user with platforms but inactive autopilot Ã¢â‚¬â€ should show autopilot step', () => {
     expect(shouldShowBanner(true, false, false, true)).toBe(true);
     expect(getActivePlatformStep(false)).toBe(false);
   });
 
-  it('fully onboarded user â€” banner should not render', () => {
+  it('fully onboarded user Ã¢â‚¬â€ banner should not render', () => {
     expect(shouldShowBanner(true, false, false, false)).toBe(false);
   });
 
-  it('dismissed user â€” banner should not render regardless of state', () => {
+  it('dismissed user Ã¢â‚¬â€ banner should not render regardless of state', () => {
     expect(shouldShowBanner(true, true, true, true)).toBe(false);
   });
 });
