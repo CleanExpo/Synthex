@@ -154,6 +154,14 @@
       "schedule": "0 2 * * *"
     },
     {
+      "path": "/api/cron/daily-post",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/analytics-sync",
+      "schedule": "0 * * * *"
+    },
+    {
       "path": "/api/cron/autopilot-learn",
       "schedule": "0 8 * * 1"
     }
