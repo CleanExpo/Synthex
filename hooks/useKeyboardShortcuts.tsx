@@ -78,7 +78,7 @@ export function useKeyboardShortcuts() {
       action: () => showShortcutsHelp(),
       description: 'Show shortcuts'
     },
-  ];
+  ], []);
   
   const openCommandPalette = useCallback(() => {
     // Trigger command palette opening
