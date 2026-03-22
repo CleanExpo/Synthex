@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import useSWR from 'swr';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Bell } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { fetchWithCSRF } from '@/lib/csrf';
@@ -108,8 +109,14 @@ export function NotificationBell() {
         )}
       </Button>
 
+      <AnimatePresence>
       {isOpen && (
-        <div className="absolute right-0 top-12 w-80 max-h-96 overflow-hidden rounded-lg bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] shadow-2xl animate-in slide-in-from-top-2 duration-300">
+        <motion.div
+          initial={{ opacity: 0, y: -8, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -8, scale: 0.96 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute right-0 top-12 w-80 max-h-96 overflow-hidden rounded-lg bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] shadow-2xl">
           <div className="flex items-center justify-between p-4 border-b border-white/10">
             <h3 className="text-sm font-semibold text-white">Notifications</h3>
             {unreadCount > 0 && (
@@ -208,8 +215,9 @@ export function NotificationBell() {
               </Button>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       <NotificationCentre
         isOpen={centreOpen}
