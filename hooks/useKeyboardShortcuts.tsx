@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { notify } from '@/lib/notifications';
 
@@ -16,7 +16,10 @@ interface Shortcut {
 export function useKeyboardShortcuts() {
   const router = useRouter();
   
-  const shortcuts: Shortcut[] = [
+  // action callbacks are stable useCallback([]) references;
+  // useMemo makes shortcuts reference-stable so useEffect does not re-fire on every render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const shortcuts = useMemo<Shortcut[]>(() => [
     // Navigation
     {
       key: 'k',
