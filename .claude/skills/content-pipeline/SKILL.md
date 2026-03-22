@@ -5,9 +5,10 @@ description: >-
   provider abstraction, BYOK key injection, content scoring, and repurposing
   flow. Use when working on AI-powered content features or debugging model
   selection issues.
+effort: medium
 metadata:
   author: synthex
-  version: "1.0"
+  version: '1.0'
   engine: synthex-ai-agency
   type: reference-skill
   triggers:
@@ -75,11 +76,13 @@ Content Repurposer → Adapt for multiple platforms
 **Purpose:** Single source of truth for which models SYNTHEX uses system-wide
 
 **Types:**
+
 - `AIProvider`: `'openai' | 'anthropic' | 'google' | 'openrouter'`
 - `ModelTier`: `'latest' | 'production' | 'legacy'`
 - `ModelConfig`: Full model specification (id, capabilities, cost, context window)
 
 **Key functions:**
+
 - `getAllLatestModels()` — Returns the latest model for each provider
 - Models not in the registry are rejected by the system
 
@@ -91,6 +94,7 @@ and periodic registry refresh.
 ## Provider Abstraction
 
 **Files:**
+
 - `lib/ai/providers/index.ts` — Factory function `getAIProvider()`
 - `lib/ai/providers/base-provider.ts` — Abstract base class
 - `lib/ai/providers/openrouter-provider.ts` — OpenRouter implementation
@@ -98,6 +102,7 @@ and periodic registry refresh.
 - `lib/ai/providers/google-provider.ts` — Google (Gemini) direct
 
 **Usage:**
+
 ```typescript
 import { getAIProvider } from '@/lib/ai/providers';
 
@@ -118,12 +123,14 @@ the right provider based on the model ID or explicit provider parameter.
 **Purpose:** Bridges user-stored API credentials into AI provider calls
 
 **Flow:**
+
 1. Look up user's API credential in DB (`prisma.aPICredential.findFirst`)
 2. Filter: `isActive: true`, `revokedAt: null`, most recent first
 3. Decrypt with `decryptApiKey()` from `lib/encryption/api-key-encryption.ts`
 4. Pass decrypted key to `getAIProvider({ apiKey })` — overrides platform key
 
 **Provider mapping:**
+
 ```
 openrouter → openrouter
 openai     → openrouter (OpenAI keys work through OpenRouter)
@@ -132,6 +139,7 @@ google     → google
 ```
 
 **Security:**
+
 - Keys stored encrypted at rest (AES-256-GCM)
 - Decrypted only at point of use, never logged
 - `revokedAt` field prevents use of compromised keys
@@ -142,6 +150,7 @@ google     → google
 **Purpose:** Direct OpenRouter API calls (legacy — prefer provider abstraction)
 
 **Environment variables:**
+
 - `OPENROUTER_API_KEY` — Platform-level API key
 - `OPENROUTER_SITE_NAME` — App name header
 - `OPENROUTER_SITE_URL` — App URL header
@@ -154,6 +163,7 @@ google     → google
 **Purpose:** Multi-model content creation with persona-based voice consistency
 
 **ContentRequest fields:**
+
 - `type`: post, caption, thread, story, reel, article
 - `platform`: twitter, instagram, linkedin, tiktok, facebook, youtube
 - `tone`: professional, casual, humorous, inspirational, educational
@@ -193,39 +203,39 @@ character limits, and audience expectations.
 
 ## Common Mistakes
 
-| Mistake | Why It's Wrong | Correct Pattern |
-|---------|---------------|----------------|
-| Hardcoding model IDs | Breaks when models update | Use model-registry.ts |
-| Using openrouter-client.ts directly | Bypasses provider abstraction | Use `getAIProvider()` |
-| Logging decrypted API keys | Security vulnerability | Never log keys |
-| Skipping content scoring | Inconsistent quality | Always score before publish |
-| Ignoring persona when available | Brand voice inconsistency | Pass `personaId` through |
+| Mistake                             | Why It's Wrong                | Correct Pattern             |
+| ----------------------------------- | ----------------------------- | --------------------------- |
+| Hardcoding model IDs                | Breaks when models update     | Use model-registry.ts       |
+| Using openrouter-client.ts directly | Bypasses provider abstraction | Use `getAIProvider()`       |
+| Logging decrypted API keys          | Security vulnerability        | Never log keys              |
+| Skipping content scoring            | Inconsistent quality          | Always score before publish |
+| Ignoring persona when available     | Brand voice inconsistency     | Pass `personaId` through    |
 
 ## Environment Variables
 
-| Variable | Purpose | Required |
-|----------|---------|----------|
-| `OPENROUTER_API_KEY` | Platform-level AI API key | CRITICAL |
-| `OPENROUTER_SITE_NAME` | App name for OpenRouter headers | Required |
-| `OPENROUTER_SITE_URL` | App URL for OpenRouter headers | Required |
-| `ANTHROPIC_API_KEY` | Direct Anthropic access | Optional |
-| `GOOGLE_AI_API_KEY` | Direct Google AI access | Optional |
-| `API_ENCRYPTION_KEY` | BYOK key encryption (AES-256-GCM) | CRITICAL |
+| Variable               | Purpose                           | Required |
+| ---------------------- | --------------------------------- | -------- |
+| `OPENROUTER_API_KEY`   | Platform-level AI API key         | CRITICAL |
+| `OPENROUTER_SITE_NAME` | App name for OpenRouter headers   | Required |
+| `OPENROUTER_SITE_URL`  | App URL for OpenRouter headers    | Required |
+| `ANTHROPIC_API_KEY`    | Direct Anthropic access           | Optional |
+| `GOOGLE_AI_API_KEY`    | Direct Google AI access           | Optional |
+| `API_ENCRYPTION_KEY`   | BYOK key encryption (AES-256-GCM) | CRITICAL |
 
 ## File Index
 
-| File | Purpose |
-|------|---------|
-| `lib/ai/model-registry.ts` | Model catalogue and version tracking |
-| `lib/ai/model-manager.ts` | Health monitoring, failover, auto-refresh |
-| `lib/ai/providers/index.ts` | Provider factory (`getAIProvider`) |
-| `lib/ai/providers/base-provider.ts` | Abstract provider base class |
-| `lib/ai/providers/openrouter-provider.ts` | OpenRouter implementation |
-| `lib/ai/providers/anthropic-provider.ts` | Anthropic (Claude) implementation |
-| `lib/ai/providers/google-provider.ts` | Google (Gemini) implementation |
-| `lib/ai/api-credential-injector.ts` | BYOK key lookup and decryption |
-| `lib/ai/content-generator.ts` | Prompt building and content generation |
-| `lib/ai/content-scorer.ts` | Real-time quality scoring (no AI calls) |
-| `lib/ai/content-repurposer.ts` | Multi-platform content adaptation |
-| `lib/ai/openrouter-client.ts` | Legacy OpenRouter client (prefer providers) |
-| `lib/encryption/api-key-encryption.ts` | AES-256-GCM key encryption/decryption |
+| File                                      | Purpose                                     |
+| ----------------------------------------- | ------------------------------------------- |
+| `lib/ai/model-registry.ts`                | Model catalogue and version tracking        |
+| `lib/ai/model-manager.ts`                 | Health monitoring, failover, auto-refresh   |
+| `lib/ai/providers/index.ts`               | Provider factory (`getAIProvider`)          |
+| `lib/ai/providers/base-provider.ts`       | Abstract provider base class                |
+| `lib/ai/providers/openrouter-provider.ts` | OpenRouter implementation                   |
+| `lib/ai/providers/anthropic-provider.ts`  | Anthropic (Claude) implementation           |
+| `lib/ai/providers/google-provider.ts`     | Google (Gemini) implementation              |
+| `lib/ai/api-credential-injector.ts`       | BYOK key lookup and decryption              |
+| `lib/ai/content-generator.ts`             | Prompt building and content generation      |
+| `lib/ai/content-scorer.ts`                | Real-time quality scoring (no AI calls)     |
+| `lib/ai/content-repurposer.ts`            | Multi-platform content adaptation           |
+| `lib/ai/openrouter-client.ts`             | Legacy OpenRouter client (prefer providers) |
+| `lib/encryption/api-key-encryption.ts`    | AES-256-GCM key encryption/decryption       |

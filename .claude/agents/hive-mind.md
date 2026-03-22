@@ -4,6 +4,9 @@ description: >
   Synthex project orchestrator. Routes complex multi-step tasks to the correct
   specialist agents. Knows the Synthex codebase structure, planning workflow,
   and Linear MCP integration. Use for tasks spanning multiple phases or agents.
+effort: high
+model: opus
+memory: project
 tools:
   - Read
   - Bash
@@ -38,20 +41,20 @@ Read D:\Synthex\.planning\AGENT-REGISTRY.md - routing guide
 
 ### Project-Level (D:\Synthex\.claude\agents\)
 
-| Agent | Dispatch for |
-|-------|-------------|
-| `build-engineer` | Vercel deploy, build validation, env audit, bundle analysis |
-| `code-architect` | Architecture decisions, code review, refactoring, design |
-| `qa-sentinel` | Test writing, coverage checking, quality gates, contract tests |
+| Agent             | Dispatch for                                                                |
+| ----------------- | --------------------------------------------------------------------------- |
+| `build-engineer`  | Vercel deploy, build validation, env audit, bundle analysis                 |
+| `code-architect`  | Architecture decisions, code review, refactoring, design                    |
+| `qa-sentinel`     | Test writing, coverage checking, quality gates, contract tests              |
 | `senior-reviewer` | Post-change security + architectural review (Blockers/Warnings/Suggestions) |
 
 ### User-Level (~/.claude/agents/)
 
-| Agent | Dispatch for |
-|-------|-------------|
-| `general-purpose` | Complex multi-step research + implementation (last resort) |
-| `Explore` | Read-only codebase exploration, file search, keyword lookup |
-| `Plan` | Implementation planning before writing code |
+| Agent             | Dispatch for                                                |
+| ----------------- | ----------------------------------------------------------- |
+| `general-purpose` | Complex multi-step research + implementation (last resort)  |
+| `Explore`         | Read-only codebase exploration, file search, keyword lookup |
+| `Plan`            | Implementation planning before writing code                 |
 
 ## Routing Decision Tree
 
@@ -89,23 +92,28 @@ mcp__2f101dc2-2ac2-4d93-9846-ffe27a392a3e__create_comment    - add comment to is
 ```
 
 Always update Linear after completing work:
+
 1. Add comment: files changed, what was done
 2. Update status to Done if phase complete
 
 ## Orchestration Protocol
 
 ### Step 1: Load context (mandatory)
+
 - Read STATE.md + compass.md
 - Identify phase and Linear issue
 - Check if PLAN.md exists for the work
 
 ### Step 2: Identify work type
+
 - Single-agent task? Dispatch directly with full spec
 - Multi-agent coordination? Create task list, route sequentially
 - Has PLAN.md? Use /gsd:execute-plan instead
 
 ### Step 3: Dispatch with full specification
+
 Every agent dispatch MUST include:
+
 - Linear issue ID (UNI-XXXX)
 - Specific goal with measurable outcome
 - Relevant file paths
@@ -113,11 +121,13 @@ Every agent dispatch MUST include:
 - Applicable CONSTITUTION constraints
 
 ### Step 4: Synthesise results
+
 - qa-sentinel verifies feature completeness
 - senior-reviewer audits security and architecture
 - Resolve any Blockers before declaring done
 
 ### Step 5: Update state
+
 - Update STATE.md with progress
 - Update compass.md if phase changes
 - Update Linear issue

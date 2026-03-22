@@ -4,7 +4,7 @@
  * Uses the Anthropic SDK directly, bypassing OpenRouter.
  * Useful when you want a direct connection to Claude models.
  *
- * Supports extended thinking (budget_tokens) and prompt caching.
+ * Supports adaptive thinking (Claude 4.6+) and prompt caching.
  *
  * ENVIRONMENT VARIABLES:
  * - ANTHROPIC_API_KEY: Anthropic API key (SECRET)
@@ -93,23 +93,27 @@ export class AnthropicProvider implements AIProvider {
         'temperature'
       >;
 
-      // Extended thinking — temperature must be omitted when thinking is enabled
-      const useThinking = request.thinking && request.thinking > 0;
+      // Adaptive thinking (Claude 4.6+) — temperature must be omitted when thinking is enabled
+      const useThinking = !!request.thinking;
 
-      const params: Anthropic.MessageCreateParamsNonStreaming = useThinking
-        ? {
-            ...baseParams,
-            thinking: {
-              type: 'enabled',
-              budget_tokens: request.thinking!,
-            },
-          }
-        : {
-            ...baseParams,
-            ...(request.temperature !== undefined
-              ? { temperature: request.temperature }
-              : {}),
-          };
+      const params = (
+        useThinking
+          ? {
+              ...baseParams,
+              thinking: {
+                type: 'adaptive' as const,
+                ...(request.thinkingDisplay === 'omitted'
+                  ? { display: 'omitted' as const }
+                  : {}),
+              },
+            }
+          : {
+              ...baseParams,
+              ...(request.temperature !== undefined
+                ? { temperature: request.temperature }
+                : {}),
+            }
+      ) as Anthropic.MessageCreateParamsNonStreaming;
 
       const data = await this.client.messages.create(params);
 

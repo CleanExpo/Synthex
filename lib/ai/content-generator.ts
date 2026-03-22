@@ -9,7 +9,7 @@ import type { AIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import { buildContextForGeneration } from '@/lib/obsidian/client-knowledge-base';
-import { THINKING_BUDGETS } from '@/lib/ai/constants';
+import { THINKING_EFFORTS } from '@/lib/ai/constants';
 
 /** Optional user-supplied API credentials that override the platform key. */
 export interface UserProviderCredentials {
@@ -164,12 +164,12 @@ export class AIContentGenerator {
     // Select appropriate model based on content type
     const model = this.selectModel(request);
 
-    // Determine thinking budget (Anthropic direct only; ignored on other providers)
-    const thinkingBudget = request.thinkingEnabled
+    // Determine thinking effort (Anthropic direct only; ignored on other providers)
+    const thinkingEffort = request.thinkingEnabled
       ? model.includes('opus')
-        ? THINKING_BUDGETS.opus
-        : THINKING_BUDGETS.standard
-      : THINKING_BUDGETS.quick;
+        ? THINKING_EFFORTS.max
+        : THINKING_EFFORTS.medium
+      : undefined;
 
     // Resolve which AI provider to use for this request.
     // User credentials take priority over the platform singleton.
@@ -189,7 +189,7 @@ export class AIContentGenerator {
         prompt,
         model,
         aiClient,
-        thinkingBudget
+        thinkingEffort
       );
 
       // Generate variations for A/B testing
@@ -369,13 +369,13 @@ Generate content that will maximize engagement and shares.
    * @param prompt - Fully-built prompt string
    * @param model - Model identifier to use
    * @param client - Resolved AIProvider instance (platform or user key)
-   * @param thinking - Extended thinking budget tokens (0 = disabled; Anthropic only)
+   * @param thinking - Adaptive thinking effort level (undefined = disabled; Anthropic only)
    */
   private async callAI(
     prompt: string,
     model: string,
     client: AIProvider,
-    thinking: number = 0
+    thinking?: 'low' | 'medium' | 'high' | 'max'
   ): Promise<string> {
     try {
       const response = await client.complete({
@@ -393,7 +393,9 @@ Generate content that will maximize engagement and shares.
         ],
         temperature: 0.8,
         max_tokens: 1000,
-        ...(thinking > 0 ? { thinking, cache: true } : {}),
+        ...(thinking
+          ? { thinking, thinkingDisplay: 'omitted' as const, cache: true }
+          : {}),
       });
 
       const content = response.choices[0]?.message?.content;

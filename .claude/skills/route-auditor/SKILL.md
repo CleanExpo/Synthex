@@ -5,9 +5,10 @@ description: >-
   the standard security and architecture pattern. Catches auth drift, unsafe
   casts, missing validation, exposed error messages, and org-scoping gaps.
   Use when creating, modifying, or reviewing any file under app/api/.
+effort: high
 metadata:
   author: synthex
-  version: "1.0"
+  version: '1.0'
   engine: synthex-ai-agency
   type: enforcement-skill
   triggers:
@@ -34,6 +35,7 @@ exists. This skill encodes that judgement as automated checks.
 ## When to Use
 
 Activate this skill when:
+
 - Creating a new API route under `app/api/`
 - Modifying an existing API route
 - Reviewing a PR that touches API routes
@@ -62,59 +64,78 @@ Activate this skill when:
 ### CRITICAL (Blockers — must fix before merge)
 
 #### C1: Auth Pattern
+
 **Rule:** Must use `APISecurityChecker.check()` OR `getUserIdFromRequestOrCookies()` from `@/lib/auth/jwt-utils`.
 **Anti-pattern:** Raw `jwt.verify()` calls, custom `getUserFromRequest()` functions.
 **Check:**
+
 ```bash
 grep -n "jwt\.verify" <file>
 grep -n "getUserFromRequest\|getTokenFromRequest" <file>
 ```
+
 **Fix:** Replace with:
+
 ```typescript
-import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 
 const userId = await getUserIdFromRequestOrCookies(request);
 if (!userId) return unauthorizedResponse();
 ```
 
 #### C2: No `as any` Casts on Auth
+
 **Rule:** Never cast JWT verification results with `as any`.
 **Anti-pattern:** `jwt.verify(token, secret) as any`
 **Check:**
+
 ```bash
 grep -n "as any" <file> | grep -i "jwt\|verify\|token\|auth"
 ```
+
 **Fix:** Use typed `verifyTokenSafe()` from `@/lib/auth/jwt-utils`.
 
 #### C3: No Duplicate Utilities
+
 **Rule:** `getJWTSecret()` must only exist in `lib/auth/jwt-utils.ts`.
 **Anti-pattern:** Local `function getJWTSecret()` defined in the route file.
 **Check:**
+
 ```bash
 grep -n "function getJWTSecret\|const getJWTSecret" <file>
 ```
+
 **Fix:** Remove local definition, import from `@/lib/auth/jwt-utils`.
 
 ### HIGH (Warnings — should fix)
 
 #### H1: Input Validation
+
 **Rule:** All POST/PUT/DELETE request bodies must be validated with Zod.
 **Anti-pattern:** `const body = await request.json()` without validation.
 **Check:** Look for `request.json()` without a subsequent Zod `.parse()` or `.safeParse()`.
 **Fix:** Define a Zod schema and validate:
+
 ```typescript
 const schema = z.object({ name: z.string().min(1) });
 const body = schema.parse(await request.json());
 ```
 
 #### H2: Error Sanitisation
+
 **Rule:** Never return raw `error.message` or stack traces to the client.
 **Anti-pattern:** `return NextResponse.json({ error: error.message }, { status: 500 })`
 **Check:**
+
 ```bash
 grep -n "error\.message\|error\.stack" <file>
 ```
+
 **Fix:** Return generic messages:
+
 ```typescript
 return NextResponse.json(
   { error: 'An internal error occurred' },
@@ -123,60 +144,69 @@ return NextResponse.json(
 ```
 
 #### H3: Organisation Scoping
+
 **Rule:** Routes querying user data must scope by `userId` or use `getEffectiveQueryFilter()`.
 **Anti-pattern:** Prisma queries without `where: { userId }` or `where: { organizationId }`.
 **Check:** Look for `prisma.<model>.findMany()` without userId/orgId in the where clause.
 **Fix:** Use `getEffectiveQueryFilter(userId)` from `@/lib/multi-business/business-scope`.
 
 #### H4: Handler Parameter Types
+
 **Rule:** Use `NextRequest` from `next/server`, not the generic `Request` type.
 **Anti-pattern:** `export async function GET(request: Request)`
 **Check:**
+
 ```bash
 grep -n "request: Request[^a-zA-Z]" <file>
 ```
+
 **Fix:** `import { NextRequest } from 'next/server'` and use `NextRequest`.
 
 ### MEDIUM (Suggestions — nice to have)
 
 #### M1: Audit Logging
+
 **Rule:** Write operations (POST/PUT/DELETE) should create audit log entries.
 **Check:** Look for POST/PUT/DELETE handlers without `auditLog` or `logger.info`.
 
 #### M2: Logger Usage
+
 **Rule:** Use `logger` from `@/lib/logger` instead of `console.log`/`console.error`.
 **Check:**
+
 ```bash
 grep -n "console\.\(log\|error\|warn\)" <file>
 ```
 
 #### M3: Runtime Export
+
 **Rule:** Routes using Prisma should export `const runtime = 'nodejs'`.
 **Check:** If file imports from `@/lib/prisma`, verify `export const runtime = 'nodejs'` exists.
 
 #### M4: Credentials on Fetch
+
 **Rule:** Client-side fetch calls include `credentials: 'include'`.
 **Check:** Look for `fetch(` without `credentials: 'include'` in the options.
 
 ## Input Specification
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| target | string | yes | File path or directory (e.g., `app/api/campaigns/route.ts` or `app/api/`) |
-| scope | string | no | `critical`, `high`, `medium`, `full` (default: `full`) |
-| fix | boolean | no | If true, apply auto-fixes where possible (default: false) |
+| Parameter | Type    | Required | Description                                                               |
+| --------- | ------- | -------- | ------------------------------------------------------------------------- |
+| target    | string  | yes      | File path or directory (e.g., `app/api/campaigns/route.ts` or `app/api/`) |
+| scope     | string  | no       | `critical`, `high`, `medium`, `full` (default: `full`)                    |
+| fix       | boolean | no       | If true, apply auto-fixes where possible (default: false)                 |
 
 ## Output Specification
 
-| Field | Type | Description |
-|-------|------|-------------|
-| file | string | File path audited |
-| check | string | Check ID (C1, C2, C3, H1, etc.) |
-| severity | critical/high/medium | Issue severity |
-| status | pass/fail | Whether the check passed |
-| line | number | Line number of violation (if applicable) |
-| description | string | What was found |
-| suggestion | string | How to fix it |
+| Field       | Type                 | Description                              |
+| ----------- | -------------------- | ---------------------------------------- |
+| file        | string               | File path audited                        |
+| check       | string               | Check ID (C1, C2, C3, H1, etc.)          |
+| severity    | critical/high/medium | Issue severity                           |
+| status      | pass/fail            | Whether the check passed                 |
+| line        | number               | Line number of violation (if applicable) |
+| description | string               | What was found                           |
+| suggestion  | string               | How to fix it                            |
 
 ### Output Format
 
@@ -214,12 +244,12 @@ grep -n "console\.\(log\|error\|warn\)" <file>
 
 ## Error Handling
 
-| Error | Action |
-|-------|--------|
-| File not found | Report clear error with suggested path |
-| Not an API route | Skip with info message |
-| Binary file | Skip silently |
-| Permission error | Report and continue with next file |
+| Error            | Action                                 |
+| ---------------- | -------------------------------------- |
+| File not found   | Report clear error with suggested path |
+| Not an API route | Skip with info message                 |
+| Binary file      | Skip silently                          |
+| Permission error | Report and continue with next file     |
 
 ## Reference Files
 

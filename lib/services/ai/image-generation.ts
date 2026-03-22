@@ -13,7 +13,7 @@
  */
 
 import { logger } from '@/lib/logger';
-import { THINKING_BUDGETS } from '@/lib/ai/constants';
+import { THINKING_EFFORTS } from '@/lib/ai/constants';
 
 // Provider types
 export type ImageProvider = 'stability' | 'dalle' | 'gemini';
@@ -353,7 +353,7 @@ async function generateWithGemini(
 }
 
 /**
- * Refine an image prompt using Claude extended thinking.
+ * Refine an image prompt using Claude adaptive thinking.
  * Gives the model space to reason about brand coherence before outputting a final prompt.
  * Returns the original prompt unchanged if ANTHROPIC_API_KEY is not set.
  *
@@ -385,7 +385,7 @@ export async function refineImagePromptWithThinking(
         },
       ],
       max_tokens: 300,
-      thinking: THINKING_BUDGETS.standard,
+      thinking: THINKING_EFFORTS.medium,
     });
 
     const refined = response.choices[0]?.message?.content?.trim();

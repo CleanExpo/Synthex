@@ -5,9 +5,10 @@ description: >-
   migration safety, and query optimisation using Prisma ORM with
   Supabase/PostgreSQL backend. Use when modifying Prisma schema, creating
   migrations, optimising queries, or debugging database issues.
+effort: high
 metadata:
   author: synthex
-  version: "2.0"
+  version: '2.0'
   engine: synthex-ai-agency
   type: database-skill
   triggers:
@@ -31,6 +32,7 @@ Supabase/PostgreSQL backend.
 ## When to Use
 
 Activate this skill when:
+
 - Modifying the Prisma schema (`prisma/schema.prisma`)
 - Creating or reviewing database migrations
 - Optimising database queries (N+1, missing indexes)
@@ -67,32 +69,32 @@ Activate this skill when:
 
 ## Input Specification
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| operation | string | yes | `schema-validate`, `migration-create`, `query-optimise`, `integrity-check` |
-| target | string | no | File path or model name |
-| migration_name | string | no | Name for new migration |
+| Parameter      | Type   | Required | Description                                                                |
+| -------------- | ------ | -------- | -------------------------------------------------------------------------- |
+| operation      | string | yes      | `schema-validate`, `migration-create`, `query-optimise`, `integrity-check` |
+| target         | string | no       | File path or model name                                                    |
+| migration_name | string | no       | Name for new migration                                                     |
 
 ## Output Specification
 
-| Field | Type | Description |
-|-------|------|-------------|
-| operation | string | Operation performed |
-| status | pass/fail/warning | Result status |
-| changes | array | List of schema/query changes |
-| warnings | array | Potential issues detected |
-| migration_sql | string | Generated SQL (if migration) |
+| Field         | Type              | Description                  |
+| ------------- | ----------------- | ---------------------------- |
+| operation     | string            | Operation performed          |
+| status        | pass/fail/warning | Result status                |
+| changes       | array             | List of schema/query changes |
+| warnings      | array             | Potential issues detected    |
+| migration_sql | string            | Generated SQL (if migration) |
 
 ## Error Handling
 
-| Error | Action |
-|-------|--------|
-| Migration conflict | Resolve manually, never auto-merge |
+| Error                          | Action                                  |
+| ------------------------------ | --------------------------------------- |
+| Migration conflict             | Resolve manually, never auto-merge      |
 | Destructive operation detected | Block and require explicit confirmation |
-| Schema validation failure | Report exact field/model with issue |
-| Connection failure | Check Supabase status, verify env vars |
-| Data type mismatch | Report expected vs actual types |
-| Rollback failure | Preserve state, escalate immediately |
+| Schema validation failure      | Report exact field/model with issue     |
+| Connection failure             | Check Supabase status, verify env vars  |
+| Data type mismatch             | Report expected vs actual types         |
+| Rollback failure               | Preserve state, escalate immediately    |
 
 ## Safety Rules
 

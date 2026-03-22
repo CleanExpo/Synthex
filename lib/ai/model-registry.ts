@@ -4,7 +4,7 @@
  * Central registry of the latest available models from each LLM provider.
  * This is the source of truth for which models SYNTHEX uses system-wide.
  *
- * Updated: 2026-02-26
+ * Updated: 2026-03-22
  * Critical: This file must be updated whenever new models become available
  */
 
@@ -16,21 +16,21 @@ export interface ModelConfig {
   id: string;
   provider: AIProvider;
   name: string;
-  
+
   // Version info
   releaseDate: Date;
   tier: ModelTier;
   capabilities: string[];
-  
+
   // Performance metrics
   contextWindow: number;
   costPer1kTokens: { input: number; output: number };
-  
+
   // Compatibility
   supportsVision: boolean;
   supportsTools: boolean;
   supportsStreaming: boolean;
-  
+
   // Status
   isDeprecated: boolean;
   deprecatedDate?: Date;
@@ -39,8 +39,8 @@ export interface ModelConfig {
 
 /**
  * OFFICIAL MODEL REGISTRY
- * Last updated: 2026-02-26
- * 
+ * Last updated: 2026-03-22
+ *
  * ⚠️ CRITICAL: This registry is the system's source of truth
  * Any model NOT in this registry will be rejected by the system
  */
@@ -89,16 +89,22 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       isDeprecated: false,
     },
   ],
-  
+
   anthropic: [
     {
-      id: 'claude-3-opus',
+      id: 'claude-opus-4-6',
       provider: 'anthropic',
-      name: 'Claude 3 Opus',
-      releaseDate: new Date('2024-03-04'),
-      tier: 'production',
-      capabilities: ['text', 'vision', 'tools', 'streaming'],
-      contextWindow: 200000,
+      name: 'Claude Opus 4.6',
+      releaseDate: new Date('2026-03-01'),
+      tier: 'latest',
+      capabilities: [
+        'text',
+        'vision',
+        'tools',
+        'streaming',
+        'adaptive-thinking',
+      ],
+      contextWindow: 1000000,
       costPer1kTokens: { input: 0.015, output: 0.075 },
       supportsVision: true,
       supportsTools: true,
@@ -106,14 +112,34 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       isDeprecated: false,
     },
     {
-      id: 'claude-3-sonnet',
+      id: 'claude-sonnet-4-6',
       provider: 'anthropic',
-      name: 'Claude 3 Sonnet',
-      releaseDate: new Date('2024-03-04'),
+      name: 'Claude Sonnet 4.6',
+      releaseDate: new Date('2026-03-01'),
+      tier: 'latest',
+      capabilities: [
+        'text',
+        'vision',
+        'tools',
+        'streaming',
+        'adaptive-thinking',
+      ],
+      contextWindow: 1000000,
+      costPer1kTokens: { input: 0.003, output: 0.015 },
+      supportsVision: true,
+      supportsTools: true,
+      supportsStreaming: true,
+      isDeprecated: false,
+    },
+    {
+      id: 'claude-haiku-4-5-20251001',
+      provider: 'anthropic',
+      name: 'Claude Haiku 4.5',
+      releaseDate: new Date('2025-10-01'),
       tier: 'production',
       capabilities: ['text', 'vision', 'tools', 'streaming'],
       contextWindow: 200000,
-      costPer1kTokens: { input: 0.003, output: 0.015 },
+      costPer1kTokens: { input: 0.0008, output: 0.004 },
       supportsVision: true,
       supportsTools: true,
       supportsStreaming: true,
@@ -124,31 +150,41 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       provider: 'anthropic',
       name: 'Claude 3.5 Sonnet',
       releaseDate: new Date('2024-06-20'),
-      tier: 'latest',
-      capabilities: ['text', 'vision', 'tools', 'streaming', 'extended-thinking'],
+      tier: 'legacy',
+      capabilities: [
+        'text',
+        'vision',
+        'tools',
+        'streaming',
+        'extended-thinking',
+      ],
       contextWindow: 200000,
       costPer1kTokens: { input: 0.003, output: 0.015 },
       supportsVision: true,
       supportsTools: true,
       supportsStreaming: true,
-      isDeprecated: false,
+      isDeprecated: true,
+      deprecatedDate: new Date('2026-03-01'),
+      replacementModel: 'claude-sonnet-4-6',
     },
     {
-      id: 'claude-3-haiku',
+      id: 'claude-3-opus',
       provider: 'anthropic',
-      name: 'Claude 3 Haiku',
+      name: 'Claude 3 Opus',
       releaseDate: new Date('2024-03-04'),
-      tier: 'production',
-      capabilities: ['text', 'vision', 'streaming'],
+      tier: 'legacy',
+      capabilities: ['text', 'vision', 'tools', 'streaming'],
       contextWindow: 200000,
-      costPer1kTokens: { input: 0.00025, output: 0.00125 },
+      costPer1kTokens: { input: 0.015, output: 0.075 },
       supportsVision: true,
-      supportsTools: false,
+      supportsTools: true,
       supportsStreaming: true,
-      isDeprecated: false,
+      isDeprecated: true,
+      deprecatedDate: new Date('2026-03-01'),
+      replacementModel: 'claude-opus-4-6',
     },
   ],
-  
+
   google: [
     {
       id: 'gemini-2-0-flash',
@@ -156,7 +192,14 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       name: 'Gemini 2.0 Flash',
       releaseDate: new Date('2024-12-19'),
       tier: 'latest',
-      capabilities: ['text', 'vision', 'audio', 'tools', 'streaming', 'multimodal'],
+      capabilities: [
+        'text',
+        'vision',
+        'audio',
+        'tools',
+        'streaming',
+        'multimodal',
+      ],
       contextWindow: 1000000,
       costPer1kTokens: { input: 0.000075, output: 0.0003 },
       supportsVision: true,
@@ -193,30 +236,22 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       isDeprecated: false,
     },
   ],
-  
+
   openrouter: [
     {
-      id: 'gpt-4-turbo',
+      id: 'anthropic/claude-opus-4-6',
       provider: 'openrouter',
-      name: 'OpenAI GPT-4 Turbo (via OpenRouter)',
-      releaseDate: new Date('2024-04-09'),
-      tier: 'production',
-      capabilities: ['text', 'vision', 'tools', 'streaming'],
-      contextWindow: 128000,
-      costPer1kTokens: { input: 0.01, output: 0.03 },
-      supportsVision: true,
-      supportsTools: true,
-      supportsStreaming: true,
-      isDeprecated: false,
-    },
-    {
-      id: 'claude-3-opus',
-      provider: 'openrouter',
-      name: 'Anthropic Claude 3 Opus (via OpenRouter)',
-      releaseDate: new Date('2024-03-04'),
-      tier: 'production',
-      capabilities: ['text', 'vision', 'tools', 'streaming'],
-      contextWindow: 200000,
+      name: 'Claude Opus 4.6 (via OpenRouter)',
+      releaseDate: new Date('2026-03-01'),
+      tier: 'latest',
+      capabilities: [
+        'text',
+        'vision',
+        'tools',
+        'streaming',
+        'adaptive-thinking',
+      ],
+      contextWindow: 1000000,
       costPer1kTokens: { input: 0.015, output: 0.075 },
       supportsVision: true,
       supportsTools: true,
@@ -224,14 +259,48 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       isDeprecated: false,
     },
     {
-      id: 'gemini-1-5-pro',
+      id: 'anthropic/claude-sonnet-4-6',
       provider: 'openrouter',
-      name: 'Google Gemini 1.5 Pro (via OpenRouter)',
-      releaseDate: new Date('2024-05-14'),
+      name: 'Claude Sonnet 4.6 (via OpenRouter)',
+      releaseDate: new Date('2026-03-01'),
+      tier: 'latest',
+      capabilities: [
+        'text',
+        'vision',
+        'tools',
+        'streaming',
+        'adaptive-thinking',
+      ],
+      contextWindow: 1000000,
+      costPer1kTokens: { input: 0.003, output: 0.015 },
+      supportsVision: true,
+      supportsTools: true,
+      supportsStreaming: true,
+      isDeprecated: false,
+    },
+    {
+      id: 'anthropic/claude-haiku-4-5',
+      provider: 'openrouter',
+      name: 'Claude Haiku 4.5 (via OpenRouter)',
+      releaseDate: new Date('2025-10-01'),
+      tier: 'production',
+      capabilities: ['text', 'vision', 'tools', 'streaming'],
+      contextWindow: 200000,
+      costPer1kTokens: { input: 0.0008, output: 0.004 },
+      supportsVision: true,
+      supportsTools: true,
+      supportsStreaming: true,
+      isDeprecated: false,
+    },
+    {
+      id: 'google/gemini-2.0-flash',
+      provider: 'openrouter',
+      name: 'Google Gemini 2.0 Flash (via OpenRouter)',
+      releaseDate: new Date('2024-12-19'),
       tier: 'production',
       capabilities: ['text', 'vision', 'tools', 'streaming'],
       contextWindow: 1000000,
-      costPer1kTokens: { input: 0.00125, output: 0.005 },
+      costPer1kTokens: { input: 0.000075, output: 0.0003 },
       supportsVision: true,
       supportsTools: true,
       supportsStreaming: true,
@@ -276,7 +345,10 @@ export function getModels(provider: AIProvider): ModelConfig[] {
 /**
  * Get a specific model by ID
  */
-export function getModel(provider: AIProvider, modelId: string): ModelConfig | null {
+export function getModel(
+  provider: AIProvider,
+  modelId: string
+): ModelConfig | null {
   const models = LATEST_MODELS[provider];
   return models.find(m => m.id === modelId) || null;
 }
@@ -284,7 +356,10 @@ export function getModel(provider: AIProvider, modelId: string): ModelConfig | n
 /**
  * Check if a model is still available and not deprecated
  */
-export function isModelAvailable(provider: AIProvider, modelId: string): boolean {
+export function isModelAvailable(
+  provider: AIProvider,
+  modelId: string
+): boolean {
   const model = getModel(provider, modelId);
   return model ? !model.isDeprecated : false;
 }
@@ -294,7 +369,9 @@ export function isModelAvailable(provider: AIProvider, modelId: string): boolean
  */
 export function getProductionModels(provider: AIProvider): ModelConfig[] {
   return LATEST_MODELS[provider]
-    .filter(m => (m.tier === 'production' || m.tier === 'latest') && !m.isDeprecated)
+    .filter(
+      m => (m.tier === 'production' || m.tier === 'latest') && !m.isDeprecated
+    )
     .sort((a, b) => b.releaseDate.getTime() - a.releaseDate.getTime());
 }
 
@@ -302,16 +379,22 @@ export function getProductionModels(provider: AIProvider): ModelConfig[] {
  * Validate model configuration
  * Ensures the model meets system requirements
  */
-export function validateModel(model: ModelConfig, requirements?: {
-  minContextWindow?: number;
-  requireVision?: boolean;
-  requireTools?: boolean;
-  requireStreaming?: boolean;
-}): boolean {
+export function validateModel(
+  model: ModelConfig,
+  requirements?: {
+    minContextWindow?: number;
+    requireVision?: boolean;
+    requireTools?: boolean;
+    requireStreaming?: boolean;
+  }
+): boolean {
   if (model.isDeprecated) return false;
 
   if (requirements) {
-    if (requirements.minContextWindow && model.contextWindow < requirements.minContextWindow) {
+    if (
+      requirements.minContextWindow &&
+      model.contextWindow < requirements.minContextWindow
+    ) {
       return false;
     }
     if (requirements.requireVision && !model.supportsVision) return false;

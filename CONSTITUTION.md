@@ -82,13 +82,16 @@ For all AI workflow product features (WorkflowExecution, StepExecution):
 
 ### Claude 4.6 Thinking Guidelines
 
-- Extended thinking is Anthropic-direct only — ignored on OpenRouter/Google
-- Budgets (tokens): quick=0, standard=500, deep=4000, opus=16000
-- Enable `standard` (500) for premium BYOK content generation
-- Enable `deep` (4000) for multi-step campaigns (5+ posts)
-- Enable `opus` (16000) for Opus flagship brand strategy only
+- Adaptive thinking is Anthropic-direct only — ignored on OpenRouter/Google
+- Use `thinking: { type: "adaptive" }` — NOT the deprecated `budget_tokens` approach
+- Effort levels: low (light content), medium (standard campaigns), high (multi-step), max (Opus flagship)
+- Enable `medium` for premium BYOK content generation
+- Enable `high` for multi-step campaigns (5+ posts)
+- Enable `max` for Opus flagship brand strategy only
+- Use `thinkingDisplay: "omitted"` for high-volume generation (skips thinking in response)
 - Always pair thinking with `cache: true` on system prompt for repeat campaign calls
-- Interleaved thinking (beta header `interleaved-thinking-2025-05-14`): only for multi-step
+- Interleaved thinking is auto-enabled with adaptive thinking (no beta header needed)
+- 1M context at standard pricing — no 2x premium over 200k
 - Full reference: `.planning/AI-CAPABILITIES.md`
 
 ### MCP Channel Conventions (Multi-Agent)

@@ -23,8 +23,10 @@ export interface AICompletionRequest {
   frequency_penalty?: number;
   presence_penalty?: number;
   stream?: boolean;
-  /** Extended thinking budget tokens (Anthropic only). 0 = disabled. */
-  thinking?: number;
+  /** Adaptive thinking effort level (Anthropic only). Falsy = disabled. */
+  thinking?: 'low' | 'medium' | 'high' | 'max';
+  /** Omit thinking content from response for faster streaming (Anthropic only). */
+  thinkingDisplay?: 'omitted';
   /** Enable prompt caching on system prompt (Anthropic only). */
   cache?: boolean;
   /** Tool definitions for tool-use requests. */

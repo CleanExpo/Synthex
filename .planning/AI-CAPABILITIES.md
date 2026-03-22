@@ -12,42 +12,52 @@
 
 ---
 
-## Extended Thinking
+## Adaptive Thinking (Claude 4.6+)
 
-Extended thinking gives Claude space to reason step-by-step before producing output. Budget = tokens consumed by the thinking process.
+Adaptive thinking lets Claude decide when and how deeply to reason. Depth is controlled via the `effort` parameter — replaces the deprecated `budget_tokens` approach.
 
-### When to enable
+### Effort levels
 
-| Scenario                     | Budget | Constant                    |
-| ---------------------------- | ------ | --------------------------- |
-| Disabled                     | 0      | `THINKING_BUDGETS.quick`    |
-| Standard content (Sonnet)    | 500    | `THINKING_BUDGETS.standard` |
-| Premium multi-step campaigns | 4,000  | `THINKING_BUDGETS.deep`     |
-| Opus flagship campaigns      | 16,000 | `THINKING_BUDGETS.opus`     |
+| Scenario                     | Effort   | Constant                  |
+| ---------------------------- | -------- | ------------------------- |
+| Disabled                     | —        | `undefined`               |
+| Light content (Sonnet)       | `low`    | `THINKING_EFFORTS.low`    |
+| Standard campaigns           | `medium` | `THINKING_EFFORTS.medium` |
+| Premium multi-step campaigns | `high`   | `THINKING_EFFORTS.high`   |
+| Opus flagship campaigns      | `max`    | `THINKING_EFFORTS.max`    |
 
 **Configured in:** `lib/ai/constants.ts`
 
 ### SDK usage
 
 ```typescript
-import { THINKING_BUDGETS } from '@/lib/ai/constants';
+import { THINKING_EFFORTS } from '@/lib/ai/constants';
 
 await provider.complete({
   model: 'claude-sonnet-4-6',
   messages: [...],
-  thinking: THINKING_BUDGETS.deep,
+  thinking: THINKING_EFFORTS.high,
   cache: true, // cache system prompt block
 });
 ```
 
-### Interleaved thinking (multi-step)
+### Display omission (faster streaming)
 
-Enable for campaigns with 5+ posts. Pass beta header on the Anthropic provider:
+For high-volume generation where you only need the output (not the reasoning), omit thinking content from the response:
 
 ```typescript
-// In anthropic-provider.ts — pass via betaHeaders when interleaved thinking needed
-betaHeaders: ['interleaved-thinking-2025-05-14'];
+await provider.complete({
+  model: 'claude-sonnet-4-6',
+  messages: [...],
+  thinking: THINKING_EFFORTS.medium,
+  thinkingDisplay: 'omitted', // skip thinking blocks in response
+  cache: true,
+});
 ```
+
+### Interleaved thinking
+
+Interleaved thinking is auto-enabled with adaptive thinking on Claude 4.6+ — no beta header needed.
 
 ---
 
@@ -58,6 +68,16 @@ Caching is GA (no beta header required). Set `cache: true` on any `AICompletionR
 Best for: repeat calls within the same campaign where the system prompt is stable.
 
 **Configured in:** `lib/ai/providers/anthropic-provider.ts`
+
+### Automatic caching
+
+Claude 4.6 supports automatic caching — simply adding `cache_control: { type: 'ephemeral' }` to system messages enables the cache. No manual key management needed.
+
+---
+
+## Context Window
+
+1M tokens is now GA at standard pricing for Claude 4.6 (Opus + Sonnet). No 2x premium over 200k.
 
 ---
 
@@ -141,12 +161,12 @@ Enabled via `WEB_SEARCH_ENABLED=true` in env.
 
 ## Decision Matrix
 
-| Task                     | Provider                  | Thinking         | Cache |
-| ------------------------ | ------------------------- | ---------------- | ----- |
-| Quick post variation     | OpenRouter / Haiku        | off              | no    |
-| Standard social post     | OpenRouter / Sonnet       | off              | no    |
-| Premium campaign (BYOK)  | Anthropic direct / Sonnet | `standard` (500) | yes   |
-| Multi-step campaign (5+) | Anthropic direct / Sonnet | `deep` (4000)    | yes   |
-| Flagship brand strategy  | Anthropic direct / Opus   | `opus` (16000)   | yes   |
-| Image prompt refinement  | Anthropic direct / Sonnet | `standard` (500) | no    |
-| Auto-research analysis   | OpenRouter / Sonnet       | off              | no    |
+| Task                     | Provider                  | Thinking | Display | Cache |
+| ------------------------ | ------------------------- | -------- | ------- | ----- |
+| Quick post variation     | OpenRouter / Haiku        | —        | —       | no    |
+| Standard social post     | OpenRouter / Sonnet       | —        | —       | no    |
+| Premium campaign (BYOK)  | Anthropic direct / Sonnet | `medium` | omitted | yes   |
+| Multi-step campaign (5+) | Anthropic direct / Sonnet | `high`   | full    | yes   |
+| Flagship brand strategy  | Anthropic direct / Opus   | `max`    | full    | yes   |
+| Image prompt refinement  | Anthropic direct / Sonnet | `medium` | omitted | no    |
+| Auto-research analysis   | OpenRouter / Sonnet       | —        | —       | no    |
