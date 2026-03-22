@@ -495,8 +495,8 @@ class ContentRecommendationEngine {
 
       // Sort by urgency
       const urgencyOrder = { immediate: 0, soon: 1, when_ready: 2 };
-      // @ts-ignore - dynamic key indexing
       return cards.sort(
+        // @ts-ignore - dynamic key indexing
         (a: any, b: any) => urgencyOrder[a.urgency] - urgencyOrder[b.urgency]
       );
     } catch (error) {

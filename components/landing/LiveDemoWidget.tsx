@@ -8,13 +8,15 @@ interface DemoResult {
   caption: string;
   imageUrl: string | null;
   durationMs: number;
+  model?: string;
+  tier?: string;
 }
 
 const INDUSTRY_CHIPS = [
-  { label: 'Cafe', emoji: '☕' },
-  { label: 'Tradie', emoji: '🔧' },
-  { label: 'Salon', emoji: '✂️' },
-  { label: 'Gym', emoji: '💪' },
+  { label: 'Cafe', emoji: '\u2615' },
+  { label: 'Tradie', emoji: '\uD83D\uDD28' },
+  { label: 'Salon', emoji: '\uD83D\uDC87' },
+  { label: 'Gym', emoji: '\uD83D\uDCAA' },
 ];
 
 /** Instagram card skeleton shimmer */
@@ -63,8 +65,8 @@ function InstagramCard({
           /* Warm gradient fallback when image generation unavailable */
           <div className="w-full h-full bg-gradient-to-br from-amber-900/40 via-charcoal-700 to-charcoal-800 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-4xl mb-2">📸</div>
-              <p className="text-white/50 text-xs">Image generation offline</p>
+              <div className="text-4xl mb-2">{'\uD83D\uDCF8'}</div>
+              <p className="text-white/50 text-xs">Image preview unavailable</p>
             </div>
           </div>
         )}
@@ -83,7 +85,23 @@ function InstagramCard({
   );
 }
 
-/** Interactive demo widget — type business name → AI generates Instagram post */
+/** Free-tier model badge */
+function FreeTierBadge({ model }: { model?: string }) {
+  const displayModel = model
+    ? model.replace(':free', '').split('/').pop() || 'Free Model'
+    : 'Llama 3.3 70B';
+
+  return (
+    <div className="flex items-center gap-2 mt-2">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-charcoal-700/80 border border-white/[0.06] text-[10px] text-white/40">
+        <span className="w-1.5 h-1.5 rounded-full bg-green-400/60 inline-block" />
+        Free Tier &middot; {displayModel}
+      </span>
+    </div>
+  );
+}
+
+/** Interactive demo widget — type business name, AI generates Instagram post */
 export function LiveDemoWidget() {
   const [businessName, setBusinessName] = useState('');
   const [state, setState] = useState<DemoState>('idle');
@@ -121,10 +139,12 @@ export function LiveDemoWidget() {
         }).then(r => r.json()),
       ]);
 
+      const captionData =
+        captionRes.status === 'fulfilled' ? captionRes.value : null;
       const caption =
-        captionRes.status === 'fulfilled' && captionRes.value?.caption
-          ? captionRes.value.caption
-          : 'Your AI-generated caption will appear here.';
+        captionData?.caption || 'Your AI-generated caption will appear here.';
+      const model = captionData?.model || undefined;
+      const tier = captionData?.tier || 'free';
 
       const imageUrl =
         imageRes.status === 'fulfilled' && imageRes.value?.imageUrl
@@ -135,6 +155,8 @@ export function LiveDemoWidget() {
         caption,
         imageUrl,
         durationMs: Date.now() - startMs,
+        model,
+        tier,
       });
       setState('result');
     } catch {
@@ -183,7 +205,7 @@ export function LiveDemoWidget() {
             {state === 'loading' ? (
               <span className="w-4 h-4 border-2 border-charcoal-900/30 border-t-charcoal-900 rounded-full animate-spin block" />
             ) : (
-              '→'
+              '\u2192'
             )}
           </button>
         </div>
@@ -216,7 +238,7 @@ export function LiveDemoWidget() {
         <div>
           <InstagramSkeleton />
           <p className="text-center text-white/40 text-xs mt-3 animate-pulse">
-            Generating your post…
+            Generating your post&hellip;
           </p>
         </div>
       )}
@@ -226,15 +248,21 @@ export function LiveDemoWidget() {
           <InstagramCard businessName={businessName} result={result} />
           <div className="flex items-center justify-between mt-3">
             <p className="text-amber-400/70 text-xs">
-              ✓ Generated in {(result.durationMs / 1000).toFixed(1)}s
+              {'\u2713'} Generated in {(result.durationMs / 1000).toFixed(1)}s
             </p>
             <button
               onClick={handleReset}
               className="text-white/50 hover:text-white/60 text-xs transition-colors"
             >
-              Try another →
+              Try another {'\u2192'}
             </button>
           </div>
+          {/* Free tier badge + upsell */}
+          <FreeTierBadge model={result.model} />
+          <p className="text-[10px] text-white/25 mt-1.5 leading-relaxed">
+            This demo uses a free-tier model. Sign up to unlock legacy models
+            like Claude, GPT-4 &amp; Gemini Pro for premium results.
+          </p>
         </div>
       )}
 

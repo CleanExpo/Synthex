@@ -6,8 +6,16 @@ const RequestSchema = z.object({
   businessName: z.string().min(1).max(80),
 });
 
+/**
+ * Demo caption generation — FREE tier model via OpenRouter.
+ *
+ * Uses meta-llama/llama-3.3-70b-instruct:free (zero cost, no credit card).
+ * This is intentionally a free-tier model to showcase the platform without
+ * burning paid AI credits. Upgrade to a legacy model (Claude, GPT-4, etc.)
+ * inside the dashboard for production-grade output.
+ */
 export async function POST(req: NextRequest) {
-  // Strict rate limit: 5 req/min per IP — public route, no auth, burns AI credits
+  // Strict rate limit: 5 req/min per IP — public route, no auth
   return authStrict(req, async () => {
     let body: unknown;
     try {
@@ -46,14 +54,14 @@ export async function POST(req: NextRequest) {
             'X-Title': 'Synthex Demo',
           },
           body: JSON.stringify({
-            model: 'anthropic/claude-haiku-4-5',
+            model: 'meta-llama/llama-3.3-70b-instruct:free',
             messages: [
               {
                 role: 'user',
-                content: `Write a single Instagram caption (2–3 sentences, 1–2 hashtags) for a ${businessName}. Australian voice, no emojis, conversational. Return only the caption text, nothing else.`,
+                content: `Write a single Instagram caption (2-3 sentences, 1-2 hashtags) for a business called "${businessName}". Australian voice, no emojis, conversational. Return only the caption text, nothing else.`,
               },
             ],
-            max_tokens: 150,
+            max_tokens: 200,
             temperature: 0.8,
           }),
         }
@@ -70,8 +78,10 @@ export async function POST(req: NextRequest) {
 
       const data = (await response.json()) as {
         choices?: Array<{ message?: { content?: string } }>;
+        model?: string;
       };
       const caption = data?.choices?.[0]?.message?.content?.trim() ?? '';
+      const modelUsed = data?.model ?? 'meta-llama/llama-3.3-70b-instruct:free';
 
       if (!caption) {
         return NextResponse.json(
@@ -80,7 +90,11 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      return NextResponse.json({ caption });
+      return NextResponse.json({
+        caption,
+        model: modelUsed,
+        tier: 'free',
+      });
     } catch (err) {
       console.error('Demo caption error:', err);
       return NextResponse.json(

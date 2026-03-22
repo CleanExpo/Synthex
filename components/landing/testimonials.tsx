@@ -1,4 +1,30 @@
-/** Testimonials — single large card with warm charcoal/amber theme */
+/** Testimonials — rotating cards with warm charcoal/amber theme.
+ *  AI-generated placeholder testimonials until real customer reviews are collected. */
+
+const TESTIMONIALS = [
+  {
+    quote:
+      "Synthex didn't just automate our social footprint; it fundamentally redefined how we interface with global markets. The results are immediate, measurable, and real.",
+    name: 'Josh Mackay',
+    title: 'CEO / Digital Horizons',
+    initials: 'JM',
+  },
+  {
+    quote:
+      "We went from spending 12 hours a week on social content to under two. The AI understands our brand voice better than most junior copywriters we've hired.",
+    name: 'Priya Sharma',
+    title: 'Marketing Director / Verdant Co.',
+    initials: 'PS',
+  },
+  {
+    quote:
+      'The cross-platform scheduling alone saved us three headcounts. Pair that with the analytics engine and you have a genuine competitive advantage.',
+    name: 'Liam Chen',
+    title: 'Head of Growth / NovaBuild',
+    initials: 'LC',
+  },
+];
+
 export function Testimonials() {
   return (
     <section className="relative py-24 md:py-32 z-10">
@@ -13,22 +39,41 @@ export function Testimonials() {
               &ldquo;
             </div>
 
-            {/* Quote */}
-            <blockquote className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight text-white leading-snug mb-10 max-w-4xl">
-              Synthex didn&apos;t just automate our social footprint; it
-              fundamentally redefined how we interface with global markets. The
-              results are immediate, measurable, and real.
-            </blockquote>
+            {/* Testimonial cards */}
+            <div className="space-y-10">
+              {TESTIMONIALS.map(t => (
+                <div key={t.name}>
+                  <blockquote className="text-lg md:text-xl lg:text-2xl font-bold tracking-tight text-white leading-snug mb-6 max-w-4xl">
+                    {t.quote}
+                  </blockquote>
 
-            {/* Attribution */}
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-charcoal-600 border border-amber-500/20 flex-shrink-0" />
-              <div>
-                <div className="font-bold text-white text-sm">Josh Mackay</div>
-                <div className="text-xs text-white/40 mt-0.5">
-                  CEO / Digital Horizons
+                  {/* Attribution */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-charcoal-600 border border-amber-500/20 flex-shrink-0 flex items-center justify-center">
+                      <span className="text-amber-400/60 text-xs font-bold">
+                        {t.initials}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="font-bold text-white text-sm">
+                        {t.name}
+                      </div>
+                      <div className="text-xs text-white/40 mt-0.5">
+                        {t.title}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ))}
+            </div>
+
+            {/* AI-generated disclaimer */}
+            <div className="mt-10 pt-6 border-t border-white/[0.04]">
+              <p className="text-[11px] text-white/20 leading-relaxed">
+                These testimonials are AI-generated placeholders while we
+                collect real customer feedback. We&apos;re striving for 5-star
+                reviews from every client &mdash; yours could be next.
+              </p>
             </div>
           </div>
         </div>

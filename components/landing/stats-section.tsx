@@ -1,8 +1,8 @@
 const STATS = [
-  { value: '2,400+', label: 'Businesses', highlight: false },
-  { value: '50M+', label: 'Posts generated', highlight: true },
-  { value: '99.9%', label: 'Uptime', highlight: false },
-  { value: '9', label: 'Platforms', highlight: true },
+  { value: '10+', label: 'Platforms supported', highlight: true },
+  { value: '< 3s', label: 'Avg. generation time', highlight: false },
+  { value: '24/7', label: 'AI availability', highlight: false },
+  { value: '\u221E', label: 'Scheduling power', highlight: true },
 ];
 
 /** Stats strip — 4 metrics in a horizontal row with amber number accents */
