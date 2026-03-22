@@ -86,17 +86,26 @@ function InstagramCard({
   );
 }
 
-/** Free-tier model badge */
-function FreeTierBadge({ model }: { model?: string }) {
+/** Model / tier badge */
+function DemoBadge({ model, tier }: { model?: string; tier?: string }) {
+  if (tier === 'sample') {
+    return (
+      <div className="flex items-center gap-2 mt-2">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-[10px] text-orange-400/70">
+          <span className="w-1.5 h-1.5 rounded-full bg-orange-400/60 inline-block" />
+          Sample preview &middot; Sign up for live AI generation
+        </span>
+      </div>
+    );
+  }
   const displayModel = model
-    ? model.replace(':free', '').split('/').pop() || 'Free Model'
+    ? model.replace(':free', '').split('/').pop() || 'AI Model'
     : 'Llama 3.3 70B';
-
   return (
     <div className="flex items-center gap-2 mt-2">
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-charcoal-700/80 border border-white/[0.06] text-[10px] text-white/40">
         <span className="w-1.5 h-1.5 rounded-full bg-green-400/60 inline-block" />
-        Free Tier &middot; {displayModel}
+        Live AI &middot; {displayModel}
       </span>
     </div>
   );
@@ -107,45 +116,46 @@ export function LiveDemoWidget() {
   const [businessName, setBusinessName] = useState('');
   const [state, setState] = useState<DemoState>('idle');
   const [result, setResult] = useState<DemoResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleChip = (label: string) => {
     setBusinessName(label);
     inputRef.current?.focus();
+    // Auto-submit on chip click
+    setTimeout(() => {
+      void runGenerate(label);
+    }, 50);
   };
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    const name = businessName.trim();
-    if (!name || state === 'loading') return;
+  const runGenerate = async (name: string) => {
+    if (!name.trim() || state === 'loading') return;
 
     setState('loading');
-    setError(null);
     setResult(null);
     const startMs = Date.now();
 
     try {
-      // Run caption and image generation in parallel
+      // Run caption and image in parallel; caption never fails (has sample fallback)
       const [captionRes, imageRes] = await Promise.allSettled([
         fetch('/api/demo/caption', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ businessName: name }),
+          body: JSON.stringify({ businessName: name.trim() }),
         }).then(r => r.json()),
         fetch('/api/demo/image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ businessName: name }),
+          body: JSON.stringify({ businessName: name.trim() }),
         }).then(r => r.json()),
       ]);
 
       const captionData =
         captionRes.status === 'fulfilled' ? captionRes.value : null;
       const caption =
-        captionData?.caption || 'Your AI-generated caption will appear here.';
-      const model = captionData?.model || undefined;
-      const tier = captionData?.tier || 'free';
+        captionData?.caption ||
+        `${name} — follow us for the latest updates, behind-the-scenes content, and exclusive offers. #AustralianBusiness`;
+      const model = captionData?.model || 'sample';
+      const tier = captionData?.tier || 'sample';
 
       const imageUrl =
         imageRes.status === 'fulfilled' && imageRes.value?.imageUrl
@@ -161,15 +171,26 @@ export function LiveDemoWidget() {
       });
       setState('result');
     } catch {
-      setError('Something went wrong. Please try again.');
-      setState('idle');
+      // Even on total network failure, show a sample
+      setResult({
+        caption: `${name} — where quality meets passion. Follow along for updates, offers, and more. #AustralianBusiness`,
+        imageUrl: null,
+        durationMs: Date.now() - startMs,
+        model: 'sample',
+        tier: 'sample',
+      });
+      setState('result');
     }
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    await runGenerate(businessName);
   };
 
   const handleReset = () => {
     setState('idle');
     setResult(null);
-    setError(null);
     setBusinessName('');
   };
 
@@ -229,9 +250,9 @@ export function LiveDemoWidget() {
       </div>
 
       {/* Content area */}
-      {state === 'idle' && !error && (
-        <div className="text-center py-8 text-white/50 text-sm">
-          Enter a business name above to generate a post
+      {state === 'idle' && (
+        <div className="text-center py-8 text-white/40 text-sm">
+          Click a chip above or type any business name
         </div>
       )}
 
@@ -258,17 +279,12 @@ export function LiveDemoWidget() {
               Try another {'\u2192'}
             </button>
           </div>
-          {/* Free tier badge + upsell */}
-          <FreeTierBadge model={result.model} />
+          <DemoBadge model={result.model} tier={result.tier} />
           <p className="text-[10px] text-white/25 mt-1.5 leading-relaxed">
-            This demo uses a free-tier model. Sign up to unlock legacy models
-            like Claude, GPT-4 &amp; Gemini Pro for premium results.
+            Sign up to unlock Claude, GPT-4 &amp; Gemini Pro with your own brand
+            voice.
           </p>
         </div>
-      )}
-
-      {error && (
-        <div className="text-center py-4 text-red-400/70 text-sm">{error}</div>
       )}
     </div>
   );

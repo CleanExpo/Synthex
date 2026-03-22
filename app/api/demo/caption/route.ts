@@ -1,22 +1,141 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { authStrict } from '@/lib/rate-limit';
+import { aiGeneration } from '@/lib/rate-limit';
 
 const RequestSchema = z.object({
   businessName: z.string().min(1).max(80),
 });
 
 /**
- * Demo caption generation — FREE tier model via OpenRouter.
+ * Demo caption generation — FREE tier via OpenRouter, with Anthropic/OpenAI fallback.
  *
- * Uses meta-llama/llama-3.3-70b-instruct:free (zero cost, no credit card).
- * This is intentionally a free-tier model to showcase the platform without
- * burning paid AI credits. Upgrade to a legacy model (Claude, GPT-4, etc.)
- * inside the dashboard for production-grade output.
+ * Rate limit: 20 req/min per IP (aiGeneration preset — NOT authStrict).
+ * Priority: OpenRouter free model → Anthropic Claude Haiku → OpenAI → sample caption.
+ * Never returns an error to the user — always produces something.
  */
+
+/** Sample captions by business name keyword — guaranteed last-resort fallback */
+const SAMPLE_CAPTIONS: Record<string, string> = {
+  carsi: `Training Australia's best — because clean isn't just a look, it's a health standard. Whether you're new to the industry or levelling up your certification, CARSI has the course for you. #RestorationTraining #CleaningScience`,
+  cafe: `Freshly brewed and ready to make your morning. Stop by and let us fuel your day the right way — good coffee, good vibes. #CoffeeCulture #MorningRitual`,
+  tradie: `Quality workmanship on every job, no matter the size. When you need it done right the first time, you know who to call. #TradesmanLife #BuiltToLast`,
+  salon: `Because you deserve to look and feel your best. Book in with us this week and walk out a new you. #HairSalon #SalonLife`,
+  gym: `Another day, another personal best waiting to happen. Come in, put in the work, and watch what you're capable of. #FitnessGoals #GymLife`,
+};
+
+function getSampleCaption(businessName: string): string {
+  const lower = businessName.toLowerCase();
+  for (const [key, caption] of Object.entries(SAMPLE_CAPTIONS)) {
+    if (lower.includes(key)) return caption;
+  }
+  return `${businessName} — where quality meets passion. Follow along for updates, behind-the-scenes content, and offers you won't want to miss. #AustralianBusiness #SmallBiz`;
+}
+
+async function generateViaOpenRouter(
+  businessName: string,
+  apiKey: string
+): Promise<string | null> {
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://synthex.social',
+        'X-Title': 'Synthex Demo',
+      },
+      body: JSON.stringify({
+        model: 'meta-llama/llama-3.3-70b-instruct:free',
+        messages: [
+          {
+            role: 'user',
+            content: `Write a single Instagram caption (2-3 sentences, 1-2 hashtags) for a business called "${businessName}". Australian voice, no emojis, conversational. Return only the caption text, nothing else.`,
+          },
+        ],
+        max_tokens: 200,
+        temperature: 0.8,
+      }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+      model?: string;
+    };
+    return data?.choices?.[0]?.message?.content?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+async function generateViaAnthropic(
+  businessName: string,
+  apiKey: string
+): Promise<string | null> {
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 200,
+        messages: [
+          {
+            role: 'user',
+            content: `Write a single Instagram caption (2-3 sentences, 1-2 hashtags) for a business called "${businessName}". Australian voice, no emojis, conversational. Return only the caption text, nothing else.`,
+          },
+        ],
+      }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      content?: Array<{ text?: string }>;
+    };
+    return data?.content?.[0]?.text?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+async function generateViaOpenAI(
+  businessName: string,
+  apiKey: string
+): Promise<string | null> {
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'user',
+            content: `Write a single Instagram caption (2-3 sentences, 1-2 hashtags) for a business called "${businessName}". Australian voice, no emojis, conversational. Return only the caption text, nothing else.`,
+          },
+        ],
+        max_tokens: 200,
+        temperature: 0.8,
+      }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+      model?: string;
+    };
+    return data?.choices?.[0]?.message?.content?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
-  // Strict rate limit: 5 req/min per IP — public route, no auth
-  return authStrict(req, async () => {
+  return aiGeneration(req, async () => {
     let body: unknown;
     try {
       body = await req.json();
@@ -38,99 +157,44 @@ export async function POST(req: NextRequest) {
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
 
-    if (!openRouterKey && !anthropicKey && !openaiKey) {
-      return NextResponse.json(
-        { error: 'AI service not configured' },
-        { status: 503 }
-      );
+    let caption: string | null = null;
+    let model = 'sample';
+    let tier = 'free';
+
+    // 1. Try OpenRouter (free tier — zero cost)
+    if (!caption && openRouterKey) {
+      caption = await generateViaOpenRouter(businessName, openRouterKey);
+      if (caption) {
+        model = 'meta-llama/llama-3.3-70b-instruct:free';
+        tier = 'free';
+      }
     }
 
-    const prompt = `Write a single Instagram caption (2-3 sentences, 1-2 hashtags) for a business called "${businessName}". Australian voice, no emojis, conversational. Return only the caption text, nothing else.`;
-
-    try {
-      let caption = '';
-      let modelUsed = '';
-      let tier = 'free';
-
-      if (openRouterKey) {
-        // Primary: OpenRouter free-tier model
-        const response = await fetch(
-          'https://openrouter.ai/api/v1/chat/completions',
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${openRouterKey}`,
-              'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://synthex.social',
-              'X-Title': 'Synthex Demo',
-            },
-            body: JSON.stringify({
-              model: 'meta-llama/llama-3.3-70b-instruct:free',
-              messages: [{ role: 'user', content: prompt }],
-              max_tokens: 200,
-              temperature: 0.8,
-            }),
-          }
-        );
-
-        if (response.ok) {
-          const data = (await response.json()) as {
-            choices?: Array<{ message?: { content?: string } }>;
-            model?: string;
-          };
-          caption = data?.choices?.[0]?.message?.content?.trim() ?? '';
-          modelUsed = data?.model ?? 'meta-llama/llama-3.3-70b-instruct:free';
-        }
+    // 2. Fallback: Anthropic Claude Haiku
+    if (!caption && anthropicKey) {
+      caption = await generateViaAnthropic(businessName, anthropicKey);
+      if (caption) {
+        model = 'claude-haiku-4-5-20251001';
+        tier = 'demo';
       }
-
-      // Fallback: Anthropic Claude (if OpenRouter unavailable or failed)
-      if (!caption && anthropicKey) {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'x-api-key': anthropicKey,
-            'anthropic-version': '2023-06-01',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'claude-haiku-4-5-20251001',
-            max_tokens: 200,
-            messages: [{ role: 'user', content: prompt }],
-          }),
-        });
-
-        if (response.ok) {
-          const data = (await response.json()) as {
-            content?: Array<{ text?: string }>;
-            model?: string;
-          };
-          caption = data?.content?.[0]?.text?.trim() ?? '';
-          modelUsed = data?.model ?? 'claude-haiku-4-5-20251001';
-          tier = 'demo';
-        } else {
-          const err = await response.text();
-          console.error('Anthropic demo error:', err);
-        }
-      }
-
-      if (!caption) {
-        return NextResponse.json(
-          { error: 'AI generation failed' },
-          { status: 502 }
-        );
-      }
-
-      return NextResponse.json({
-        caption,
-        model: modelUsed,
-        tier,
-      });
-    } catch (err) {
-      console.error('Demo caption error:', err);
-      return NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
-      );
     }
+
+    // 3. Fallback: OpenAI GPT-4o Mini
+    if (!caption && openaiKey) {
+      caption = await generateViaOpenAI(businessName, openaiKey);
+      if (caption) {
+        model = 'gpt-4o-mini';
+        tier = 'demo';
+      }
+    }
+
+    // 4. Final fallback: curated sample — demo ALWAYS produces output
+    if (!caption) {
+      caption = getSampleCaption(businessName);
+      model = 'sample';
+      tier = 'sample';
+    }
+
+    return NextResponse.json({ caption, model, tier });
   });
 }
