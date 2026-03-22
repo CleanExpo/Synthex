@@ -4,10 +4,14 @@
  * Deep single-page SEO analysis: meta tags, headings, content, images, links, schema.
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
+import { validateExternalUrl } from '@/lib/security/validate-url';
 
 const RequestSchema = z.object({
   url: z.string().url('Invalid URL provided'),
@@ -30,24 +34,57 @@ async function analyzePageSEO(url: string) {
   const titleValue = titleMatch?.[1]?.trim() || null;
   const titleLength = titleValue?.length || 0;
 
-  const descMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i)
-    || html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description["']/i);
+  const descMatch =
+    html.match(
+      /<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i
+    ) ||
+    html.match(
+      /<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description["']/i
+    );
   const descValue = descMatch?.[1]?.trim() || null;
   const descLength = descValue?.length || 0;
 
-  const canonicalMatch = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']*)["']/i);
-  const robotsMatch = html.match(/<meta[^>]+name=["']robots["'][^>]+content=["']([^"']*)["']/i);
+  const canonicalMatch = html.match(
+    /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']*)["']/i
+  );
+  const robotsMatch = html.match(
+    /<meta[^>]+name=["']robots["'][^>]+content=["']([^"']*)["']/i
+  );
 
-  const ogTitleMatch = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']*)["']/i)
-    || html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+property=["']og:title["']/i);
-  const ogDescMatch = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']*)["']/i)
-    || html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+property=["']og:description["']/i);
-  const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']*)["']/i)
-    || html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+property=["']og:image["']/i);
-  const twitterCardMatch = html.match(/<meta[^>]+name=["']twitter:card["'][^>]+content=["']([^"']*)["']/i);
+  const ogTitleMatch =
+    html.match(
+      /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']*)["']/i
+    ) ||
+    html.match(
+      /<meta[^>]+content=["']([^"']*)["'][^>]+property=["']og:title["']/i
+    );
+  const ogDescMatch =
+    html.match(
+      /<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']*)["']/i
+    ) ||
+    html.match(
+      /<meta[^>]+content=["']([^"']*)["'][^>]+property=["']og:description["']/i
+    );
+  const ogImageMatch =
+    html.match(
+      /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']*)["']/i
+    ) ||
+    html.match(
+      /<meta[^>]+content=["']([^"']*)["'][^>]+property=["']og:image["']/i
+    );
+  const twitterCardMatch = html.match(
+    /<meta[^>]+name=["']twitter:card["'][^>]+content=["']([^"']*)["']/i
+  );
 
   // Headings
-  const headings: Record<string, string[]> = { h1: [], h2: [], h3: [], h4: [], h5: [], h6: [] };
+  const headings: Record<string, string[]> = {
+    h1: [],
+    h2: [],
+    h3: [],
+    h4: [],
+    h5: [],
+    h6: [],
+  };
   for (const tag of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']) {
     const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'gi');
     let match;
@@ -59,17 +96,30 @@ async function analyzePageSEO(url: string) {
 
   // Content metrics
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  const bodyText = bodyMatch ? bodyMatch[1].replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
+  const bodyText = bodyMatch
+    ? bodyMatch[1]
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    : '';
   const wordCount = bodyText.split(/\s+/).filter(Boolean).length;
 
   // Simple readability approximation (average words per sentence)
   const sentences = bodyText.split(/[.!?]+/).filter(s => s.trim().length > 10);
-  const avgWordsPerSentence = sentences.length > 0 ? wordCount / sentences.length : 0;
-  const readabilityScore = Math.max(0, Math.min(100, Math.round(100 - Math.abs(avgWordsPerSentence - 15) * 3)));
+  const avgWordsPerSentence =
+    sentences.length > 0 ? wordCount / sentences.length : 0;
+  const readabilityScore = Math.max(
+    0,
+    Math.min(100, Math.round(100 - Math.abs(avgWordsPerSentence - 15) * 3))
+  );
 
   // Images
   const imgMatches = html.match(/<img[^>]*>/gi) || [];
-  const missingAlt = imgMatches.filter(img => !img.match(/alt=["'][^"']+["']/i)).length;
+  const missingAlt = imgMatches.filter(
+    img => !img.match(/alt=["'][^"']+["']/i)
+  ).length;
 
   // Links
   const linkMatches = html.match(/<a[^>]+href=["']([^"']*)["']/gi) || [];
@@ -80,7 +130,12 @@ async function analyzePageSEO(url: string) {
     const hrefMatch = link.match(/href=["']([^"']*)["']/i);
     if (!hrefMatch) continue;
     const href = hrefMatch[1];
-    if (href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:')) continue;
+    if (
+      href.startsWith('#') ||
+      href.startsWith('javascript:') ||
+      href.startsWith('mailto:')
+    )
+      continue;
     try {
       const linkUrl = new URL(href, url);
       if (linkUrl.hostname === parsedUrl.hostname) {
@@ -95,7 +150,10 @@ async function analyzePageSEO(url: string) {
 
   // Schema detection
   const schemaTypes: string[] = [];
-  const ldJsonMatches = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
+  const ldJsonMatches =
+    html.match(
+      /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
+    ) || [];
   for (const block of ldJsonMatches) {
     const content = block.replace(/<\/?script[^>]*>/gi, '');
     try {
@@ -106,7 +164,9 @@ async function analyzePageSEO(url: string) {
           if (item['@type']) schemaTypes.push(item['@type']);
         }
       }
-    } catch { /* malformed JSON-LD */ }
+    } catch {
+      /* malformed JSON-LD */
+    }
   }
 
   // Score calculation
@@ -135,12 +195,20 @@ async function analyzePageSEO(url: string) {
       title: {
         value: titleValue,
         length: titleLength,
-        status: !titleValue ? 'error' : titleLength > 60 || titleLength < 30 ? 'warning' : 'good',
+        status: !titleValue
+          ? 'error'
+          : titleLength > 60 || titleLength < 30
+            ? 'warning'
+            : 'good',
       },
       description: {
         value: descValue,
         length: descLength,
-        status: !descValue ? 'error' : descLength > 160 || descLength < 70 ? 'warning' : 'good',
+        status: !descValue
+          ? 'error'
+          : descLength > 160 || descLength < 70
+            ? 'warning'
+            : 'good',
       },
       canonical: canonicalMatch?.[1] || null,
       robots: robotsMatch?.[1] || null,
@@ -175,7 +243,10 @@ async function analyzePageSEO(url: string) {
 }
 
 export async function POST(request: NextRequest) {
-  const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_WRITE);
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_WRITE
+  );
   if (!security.allowed) {
     return APISecurityChecker.createSecureResponse(
       { error: security.error },
@@ -188,9 +259,19 @@ export async function POST(request: NextRequest) {
     const validation = RequestSchema.safeParse(body);
     if (!validation.success) {
       return APISecurityChecker.createSecureResponse(
-        { success: false, error: 'Invalid request', details: validation.error.errors },
+        {
+          success: false,
+          error: 'Invalid request',
+          details: validation.error.errors,
+        },
         400
       );
+    }
+
+    try {
+      validateExternalUrl(validation.data.url);
+    } catch {
+      return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
     }
 
     const analysis = await analyzePageSEO(validation.data.url);

@@ -27,7 +27,10 @@ import {
   sendEngagementNotification,
   sendSystemNotification,
 } from '@/lib/websocket/notification-channel';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 
@@ -93,7 +96,8 @@ export async function GET(request: NextRequest) {
     endpoints: {
       websocket: {
         development: 'ws://localhost:3001/ws',
-        production: process.env.NEXT_PUBLIC_WS_URL || 'wss://ws.synthex.social/ws',
+        production:
+          process.env.NEXT_PUBLIC_WS_URL || 'wss://ws.synthex.social/ws',
       },
       sse: '/api/notifications/stream',
     },
@@ -140,17 +144,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Get sender user ID from centralised auth
-    const senderId = await getUserIdFromRequestOrCookies(request) || undefined;
+    const senderId =
+      (await getUserIdFromRequestOrCookies(request)) || undefined;
 
     // Parse and validate body
     let body: unknown;
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json(
-        { error: 'Invalid JSON body' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
     const parseResult = RequestBodySchema.safeParse(body);
@@ -162,7 +164,10 @@ export async function POST(request: NextRequest) {
     }
 
     const data = parseResult.data;
-    let deliveryResults: Map<string, any> | { delivered: boolean; method: string } | null = null;
+    let deliveryResults:
+      | Map<string, any>
+      | { delivered: boolean; method: string }
+      | null = null;
 
     switch (data.type) {
       case 'notification': {
@@ -220,12 +225,15 @@ export async function POST(request: NextRequest) {
           // System-wide broadcast (admin only in production)
           logger.warn('System broadcast requested', { title, senderId });
         } else if (target.userIds && target.userIds.length > 0) {
-          deliveryResults = await NotificationChannel.broadcast(target.userIds, {
-            type: 'system',
-            title,
-            message,
-            priority,
-          });
+          deliveryResults = await NotificationChannel.broadcast(
+            target.userIds,
+            {
+              type: 'system',
+              title,
+              message,
+              priority,
+            }
+          );
         } else if (target.userId) {
           deliveryResults = await sendSystemNotification(
             target.userId,
@@ -250,7 +258,15 @@ export async function POST(request: NextRequest) {
         outcome: 'success',
         details: {
           type: data.type,
-          targetType: 'type' in data && 'target' in data ? Object.keys((data as Record<string, unknown>).target as Record<string, unknown>)[0] : 'unknown',
+          targetType:
+            'type' in data && 'target' in data
+              ? Object.keys(
+                  (data as Record<string, unknown>).target as Record<
+                    string,
+                    unknown
+                  >
+                )[0]
+              : 'unknown',
         },
       });
     }
@@ -264,9 +280,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Notification delivered',
-      delivery: deliveryResults instanceof Map
-        ? Object.fromEntries(deliveryResults)
-        : deliveryResults,
+      delivery:
+        deliveryResults instanceof Map
+          ? Object.fromEntries(deliveryResults)
+          : deliveryResults,
     });
   } catch (error) {
     logger.error('Notification send error', { error });
@@ -285,7 +302,8 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin':
+        process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     },

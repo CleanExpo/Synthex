@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { checkApiKeyGate } from '@/lib/middleware/api-key-gate.edge';
+import { jwtVerify } from 'jose';
 
 // Note: Using console directly instead of logger for Edge Function compatibility
 
@@ -162,23 +163,19 @@ export async function middleware(request: NextRequest) {
   // The onboardingComplete flag is embedded in the JWT at login/signup time.
   if (hasCustomAuth && authToken && pathname.startsWith('/dashboard')) {
     try {
-      const parts = authToken.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+      const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+      const { payload } = await jwtVerify(authToken, secret);
 
-        // Check superadmin bypass — superadmins skip onboarding
-        const isSuperadmin = payload.role === 'superadmin';
+      // Check superadmin bypass — superadmins skip onboarding
+      const isSuperadmin = payload.role === 'superadmin';
 
-        // If onboarding not complete and not superadmin, redirect to /onboarding
-        if (!isSuperadmin && payload.onboardingComplete === false) {
-          return NextResponse.redirect(new URL('/onboarding', request.url));
-        }
+      // If onboarding not complete and not superadmin, redirect to /onboarding
+      if (!isSuperadmin && payload.onboardingComplete === false) {
+        return NextResponse.redirect(new URL('/onboarding', request.url));
       }
     } catch {
-      // Token parse failed — allow access to dashboard rather than blocking
-      console.warn(
-        '[Middleware] Could not parse auth token for onboarding check'
-      );
+      // Invalid or forged token — skip the onboarding redirect entirely.
+      // Route handlers perform their own full auth checks; do not block here.
     }
   }
 

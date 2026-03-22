@@ -17,8 +17,13 @@ import crypto from 'crypto';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
-import { sendTestWebhook, broadcastWebhook, type WebhookEventType } from '@/lib/webhooks/sender';
+import {
+  sendTestWebhook,
+  broadcastWebhook,
+  type WebhookEventType,
+} from '@/lib/webhooks/sender';
 import { logger } from '@/lib/logger';
+import { validateExternalUrl } from '@/lib/security/validate-url';
 
 // =============================================================================
 // Constants - All available webhook event types
@@ -73,41 +78,48 @@ const AVAILABLE_EVENTS: WebhookEventType[] = [
 
 const webhookSubscriptionSchema = z.object({
   url: z.string().url('Invalid webhook URL'),
-  events: z.array(z.enum([
-    'user.created',
-    'user.updated',
-    'user.deleted',
-    'user.login',
-    'user.logout',
-    'content.created',
-    'content.updated',
-    'content.published',
-    'content.scheduled',
-    'content.failed',
-    'content.deleted',
-    'campaign.created',
-    'campaign.started',
-    'campaign.completed',
-    'campaign.paused',
-    'campaign.deleted',
-    'team.member.added',
-    'team.member.removed',
-    'team.role.changed',
-    'team.settings.updated',
-    'subscription.created',
-    'subscription.updated',
-    'subscription.cancelled',
-    'subscription.payment.succeeded',
-    'subscription.payment.failed',
-    'integration.connected',
-    'integration.disconnected',
-    'integration.error',
-    'analytics.report.ready',
-    'analytics.alert.triggered',
-    'webhook.test',
-    'webhook.ping',
-  ])).min(1, 'At least one event type required'),
-  secret: z.string().min(16, 'Secret must be at least 16 characters').optional(),
+  events: z
+    .array(
+      z.enum([
+        'user.created',
+        'user.updated',
+        'user.deleted',
+        'user.login',
+        'user.logout',
+        'content.created',
+        'content.updated',
+        'content.published',
+        'content.scheduled',
+        'content.failed',
+        'content.deleted',
+        'campaign.created',
+        'campaign.started',
+        'campaign.completed',
+        'campaign.paused',
+        'campaign.deleted',
+        'team.member.added',
+        'team.member.removed',
+        'team.role.changed',
+        'team.settings.updated',
+        'subscription.created',
+        'subscription.updated',
+        'subscription.cancelled',
+        'subscription.payment.succeeded',
+        'subscription.payment.failed',
+        'integration.connected',
+        'integration.disconnected',
+        'integration.error',
+        'analytics.report.ready',
+        'analytics.alert.triggered',
+        'webhook.test',
+        'webhook.ping',
+      ])
+    )
+    .min(1, 'At least one event type required'),
+  secret: z
+    .string()
+    .min(16, 'Secret must be at least 16 characters')
+    .optional(),
   active: z.boolean().optional().default(true),
   description: z.string().max(500).optional(),
 });
@@ -191,7 +203,10 @@ export async function GET() {
   } catch (error: unknown) {
     logger.error('List webhooks error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to list webhooks') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to list webhooks'),
+      },
       { status: 500 }
     );
   }
@@ -222,6 +237,15 @@ export async function POST(request: NextRequest) {
 
     const { url, events, secret, active, description } = validation.data;
 
+    try {
+      validateExternalUrl(url);
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid webhook URL' },
+        { status: 400 }
+      );
+    }
+
     // Generate a secret if not provided
     const webhookSecret = secret || crypto.randomBytes(32).toString('hex');
 
@@ -235,7 +259,7 @@ export async function POST(request: NextRequest) {
       : undefined;
 
     // Create the webhook endpoint and audit log in a transaction
-    const webhook = await prisma.$transaction(async (tx) => {
+    const webhook = await prisma.$transaction(async tx => {
       const created = await tx.webhookEndpoint.create({
         data: {
           url,
@@ -253,7 +277,12 @@ export async function POST(request: NextRequest) {
           resource: 'webhook',
           resourceId: created.id,
           userId,
-          details: { url, events, active: shouldBeActive, testResult: testResult.success },
+          details: {
+            url,
+            events,
+            active: shouldBeActive,
+            testResult: testResult.success,
+          },
           severity: 'low',
           category: 'system',
           outcome: 'success',
@@ -265,7 +294,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: warning ? 'Webhook subscription created with warning' : 'Webhook subscription created',
+      message: warning
+        ? 'Webhook subscription created with warning'
+        : 'Webhook subscription created',
       warning,
       data: {
         id: webhook.id,
@@ -284,7 +315,10 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Create webhook error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to create webhook') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to create webhook'),
+      },
       { status: 500 }
     );
   }
@@ -350,7 +384,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update the webhook and log in a transaction
-    const updated = await prisma.$transaction(async (tx) => {
+    const updated = await prisma.$transaction(async tx => {
       const result = await tx.webhookEndpoint.update({
         where: { id },
         data: updateData,
@@ -381,7 +415,10 @@ export async function PATCH(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Update webhook error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to update webhook') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to update webhook'),
+      },
       { status: 500 }
     );
   }
@@ -411,7 +448,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete with ownership check and log in a transaction
-    const deleted = await prisma.$transaction(async (tx) => {
+    const deleted = await prisma.$transaction(async tx => {
       const result = await tx.webhookEndpoint.deleteMany({
         where: { id: webhookId, userId },
       });
@@ -450,7 +487,10 @@ export async function DELETE(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Delete webhook error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to delete webhook') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to delete webhook'),
+      },
       { status: 500 }
     );
   }
@@ -478,7 +518,7 @@ async function triggerWebhooks(
     });
 
     // Filter to those subscribed to this event
-    const relevantSubs = subscriptions.filter((sub) => {
+    const relevantSubs = subscriptions.filter(sub => {
       const events = sub.events as string[];
       return events.includes(event);
     });
@@ -488,7 +528,7 @@ async function triggerWebhooks(
     }
 
     // Convert to format expected by broadcastWebhook
-    const webhookSubscriptions = relevantSubs.map((sub) => ({
+    const webhookSubscriptions = relevantSubs.map(sub => ({
       id: sub.id,
       url: sub.url,
       events: sub.events as WebhookEventType[],
@@ -501,8 +541,8 @@ async function triggerWebhooks(
 
     // Update delivery timestamps and failure counts
     for (const deliveryResult of result.results) {
-      const sub = relevantSubs.find((s) =>
-        webhookSubscriptions.find((ws) => ws.id === s.id && ws.url === s.url)
+      const sub = relevantSubs.find(s =>
+        webhookSubscriptions.find(ws => ws.id === s.id && ws.url === s.url)
       );
       if (sub) {
         if (deliveryResult.success) {
@@ -549,7 +589,10 @@ async function deliverWebhook(
   };
 
   if (secret) {
-    const signature = crypto.createHmac('sha256', secret).update(body).digest('hex');
+    const signature = crypto
+      .createHmac('sha256', secret)
+      .update(body)
+      .digest('hex');
     headers['X-Webhook-Signature'] = `sha256=${signature}`;
   }
 
@@ -580,7 +623,8 @@ async function deliverWebhook(
       error: response.ok ? undefined : `HTTP ${response.status}`,
     };
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
 
     await prisma.auditLog.create({
       data: {

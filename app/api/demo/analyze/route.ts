@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { aiGeneration } from '@/lib/rate-limit';
+import { validateExternalUrl } from '@/lib/security/validate-url';
 
 export const runtime = 'nodejs';
 export const maxDuration = 20;
@@ -292,6 +293,12 @@ export async function POST(req: NextRequest) {
     }
 
     const { url } = parsed.data;
+
+    try {
+      validateExternalUrl(url);
+    } catch {
+      return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
+    }
 
     // --- Fetch the website (5s timeout) ---
     let html = '';

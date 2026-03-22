@@ -9,7 +9,7 @@
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import {
@@ -21,6 +21,7 @@ import {
   PLAN_LIMITS,
 } from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';
+import { validateExternalUrl } from '@/lib/security/validate-url';
 
 // Request validation schema
 const AuditRequestSchema = z.object({
@@ -439,6 +440,12 @@ export async function POST(request: NextRequest) {
       includeCoreWebVitals,
       includeContentAnalysis,
     } = validationResult.data;
+
+    try {
+      validateExternalUrl(url);
+    } catch {
+      return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
+    }
 
     // Perform the audit (async — must be awaited)
     const auditResult = await performSEOAudit(url, {
