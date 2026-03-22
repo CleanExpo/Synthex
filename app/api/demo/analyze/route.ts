@@ -180,7 +180,7 @@ async function generateCaption(
   geminiKey?: string,
   openaiKey?: string
 ): Promise<{ caption: string; model: string }> {
-  const prompt = `Write a single Instagram caption (2-3 sentences, 1-2 hashtags) for an Australian ${industry} business called "${businessName}".${description ? ` About them: ${description.slice(0, 200)}` : ''} Conversational tone, no emojis. Return only the caption, nothing else.`;
+  const prompt = `Write a single Instagram caption (2-3 sentences, 1-2 hashtags) for an Australian ${industry} business called "${businessName}".${description ? ` About them: ${description.slice(0, 200)}` : ''} Conversational tone, no emojis. Return only the finished caption text, nothing else.`;
 
   if (geminiKey) {
     try {
@@ -191,17 +191,32 @@ async function generateCaption(
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 400, temperature: 0.85 },
+            generationConfig: {
+              maxOutputTokens: 400,
+              temperature: 0.85,
+              // Disable thinking mode — Gemini 2.5 Flash is a thinking model.
+              // Without thinkingBudget:0 it returns a `thought:true` part first
+              // containing mid-reasoning text, causing truncated output.
+              thinkingConfig: { thinkingBudget: 0 },
+            },
           }),
         }
       );
       if (res.ok) {
         const d = (await res.json()) as {
           candidates?: Array<{
-            content?: { parts?: Array<{ text?: string }> };
+            content?: {
+              parts?: Array<{ text?: string; thought?: boolean }>;
+            };
           }>;
         };
-        const text = d?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        // Skip thinking-token parts (thought:true) and join only answer parts
+        const rawParts = d?.candidates?.[0]?.content?.parts ?? [];
+        const text = rawParts
+          .filter(p => !p.thought)
+          .map(p => p.text ?? '')
+          .join('')
+          .trim();
         if (text) return { caption: text, model: 'gemini-2.5-flash' };
       }
     } catch {}

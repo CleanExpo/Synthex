@@ -32,7 +32,9 @@ function getSampleCaption(businessName: string): string {
 
 interface GeminiTextResponse {
   candidates?: Array<{
-    content?: { parts?: Array<{ text?: string }> };
+    content?: {
+      parts?: Array<{ text?: string; thought?: boolean }>;
+    };
   }>;
 }
 
@@ -51,21 +53,32 @@ async function generateViaGemini(
             {
               parts: [
                 {
-                  text: `Write a single Instagram caption (2-3 sentences, 1-2 hashtags) for an Australian business called "${businessName}". Conversational tone, no emojis. Return only the caption text, nothing else.`,
+                  text: `Write a single Instagram caption (2-3 sentences, 1-2 hashtags) for an Australian business called "${businessName}". Conversational tone, no emojis. Return only the finished caption text, nothing else.`,
                 },
               ],
             },
           ],
           generationConfig: {
-            maxOutputTokens: 200,
+            maxOutputTokens: 400,
             temperature: 0.85,
+            // Disable thinking mode — Gemini 2.5 Flash is a thinking model.
+            // Without this it prepends a `thought:true` part containing raw
+            // mid-reasoning text before the actual answer part.
+            thinkingConfig: { thinkingBudget: 0 },
           },
         }),
       }
     );
     if (!res.ok) return null;
     const data = (await res.json()) as GeminiTextResponse;
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
+    // Filter out thinking-token parts and join only the answer parts
+    const parts = data?.candidates?.[0]?.content?.parts ?? [];
+    const text = parts
+      .filter(p => !p.thought)
+      .map(p => p.text ?? '')
+      .join('')
+      .trim();
+    return text || null;
   } catch {
     return null;
   }
