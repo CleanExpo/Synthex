@@ -374,8 +374,7 @@ function NavGroup({ group }: { group: SidebarNavGroup }) {
 
   useEffect(() => {
     const isActive = group.items.some(
-      (item) =>
-        pathname === item.href || pathname.startsWith(item.href + '/')
+      item => pathname === item.href || pathname.startsWith(item.href + '/')
     );
     if (isActive) setIsOpen(true);
   }, [pathname, group.items]);
@@ -393,7 +392,10 @@ function NavGroup({ group }: { group: SidebarNavGroup }) {
               </Link>
             </SidebarMenuButton>
           </TooltipTrigger>
-          <TooltipContent side="right" className="bg-[#0a0a12] border-white/10 text-white/70 text-xs">
+          <TooltipContent
+            side="right"
+            className="bg-[#0a0a12] border-white/10 text-white/70 text-xs"
+          >
             {group.label}
           </TooltipContent>
         </Tooltip>
@@ -419,10 +421,9 @@ function NavGroup({ group }: { group: SidebarNavGroup }) {
       {isOpen && (
         <SidebarGroupContent>
           <SidebarMenu>
-            {group.items.map((item) => {
+            {group.items.map(item => {
               const isActive =
-                pathname === item.href ||
-                pathname.startsWith(item.href + '/');
+                pathname === item.href || pathname.startsWith(item.href + '/');
               return (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
@@ -458,7 +459,7 @@ function DashboardSidebar() {
   const pathname = usePathname();
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
-  const user = useUser();
+  const { user } = useUser();
 
   const [showAllGroups, setShowAllGroups] = useState(false);
 
@@ -476,10 +477,10 @@ function DashboardSidebar() {
   useEffect(() => {
     if (showAllGroups) return;
     const isInHiddenGroup = sidebarGroups.some(
-      (g) =>
+      g =>
         !STARTER_GROUP_IDS.has(g.id) &&
         g.items.some(
-          (item) => pathname === item.href || pathname.startsWith(item.href + '/')
+          item => pathname === item.href || pathname.startsWith(item.href + '/')
         )
     );
     if (isInHiddenGroup) {
@@ -505,11 +506,11 @@ function DashboardSidebar() {
   const visibleGroups = showAllGroups
     ? dynamicSidebarGroups
     : dynamicSidebarGroups.filter(
-        (g) => STARTER_GROUP_IDS.has(g.id) || g.id === 'businesses'
+        g => STARTER_GROUP_IDS.has(g.id) || g.id === 'businesses'
       );
 
   const hiddenGroupCount = dynamicSidebarGroups.filter(
-    (g) => !STARTER_GROUP_IDS.has(g.id) && g.id !== 'businesses'
+    g => !STARTER_GROUP_IDS.has(g.id) && g.id !== 'businesses'
   ).length;
 
   return (
@@ -519,10 +520,7 @@ function DashboardSidebar() {
     >
       {/* Logo Header */}
       <SidebarHeader className="border-b border-[0.5px] border-white/[0.06] h-14 flex-row items-center justify-between">
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-2.5 group"
-        >
+        <Link href="/dashboard" className="flex items-center gap-2.5 group">
           <SynthexLogo className="w-7 h-7 flex-shrink-0 opacity-90 group-hover:opacity-100 transition-opacity" />
           {!isCollapsed && (
             <span className="text-xs font-light tracking-[0.2em] text-white uppercase">
@@ -540,13 +538,13 @@ function DashboardSidebar() {
         <TooltipProvider delayDuration={0}>
           {isCollapsed ? (
             <SidebarMenu className="py-3 px-2 gap-1">
-              {visibleGroups.map((group) => (
+              {visibleGroups.map(group => (
                 <NavGroup key={group.id} group={group} />
               ))}
             </SidebarMenu>
           ) : (
             <>
-              {visibleGroups.map((group) =>
+              {visibleGroups.map(group =>
                 group.id === 'businesses' ? (
                   <SidebarGroup key="businesses">
                     <SidebarGroupLabel className="text-[10px] tracking-[0.2em] uppercase text-white/25 px-3 py-1.5">
@@ -610,7 +608,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   useTokenRefresh();
-  const user = useUser();
+  const { user } = useUser();
   const [searchValue, setSearchValue] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -651,7 +649,7 @@ export default function DashboardLayout({
                     type="search"
                     placeholder="Search..."
                     value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
+                    onChange={e => setSearchValue(e.target.value)}
                     aria-label="Search"
                     className="w-40 sm:w-52 md:w-64 pl-8 pr-3 py-1.5 text-xs bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/70 placeholder:text-white/20 rounded-sm focus:outline-none focus:border-amber-500/30 transition-colors"
                   />
@@ -666,7 +664,7 @@ export default function DashboardLayout({
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 p-1 rounded-sm hover:bg-white/[0.04] transition-colors">
                       <Avatar className="h-7 w-7">
-                        <AvatarImage src={user?.avatarUrl} />
+                        <AvatarImage src={user?.avatar ?? undefined} />
                         <AvatarFallback className="bg-amber-500/10 text-amber-500 text-xs">
                           {user?.name
                             ?.split(' ')
@@ -749,8 +747,8 @@ export default function DashboardLayout({
             className="md:hidden"
             items={MOBILE_NAV_ITEMS}
             activeId={getMobileActiveId(pathname)}
-            onSelect={(id) => {
-              const item = MOBILE_NAV_ITEMS.find((i) => i.id === id);
+            onSelect={id => {
+              const item = MOBILE_NAV_ITEMS.find(i => i.id === id);
               if (item?.href) router.push(item.href);
             }}
           />
