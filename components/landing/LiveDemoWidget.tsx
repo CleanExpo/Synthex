@@ -23,11 +23,9 @@ const INDUSTRY_CHIPS = [
 function InstagramSkeleton() {
   return (
     <div className="bg-charcoal-800 border border-white/[0.06] rounded-2xl overflow-hidden">
-      {/* Image placeholder */}
       <div className="w-full h-48 bg-charcoal-700 relative overflow-hidden">
         <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/[0.05] to-transparent" />
       </div>
-      {/* Text lines */}
       <div className="p-4 space-y-2">
         <div className="h-3 bg-charcoal-700 rounded-full w-1/3 relative overflow-hidden">
           <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite_0.2s] bg-gradient-to-r from-transparent via-white/[0.05] to-transparent" />
@@ -43,7 +41,7 @@ function InstagramSkeleton() {
   );
 }
 
-/** Rendered Instagram card */
+/** Rendered Instagram card with graceful image loading */
 function InstagramCard({
   businessName,
   result,
@@ -51,32 +49,86 @@ function InstagramCard({
   businessName: string;
   result: DemoResult;
 }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
+  const handle = businessName.toLowerCase().replace(/\s+/g, '');
+
+  // Emoji that matches the business type for the gradient fallback
+  const getEmoji = (name: string) => {
+    const lower = name.toLowerCase();
+    if (
+      lower.includes('cafe') ||
+      lower.includes('coffee') ||
+      lower.includes('food')
+    )
+      return '\u2615';
+    if (
+      lower.includes('tradie') ||
+      lower.includes('plumb') ||
+      lower.includes('electr') ||
+      lower.includes('build')
+    )
+      return '\uD83D\uDD28';
+    if (
+      lower.includes('salon') ||
+      lower.includes('hair') ||
+      lower.includes('beauty')
+    )
+      return '\uD83D\uDC87';
+    if (
+      lower.includes('gym') ||
+      lower.includes('fit') ||
+      lower.includes('sport')
+    )
+      return '\uD83D\uDCAA';
+    if (lower.includes('clean') || lower.includes('restore')) return '\u2728';
+    if (
+      lower.includes('retail') ||
+      lower.includes('fashion') ||
+      lower.includes('cloth')
+    )
+      return '\uD83D\uDECD\uFE0F';
+    return '\uD83C\uDFE2';
+  };
+
+  const showGradient = !result.imageUrl || imgError;
+  const showShimmer = result.imageUrl && !imgLoaded && !imgError;
+
   return (
-    <div className="bg-charcoal-800 border border-white/[0.06] rounded-2xl overflow-hidden transition-all duration-500 ease-out scale-95 animate-[fade-in_0.4s_ease-out_forwards,slide-up_0.4s_ease-out_forwards]">
-      {/* Image */}
+    <div className="bg-charcoal-800 border border-white/[0.06] rounded-2xl overflow-hidden transition-all duration-500 ease-out animate-[fade-in_0.4s_ease-out_forwards]">
+      {/* Image area */}
       <div className="w-full h-48 bg-charcoal-700 relative overflow-hidden">
-        {result.imageUrl ? (
+        {/* Shimmer while remote image is loading */}
+        {showShimmer && (
+          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/[0.05] to-transparent" />
+        )}
+
+        {/* The actual image (Picsum stock photo or Gemini-generated) */}
+        {result.imageUrl && !imgError && (
           <img
             src={result.imageUrl}
-            alt={`Generated image for ${businessName}`}
-            className="w-full h-full object-cover"
+            alt={`${businessName} post`}
+            className={`w-full h-full object-cover transition-opacity duration-500 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={() => setImgLoaded(true)}
+            onError={() => setImgError(true)}
           />
-        ) : (
-          /* Warm gradient fallback when image generation unavailable */
-          <div className="w-full h-full bg-gradient-to-br from-orange-900/40 via-charcoal-700 to-charcoal-800 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-4xl mb-2">{'\uD83D\uDCF8'}</div>
-              <p className="text-white/50 text-xs">Image preview unavailable</p>
-            </div>
+        )}
+
+        {/* Gradient fallback — only when no URL or image fails */}
+        {showGradient && (
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-900/30 via-charcoal-700 to-charcoal-800 flex flex-col items-center justify-center gap-2">
+            <div className="text-5xl">{getEmoji(businessName)}</div>
+            <p className="text-white/40 text-[11px] tracking-wide font-medium">
+              {businessName}
+            </p>
           </div>
         )}
       </div>
 
       {/* Caption */}
       <div className="p-4">
-        <p className="text-white/60 text-xs font-semibold mb-1">
-          @{businessName.toLowerCase().replace(/\s+/g, '')}
-        </p>
+        <p className="text-white/60 text-xs font-semibold mb-1">@{handle}</p>
         <p className="text-white/80 text-sm leading-relaxed">
           {result.caption}
         </p>
@@ -120,7 +172,6 @@ export function LiveDemoWidget() {
   const handleChip = (label: string) => {
     setBusinessName(label);
     inputRef.current?.focus();
-    // Auto-submit on chip click
     setTimeout(() => {
       void runGenerate(label);
     }, 50);
@@ -134,7 +185,6 @@ export function LiveDemoWidget() {
     const startMs = Date.now();
 
     try {
-      // Run caption and image in parallel; caption never fails (has sample fallback)
       const [captionRes, imageRes] = await Promise.allSettled([
         fetch('/api/demo/caption', {
           method: 'POST',
@@ -170,7 +220,6 @@ export function LiveDemoWidget() {
       });
       setState('result');
     } catch {
-      // Even on total network failure, show a sample
       setResult({
         caption: `${name} — where quality meets passion. Follow along for updates, offers, and more. #AustralianBusiness`,
         imageUrl: null,
