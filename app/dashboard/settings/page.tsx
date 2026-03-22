@@ -22,6 +22,7 @@ import {
   Save,
   Settings2,
   Shield,
+  Sparkles,
   User,
   Zap,
 } from '@/components/icons';
@@ -37,7 +38,7 @@ import {
 } from '@/components/settings';
 import { cn } from '@/lib/utils';
 
-// ── Tab definitions ───────────────────────────────────────────────────────────
+// ─── Tab definitions ──────────────────────────────────────────────────────────
 
 const TABS: {
   id: SettingsTab;
@@ -115,7 +116,7 @@ function SettingsPageContent() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors disabled:opacity-60"
+              className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-[#050508] text-xs font-semibold tracking-wide rounded-sm transition-colors disabled:opacity-60"
             >
               <Save className="h-3.5 w-3.5" />
               {isSaving ? 'Saving…' : 'Save Changes'}
@@ -147,7 +148,7 @@ function SettingsPageContent() {
       {/* Tab content */}
       <div className="mt-6">
         {activeTab === 'profile' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <ProfileTab
               profile={profile}
               onProfileChange={handleProfileChange}
@@ -155,22 +156,41 @@ function SettingsPageContent() {
               onSave={handleSave}
               isSaving={isSaving}
             />
-            <Link href="/dashboard/settings/brand-profile">
-              <div className="flex items-center justify-between py-4 px-5 border-[0.5px] border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/[0.12] rounded-sm transition-colors cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <Building className="w-4 h-4 text-orange-400" />
-                  <div>
-                    <p className="text-sm font-light text-white">
-                      Brand Profile
-                    </p>
-                    <p className="text-xs text-white/40 mt-0.5">
-                      Logo, colours, website, and social handles
-                    </p>
+            {/* Brand quick-links */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Link href="/dashboard/settings/brand-profile">
+                <div className="flex items-center justify-between py-4 px-5 border-[0.5px] border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/[0.12] rounded-sm transition-colors cursor-pointer h-full">
+                  <div className="flex items-center gap-3">
+                    <Building className="w-4 h-4 text-amber-500/70" />
+                    <div>
+                      <p className="text-sm font-light text-white">
+                        Brand Profile
+                      </p>
+                      <p className="text-xs text-white/40 mt-0.5">
+                        Logo, colours, website, and social handles
+                      </p>
+                    </div>
                   </div>
+                  <ChevronRight className="w-4 h-4 text-white/30 flex-shrink-0" />
                 </div>
-                <ChevronRight className="w-4 h-4 text-white/50" />
-              </div>
-            </Link>
+              </Link>
+              <Link href="/dashboard/settings/brand-setup">
+                <div className="flex items-center justify-between py-4 px-5 border-[0.5px] border-amber-500/20 bg-amber-500/[0.03] hover:bg-amber-500/[0.06] hover:border-amber-500/30 rounded-sm transition-colors cursor-pointer h-full">
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <div>
+                      <p className="text-sm font-light text-white">
+                        Brand Setup Wizard
+                      </p>
+                      <p className="text-xs text-white/40 mt-0.5">
+                        Guided onboarding with AI BrandDNA
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-white/30 flex-shrink-0" />
+                </div>
+              </Link>
+            </div>
           </div>
         )}
 
@@ -237,7 +257,7 @@ function SettingsPageContent() {
                 </div>
                 <button
                   onClick={handleUpgrade}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-[#050508] text-xs font-semibold tracking-wide rounded-sm transition-colors"
                 >
                   <Zap className="w-3.5 h-3.5" />
                   Upgrade to Enterprise

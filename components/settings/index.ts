@@ -20,3 +20,4 @@ export { BrandingTab } from './branding-tab';
 export { BrandProfileTab } from './brand-profile-tab';
 export { AICredentialsManager } from './ai-credentials-manager';
 export { PlatformCredentialsManager } from './platform-credentials-manager';
+export { BrandSetupWizard } from './brand-setup-wizard';
