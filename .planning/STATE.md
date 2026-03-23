@@ -9,9 +9,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 126 (marketing-redesign) — ALL PLANS COMPLETE ✅
-Last activity: 2026-03-20 — Marketing site redesigned: warm charcoal (#1a1612), Satoshi font, floating pill nav, 55/45 hero with LiveDemoWidget (AI post generation), 3-tier pricing, body sections + sub-pages amber refresh. type-check 0, test 1547 passed, lint 0. UNI-1604 DONE.
-Linear: UNI-1604
+Phase: 127 (contact-form) — ALL PLANS COMPLETE ✅
+Last activity: 2026-03-23 — Contact form at /contact wired to Resend SDK. New public POST /api/contact: Zod validation, writeDefault rate limit (30 req/min), sends to phil@carsi.com.au with replyTo set to sender. Fake setTimeout removed from page. type-check 0, lint 0.
+Linear: —
+
+Previous: Phase 126 (marketing-redesign) — 2026-03-20 — UNI-1604 DONE.
 
 Milestone: v10.0 Full Platform Quality Loop — **PENDING HUMAN GATE**
 Last milestone shipped: v9.0 — 2026-03-17
@@ -344,10 +346,10 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-13
-Stopped at: v8.0 milestone complete — Synthex is LIVE
+Last session: 2026-03-23
+Stopped at: Phase 127 contact-form complete — /api/contact wired to Resend
 Resume file: None
-Next action: None — all milestones shipped
+Next action: Verify synthex.social domain in Resend dashboard, then live-test contact form
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
