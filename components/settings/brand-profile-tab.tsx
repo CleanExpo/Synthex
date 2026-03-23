@@ -32,6 +32,7 @@ import {
   Users,
   X,
   AlertCircle,
+  Sparkles,
 } from '@/components/icons';
 import { toast } from 'sonner';
 import useSWR from 'swr';
@@ -81,6 +82,25 @@ const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
 // Types
 // ---------------------------------------------------------------------------
 
+interface VaultParsed {
+  name: string | null;
+  industry: string | null;
+  tone: string | null;
+  targetAudience: string | null;
+  usp: string | null;
+  keywords: string[];
+  colours: string[];
+  typography: string | null;
+}
+
+interface BusinessDNAResponse {
+  vault: {
+    raw: string | null;
+    parsed: VaultParsed;
+  };
+  brandDna: BrandDNARecord | null;
+}
+
 interface LocalProfile {
   name: string;
   description: string;
@@ -122,6 +142,156 @@ function isValidUrl(str: string): boolean {
 const DEFAULT_COLOR = '#6366f1';
 
 // ---------------------------------------------------------------------------
+// BusinessDNAViewer — read-only card showing the AI brand context
+// ---------------------------------------------------------------------------
+
+interface BusinessDNAViewerProps {
+  data: BusinessDNAResponse | null;
+  isLoading: boolean;
+}
+
+function DNAField({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null | undefined;
+}) {
+  if (!value) return null;
+  return (
+    <div className="space-y-1">
+      <p className="text-xs font-medium text-white/50 uppercase tracking-wide">
+        {label}
+      </p>
+      <p className="text-sm text-white/80 leading-relaxed">{value}</p>
+    </div>
+  );
+}
+
+function BusinessDNAViewer({ data, isLoading }: BusinessDNAViewerProps) {
+  const parsed = data?.vault?.parsed;
+  const bd = data?.brandDna;
+
+  // Merge: vault parsed fields take precedence, fall back to Prisma BrandDNA
+  const industry = parsed?.industry ?? bd?.industry ?? null;
+  const tone =
+    parsed?.tone ??
+    (bd?.brandVoice as { tone?: string } | null | undefined)?.tone ??
+    null;
+  const targetAudience =
+    parsed?.targetAudience ??
+    (bd?.persona as { description?: string } | null | undefined)?.description ??
+    null;
+  const usp = parsed?.usp ?? null;
+  const keywords: string[] =
+    parsed?.keywords && parsed.keywords.length > 0
+      ? parsed.keywords
+      : Array.isArray((bd as { offerings?: unknown } | null)?.offerings)
+        ? ((bd as { offerings?: unknown })?.offerings as string[])
+        : [];
+  const colours: string[] =
+    parsed?.colours && parsed.colours.length > 0
+      ? parsed.colours
+      : [bd?.primaryColour, bd?.secondaryColour].filter((c): c is string =>
+          Boolean(c)
+        );
+  const hasAnyData =
+    industry ||
+    tone ||
+    targetAudience ||
+    usp ||
+    keywords.length > 0 ||
+    colours.length > 0;
+
+  return (
+    <Card variant="glass">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-cyan-400" />
+          Your Brand Profile
+        </CardTitle>
+        <CardDescription>
+          The AI brand context used for content generation — populated
+          automatically after onboarding
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex items-center gap-3 py-4">
+            <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
+            <p className="text-sm text-white/50">Loading brand profile…</p>
+          </div>
+        ) : !hasAnyData ? (
+          <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-4 py-6 text-center">
+            <Sparkles className="w-8 h-8 text-white/20 mx-auto mb-3" />
+            <p className="text-sm text-white/40">
+              Your brand profile will populate after onboarding completes.
+            </p>
+            <p className="text-xs text-white/25 mt-1">
+              We&apos;ll automatically extract your brand DNA from your website.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <DNAField label="Industry" value={industry} />
+              <DNAField label="Tone of Voice" value={tone} />
+              <DNAField label="Target Audience" value={targetAudience} />
+              <DNAField label="Unique Selling Proposition" value={usp} />
+            </div>
+
+            {keywords.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-white/50 uppercase tracking-wide">
+                  Keywords &amp; Offerings
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {keywords.map(kw => (
+                    <span
+                      key={kw}
+                      className="px-2.5 py-0.5 rounded-full text-xs bg-cyan-500/10 border border-cyan-500/20 text-cyan-300"
+                    >
+                      {kw}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {colours.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-white/50 uppercase tracking-wide">
+                  Brand Colours
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {colours.map(colour => (
+                    <div
+                      key={colour}
+                      className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.08] text-xs text-white/70"
+                    >
+                      <span
+                        className="inline-block w-3.5 h-3.5 rounded-full border border-white/20 shrink-0"
+                        style={{ background: colour }}
+                      />
+                      {colour}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs text-white/25 pt-1">
+              Read-only — updated automatically when your brand profile is
+              refreshed.
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -144,6 +314,12 @@ export function BrandProfileTab({
     (url: string) => fetch(url, { credentials: 'include' }).then(r => r.json())
   );
   const brandDna = brandDnaData?.brandDna;
+
+  // Business DNA Vault — Obsidian vault profile used by AI content pipeline
+  const { data: businessDnaData, isLoading: isDnaLoading } =
+    useSWR<BusinessDNAResponse>('/api/brand/dna', (url: string) =>
+      fetch(url, { credentials: 'include' }).then(r => r.json())
+    );
 
   const [local, setLocal] = useState<LocalProfile>({
     name: '',
@@ -733,6 +909,14 @@ export function BrandProfileTab({
           </div>
         </CardContent>
       </Card>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Card 5 — Business DNA Profile (AI context viewer)                  */}
+      {/* ------------------------------------------------------------------ */}
+      <BusinessDNAViewer
+        data={businessDnaData ?? null}
+        isLoading={isDnaLoading}
+      />
 
       {/* ------------------------------------------------------------------ */}
       {/* Save Button                                                         */}
