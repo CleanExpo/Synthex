@@ -126,6 +126,18 @@
       "schedule": "0 9 * * *"
     },
     {
+      "path": "/api/cron/drip-day3",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/drip-day7",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/drip-day14",
+      "schedule": "0 9 * * *"
+    },
+    {
       "path": "/api/cron/unite-hub-revenue",
       "schedule": "0 6 * * *"
     },
