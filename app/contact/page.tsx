@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   Mail,
-  Phone,
   MapPin,
   Send,
   MessageCircle,
@@ -24,23 +23,16 @@ const contactMethods = [
   {
     icon: Mail,
     title: 'Email',
-    value: 'hello@synthex.social',
+    value: 'support@synthex.social',
     description: 'Send us an email anytime',
-    link: 'mailto:hello@synthex.social',
-  },
-  {
-    icon: Phone,
-    title: 'Phone',
-    value: '+1 (555) 123-4567',
-    description: 'Mon-Fri from 9am to 6pm PST',
-    link: 'tel:+15551234567',
+    link: 'mailto:support@synthex.social',
   },
   {
     icon: MapPin,
-    title: 'Office',
-    value: 'San Francisco, CA',
-    description: '123 Market Street, Suite 500',
-    link: 'https://maps.google.com',
+    title: 'Location',
+    value: 'Brisbane, QLD',
+    description: 'Australia',
+    link: 'https://maps.google.com/?q=Brisbane,QLD,Australia',
   },
 ];
 
@@ -48,7 +40,7 @@ const faqs = [
   {
     question: 'How quickly can I expect a response?',
     answer:
-      'We typically respond to all inquiries within 24 hours during business days. For urgent matters, please call our support line.',
+      'We typically respond to all inquiries within 24 hours during business days. For urgent matters, email us at support@synthex.social.',
   },
   {
     question: 'Do you offer custom enterprise solutions?',
