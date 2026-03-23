@@ -104,6 +104,7 @@ export function ObsidianImportModal({
   const [editPlatform, setEditPlatform] = useState('general');
   const [editTone, setEditTone] = useState('');
   const [editHashtags, setEditHashtags] = useState('');
+  const [editTopic, setEditTopic] = useState('');
   const [importLoading, setImportLoading] = useState(false);
   const [importError, setImportError] = useState('');
 
@@ -128,6 +129,7 @@ export function ObsidianImportModal({
     setEditPlatform('general');
     setEditTone('');
     setEditHashtags('');
+    setEditTopic('');
     setImportLoading(false);
     setImportError('');
     setCreatedDraftId('');
@@ -161,6 +163,11 @@ export function ObsidianImportModal({
       }
       if (!selectedFile.name.match(/\.(md|markdown|txt)$/i)) {
         setPreviewError('Only .md, .markdown, and .txt files are accepted.');
+        return;
+      }
+      if (selectedFile.size > 512 * 1024) {
+        setPreviewError('File is too large (maximum 512 KB).');
+        setPreviewLoading(false);
         return;
       }
     }
@@ -215,6 +222,7 @@ export function ObsidianImportModal({
       setEditPlatform(result.platform || 'general');
       setEditTone(result.tone ?? '');
       setEditHashtags(result.hashtags.join(', '));
+      setEditTopic(result.topic ?? '');
 
       setStep(2);
     } catch {
@@ -246,6 +254,7 @@ export function ObsidianImportModal({
           content: parseResult.content,
           platform: editPlatform,
           tone: editTone || undefined,
+          topic: editTopic.trim() || undefined,
           hashtags: hashtagsArray,
           frontMatter: parseResult.frontMatter,
         }),
@@ -478,6 +487,17 @@ export function ObsidianImportModal({
                 onChange={e => setEditTone(e.target.value)}
                 placeholder="e.g. professional, casual, witty"
                 className="bg-gray-800 border-white/10 text-white placeholder:text-gray-600"
+              />
+            </div>
+
+            {/* Topic */}
+            <div className="space-y-1">
+              <Label htmlFor="topic">Topic (optional)</Label>
+              <Input
+                id="topic"
+                value={editTopic}
+                onChange={e => setEditTopic(e.target.value)}
+                placeholder="e.g. product launch"
               />
             </div>
 
