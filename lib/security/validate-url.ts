@@ -17,7 +17,9 @@ const BLOCKED_PATTERNS: RegExp[] = [
   /^172\.(1[6-9]|2\d|3[01])\./,
   /^192\.168\./,
   /^169\.254\./, // AWS/GCP/Azure cloud metadata endpoint
-  /^::1/, // IPv6 loopback
+  /^::1/, // IPv6 loopback (bare)
+  /^\[::1\]/, // IPv6 loopback (URL.hostname bracket form)
+  /^\[fd[0-9a-f]{2}:/i, // IPv6 private range bracket form
   /^fd[0-9a-f]{2}:/i, // IPv6 private range (fc00::/7)
   /^0\.0\.0\.0/,
 ];

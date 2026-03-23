@@ -136,10 +136,7 @@ describe('validateExternalUrl', () => {
       ).toThrow('URL resolves to a blocked address');
     });
 
-    // Skip: the regex /^::1/ does not match '[::1]' (the bracket-wrapped form
-    // returned by URL.hostname for IPv6 literals). The validate-url utility has
-    // a known SSRF gap for IPv6 loopback addresses that should be fixed separately.
-    it.skip('blocks IPv6 loopback ::1 (KNOWN GAP: regex misses bracket form)', () => {
+    it('blocks IPv6 loopback ::1 via bracket form from URL.hostname', () => {
       expect(() => validateExternalUrl('http://[::1]/admin')).toThrow(
         'URL resolves to a blocked address'
       );

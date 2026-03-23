@@ -30,14 +30,14 @@ module.exports = {
   coverageReporters: ['text', 'lcov', 'html', 'json'],
 
   // Coverage thresholds
-  // Current: ~11% | Target: 40% (QG-6, dedicated sprint)
-  // Set to current levels + small buffer to prevent regression
+  // Current: ~57% statements (post SYN-446 sprint, 2026-03-24)
+  // Set slightly below actual to absorb new untested code added each sprint
   coverageThreshold: {
     global: {
-      branches: 8,
-      functions: 9,
-      lines: 10,
-      statements: 10,
+      branches: 35,
+      functions: 48,
+      lines: 53,
+      statements: 53,
     },
   },
 
