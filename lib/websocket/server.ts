@@ -309,6 +309,7 @@ class SynthexWebSocketServer {
    * Start heartbeat to detect dead connections
    */
   private startHeartbeat(): void {
+    if (this.heartbeatInterval) return; // Prevent double-start
     this.heartbeatInterval = setInterval(() => {
       const now = new Date();
       const timeout = 60000; // 60 seconds
@@ -350,6 +351,7 @@ class SynthexWebSocketServer {
   public shutdown(): void {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
     }
 
     this.clients.forEach((client, ws) => {
