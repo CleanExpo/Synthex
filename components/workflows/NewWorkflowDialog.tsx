@@ -33,6 +33,8 @@ interface NewWorkflowDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (exec: WorkflowExecution) => void;
+  /** Optional template to pre-select — skips to step 2 when provided */
+  preSelectedTemplate?: WorkflowTemplate | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -49,6 +51,7 @@ export function NewWorkflowDialog({
   open,
   onOpenChange,
   onCreated,
+  preSelectedTemplate = null,
 }: NewWorkflowDialogProps) {
   const { templates, isLoading: loadingTemplates } = useWorkflowTemplates();
 
@@ -61,7 +64,7 @@ export function NewWorkflowDialog({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Reset state when dialog closes
+  // Reset state when dialog closes; apply pre-selected template when opening
   useEffect(() => {
     if (!open) {
       setStep(1);
@@ -70,8 +73,13 @@ export function NewWorkflowDialog({
       setTitle('');
       setInputDataRaw('');
       setError(null);
+    } else if (preSelectedTemplate) {
+      setSelectedTemplate(preSelectedTemplate);
+      setIsAdHoc(false);
+      setTitle(preSelectedTemplate.name);
+      setStep(2);
     }
-  }, [open]);
+  }, [open, preSelectedTemplate]);
 
   // Pre-fill title from template name
   useEffect(() => {

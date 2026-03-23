@@ -12,12 +12,14 @@ import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { DashboardEmptyState } from '@/components/dashboard/empty-state';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { GitBranch, Plus, Brain } from '@/components/icons';
+import { GitBranch, Plus, Brain, Play, Layers } from '@/components/icons';
 import {
   useWorkflowExecutions,
   type WorkflowExecution,
   type WorkflowExecutionWithSteps,
+  type WorkflowTemplate,
 } from '@/lib/workflow/hooks/use-workflow-executions';
 import { useUser } from '@/hooks/use-user';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -38,6 +40,119 @@ const ALLOWED_PLANS = [
   'business',
   'custom',
 ];
+
+// ---------------------------------------------------------------------------
+// WorkflowTemplatesGrid — template selection section above executions
+// ---------------------------------------------------------------------------
+
+interface WorkflowTemplatesGridProps {
+  templates: WorkflowTemplate[];
+  isLoading: boolean;
+  error: Error | undefined;
+  onUseTemplate: (template: WorkflowTemplate) => void;
+}
+
+function TemplateSkeleton() {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {[1, 2, 3].map(i => (
+        <div
+          key={i}
+          className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-2 animate-pulse"
+        >
+          <div className="h-4 w-2/3 rounded bg-white/10" />
+          <div className="h-3 w-full rounded bg-white/5" />
+          <div className="h-3 w-4/5 rounded bg-white/5" />
+          <div className="h-7 w-28 rounded-lg bg-white/10 mt-3" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function WorkflowTemplatesGrid({
+  templates,
+  isLoading,
+  error,
+  onUseTemplate,
+}: WorkflowTemplatesGridProps) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Layers className="h-4 w-4 text-[#FF6B35]" />
+        <h2 className="text-sm font-semibold text-white">Templates</h2>
+        <span className="text-xs text-white/40">
+          — select one to start a workflow
+        </span>
+      </div>
+
+      {isLoading && <TemplateSkeleton />}
+
+      {error && !isLoading && (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
+          <p className="text-xs text-red-400">
+            Could not load templates. Please refresh and try again.
+          </p>
+        </div>
+      )}
+
+      {!isLoading && !error && templates.length === 0 && (
+        <Card className="bg-white/[0.02] border-white/10">
+          <CardContent className="flex flex-col items-center py-8 gap-2">
+            <Layers className="h-7 w-7 text-white/30" />
+            <p className="text-sm text-white/50">No templates available yet</p>
+            <p className="text-xs text-white/30 text-center max-w-xs">
+              Create a template to streamline your workflow automation.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {!isLoading && !error && templates.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {templates.map(tpl => {
+            const stepCount = Array.isArray(tpl.steps)
+              ? (tpl.steps as unknown[]).length
+              : typeof tpl.steps === 'object' && tpl.steps !== null
+                ? Object.keys(tpl.steps as object).length
+                : 0;
+
+            return (
+              <div
+                key={tpl.id}
+                className="group rounded-xl border border-white/10 bg-white/[0.02] p-4 flex flex-col gap-2 hover:border-[#FF6B35]/30 hover:bg-white/[0.04] transition-all"
+              >
+                <h3 className="text-sm font-semibold text-white truncate">
+                  {tpl.name}
+                </h3>
+                {tpl.description && (
+                  <p className="text-xs text-white/50 line-clamp-2 leading-relaxed">
+                    {tpl.description}
+                  </p>
+                )}
+                <div className="flex items-center justify-between mt-auto pt-2">
+                  {stepCount > 0 && (
+                    <span className="text-[10px] text-white/30">
+                      {stepCount} {stepCount === 1 ? 'step' : 'steps'}
+                    </span>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={() => onUseTemplate(tpl)}
+                    className="gradient-primary text-white h-7 px-3 text-xs ml-auto gap-1"
+                  >
+                    <Play className="h-3 w-3" />
+                    Use Template
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Fetcher for single execution detail (with steps)
@@ -69,15 +184,12 @@ function ExecutionSkeleton() {
 }
 
 // ---------------------------------------------------------------------------
-// Template selector for Intelligence tab
+// Template fetcher (used for both the templates grid and the Intelligence tab)
 // ---------------------------------------------------------------------------
 
-interface Template {
-  id: string;
-  name: string;
-}
-
-async function fetchTemplates(url: string): Promise<{ templates: Template[] }> {
+async function fetchTemplates(
+  url: string
+): Promise<{ templates: WorkflowTemplate[] }> {
   const res = await fetch(url, { credentials: 'include' });
   if (!res.ok) throw new Error('Failed to fetch templates');
   return res.json();
@@ -96,6 +208,11 @@ export function WorkflowsPageClient() {
 
   // Dialog open state — also triggered by ?action=new from command palette
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Pre-selected template (set when user clicks "Use Template" in the grid)
+  const [dialogTemplate, setDialogTemplate] = useState<WorkflowTemplate | null>(
+    null
+  );
 
   // Pre-open dialog if ?action=new
   useEffect(() => {
@@ -122,8 +239,12 @@ export function WorkflowsPageClient() {
     null
   );
 
-  // Load templates for intelligence panel
-  const { data: templatesData } = useSWR<{ templates: Template[] }>(
+  // Load templates — used both for the template grid and the intelligence panel
+  const {
+    data: templatesData,
+    isLoading: templatesLoading,
+    error: templatesError,
+  } = useSWR<{ templates: WorkflowTemplate[] }>(
     '/api/workflows/templates',
     fetchTemplates
   );
@@ -166,8 +287,14 @@ export function WorkflowsPageClient() {
 
   function handleCreated(exec: WorkflowExecution) {
     setDialogOpen(false);
+    setDialogTemplate(null);
     mutate();
     setSelectedId(exec.id);
+  }
+
+  function handleUseTemplate(template: WorkflowTemplate) {
+    setDialogTemplate(template);
+    setDialogOpen(true);
   }
 
   // -------------------------------------------------------------------------
@@ -231,7 +358,16 @@ export function WorkflowsPageClient() {
         </TabsList>
 
         {/* Executions tab */}
-        <TabsContent value="executions" className="mt-4">
+        <TabsContent value="executions" className="mt-4 space-y-6">
+          {/* Template selection grid — always shown above executions */}
+          <WorkflowTemplatesGrid
+            templates={templates}
+            isLoading={templatesLoading}
+            error={templatesError}
+            onUseTemplate={handleUseTemplate}
+          />
+
+          {/* Execution list / empty state */}
           {isLoading ? (
             <ExecutionSkeleton />
           ) : !hasExecutions ? (
@@ -332,8 +468,12 @@ export function WorkflowsPageClient() {
       {/* New Workflow Dialog */}
       <NewWorkflowDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={open => {
+          setDialogOpen(open);
+          if (!open) setDialogTemplate(null);
+        }}
         onCreated={handleCreated}
+        preSelectedTemplate={dialogTemplate}
       />
     </div>
   );
