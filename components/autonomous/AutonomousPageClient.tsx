@@ -9,7 +9,7 @@
  * 3. Executing — status + link to /dashboard/workflows
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -78,6 +78,8 @@ function stepTypeColour(type: string): string {
 // Main Component
 // ---------------------------------------------------------------------------
 
+const AUTOPILOT_INTRO_KEY = 'autopilot-intro-seen';
+
 export function AutonomousPageClient() {
   const router = useRouter();
   const [instruction, setInstruction] = useState('');
@@ -85,6 +87,19 @@ export function AutonomousPageClient() {
   const [executionId, setExecutionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showIntro, setShowIntro] = useState(false);
+
+  // Show first-run banner only once, client-side only (avoids SSR mismatch)
+  useEffect(() => {
+    if (!localStorage.getItem(AUTOPILOT_INTRO_KEY)) {
+      setShowIntro(true);
+    }
+  }, []);
+
+  function dismissIntro() {
+    setShowIntro(false);
+    localStorage.setItem(AUTOPILOT_INTRO_KEY, '1');
+  }
 
   // ---- State: input | preview | executing ----
   const state = executionId ? 'executing' : parsed ? 'preview' : 'input';
@@ -160,6 +175,39 @@ export function AutonomousPageClient() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
+      {/* First-run Autopilot onboarding banner */}
+      {showIntro && (
+        <div className="relative rounded-xl bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 border border-orange-500/20 px-5 py-4">
+          <button
+            onClick={dismissIntro}
+            aria-label="Dismiss"
+            className="absolute top-3 right-3 text-white/40 hover:text-white/70 transition-colors text-lg leading-none"
+          >
+            ×
+          </button>
+          <div className="flex items-start gap-3 pr-6">
+            <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-orange-500/20 flex-shrink-0">
+              <Sparkles className="h-3.5 w-3.5 text-orange-400" />
+            </span>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-white">
+                Welcome to Autopilot — your AI task runner
+              </p>
+              <p className="text-xs text-white/60 leading-relaxed">
+                Type a plain-English instruction and Autopilot will build a
+                step-by-step workflow, show you a preview, and execute it on
+                your behalf. Try{' '}
+                <em>
+                  &ldquo;Create 5 LinkedIn posts about our latest launch and
+                  schedule them next week&rdquo;
+                </em>{' '}
+                to get started.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
