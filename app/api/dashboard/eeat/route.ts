@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
           where: { userId },
           orderBy: { updatedAt: 'desc' },
         })) ??
-        (
+        (await (
           prisma as unknown as Record<string, unknown> & {
             eeatScore?: {
               findFirst: (args: unknown) => Promise<typeof eeatRow>;
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
         ).eeatScore?.findFirst({
           where: { userId },
           orderBy: { updatedAt: 'desc' },
-        }) ??
+        })) ??
         null;
     } catch {
       // Model may not exist yet

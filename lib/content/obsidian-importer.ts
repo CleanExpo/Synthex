@@ -1,4 +1,9 @@
-import { parseObsidianNote, ObsidianParseResult } from '@/lib/markdown/obsidian-parser';
+import { Prisma } from '@prisma/client';
+
+import {
+  parseObsidianNote,
+  ObsidianParseResult,
+} from '@/lib/markdown/obsidian-parser';
 import { readNote, isEnabled } from '@/lib/obsidian/client';
 import { prisma } from '@/lib/prisma';
 
@@ -52,7 +57,7 @@ export async function confirmObsidianImport(
       metadata: {
         importedFrom: 'obsidian',
         frontMatter: preview.frontMatter,
-      },
+      } as Prisma.InputJsonValue,
     },
   });
 
