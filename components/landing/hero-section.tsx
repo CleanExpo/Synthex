@@ -76,8 +76,9 @@ export function HeroSection() {
               animate="visible"
               className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.05] mb-6"
             >
-              The social media platform that{' '}
-              <em className="text-orange-500 not-italic">works for you</em>
+              Stop spending{' '}
+              <em className="text-orange-500 not-italic">10+ hours a week</em>{' '}
+              on social media.
             </motion.h1>
 
             <motion.p
@@ -87,8 +88,8 @@ export function HeroSection() {
               animate="visible"
               className="text-lg text-white/50 max-w-lg leading-relaxed mb-10"
             >
-              Paste your website URL. AI extracts your brand voice and generates
-              on-brand posts in seconds. You approve — Synthex handles the rest.
+              Synthex learns your brand voice, then creates and schedules posts
+              across all 9 platforms — automatically.
             </motion.p>
 
             <motion.div
@@ -96,22 +97,27 @@ export function HeroSection() {
               variants={heroTextVariants}
               initial="hidden"
               animate="visible"
-              className="flex flex-col sm:flex-row gap-3"
             >
-              <Link
-                href="/signup"
-                className="group relative inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-orange-500 text-charcoal-900 font-bold rounded-full hover:bg-orange-400 hover:-translate-y-0.5 transition-all duration-200 text-sm overflow-hidden"
-              >
-                <span className="relative z-10">Start free</span>
-                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-              </Link>
-              <Link
-                href="/features"
-                className="group relative inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white/[0.04] border border-white/10 text-white/80 hover:text-white hover:bg-white/[0.08] rounded-full transition-all duration-200 text-sm font-medium overflow-hidden"
-              >
-                <span className="relative z-10">See it work</span>
-                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href="/signup"
+                  className="group relative inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-orange-500 text-charcoal-900 font-bold rounded-full hover:bg-orange-400 hover:-translate-y-0.5 transition-all duration-200 text-sm overflow-hidden"
+                >
+                  <span className="relative z-10">Start free</span>
+                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                </Link>
+                <Link
+                  href="/features"
+                  className="group relative inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white/[0.04] border border-white/10 text-white/80 hover:text-white hover:bg-white/[0.08] rounded-full transition-all duration-200 text-sm font-medium overflow-hidden"
+                >
+                  <span className="relative z-10">See it work</span>
+                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                </Link>
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                No credit card required · Cancel anytime · 30-day money-back
+                guarantee
+              </p>
             </motion.div>
 
             <motion.div
