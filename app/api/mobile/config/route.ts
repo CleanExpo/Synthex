@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
       },
       endpoints: {
         api: process.env.NEXT_PUBLIC_APP_URL || '',
-        websocket: process.env.NEXT_PUBLIC_WS_URL || '',
       },
       userId: security.context.userId,
     };

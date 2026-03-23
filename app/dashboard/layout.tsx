@@ -81,7 +81,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { WebSocketProvider } from '@/components/WebSocketProvider';
 import { BusinessSwitcher } from '@/components/business';
 import { useUser } from '@/hooks/use-user';
 import { SynthexLogo } from '@/components/landing/synthex-logo';
@@ -631,155 +630,150 @@ export default function DashboardLayout({
 
   return (
     <ModeProvider>
-      <WebSocketProvider autoConnect showConnectionStatus={false}>
-        <SidebarProvider
-          defaultOpen={true}
-          className="min-h-screen bg-[#050508]"
-        >
-          {/* Mobile Menu */}
-          <MobileMenu />
+      <SidebarProvider defaultOpen={true} className="min-h-screen bg-[#050508]">
+        {/* Mobile Menu */}
+        <MobileMenu />
 
-          {/* Desktop Sidebar */}
-          <DashboardSidebar />
+        {/* Desktop Sidebar */}
+        <DashboardSidebar />
 
-          {/* Main Content Area */}
-          <div className="flex-1 flex flex-col min-h-screen">
-            {/* Top Header Bar */}
-            <header className="sticky top-0 z-30 flex items-center justify-between h-14 border-b border-[0.5px] border-white/[0.06] bg-[#050508]/80 backdrop-blur-sm px-4 md:px-6">
-              <div className="flex items-center gap-3">
-                {/* Sidebar toggle for collapsed state */}
-                <SidebarTrigger className="hidden md:flex text-white/50 hover:text-white/80 transition-colors h-6 w-6" />
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-h-screen">
+          {/* Top Header Bar */}
+          <header className="sticky top-0 z-30 flex items-center justify-between h-14 border-b border-[0.5px] border-white/[0.06] bg-[#050508]/80 backdrop-blur-sm px-4 md:px-6">
+            <div className="flex items-center gap-3">
+              {/* Sidebar toggle for collapsed state */}
+              <SidebarTrigger className="hidden md:flex text-white/50 hover:text-white/80 transition-colors h-6 w-6" />
 
-                {/* Mobile menu toggle */}
-                <button
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="lg:hidden p-1.5 text-white/40 hover:text-white transition-colors rounded-sm"
-                  aria-label="Open menu"
+              {/* Mobile menu toggle */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="lg:hidden p-1.5 text-white/40 hover:text-white transition-colors rounded-sm"
+                aria-label="Open menu"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/40 pointer-events-none" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  value={searchValue}
+                  onChange={e => setSearchValue(e.target.value)}
+                  aria-label="Search"
+                  className="w-40 sm:w-52 md:w-64 pl-8 pr-3 py-1.5 text-xs bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/70 placeholder:text-white/40 rounded-sm focus:outline-none focus:border-amber-500/30 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <NotificationBell />
+
+              {/* User Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 p-1 rounded-sm hover:bg-white/[0.04] transition-colors">
+                    <Avatar className="h-7 w-7">
+                      <AvatarImage src={user?.avatar ?? undefined} />
+                      <AvatarFallback className="bg-amber-500/10 text-amber-500 text-xs">
+                        {user?.name
+                          ?.split(' ')
+                          .map((n: string) => n[0])
+                          .join('')
+                          .toUpperCase() ?? 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    {user?.name && (
+                      <span className="hidden md:inline text-xs text-white/60">
+                        {user.name}
+                      </span>
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-48 bg-[#0a0a12] border-white/[0.08] rounded-sm"
                 >
-                  <Menu className="h-5 w-5" />
-                </button>
-
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/40 pointer-events-none" />
-                  <input
-                    type="search"
-                    placeholder="Search..."
-                    value={searchValue}
-                    onChange={e => setSearchValue(e.target.value)}
-                    aria-label="Search"
-                    className="w-40 sm:w-52 md:w-64 pl-8 pr-3 py-1.5 text-xs bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/70 placeholder:text-white/40 rounded-sm focus:outline-none focus:border-amber-500/30 transition-colors"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <NotificationBell />
-
-                {/* User Menu */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 p-1 rounded-sm hover:bg-white/[0.04] transition-colors">
-                      <Avatar className="h-7 w-7">
-                        <AvatarImage src={user?.avatar ?? undefined} />
-                        <AvatarFallback className="bg-amber-500/10 text-amber-500 text-xs">
-                          {user?.name
-                            ?.split(' ')
-                            .map((n: string) => n[0])
-                            .join('')
-                            .toUpperCase() ?? 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      {user?.name && (
-                        <span className="hidden md:inline text-xs text-white/60">
-                          {user.name}
-                        </span>
-                      )}
+                  <DropdownMenuLabel className="text-xs text-white/40 font-normal">
+                    {user?.email ?? 'Account'}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-white/[0.06]" />
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/dashboard/settings?tab=profile"
+                      className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm"
+                    >
+                      <User className="h-3.5 w-3.5" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/dashboard/settings"
+                      className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm"
+                    >
+                      <Settings className="h-3.5 w-3.5" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/dashboard/settings?tab=billing"
+                      className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm"
+                    >
+                      <CreditCard className="h-3.5 w-3.5" />
+                      Billing
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-white/[0.06]" />
+                  <DropdownMenuItem>
+                    <button
+                      onClick={() => router.push('/api/auth/signout')}
+                      className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-white/40 hover:text-red-400 cursor-pointer rounded-sm"
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      Sign out
                     </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="w-48 bg-[#0a0a12] border-white/[0.08] rounded-sm"
-                  >
-                    <DropdownMenuLabel className="text-xs text-white/40 font-normal">
-                      {user?.email ?? 'Account'}
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-white/[0.06]" />
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href="/dashboard/settings?tab=profile"
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm"
-                      >
-                        <User className="h-3.5 w-3.5" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href="/dashboard/settings"
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm"
-                      >
-                        <Settings className="h-3.5 w-3.5" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href="/dashboard/settings?tab=billing"
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm"
-                      >
-                        <CreditCard className="h-3.5 w-3.5" />
-                        Billing
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-white/[0.06]" />
-                    <DropdownMenuItem>
-                      <button
-                        onClick={() => router.push('/api/auth/signout')}
-                        className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-white/40 hover:text-red-400 cursor-pointer rounded-sm"
-                      >
-                        <LogOut className="h-3.5 w-3.5" />
-                        Sign out
-                      </button>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </header>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </header>
 
-            {/* Page Content */}
-            <main className="p-4 md:p-6">{children}</main>
-          </div>
+          {/* Page Content */}
+          <main className="p-4 md:p-6">{children}</main>
+        </div>
 
-          {/* Mobile overlay */}
-          {mobileMenuOpen && (
-            <div
-              className="fixed inset-0 z-30 bg-black/60 lg:hidden"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-          )}
-
-          {/* Mobile Bottom Navigation */}
-          <BottomMenu
-            className="md:hidden"
-            items={MOBILE_NAV_ITEMS}
-            activeId={getMobileActiveId(pathname)}
-            onSelect={id => {
-              const item = MOBILE_NAV_ITEMS.find(i => i.id === id);
-              if (item?.href) router.push(item.href);
-            }}
+        {/* Mobile overlay */}
+        {mobileMenuOpen && (
+          <div
+            className="fixed inset-0 z-30 bg-black/60 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
           />
+        )}
 
-          {/* AI Project Manager */}
-          <AIPMFloatingButton />
+        {/* Mobile Bottom Navigation */}
+        <BottomMenu
+          className="md:hidden"
+          items={MOBILE_NAV_ITEMS}
+          activeId={getMobileActiveId(pathname)}
+          onSelect={id => {
+            const item = MOBILE_NAV_ITEMS.find(i => i.id === id);
+            if (item?.href) router.push(item.href);
+          }}
+        />
 
-          {/* Keyboard Hints */}
-          <KeyboardHints />
+        {/* AI Project Manager */}
+        <AIPMFloatingButton />
 
-          {/* Product Tour — triggers on first dashboard visit after onboarding */}
-          <ProductTour />
-        </SidebarProvider>
-      </WebSocketProvider>
+        {/* Keyboard Hints */}
+        <KeyboardHints />
+
+        {/* Product Tour — triggers on first dashboard visit after onboarding */}
+        <ProductTour />
+      </SidebarProvider>
     </ModeProvider>
   );
 }

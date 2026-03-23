@@ -561,3 +561,106 @@ export async function sendWelcomeSequenceDay7(
 </html>`,
   });
 }
+
+// ============================================================================
+// WELCOME SEQUENCE — D+14
+// ============================================================================
+
+/**
+ * Send the Day 14 power-user feature showcase email.
+ * Returns a Promise so callers can await delivery and handle errors.
+ */
+export async function sendWelcomeSequenceDay14(
+  email: string,
+  name?: string
+): Promise<void> {
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: 'Two weeks with Synthex — here\'s what\'s possible',
+    html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Two weeks with Synthex</title>
+</head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#0a0a0a;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0a;">
+    <tr>
+      <td align="center" style="padding:40px 20px;">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#1a1a2e 0%,#0a0a0a 100%);border-radius:16px;overflow:hidden;">
+          <tr>
+            <td style="background:linear-gradient(135deg,#f59e0b 0%,#ef4444 100%);padding:40px 20px;text-align:center;">
+              <h1 style="margin:0;color:#ffffff;font-size:32px;">Two Weeks In</h1>
+              <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:16px;">Here are 3 features that change the game for power users</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:40px;">
+              <p style="margin:0 0 20px;color:#ffffff;font-size:18px;">Hi ${name ?? 'there'},</p>
+              <p style="margin:0 0 24px;color:#a3a3a3;font-size:16px;line-height:1.6;">
+                You've been with us for 2 weeks — that's a great sign. Here are three features that our most active users rely on to get real leverage from Synthex:
+              </p>
+              <!-- Feature 1 -->
+              <div style="background:#1a1a1a;border-radius:12px;padding:24px;margin:0 0 16px;">
+                <div style="display:flex;align-items:flex-start;">
+                  <div style="background:linear-gradient(135deg,#f59e0b 0%,#ef4444 100%);border-radius:10px;width:40px;height:40px;display:inline-block;text-align:center;line-height:40px;flex-shrink:0;font-size:18px;">&#9881;</div>
+                  <div style="margin-left:16px;">
+                    <p style="margin:0 0 6px;color:#fbbf24;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Feature 01</p>
+                    <p style="margin:0 0 8px;color:#ffffff;font-size:16px;font-weight:600;">Autopilot Mode — set it and forget it</p>
+                    <p style="margin:0;color:#a3a3a3;font-size:14px;line-height:1.5;">
+                      Tell Synthex your posting schedule, tone, and topics once. Autopilot handles the rest — generating, scheduling, and publishing content so your social presence stays active even when you're not.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <!-- Feature 2 -->
+              <div style="background:#1a1a1a;border-radius:12px;padding:24px;margin:0 0 16px;">
+                <div style="display:flex;align-items:flex-start;">
+                  <div style="background:linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%);border-radius:10px;width:40px;height:40px;display:inline-block;text-align:center;line-height:40px;flex-shrink:0;font-size:18px;">&#128200;</div>
+                  <div style="margin-left:16px;">
+                    <p style="margin:0 0 6px;color:#60a5fa;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Feature 02</p>
+                    <p style="margin:0 0 8px;color:#ffffff;font-size:16px;font-weight:600;">Analytics Deep-Dive — see which content drives real ROI</p>
+                    <p style="margin:0;color:#a3a3a3;font-size:14px;line-height:1.5;">
+                      Go beyond likes and impressions. The Analytics dashboard breaks down engagement by format, platform, and time of day — so you can double down on what's actually converting, and stop guessing.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <!-- Feature 3 -->
+              <div style="background:#1a1a1a;border-radius:12px;padding:24px;margin:0 0 32px;">
+                <div style="display:flex;align-items:flex-start;">
+                  <div style="background:linear-gradient(135deg,#10b981 0%,#3b82f6 100%);border-radius:10px;width:40px;height:40px;display:inline-block;text-align:center;line-height:40px;flex-shrink:0;font-size:18px;">&#127758;</div>
+                  <div style="margin-left:16px;">
+                    <p style="margin:0 0 6px;color:#34d399;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Feature 03</p>
+                    <p style="margin:0 0 8px;color:#ffffff;font-size:16px;font-weight:600;">Multi-Platform Campaigns — one brief, 9 platforms</p>
+                    <p style="margin:0;color:#a3a3a3;font-size:14px;line-height:1.5;">
+                      Write one campaign brief and Synthex adapts it for every platform — optimising tone, length, and format for Instagram, LinkedIn, Twitter/X, TikTok, and 5 more — simultaneously.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div style="text-align:center;margin-bottom:16px;">
+                <a href="${APP_URL}/dashboard" style="display:inline-block;background:linear-gradient(135deg,#f59e0b 0%,#ef4444 100%);color:#ffffff;padding:14px 35px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;">
+                  Unlock All Features &#8594;
+                </a>
+              </div>
+              <p style="margin:0;color:#666666;font-size:13px;text-align:center;">
+                Any questions? Just reply — we read every email.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#000000;padding:25px;text-align:center;">
+              <p style="margin:0;color:#666666;font-size:12px;">© 2026 Synthex. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+  });
+}

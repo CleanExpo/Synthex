@@ -3,18 +3,15 @@
  */
 
 // Client exports
-export { 
-  getWebSocketClient, 
+export {
+  getWebSocketClient,
   initializeWebSocket,
   type WebSocketMessage,
-  type NotificationData 
+  type NotificationData,
 } from './client';
 
 // Server exports (for separate WebSocket server setup)
-export { 
-  getWebSocketServer,
-  type ConnectedClient 
-} from './server';
+export { getWebSocketServer, type ConnectedClient } from './server';
 
 // Re-export default client
 export { default as WebSocketClient } from './client';
