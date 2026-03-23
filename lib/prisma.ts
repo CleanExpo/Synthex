@@ -125,7 +125,10 @@ const createPrismaClient = (): PrismaClient => {
     globalForPrisma.prismaMetrics.errors++;
   });
 
-  // PrismaPg adapter type doesn't perfectly match SqlDriverAdapterFactory in Prisma 6 — safe to cast
+  // TODO(type-safety): PrismaPg adapter type doesn't perfectly match SqlDriverAdapterFactory in
+  // Prisma 6 — the @prisma/adapter-pg package exports mismatched types for this version.
+  // Track upstream fix: https://github.com/prisma/prisma/issues
+
   const adapter: any = new PrismaPg(pool);
 
   const client = new PrismaClient({
@@ -197,7 +200,7 @@ export const prisma = new Proxy({} as PrismaClient, {
           `DATABASE_URL may not be set or client creation failed.`
       );
     }
-    const val = (c as any)[prop];
+    const val = (c as unknown as Record<string | symbol, unknown>)[prop];
     return typeof val === 'function' ? val.bind(c) : val;
   },
 });
