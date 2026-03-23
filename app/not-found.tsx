@@ -57,9 +57,43 @@ function MessageDisplay() {
           </Link>
         </div>
 
-        {/* Helpful links */}
+        {/* Back to home */}
         <div className="mt-10 pt-6 border-t border-white/[0.06] w-64 text-center">
-          <p className="text-xs text-white/40 mb-3">Helpful links</p>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1 text-sm font-medium text-orange-400 hover:text-orange-300 transition-colors mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Synthex
+          </Link>
+
+          {/* Public navigation */}
+          <p className="text-xs text-white/40 mb-3">Pages</p>
+          <div className="flex flex-wrap gap-2 justify-center mb-6">
+            <Link
+              href="/pricing"
+              className="text-orange-400 hover:text-orange-300 text-xs transition-colors"
+            >
+              Pricing
+            </Link>
+            <span className="text-white/50">•</span>
+            <Link
+              href="/contact"
+              className="text-orange-400 hover:text-orange-300 text-xs transition-colors"
+            >
+              Contact
+            </Link>
+            <span className="text-white/50">•</span>
+            <Link
+              href="/dashboard"
+              className="text-orange-400 hover:text-orange-300 text-xs transition-colors"
+            >
+              Dashboard
+            </Link>
+          </div>
+
+          {/* Dashboard quick links */}
+          <p className="text-xs text-white/40 mb-3">Dashboard</p>
           <div className="flex flex-wrap gap-2 justify-center">
             <Link
               href="/dashboard/content"
