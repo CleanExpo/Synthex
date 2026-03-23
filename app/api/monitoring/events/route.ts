@@ -1,30 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { prisma } from '@/lib/prisma';
 
-/** Monitoring event structure */
-interface MonitoringEvent {
-  sessionId: string;
-  userId?: string;
-  timestamp: string;
-  type: string;
-  data?: Record<string, unknown>;
-}
-
-// In-memory storage for development
-// In production, this should write to a database or external service
-const events: MonitoringEvent[] = [];
-
-const monitoringEventSchema = z.object({
-  sessionId: z.string().min(1, 'Session ID is required'),
-  userId: z.string().optional(),
-  timestamp: z.string().optional(),
-  type: z.string().optional(),
-  data: z.record(z.unknown()).optional(),
-  errors: z.array(z.any()).optional(),
-  actions: z.array(z.any()).optional(),
-}).passthrough();
+const monitoringEventSchema = z
+  .object({
+    sessionId: z.string().min(1, 'Session ID is required'),
+    userId: z.string().optional(),
+    timestamp: z.string().optional(),
+    type: z.string().optional(),
+    data: z.record(z.unknown()).optional(),
+    errors: z.array(z.any()).optional(),
+    actions: z.array(z.any()).optional(),
+  })
+  .passthrough();
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,45 +33,42 @@ export async function POST(request: NextRequest) {
     const authUserId = await getUserIdFromCookies().catch(() => null);
     const verifiedUserId = authUserId ?? null;
 
-    // Process errors
+    // Persist client errors to AuditLog — survives Lambda cold starts
     if (body.errors && body.errors.length > 0) {
+      const auditRows = body.errors.map((error: Record<string, unknown>) => ({
+        action: 'client_error',
+        resource: 'browser',
+        details: {
+          message: String(error.message ?? 'Unknown error'),
+          stack: error.stack != null ? String(error.stack) : null,
+          url:
+            (error.context as Record<string, unknown>)?.url != null
+              ? String((error.context as Record<string, unknown>).url)
+              : null,
+          sessionId: body.sessionId,
+          timestamp: error.timestamp != null ? String(error.timestamp) : null,
+          userAgent: error.userAgent != null ? String(error.userAgent) : null,
+        } satisfies Prisma.InputJsonObject,
+        severity: 'high',
+        category: 'system',
+        outcome: 'failure',
+        userId: verifiedUserId,
+      }));
+
+      // fire-and-forget — don't block the response on DB write
+      prisma.auditLog.createMany({ data: auditRows }).catch(err => {
+        logger.error('[monitoring] Failed to persist error to AuditLog:', err);
+      });
+
+      // Also log to Vercel Runtime Logs (visible in Vercel dashboard)
       for (const error of body.errors) {
-        logger.error('[Error Tracked]:', {
-          message: error instanceof Error ? error.message : String(error),
-          url: error.context?.url,
+        logger.error('[client-error]', {
+          message: String(error.message ?? 'Unknown error'),
+          url: (error.context as Record<string, unknown>)?.url,
           userId: verifiedUserId,
           sessionId: body.sessionId,
-          timestamp: error.timestamp,
         });
-
-        // In production, send to error tracking service
-        if (process.env.NODE_ENV === 'production') {
-          // Example: Send to Sentry, LogRocket, etc.
-          // await sendToSentry(error);
-        }
       }
-    }
-
-    // Process user actions
-    if (body.actions && body.actions.length > 0) {
-      for (const action of body.actions) {
-        // In production, send to analytics service
-        if (process.env.NODE_ENV === 'production') {
-          // Example: Send to Google Analytics, Mixpanel, etc.
-          // await sendToAnalytics(action);
-        }
-      }
-    }
-
-    // Store events (for development)
-    events.push({
-      ...body,
-      receivedAt: new Date().toISOString(),
-    } as MonitoringEvent);
-
-    // Keep only last 1000 events in memory
-    if (events.length > 1000) {
-      events.splice(0, events.length - 1000);
     }
 
     return NextResponse.json({ success: true });
@@ -93,17 +81,19 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint for development debugging
-export async function GET() {
-  if (process.env.NODE_ENV !== 'development') {
-    return NextResponse.json(
-      { error: 'Not available in production' },
-      { status: 403 }
-    );
+// GET: query recent client errors from AuditLog (admin only)
+export async function GET(request: NextRequest) {
+  const authUserId = await getUserIdFromCookies().catch(() => null);
+  if (!authUserId) {
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   }
 
-  return NextResponse.json({
-    totalEvents: events.length,
-    events: events.slice(-10), // Return last 10 events
+  const errors = await prisma.auditLog.findMany({
+    where: { action: 'client_error', category: 'system' },
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+    select: { id: true, details: true, createdAt: true, userId: true },
   });
+
+  return NextResponse.json({ errors });
 }
