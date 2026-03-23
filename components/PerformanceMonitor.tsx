@@ -1,27 +1,36 @@
 'use client';
 
 import { useEffect } from 'react';
-import { collectWebVitals, analyzeResourceTiming, monitorMemoryUsage } from '@/lib/performance';
+import {
+  collectWebVitals,
+  analyzeResourceTiming,
+  monitorMemoryUsage,
+} from '@/lib/performance';
 import { getMonitoring } from '@/lib/monitoring';
+import { getConsentCookie } from '@/lib/cookie-consent';
 
 export function PerformanceMonitor() {
   useEffect(() => {
     // Initialize monitoring
     const monitoring = getMonitoring();
 
-    // Track page view
-    monitoring.trackAction('page_view', window.location.pathname);
+    // Track page view — only if user has accepted cookie consent (GDPR/CCPA)
+    if (getConsentCookie() === 'accepted') {
+      monitoring.trackAction('page_view', window.location.pathname);
+    }
 
     // Web Vitals monitoring via web-vitals SDK
-    import('web-vitals').then(({ onCLS, onFCP, onINP, onLCP, onTTFB }) => {
-      onCLS(collectWebVitals);
-      onFCP(collectWebVitals);
-      onINP(collectWebVitals);
-      onLCP(collectWebVitals);
-      onTTFB(collectWebVitals);
-    }).catch(() => {
-      // web-vitals not available — PostHog fallback handles collection
-    });
+    import('web-vitals')
+      .then(({ onCLS, onFCP, onINP, onLCP, onTTFB }) => {
+        onCLS(collectWebVitals);
+        onFCP(collectWebVitals);
+        onINP(collectWebVitals);
+        onLCP(collectWebVitals);
+        onTTFB(collectWebVitals);
+      })
+      .catch(() => {
+        // web-vitals not available — PostHog fallback handles collection
+      });
 
     // Analyze resource timing after page load
     if (document.readyState === 'complete') {

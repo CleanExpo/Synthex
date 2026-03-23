@@ -17,23 +17,50 @@ import dynamic from 'next/dynamic';
  */
 
 const PerformanceMonitor = dynamic(
-  () => import('@/components/PerformanceMonitor').then(m => ({ default: m.PerformanceMonitor })),
+  () =>
+    import('@/components/PerformanceMonitor').then(m => ({
+      default: m.PerformanceMonitor,
+    })),
   { ssr: false }
 );
 const CommandPalette = dynamic(
-  () => import('@/components/CommandPalette').then(m => ({ default: m.CommandPalette })),
+  () =>
+    import('@/components/CommandPalette').then(m => ({
+      default: m.CommandPalette,
+    })),
   { ssr: false }
 );
 const ProductTour = dynamic(
-  () => import('@/components/ProductTour').then(m => ({ default: m.ProductTour })),
+  () =>
+    import('@/components/ProductTour').then(m => ({ default: m.ProductTour })),
   { ssr: false }
 );
 const FloatingActionButton = dynamic(
-  () => import('@/components/FloatingActionButton').then(m => ({ default: m.FloatingActionButton })),
+  () =>
+    import('@/components/FloatingActionButton').then(m => ({
+      default: m.FloatingActionButton,
+    })),
   { ssr: false }
 );
 const FloatingStreak = dynamic(
-  () => import('@/components/StreakCounter').then(m => ({ default: m.FloatingStreak })),
+  () =>
+    import('@/components/StreakCounter').then(m => ({
+      default: m.FloatingStreak,
+    })),
+  { ssr: false }
+);
+const CookieConsentBanner = dynamic(
+  () =>
+    import('@/components/CookieConsentBanner').then(m => ({
+      default: m.CookieConsentBanner,
+    })),
+  { ssr: false }
+);
+const GoogleAnalyticsLoader = dynamic(
+  () =>
+    import('@/components/GoogleAnalyticsLoader').then(m => ({
+      default: m.GoogleAnalyticsLoader,
+    })),
   { ssr: false }
 );
 
@@ -45,6 +72,8 @@ export function LazyClientComponents() {
       <ProductTour />
       <FloatingActionButton />
       <FloatingStreak />
+      <CookieConsentBanner />
+      <GoogleAnalyticsLoader />
     </>
   );
 }
