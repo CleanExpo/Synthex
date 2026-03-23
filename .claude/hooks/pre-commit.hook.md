@@ -14,27 +14,33 @@ Runs verification before git commit.
 ## Actions
 
 ### 0. Settings Validation
+
 ```bash
 npm run validate:claude
 ```
 
 ### 1. Verification Check
+
 ```bash
-pnpm turbo run type-check lint
+npm run type-check && npm run lint
 ```
 
 ### 2. Test Suite
+
 ```bash
-pnpm turbo run test
+npm test
 ```
 
 ### 3. Build Verification
+
 ```bash
-pnpm turbo run build
+npm run build
 ```
 
 ### 4. Secret Scan
+
 Check for exposed:
+
 - API keys
 - Passwords
 - Tokens
@@ -45,6 +51,7 @@ Check for exposed:
 Report failures (non-blocking).
 
 User decides whether to:
+
 - Fix issues first (recommended)
 - Commit anyway (not recommended)
 

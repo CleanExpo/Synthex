@@ -1,16 +1,13 @@
 name: CI
 
-
 on:
   pull_request:
     branches: [main, develop]
   push:
     branches: [main, develop, 'feature/**', 'fix/**']
 
-
 env:
   NODE_VERSION: '22'
-
 
 jobs:
   # -------------------------------------------------------
@@ -29,7 +26,6 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - run: npm run lint
 
-
   type-check:
     name: Type Check
     runs-on: ubuntu-latest
@@ -42,7 +38,6 @@ jobs:
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
       - run: npm run type-check
-
 
   test:
     name: Unit Tests
@@ -66,7 +61,15 @@ jobs:
           name: coverage-report
           path: coverage/
           retention-days: 30
-
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: synthex-coverage
+          fail_ci_if_error: false # Change to true once CODECOV_TOKEN is in repo secrets
 
   security:
     name: Security Scan
@@ -93,7 +96,6 @@ jobs:
           path: ./
           base: ${{ github.event.pull_request.base.sha || github.event.before }}
           head: ${{ github.sha }}
-
 
   # -------------------------------------------------------
   # Build -- depends on quality checks passing
