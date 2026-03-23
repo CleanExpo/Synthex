@@ -200,20 +200,26 @@ class PerformanceMonitor {
   // ============================================================================
 
   private startMonitoring(): void {
+    if (this.flushInterval && this.systemMonitorInterval) return; // Prevent double-start
+
     // Start periodic flushing
-    this.flushInterval = setInterval(() => {
-      this.flushAllMetrics();
-    }, this.FLUSH_INTERVAL);
+    if (!this.flushInterval) {
+      this.flushInterval = setInterval(() => {
+        this.flushAllMetrics();
+      }, this.FLUSH_INTERVAL);
+    }
 
     // Start system monitoring
-    this.systemMonitorInterval = setInterval(() => {
-      const metrics = this.collectSystemMetrics();
-      this.systemMetricsBuffer.push(metrics);
+    if (!this.systemMonitorInterval) {
+      this.systemMonitorInterval = setInterval(() => {
+        const metrics = this.collectSystemMetrics();
+        this.systemMetricsBuffer.push(metrics);
 
-      if (this.systemMetricsBuffer.length >= 100) {
-        this.flushSystemMetrics();
-      }
-    }, this.SYSTEM_MONITOR_INTERVAL);
+        if (this.systemMetricsBuffer.length >= 100) {
+          this.flushSystemMetrics();
+        }
+      }, this.SYSTEM_MONITOR_INTERVAL);
+    }
 
     // Ensure cleanup on exit
     process.on('beforeExit', () => this.shutdown());
