@@ -39,9 +39,14 @@ export function FooterSection() {
           </nav>
 
           {/* Copyright */}
-          <p className="text-[11px] text-white/50 flex-shrink-0">
-            © 2026 Synthex. AI-native social media.
-          </p>
+          <div className="flex-shrink-0 text-center md:text-right">
+            <p className="text-[11px] text-white/50">
+              © 2026 Synthex. AI-native social media.
+            </p>
+            <p className="text-[11px] text-white/30 mt-1">
+              Synthex Pty Ltd · ABN: [ABN REQUIRED] · Brisbane, QLD, Australia
+            </p>
+          </div>
         </div>
       </div>
     </footer>
