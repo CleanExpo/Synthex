@@ -15,7 +15,12 @@
 // Types
 // =============================================================================
 
-export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'dead';
+export type JobStatus =
+  | 'pending'
+  | 'processing'
+  | 'completed'
+  | 'failed'
+  | 'dead';
 
 export interface Job<T = unknown> {
   id: string;
@@ -79,11 +84,12 @@ export async function enqueue<T>(
     maxAttempts: options.maxAttempts || 3,
     createdAt: new Date(),
     updatedAt: new Date(),
-    scheduledFor: options.scheduledFor || (options.delay ? new Date(Date.now() + options.delay) : undefined),
+    scheduledFor:
+      options.scheduledFor ||
+      (options.delay ? new Date(Date.now() + options.delay) : undefined),
   };
 
   jobs.set(job.id, job);
-
 
   // Auto-process if handler exists and not scheduled for later
   if (!job.scheduledFor || job.scheduledFor <= new Date()) {
@@ -96,7 +102,10 @@ export async function enqueue<T>(
 /**
  * Register a job handler
  */
-export function registerHandler<T = unknown>(type: string, handler: JobHandler<T>): void {
+export function registerHandler<T = unknown>(
+  type: string,
+  handler: JobHandler<T>
+): void {
   handlers.set(type, handler as JobHandler);
 }
 
@@ -105,7 +114,7 @@ export function registerHandler<T = unknown>(type: string, handler: JobHandler<T
  */
 async function processNextJob(type?: string): Promise<void> {
   const pendingJobs = Array.from(jobs.values())
-    .filter((job) => {
+    .filter(job => {
       if (job.status !== 'pending') return false;
       if (type && job.type !== type) return false;
       if (processingLock.has(job.id)) return false;
@@ -136,14 +145,12 @@ async function processNextJob(type?: string): Promise<void> {
     job.attempts++;
     job.updatedAt = new Date();
 
-
     const result = await handler(job);
 
     job.status = 'completed';
     job.completedAt = new Date();
     job.result = result;
     job.updatedAt = new Date();
-
   } catch (error) {
     job.error = error instanceof Error ? error.message : String(error);
     job.updatedAt = new Date();
@@ -180,7 +187,7 @@ export function getJob(id: string): Job | undefined {
  * Get jobs by status
  */
 export function getJobsByStatus(status: JobStatus): Job[] {
-  return Array.from(jobs.values()).filter((job) => job.status === status);
+  return Array.from(jobs.values()).filter(job => job.status === status);
 }
 
 /**
@@ -240,11 +247,11 @@ export function getQueueStats(): {
 
   return {
     total: allJobs.length,
-    pending: allJobs.filter((j) => j.status === 'pending').length,
-    processing: allJobs.filter((j) => j.status === 'processing').length,
-    completed: allJobs.filter((j) => j.status === 'completed').length,
-    failed: allJobs.filter((j) => j.status === 'failed').length,
-    dead: allJobs.filter((j) => j.status === 'dead').length,
+    pending: allJobs.filter(j => j.status === 'pending').length,
+    processing: allJobs.filter(j => j.status === 'processing').length,
+    completed: allJobs.filter(j => j.status === 'completed').length,
+    failed: allJobs.filter(j => j.status === 'failed').length,
+    dead: allJobs.filter(j => j.status === 'dead').length,
   };
 }
 
@@ -340,7 +347,10 @@ export async function queueWebhookDelivery(
   data: WebhookDeliveryJobData,
   options?: JobOptions
 ): Promise<Job<WebhookDeliveryJobData>> {
-  return enqueue(JobTypes.WEBHOOK_DELIVER, data, { ...options, maxAttempts: 5 });
+  return enqueue(JobTypes.WEBHOOK_DELIVER, data, {
+    ...options,
+    maxAttempts: 5,
+  });
 }
 
 // =============================================================================
@@ -384,17 +394,29 @@ export async function queueContentPublish(
 // Worker Initialization
 // =============================================================================
 
+let _workerInterval: NodeJS.Timeout | null = null;
+
 /**
  * Start the job processing worker
  */
 export function startWorker(): void {
-
+  if (_workerInterval) return; // Prevent double-start
   // Process pending jobs every 5 seconds
-  setInterval(() => {
+  _workerInterval = setInterval(() => {
     for (const type of handlers.keys()) {
       processNextJob(type);
     }
   }, 5000);
+}
+
+/**
+ * Stop the job processing worker (clears the interval)
+ */
+export function stopWorker(): void {
+  if (_workerInterval) {
+    clearInterval(_workerInterval);
+    _workerInterval = null;
+  }
 }
 
 /**
@@ -408,23 +430,25 @@ export function registerDefaultHandlers(): void {
   });
 
   // Webhook delivery handler
-  registerHandler(JobTypes.WEBHOOK_DELIVER, async (job: Job<WebhookDeliveryJobData>) => {
-    const { url, event, payload, secret } = job.data;
+  registerHandler(
+    JobTypes.WEBHOOK_DELIVER,
+    async (job: Job<WebhookDeliveryJobData>) => {
+      const { url, event, payload, secret } = job.data;
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Webhook-Event': event,
-      },
-      body: JSON.stringify(payload),
-    });
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Webhook-Event': event,
+        },
+        body: JSON.stringify(payload),
+      });
 
-    if (!response.ok) {
-      throw new Error(`Webhook delivery failed: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Webhook delivery failed: ${response.status}`);
+      }
+
+      return { delivered: true, status: response.status };
     }
-
-    return { delivered: true, status: response.status };
-  });
-
+  );
 }
