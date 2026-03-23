@@ -1033,3 +1033,7 @@ Reverse lookup: which routes touch each model. Top 30 most-used models.
 | 2026-03-23 | middleware.ts           | SEC-5: JWT HMAC verification via jose                          | SEC-5  |
 | 2026-03-23 | /api/ws                 | COMP-5: WebSocket CORS restricted to synthex.social            | COMP-5 |
 | 2026-03-23 | /api/contact            | Created — public POST, Resend SDK, rate-limited (writeDefault) | —      |
+
+### 2026-03-23 — UNI-1633: Obsidian content import
+- POST /api/content/import-obsidian — user-auth, writeDefault rate-limit — previews Obsidian note parse (no DB write)
+- POST /api/content/import-obsidian/confirm — user-auth, writeDefault rate-limit — creates ContentDraft from parsed note
