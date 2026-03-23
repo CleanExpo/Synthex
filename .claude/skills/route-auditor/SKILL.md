@@ -241,7 +241,15 @@ grep -n "console\.\(log\|error\|warn\)" <file>
    grep "<route-path-or-prefix>" .planning/ROUTE_REFERENCE.md
    ```
 
-   Confirm: exact file path, HTTP methods, auth level, Prisma models used. If the route is not found, grep the filesystem (`find app/api -name "route.ts" | xargs grep -l "<path-segment>"`) and note that the reference may be stale — suggest running `npm run routes:refresh`.
+   Confirm from the reference: HTTP path, allowed methods, auth level, Prisma models used.
+   Derive the filesystem path: convert `/api/<path>` → `app/api/<path>/route.ts` (App Router convention).
+   If the converted path does not resolve to an actual file, fall back to the filesystem grep:
+
+   ```bash
+   find app/api -name "route.ts" | xargs grep -l "<path-segment>"
+   ```
+
+   If still not found, note the reference may be stale — suggest running `npm run routes:refresh`.
 
 1. **Read only the confirmed file path** — Use the path derived from the reference (or filesystem grep result). Do not guess paths.
 2. **For each route file**, run all checks in order (Critical first)
