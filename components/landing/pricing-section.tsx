@@ -254,6 +254,12 @@ export function PricingSection({
                 </p>
               )}
 
+              {!plan.isEnterprise && (
+                <p className="text-xs text-green-400 mt-1">
+                  30-day money-back guarantee
+                </p>
+              )}
+
               <ul className="mt-5 gap-2 flex flex-col text-left">
                 {plan.features.map((feature, idx) => (
                   <li key={idx} className="flex items-start gap-2">

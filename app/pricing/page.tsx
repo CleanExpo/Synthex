@@ -121,7 +121,8 @@ export default function PricingPage() {
               Start Your 14-Day Free Trial
             </h2>
             <p className="text-xl text-gray-400 mb-8">
-              No credit card required. Cancel anytime.
+              No credit card required · Cancel anytime · 30-day money-back
+              guarantee
             </p>
             <Link href="/signup">
               <Button
