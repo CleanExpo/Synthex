@@ -7,43 +7,43 @@ completed: 2026-03-03
 
 # Phase 55 Plan 02: Inline State Audit Summary
 
-**All 13 dashboard pages pass loading/empty/error state coverage. No changes required to page.tsx files. All 10 SEO sub-route error.tsx files confirmed present.**
+**Re-audited 2026-03-23: 2 pages had missed error states (bio, experiments). Fixed. All 13 pages now pass. All 10 SEO sub-route error.tsx confirmed.**
 
 ## Audit Table
 
-| Page | Loading State | Empty State | Error State | Action Taken |
-|------|--------------|-------------|-------------|--------------|
-| content/drafts | ✅ Loader2 spinner (isLoading guard) | ✅ Local EmptyState (icon + title + description + CTA) | ✅ toast.error on fetch/delete failure | None — already compliant |
-| content/library | ✅ Loader2 spinner (isLoading guard) | ✅ Local EmptyState (icon + title + description + CTA) | ✅ toast.error on fetch/delete failure | None — already compliant |
-| businesses | ✅ Custom animate-pulse skeleton (userLoading guard) | ✅ Access-denied card for non-multi-business owners; list always non-empty for authorised users | ✅ Inline access-denied card | None — access guard serves as empty state |
-| personas | ✅ DashboardSkeleton | ✅ APIErrorCard for 401/error | ✅ APIErrorCard | None — already compliant |
-| calendar | ✅ Loader2 spinner | ✅ DashboardEmptyState with CTA | ✅ Inline error card | None — already compliant |
-| bio | ✅ Loader2 spinner | ✅ DashboardEmptyState with CTA | ✅ Inline error display via state | None — already compliant |
-| competitors | ✅ DashboardSkeleton | ✅ Inline empty state card with Array.isArray guard | ✅ Inline error card | None — Array.isArray guard added in commit 6612fc9 (prior session) |
-| reports | ✅ Delegated to ReportsList (Loader2 spinner) | ✅ Delegated to ReportsList (inline empty message) | ✅ Delegated to ReportsList (inline error) | None — delegation pattern is acceptable |
-| schedule | ✅ DashboardSkeleton | ✅ APIErrorCard (error state covers empty + error) | ✅ APIErrorCard | None — already compliant |
-| collaboration | ✅ Loader2 spinner | ✅ Inline empty card (icon + title + description) | ✅ Inline error card | None — already compliant |
-| experiments | ✅ DashboardSkeleton | ✅ APIErrorCard | ✅ APIErrorCard | None — already compliant |
-| webhooks | ✅ Loader2 spinner | ✅ Local EmptyState component (icon + title + description + CTA) | ✅ Inline error display | None — already compliant |
-| team | ✅ DashboardSkeleton | ✅ APIErrorCard | ✅ APIErrorCard | None — already compliant |
+| Page            | Loading State                                        | Empty State                                                                                     | Error State                                | Action Taken                                                                           |
+| --------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------- |
+| content/drafts  | ✅ Loader2 spinner (isLoading guard)                 | ✅ Local EmptyState (icon + title + description + CTA)                                          | ✅ toast.error on fetch/delete failure     | None — already compliant                                                               |
+| content/library | ✅ Loader2 spinner (isLoading guard)                 | ✅ Local EmptyState (icon + title + description + CTA)                                          | ✅ toast.error on fetch/delete failure     | None — already compliant                                                               |
+| businesses      | ✅ Custom animate-pulse skeleton (userLoading guard) | ✅ Access-denied card for non-multi-business owners; list always non-empty for authorised users | ✅ Inline access-denied card               | None — access guard serves as empty state                                              |
+| personas        | ✅ DashboardSkeleton                                 | ✅ APIErrorCard for 401/error                                                                   | ✅ APIErrorCard                            | None — already compliant                                                               |
+| calendar        | ✅ Loader2 spinner                                   | ✅ DashboardEmptyState with CTA                                                                 | ✅ Inline error card                       | None — already compliant                                                               |
+| bio             | ✅ Loader2 spinner                                   | ✅ DashboardEmptyState with CTA                                                                 | ❌→✅ Added AlertCircle banner             | error from useLinkBio() imported but never rendered (2026-03-23 fix)                   |
+| competitors     | ✅ DashboardSkeleton                                 | ✅ Inline empty state card with Array.isArray guard                                             | ✅ Inline error card                       | None — Array.isArray guard added in commit 6612fc9 (prior session)                     |
+| reports         | ✅ Delegated to ReportsList (Loader2 spinner)        | ✅ Delegated to ReportsList (inline empty message)                                              | ✅ Delegated to ReportsList (inline error) | None — delegation pattern is acceptable                                                |
+| schedule        | ✅ DashboardSkeleton                                 | ✅ APIErrorCard (error state covers empty + error)                                              | ✅ APIErrorCard                            | None — already compliant                                                               |
+| collaboration   | ✅ Loader2 spinner                                   | ✅ Inline empty card (icon + title + description)                                               | ✅ Inline error card                       | None — already compliant                                                               |
+| experiments     | ✅ DashboardSkeleton                                 | ✅ inline empty with CTA                                                                        | ❌→✅ Added error banner                   | useSWR error never destructured; added error state + grid suppression (2026-03-23 fix) |
+| webhooks        | ✅ Loader2 spinner                                   | ✅ Local EmptyState component (icon + title + description + CTA)                                | ✅ Inline error display                    | None — already compliant                                                               |
+| team            | ✅ DashboardSkeleton                                 | ✅ APIErrorCard                                                                                 | ✅ APIErrorCard                            | None — already compliant                                                               |
 
 ## SEO Sub-Route error.tsx Files
 
 All 10 SEO sub-route pages confirmed to have `error.tsx` files using the correct `DashboardError` pattern:
 
-| Sub-route | error.tsx | Pattern |
-|-----------|-----------|---------|
-| seo/technical | ✅ Present | DashboardError |
-| seo/search-console | ✅ Present | DashboardError |
-| seo/pagespeed | ✅ Present | DashboardError |
-| seo/schema | ✅ Present | DashboardError |
-| seo/geo-readiness | ✅ Present | DashboardError |
+| Sub-route            | error.tsx  | Pattern        |
+| -------------------- | ---------- | -------------- |
+| seo/technical        | ✅ Present | DashboardError |
+| seo/search-console   | ✅ Present | DashboardError |
+| seo/pagespeed        | ✅ Present | DashboardError |
+| seo/schema           | ✅ Present | DashboardError |
+| seo/geo-readiness    | ✅ Present | DashboardError |
 | seo/scheduled-audits | ✅ Present | DashboardError |
-| seo/audit | ✅ Present | DashboardError |
-| seo/sitemap | ✅ Present | DashboardError |
-| seo/competitor | ✅ Present | DashboardError |
-| seo/page | ✅ Present | DashboardError |
-| seo/ (parent) | ✅ Present | DashboardError |
+| seo/audit            | ✅ Present | DashboardError |
+| seo/sitemap          | ✅ Present | DashboardError |
+| seo/competitor       | ✅ Present | DashboardError |
+| seo/page             | ✅ Present | DashboardError |
+| seo/ (parent)        | ✅ Present | DashboardError |
 
 ## Files Created/Modified
 
@@ -59,6 +59,7 @@ None. All 13 pages already had compliant loading/empty/error state coverage.
 ## Issues Encountered
 
 None. Phase 55-01 (prior plan) had already resolved:
+
 - BUG-01: competitors `r.filter is not a function` — Array.isArray guard added in commit `6612fc9`
 - BUG-02: personas 401 — resolved
 - BUG-03: team "Failed to load" — resolved
