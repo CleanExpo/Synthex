@@ -111,18 +111,18 @@ HEADER
   current_group=""
   while IFS='|' read -r group methods url_path auth models; do
     if [ "$group" != "$current_group" ]; then
-      printf '\n### %s\n\n' "$group"
+      printf -- '\n### %s\n\n' "$group"
       current_group="$group"
     fi
     if [ -n "$models" ]; then
-      printf '- `%s %s` — %s — _%s_\n' "$methods" "$url_path" "$auth" "$models"
+      printf -- '- `%s %s` — %s — _%s_\n' "$methods" "$url_path" "$auth" "$models"
     else
-      printf '- `%s %s` — %s\n' "$methods" "$url_path" "$auth"
+      printf -- '- `%s %s` — %s\n' "$methods" "$url_path" "$auth"
     fi
   done < <(sort "$TMPWORK/routes.tsv")
 
   # Trailing separator before Zone 2
-  printf '\n---\n\n'
+  printf -- '\n---\n\n'
 } > "$TMPWORK/zone1.txt"
 
 # 8. Write file: new Zone 1 + preserved Zone 2

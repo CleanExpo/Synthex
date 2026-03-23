@@ -92,7 +92,8 @@
     "health:check:quick": "powershell -ExecutionPolicy Bypass -File scripts/health-check.ps1 -Quick",
     "render:videos": "npx tsx scripts/render-and-upload-videos.ts",
     "render:videos:single": "npx tsx scripts/render-and-upload-videos.ts --id",
-    "render:videos:dry-run": "npx tsx scripts/render-and-upload-videos.ts --dry-run"
+    "render:videos:dry-run": "npx tsx scripts/render-and-upload-videos.ts --dry-run",
+    "routes:refresh": "bash .claude/scripts/refresh-routes.sh"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.14",
