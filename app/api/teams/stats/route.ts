@@ -126,8 +126,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // teamInvitation is a Prisma model not yet in the generated client type — runtime access via dynamic client
-    const pendingInvitations = await (prisma as any).teamInvitation.count({
+    const pendingInvitations = await prisma.teamInvitation.count({
       where: {
         organizationId,
         status: 'sent',

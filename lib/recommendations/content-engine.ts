@@ -376,10 +376,12 @@ class ContentRecommendationEngine {
       // Sort by priority and confidence
       const sorted = recommendations
         .sort((a: any, b: any) => {
-          const priorityOrder = { high: 0, medium: 1, low: 2 };
-          // @ts-ignore - dynamic key indexing
+          const priorityOrder: Record<string, number> = {
+            high: 0,
+            medium: 1,
+            low: 2,
+          };
           if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-            // @ts-ignore - dynamic key indexing
             return priorityOrder[a.priority] - priorityOrder[b.priority];
           }
           return b.confidence - a.confidence;
@@ -494,12 +496,13 @@ class ContentRecommendationEngine {
       }
 
       // Sort by urgency
-      const urgencyOrder = { immediate: 0, soon: 1, when_ready: 2 };
+      const urgencyOrder: Record<string, number> = {
+        immediate: 0,
+        soon: 1,
+        when_ready: 2,
+      };
       return cards.sort(
-        // @ts-ignore - dynamic key indexing
-        (a: any, b: any) =>
-          (urgencyOrder as Record<string, number>)[a.urgency] -
-          (urgencyOrder as Record<string, number>)[b.urgency]
+        (a: any, b: any) => urgencyOrder[a.urgency] - urgencyOrder[b.urgency]
       );
     } catch (error) {
       logger.error('Failed to get recommendation cards:', { error, userId });

@@ -6,7 +6,7 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import { IncomingMessage } from 'http';
 import { URL } from 'url';
-import jwt from 'jsonwebtoken';
+import jwt, { type JwtPayload } from 'jsonwebtoken';
 
 export interface WebSocketMessage {
   type:
@@ -92,8 +92,10 @@ class SynthexWebSocketServer {
       if (token) {
         const secret = process.env.JWT_SECRET;
         if (!secret) throw new Error('JWT_SECRET not configured');
-        const decoded = jwt.verify(token, secret) as any;
-        userId = decoded.userId || decoded.id;
+        const decoded = jwt.verify(token, secret) as JwtPayload;
+        userId =
+          (decoded.userId as string | undefined) ||
+          (decoded.id as string | undefined);
       }
     } catch (error) {
       console.error('Failed to extract user ID:', error);

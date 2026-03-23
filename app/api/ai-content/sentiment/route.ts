@@ -15,6 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
@@ -462,8 +463,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Store analysis
-          // Prisma client type does not expose sentimentAnalysis in the generated type union — runtime model
-          const analysis = await (prisma as any).sentimentAnalysis?.create({
+          const analysis = await prisma.sentimentAnalysis.create({
             data: {
               userId,
               contentType,
@@ -475,7 +475,9 @@ export async function POST(request: NextRequest) {
               emotions: sentiment.emotions,
               toneIndicators: sentiment.toneIndicators,
               keyPhrases: sentiment.keyPhrases,
-              predictedEngagement: engagementPrediction,
+              predictedEngagement:
+                (engagementPrediction as Prisma.InputJsonValue | null) ??
+                Prisma.JsonNull,
               platform,
               model: ai ? ai.name : 'rule-based',
             },
@@ -483,9 +485,8 @@ export async function POST(request: NextRequest) {
 
           // If analyzing a comment, update the comment's sentiment
           if (contentType === 'comment' && contentId) {
-            // Prisma client type does not expose contentComment in the generated type union — runtime model
-            await (prisma as any).contentComment
-              ?.update({
+            await prisma.contentComment
+              .update({
                 where: { id: contentId },
                 data: {
                   sentiment: sentiment.sentiment,
@@ -500,7 +501,7 @@ export async function POST(request: NextRequest) {
 
           return NextResponse.json({
             analysis: {
-              id: analysis?.id,
+              id: analysis.id,
               sentiment: sentiment.sentiment,
               score: sentiment.score,
               confidence: sentiment.confidence,
@@ -557,20 +558,14 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Build query
-    const where: {
-      userId: string;
-      contentType?: string;
-      contentId?: string;
-      sentiment?: string;
-    } = { userId };
+    const where: Prisma.SentimentAnalysisWhereInput = { userId };
 
     if (contentType) where.contentType = contentType;
     if (contentId) where.contentId = contentId;
     if (sentiment) where.sentiment = sentiment;
 
     const [analyses, total] = await Promise.all([
-      // Prisma client type does not expose sentimentAnalysis in the generated type union — runtime model
-      (prisma as any).sentimentAnalysis?.findMany({
+      prisma.sentimentAnalysis.findMany({
         where,
         orderBy: { analyzedAt: 'desc' },
         take: limit,
@@ -587,14 +582,14 @@ export async function GET(request: NextRequest) {
           predictedEngagement: true,
           analyzedAt: true,
         },
-      }) || [],
-      (prisma as any).sentimentAnalysis?.count({ where }) || 0,
+      }),
+      prisma.sentimentAnalysis.count({ where }),
     ]);
 
     return NextResponse.json({
-      analyses: analyses || [],
-      total: total || 0,
-      hasMore: (analyses?.length || 0) === limit,
+      analyses,
+      total,
+      hasMore: analyses.length === limit,
     });
   } catch (error) {
     logger.error('Get analyses error:', error);

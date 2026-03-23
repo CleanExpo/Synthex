@@ -3,7 +3,6 @@
  * This client is specifically for browser-side operations with proper session management
  */
 
-// @ts-ignore - SSR package types might not be fully compatible
 import { createBrowserClient } from '@supabase/ssr';
 
 // Ensure we have the required environment variables
@@ -26,7 +25,8 @@ export function createSupabaseBrowser() {
         persistSession: true,
         detectSessionInUrl: true,
         flowType: 'pkce',
-        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        storage:
+          typeof window !== 'undefined' ? window.localStorage : undefined,
         storageKey: 'synthex-auth-token',
       },
       realtime: {

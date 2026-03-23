@@ -664,8 +664,11 @@ class CompetitiveIntelligence {
       }
 
       return gaps.sort((a: any, b: any) => {
-        const priorityOrder = { high: 0, medium: 1, low: 2 };
-        // @ts-ignore - dynamic key indexing
+        const priorityOrder: Record<string, number> = {
+          high: 0,
+          medium: 1,
+          low: 2,
+        };
         return priorityOrder[a.opportunity] - priorityOrder[b.opportunity];
       });
     } catch (error) {
@@ -826,8 +829,7 @@ class CompetitiveIntelligence {
         opportunities: report.opportunities,
         threats: report.threats,
         actionItems: actionItems.sort((a: any, b: any) => {
-          const order = { high: 0, medium: 1, low: 2 };
-          // @ts-ignore - dynamic key indexing
+          const order: Record<string, number> = { high: 0, medium: 1, low: 2 };
           return order[a.priority] - order[b.priority];
         }),
       };
@@ -1029,10 +1031,9 @@ class CompetitiveIntelligence {
       'avgShares',
     ] as const;
 
-    return metrics.map((metric: any) => {
+    return metrics.map(metric => {
       const sorted = [...allMetrics].sort(
-        // @ts-ignore - dynamic key indexing
-        (a, b) => b[metric] - a[metric]
+        (a, b) => (b[metric] as number) - (a[metric] as number)
       );
       const rank = sorted.findIndex(m => m === userMetrics) + 1;
       const percentile = ((allMetrics.length - rank) / allMetrics.length) * 100;
@@ -1069,9 +1070,11 @@ class CompetitiveIntelligence {
       recommendations: string[];
     }> = [];
 
-    const metricConfigs: Record<
-      string,
-      { benchmark: 'avg' | 'top'; recommendations: string[] }
+    const metricConfigs: Partial<
+      Record<
+        keyof MetricSet,
+        { benchmark: 'avg' | 'top'; recommendations: string[] }
+      >
     > = {
       avgEngagementRate: {
         benchmark: 'avg',
@@ -1099,12 +1102,15 @@ class CompetitiveIntelligence {
       },
     };
 
-    for (const [metric, config] of Object.entries(metricConfigs)) {
-      const yourValue = (userMetrics as any)[metric];
+    for (const [metric, config] of Object.entries(metricConfigs) as [
+      keyof MetricSet,
+      { benchmark: 'avg' | 'top'; recommendations: string[] },
+    ][]) {
+      const yourValue = userMetrics[metric] ?? 0;
       const benchmarkValue =
         config.benchmark === 'avg'
-          ? (industryAvg as any)[metric]
-          : (topPerformer as any)[metric];
+          ? (industryAvg[metric] ?? 0)
+          : (topPerformer[metric] ?? 0);
 
       const gap = benchmarkValue - yourValue;
       const gapPercent = benchmarkValue > 0 ? (gap / benchmarkValue) * 100 : 0;
@@ -1127,8 +1133,7 @@ class CompetitiveIntelligence {
     }
 
     return gaps.sort((a: any, b: any) => {
-      const order = { high: 0, medium: 1, low: 2 };
-      // @ts-ignore - dynamic key indexing
+      const order: Record<string, number> = { high: 0, medium: 1, low: 2 };
       return order[a.priority] - order[b.priority];
     });
   }
