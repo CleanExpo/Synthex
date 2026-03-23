@@ -214,7 +214,7 @@ export function ObsidianImportModal({
       setEditTitle(result.title);
       setEditPlatform(result.platform || 'general');
       setEditTone(result.tone ?? '');
-      setEditHashtags(result.hashtags.map(h => h).join(', '));
+      setEditHashtags(result.hashtags.join(', '));
 
       setStep(2);
     } catch {
