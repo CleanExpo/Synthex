@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --webpack",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "test": "jest",
     "type-check": "tsc --noEmit",
     "dev:next": "next dev",
