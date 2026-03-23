@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { writeDefault } from '@/lib/rate-limit';
 import { confirmObsidianImport } from '@/lib/content/obsidian-importer';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 
 const ConfirmSchema = z.object({
   title: z.string().min(1).max(500),
@@ -20,6 +21,8 @@ export async function POST(req: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
+
+    const organizationId = await getEffectiveOrganizationId(userId);
 
     let body: unknown;
     try {
@@ -40,7 +43,7 @@ export async function POST(req: NextRequest) {
       const result = await confirmObsidianImport(
         parsed.data,
         userId,
-        null // organizationId — future: could accept orgId from body for multi-tenant
+        organizationId
       );
       return NextResponse.json(result, { status: 201 });
     } catch (err) {
