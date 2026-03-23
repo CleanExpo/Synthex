@@ -8,6 +8,17 @@
 4. Run Linear MCP: list top 5 issues with status "In Progress" for the Synthex project — these are your active priorities
 5. Do not start new work until steps 1–4 are complete
 
+## PRE-IMPLEMENTATION (before writing any code)
+
+1. Find the feature/route in `.planning/ROUTE_REFERENCE.md` — confirm the exact file path, HTTP method, auth level, and Prisma models
+2. Check "Known issues" for that route — don't re-fix something already fixed
+3. If the route or page isn't in the reference, grep for it (`grep -r "routename" app/`) before assuming a path
+
+## POST-IMPLEMENTATION (after code changes are verified)
+
+1. Update `.planning/ROUTE_REFERENCE.md` → add to "Recent Changes" log and any "Known issues" found
+2. Do NOT update the full route listing unless routes were added or renamed
+
 ## DURING SESSION
 
 - Every 10 tool calls, write a brief progress note to `.claude/scratchpad/current-session.md`
@@ -66,20 +77,21 @@ npx prisma db push       # Push schema to DB
 
 # KEY DIRECTORIES
 
-| Path                       | Purpose                                         |
-| -------------------------- | ----------------------------------------------- |
-| `app/`                     | Pages + API routes (App Router)                 |
-| `lib/`                     | Services, utilities, integrations               |
-| `components/`              | React components (Radix UI + Tailwind)          |
-| `lib/auth/`                | Auth — check here first, always                 |
-| `prisma/schema.prisma`     | Prisma schema (source of truth)                 |
-| `.claude/skills/`          | Domain skills (invoke via Skill tool)           |
-| `.claude/rules/`           | Context rule domains (auto-loaded by Claude)    |
-| `.claude/memory/MEMORY.md` | Cross-session project state + decisions         |
-| `.claude/scratchpad/`      | Ephemeral working space                         |
-| `.planning/STATE.md`       | Current phase + active priorities               |
-| `.planning/ROADMAP.md`     | Full milestone roadmap                          |
-| `.env.example`             | Required env vars (source of truth for secrets) |
+| Path                           | Purpose                                                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `app/`                         | Pages + API routes (App Router)                                                                              |
+| `lib/`                         | Services, utilities, integrations                                                                            |
+| `components/`                  | React components (Radix UI + Tailwind)                                                                       |
+| `lib/auth/`                    | Auth — check here first, always                                                                              |
+| `prisma/schema.prisma`         | Prisma schema (source of truth)                                                                              |
+| `.claude/skills/`              | Domain skills (invoke via Skill tool)                                                                        |
+| `.claude/rules/`               | Context rule domains (auto-loaded by Claude)                                                                 |
+| `.claude/memory/MEMORY.md`     | Cross-session project state + decisions                                                                      |
+| `.claude/scratchpad/`          | Ephemeral working space                                                                                      |
+| `.planning/STATE.md`           | Current phase + active priorities                                                                            |
+| `.planning/ROADMAP.md`         | Full milestone roadmap                                                                                       |
+| `.planning/ROUTE_REFERENCE.md` | **Read before any implementation** — all 498 API routes, 100 pages, auth levels, Prisma models, known issues |
+| `.env.example`                 | Required env vars (source of truth for secrets)                                                              |
 
 ---
 
