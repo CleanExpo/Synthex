@@ -36,12 +36,17 @@ class MonitoringService {
     if (typeof window !== 'undefined') {
       // Global error handler
       window.addEventListener('error', this.handleError.bind(this));
-      window.addEventListener('unhandledrejection', this.handlePromiseRejection.bind(this));
-      
+      window.addEventListener(
+        'unhandledrejection',
+        this.handlePromiseRejection.bind(this)
+      );
+
       // Start flush interval
-      this.intervalId = setInterval(() => {
-        this.flush();
-      }, this.flushInterval);
+      if (!this.intervalId) {
+        this.intervalId = setInterval(() => {
+          this.flush();
+        }, this.flushInterval);
+      }
 
       // Flush on page unload
       window.addEventListener('beforeunload', () => {
@@ -114,7 +119,7 @@ class MonitoringService {
 
   private addError(error: ErrorReport) {
     this.errorQueue.push(error);
-    
+
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
       console.error('Error captured:', error);
@@ -127,7 +132,11 @@ class MonitoringService {
   }
 
   // User action tracking
-  trackAction(action: string, element?: string, metadata?: Record<string, unknown>) {
+  trackAction(
+    action: string,
+    element?: string,
+    metadata?: Record<string, unknown>
+  ) {
     const userAction: UserAction = {
       action,
       element,
@@ -178,13 +187,10 @@ class MonitoringService {
 
     try {
       const method = immediate ? 'sendBeacon' : 'fetch';
-      
+
       if (immediate && 'sendBeacon' in navigator) {
         // Use sendBeacon for immediate flush (page unload)
-        navigator.sendBeacon(
-          '/api/monitoring/events',
-          JSON.stringify(payload)
-        );
+        navigator.sendBeacon('/api/monitoring/events', JSON.stringify(payload));
       } else {
         // Use fetch for regular flush
         await fetch('/api/monitoring/events', {
@@ -224,7 +230,6 @@ export function getMonitoring(): MonitoringService {
   return monitoringInstance!;
 }
 
-
 // Utility functions for monitoring
 export function withMonitoring<T extends (...args: unknown[]) => unknown>(
   fn: T,
@@ -233,14 +238,14 @@ export function withMonitoring<T extends (...args: unknown[]) => unknown>(
   return ((...args: Parameters<T>) => {
     const monitoring = getMonitoring();
     const startTime = performance.now();
-    
+
     try {
       const result = fn(...args);
-      
+
       // Handle async functions
       if (result instanceof Promise) {
         return result
-          .then((value) => {
+          .then(value => {
             const duration = performance.now() - startTime;
             monitoring.trackAction(actionName, undefined, {
               success: true,
@@ -248,7 +253,7 @@ export function withMonitoring<T extends (...args: unknown[]) => unknown>(
             });
             return value;
           })
-          .catch((error) => {
+          .catch(error => {
             const duration = performance.now() - startTime;
             monitoring.captureError(error, {
               action: actionName,
@@ -257,7 +262,7 @@ export function withMonitoring<T extends (...args: unknown[]) => unknown>(
             throw error;
           });
       }
-      
+
       // Handle sync functions
       const duration = performance.now() - startTime;
       monitoring.trackAction(actionName, undefined, {
@@ -279,7 +284,7 @@ export function withMonitoring<T extends (...args: unknown[]) => unknown>(
 // Export monitoring hooks for React
 export function useMonitoring() {
   const monitoring = getMonitoring();
-  
+
   return {
     trackAction: monitoring.trackAction.bind(monitoring),
     trackEvent: monitoring.trackEvent.bind(monitoring),
