@@ -123,8 +123,8 @@ export function OptimizedImage({
         style={{ aspectRatio }}
       >
         <div className="text-center p-4">
-          <ImageOff className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-xs text-gray-400">Failed to load image</p>
+          <ImageOff className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+          <p className="text-xs text-gray-300">Failed to load image</p>
         </div>
       </div>
     );

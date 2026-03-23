@@ -47,7 +47,7 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Content Performance by Platform</CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-slate-300">
           Engagement, reach and posts by platform
         </CardDescription>
       </CardHeader>

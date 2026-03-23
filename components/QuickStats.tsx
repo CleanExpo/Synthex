@@ -134,15 +134,15 @@ function StatCard({
       ? 'text-green-400'
       : stat.changeType === 'decrease'
         ? 'text-red-400'
-        : 'text-gray-400';
+        : 'text-gray-300';
 
   if (compact) {
     return (
       <div className="flex items-center justify-between p-3 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg hover:bg-white/5 transition-colors">
         <div className="flex items-center gap-3">
-          <Icon className={`h-4 w-4 ${stat.color || 'text-gray-400'}`} />
+          <Icon className={`h-4 w-4 ${stat.color || 'text-gray-300'}`} />
           <div>
-            <p className="text-xs text-gray-400">{stat.label}</p>
+            <p className="text-xs text-gray-300">{stat.label}</p>
             <p className="text-lg font-semibold text-white">{stat.value}</p>
           </div>
         </div>
@@ -165,12 +165,12 @@ function StatCard({
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
             <div
-              className={`p-2 rounded-lg bg-white/5 ${stat.color || 'text-gray-400'}`}
+              className={`p-2 rounded-lg bg-white/5 ${stat.color || 'text-gray-300'}`}
             >
               <Icon className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-xs text-gray-400">{stat.label}</p>
+              <p className="text-xs text-gray-300">{stat.label}</p>
               <p className="text-xl font-bold text-white">{stat.value}</p>
             </div>
           </div>
@@ -252,7 +252,7 @@ export function StatsTickker() {
   return (
     <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-full">
       <Icon className="h-4 w-4 text-orange-400" />
-      <span className="text-sm text-gray-400">{stat.label}:</span>
+      <span className="text-sm text-gray-300">{stat.label}:</span>
       <span className="text-sm font-semibold text-white">{stat.value}</span>
     </div>
   );
@@ -264,11 +264,11 @@ export function MiniStats() {
     <div className="flex items-center gap-4">
       <div className="flex items-center gap-2">
         <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-        <span className="text-xs text-gray-400">Live</span>
+        <span className="text-xs text-gray-300">Live</span>
       </div>
 
       <div className="flex items-center gap-1">
-        <Eye className="h-3 w-3 text-gray-400" />
+        <Eye className="h-3 w-3 text-gray-300" />
         <span className="text-xs text-white font-medium">2.3K</span>
       </div>
 

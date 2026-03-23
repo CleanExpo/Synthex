@@ -66,7 +66,7 @@ export function CategoryGrid({
                     <li key={index}>
                       <Link
                         href={link.href}
-                        className="text-sm text-gray-400 hover:text-white flex items-center gap-1"
+                        className="text-sm text-gray-300 hover:text-white flex items-center gap-1"
                       >
                         <ChevronRight className="w-3 h-3" />
                         {link.title}

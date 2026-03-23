@@ -80,7 +80,7 @@ export function RealTimeAnalytics() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold gradient-text">Real-Time Analytics</h2>
-          <p className="text-gray-400 mt-2">Monitor your social media performance in real-time</p>
+          <p className="text-gray-300 mt-2">Monitor your social media performance in real-time</p>
         </div>
         <div className="flex items-center gap-3">
           <Select value={timeRange} onValueChange={setTimeRange}>

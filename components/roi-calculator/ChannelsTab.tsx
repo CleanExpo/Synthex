@@ -74,25 +74,25 @@ export function ChannelsTab({ channelPerformance }: ChannelsTabProps) {
                   </div>
                   <div className="grid grid-cols-4 gap-4 text-center">
                     <div>
-                      <p className="text-xs text-gray-400">Investment</p>
+                      <p className="text-xs text-gray-300">Investment</p>
                       <p className="text-sm font-medium text-white">
                         {formatCurrency(channel.investment)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-400">Revenue</p>
+                      <p className="text-xs text-gray-300">Revenue</p>
                       <p className="text-sm font-medium text-white">
                         {formatCurrency(channel.revenue)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-400">Conversions</p>
+                      <p className="text-xs text-gray-300">Conversions</p>
                       <p className="text-sm font-medium text-white">
                         {channel.conversions}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-400">CPA</p>
+                      <p className="text-xs text-gray-300">CPA</p>
                       <p className="text-sm font-medium text-white">
                         {formatCurrency(channel.cpa)}
                       </p>

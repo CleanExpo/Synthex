@@ -66,7 +66,7 @@ export function TaskListRow({
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-3 text-xs text-slate-400">
+        <div className="flex items-center gap-3 text-xs text-slate-300">
           <TaskTypeBadge type={task.type} />
           {task.subtasks.length > 0 && (
             <span>
@@ -81,7 +81,7 @@ export function TaskListRow({
         <TaskPriorityBadge priority={task.priority} />
         <AssigneeAvatars assignees={task.assignees} max={2} />
         <div
-          className={`flex items-center gap-1 text-sm ${isOverdue ? 'text-red-400' : 'text-slate-400'}`}
+          className={`flex items-center gap-1 text-sm ${isOverdue ? 'text-red-400' : 'text-slate-300'}`}
         >
           <Calendar className="w-4 h-4" />
           {dueDate.toLocaleDateString('en-US', {

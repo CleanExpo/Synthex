@@ -134,7 +134,7 @@ export function BestTimesHeatmap({
   if (isLoading) {
     return (
       <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
-        <h4 className="text-sm font-medium text-gray-400 mb-4">Best Posting Times</h4>
+        <h4 className="text-sm font-medium text-gray-300 mb-4">Best Posting Times</h4>
         <LoadingSkeleton />
       </div>
     );
@@ -143,7 +143,7 @@ export function BestTimesHeatmap({
   if (!data?.length) {
     return (
       <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
-        <h4 className="text-sm font-medium text-gray-400 mb-4">Best Posting Times</h4>
+        <h4 className="text-sm font-medium text-gray-300 mb-4">Best Posting Times</h4>
         <p className="text-gray-500 text-sm text-center py-8">No timing data available</p>
       </div>
     );
@@ -152,7 +152,7 @@ export function BestTimesHeatmap({
   return (
     <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
       <div className="flex items-center justify-between mb-4">
-        <h4 className="text-sm font-medium text-gray-400">Best Posting Times</h4>
+        <h4 className="text-sm font-medium text-gray-300">Best Posting Times</h4>
         {/* Legend */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
@@ -220,7 +220,7 @@ export function BestTimesHeatmap({
       {selectedCell && (
         <div className="mt-4 p-3 bg-white/5 rounded-lg border border-white/10">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-gray-300">
               {DAYS[selectedCell.day]} at {formatHour(selectedCell.hour)}
             </span>
             <span className="text-sm font-medium text-white">
@@ -240,7 +240,7 @@ export function BestTimesHeatmap({
           <p className="text-xs text-white font-medium">
             {tooltip.day} at {tooltip.hour}
           </p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-300">
             {getEngagementLabel(tooltip.engagement)} ({tooltip.engagement}%)
           </p>
         </div>

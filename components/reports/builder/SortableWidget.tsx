@@ -63,7 +63,7 @@ export function SortableWidget({ widget, onEdit, onDelete }: SortableWidgetProps
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div {...attributes} {...listeners} className="cursor-move">
-                <Move className="h-4 w-4 text-gray-400" />
+                <Move className="h-4 w-4 text-gray-300" />
               </div>
               {getWidgetIcon(widget.type)}
               <span className="font-medium text-white">{widget.title}</span>
@@ -80,13 +80,13 @@ export function SortableWidget({ widget, onEdit, onDelete }: SortableWidgetProps
         </CardHeader>
         <CardContent className="p-4">
           <div className="h-32 bg-white/5 rounded flex items-center justify-center">
-            <span className="text-gray-400">
+            <span className="text-gray-300">
               {widget.type === 'chart' && 'Chart Preview'}
               {widget.type === 'table' && 'Table Preview'}
               {widget.type === 'metric' && (
                 <div className="text-center">
                   <p className="text-3xl font-bold text-white">1,234</p>
-                  <p className="text-sm text-gray-400">Sample Metric</p>
+                  <p className="text-sm text-gray-300">Sample Metric</p>
                 </div>
               )}
               {widget.type === 'text' && 'Text Content'}

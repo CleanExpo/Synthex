@@ -152,7 +152,7 @@ export function ScheduleHealth() {
             >
               {hasActivity ? `${last7Days.successRate}%` : '—'}
             </span>
-            <span className="text-xs text-gray-400 mt-1">Success Rate</span>
+            <span className="text-xs text-gray-300 mt-1">Success Rate</span>
           </div>
 
           {/* Secondary metrics grid */}

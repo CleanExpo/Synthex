@@ -252,7 +252,7 @@ export function PublishConfirmModal({
         <div className="space-y-5 py-2">
           {/* Content summary */}
           <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
-            <p className="text-xs text-slate-400 leading-relaxed">{preview}</p>
+            <p className="text-xs text-slate-300 leading-relaxed">{preview}</p>
             <div className="flex items-center gap-2 flex-wrap">
               {platforms.map(p => (
                 <span
@@ -263,13 +263,13 @@ export function PublishConfirmModal({
                 </span>
               ))}
               {mediaUrls && mediaUrls.length > 0 && (
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[10px] text-slate-300">
                   {mediaUrls.length}{' '}
                   {mediaUrls.length === 1 ? 'image' : 'images'}
                 </span>
               )}
               {hashtags && hashtags.length > 0 && (
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[10px] text-slate-300">
                   {hashtags.length}{' '}
                   {hashtags.length === 1 ? 'hashtag' : 'hashtags'}
                 </span>
@@ -293,7 +293,7 @@ export function PublishConfirmModal({
             </label>
 
             {connectionsLoading ? (
-              <div className="flex items-center gap-2 text-xs text-slate-400 py-2">
+              <div className="flex items-center gap-2 text-xs text-slate-300 py-2">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 Checking connected accounts...
               </div>
@@ -335,7 +335,7 @@ export function PublishConfirmModal({
                             {getPlatformLabel(p)}
                           </span>
                         </div>
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-[10px] text-slate-300">
                           {result
                             ? result.success
                               ? 'Scheduled'
@@ -414,7 +414,7 @@ export function PublishConfirmModal({
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="text-slate-400 hover:text-white hover:bg-white/5"
+            className="text-slate-300 hover:text-white hover:bg-white/5"
             disabled={isSubmitting}
           >
             {scheduleResults ? 'Close' : 'Cancel'}

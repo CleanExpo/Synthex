@@ -58,7 +58,7 @@ export function PredictionStats({ stats }: PredictionStatsProps) {
           <Card key={item.label} variant="glass">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-slate-400">{item.label}</span>
+                <span className="text-sm text-slate-300">{item.label}</span>
                 <div className="p-2 rounded-lg bg-white/5">
                   <Icon className="h-4 w-4 text-orange-400" />
                 </div>

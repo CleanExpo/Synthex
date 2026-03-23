@@ -111,7 +111,7 @@ export function ContentCapsulePreview({
               'flex-1 text-sm py-1.5 rounded-md transition-colors font-medium',
               view === v
                 ? 'bg-orange-500/20 text-orange-300'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-300 hover:text-slate-200'
             )}
           >
             {v === 'capsule' ? 'Capsule Format' : 'Original'}
@@ -147,7 +147,7 @@ export function ContentCapsulePreview({
             {/* Supporting points */}
             {result.supportingPoints.length > 0 && (
               <div className="space-y-1.5">
-                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <span className="text-xs font-medium text-slate-300 uppercase tracking-wider">
                   Supporting Points
                 </span>
                 <ul className="space-y-1.5">
@@ -169,7 +169,7 @@ export function ContentCapsulePreview({
             {/* Key terms */}
             {result.keyTerms.length > 0 && (
               <div className="space-y-1.5">
-                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <span className="text-xs font-medium text-slate-300 uppercase tracking-wider">
                   Key Terms
                 </span>
                 <div className="flex flex-wrap gap-1.5">

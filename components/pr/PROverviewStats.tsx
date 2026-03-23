@@ -145,7 +145,7 @@ export function PROverviewStats() {
         >
           <div className="flex items-center gap-2 mb-2">
             <stat.icon className={`h-4 w-4 ${stat.colour}`} />
-            <span className="text-xs text-gray-400 font-medium">
+            <span className="text-xs text-gray-300 font-medium">
               {stat.label}
             </span>
           </div>

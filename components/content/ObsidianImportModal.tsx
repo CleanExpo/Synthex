@@ -330,7 +330,7 @@ export function ObsidianImportModal({
                     'px-4 py-2 rounded-lg text-sm font-medium transition-all',
                     activeTab === tab.id
                       ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      : 'text-gray-300 hover:text-white hover:bg-white/5'
                   )}
                 >
                   {tab.label}
@@ -403,7 +403,7 @@ export function ObsidianImportModal({
               <Button
                 variant="outline"
                 onClick={() => handleOpenChange(false)}
-                className="border-white/10 text-gray-400 hover:text-white"
+                className="border-white/10 text-gray-300 hover:text-white"
               >
                 Cancel
               </Button>
@@ -538,7 +538,7 @@ export function ObsidianImportModal({
                   setImportError('');
                   setStep(1);
                 }}
-                className="border-white/10 text-gray-400 hover:text-white"
+                className="border-white/10 text-gray-300 hover:text-white"
               >
                 Back
               </Button>
@@ -592,7 +592,7 @@ export function ObsidianImportModal({
               <Button
                 variant="outline"
                 onClick={resetAll}
-                className="border-white/10 text-gray-400 hover:text-white"
+                className="border-white/10 text-gray-300 hover:text-white"
               >
                 Import Another
               </Button>

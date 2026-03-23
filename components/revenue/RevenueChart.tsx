@@ -64,7 +64,7 @@ function CustomTooltip({ active, payload, label, currency }: CustomTooltipProps)
 
   return (
     <div className="bg-gray-900 border border-white/10 rounded-lg p-3 shadow-xl">
-      <p className="text-sm text-gray-400">{formatMonth(label)}</p>
+      <p className="text-sm text-gray-300">{formatMonth(label)}</p>
       <p className="text-lg font-bold text-white">
         {formatCurrency(payload[0].value, currency)}
       </p>
@@ -86,7 +86,7 @@ export function RevenueChart({
     return (
       <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl p-8 text-center', className)}>
         <TrendingUp className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-        <p className="text-gray-400">No revenue data to display</p>
+        <p className="text-gray-300">No revenue data to display</p>
       </div>
     );
   }

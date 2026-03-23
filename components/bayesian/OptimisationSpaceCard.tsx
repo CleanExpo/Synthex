@@ -65,7 +65,7 @@ export function OptimisationSpaceCard({
           <CardTitle className="text-white text-sm font-semibold leading-tight">
             {formatSurface(space.surface)}
             {space.name && (
-              <span className="block text-xs font-normal text-gray-400 mt-0.5">
+              <span className="block text-xs font-normal text-gray-300 mt-0.5">
                 {space.name}
               </span>
             )}
@@ -109,7 +109,7 @@ export function OptimisationSpaceCard({
                 key={key}
                 className="flex justify-between items-center text-xs"
               >
-                <span className="text-gray-400 font-mono">{key}</span>
+                <span className="text-gray-300 font-mono">{key}</span>
                 <span className="text-orange-300 font-mono">
                   {value.toFixed(3)}
                 </span>

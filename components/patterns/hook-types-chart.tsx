@@ -24,7 +24,7 @@ export function HookTypesChart() {
           <span>Viral Hook Types</span>
           <Sparkles className="h-4 w-4 text-orange-500" />
         </CardTitle>
-        <CardDescription className="text-gray-400">
+        <CardDescription className="text-gray-300">
           Most effective content hooks
         </CardDescription>
       </CardHeader>

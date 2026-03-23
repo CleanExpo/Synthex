@@ -70,7 +70,7 @@ export function PlatformHeatmap({ predictions, metric }: PlatformHeatmapProps) {
         {/* Data rows — one per platform */}
         {platforms.map((platform) => (
           <React.Fragment key={platform}>
-            <div className="text-xs text-gray-400 capitalize flex items-center pr-2">
+            <div className="text-xs text-gray-300 capitalize flex items-center pr-2">
               {platform}
             </div>
             {dates.map((date) => {

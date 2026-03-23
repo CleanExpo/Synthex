@@ -80,11 +80,11 @@ function DonutRing({
           <span className="text-2xl font-bold text-white tabular-nums">
             {pct}%
           </span>
-          <span className="text-[10px] text-slate-400">coverage</span>
+          <span className="text-[10px] text-slate-300">coverage</span>
         </div>
       </div>
       {/* Legend */}
-      <div className="flex gap-4 text-xs text-slate-400">
+      <div className="flex gap-4 text-xs text-slate-300">
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-orange-400 inline-block" />
           {mentionedCount} mentioned
@@ -114,7 +114,7 @@ function CategoryBars({
           <div key={cat.category} className="space-y-1">
             <div className="flex justify-between text-xs">
               <span className="text-slate-300">{label}</span>
-              <span className="text-slate-400 tabular-nums">
+              <span className="text-slate-300 tabular-nums">
                 {pct}%
                 {cat.testedCount > 0 && (
                   <span className="text-slate-500 ml-1">
@@ -144,7 +144,7 @@ function CategoryBars({
 function GapRecommendations({ gaps }: { gaps: PromptGapAnalysis['gaps'] }) {
   if (gaps.length === 0) {
     return (
-      <p className="text-sm text-slate-400 text-center py-4">
+      <p className="text-sm text-slate-300 text-center py-4">
         No significant gaps detected — great visibility coverage!
       </p>
     );
@@ -162,7 +162,7 @@ function GapRecommendations({ gaps }: { gaps: PromptGapAnalysis['gaps'] }) {
             <p className="text-xs font-semibold text-orange-300 mb-1">
               {label}
             </p>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-300 leading-relaxed">
               {gap.recommendation}
             </p>
           </div>
@@ -193,12 +193,12 @@ export function PromptGapChart({ analysis, className }: PromptGapChartProps) {
           <p className="text-sm font-medium text-white">
             {analysis.entityName} — Prompt Visibility
           </p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-300">
             Tested{' '}
             <strong className="text-slate-200">{analysis.testedCount}</strong>{' '}
             prompts across 6 categories
           </p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-300">
             Brand mentioned in{' '}
             <strong className="text-orange-400">
               {analysis.mentionedCount}
@@ -210,7 +210,7 @@ export function PromptGapChart({ analysis, className }: PromptGapChartProps) {
 
       {/* Category breakdown */}
       <div>
-        <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+        <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">
           Mention Rate by Category
         </h4>
         {analysis.topCategories.every(c => c.testedCount === 0) ? (
@@ -223,7 +223,7 @@ export function PromptGapChart({ analysis, className }: PromptGapChartProps) {
       {/* Recommendations */}
       {analysis.gaps.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+          <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">
             Gap Recommendations
           </h4>
           <GapRecommendations gaps={analysis.gaps} />

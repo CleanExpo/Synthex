@@ -25,7 +25,7 @@ export function ContentInput({
 }: ContentInputProps) {
   return (
     <div>
-      <Label htmlFor="content" className="text-gray-400">Content</Label>
+      <Label htmlFor="content" className="text-gray-300">Content</Label>
       <Textarea
         id="content"
         value={content}

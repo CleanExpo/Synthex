@@ -57,7 +57,7 @@ function ScoreGauge({ score }: { score: number }) {
         <span className="text-3xl font-bold text-white">
           {Math.round(score)}
         </span>
-        <span className="text-xs text-gray-400">/100</span>
+        <span className="text-xs text-gray-300">/100</span>
       </div>
     </div>
   );
@@ -82,7 +82,7 @@ function PillarBar({
     <div className="space-y-1">
       <div className="flex items-center justify-between text-xs">
         <span className="text-gray-300">{label}</span>
-        <span className="text-gray-400 tabular-nums">
+        <span className="text-gray-300 tabular-nums">
           {Math.round(score * 10) / 10}/{max}
         </span>
       </div>
@@ -152,7 +152,7 @@ export function CompositeHealthWidget() {
         {/* Next actions */}
         {nextActions.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-400">Quick wins</p>
+            <p className="text-xs font-medium text-gray-300">Quick wins</p>
             {nextActions.map(action => (
               <div
                 key={action}
@@ -168,7 +168,7 @@ export function CompositeHealthWidget() {
         {/* Expandable checklist */}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors w-full"
+          className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-white transition-colors w-full"
         >
           {expanded ? (
             <ChevronUp className="w-3.5 h-3.5" />
@@ -194,7 +194,7 @@ export function CompositeHealthWidget() {
                 <span
                   className={
                     item.completed
-                      ? 'text-gray-400 line-through'
+                      ? 'text-gray-300 line-through'
                       : 'text-gray-300'
                   }
                 >

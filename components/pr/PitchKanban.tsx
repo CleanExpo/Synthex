@@ -114,7 +114,7 @@ function PitchCard({ pitch, onStatusChange, updating }: PitchCardProps) {
       <div className="text-sm font-medium text-white mb-1 line-clamp-2">
         {pitch.subject}
       </div>
-      <div className="text-xs text-gray-400 mb-2 line-clamp-2">
+      <div className="text-xs text-gray-300 mb-2 line-clamp-2">
         {pitch.angle}
       </div>
       <div className="flex items-center justify-between">
@@ -209,7 +209,7 @@ export function PitchKanban({ onNewPitch }: PitchKanbanProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12 text-gray-400">
+      <div className="flex items-center justify-center py-12 text-gray-300">
         <Loader2 className="h-6 w-6 animate-spin mr-2" />
         Loading pitches...
       </div>
@@ -228,7 +228,7 @@ export function PitchKanban({ onNewPitch }: PitchKanbanProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-gray-400">
+        <h3 className="text-sm font-medium text-gray-300">
           {pitches.length} total pitches
         </h3>
         {onNewPitch && (

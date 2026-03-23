@@ -25,7 +25,7 @@ function getStatusColor(status: string) {
     case 'published': return 'text-green-500';
     case 'failed': return 'text-red-500';
     case 'draft': return 'text-gray-500';
-    default: return 'text-gray-400';
+    default: return 'text-gray-300';
   }
 }
 
@@ -75,7 +75,7 @@ export function ListView({ scheduledPosts, selectedPlatform, onDuplicate, onEdit
                   )}
                 </div>
                 <p className="text-sm mb-2 line-clamp-2">{post.content}</p>
-                <div className="flex items-center gap-4 text-xs text-gray-400">
+                <div className="flex items-center gap-4 text-xs text-gray-300">
                   <span className="flex items-center gap-1">
                     <CalendarIcon className="w-3 h-3" />
                     {format(post.scheduledTime, 'MMM d, yyyy')}

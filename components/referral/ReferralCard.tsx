@@ -105,7 +105,7 @@ export default function ReferralCard() {
           size="icon"
           className={cn(
             'shrink-0 h-9 w-9',
-            copied ? 'text-green-400' : 'text-gray-400 hover:text-white'
+            copied ? 'text-green-400' : 'text-gray-300 hover:text-white'
           )}
           aria-label={copied ? 'Referral link copied' : 'Copy referral link'}
           onClick={handleCopy}

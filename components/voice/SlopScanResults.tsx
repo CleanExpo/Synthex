@@ -193,7 +193,7 @@ export function SlopScanResults({ result, className }: SlopScanResultsProps) {
           ).map(cat => (
             <div key={cat}>
               <div className="flex items-centre gap-2 mb-1">
-                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <span className="text-xs font-medium text-slate-300 uppercase tracking-wider">
                   {CATEGORY_LABELS[cat]}
                 </span>
                 <span className="text-xs text-slate-600">

@@ -382,7 +382,7 @@ export default function IntegrationsPage() {
           <h1 className="text-3xl font-bold text-white mb-2">Integrations</h1>
           <HelpVideo videoId="platform-guide-instagram" />
         </div>
-        <p className="text-gray-400">
+        <p className="text-gray-300">
           Connect your social media accounts to start creating and scheduling
           content
         </p>
@@ -408,7 +408,7 @@ export default function IntegrationsPage() {
                         {integration.name}
                       </CardTitle>
                       {integration.connected && integration.accountName && (
-                        <p className="text-sm text-gray-400 mt-1">
+                        <p className="text-sm text-gray-300 mt-1">
                           {integration.accountName}
                         </p>
                       )}
@@ -426,7 +426,7 @@ export default function IntegrationsPage() {
 
                 {integration.permissions && (
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-gray-400 mb-2">
+                    <p className="text-xs font-medium text-gray-300 mb-2">
                       Permissions:
                     </p>
                     <div className="flex flex-wrap gap-1">
@@ -508,7 +508,7 @@ export default function IntegrationsPage() {
           <h2 className="text-2xl font-bold text-white mb-1">
             Analytics, SEO & Storage
           </h2>
-          <p className="text-gray-400">
+          <p className="text-gray-300">
             Connect Google tools to track performance, analytics, and store all
             your content in Drive
           </p>
@@ -534,7 +534,7 @@ export default function IntegrationsPage() {
                           {integration.name}
                         </CardTitle>
                         {integration.connected && integration.accountName && (
-                          <p className="text-sm text-gray-400 mt-1">
+                          <p className="text-sm text-gray-300 mt-1">
                             {integration.accountName}
                           </p>
                         )}
@@ -552,7 +552,7 @@ export default function IntegrationsPage() {
 
                   {integration.permissions && (
                     <div className="space-y-1">
-                      <p className="text-xs font-medium text-gray-400 mb-2">
+                      <p className="text-xs font-medium text-gray-300 mb-2">
                         Permissions:
                       </p>
                       <div className="flex flex-wrap gap-1">
@@ -635,7 +635,7 @@ export default function IntegrationsPage() {
           <h2 className="text-2xl font-bold text-white mb-1">
             Third-Party Tools
           </h2>
-          <p className="text-gray-400">
+          <p className="text-gray-300">
             Connect design, scheduling, and automation tools
           </p>
         </div>
@@ -690,7 +690,7 @@ export default function IntegrationsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3 text-sm text-gray-400">
+          <div className="space-y-3 text-sm text-gray-300">
             <p className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
               Your credentials are encrypted and stored securely

@@ -113,7 +113,7 @@ export function ContentConfigForm({
         <div className="space-y-2">
           <Label>Platform</Label>
           {loadingConnections ? (
-            <div className="flex items-center gap-2 text-sm text-gray-400 py-2">
+            <div className="flex items-center gap-2 text-sm text-gray-300 py-2">
               <Loader2 className="w-4 h-4 animate-spin" />
               Loading connected platforms...
             </div>
@@ -238,7 +238,7 @@ export function ContentConfigForm({
         <div className="space-y-2">
           <Label>Content Length</Label>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-400">Short</span>
+            <span className="text-sm text-gray-300">Short</span>
             <Slider
               value={[
                 formData.length === 'short'
@@ -256,7 +256,7 @@ export function ContentConfigForm({
               step={1}
               className="flex-1"
             />
-            <span className="text-sm text-gray-400">Long</span>
+            <span className="text-sm text-gray-300">Long</span>
           </div>
         </div>
 

@@ -313,7 +313,7 @@ export function ROICalculator() {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">ROI Calculator</h2>
-            <p className="text-gray-400">
+            <p className="text-gray-300">
               Measure and optimize your marketing returns
             </p>
           </div>
@@ -388,7 +388,7 @@ export function ROICalculator() {
                 </Badge>
               </div>
               <p className="text-2xl font-bold text-white">{value}</p>
-              <p className="text-xs text-gray-400 mt-1">{sub}</p>
+              <p className="text-xs text-gray-300 mt-1">{sub}</p>
             </CardContent>
           </Card>
         ))}

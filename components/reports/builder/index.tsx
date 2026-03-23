@@ -249,7 +249,7 @@ export function ReportBuilder() {
             <h2 className="text-2xl font-bold text-white">
               Custom Report Builder
             </h2>
-            <p className="text-gray-400">
+            <p className="text-gray-300">
               Create personalized reports and dashboards
             </p>
           </div>

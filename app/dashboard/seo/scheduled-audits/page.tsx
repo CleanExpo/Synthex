@@ -73,13 +73,13 @@ function getFrequencyBadge(frequency: string): {
     default:
       return {
         label: frequency,
-        className: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+        className: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
       };
   }
 }
 
 function getScoreColor(score: number | null): string {
-  if (score === null) return 'text-gray-400';
+  if (score === null) return 'text-gray-300';
   if (score >= 80) return 'text-emerald-400';
   if (score >= 60) return 'text-orange-400';
   if (score >= 40) return 'text-orange-400';
@@ -186,7 +186,7 @@ function ScheduledSitesTab({
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">
+                  <label className="block text-sm text-gray-300 mb-1">
                     Site URL
                   </label>
                   <Input
@@ -201,7 +201,7 @@ function ScheduledSitesTab({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">
+                  <label className="block text-sm text-gray-300 mb-1">
                     Site Name
                   </label>
                   <Input
@@ -218,7 +218,7 @@ function ScheduledSitesTab({
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">
+                  <label className="block text-sm text-gray-300 mb-1">
                     Frequency
                   </label>
                   <select
@@ -240,7 +240,7 @@ function ScheduledSitesTab({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">
+                  <label className="block text-sm text-gray-300 mb-1">
                     Alert Threshold ({formData.alertThreshold}% drop)
                   </label>
                   <input
@@ -300,7 +300,7 @@ function ScheduledSitesTab({
             <h3 className="text-lg font-medium text-white mb-2">
               No scheduled audits yet
             </h3>
-            <p className="text-gray-400 mb-6">
+            <p className="text-gray-300 mb-6">
               Add a site to start monitoring its SEO health automatically.
             </p>
             <Button
@@ -337,7 +337,7 @@ function ScheduledSitesTab({
                         <h3 className="text-lg font-semibold text-white">
                           {target.name}
                         </h3>
-                        <p className="text-sm text-gray-400">{target.url}</p>
+                        <p className="text-sm text-gray-300">{target.url}</p>
                         <div className="flex items-center gap-3 mt-2">
                           <span
                             className={`px-2 py-0.5 text-xs font-medium rounded border ${freqBadge.className}`}
@@ -430,7 +430,7 @@ function AuditHistoryTab({
     <div className="space-y-6">
       {/* URL Filter */}
       <div className="flex items-center gap-4">
-        <label className="text-sm text-gray-400">Filter by site:</label>
+        <label className="text-sm text-gray-300">Filter by site:</label>
         <select
           value={selectedUrl}
           onChange={e => onUrlChange(e.target.value)}
@@ -523,7 +523,7 @@ function AuditHistoryTab({
             Audit History
           </h3>
           {history.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
+            <div className="text-center py-8 text-gray-300">
               No audits found. Run your first audit to see history here.
             </div>
           ) : (
@@ -552,7 +552,7 @@ function AuditHistoryTab({
                           <p className="font-medium text-white">
                             {new URL(audit.url).hostname}
                           </p>
-                          <p className="text-sm text-gray-400">
+                          <p className="text-sm text-gray-300">
                             {issues.length} issues
                           </p>
                         </div>
@@ -565,15 +565,15 @@ function AuditHistoryTab({
                           )}
                         </span>
                         {isExpanded ? (
-                          <ChevronUp className="w-4 h-4 text-gray-400" />
+                          <ChevronUp className="w-4 h-4 text-gray-300" />
                         ) : (
-                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                          <ChevronDown className="w-4 h-4 text-gray-300" />
                         )}
                       </div>
                     </div>
                     {isExpanded && issues.length > 0 && (
                       <div className="px-4 pb-4 border-t border-white/5">
-                        <p className="text-sm text-gray-400 py-3">
+                        <p className="text-sm text-gray-300 py-3">
                           Top Issues:
                         </p>
                         <div className="space-y-2">
@@ -637,7 +637,7 @@ function AlertsTab({
           <h3 className="text-lg font-medium text-white mb-2">
             No regressions detected
           </h3>
-          <p className="text-gray-400">
+          <p className="text-gray-300">
             Your sites are performing well! Keep up the good work.
           </p>
         </CardContent>
@@ -693,7 +693,7 @@ function AlertsTab({
                         : 'Warning'}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-400 mb-3">{regression.url}</p>
+                  <p className="text-sm text-gray-300 mb-3">{regression.url}</p>
                   {/* Score Drop */}
                   <div className="flex items-center gap-4 mb-4">
                     <div className="text-2xl font-bold">
@@ -712,7 +712,7 @@ function AlertsTab({
                   {/* Top Issues */}
                   {regression.topIssues.length > 0 && (
                     <div>
-                      <p className="text-sm text-gray-400 mb-2">Top Issues:</p>
+                      <p className="text-sm text-gray-300 mb-2">Top Issues:</p>
                       <div className="space-y-1">
                         {regression.topIssues.map((issue, i) => (
                           <div
@@ -805,7 +805,7 @@ export default function ScheduledAuditsPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-gray-400 hover:text-white"
+              className="text-gray-300 hover:text-white"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to SEO Tools
@@ -819,7 +819,7 @@ export default function ScheduledAuditsPage() {
           <Calendar className="w-8 h-8 text-orange-400" />
           Scheduled Audits
         </h1>
-        <p className="text-gray-400 mt-2">
+        <p className="text-gray-300 mt-2">
           Automate recurring SEO audits with regression detection and email
           alerts
         </p>
@@ -840,7 +840,7 @@ export default function ScheduledAuditsPage() {
               className={`px-4 py-2 flex items-center gap-2 ${
                 activeTab === tab.id
                   ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  : 'text-gray-300 hover:text-white hover:bg-white/5'
               }`}
             >
               <tab.icon className="w-4 h-4" />

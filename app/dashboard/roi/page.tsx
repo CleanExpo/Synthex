@@ -7,7 +7,11 @@
  */
 
 import { useState, useCallback } from 'react';
-import { useROI, CreateInvestmentInput, ContentInvestment } from '@/hooks/useROI';
+import {
+  useROI,
+  CreateInvestmentInput,
+  ContentInvestment,
+} from '@/hooks/useROI';
 import { ROIOverview } from '@/components/roi/ROIOverview';
 import { ROIChart } from '@/components/roi/ROIChart';
 import { PlatformROICards } from '@/components/roi/PlatformROICards';
@@ -33,8 +37,12 @@ import type { InvestmentType, InvestmentCategory } from '@/lib/roi/roi-service';
 
 export default function ROIPage() {
   const [typeFilter, setTypeFilter] = useState<InvestmentType | 'all'>('all');
-  const [categoryFilter, setCategoryFilter] = useState<InvestmentCategory | 'all'>('all');
-  const [dateRange, setDateRange] = useState<'30d' | '90d' | '365d' | 'all'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<
+    InvestmentCategory | 'all'
+  >('all');
+  const [dateRange, setDateRange] = useState<'30d' | '90d' | '365d' | 'all'>(
+    'all'
+  );
 
   // Calculate date filters
   const getDateFilters = () => {
@@ -64,7 +72,9 @@ export default function ROIPage() {
 
   // Form state
   const [showForm, setShowForm] = useState(false);
-  const [editingEntry, setEditingEntry] = useState<ContentInvestment | null>(null);
+  const [editingEntry, setEditingEntry] = useState<ContentInvestment | null>(
+    null
+  );
 
   const handleRefresh = useCallback(async () => {
     await refetch();
@@ -108,7 +118,9 @@ export default function ROIPage() {
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-6 h-6 text-red-400" />
             <div>
-              <h3 className="text-lg font-semibold text-white">Failed to load ROI data</h3>
+              <h3 className="text-lg font-semibold text-white">
+                Failed to load ROI data
+              </h3>
               <p className="text-red-400">{error}</p>
             </div>
           </div>
@@ -134,7 +146,7 @@ export default function ROIPage() {
         <div className="flex flex-wrap items-center gap-3">
           <Select
             value={typeFilter}
-            onValueChange={(v) => setTypeFilter(v as InvestmentType | 'all')}
+            onValueChange={v => setTypeFilter(v as InvestmentType | 'all')}
           >
             <SelectTrigger className="w-[120px] bg-gray-900/50 border-white/10">
               <SelectValue placeholder="Type" />
@@ -147,7 +159,9 @@ export default function ROIPage() {
           </Select>
           <Select
             value={categoryFilter}
-            onValueChange={(v) => setCategoryFilter(v as InvestmentCategory | 'all')}
+            onValueChange={v =>
+              setCategoryFilter(v as InvestmentCategory | 'all')
+            }
           >
             <SelectTrigger className="w-[140px] bg-gray-900/50 border-white/10">
               <SelectValue placeholder="Category" />
@@ -163,7 +177,7 @@ export default function ROIPage() {
           </Select>
           <Select
             value={dateRange}
-            onValueChange={(v) => setDateRange(v as typeof dateRange)}
+            onValueChange={v => setDateRange(v as typeof dateRange)}
           >
             <SelectTrigger className="w-[120px] bg-gray-900/50 border-white/10">
               <SelectValue placeholder="Period" />
@@ -199,10 +213,13 @@ export default function ROIPage() {
       {emptyData && !isLoading && (
         <div className="bg-gray-900/30 border border-white/10 rounded-xl p-12 text-center">
           <Calculator className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">No Investments Tracked Yet</h3>
-          <p className="text-gray-400 max-w-md mx-auto mb-6">
-            Start tracking your content investments to calculate ROI.
-            Track time spent creating content and money invested in equipment, software, and promotion.
+          <h3 className="text-xl font-semibold text-white mb-2">
+            No Investments Tracked Yet
+          </h3>
+          <p className="text-gray-300 max-w-md mx-auto mb-6">
+            Start tracking your content investments to calculate ROI. Track time
+            spent creating content and money invested in equipment, software,
+            and promotion.
           </p>
           <Button onClick={handleAddEntry} className="gap-2">
             <Plus className="w-4 h-4" />
@@ -229,13 +246,15 @@ export default function ROIPage() {
       )}
 
       {/* Platform ROI Cards */}
-      {(!emptyData || isLoading) && data?.report.byPlatform && data.report.byPlatform.length > 0 && (
-        <PlatformROICards
-          data={data?.report.byPlatform || []}
-          currency={data?.report.overall.currency}
-          isLoading={isLoading}
-        />
-      )}
+      {(!emptyData || isLoading) &&
+        data?.report.byPlatform &&
+        data.report.byPlatform.length > 0 && (
+          <PlatformROICards
+            data={data?.report.byPlatform || []}
+            currency={data?.report.overall.currency}
+            isLoading={isLoading}
+          />
+        )}
 
       {/* Investment List */}
       {(!emptyData || isLoading) && (

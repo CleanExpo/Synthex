@@ -187,7 +187,7 @@ export function PromptGeneratorForm({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-slate-400 mb-1">
+            <label className="block text-xs text-slate-300 mb-1">
               Entity Name *
             </label>
             <Input
@@ -200,7 +200,7 @@ export function PromptGeneratorForm({
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 mb-1">
+            <label className="block text-xs text-slate-300 mb-1">
               Entity Type *
             </label>
             <select
@@ -217,7 +217,7 @@ export function PromptGeneratorForm({
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 mb-1">
+            <label className="block text-xs text-slate-300 mb-1">
               Topic / Industry *
             </label>
             <Input
@@ -230,7 +230,7 @@ export function PromptGeneratorForm({
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 mb-1">
+            <label className="block text-xs text-slate-300 mb-1">
               Location (optional)
             </label>
             <Input
@@ -275,7 +275,7 @@ export function PromptGeneratorForm({
                   'px-2.5 py-1 rounded-full text-xs border transition-colors',
                   categoryFilter === 'all'
                     ? 'bg-orange-500/20 text-orange-300 border-orange-500/30'
-                    : 'border-white/20 text-slate-400 hover:text-slate-300'
+                    : 'border-white/20 text-slate-300 hover:text-slate-300'
                 )}
               >
                 All ({templates.length})
@@ -290,7 +290,7 @@ export function PromptGeneratorForm({
                       'px-2.5 py-1 rounded-full text-xs border transition-colors',
                       categoryFilter === cat
                         ? catColour(cat)
-                        : 'border-white/20 text-slate-400 hover:text-slate-300'
+                        : 'border-white/20 text-slate-300 hover:text-slate-300'
                     )}
                   >
                     {CATEGORY_CONFIG[cat as PromptCategory]?.label ?? cat} (
@@ -344,7 +344,7 @@ export function PromptGeneratorForm({
                       'shrink-0 w-7 h-7 rounded-md border flex items-center justify-center transition-colors',
                       isTracked
                         ? 'bg-green-500/20 border-green-500/30 text-green-400 cursor-default'
-                        : 'border-white/20 text-slate-400 hover:text-white hover:border-white/40'
+                        : 'border-white/20 text-slate-300 hover:text-white hover:border-white/40'
                     )}
                     title={isTracked ? 'Tracked' : 'Track this prompt'}
                   >

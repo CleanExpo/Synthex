@@ -188,7 +188,7 @@ export function WeekView({
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-gray-900/80">
           <button
             onClick={() => onWeekChange?.('prev')}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-300 hover:text-white"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -197,7 +197,7 @@ export function WeekView({
           </h2>
           <button
             onClick={() => onWeekChange?.('next')}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-300 hover:text-white"
           >
             <ChevronRight className="h-5 w-5" />
           </button>

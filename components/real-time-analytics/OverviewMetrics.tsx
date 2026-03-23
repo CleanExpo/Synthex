@@ -36,7 +36,7 @@ export function OverviewMetrics({ overview }: OverviewMetricsProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
       <Card variant="glass">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-gray-400">Total Reach</CardTitle>
+          <CardTitle className="text-sm text-gray-300">Total Reach</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
@@ -54,7 +54,7 @@ export function OverviewMetrics({ overview }: OverviewMetricsProps) {
 
       <Card variant="glass">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-gray-400">Engagement</CardTitle>
+          <CardTitle className="text-sm text-gray-300">Engagement</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
@@ -72,7 +72,7 @@ export function OverviewMetrics({ overview }: OverviewMetricsProps) {
 
       <Card variant="glass">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-gray-400">Followers</CardTitle>
+          <CardTitle className="text-sm text-gray-300">Followers</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
@@ -92,7 +92,7 @@ export function OverviewMetrics({ overview }: OverviewMetricsProps) {
 
       <Card variant="glass">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-gray-400">Posts</CardTitle>
+          <CardTitle className="text-sm text-gray-300">Posts</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
@@ -110,7 +110,7 @@ export function OverviewMetrics({ overview }: OverviewMetricsProps) {
 
       <Card variant="glass">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-gray-400">
+          <CardTitle className="text-sm text-gray-300">
             Engagement Rate
           </CardTitle>
         </CardHeader>
@@ -125,7 +125,7 @@ export function OverviewMetrics({ overview }: OverviewMetricsProps) {
 
       <Card variant="glass">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-gray-400">Growth Rate</CardTitle>
+          <CardTitle className="text-sm text-gray-300">Growth Rate</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">

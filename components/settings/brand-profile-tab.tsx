@@ -511,7 +511,7 @@ export function BrandProfileTab({
         <CardContent className="py-12">
           <div className="flex flex-col items-center justify-center gap-3">
             <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
-            <p className="text-slate-400">Loading brand profile...</p>
+            <p className="text-slate-300">Loading brand profile...</p>
           </div>
         </CardContent>
       </Card>
@@ -524,7 +524,7 @@ export function BrandProfileTab({
         <CardContent className="py-12">
           <div className="flex flex-col items-center justify-center gap-3 text-center">
             <AlertCircle className="w-8 h-8 text-red-400" />
-            <p className="text-slate-400">
+            <p className="text-slate-300">
               Failed to load brand profile. Please refresh and try again.
             </p>
           </div>
@@ -731,7 +731,7 @@ export function BrandProfileTab({
           <div className="space-y-2">
             <Label htmlFor="bp-website">Website</Label>
             <div className="flex gap-3 items-center">
-              <Globe className="w-4 h-4 text-slate-400 shrink-0" />
+              <Globe className="w-4 h-4 text-slate-300 shrink-0" />
               <Input
                 id="bp-website"
                 value={local.website}
@@ -883,7 +883,7 @@ export function BrandProfileTab({
             {/* Preview Body */}
             <div className="p-4 space-y-3">
               {local.description && (
-                <p className="text-slate-400 text-xs leading-relaxed line-clamp-2">
+                <p className="text-slate-300 text-xs leading-relaxed line-clamp-2">
                   {local.description}
                 </p>
               )}
@@ -895,7 +895,7 @@ export function BrandProfileTab({
                   Primary Button
                 </div>
                 {local.website && (
-                  <span className="text-xs text-slate-400 flex items-center gap-1">
+                  <span className="text-xs text-slate-300 flex items-center gap-1">
                     <Globe className="w-3 h-3" />
                     {local.website.replace(/^https?:\/\//, '')}
                   </span>

@@ -19,7 +19,7 @@ export function ReportsHeader({ isLoading, onRefresh, onNewReport }: ReportsHead
     <div className="flex justify-between items-center">
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">Reports</h1>
-        <p className="text-gray-400">Generate and download comprehensive reports</p>
+        <p className="text-gray-300">Generate and download comprehensive reports</p>
       </div>
       <div className="flex gap-3">
         <Button onClick={onRefresh} variant="outline">

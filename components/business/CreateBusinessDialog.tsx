@@ -87,7 +87,7 @@ export function CreateBusinessDialog({
               disabled={isSubmitting}
               className="h-8 w-8 p-0 hover:bg-orange-500/10"
             >
-              <X className="h-4 w-4 text-gray-400" />
+              <X className="h-4 w-4 text-gray-300" />
             </Button>
           </div>
         </CardHeader>
@@ -147,7 +147,7 @@ export function CreateBusinessDialog({
                   <p className="text-sm font-medium text-white">
                     Additional Business Pricing
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-300 mt-1">
                     Each additional business is{' '}
                     <span className="text-orange-400 font-semibold">
                       $249/month

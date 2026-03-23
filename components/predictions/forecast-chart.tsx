@@ -77,7 +77,7 @@ function getTrendConfig(trend: EngagementForecast['trend']) {
     default:
       return {
         label: 'Unknown',
-        className: 'bg-slate-500/20 text-slate-400 border border-slate-500/30',
+        className: 'bg-slate-500/20 text-slate-300 border border-slate-500/30',
       };
   }
 }
@@ -108,12 +108,12 @@ function ForecastTooltip({ active, payload, label }: CustomTooltipProps) {
 
   return (
     <div className="rounded-lg bg-surface-base/90 border border-white/10 px-3 py-2 shadow-xl text-xs">
-      <p className="text-slate-400 mb-1">{label}</p>
+      <p className="text-slate-300 mb-1">{label}</p>
       <p className="text-orange-400 font-medium">
         Predicted:{' '}
         <span className="text-white">{predicted.toLocaleString()}</span>
       </p>
-      <p className="text-slate-400">
+      <p className="text-slate-300">
         Range: {lowerBound.toLocaleString()} –{' '}
         {Math.round(upperBound).toLocaleString()}
       </p>
@@ -189,7 +189,7 @@ export function ForecastChart({ forecast, isLoading }: ForecastChartProps) {
               >
                 {trendConfig.label}
               </span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-300">
                 {growthSign}
                 {forecast.growthRate.toFixed(1)}% growth
               </span>

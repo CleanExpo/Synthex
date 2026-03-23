@@ -72,7 +72,7 @@ const SENTIMENT_STYLES: Record<string, { label: string; className: string }> = {
   },
   neutral: {
     label: 'Neutral',
-    className: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+    className: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
   },
   negative: {
     label: 'Negative',
@@ -134,7 +134,7 @@ export function CoverageFeed() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12 text-gray-400">
+      <div className="flex items-center justify-center py-12 text-gray-300">
         <Loader2 className="h-6 w-6 animate-spin mr-2" />
         Loading coverage...
       </div>
@@ -222,7 +222,7 @@ export function CoverageFeed() {
                       {item.title}
                     </a>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
-                      <span className="text-xs text-gray-400 font-medium">
+                      <span className="text-xs text-gray-300 font-medium">
                         {item.outlet}
                       </span>
                       {item.journalist && (
@@ -269,7 +269,7 @@ export function CoverageFeed() {
 
       {/* Manual add button */}
       <div className="mt-4">
-        <button className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+        <button className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors">
           <Plus className="h-4 w-4" />
           Add coverage manually
         </button>

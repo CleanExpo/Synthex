@@ -70,7 +70,7 @@ export function TacticScoreCard({
       </div>
 
       {/* Explanation */}
-      <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">
+      <p className="mt-1.5 text-xs text-slate-300 leading-relaxed">
         {score.explanation}
       </p>
 

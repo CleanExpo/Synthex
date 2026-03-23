@@ -52,7 +52,7 @@ export function CROScoreCard({ score, issues }: CROScoreCardProps) {
         {dimensions.map(dim => (
           <div key={dim.label}>
             <div className="flex justify-between text-xs mb-1">
-              <span className="text-slate-400">{dim.label}</span>
+              <span className="text-slate-300">{dim.label}</span>
               <span className="text-slate-300">
                 {dim.value}/{dim.max}
               </span>

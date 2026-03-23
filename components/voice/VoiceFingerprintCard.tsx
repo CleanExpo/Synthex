@@ -69,7 +69,7 @@ function MetricBar({
   return (
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-xs text-slate-400 truncate">{label}</span>
+        <span className="text-xs text-slate-300 truncate">{label}</span>
         <span className="text-sm font-semibold text-white flex-shrink-0">
           {value}
         </span>

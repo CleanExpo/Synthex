@@ -31,17 +31,17 @@ export function PerformanceTab({ metrics }: PerformanceTabProps) {
           {/* Key Metrics */}
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <p className="text-sm text-gray-400">Avg Response Time</p>
+              <p className="text-sm text-gray-300">Avg Response Time</p>
               <p className="text-2xl font-bold text-white">{metrics.responseTime}ms</p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Total Requests</p>
+              <p className="text-sm text-gray-300">Total Requests</p>
               <p className="text-2xl font-bold text-white">
                 {metrics.requestCount.toLocaleString()}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Error Rate</p>
+              <p className="text-sm text-gray-300">Error Rate</p>
               <p className="text-2xl font-bold text-white">{metrics.errorRate}%</p>
             </div>
           </div>

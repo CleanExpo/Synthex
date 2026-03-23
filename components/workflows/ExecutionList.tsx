@@ -24,7 +24,7 @@ type StatusConfig = {
 const STATUS_CONFIG: Record<string, StatusConfig> = {
   pending: {
     bg: 'bg-gray-500/20',
-    text: 'text-gray-400',
+    text: 'text-gray-300',
     border: 'border-gray-500/30',
     label: 'Pending',
   },

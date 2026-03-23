@@ -2,7 +2,10 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useInfiniteScroll, useInfiniteScrollTrigger } from '@/hooks/useInfiniteScroll';
+import {
+  useInfiniteScroll,
+  useInfiniteScrollTrigger,
+} from '@/hooks/useInfiniteScroll';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,11 +38,11 @@ export function InfiniteScrollFeed<T extends FeedItem>({
   emptyMessage = 'No items to display',
   errorMessage = 'Failed to load items',
   showScrollToTop = true,
-  gap = 4
+  gap = 4,
 }: InfiniteScrollFeedProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  
+
   const {
     items,
     loading,
@@ -48,17 +51,17 @@ export function InfiniteScrollFeed<T extends FeedItem>({
     loadMoreItems,
     reset,
     isLoadingMore,
-    totalLoaded
+    totalLoaded,
   } = useInfiniteScroll<T>({
     pageSize,
-    loadMore
+    loadMore,
   });
-  
+
   const triggerRef = useInfiniteScrollTrigger(loadMoreItems, {
     enabled: hasMore && !isLoadingMore,
-    rootMargin: '200px'
+    rootMargin: '200px',
   });
-  
+
   // Show/hide scroll to top button — rAF-throttled for performance
   useEffect(() => {
     let rafId: number | null = null;
@@ -81,14 +84,14 @@ export function InfiniteScrollFeed<T extends FeedItem>({
       if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
-  
+
   const scrollToTop = () => {
     containerRef.current?.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: 'smooth',
     });
   };
-  
+
   // Loading skeleton
   const LoadingSkeleton = () => (
     <div className={`space-y-${gap}`}>
@@ -113,14 +116,16 @@ export function InfiniteScrollFeed<T extends FeedItem>({
       ))}
     </div>
   );
-  
+
   // Error state
   if (error && items.length === 0) {
     return (
       <Card variant="glass" className="p-8 text-center">
         <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-        <p className="text-lg font-semibold text-white mb-2">Error Loading Feed</p>
-        <p className="text-gray-400 mb-4">{errorMessage}</p>
+        <p className="text-lg font-semibold text-white mb-2">
+          Error Loading Feed
+        </p>
+        <p className="text-gray-300 mb-4">{errorMessage}</p>
         <Button onClick={reset} variant="outline">
           <RefreshCw className="h-4 w-4 mr-2" />
           Try Again
@@ -128,16 +133,16 @@ export function InfiniteScrollFeed<T extends FeedItem>({
       </Card>
     );
   }
-  
+
   // Empty state
   if (!loading && items.length === 0) {
     return (
       <Card variant="glass" className="p-8 text-center">
-        <p className="text-gray-400">{emptyMessage}</p>
+        <p className="text-gray-300">{emptyMessage}</p>
       </Card>
     );
   }
-  
+
   return (
     <div className={`relative ${className}`} ref={containerRef}>
       {/* Items list */}
@@ -160,30 +165,33 @@ export function InfiniteScrollFeed<T extends FeedItem>({
           ))}
         </AnimatePresence>
       </motion.div>
-      
+
       {/* Loading more indicator */}
       {isLoadingMore && (
         <div className="mt-4">
           <LoadingSkeleton />
         </div>
       )}
-      
+
       {/* Infinite scroll trigger */}
       {hasMore && !isLoadingMore && (
-        <div ref={triggerRef as any} className="h-20 flex items-center justify-center">
-          <span className="text-sm text-gray-400">Loading more...</span>
+        <div
+          ref={triggerRef as any}
+          className="h-20 flex items-center justify-center"
+        >
+          <span className="text-sm text-gray-300">Loading more...</span>
         </div>
       )}
-      
+
       {/* End of feed message */}
       {!hasMore && items.length > 0 && (
         <div className="text-center py-8">
-          <p className="text-gray-400">
+          <p className="text-gray-300">
             You've reached the end • {totalLoaded} items loaded
           </p>
         </div>
       )}
-      
+
       {/* Scroll to top button */}
       {showScrollToTop && showScrollButton && (
         <motion.button
@@ -198,7 +206,7 @@ export function InfiniteScrollFeed<T extends FeedItem>({
           <ChevronUp className="h-5 w-5 text-white" />
         </motion.button>
       )}
-      
+
       {/* Initial loading */}
       {loading && items.length === 0 && <LoadingSkeleton />}
     </div>
@@ -211,7 +219,7 @@ export function VirtualScrollFeed<T>({
   renderItem,
   itemHeight = 100,
   containerHeight = 600,
-  className = ''
+  className = '',
 }: {
   items: T[];
   renderItem: (item: T, index: number) => React.ReactNode;
@@ -221,21 +229,21 @@ export function VirtualScrollFeed<T>({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
-  
+
   const totalHeight = items.length * itemHeight;
   const startIndex = Math.floor(scrollTop / itemHeight);
   const endIndex = Math.min(
     items.length - 1,
     Math.ceil((scrollTop + containerHeight) / itemHeight)
   );
-  
+
   const visibleItems = items.slice(startIndex, endIndex + 1);
   const offsetY = startIndex * itemHeight;
-  
+
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     setScrollTop(e.currentTarget.scrollTop);
   };
-  
+
   return (
     <div
       ref={containerRef}
@@ -250,14 +258,11 @@ export function VirtualScrollFeed<T>({
             position: 'absolute',
             top: 0,
             left: 0,
-            right: 0
+            right: 0,
           }}
         >
           {visibleItems.map((item, index) => (
-            <div
-              key={startIndex + index}
-              style={{ height: itemHeight }}
-            >
+            <div key={startIndex + index} style={{ height: itemHeight }}>
               {renderItem(item, startIndex + index)}
             </div>
           ))}
@@ -268,31 +273,31 @@ export function VirtualScrollFeed<T>({
 }
 
 // Optimized image component for feeds
-export function FeedImage({ 
-  src, 
-  alt, 
-  className = '' 
-}: { 
-  src: string; 
-  alt: string; 
+export function FeedImage({
+  src,
+  alt,
+  className = '',
+}: {
+  src: string;
+  alt: string;
   className?: string;
 }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  
+
   if (error) {
     return (
-      <div className={`bg-white/5 flex items-center justify-center ${className}`}>
-        <AlertCircle className="h-8 w-8 text-gray-400" />
+      <div
+        className={`bg-white/5 flex items-center justify-center ${className}`}
+      >
+        <AlertCircle className="h-8 w-8 text-gray-300" />
       </div>
     );
   }
-  
+
   return (
     <div className={`relative ${className}`}>
-      {!loaded && (
-        <Skeleton className="absolute inset-0" />
-      )}
+      {!loaded && <Skeleton className="absolute inset-0" />}
       <img
         src={src}
         alt={alt}

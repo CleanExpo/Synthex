@@ -25,7 +25,7 @@ const SOURCE_TYPE_COLORS: Record<string, string> = {
   government: 'text-emerald-400',
   academic: 'text-blue-400',
   industry: 'text-orange-400',
-  web: 'text-slate-400',
+  web: 'text-slate-300',
 };
 
 export function AuthoritySourcePanel({
@@ -46,12 +46,12 @@ export function AuthoritySourcePanel({
               {connector.name}
             </span>
             <span
-              className={`ml-auto text-xs ${SOURCE_TYPE_COLORS[connector.type] ?? 'text-slate-400'} capitalize`}
+              className={`ml-auto text-xs ${SOURCE_TYPE_COLORS[connector.type] ?? 'text-slate-300'} capitalize`}
             >
               {connector.type}
             </span>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-300">
             {CONNECTOR_DESCRIPTIONS[connector.id] ??
               `${connector.type} source connector`}
           </p>

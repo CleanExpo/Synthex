@@ -103,10 +103,10 @@ function InstagramMockup({
       {mediaType !== 'none' ? (
         <div className="bg-gray-200 h-96 flex items-center justify-center">
           {mediaType === 'image' && (
-            <ImageIcon className="h-16 w-16 text-gray-400" />
+            <ImageIcon className="h-16 w-16 text-gray-300" />
           )}
           {mediaType === 'video' && (
-            <Video className="h-16 w-16 text-gray-400" />
+            <Video className="h-16 w-16 text-gray-300" />
           )}
         </div>
       ) : (
@@ -158,10 +158,10 @@ function LinkedInMockup({
           {mediaType !== 'none' && (
             <div className="mt-3 bg-gray-100 rounded-lg h-48 flex items-center justify-center border">
               {mediaType === 'image' && (
-                <ImageIcon className="h-12 w-12 text-gray-400" />
+                <ImageIcon className="h-12 w-12 text-gray-300" />
               )}
               {mediaType === 'video' && (
-                <Video className="h-12 w-12 text-gray-400" />
+                <Video className="h-12 w-12 text-gray-300" />
               )}
             </div>
           )}

@@ -200,7 +200,7 @@ export function ReviewQueue({ onEdit, onMutate }: ReviewQueueProps) {
   if (isLoading) {
     return (
       <Card variant="glass" className="border-orange-500/20">
-        <CardContent className="py-4 flex items-center gap-2 text-slate-400">
+        <CardContent className="py-4 flex items-center gap-2 text-slate-300">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span className="text-sm">Loading review queue…</span>
         </CardContent>
@@ -228,7 +228,7 @@ export function ReviewQueue({ onEdit, onMutate }: ReviewQueueProps) {
                   {count} awaiting approval
                 </Badge>
               </CardTitle>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-300 mt-0.5">
                 These posts are drafted and ready — approve each one to schedule
                 it for publishing.
               </p>
@@ -249,7 +249,7 @@ export function ReviewQueue({ onEdit, onMutate }: ReviewQueueProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="text-slate-400 hover:text-white"
+              className="text-slate-300 hover:text-white"
               onClick={() => setIsExpanded(v => !v)}
             >
               {showBody ? (
@@ -335,12 +335,12 @@ function ReviewPostCard({
             {platformLabel(post.platform)}
           </span>
           {/* Campaign name */}
-          <span className="text-xs text-slate-400 truncate max-w-[180px]">
+          <span className="text-xs text-slate-300 truncate max-w-[180px]">
             {post.campaign.name}
           </span>
         </div>
         {/* Scheduled date */}
-        <div className="flex items-center gap-1 text-xs text-slate-400">
+        <div className="flex items-center gap-1 text-xs text-slate-300">
           <Calendar className="h-3 w-3" />
           <span>{scheduledDate}</span>
         </div>

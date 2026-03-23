@@ -40,7 +40,7 @@ interface WebProject {
 const STATUS_COLOURS: Record<string, string> = {
   draft: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
   active: 'bg-green-500/10 text-green-400 border-green-500/20',
-  archived: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+  archived: 'bg-gray-500/10 text-gray-300 border-gray-500/20',
 };
 
 export default function WebProjectsPage() {
@@ -122,7 +122,7 @@ export default function WebProjectsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Web Projects</h1>
-          <p className="text-gray-400 text-sm mt-1">
+          <p className="text-gray-300 text-sm mt-1">
             Manage website builds, design tokens, and animation templates.
           </p>
         </div>
@@ -181,7 +181,7 @@ export default function WebProjectsPage() {
                   type="button"
                   variant="ghost"
                   onClick={() => setDialogOpen(false)}
-                  className="text-gray-400 hover:text-white"
+                  className="text-gray-300 hover:text-white"
                 >
                   Cancel
                 </Button>
@@ -268,7 +268,7 @@ export default function WebProjectsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-gray-400 hover:text-white"
+                        className="h-7 w-7 text-gray-300 hover:text-white"
                       >
                         <Edit className="w-3.5 h-3.5" />
                       </Button>
@@ -276,7 +276,7 @@ export default function WebProjectsPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-gray-400 hover:text-red-400"
+                      className="h-7 w-7 text-gray-300 hover:text-red-400"
                       onClick={() => handleDelete(project.id)}
                     >
                       <Trash2 className="w-3.5 h-3.5" />

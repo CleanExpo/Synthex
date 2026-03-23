@@ -25,7 +25,7 @@ export function TopicsTab({ topicSentiments }: TopicsTabProps) {
               <div key={topic.topic} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <Hash className="h-4 w-4 text-gray-400" />
+                    <Hash className="h-4 w-4 text-gray-300" />
                     <span className="font-medium text-white capitalize">{topic.topic}</span>
                     <Badge variant="secondary" className="text-xs">
                       {topic.mentions} mentions

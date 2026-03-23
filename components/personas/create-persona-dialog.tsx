@@ -54,7 +54,7 @@ export function CreatePersonaDialog({
       <DialogContent className="sm:max-w-[500px] bg-slate-900 border-white/10">
         <DialogHeader>
           <DialogTitle className="text-white">Create New Persona</DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-slate-300">
             Define a new AI persona with specific voice and style attributes.
           </DialogDescription>
         </DialogHeader>

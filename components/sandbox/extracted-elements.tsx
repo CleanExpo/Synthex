@@ -22,7 +22,7 @@ export function ExtractedElements({
     <div className="p-4 bg-white/5 rounded-lg space-y-3">
       {hashtags.length > 0 && (
         <div>
-          <p className="text-xs text-gray-400 mb-2">
+          <p className="text-xs text-gray-300 mb-2">
             Hashtags ({hashtags.length})
           </p>
           <div className="flex flex-wrap gap-2">
@@ -39,7 +39,7 @@ export function ExtractedElements({
       )}
       {mentions.length > 0 && (
         <div>
-          <p className="text-xs text-gray-400 mb-2">
+          <p className="text-xs text-gray-300 mb-2">
             Mentions ({mentions.length})
           </p>
           <div className="flex flex-wrap gap-2">

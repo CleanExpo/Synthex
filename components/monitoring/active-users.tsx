@@ -32,7 +32,7 @@ export function ActiveUsers({ activeUsers }: ActiveUsersProps) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-3xl font-bold text-white">{activeUsers}</p>
-            <p className="text-sm text-gray-400">Users online</p>
+            <p className="text-sm text-gray-300">Users online</p>
           </div>
           <div className="flex items-center text-green-400">
             <TrendingUp className="w-5 h-5 mr-2" />

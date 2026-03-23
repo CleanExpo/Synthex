@@ -103,7 +103,7 @@ export function ThemePicker({
         <Label>Custom Colors</Label>
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label className="text-xs text-gray-400">Primary</Label>
+            <Label className="text-xs text-gray-300">Primary</Label>
             <div className="flex items-center gap-2">
               <input
                 type="color"
@@ -120,7 +120,7 @@ export function ThemePicker({
             </div>
           </div>
           <div className="space-y-2">
-            <Label className="text-xs text-gray-400">Background</Label>
+            <Label className="text-xs text-gray-300">Background</Label>
             <div className="flex items-center gap-2">
               <input
                 type="color"
@@ -145,7 +145,7 @@ export function ThemePicker({
             </div>
           </div>
           <div className="space-y-2">
-            <Label className="text-xs text-gray-400">Text</Label>
+            <Label className="text-xs text-gray-300">Text</Label>
             <div className="flex items-center gap-2">
               <input
                 type="color"
@@ -177,7 +177,7 @@ export function ThemePicker({
                 style.preview,
                 buttonStyle === style.id
                   ? 'border-orange-500 bg-orange-500/10 text-white'
-                  : 'border-white/10 hover:border-white/20 text-gray-400'
+                  : 'border-white/10 hover:border-white/20 text-gray-300'
               )}
             >
               {style.label}

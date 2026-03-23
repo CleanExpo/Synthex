@@ -432,7 +432,7 @@ export function PredictiveAnalytics() {
   const getChangeColor = (change: number) => {
     if (change > 0) return 'text-green-400';
     if (change < 0) return 'text-red-400';
-    return 'text-gray-400';
+    return 'text-gray-300';
   };
 
   const getRiskColor = (risk: string) => {
@@ -469,7 +469,7 @@ export function PredictiveAnalytics() {
             <h2 className="text-2xl font-bold text-white">
               Predictive Analytics
             </h2>
-            <p className="text-gray-400">AI-powered forecasting and insights</p>
+            <p className="text-gray-300">AI-powered forecasting and insights</p>
           </div>
         </div>
 
@@ -506,7 +506,7 @@ export function PredictiveAnalytics() {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <p className="text-xs text-gray-400">{prediction.metric}</p>
+                    <p className="text-xs text-gray-300">{prediction.metric}</p>
                     <p className="text-2xl font-bold text-white">
                       {prediction.predictedValue}
                       {prediction.metric.includes('Rate') && '%'}
@@ -528,18 +528,18 @@ export function PredictiveAnalytics() {
                   >
                     {Math.abs(prediction.change).toFixed(1)}%
                   </span>
-                  <span className="text-xs text-gray-400">vs current</span>
+                  <span className="text-xs text-gray-300">vs current</span>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-400">Confidence</span>
+                    <span className="text-gray-300">Confidence</span>
                     <span className="text-white">{prediction.confidence}%</span>
                   </div>
                   <Progress value={prediction.confidence} className="h-1.5" />
                 </div>
 
-                <p className="text-xs text-gray-400 mt-2">
+                <p className="text-xs text-gray-300 mt-2">
                   {prediction.timeframe}
                 </p>
               </CardContent>
@@ -633,7 +633,7 @@ export function PredictiveAnalytics() {
                       <h4 className="font-medium text-white">
                         {scenario.name}
                       </h4>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-300">
                         {scenario.description}
                       </p>
                     </div>
@@ -648,7 +648,7 @@ export function PredictiveAnalytics() {
                         key={metric.metric}
                         className="flex items-center justify-between text-sm"
                       >
-                        <span className="text-gray-400">{metric.metric}</span>
+                        <span className="text-gray-300">{metric.metric}</span>
                         <div className="flex gap-3">
                           <span className="text-red-400">{metric.worst}</span>
                           <span className="text-yellow-400 font-medium">
@@ -703,24 +703,24 @@ export function PredictiveAnalytics() {
                     </Badge>
                   </div>
 
-                  <p className="text-xs text-gray-400 mb-2">
+                  <p className="text-xs text-gray-300 mb-2">
                     {anomaly.description}
                   </p>
 
                   <div className="flex items-center justify-between">
                     <div className="flex gap-4 text-xs">
-                      <span className="text-gray-400">
+                      <span className="text-gray-300">
                         Value:{' '}
                         <span className="text-white">{anomaly.value}</span>
                       </span>
-                      <span className="text-gray-400">
+                      <span className="text-gray-300">
                         Expected:{' '}
                         <span className="text-white">
                           {anomaly.expectedValue}
                         </span>
                       </span>
                     </div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-gray-300">
                       {new Date(anomaly.timestamp).toLocaleTimeString()}
                     </span>
                   </div>
@@ -754,7 +754,7 @@ export function PredictiveAnalytics() {
 
                 <div className="space-y-3">
                   <div>
-                    <p className="text-xs text-gray-400 mb-2">Key Factors</p>
+                    <p className="text-xs text-gray-300 mb-2">Key Factors</p>
                     {prediction.factors.map(factor => (
                       <div
                         key={factor.name}
@@ -778,7 +778,7 @@ export function PredictiveAnalytics() {
                   </div>
 
                   <div>
-                    <p className="text-xs text-gray-400 mb-2">
+                    <p className="text-xs text-gray-300 mb-2">
                       Recommendations
                     </p>
                     {prediction.recommendations.map((rec, i) => (

@@ -245,7 +245,7 @@ export default function PsychologyBrandGenerator() {
                   className={`w-12 h-12 rounded-full flex items-center justify-center font-bold ${
                     step >= s
                       ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white'
-                      : 'bg-gray-700 text-gray-400'
+                      : 'bg-gray-700 text-gray-300'
                   }`}
                 >
                   {s}
@@ -603,7 +603,7 @@ export default function PsychologyBrandGenerator() {
                         </span>{' '}
                         {name.psychologicalTrigger}
                       </p>
-                      <p className="text-gray-400">{name.rationale}</p>
+                      <p className="text-gray-300">{name.rationale}</p>
                     </motion.div>
                   ))}
                 </div>

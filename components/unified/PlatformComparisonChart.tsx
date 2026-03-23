@@ -68,7 +68,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 
   return (
     <div className="bg-gray-900 border border-white/10 rounded-lg p-3 shadow-xl">
-      <p className="text-sm text-gray-400 mb-2">{label}</p>
+      <p className="text-sm text-gray-300 mb-2">{label}</p>
       <div className="space-y-1">
         {payload.map((entry, index) => (
           <div key={index} className="flex items-center justify-between gap-4">
@@ -87,7 +87,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       </div>
       <div className="mt-2 pt-2 border-t border-white/10">
         <div className="flex justify-between">
-          <span className="text-sm text-gray-400">Total</span>
+          <span className="text-sm text-gray-300">Total</span>
           <span className="text-sm font-semibold text-white">
             {formatNumber(total)}
           </span>
@@ -128,7 +128,7 @@ export function PlatformComparisonChart({
   if (connectedPlatforms.length === 0) {
     return (
       <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-8', className)}>
-        <div className="text-center text-gray-400">
+        <div className="text-center text-gray-300">
           <p>Connect platforms to see comparison data</p>
         </div>
       </div>

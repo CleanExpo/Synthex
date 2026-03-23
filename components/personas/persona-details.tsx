@@ -36,12 +36,12 @@ export function PersonaDetails({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>{persona.name}</CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription className="text-slate-300">
               Last trained: {persona.lastTrained}
             </CardDescription>
           </div>
           <div className="flex space-x-2">
-            <Button size="sm" variant="ghost" className="text-slate-400" onClick={onEdit}>
+            <Button size="sm" variant="ghost" className="text-slate-300" onClick={onEdit}>
               <Edit className="h-4 w-4" />
             </Button>
             <Button
@@ -59,21 +59,21 @@ export function PersonaDetails({
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="space-y-3">
             <div>
-              <Label className="text-slate-400">Tone</Label>
+              <Label className="text-slate-300">Tone</Label>
               <p className="text-white">{persona.attributes.tone}</p>
             </div>
             <div>
-              <Label className="text-slate-400">Style</Label>
+              <Label className="text-slate-300">Style</Label>
               <p className="text-white">{persona.attributes.style}</p>
             </div>
           </div>
           <div className="space-y-3">
             <div>
-              <Label className="text-slate-400">Vocabulary</Label>
+              <Label className="text-slate-300">Vocabulary</Label>
               <p className="text-white">{persona.attributes.vocabulary}</p>
             </div>
             <div>
-              <Label className="text-slate-400">Emotion</Label>
+              <Label className="text-slate-300">Emotion</Label>
               <p className="text-white">{persona.attributes.emotion}</p>
             </div>
           </div>

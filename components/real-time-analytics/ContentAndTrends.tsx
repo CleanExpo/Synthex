@@ -62,19 +62,19 @@ export function ContentAndTrends({
                   className="flex items-start justify-between p-3 bg-white/5 rounded-lg"
                 >
                   <div className="flex gap-3 flex-1">
-                    <Icon className="w-4 h-4 mt-1 text-gray-400" />
+                    <Icon className="w-4 h-4 mt-1 text-gray-300" />
                     <div className="flex-1">
                       <p className="text-sm line-clamp-2">{content.content}</p>
                       <div className="flex items-center gap-4 mt-2">
-                        <span className="text-xs text-gray-400 flex items-center gap-1">
+                        <span className="text-xs text-gray-300 flex items-center gap-1">
                           <Heart className="w-3 h-3" />{' '}
                           {formatNumber(content.likes)}
                         </span>
-                        <span className="text-xs text-gray-400 flex items-center gap-1">
+                        <span className="text-xs text-gray-300 flex items-center gap-1">
                           <MessageSquare className="w-3 h-3" />{' '}
                           {formatNumber(content.comments)}
                         </span>
-                        <span className="text-xs text-gray-400 flex items-center gap-1">
+                        <span className="text-xs text-gray-300 flex items-center gap-1">
                           <Share2 className="w-3 h-3" />{' '}
                           {formatNumber(content.shares)}
                         </span>
@@ -108,7 +108,7 @@ export function ContentAndTrends({
                   <Target className="w-4 h-4 text-orange-500" />
                   <div>
                     <p className="font-medium">{trend.hashtag}</p>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-gray-300">
                       {formatNumber(trend.mentions)} mentions
                     </p>
                   </div>
@@ -121,7 +121,7 @@ export function ContentAndTrends({
                         ? 'border-green-500 text-green-400'
                         : trend.sentiment === 'negative'
                           ? 'border-red-500 text-red-400'
-                          : 'border-gray-500 text-gray-400'
+                          : 'border-gray-500 text-gray-300'
                     }
                   >
                     {trend.sentiment}

@@ -66,7 +66,7 @@ export interface DistributionPanelProps {
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    pending: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+    pending: 'bg-gray-500/10 text-gray-300 border-gray-500/20',
     submitted: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
     published: 'bg-green-500/10 text-green-400 border-green-500/20',
     failed: 'bg-red-500/10 text-red-400 border-red-500/20',

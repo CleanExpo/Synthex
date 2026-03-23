@@ -57,7 +57,7 @@ function ScoreGauge({ score }: { score: number }) {
         <span className="text-3xl font-bold text-white">
           {Math.round(score)}
         </span>
-        <span className="text-xs text-gray-400">/100</span>
+        <span className="text-xs text-gray-300">/100</span>
       </div>
     </div>
   );
@@ -91,7 +91,7 @@ function TrendIndicator({ trend }: { trend: string }) {
     case 'stable':
     default:
       return (
-        <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+        <span className="inline-flex items-center gap-1 text-xs text-gray-300">
           <Minus className="w-3.5 h-3.5" />
           Stable
         </span>
@@ -114,7 +114,7 @@ function ComponentBar({
     <div className="space-y-1">
       <div className="flex items-center justify-between text-xs">
         <span className="text-gray-300">{label}</span>
-        <span className="text-gray-400 tabular-nums">
+        <span className="text-gray-300 tabular-nums">
           {Math.round(score)}/100{' '}
           <span className="text-gray-600">({weight})</span>
         </span>

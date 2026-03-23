@@ -73,7 +73,7 @@ const TIER_CONFIG: Record<
   },
   silver: {
     label: 'Silver',
-    colour: 'text-slate-400',
+    colour: 'text-slate-300',
     bgColour: 'bg-slate-400/10',
     borderColour: 'border-slate-400/30',
     badgeColour: '#C0C0C0',

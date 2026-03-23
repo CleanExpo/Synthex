@@ -26,7 +26,7 @@ function MentionRateBadge({ rate }: { rate: number }) {
       ? 'text-red-400 bg-red-500/10'
       : pct >= 30
         ? 'text-orange-400 bg-orange-500/10'
-        : 'text-slate-400 bg-white/5';
+        : 'text-slate-300 bg-white/5';
 
   return (
     <span
@@ -56,7 +56,7 @@ export function CompetitorVisibilityTable({
   if (competitors.length === 0) {
     return (
       <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-300">
           No competitor mentions detected yet.
         </p>
         <p className="text-xs text-slate-500 mt-1">
@@ -71,16 +71,16 @@ export function CompetitorVisibilityTable({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/10">
-            <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">
+            <th className="text-left text-xs font-semibold text-slate-300 uppercase tracking-wider px-4 py-3">
               Competitor
             </th>
-            <th className="text-center text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">
+            <th className="text-center text-xs font-semibold text-slate-300 uppercase tracking-wider px-4 py-3">
               Mentions
             </th>
-            <th className="text-center text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">
+            <th className="text-center text-xs font-semibold text-slate-300 uppercase tracking-wider px-4 py-3">
               Mention Rate
             </th>
-            <th className="text-center text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">
+            <th className="text-center text-xs font-semibold text-slate-300 uppercase tracking-wider px-4 py-3">
               Avg Position
             </th>
           </tr>

@@ -101,12 +101,12 @@ export function CompetitorDetailView({
                         key={platform}
                         className="flex items-center gap-3 p-3 bg-white/5 rounded-lg"
                       >
-                        <Icon className="h-5 w-5 text-gray-400" />
+                        <Icon className="h-5 w-5 text-gray-300" />
                         <div className="flex-1">
                           <p className="text-sm font-medium text-white capitalize">
                             {platform}
                           </p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-gray-300">
                             {(followers as number).toLocaleString()} followers
                             &bull; {engagement}% engagement
                           </p>
@@ -135,28 +135,28 @@ export function CompetitorDetailView({
                   <p className="text-lg font-bold text-white">
                     {competitor.metrics.contentPerformance.avgLikes.toLocaleString()}
                   </p>
-                  <p className="text-xs text-gray-400">Avg Likes</p>
+                  <p className="text-xs text-gray-300">Avg Likes</p>
                 </div>
                 <div className="p-3 bg-white/5 rounded-lg text-center">
                   <MessageSquare className="h-5 w-5 text-blue-400 mx-auto mb-2" />
                   <p className="text-lg font-bold text-white">
                     {competitor.metrics.contentPerformance.avgComments}
                   </p>
-                  <p className="text-xs text-gray-400">Avg Comments</p>
+                  <p className="text-xs text-gray-300">Avg Comments</p>
                 </div>
                 <div className="p-3 bg-white/5 rounded-lg text-center">
                   <Share2 className="h-5 w-5 text-green-400 mx-auto mb-2" />
                   <p className="text-lg font-bold text-white">
                     {competitor.metrics.contentPerformance.avgShares}
                   </p>
-                  <p className="text-xs text-gray-400">Avg Shares</p>
+                  <p className="text-xs text-gray-300">Avg Shares</p>
                 </div>
                 <div className="p-3 bg-white/5 rounded-lg text-center">
                   <TrendingUp className="h-5 w-5 text-orange-400 mx-auto mb-2" />
                   <p className="text-lg font-bold text-white">
                     {competitor.metrics.contentPerformance.viralPosts}
                   </p>
-                  <p className="text-xs text-gray-400">Viral Posts</p>
+                  <p className="text-xs text-gray-300">Viral Posts</p>
                 </div>
               </div>
             </div>

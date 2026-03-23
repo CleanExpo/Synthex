@@ -27,7 +27,7 @@ function StatusBadge({ status }: { status: string }) {
   > = {
     pending: {
       bg: 'bg-gray-500/20',
-      text: 'text-gray-400',
+      text: 'text-gray-300',
       border: 'border-gray-500/30',
       label: 'Pending',
     },
@@ -243,7 +243,7 @@ export function ExecutionDetail({
             <div className="space-y-2">
               {waitingSteps.map(step => (
                 <div key={step.id} className="space-y-1">
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-300">
                     Step {step.stepIndex + 1}:{' '}
                     <strong className="text-white">{step.stepName}</strong>
                   </p>

@@ -101,7 +101,7 @@ function TabButton({
         'px-4 py-2 text-sm font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
         active
           ? 'bg-white/10 text-white'
-          : 'text-gray-400 hover:text-white hover:bg-white/5'
+          : 'text-gray-300 hover:text-white hover:bg-white/5'
       )}
     >
       {children}
@@ -176,7 +176,7 @@ function AuditTab() {
           <span
             className={cn(
               'text-xs tabular-nums',
-              words > 0 ? 'text-slate-400' : 'text-slate-600'
+              words > 0 ? 'text-slate-300' : 'text-slate-600'
             )}
           >
             {words.toLocaleString()} {words === 1 ? 'word' : 'words'}
@@ -257,7 +257,7 @@ function AuditTab() {
           {/* Writing Quality dimension from content scorer */}
           {result.contentScore?.dimensions?.writingQuality && (
             <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
-              <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+              <p className="text-xs font-medium text-slate-300 uppercase tracking-wider">
                 Writing Quality Dimension Score
               </p>
               <div className="flex items-baseline gap-2">
@@ -271,7 +271,7 @@ function AuditTab() {
                 <ul className="space-y-1">
                   {result.contentScore.dimensions.writingQuality.issues.map(
                     (issue, i) => (
-                      <li key={i} className="text-xs text-slate-400">
+                      <li key={i} className="text-xs text-slate-300">
                         • {issue}
                       </li>
                     )
@@ -323,7 +323,7 @@ function HistoryTab() {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
         <Shield className="w-10 h-10 text-slate-600" />
-        <p className="text-slate-400 text-sm font-medium">
+        <p className="text-slate-300 text-sm font-medium">
           No saved audits yet
         </p>
         <p className="text-slate-600 text-xs">
@@ -437,7 +437,7 @@ function QualityDashboardPageContent() {
           <h1 className="text-2xl font-bold text-white">
             Content Quality Gate
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-300 mt-1">
             Detect AI tell-phrases and score content humanness before
             publishing.
           </p>

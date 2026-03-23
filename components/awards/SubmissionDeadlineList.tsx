@@ -50,7 +50,7 @@ export function SubmissionDeadlineList({ deadlines, isLoading = false }: Submiss
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Calendar className="h-10 w-10 text-slate-600 mb-3" />
-        <p className="text-slate-400 text-sm font-medium">No upcoming deadlines</p>
+        <p className="text-slate-300 text-sm font-medium">No upcoming deadlines</p>
         <p className="text-slate-600 text-xs mt-1">Award deadlines within the next 90 days will appear here.</p>
       </div>
     );
@@ -69,7 +69,7 @@ export function SubmissionDeadlineList({ deadlines, isLoading = false }: Submiss
           {/* Name + date */}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-white truncate">{dl.name}</p>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-300">
               {new Date(dl.deadline).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           </div>

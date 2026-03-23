@@ -154,7 +154,7 @@ function LinkCard({
         {/* Status Badges */}
         <div className="flex flex-col items-end gap-1">
           {!link.isActive && (
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-500/20 text-gray-400 rounded-full">
+            <span className="px-2 py-0.5 text-xs font-medium bg-gray-500/20 text-gray-300 rounded-full">
               Inactive
             </span>
           )}

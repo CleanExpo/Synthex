@@ -73,7 +73,7 @@ export function BusinessManagementTable({
       case 'cancelled':
         return 'bg-red-500/20 text-red-400 border-red-500/30';
       default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
     }
   };
 
@@ -163,22 +163,22 @@ export function BusinessManagementTable({
             <table className="w-full">
               <thead className="border-b border-orange-500/10">
                 <tr className="text-left">
-                  <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Business
                   </th>
-                  <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Billing
                   </th>
-                  <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Monthly Rate
                   </th>
-                  <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Social Accounts
                   </th>
-                  <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider text-right">
+                  <th className="px-6 py-4 text-xs font-medium text-gray-300 uppercase tracking-wider text-right">
                     Actions
                   </th>
                 </tr>
@@ -218,7 +218,7 @@ export function BusinessManagementTable({
                                 size="sm"
                                 onClick={cancelRename}
                                 disabled={renameSaving}
-                                className="h-7 w-7 p-0 text-gray-400 hover:text-gray-300 hover:bg-white/5"
+                                className="h-7 w-7 p-0 text-gray-300 hover:text-gray-300 hover:bg-white/5"
                               >
                                 <X className="h-3 w-3" />
                               </Button>
@@ -249,7 +249,7 @@ export function BusinessManagementTable({
                           className={
                             business.isActive
                               ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                              : 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+                              : 'bg-gray-500/20 text-gray-300 border-gray-500/30'
                           }
                         >
                           {business.isActive ? 'Active' : 'Inactive'}
@@ -273,7 +273,7 @@ export function BusinessManagementTable({
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-400">
+                          <span className="text-sm text-gray-300">
                             {business.stats?.activePlatforms ?? 0} connected
                           </span>
                           <Button
@@ -286,7 +286,7 @@ export function BusinessManagementTable({
                                   : business.organizationId
                               )
                             }
-                            className="text-gray-400 hover:text-white hover:bg-orange-500/10"
+                            className="text-gray-300 hover:text-white hover:bg-orange-500/10"
                           >
                             {expandedId === business.organizationId ? (
                               <ChevronUp className="h-4 w-4" />
@@ -405,7 +405,7 @@ export function BusinessManagementTable({
                           size="sm"
                           onClick={cancelRename}
                           disabled={renameSaving}
-                          className="h-7 w-7 p-0 text-gray-400 hover:text-gray-300 hover:bg-white/5 flex-shrink-0"
+                          className="h-7 w-7 p-0 text-gray-300 hover:text-gray-300 hover:bg-white/5 flex-shrink-0"
                         >
                           <X className="h-3 w-3" />
                         </Button>
@@ -435,7 +435,7 @@ export function BusinessManagementTable({
                       className={
                         business.isActive
                           ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                          : 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+                          : 'bg-gray-500/20 text-gray-300 border-gray-500/30'
                       }
                     >
                       {business.isActive ? 'Active' : 'Inactive'}
@@ -452,7 +452,7 @@ export function BusinessManagementTable({
                 {/* Monthly Rate */}
                 <div className="pt-2 border-t border-orange-500/10">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-400">Monthly Rate</span>
+                    <span className="text-sm text-gray-300">Monthly Rate</span>
                     <span className="text-lg font-semibold text-white">
                       {formatCurrency(business.monthlyRate)}
                       <span className="text-xs text-gray-500">/month</span>
@@ -463,7 +463,7 @@ export function BusinessManagementTable({
                 {/* Social Accounts */}
                 <div className="pt-2 border-t border-orange-500/10">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-gray-300">
                       {business.stats?.activePlatforms ?? 0} social accounts
                       connected
                     </span>
@@ -478,7 +478,7 @@ export function BusinessManagementTable({
                               : business.organizationId
                           )
                         }
-                        className="text-gray-400 hover:text-white hover:bg-orange-500/10"
+                        className="text-gray-300 hover:text-white hover:bg-orange-500/10"
                       >
                         {expandedId === business.organizationId ? (
                           <ChevronUp className="h-4 w-4" />
@@ -554,7 +554,7 @@ export function BusinessManagementTable({
       {businesses.length === 0 && (
         <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardContent className="py-12 text-center">
-            <p className="text-gray-400">No businesses found</p>
+            <p className="text-gray-300">No businesses found</p>
           </CardContent>
         </Card>
       )}

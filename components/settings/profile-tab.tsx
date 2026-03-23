@@ -73,7 +73,7 @@ export function ProfileTab({
             <h3 className="font-semibold text-white">
               {profile.name || 'Your Name'}
             </h3>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-300">
               {profile.role || 'Your Role'}
             </p>
             <p className="text-xs text-slate-500 mt-1">

@@ -70,7 +70,7 @@ function stepTypeColour(type: string): string {
     case 'validation':
       return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
     default:
-      return 'text-gray-400 bg-gray-500/10 border-gray-500/20';
+      return 'text-gray-300 bg-gray-500/10 border-gray-500/20';
   }
 }
 
@@ -166,7 +166,7 @@ export function AutonomousPageClient() {
           <Sparkles className="h-6 w-6 text-orange-500" />
           Autonomous
         </h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-sm text-gray-300 mt-1">
           Describe what you want done in plain English. Synthex will build and
           execute a workflow for you.
         </p>
@@ -209,7 +209,7 @@ export function AutonomousPageClient() {
                 <button
                   key={ex}
                   onClick={() => setInstruction(ex)}
-                  className="text-xs px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-colors"
+                  className="text-xs px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-colors"
                 >
                   {ex.length > 60 ? ex.slice(0, 57) + '...' : ex}
                 </button>
@@ -250,7 +250,7 @@ export function AutonomousPageClient() {
                 <h2 className="text-lg font-semibold text-white">
                   {parsed.title}
                 </h2>
-                <p className="text-sm text-gray-400 mt-1">{parsed.summary}</p>
+                <p className="text-sm text-gray-300 mt-1">{parsed.summary}</p>
               </div>
               <ConfidenceBadge score={parsed.confidence} />
             </div>
@@ -302,7 +302,7 @@ export function AutonomousPageClient() {
                       />
                     )}
                     <span className="absolute left-0 top-1 h-6 w-6 rounded-full border border-white/10 bg-white/5 flex items-center justify-center">
-                      <span className="text-gray-400">
+                      <span className="text-gray-300">
                         <StepIcon stepType={step.type} />
                       </span>
                     </span>
@@ -342,7 +342,7 @@ export function AutonomousPageClient() {
             <Button
               variant="outline"
               onClick={handleReset}
-              className="border-white/10 text-gray-400 hover:text-white"
+              className="border-white/10 text-gray-300 hover:text-white"
             >
               <RotateCcw className="h-4 w-4 mr-2" />
               Start Over
@@ -378,7 +378,7 @@ export function AutonomousPageClient() {
             <h2 className="text-lg font-semibold text-white">
               Workflow Created
             </h2>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-300">
               Your workflow is now queued and will execute automatically.
             </p>
           </div>
@@ -387,7 +387,7 @@ export function AutonomousPageClient() {
             <Button
               variant="outline"
               onClick={handleReset}
-              className="border-white/10 text-gray-400 hover:text-white"
+              className="border-white/10 text-gray-300 hover:text-white"
             >
               <RotateCcw className="h-4 w-4 mr-2" />
               New Instruction
@@ -409,7 +409,7 @@ export function AutonomousPageClient() {
           <p className="text-[11px] text-gray-600 font-medium uppercase tracking-wider mb-1">
             Original Instruction
           </p>
-          <p className="text-xs text-gray-400 italic">
+          <p className="text-xs text-gray-300 italic">
             &ldquo;{parsed.originalInstruction}&rdquo;
           </p>
         </div>

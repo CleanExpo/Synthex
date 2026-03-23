@@ -430,7 +430,7 @@ export function PlatformCredentialsManager() {
                           {platform.name}
                         </p>
                         {isConfigured && credential ? (
-                          <p className="text-sm text-slate-400 font-mono">
+                          <p className="text-sm text-slate-300 font-mono">
                             {credential.maskedClientId}
                           </p>
                         ) : (
@@ -462,7 +462,7 @@ export function PlatformCredentialsManager() {
                           </Button>
                         </>
                       ) : (
-                        <Badge className="bg-slate-500/20 text-slate-400 border-slate-500/30">
+                        <Badge className="bg-slate-500/20 text-slate-300 border-slate-500/30">
                           Not configured
                         </Badge>
                       )}
@@ -473,7 +473,7 @@ export function PlatformCredentialsManager() {
                   {isEditing && (
                     <div className="px-4 pb-4 pt-1 space-y-4 border-t border-white/5">
                       {/* Developer portal link */}
-                      <div className="flex items-center gap-2 text-xs text-slate-400">
+                      <div className="flex items-center gap-2 text-xs text-slate-300">
                         <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
                         <a
                           href={platform.devPortalUrl}
@@ -488,7 +488,7 @@ export function PlatformCredentialsManager() {
 
                       {/* Callback URL */}
                       <div>
-                        <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                        <label className="block text-xs font-medium text-slate-300 mb-1.5">
                           Callback URL
                         </label>
                         <div className="flex items-center gap-2">
@@ -504,7 +504,7 @@ export function PlatformCredentialsManager() {
                               e.stopPropagation();
                               copyCallbackUrl(platform.id);
                             }}
-                            className="text-slate-400 hover:text-orange-400 hover:bg-orange-500/10 flex-shrink-0"
+                            className="text-slate-300 hover:text-orange-400 hover:bg-orange-500/10 flex-shrink-0"
                             aria-label="Copy callback URL"
                           >
                             <Copy className="w-4 h-4" />

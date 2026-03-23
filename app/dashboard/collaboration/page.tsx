@@ -95,11 +95,11 @@ function getActivityIcon(type: string) {
     case 'campaign_started':
       return <CheckCircle className="h-4 w-4 text-green-400" />;
     case 'campaign_ended':
-      return <CheckCircle className="h-4 w-4 text-gray-400" />;
+      return <CheckCircle className="h-4 w-4 text-gray-300" />;
     case 'milestone_reached':
       return <TrendingUp className="h-4 w-4 text-yellow-400" />;
     default:
-      return <Activity className="h-4 w-4 text-gray-400" />;
+      return <Activity className="h-4 w-4 text-gray-300" />;
   }
 }
 
@@ -213,7 +213,7 @@ function ActivityTab() {
             <h3 className="text-lg font-medium text-white mb-2">
               No recent activity
             </h3>
-            <p className="text-gray-400 max-w-sm mx-auto">
+            <p className="text-gray-300 max-w-sm mx-auto">
               Start creating content to see team updates here.
             </p>
           </div>
@@ -262,7 +262,7 @@ function ActivityTab() {
                       {formatRelativeTime(activity.timestamp)}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-400 mt-0.5 line-clamp-2">
+                  <p className="text-sm text-gray-300 mt-0.5 line-clamp-2">
                     {activity.description}
                   </p>
                   {activity.platform && (
@@ -323,7 +323,7 @@ function CommentsTab() {
           <h3 className="text-lg font-medium text-white mb-2">
             No comments yet
           </h3>
-          <p className="text-gray-400 max-w-sm mx-auto">
+          <p className="text-gray-300 max-w-sm mx-auto">
             Start collaborating on content to see comments here. Open any
             content item to view and add comments.
           </p>
@@ -438,7 +438,7 @@ function SharesTab() {
               <h3 className="text-lg font-medium text-white mb-2">
                 Nothing shared yet
               </h3>
-              <p className="text-gray-400 max-w-sm mx-auto">
+              <p className="text-gray-300 max-w-sm mx-auto">
                 {shareFilter === 'sharedWithMe'
                   ? 'Content shared with you will appear here.'
                   : 'Share content with team members to see it here.'}
@@ -463,7 +463,7 @@ function SharesTab() {
                       <p className="text-sm font-medium text-white capitalize">
                         {share.contentType}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-300">
                         {formatRelativeTime(share.createdAt)}
                       </p>
                     </div>
@@ -471,7 +471,7 @@ function SharesTab() {
                   {getPermissionBadge(share.permission)}
                 </div>
 
-                <div className="flex items-center gap-4 text-xs text-gray-400 mb-3">
+                <div className="flex items-center gap-4 text-xs text-gray-300 mb-3">
                   <span className="flex items-center gap-1">
                     <Eye className="w-3 h-3" />
                     {share.viewCount} views
@@ -568,7 +568,7 @@ export default function CollaborationPage() {
             <h1 className="text-3xl font-bold text-white">
               Team Collaboration
             </h1>
-            <p className="text-gray-400">
+            <p className="text-gray-300">
               Activity feed, comments, and shared content
             </p>
           </div>

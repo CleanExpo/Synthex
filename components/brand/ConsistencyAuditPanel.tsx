@@ -70,7 +70,7 @@ function matchBadge(match: NameMatchType): {
     case 'not-found':
       return {
         label: 'Not found',
-        className: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+        className: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
       };
   }
 }
@@ -108,7 +108,7 @@ export function ConsistencyAuditPanel({
       {!report && !loading && (
         <div className="bg-white/[0.03] border border-white/10 rounded-xl p-8 text-center">
           <Info className="w-8 h-8 text-gray-500 mx-auto mb-3" />
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             Run a consistency audit to score your brand name across all declared
             sameAs platforms.
           </p>
@@ -118,7 +118,7 @@ export function ConsistencyAuditPanel({
       {loading && (
         <div className="bg-white/[0.03] border border-white/10 rounded-xl p-8 text-center">
           <Loader2 className="w-8 h-8 text-gray-500 mx-auto mb-3 animate-spin" />
-          <p className="text-sm text-gray-400">Running consistency audit…</p>
+          <p className="text-sm text-gray-300">Running consistency audit…</p>
         </div>
       )}
 
@@ -132,7 +132,7 @@ export function ConsistencyAuditPanel({
             )}
           >
             <div>
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">
+              <p className="text-xs text-gray-300 font-medium uppercase tracking-wide">
                 Overall Score
               </p>
               <p className="text-xs text-gray-500 mt-0.5">
@@ -156,16 +156,16 @@ export function ConsistencyAuditPanel({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-300 uppercase tracking-wide">
                       Platform
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-300 uppercase tracking-wide">
                       Declared Name
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-300 uppercase tracking-wide">
                       Status
                     </th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">
+                    <th className="text-right px-4 py-3 text-xs font-medium text-gray-300 uppercase tracking-wide">
                       Score
                     </th>
                   </tr>
@@ -178,7 +178,7 @@ export function ConsistencyAuditPanel({
                         <td className="px-4 py-3 text-white font-medium">
                           {result.platform}
                         </td>
-                        <td className="px-4 py-3 text-gray-400 text-xs font-mono">
+                        <td className="px-4 py-3 text-gray-300 text-xs font-mono">
                           {result.foundName ?? '—'}
                         </td>
                         <td className="px-4 py-3">

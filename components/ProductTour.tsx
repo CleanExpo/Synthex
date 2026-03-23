@@ -346,7 +346,7 @@ export function ProductTour() {
         {/* Close button */}
         <button
           onClick={skipTour}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white"
+          className="absolute top-4 right-4 text-gray-300 hover:text-white"
         >
           <X className="w-5 h-5" />
         </button>
@@ -378,7 +378,7 @@ export function ProductTour() {
               variant="ghost"
               size="sm"
               onClick={skipTour}
-              className="text-gray-400"
+              className="text-gray-300"
             >
               Skip tour
             </Button>
@@ -431,7 +431,7 @@ export function TourTrigger() {
       variant="ghost"
       size="sm"
       onClick={startTour}
-      className="text-gray-400 hover:text-white"
+      className="text-gray-300 hover:text-white"
     >
       <Sparkles className="w-4 h-4 mr-2" />
       Take Tour

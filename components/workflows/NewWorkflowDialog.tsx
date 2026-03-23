@@ -164,7 +164,7 @@ export function NewWorkflowDialog({
       <DialogContent variant="glass-solid" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white">Start New Workflow</DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-gray-300">
             {step === 1
               ? 'Choose a template or start ad-hoc.'
               : 'Name your workflow and provide input data.'}
@@ -275,7 +275,7 @@ export function NewWorkflowDialog({
           <div className="space-y-4">
             {/* Title */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">
+              <label className="block text-xs font-medium text-gray-300 mb-1">
                 Workflow title <span className="text-red-400">*</span>
               </label>
               <input
@@ -290,7 +290,7 @@ export function NewWorkflowDialog({
 
             {/* Input data */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">
+              <label className="block text-xs font-medium text-gray-300 mb-1">
                 Input data{' '}
                 <span className="text-gray-600">(optional JSON)</span>
               </label>
@@ -318,7 +318,7 @@ export function NewWorkflowDialog({
                 setError(null);
               }}
               disabled={submitting}
-              className="text-gray-400 hover:text-white"
+              className="text-gray-300 hover:text-white"
             >
               <ChevronLeft className="h-3.5 w-3.5 mr-1" />
               Back

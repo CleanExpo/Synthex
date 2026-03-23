@@ -12,7 +12,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import prisma from '@/lib/prisma';
 import { getForecastingClient } from '@/lib/forecasting/client';
 import { FORECAST_METRICS } from '@/lib/forecasting/metrics';
@@ -27,14 +26,16 @@ export const maxDuration = 300;
 export async function GET(request: NextRequest) {
   try {
     // 1. Verify CRON_SECRET
-    const headersList = await headers();
-    const authHeader = headersList.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const authHeader = request.headers.get('authorization');
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
     const startTime = Date.now();
-    logger.info('cron:forecast-training:start', { timestamp: new Date().toISOString() });
+    logger.info('cron:forecast-training:start', {
+      timestamp: new Date().toISOString(),
+    });
 
     // 2. Get client — skip gracefully if not configured
     const client = getForecastingClient();
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest) {
         const dataPoints = await collectTrainingData(
           model.orgId,
           metric,
-          model.platform ?? undefined,
+          model.platform ?? undefined
         );
 
         // Skip if insufficient data
@@ -75,7 +76,9 @@ export async function GET(request: NextRequest) {
         }
 
         // Retrain via service
-        const result = await client.retrainForecastModel(model.id, { data: dataPoints });
+        const result = await client.retrainForecastModel(model.id, {
+          data: dataPoints,
+        });
 
         // Serialise typed objects through JSON to satisfy Prisma's InputJsonValue constraint
         const accuracyJson = result.accuracy
@@ -98,7 +101,10 @@ export async function GET(request: NextRequest) {
 
         results.retrained++;
       } catch (err) {
-        logger.error(`forecast-training cron: failed to retrain model ${model.id}`, { err });
+        logger.error(
+          `forecast-training cron: failed to retrain model ${model.id}`,
+          { err }
+        );
 
         // QA-AUDIT-2026-03-14 (C7): Retry up to 3 times before marking permanently failed.
         // Increment retryCount and keep status as 'pending' so the next cron run re-attempts.
@@ -106,21 +112,35 @@ export async function GET(request: NextRequest) {
         const maxRetries = 3;
 
         if (currentRetry < maxRetries) {
-          await prisma.forecastModel.update({
-            where: { id: model.id },
-            data: { retryCount: currentRetry + 1 },
-          }).catch((updateErr) => {
-            logger.error(`forecast-training cron: failed to increment retryCount for model ${model.id}`, { updateErr });
-          });
-          logger.warn(`forecast-training cron: model ${model.id} retry ${currentRetry + 1}/${maxRetries} — will re-attempt next run`);
+          await prisma.forecastModel
+            .update({
+              where: { id: model.id },
+              data: { retryCount: currentRetry + 1 },
+            })
+            .catch(updateErr => {
+              logger.error(
+                `forecast-training cron: failed to increment retryCount for model ${model.id}`,
+                { updateErr }
+              );
+            });
+          logger.warn(
+            `forecast-training cron: model ${model.id} retry ${currentRetry + 1}/${maxRetries} — will re-attempt next run`
+          );
         } else {
-          await prisma.forecastModel.update({
-            where: { id: model.id },
-            data: { status: 'failed' },
-          }).catch((updateErr) => {
-            logger.error(`forecast-training cron: failed to mark model ${model.id} as failed`, { updateErr });
-          });
-          logger.error(`forecast-training cron: model ${model.id} permanently failed after ${maxRetries} retries`);
+          await prisma.forecastModel
+            .update({
+              where: { id: model.id },
+              data: { status: 'failed' },
+            })
+            .catch(updateErr => {
+              logger.error(
+                `forecast-training cron: failed to mark model ${model.id} as failed`,
+                { updateErr }
+              );
+            });
+          logger.error(
+            `forecast-training cron: model ${model.id} permanently failed after ${maxRetries} retries`
+          );
         }
 
         results.failed++;
@@ -128,7 +148,11 @@ export async function GET(request: NextRequest) {
     }
 
     const durationMs = Date.now() - startTime;
-    logger.info('cron:forecast-training:end', { timestamp: new Date().toISOString(), durationMs, ...results });
+    logger.info('cron:forecast-training:end', {
+      timestamp: new Date().toISOString(),
+      durationMs,
+      ...results,
+    });
 
     return NextResponse.json({
       success: true,
@@ -137,8 +161,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('GET /api/cron/forecast-training error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Forecast training cron failed' },
-      { status: 500 },
+      {
+        error: 'Internal Server Error',
+        message: 'Forecast training cron failed',
+      },
+      { status: 500 }
     );
   }
 }

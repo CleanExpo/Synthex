@@ -162,7 +162,7 @@ export function BrandCalendarView({ brandId }: BrandCalendarViewProps) {
       {!calendar && !loading && (
         <div className="bg-white/[0.03] border border-white/10 rounded-xl p-8 text-center">
           <Calendar className="w-8 h-8 text-gray-500 mx-auto mb-3" />
-          <p className="text-sm text-gray-400 font-medium">
+          <p className="text-sm text-gray-300 font-medium">
             No calendar generated yet
           </p>
           <p className="text-xs text-gray-500 mt-1">
@@ -228,7 +228,7 @@ export function BrandCalendarView({ brandId }: BrandCalendarViewProps) {
             {weeks.map(week => (
               <div key={week.weekStart}>
                 <div className="flex items-center gap-3 mb-2">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-gray-300 uppercase tracking-wide">
                     Week of {formatWeekHeader(week.weekStart)}
                   </p>
                   <div className="flex-1 h-px bg-white/[0.06]" />

@@ -47,7 +47,7 @@ export function EngagementChart({ data }: EngagementChartProps) {
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Engagement Trend</CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-slate-300">
           Daily engagement across platforms
         </CardDescription>
       </CardHeader>

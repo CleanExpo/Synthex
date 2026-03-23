@@ -202,10 +202,10 @@ export function StreakCounter({ compact = false }: { compact?: boolean }) {
     return (
       <button className="flex items-center gap-2 px-3 py-2 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg hover:bg-white/5 transition-colors">
         <Flame
-          className={`h-5 w-5 ${streakData.currentStreak > 0 ? 'text-orange-400' : 'text-gray-400'}`}
+          className={`h-5 w-5 ${streakData.currentStreak > 0 ? 'text-orange-400' : 'text-gray-300'}`}
         />
         <span className="font-bold text-white">{streakData.currentStreak}</span>
-        <span className="text-xs text-gray-400">day streak</span>
+        <span className="text-xs text-gray-300">day streak</span>
       </button>
     );
   }
@@ -225,13 +225,13 @@ export function StreakCounter({ compact = false }: { compact?: boolean }) {
               className={`h-6 w-6 ${
                 streakData.currentStreak > 0
                   ? 'text-orange-400'
-                  : 'text-gray-400'
+                  : 'text-gray-300'
               }`}
             />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-white">Daily Streak</h3>
-            <p className="text-sm text-gray-400">Keep your momentum going!</p>
+            <p className="text-sm text-gray-300">Keep your momentum going!</p>
           </div>
         </div>
 
@@ -239,14 +239,14 @@ export function StreakCounter({ compact = false }: { compact?: boolean }) {
           <p className="text-3xl font-bold gradient-text">
             {streakData.currentStreak}
           </p>
-          <p className="text-xs text-gray-400">days</p>
+          <p className="text-xs text-gray-300">days</p>
         </div>
       </div>
 
       {/* Progress to next milestone */}
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-400">Next milestone</span>
+          <span className="text-gray-300">Next milestone</span>
           <span className="text-white font-medium">
             {streakData.nextMilestone} days
           </span>
@@ -264,19 +264,19 @@ export function StreakCounter({ compact = false }: { compact?: boolean }) {
           <p className="text-xl font-bold text-white">
             {streakData.longestStreak}
           </p>
-          <p className="text-xs text-gray-400">Best Streak</p>
+          <p className="text-xs text-gray-300">Best Streak</p>
         </div>
 
         <div className="text-center p-3 bg-white/5 rounded-lg">
           <Star className="h-5 w-5 text-orange-400 mx-auto mb-1" />
           <p className="text-xl font-bold text-white">Lv.{streakData.level}</p>
-          <p className="text-xs text-gray-400">Level</p>
+          <p className="text-xs text-gray-300">Level</p>
         </div>
 
         <div className="text-center p-3 bg-white/5 rounded-lg">
           <Zap className="h-5 w-5 text-blue-400 mx-auto mb-1" />
           <p className="text-xl font-bold text-white">{streakData.points}</p>
-          <p className="text-xs text-gray-400">Points</p>
+          <p className="text-xs text-gray-300">Points</p>
         </div>
       </div>
 
@@ -306,7 +306,7 @@ export function StreakCounter({ compact = false }: { compact?: boolean }) {
 
       {/* Achievements Preview */}
       <div className="flex items-center justify-between pt-2 border-t border-white/10">
-        <span className="text-sm text-gray-400">Recent Achievement</span>
+        <span className="text-sm text-gray-300">Recent Achievement</span>
         <div className="flex items-center gap-2">
           <Award className="h-4 w-4 text-yellow-400" />
           <span className="text-sm text-white">Content Creator</span>
@@ -329,7 +329,7 @@ export function FloatingStreak() {
         <span className="text-sm font-bold text-white">
           {streakData.currentStreak}
         </span>
-        <span className="text-xs text-gray-400">streak</span>
+        <span className="text-xs text-gray-300">streak</span>
       </div>
     </div>
   );

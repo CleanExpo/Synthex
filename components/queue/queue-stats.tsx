@@ -64,7 +64,7 @@ function StatCard({ label, value, icon: Icon, highlight, highlightColour }: Stat
       >
         <Icon
           className={`h-4 w-4 ${
-            highlight ? 'text-red-400' : 'text-gray-400'
+            highlight ? 'text-red-400' : 'text-gray-300'
           }`}
         />
       </div>

@@ -40,7 +40,7 @@ function MetricCard({
     <div className="p-4 bg-white/5 rounded-lg">
       <div className="flex items-center gap-2 mb-1">
         <Icon className="w-4 h-4 text-orange-400" />
-        <span className="text-sm text-gray-400">{label}</span>
+        <span className="text-sm text-gray-300">{label}</span>
       </div>
       <p className="text-2xl font-bold text-white">{value}</p>
     </div>
@@ -62,7 +62,7 @@ export default function GBPInsightsPage() {
       <div>
         <Link
           href="/dashboard/google-business"
-          className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
+          className="text-sm text-gray-300 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Google Business
@@ -71,7 +71,7 @@ export default function GBPInsightsPage() {
           <TrendingUp className="w-7 h-7 text-orange-400" />
           Performance Insights
         </h1>
-        <p className="text-gray-400 mt-1">
+        <p className="text-gray-300 mt-1">
           Track how customers find and interact with your business listing
         </p>
       </div>
@@ -82,7 +82,7 @@ export default function GBPInsightsPage() {
         <>
           {/* Period Selector */}
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Period:</span>
+            <span className="text-sm text-gray-300">Period:</span>
             {[7, 14, 30, 90].map(d => (
               <Button
                 key={d}
@@ -92,7 +92,7 @@ export default function GBPInsightsPage() {
                 className={`text-xs ${
                   days === d
                     ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
-                    : 'border-white/10 text-gray-400 hover:bg-white/5'
+                    : 'border-white/10 text-gray-300 hover:bg-white/5'
                 }`}
               >
                 {d} days

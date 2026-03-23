@@ -154,7 +154,7 @@ export default function GEOPage() {
               <Globe className="h-7 w-7 text-orange-400" />
               GEO Analysis
             </h1>
-            <p className="text-gray-400 mt-1">
+            <p className="text-gray-300 mt-1">
               Generative Engine Optimization — optimize content for AI search
               engines
             </p>
@@ -255,7 +255,7 @@ export default function GEOPage() {
                   <CardContent className="p-4">
                     <Icon className="h-8 w-8 text-orange-400 mb-3" />
                     <h3 className="text-white font-medium text-sm">{title}</h3>
-                    <p className="text-gray-400 text-xs mt-1">{desc}</p>
+                    <p className="text-gray-300 text-xs mt-1">{desc}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -275,7 +275,7 @@ export default function GEOPage() {
                       <Badge className={getTier(result.score.overall).color}>
                         {getTier(result.score.overall).label}
                       </Badge>
-                      <p className="text-gray-400 text-sm mt-2">
+                      <p className="text-gray-300 text-sm mt-2">
                         Overall GEO Score
                       </p>
                       {result.weightSource === 'bo' && (
@@ -285,7 +285,7 @@ export default function GEOPage() {
                         </div>
                       )}
                       {result.weightSource === 'heuristic' && (
-                        <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-500/20 border border-gray-500/20 text-gray-400 text-xs">
+                        <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-500/20 border border-gray-500/20 text-gray-300 text-xs">
                           Heuristic weights
                         </div>
                       )}
@@ -361,7 +361,7 @@ export default function GEOPage() {
                                   </Badge>
                                 )}
                               </div>
-                              <span className="text-sm text-gray-400">
+                              <span className="text-sm text-gray-300">
                                 {p.wordCount}w — Score: {p.score}
                               </span>
                             </div>
@@ -397,15 +397,15 @@ export default function GEOPage() {
                                   {rec.title}
                                 </span>
                                 <Badge
-                                  className={`text-xs ${rec.priority === 'critical' ? 'bg-red-500/20 text-red-400' : rec.priority === 'high' ? 'bg-orange-500/20 text-orange-400' : 'bg-gray-500/20 text-gray-400'}`}
+                                  className={`text-xs ${rec.priority === 'critical' ? 'bg-red-500/20 text-red-400' : rec.priority === 'high' ? 'bg-orange-500/20 text-orange-400' : 'bg-gray-500/20 text-gray-300'}`}
                                 >
                                   {rec.priority}
                                 </Badge>
-                                <Badge className="bg-white/5 text-gray-400 text-xs">
+                                <Badge className="bg-white/5 text-gray-300 text-xs">
                                   +{rec.impact}pts
                                 </Badge>
                               </div>
-                              <p className="text-xs text-gray-400 mt-1">
+                              <p className="text-xs text-gray-300 mt-1">
                                 {rec.description}
                               </p>
                             </div>
@@ -434,7 +434,7 @@ export default function GEOPage() {
                       >
                         {getTier(result.score.entityCoherence).label}
                       </Badge>
-                      <p className="text-gray-400 text-sm mt-2">
+                      <p className="text-gray-300 text-sm mt-2">
                         Entity Coherence Score
                       </p>
                       <p className="text-gray-500 text-xs mt-1">
@@ -501,7 +501,7 @@ export default function GEOPage() {
                             </div>
                           ))}
                         </div>
-                        <div className="mt-4 flex gap-4 text-sm text-gray-400">
+                        <div className="mt-4 flex gap-4 text-sm text-gray-300">
                           <span>
                             {result.entityAnalysis.entityCount} total entities
                           </span>
@@ -547,7 +547,7 @@ export default function GEOPage() {
                                 className="flex items-center gap-3 p-2 rounded-lg bg-white/[0.02] border border-white/[0.05]"
                               >
                                 <Badge
-                                  className={`text-xs shrink-0 ${typeColors[entity.type] ?? 'bg-gray-500/20 text-gray-400'}`}
+                                  className={`text-xs shrink-0 ${typeColors[entity.type] ?? 'bg-gray-500/20 text-gray-300'}`}
                                 >
                                   {entity.type}
                                 </Badge>
@@ -559,7 +559,7 @@ export default function GEOPage() {
                                     also: {entity.variants.slice(1).join(', ')}
                                   </span>
                                 )}
-                                <span className="text-xs text-gray-400 shrink-0">
+                                <span className="text-xs text-gray-300 shrink-0">
                                   {entity.count}&times;
                                 </span>
                               </div>
@@ -613,7 +613,7 @@ export default function GEOPage() {
 
           <TabsContent value="history" className="mt-4">
             <Card className="bg-surface-base/80 border border-orange-500/10">
-              <CardContent className="p-12 text-center text-gray-400">
+              <CardContent className="p-12 text-center text-gray-300">
                 <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 <p>Analysis history coming soon</p>
                 <p className="text-sm mt-1">

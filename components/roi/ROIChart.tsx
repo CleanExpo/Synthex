@@ -94,7 +94,7 @@ export function ROIChart({
         )}
       >
         <ChartBarIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-        <p className="text-gray-400">No platform data to display</p>
+        <p className="text-gray-300">No platform data to display</p>
         <p className="text-sm text-gray-500 mt-1">
           Add investments to see ROI comparison
         </p>
@@ -154,7 +154,7 @@ export function ROIChart({
             <Legend
               wrapperStyle={{ paddingTop: '10px' }}
               formatter={value => (
-                <span className="text-gray-400 text-sm">{value}</span>
+                <span className="text-gray-300 text-sm">{value}</span>
               )}
             />
             <Bar dataKey="Revenue" fill="#10b981" radius={[4, 4, 0, 0]} />

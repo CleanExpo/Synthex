@@ -195,9 +195,9 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
           </span>
         </div>
         {isExpanded ? (
-          <ChevronUp className="h-4 w-4 text-gray-400" />
+          <ChevronUp className="h-4 w-4 text-gray-300" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-gray-400" />
+          <ChevronDown className="h-4 w-4 text-gray-300" />
         )}
       </button>
 
@@ -207,7 +207,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
           <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Brand name */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">
+              <label className="block text-xs font-medium text-gray-300 mb-1.5">
                 Brand / Company Name <span className="text-red-400">*</span>
               </label>
               <input
@@ -221,7 +221,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
 
             {/* Category */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">
+              <label className="block text-xs font-medium text-gray-300 mb-1.5">
                 Category
               </label>
               <select
@@ -240,7 +240,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
 
           {/* Angle */}
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1.5">
+            <label className="block text-xs font-medium text-gray-300 mb-1.5">
               News Angle <span className="text-red-400">*</span>
             </label>
             <textarea
@@ -254,7 +254,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
 
           {/* Key facts */}
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1.5">
+            <label className="block text-xs font-medium text-gray-300 mb-1.5">
               Key Facts <span className="text-red-400">*</span>
               <span className="ml-1 text-gray-600 font-normal">
                 — one fact per line
@@ -271,7 +271,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
 
           {/* Target audience */}
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1.5">
+            <label className="block text-xs font-medium text-gray-300 mb-1.5">
               Target Audience <span className="text-red-400">*</span>
             </label>
             <input
@@ -286,7 +286,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Quote name */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">
+              <label className="block text-xs font-medium text-gray-300 mb-1.5">
                 Quote — Spokesperson Name{' '}
                 <span className="text-red-400">*</span>
               </label>
@@ -301,7 +301,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
 
             {/* Quote text */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">
+              <label className="block text-xs font-medium text-gray-300 mb-1.5">
                 Quote Text <span className="text-red-400">*</span>
               </label>
               <input
@@ -346,7 +346,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
           {generated && (
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <h3 className="text-xs font-semibold text-gray-300 uppercase tracking-wider">
                   Generated Preview
                   {!generated.isAIGenerated && (
                     <span className="ml-2 text-orange-400 normal-case font-normal">

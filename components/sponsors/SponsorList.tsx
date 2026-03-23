@@ -30,7 +30,7 @@ interface SponsorListProps {
 }
 
 const STATUS_COLORS: Record<SponsorStatus, string> = {
-  lead: 'bg-gray-500/10 text-gray-400 border-gray-500/30',
+  lead: 'bg-gray-500/10 text-gray-300 border-gray-500/30',
   active: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
   past: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
 };

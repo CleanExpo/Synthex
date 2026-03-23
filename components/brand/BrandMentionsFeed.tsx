@@ -60,7 +60,7 @@ function sentimentBadge(sentiment: string): { label: string; className: string }
   switch (sentiment) {
     case 'positive': return { label: 'Positive', className: 'bg-green-500/20 text-green-300 border-green-500/30' };
     case 'negative': return { label: 'Negative', className: 'bg-red-500/20 text-red-300 border-red-500/30' };
-    default:         return { label: 'Neutral',  className: 'bg-gray-500/20 text-gray-400 border-gray-500/30' };
+    default:         return { label: 'Neutral',  className: 'bg-gray-500/20 text-gray-300 border-gray-500/30' };
   }
 }
 
@@ -157,7 +157,7 @@ export function BrandMentionsFeed({ brandId }: BrandMentionsFeedProps) {
       {data && data.mentions.length === 0 && (
         <div className="bg-white/[0.03] border border-white/10 rounded-xl p-8 text-center">
           <Search className="w-8 h-8 text-gray-500 mx-auto mb-3" />
-          <p className="text-sm text-gray-400 font-medium">No mentions found</p>
+          <p className="text-sm text-gray-300 font-medium">No mentions found</p>
           <p className="text-xs text-gray-500 mt-1">Click "Poll for new mentions" to search for brand mentions across NewsData.io and GDELT.</p>
         </div>
       )}
@@ -184,7 +184,7 @@ export function BrandMentionsFeed({ brandId }: BrandMentionsFeedProps) {
                       <ExternalLink className="w-3.5 h-3.5 shrink-0 mt-0.5 text-gray-500" />
                     </a>
                     {mention.description && (
-                      <p className="text-xs text-gray-400 mt-1 line-clamp-2">
+                      <p className="text-xs text-gray-300 mt-1 line-clamp-2">
                         {mention.description.slice(0, 120)}{mention.description.length > 120 ? '…' : ''}
                       </p>
                     )}
@@ -208,7 +208,7 @@ export function BrandMentionsFeed({ brandId }: BrandMentionsFeedProps) {
           {data.total > page * limit && (
             <button
               onClick={() => setPage(p => p + 1)}
-              className="w-full py-3 text-sm text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.05] border border-white/10 rounded-xl transition-colors"
+              className="w-full py-3 text-sm text-gray-300 hover:text-white bg-white/[0.03] hover:bg-white/[0.05] border border-white/10 rounded-xl transition-colors"
             >
               Load more ({data.total - page * limit} remaining)
             </button>

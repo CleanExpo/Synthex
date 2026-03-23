@@ -166,7 +166,7 @@ export default function ReferralsPage() {
       <div className="max-w-3xl mx-auto">
         <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-8 text-center space-y-4">
           <Gift className="w-10 h-10 text-slate-500 mx-auto" />
-          <p className="text-slate-400 text-sm">
+          <p className="text-slate-300 text-sm">
             Could not load referral data. Please try again.
           </p>
           <button
@@ -203,7 +203,7 @@ export default function ReferralsPage() {
           <Gift className="w-7 h-7 text-orange-400" />
           Refer &amp; Earn
         </h1>
-        <p className="text-slate-400 text-sm mt-1">
+        <p className="text-slate-300 text-sm mt-1">
           Invite businesses to SYNTHEX — you both receive 500 bonus AI credits
           when they convert.
         </p>
@@ -211,7 +211,7 @@ export default function ReferralsPage() {
 
       {/* Referral link card */}
       <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-5 space-y-3">
-        <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+        <p className="text-xs font-medium text-slate-300 uppercase tracking-wider">
           Your referral link
         </p>
         <div className="flex items-center gap-2">
@@ -263,7 +263,7 @@ export default function ReferralsPage() {
           <p className="text-sm font-medium text-white">
             Progress to next reward
           </p>
-          <span className="text-xs text-slate-400 tabular-nums">
+          <span className="text-xs text-slate-300 tabular-nums">
             {progressCount} / {REWARD_THRESHOLD} conversions
           </span>
         </div>

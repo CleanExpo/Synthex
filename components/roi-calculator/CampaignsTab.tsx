@@ -23,7 +23,7 @@ export function CampaignsTab({ campaigns }: CampaignsTabProps) {
                   <Badge variant="secondary">{campaign.platform}</Badge>
                   <div className={`w-2 h-2 rounded-full ${getStatusColor(campaign.status)}`} />
                 </div>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-300">
                   {new Date(campaign.startDate).toLocaleDateString()} - {new Date(campaign.endDate).toLocaleDateString()}
                 </p>
               </div>
@@ -34,23 +34,23 @@ export function CampaignsTab({ campaigns }: CampaignsTabProps) {
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
               <div>
-                <p className="text-xs text-gray-400">Budget</p>
+                <p className="text-xs text-gray-300">Budget</p>
                 <p className="text-sm font-medium text-white">{formatCurrency(campaign.budget)}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-400">Spent</p>
+                <p className="text-xs text-gray-300">Spent</p>
                 <p className="text-sm font-medium text-white">{formatCurrency(campaign.spent)}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-400">Impressions</p>
+                <p className="text-xs text-gray-300">Impressions</p>
                 <p className="text-sm font-medium text-white">{campaign.impressions.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-400">Conversions</p>
+                <p className="text-xs text-gray-300">Conversions</p>
                 <p className="text-sm font-medium text-white">{campaign.conversions}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-400">Revenue</p>
+                <p className="text-xs text-gray-300">Revenue</p>
                 <p className="text-sm font-medium text-white">{formatCurrency(campaign.revenue)}</p>
               </div>
             </div>

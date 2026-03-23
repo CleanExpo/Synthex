@@ -131,7 +131,7 @@ function BioPagesPageContent() {
               <FileText className="w-5 h-5 text-orange-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-400">Total Pages</p>
+              <p className="text-sm text-gray-300">Total Pages</p>
               <p className="text-2xl font-bold text-white">
                 {totals.totalPages}
               </p>
@@ -144,7 +144,7 @@ function BioPagesPageContent() {
               <Eye className="w-5 h-5 text-orange-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-400">Total Views</p>
+              <p className="text-sm text-gray-300">Total Views</p>
               <p className="text-2xl font-bold text-white">
                 {totals.totalViews.toLocaleString()}
               </p>
@@ -157,7 +157,7 @@ function BioPagesPageContent() {
               <MousePointer className="w-5 h-5 text-green-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-400">Total Clicks</p>
+              <p className="text-sm text-gray-300">Total Clicks</p>
               <p className="text-2xl font-bold text-white">
                 {totals.totalClicks.toLocaleString()}
               </p>
@@ -223,14 +223,14 @@ function BioPagesPageContent() {
                   <h3 className="font-semibold text-white truncate">
                     {page.title}
                   </h3>
-                  <p className="text-sm text-gray-400 truncate">/{page.slug}</p>
+                  <p className="text-sm text-gray-300 truncate">/{page.slug}</p>
                 </div>
                 <Badge
                   variant={page.isPublished ? 'default' : 'secondary'}
                   className={cn(
                     page.isPublished
                       ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                      : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                      : 'bg-gray-500/10 text-gray-300 border-gray-500/20'
                   )}
                 >
                   {page.isPublished ? 'Published' : 'Draft'}
@@ -238,7 +238,7 @@ function BioPagesPageContent() {
               </div>
 
               {/* Stats */}
-              <div className="flex items-center gap-4 mb-4 text-sm text-gray-400">
+              <div className="flex items-center gap-4 mb-4 text-sm text-gray-300">
                 <div className="flex items-center gap-1">
                   <Eye className="w-4 h-4" />
                   <span>{page.totalViews.toLocaleString()}</span>
@@ -320,7 +320,7 @@ function BioPagesPageContent() {
               />
             </div>
             {newTitle && (
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-300">
                 URL will be: /bio/
                 <span className="text-orange-400">{slugify(newTitle)}</span>
               </p>
@@ -353,7 +353,7 @@ function BioPagesPageContent() {
           <DialogHeader>
             <DialogTitle>Delete Bio Page</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-gray-400 py-4">
+          <p className="text-sm text-gray-300 py-4">
             Are you sure you want to delete "{pageToDelete?.title}"? This action
             cannot be undone and all links and analytics will be permanently
             lost.

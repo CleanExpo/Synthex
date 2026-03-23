@@ -114,7 +114,7 @@ export function GeneratedContentDisplay({
             <div className="grid grid-cols-2 gap-4">
               <div className="p-3 bg-white/5 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Viral Score</span>
+                  <span className="text-sm text-gray-300">Viral Score</span>
                   <TrendingUp
                     className={`w-4 h-4 ${getViralScoreColor(generatedContent.viralScore)}`}
                   />
@@ -127,7 +127,7 @@ export function GeneratedContentDisplay({
               </div>
               <div className="p-3 bg-white/5 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Est. Engagement</span>
+                  <span className="text-sm text-gray-300">Est. Engagement</span>
                   <Zap
                     className={`w-4 h-4 ${getEngagementColor(generatedContent.estimatedEngagement)}`}
                   />
@@ -171,7 +171,7 @@ export function GeneratedContentDisplay({
                     <div className="p-4 bg-white/5 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <Badge variant="outline">{variation.style}</Badge>
-                        <span className="text-sm text-gray-400">
+                        <span className="text-sm text-gray-300">
                           Score: {variation.score.toFixed(0)}
                         </span>
                       </div>
@@ -248,7 +248,7 @@ export function GeneratedContentDisplay({
         ) : (
           <div className="text-center py-12">
             <Sparkles className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">Generate content to see it here</p>
+            <p className="text-gray-300">Generate content to see it here</p>
             <p className="text-sm text-gray-500 mt-2">
               AI-powered content will appear instantly
             </p>

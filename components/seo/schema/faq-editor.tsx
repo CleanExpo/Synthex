@@ -35,7 +35,7 @@ export function FAQEditor({
       {items.map((item, index) => (
         <div key={index} className="space-y-2 p-4 bg-white/5 rounded-lg">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-400">Q{index + 1}</span>
+            <span className="text-sm text-gray-300">Q{index + 1}</span>
             {items.length > 1 && (
               <Button
                 variant="ghost"

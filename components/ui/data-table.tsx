@@ -158,7 +158,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      'h-12 px-4 text-left align-middle font-medium text-slate-400 [&:has([role=checkbox])]:pr-0',
+      'h-12 px-4 text-left align-middle font-medium text-slate-300 [&:has([role=checkbox])]:pr-0',
       className
     )}
     {...props}
@@ -184,7 +184,7 @@ const TableCaption = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <caption
     ref={ref}
-    className={cn('mt-4 text-sm text-slate-400', className)}
+    className={cn('mt-4 text-sm text-slate-300', className)}
     {...props}
   />
 ));
@@ -296,7 +296,7 @@ export function DataTable<T extends Record<string, any>>({
       {search && (
         <div className="p-4 border-b border-white/[0.06]">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
             <Input
               value={search.value}
               onChange={e => search.onChange(e.target.value)}
@@ -413,7 +413,7 @@ export function DataTable<T extends Record<string, any>>({
                 className="h-48 text-center"
               >
                 {emptyState || (
-                  <div className="text-slate-400">
+                  <div className="text-slate-300">
                     <p className="text-lg font-medium">No data</p>
                     <p className="text-sm">No records found.</p>
                   </div>
@@ -480,7 +480,7 @@ export function DataTable<T extends Record<string, any>>({
       {/* Pagination */}
       {pagination && (
         <div className="flex items-center justify-between px-4 py-3 border-t border-white/[0.06]">
-          <div className="text-sm text-slate-400">
+          <div className="text-sm text-slate-300">
             Showing{' '}
             <span className="font-medium text-white">
               {(pagination.page - 1) * pagination.pageSize + 1}
@@ -536,7 +536,7 @@ export function DataTable<T extends Record<string, any>>({
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <span className="px-3 text-sm text-slate-400">
+              <span className="px-3 text-sm text-slate-300">
                 Page {pagination.page} of{' '}
                 {Math.ceil(pagination.total / pagination.pageSize)}
               </span>

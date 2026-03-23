@@ -164,7 +164,7 @@ export function CompetitorAnalysis() {
             <h2 className="text-2xl font-bold text-white">
               Competitor Analysis
             </h2>
-            <p className="text-gray-400">
+            <p className="text-gray-300">
               Track and analyze competitor performance
             </p>
           </div>

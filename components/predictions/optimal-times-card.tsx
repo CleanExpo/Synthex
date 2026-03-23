@@ -124,14 +124,14 @@ export function OptimalTimesCard({ data, isLoading }: OptimalTimesCardProps) {
         {isLoading ? (
           <OptimalTimesSkeleton />
         ) : !data ? (
-          <p className="text-sm text-slate-400 text-center py-8">
+          <p className="text-sm text-slate-300 text-center py-8">
             Select a platform to see optimal posting times.
           </p>
         ) : (
           <div className="space-y-5">
             {/* Next Optimal Time */}
             <div className="rounded-lg bg-white/5 border border-white/10 p-4 text-center">
-              <p className="text-xs text-slate-400 mb-1">Next Optimal Time</p>
+              <p className="text-xs text-slate-300 mb-1">Next Optimal Time</p>
               <p className="text-xl font-semibold text-white">
                 {formatNextTime(data.nextOptimalTime)}
               </p>
@@ -163,7 +163,7 @@ export function OptimalTimesCard({ data, isLoading }: OptimalTimesCardProps) {
               <div className="space-y-2.5">
                 {data.slots.slice(0, 5).map((slot, i) => (
                   <div key={i} className="flex items-center gap-3">
-                    <span className="text-xs text-slate-400 w-24 shrink-0">
+                    <span className="text-xs text-slate-300 w-24 shrink-0">
                       {DAY_NAMES[slot.day]} {formatHour(slot.hour)}
                     </span>
                     <div className="flex-1 h-2 rounded-full bg-white/5 overflow-hidden">

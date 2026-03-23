@@ -75,7 +75,7 @@ export function ImageGallery({
         <div className="p-4 rounded-full bg-white/5 border border-white/10 mb-4">
           <ImageIcon className="h-8 w-8 text-gray-500" />
         </div>
-        <p className="text-gray-400">{emptyMessage}</p>
+        <p className="text-gray-300">{emptyMessage}</p>
         <p className="text-sm text-gray-500 mt-1">
           Generate some images to see them here
         </p>
@@ -171,7 +171,7 @@ export function SingleImageDisplay({
         <div className="p-4 rounded-full bg-white/5 border border-white/10 mb-4">
           <ImageIcon className="h-8 w-8 text-gray-500" />
         </div>
-        <p className="text-gray-400">No image generated</p>
+        <p className="text-gray-300">No image generated</p>
         <p className="text-sm text-gray-500 mt-1">
           Enter a prompt and click Generate
         </p>

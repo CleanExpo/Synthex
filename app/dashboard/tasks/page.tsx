@@ -52,7 +52,11 @@ export default function TasksPage() {
   if (error) {
     return (
       <div className="p-6">
-        <APIErrorCard title="Tasks Error" message={error} onRetry={handleRetry} />
+        <APIErrorCard
+          title="Tasks Error"
+          message={error}
+          onRetry={handleRetry}
+        />
       </div>
     );
   }
@@ -63,7 +67,7 @@ export default function TasksPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold gradient-text">Tasks</h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-slate-300 mt-1">
             Manage your marketing tasks and workflows
           </p>
         </div>
@@ -72,7 +76,10 @@ export default function TasksPage() {
             <Filter className="w-4 h-4 mr-2" />
             Filters
           </Button>
-          <Button onClick={() => setCreateDialogOpen(true)} className="gradient-primary">
+          <Button
+            onClick={() => setCreateDialogOpen(true)}
+            className="gradient-primary"
+          >
             <Plus className="w-4 h-4 mr-2" />
             New Task
           </Button>
@@ -98,16 +105,23 @@ export default function TasksPage() {
       {tasks.length === 0 ? (
         <div className="text-center py-12">
           <ListTodo className="h-16 w-16 mx-auto mb-4 text-slate-500" />
-          <h3 className="text-xl font-semibold text-white mb-2">No tasks yet</h3>
-          <p className="text-slate-400 mb-4">Create your first task to get started.</p>
-          <Button onClick={() => setCreateDialogOpen(true)} className="gradient-primary">
+          <h3 className="text-xl font-semibold text-white mb-2">
+            No tasks yet
+          </h3>
+          <p className="text-slate-300 mb-4">
+            Create your first task to get started.
+          </p>
+          <Button
+            onClick={() => setCreateDialogOpen(true)}
+            className="gradient-primary"
+          >
             <Plus className="w-4 h-4 mr-2" />
             New Task
           </Button>
         </div>
       ) : view === 'kanban' ? (
         <div className="flex gap-6 overflow-x-auto pb-4">
-          {(['todo', 'in_progress', 'review', 'done'] as const).map((status) => (
+          {(['todo', 'in_progress', 'review', 'done'] as const).map(status => (
             <KanbanColumn
               key={status}
               status={status}
@@ -123,13 +137,17 @@ export default function TasksPage() {
           {filteredTasks.length === 0 ? (
             <div className="text-center py-12">
               <ListTodo className="h-16 w-16 mx-auto mb-4 text-slate-500" />
-              <h3 className="text-xl font-semibold text-white mb-2">No Tasks Found</h3>
-              <p className="text-slate-400">
-                {searchQuery ? 'Try adjusting your search or filters' : 'Create your first task to get started'}
+              <h3 className="text-xl font-semibold text-white mb-2">
+                No Tasks Found
+              </h3>
+              <p className="text-slate-300">
+                {searchQuery
+                  ? 'Try adjusting your search or filters'
+                  : 'Create your first task to get started'}
               </p>
             </div>
           ) : (
-            filteredTasks.map((task) => (
+            filteredTasks.map(task => (
               <TaskListRow
                 key={task.id}
                 task={task}

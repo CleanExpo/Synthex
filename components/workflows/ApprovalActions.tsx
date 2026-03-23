@@ -185,7 +185,7 @@ export function ApprovalActions({
                 setRejectReason('');
                 setError(null);
               }}
-              className="text-gray-400 hover:text-white"
+              className="text-gray-300 hover:text-white"
             >
               Cancel
             </Button>

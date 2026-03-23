@@ -70,7 +70,7 @@ async function fetchJson<T>(url: string): Promise<T> {
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    draft: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+    draft: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
     published: 'bg-green-500/20 text-green-300 border-green-500/30',
     archived: 'bg-red-500/20 text-red-400 border-red-500/30',
   };
@@ -172,7 +172,7 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
       {/* Left: Form */}
       <div className="space-y-4">
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1">
+          <label className="block text-xs font-medium text-gray-300 mb-1">
             Headline *
           </label>
           <input
@@ -184,7 +184,7 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1">
+          <label className="block text-xs font-medium text-gray-300 mb-1">
             Subheading
           </label>
           <input
@@ -196,7 +196,7 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1">
+          <label className="block text-xs font-medium text-gray-300 mb-1">
             Body (Markdown) *
           </label>
           <textarea
@@ -209,7 +209,7 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">
+            <label className="block text-xs font-medium text-gray-300 mb-1">
               Location
             </label>
             <input
@@ -221,7 +221,7 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">
+            <label className="block text-xs font-medium text-gray-300 mb-1">
               Category
             </label>
             <select
@@ -239,7 +239,7 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1">
+          <label className="block text-xs font-medium text-gray-300 mb-1">
             Keywords (comma-separated)
           </label>
           <input
@@ -251,7 +251,7 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1">
+          <label className="block text-xs font-medium text-gray-300 mb-1">
             Boilerplate (About section)
           </label>
           <textarea
@@ -266,7 +266,7 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">
+            <label className="block text-xs font-medium text-gray-300 mb-1">
               Contact Name
             </label>
             <input
@@ -279,7 +279,7 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">
+            <label className="block text-xs font-medium text-gray-300 mb-1">
               Contact Email
             </label>
             <input
@@ -292,7 +292,7 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">
+            <label className="block text-xs font-medium text-gray-300 mb-1">
               Contact Phone
             </label>
             <input
@@ -338,7 +338,7 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
       {/* Right: JSON-LD preview */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-xs font-medium text-gray-400">
+          <label className="text-xs font-medium text-gray-300">
             JSON-LD Preview
           </label>
           <button
@@ -394,7 +394,7 @@ export function PressReleaseEditor({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12 text-gray-400">
+      <div className="flex items-center justify-center py-12 text-gray-300">
         <Loader2 className="h-6 w-6 animate-spin mr-2" />
         Loading press releases...
       </div>
@@ -413,7 +413,7 @@ export function PressReleaseEditor({
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-gray-400">
+        <h3 className="text-sm font-medium text-gray-300">
           {releases.length} press releases
         </h3>
         <button

@@ -37,7 +37,7 @@ export function PropertySelector({
   if (properties.length === 0) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-400">No properties synced</span>
+        <span className="text-sm text-gray-300">No properties synced</span>
         {onSync && (
           <Button
             variant="outline"
@@ -71,7 +71,7 @@ export function PropertySelector({
           <span className="text-white truncate flex-1 text-left">
             {selected?.siteUrl || 'Select property'}
           </span>
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          <ChevronDown className="w-4 h-4 text-gray-300" />
         </button>
         {onSync && (
           <Button
@@ -79,7 +79,7 @@ export function PropertySelector({
             size="sm"
             onClick={onSync}
             disabled={syncing}
-            className="text-gray-400 hover:text-orange-400"
+            className="text-gray-300 hover:text-orange-400"
             title="Sync properties from Google"
           >
             {syncing ? (

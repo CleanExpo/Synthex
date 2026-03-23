@@ -65,7 +65,7 @@ export function GeneratedContent({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Generated Content</CardTitle>
-            <CardDescription className="text-gray-400">
+            <CardDescription className="text-gray-300">
               AI-generated content based on your settings
             </CardDescription>
           </div>
@@ -75,7 +75,7 @@ export function GeneratedContent({
                 size="sm"
                 variant="ghost"
                 onClick={onEditModeToggle}
-                className="text-gray-400"
+                className="text-gray-300"
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -83,7 +83,7 @@ export function GeneratedContent({
                 size="sm"
                 variant="ghost"
                 onClick={onRefresh}
-                className="text-gray-400"
+                className="text-gray-300"
               >
                 <RefreshCw className="h-4 w-4" />
               </Button>
@@ -126,30 +126,30 @@ export function GeneratedContent({
             {content.metadata && (
               <div className="p-4 bg-white/5 rounded-lg space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400">Platform</span>
+                  <span className="text-gray-300">Platform</span>
                   <span className="text-white capitalize">
                     {content.metadata.platform}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400">Hook Type</span>
+                  <span className="text-gray-300">Hook Type</span>
                   <span className="text-white capitalize">
                     {content.metadata.hookType}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400">Character Count</span>
+                  <span className="text-gray-300">Character Count</span>
                   <span className="text-white">{content.metadata.length}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400">Est. Engagement</span>
+                  <span className="text-gray-300">Est. Engagement</span>
                   <span className="text-white">
                     {content.metadata.estimatedEngagement}%
                   </span>
                 </div>
                 {content.metadata.hashtags.length > 0 && (
                   <div className="pt-2 border-t border-white/10">
-                    <p className="text-xs text-gray-400 mb-1">Hashtags</p>
+                    <p className="text-xs text-gray-300 mb-1">Hashtags</p>
                     <div className="flex flex-wrap gap-1">
                       {content.metadata.hashtags.map(
                         (tag: string, i: number) => (
@@ -200,7 +200,7 @@ export function GeneratedContent({
             <h3 className="text-xl font-semibold text-white mb-2">
               No Content Yet
             </h3>
-            <p className="text-gray-400">
+            <p className="text-gray-300">
               Configure your settings and click generate to create content
             </p>
           </div>

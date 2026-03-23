@@ -111,7 +111,7 @@ function IssueCard({ issue }: { issue: HealingIssue }) {
               >
                 {isCritical ? 'Critical' : 'Warning'}
               </Badge>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-300">
                 {ISSUE_TYPE_LABELS[issue.issueType] ?? issue.issueType}
               </span>
             </div>
@@ -121,14 +121,14 @@ function IssueCard({ issue }: { issue: HealingIssue }) {
                 Current: {issue.currentValue}
               </p>
             )}
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-300 mt-1">
               Impact: {issue.estimatedImpact}
             </p>
           </div>
         </div>
         <button
           onClick={() => setExpanded(!expanded)}
-          className="shrink-0 text-gray-400 hover:text-white p-1"
+          className="shrink-0 text-gray-300 hover:text-white p-1"
           aria-label={expanded ? 'Collapse fix' : 'Expand fix'}
         >
           <ChevronDown
@@ -147,7 +147,7 @@ function IssueCard({ issue }: { issue: HealingIssue }) {
               <p className="text-xs font-medium text-gray-300 mb-1">
                 Suggested Fix:
               </p>
-              <p className="text-xs text-gray-400 whitespace-pre-wrap">
+              <p className="text-xs text-gray-300 whitespace-pre-wrap">
                 {issue.suggestedFix}
               </p>
             </div>
@@ -273,7 +273,7 @@ export function HealingPanel() {
                 )}
               </div>
             </div>
-            <p className="text-xs text-gray-400 truncate">
+            <p className="text-xs text-gray-300 truncate">
               {analysisResult.url}
             </p>
           </CardHeader>
@@ -282,7 +282,7 @@ export function HealingPanel() {
               <div className="text-center py-8">
                 <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
                 <p className="text-white font-medium">No issues detected</p>
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="text-sm text-gray-300 mt-1">
                   This page appears to have no obvious SEO healing opportunities
                   based on the provided metadata.
                 </p>
@@ -330,7 +330,7 @@ export function HealingPanel() {
                     <p className="text-xs text-white truncate">
                       {action.targetUrl}
                     </p>
-                    <p className="text-xs text-gray-400 truncate">
+                    <p className="text-xs text-gray-300 truncate">
                       {ISSUE_TYPE_LABELS[action.issueType] ?? action.issueType}
                     </p>
                   </div>

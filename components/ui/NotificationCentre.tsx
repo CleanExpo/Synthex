@@ -131,7 +131,7 @@ function NotificationRow({ item, onMarkRead }: NotificationRowProps) {
         <p
           className={cn(
             'text-sm font-medium leading-snug',
-            item.read ? 'text-gray-400' : 'text-white'
+            item.read ? 'text-gray-300' : 'text-white'
           )}
         >
           {item.title}
@@ -267,7 +267,7 @@ export function NotificationCentre({
               type="button"
               onClick={onClose}
               aria-label="Close notifications"
-              className="rounded-md p-1.5 text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+              className="rounded-md p-1.5 text-gray-300 hover:text-white hover:bg-white/[0.06] transition-colors"
             >
               <X className="h-4 w-4" />
             </button>

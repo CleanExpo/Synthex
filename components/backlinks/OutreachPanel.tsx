@@ -251,7 +251,7 @@ export function OutreachPanel({
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-sm font-semibold text-white">Outreach Email</h3>
-          <p className="text-xs text-slate-400 mt-0.5">{prospect.targetDomain}</p>
+          <p className="text-xs text-slate-300 mt-0.5">{prospect.targetDomain}</p>
         </div>
         <button onClick={onClose} className="text-slate-500 hover:text-slate-200 transition-colors">
           <X className="h-4 w-4" />
@@ -260,7 +260,7 @@ export function OutreachPanel({
 
       {/* Template selector */}
       <div className="mb-3">
-        <label className="block text-xs text-slate-400 mb-1">Template type</label>
+        <label className="block text-xs text-slate-300 mb-1">Template type</label>
         <select
           value={selectedType}
           onChange={e => setSelectedType(e.target.value as BacklinkOpportunityType)}
@@ -274,7 +274,7 @@ export function OutreachPanel({
 
       {/* To email */}
       <div className="mb-3">
-        <label className="block text-xs text-slate-400 mb-1">To</label>
+        <label className="block text-xs text-slate-300 mb-1">To</label>
         <input
           type="email"
           value={toEmail}
@@ -286,7 +286,7 @@ export function OutreachPanel({
 
       {/* Subject */}
       <div className="mb-3">
-        <label className="block text-xs text-slate-400 mb-1">Subject</label>
+        <label className="block text-xs text-slate-300 mb-1">Subject</label>
         <input
           type="text"
           value={subject}
@@ -297,7 +297,7 @@ export function OutreachPanel({
 
       {/* Body */}
       <div className="mb-4">
-        <label className="block text-xs text-slate-400 mb-1">Body</label>
+        <label className="block text-xs text-slate-300 mb-1">Body</label>
         <textarea
           value={body}
           onChange={e => setBody(e.target.value)}

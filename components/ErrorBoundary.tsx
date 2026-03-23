@@ -98,7 +98,7 @@ export class ErrorBoundary extends Component<
                   <h1 className="text-3xl font-bold text-white">
                     Oops! Something went wrong
                   </h1>
-                  <p className="text-gray-400">
+                  <p className="text-gray-300">
                     We encountered an unexpected error. Don't worry, we've been
                     notified and are working on it.
                   </p>

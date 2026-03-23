@@ -73,7 +73,7 @@ function StatusBadge({
 }) {
   if (status === 'pending' || brandMentioned === null) {
     return (
-      <span className="text-xs text-slate-400 flex items-center gap-1">
+      <span className="text-xs text-slate-300 flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-slate-500 inline-block" />
         Not tested
       </span>

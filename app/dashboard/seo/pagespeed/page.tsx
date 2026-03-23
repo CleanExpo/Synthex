@@ -103,7 +103,7 @@ function ScoreGauge({ label, score }: { label: string; score: number }) {
       <div className={`text-3xl font-bold ${getScoreColor(score)} mb-1`}>
         {score}
       </div>
-      <div className="text-xs text-gray-400 font-medium">{label}</div>
+      <div className="text-xs text-gray-300 font-medium">{label}</div>
     </div>
   );
 }
@@ -138,7 +138,7 @@ function CwvMetricCard({
 
   return (
     <div className={`p-4 rounded-lg border text-center ${bgFn(value)}`}>
-      <p className="text-xs text-gray-400 mb-1">{label}</p>
+      <p className="text-xs text-gray-300 mb-1">{label}</p>
       <p className={`text-2xl font-bold ${colorFn(value)}`}>
         {typeof value === 'number' && value < 1
           ? value.toFixed(3)
@@ -272,7 +272,7 @@ function AnalysisResults({ analysis }: { analysis: PageSpeedAnalysis }) {
                   </p>
                 </div>
                 {diag.displayValue && (
-                  <span className="flex-shrink-0 text-xs text-gray-400 font-mono whitespace-nowrap">
+                  <span className="flex-shrink-0 text-xs text-gray-300 font-mono whitespace-nowrap">
                     {diag.displayValue}
                   </span>
                 )}
@@ -301,7 +301,7 @@ function PerformanceTrendsChart({
         <h3 className="text-lg font-medium text-white mb-2">
           No trend data yet
         </h3>
-        <p className="text-gray-400">
+        <p className="text-gray-300">
           Run PageSpeed analyses to start tracking performance trends over time.
         </p>
       </div>
@@ -383,7 +383,7 @@ function PerformanceTrendsChart({
           />
         </LineChart>
       </ResponsiveContainer>
-      <div className="flex items-center justify-center gap-6 text-xs text-gray-400">
+      <div className="flex items-center justify-center gap-6 text-xs text-gray-300">
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-0.5 bg-orange-500 rounded" /> Performance
           (0-100)
@@ -415,7 +415,7 @@ function AnalysisHistoryTable({
         <h3 className="text-lg font-medium text-white mb-2">
           No analysis history
         </h3>
-        <p className="text-gray-400">
+        <p className="text-gray-300">
           Run your first PageSpeed analysis to see results tracked here.
         </p>
       </div>
@@ -427,19 +427,19 @@ function AnalysisHistoryTable({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/10">
-            <th className="text-left py-3 px-2 text-gray-400 font-medium">
+            <th className="text-left py-3 px-2 text-gray-300 font-medium">
               URL
             </th>
-            <th className="text-left py-3 px-2 text-gray-400 font-medium">
+            <th className="text-left py-3 px-2 text-gray-300 font-medium">
               Date
             </th>
-            <th className="text-right py-3 px-2 text-gray-400 font-medium">
+            <th className="text-right py-3 px-2 text-gray-300 font-medium">
               Performance
             </th>
-            <th className="text-right py-3 px-2 text-gray-400 font-medium">
+            <th className="text-right py-3 px-2 text-gray-300 font-medium">
               LCP
             </th>
-            <th className="text-right py-3 px-2 text-gray-400 font-medium">
+            <th className="text-right py-3 px-2 text-gray-300 font-medium">
               CLS
             </th>
           </tr>
@@ -512,7 +512,7 @@ export default function PageSpeedPage() {
         <div>
           <Link
             href="/dashboard/seo"
-            className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
+            className="text-sm text-gray-300 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to SEO Tools
@@ -521,7 +521,7 @@ export default function PageSpeedPage() {
             <Zap className="w-8 h-8 text-orange-400" />
             PageSpeed Insights
           </h1>
-          <p className="text-gray-400 mt-2">
+          <p className="text-gray-300 mt-2">
             Analyze page performance, Core Web Vitals, and track improvements
             over time
           </p>
@@ -541,7 +541,7 @@ export default function PageSpeedPage() {
                 <Zap className="w-5 h-5 text-orange-400" />
                 Analyze URL
               </h2>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-300 mt-1">
                 Enter a URL to run PageSpeed Insights analysis with Lighthouse
                 scores and Core Web Vitals
               </p>
@@ -572,7 +572,7 @@ export default function PageSpeedPage() {
 
               {/* Strategy Toggle */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400 mr-2">Device:</span>
+                <span className="text-sm text-gray-300 mr-2">Device:</span>
                 {(['mobile', 'desktop'] as const).map(s => (
                   <Button
                     key={s}
@@ -583,7 +583,7 @@ export default function PageSpeedPage() {
                     className={`text-xs capitalize ${
                       strategy === s
                         ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
-                        : 'border-white/10 text-gray-400 hover:bg-white/5'
+                        : 'border-white/10 text-gray-300 hover:bg-white/5'
                     }`}
                   >
                     {s}
@@ -604,7 +604,7 @@ export default function PageSpeedPage() {
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
                   <Loader2 className="w-8 h-8 text-orange-400 animate-spin mx-auto mb-3" />
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-300">
                     Running PageSpeed analysis... This may take up to 30
                     seconds.
                   </p>
@@ -629,7 +629,7 @@ export default function PageSpeedPage() {
                 <TrendingUp className="w-5 h-5 text-orange-400" />
                 Performance Trends
               </h2>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-300 mt-1">
                 Track performance score, LCP, and CLS trends over the last 30
                 days
               </p>
@@ -652,7 +652,7 @@ export default function PageSpeedPage() {
                 <Activity className="w-5 h-5 text-orange-400" />
                 Analysis History
               </h2>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-300 mt-1">
                 Past PageSpeed analyses and their results
               </p>
             </div>

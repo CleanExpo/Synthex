@@ -285,7 +285,7 @@ export function ImageGenerator({
                     'disabled:opacity-50 disabled:cursor-not-allowed',
                     selectedStyle === id
                       ? 'bg-orange-500/20 border-orange-500/50 text-orange-300'
-                      : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
+                      : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white'
                   )}
                 >
                   <Icon className="h-5 w-5" />
@@ -354,7 +354,7 @@ export function ImageGenerator({
           <button
             type="button"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors"
           >
             {showAdvanced ? (
               <ChevronUp className="h-4 w-4" />

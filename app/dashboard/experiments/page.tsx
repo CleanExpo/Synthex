@@ -153,7 +153,7 @@ function ExperimentsTab() {
           {
             label: 'Draft',
             value: experiments.filter(e => e.status === 'draft').length,
-            colour: 'text-gray-400',
+            colour: 'text-gray-300',
           },
         ].map(stat => (
           <div
@@ -163,7 +163,7 @@ function ExperimentsTab() {
             <p className={cn('text-2xl font-bold', stat.colour)}>
               {stat.value}
             </p>
-            <p className="text-xs text-gray-400 mt-1">{stat.label}</p>
+            <p className="text-xs text-gray-300 mt-1">{stat.label}</p>
           </div>
         ))}
       </div>
@@ -242,7 +242,7 @@ function ExperimentsTab() {
           <h3 className="text-lg font-semibold text-white mb-2">
             No experiments yet
           </h3>
-          <p className="text-sm text-gray-400 mb-6 max-w-sm mx-auto">
+          <p className="text-sm text-gray-300 mb-6 max-w-sm mx-auto">
             Create your first SEO A/B experiment to start measuring what
             actually moves the needle on GEO, E-E-A-T, and rankings.
           </p>
@@ -321,7 +321,7 @@ function ExperimentsPageContent() {
               Phase 98
             </Badge>
           </div>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             Autonomous A/B testing, self-healing SEO, and dog-food checks
           </p>
         </div>
@@ -337,7 +337,7 @@ function ExperimentsPageContent() {
               'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
               activeTab === tab.id
                 ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                : 'text-gray-300 hover:text-white hover:bg-white/5'
             )}
           >
             <tab.icon className="w-4 h-4" />
@@ -382,10 +382,10 @@ function ExperimentsPageContent() {
               className={cn('p-4 rounded-lg border', tip.colour)}
             >
               <div className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                <AlertCircle className="w-4 h-4 text-gray-300 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-white">{tip.title}</p>
-                  <p className="text-xs text-gray-400 mt-1">{tip.body}</p>
+                  <p className="text-xs text-gray-300 mt-1">{tip.body}</p>
                 </div>
               </div>
             </div>

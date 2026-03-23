@@ -37,7 +37,7 @@ export function getTypeIcon(type: string) {
 
 export function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    pending: 'bg-gray-500/20 text-gray-400',
+    pending: 'bg-gray-500/20 text-gray-300',
     generating: 'bg-yellow-500/20 text-yellow-400',
     completed: 'bg-green-500/20 text-green-400',
     failed: 'bg-red-500/20 text-red-400',
@@ -66,7 +66,7 @@ export function FormatBadge({ format }: { format: string }) {
   };
 
   return (
-    <Badge className={styles[format] || 'bg-gray-500/20 text-gray-400'}>
+    <Badge className={styles[format] || 'bg-gray-500/20 text-gray-300'}>
       {format.toUpperCase()}
     </Badge>
   );

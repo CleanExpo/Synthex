@@ -85,7 +85,7 @@ export function VisualGallery({ initialAssets }: VisualGalleryProps) {
             ))}
           </div>
         ) : assets.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-gray-300">
             <ImageIcon className="h-12 w-12 mx-auto mb-3 opacity-30" />
             <p className="text-sm">No visuals generated yet</p>
             <p className="text-xs mt-1">
@@ -109,7 +109,7 @@ export function VisualGallery({ initialAssets }: VisualGalleryProps) {
                 </div>
                 <div className="p-2">
                   <div className="flex items-center justify-between">
-                    <Badge className="bg-white/5 text-gray-400 text-xs">
+                    <Badge className="bg-white/5 text-gray-300 text-xs">
                       {typeLabels[asset.type] || asset.type}
                     </Badge>
                     {asset.qualityScore && (

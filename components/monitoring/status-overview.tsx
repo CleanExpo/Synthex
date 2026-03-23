@@ -26,7 +26,7 @@ export function StatusOverview({ metrics }: StatusOverviewProps) {
         </CardHeader>
         <CardContent>
           <StatusBadge status={metrics.system.status} />
-          <p className="text-xs text-gray-400 mt-2">
+          <p className="text-xs text-gray-300 mt-2">
             Uptime: {metrics.system.uptime}
           </p>
         </CardContent>
@@ -43,7 +43,7 @@ export function StatusOverview({ metrics }: StatusOverviewProps) {
           <p className="text-2xl font-bold text-white">
             {metrics.database.connections}/{metrics.database.maxConnections}
           </p>
-          <p className="text-xs text-gray-400 mt-1">Active Connections</p>
+          <p className="text-xs text-gray-300 mt-1">Active Connections</p>
         </CardContent>
       </Card>
 
@@ -58,7 +58,7 @@ export function StatusOverview({ metrics }: StatusOverviewProps) {
           <p className="text-2xl font-bold text-white">
             {metrics.api.latency}ms
           </p>
-          <p className="text-xs text-gray-400 mt-1">Average Latency</p>
+          <p className="text-xs text-gray-300 mt-1">Average Latency</p>
         </CardContent>
       </Card>
 
@@ -73,7 +73,7 @@ export function StatusOverview({ metrics }: StatusOverviewProps) {
           <p className="text-2xl font-bold text-white">
             {metrics.security.threats}
           </p>
-          <p className="text-xs text-gray-400 mt-1">Active Threats</p>
+          <p className="text-xs text-gray-300 mt-1">Active Threats</p>
         </CardContent>
       </Card>
     </div>

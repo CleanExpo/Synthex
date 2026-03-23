@@ -31,7 +31,7 @@ export function PassageHighlighter({ passages }: PassageHighlighterProps) {
             <Eye className="h-5 w-5 text-orange-400" />
             Citable Passages
           </CardTitle>
-          <span className="text-sm text-gray-400">
+          <span className="text-sm text-gray-300">
             {passages.filter(p => p.isOptimalLength).length}/{passages.length}{' '}
             optimal
           </span>
@@ -47,9 +47,9 @@ export function PassageHighlighter({ passages }: PassageHighlighterProps) {
             >
               <div className="flex items-center gap-3 p-3">
                 {expanded === i ? (
-                  <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
+                  <ChevronDown className="h-4 w-4 text-gray-300 shrink-0" />
                 ) : (
-                  <ChevronRight className="h-4 w-4 text-gray-400 shrink-0" />
+                  <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-gray-300 truncate">
@@ -58,7 +58,7 @@ export function PassageHighlighter({ passages }: PassageHighlighterProps) {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Badge
-                    className={`text-xs ${passage.isOptimalLength ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-400'}`}
+                    className={`text-xs ${passage.isOptimalLength ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-300'}`}
                   >
                     {passage.wordCount}w
                   </Badge>

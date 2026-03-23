@@ -46,7 +46,7 @@ export function AnalyticsHeader({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold gradient-text">Analytics Dashboard</h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-slate-300 mt-1">
             Track your social media performance and insights
           </p>
         </div>

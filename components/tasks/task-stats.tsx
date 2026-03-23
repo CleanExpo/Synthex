@@ -20,7 +20,7 @@ export function TaskStatsGrid({ stats }: { stats: TaskStats }) {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card variant="glass">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-400">
+          <CardTitle className="text-sm font-medium text-slate-300">
             Total Tasks
           </CardTitle>
           <ListTodo className="h-4 w-4 text-orange-500" />
@@ -32,7 +32,7 @@ export function TaskStatsGrid({ stats }: { stats: TaskStats }) {
       </Card>
       <Card variant="glass">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-400">
+          <CardTitle className="text-sm font-medium text-slate-300">
             In Progress
           </CardTitle>
           <Play className="h-4 w-4 text-blue-500" />
@@ -46,7 +46,7 @@ export function TaskStatsGrid({ stats }: { stats: TaskStats }) {
       </Card>
       <Card variant="glass">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-400">
+          <CardTitle className="text-sm font-medium text-slate-300">
             Completed
           </CardTitle>
           <CheckCircle className="h-4 w-4 text-emerald-500" />
@@ -63,7 +63,7 @@ export function TaskStatsGrid({ stats }: { stats: TaskStats }) {
       </Card>
       <Card variant="glass">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-400">
+          <CardTitle className="text-sm font-medium text-slate-300">
             Overdue
           </CardTitle>
           <AlertCircle className="h-4 w-4 text-red-500" />

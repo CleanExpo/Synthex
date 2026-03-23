@@ -202,7 +202,7 @@ export function ExtensionStatusBanner({ state }: ExtensionStatusBannerProps) {
         <p className="text-sm text-orange-400 font-medium">
           Extension detected {count} active session{count !== 1 ? 's' : ''}
         </p>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-300">
           You&apos;re logged into {names}
           {count > 3 ? ` +${count - 3} more` : ''} — connect them below with one
           click.

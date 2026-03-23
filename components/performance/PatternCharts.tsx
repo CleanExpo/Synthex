@@ -55,7 +55,7 @@ function CustomTooltip({
 
   return (
     <div className="bg-gray-900 border border-white/10 rounded-lg p-2 shadow-xl">
-      <p className="text-xs text-gray-400">{label}</p>
+      <p className="text-xs text-gray-300">{label}</p>
       <p className="text-sm font-medium text-white">
         {valueLabel}: {payload[0].value}
         {valueSuffix}
@@ -80,7 +80,7 @@ function ChartCard({
         className
       )}
     >
-      <h4 className="text-sm font-medium text-gray-400 mb-3">{title}</h4>
+      <h4 className="text-sm font-medium text-gray-300 mb-3">{title}</h4>
       {children}
     </div>
   );
@@ -246,7 +246,7 @@ export function PatternCharts({
                     const data = payload[0].payload as { count: number };
                     return (
                       <div className="bg-gray-900 border border-white/10 rounded-lg p-2 shadow-xl">
-                        <p className="text-xs text-gray-400">{label}</p>
+                        <p className="text-xs text-gray-300">{label}</p>
                         <p className="text-sm font-medium text-white">
                           {payload[0].value}% avg
                         </p>
@@ -280,7 +280,7 @@ export function PatternCharts({
             <div className="text-4xl font-bold text-white mb-2">
               {patterns.bestLength.min}-{patterns.bestLength.max}
             </div>
-            <div className="text-sm text-gray-400">characters</div>
+            <div className="text-sm text-gray-300">characters</div>
             <div className="mt-3 px-3 py-1 bg-emerald-500/10 rounded-full">
               <span className="text-xs text-emerald-400">
                 {patterns.bestLength.avgEngagement}% avg engagement

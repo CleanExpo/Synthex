@@ -20,7 +20,7 @@ export function TeamStatsGrid({ stats }: TeamStatsGridProps) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-400">
+              <p className="text-sm font-medium text-slate-300">
                 Total Members
               </p>
               <p className="text-2xl font-bold text-white">{stats.total}</p>
@@ -34,7 +34,7 @@ export function TeamStatsGrid({ stats }: TeamStatsGridProps) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-400">
+              <p className="text-sm font-medium text-slate-300">
                 Active Members
               </p>
               <p className="text-2xl font-bold text-white">{stats.active}</p>
@@ -48,7 +48,7 @@ export function TeamStatsGrid({ stats }: TeamStatsGridProps) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-400">
+              <p className="text-sm font-medium text-slate-300">
                 Pending Invites
               </p>
               <p className="text-2xl font-bold text-white">{stats.pending}</p>
@@ -62,7 +62,7 @@ export function TeamStatsGrid({ stats }: TeamStatsGridProps) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-400">Admins</p>
+              <p className="text-sm font-medium text-slate-300">Admins</p>
               <p className="text-2xl font-bold text-white">{stats.admins}</p>
             </div>
             <Crown className="h-8 w-8 text-red-400" />

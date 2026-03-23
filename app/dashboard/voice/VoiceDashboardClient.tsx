@@ -242,7 +242,7 @@ export function VoiceDashboardClient() {
               'flex-1 flex items-centre justify-centre gap-2 text-sm py-2 rounded-lg transition-colors font-medium',
               activeTab === id
                 ? 'bg-orange-500/20 text-orange-300 border border-orange-500/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-white/5',
+                : 'text-slate-300 hover:text-slate-200 hover:bg-white/5',
             ].join(' ')}
           >
             <Icon className="w-4 h-4 flex-shrink-0" />
@@ -321,7 +321,7 @@ export function VoiceDashboardClient() {
                       </h4>
                       <button
                         onClick={handleCopyContext}
-                        className="flex items-centre gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+                        className="flex items-centre gap-1.5 text-xs text-slate-300 hover:text-slate-200 transition-colors"
                       >
                         {copied ? (
                           <>

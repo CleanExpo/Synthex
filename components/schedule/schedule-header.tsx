@@ -22,7 +22,7 @@ export function ScheduleHeader({ isCreating, onImport, onExport, onCreate, onBul
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 className="text-3xl font-bold gradient-text">Content Schedule</h1>
-        <p className="text-slate-400 mt-1">
+        <p className="text-slate-300 mt-1">
           Drag and drop to reschedule your content across all platforms
         </p>
       </div>

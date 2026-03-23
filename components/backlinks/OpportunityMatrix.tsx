@@ -45,7 +45,7 @@ const TIERS: { tier: DomainAuthorityTier; label: string; range: string }[] = [
 const TIER_COLOURS: Record<DomainAuthorityTier, string> = {
   high: 'text-emerald-400',
   medium: 'text-orange-400',
-  low: 'text-slate-400',
+  low: 'text-slate-300',
 };
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -105,7 +105,7 @@ export function OpportunityMatrix({
     <div className="rounded-xl border border-white/10 bg-white/5 p-4">
       <h3 className="text-sm font-semibold text-white mb-3">
         Opportunity Matrix
-        <span className="ml-2 text-xs font-normal text-slate-400">
+        <span className="ml-2 text-xs font-normal text-slate-300">
           Click a cell to filter
         </span>
       </h3>
@@ -120,7 +120,7 @@ export function OpportunityMatrix({
               {TYPES.map(type => (
                 <th
                   key={type}
-                  className="pb-2 text-center text-slate-400 font-medium px-2"
+                  className="pb-2 text-center text-slate-300 font-medium px-2"
                 >
                   {TYPE_SHORT_LABELS[type]}
                 </th>
@@ -173,7 +173,7 @@ export function OpportunityMatrix({
       {activeFilter && (
         <button
           onClick={() => onFilterChange(null)}
-          className="mt-2 text-xs text-slate-400 hover:text-slate-200 underline"
+          className="mt-2 text-xs text-slate-300 hover:text-slate-200 underline"
         >
           Clear filter
         </button>

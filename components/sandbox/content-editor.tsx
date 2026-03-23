@@ -52,7 +52,7 @@ export function ContentEditor({
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Content Editor</CardTitle>
-        <CardDescription className="text-gray-400">
+        <CardDescription className="text-gray-300">
           Compose and edit your content
         </CardDescription>
       </CardHeader>

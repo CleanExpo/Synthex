@@ -221,7 +221,7 @@ export function FileUpload({
             <Upload
               className={cn(
                 'w-full h-full',
-                isDragActive ? 'text-orange-400' : 'text-gray-400'
+                isDragActive ? 'text-orange-400' : 'text-gray-300'
               )}
             />
           </motion.div>
@@ -232,7 +232,7 @@ export function FileUpload({
               : 'Drag & drop files here, or click to select'}
           </p>
 
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             {multiple
               ? `Upload up to ${maxFiles} files (max ${formatBytes(maxSize)} each)`
               : `Upload a file (max ${formatBytes(maxSize)})`}
@@ -242,7 +242,7 @@ export function FileUpload({
             {Object.keys(accept).map(type => (
               <span
                 key={type}
-                className="px-2 py-1 bg-white/10 rounded text-xs text-gray-400"
+                className="px-2 py-1 bg-white/10 rounded text-xs text-gray-300"
               >
                 {type.replace('/*', '')}
               </span>
@@ -309,7 +309,7 @@ export function FileUpload({
                     <p className="text-sm font-medium text-white truncate">
                       {file.name}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-300">
                       {formatBytes(file.size)}
                     </p>
 
@@ -339,7 +339,7 @@ export function FileUpload({
                       disabled={file.status === 'uploading'}
                       className="p-1 hover:bg-white/10 rounded transition-colors disabled:opacity-50"
                     >
-                      <X className="h-4 w-4 text-gray-400" />
+                      <X className="h-4 w-4 text-gray-300" />
                     </button>
                   </div>
                 </div>

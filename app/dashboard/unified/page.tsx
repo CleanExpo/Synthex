@@ -80,7 +80,7 @@ function StatCard({
           <Icon className={cn('w-5 h-5', `text-${color}-400`)} />
         </div>
         <div>
-          <p className="text-sm text-gray-400">{label}</p>
+          <p className="text-sm text-gray-300">{label}</p>
           <p className="text-2xl font-bold text-white">{value}</p>
           {subValue && <p className="text-xs text-gray-500">{subValue}</p>}
         </div>
@@ -131,7 +131,7 @@ export default function UnifiedDashboardPage() {
           <h3 className="text-lg font-semibold text-white mb-2">
             Failed to load metrics
           </h3>
-          <p className="text-gray-400 mb-4">{error}</p>
+          <p className="text-gray-300 mb-4">{error}</p>
           <Button onClick={handleRefresh} variant="outline">
             <RefreshCw className="w-4 h-4 mr-2" />
             Try Again
@@ -186,7 +186,7 @@ export default function UnifiedDashboardPage() {
               <Users className="w-5 h-5 text-orange-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-400">Total Followers</p>
+              <p className="text-sm text-gray-300">Total Followers</p>
               <p className="text-2xl font-bold text-white">
                 {formatNumber(data?.totals.followers ?? 0)}
               </p>
@@ -199,7 +199,7 @@ export default function UnifiedDashboardPage() {
               <Activity className="w-5 h-5 text-orange-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-400">Total Engagement</p>
+              <p className="text-sm text-gray-300">Total Engagement</p>
               <p className="text-2xl font-bold text-white">
                 {formatNumber(data?.totals.engagement ?? 0)}
               </p>
@@ -212,7 +212,7 @@ export default function UnifiedDashboardPage() {
               <Eye className="w-5 h-5 text-green-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-400">Total Reach</p>
+              <p className="text-sm text-gray-300">Total Reach</p>
               <p className="text-2xl font-bold text-white">
                 {formatNumber(data?.totals.reach ?? 0)}
               </p>
@@ -225,7 +225,7 @@ export default function UnifiedDashboardPage() {
               <FileText className="w-5 h-5 text-orange-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-400">Total Posts</p>
+              <p className="text-sm text-gray-300">Total Posts</p>
               <p className="text-2xl font-bold text-white">
                 {data?.totals.posts ?? 0}
               </p>
@@ -245,7 +245,7 @@ export default function UnifiedDashboardPage() {
                     <Target className="w-5 h-5 text-orange-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400">Top Platform</p>
+                    <p className="text-sm text-gray-300">Top Platform</p>
                     <p className="text-lg font-semibold text-white">
                       {PLATFORM_NAMES[data.insights.topPlatform] ??
                         data.insights.topPlatform}
@@ -262,7 +262,7 @@ export default function UnifiedDashboardPage() {
                     <TrendingUp className="w-5 h-5 text-green-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400">Fastest Growing</p>
+                    <p className="text-sm text-gray-300">Fastest Growing</p>
                     <p className="text-lg font-semibold text-white">
                       {PLATFORM_NAMES[data.insights.fastestGrowing] ??
                         data.insights.fastestGrowing}
@@ -279,7 +279,7 @@ export default function UnifiedDashboardPage() {
                     <Zap className="w-5 h-5 text-orange-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-gray-300">
                       Best Engagement Rate
                     </p>
                     <p className="text-lg font-semibold text-white">

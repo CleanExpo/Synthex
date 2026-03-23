@@ -49,7 +49,7 @@ function CwvHistoryChart({ history }: { history: CwvHistoryEntry[] }) {
         <h3 className="text-lg font-medium text-white mb-2">
           No CWV history yet
         </h3>
-        <p className="text-gray-400 mb-6">
+        <p className="text-gray-300 mb-6">
           Run your first SEO audit to start tracking Core Web Vitals over time.
         </p>
         <Link href="/dashboard/seo/audit">
@@ -135,7 +135,7 @@ function CwvHistoryChart({ history }: { history: CwvHistoryEntry[] }) {
           />
         </LineChart>
       </ResponsiveContainer>
-      <div className="flex items-center justify-center gap-6 text-xs text-gray-400">
+      <div className="flex items-center justify-center gap-6 text-xs text-gray-300">
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-0.5 bg-orange-500 rounded" /> LCP (seconds)
         </span>
@@ -222,7 +222,7 @@ function MobileParitySection({
           {/* Performance Comparison */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-white/5 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">
+              <h4 className="text-sm font-medium text-gray-300 mb-2">
                 Mobile Score
               </h4>
               <p className="text-2xl font-bold text-white">
@@ -230,7 +230,7 @@ function MobileParitySection({
               </p>
             </div>
             <div className="p-4 bg-white/5 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">
+              <h4 className="text-sm font-medium text-gray-300 mb-2">
                 Desktop Score
               </h4>
               <p className="text-2xl font-bold text-white">
@@ -263,7 +263,7 @@ function MobileParitySection({
                     <p className="text-sm font-medium text-white">
                       {issue.title}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-300 mt-1">
                       {issue.description}
                     </p>
                   </div>
@@ -281,7 +281,7 @@ function MobileParitySection({
               {result.recommendations.map((rec: string, i: number) => (
                 <div
                   key={i}
-                  className="flex items-start gap-2 text-sm text-gray-400"
+                  className="flex items-start gap-2 text-sm text-gray-300"
                 >
                   <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
                   <span>{rec}</span>
@@ -310,7 +310,7 @@ function ScoreCard({ label, value }: { label: string; value: number }) {
         : 'bg-red-500/10';
   return (
     <div className={`p-4 ${bg} rounded-lg`}>
-      <h4 className="text-sm font-medium text-gray-400 mb-1">{label}</h4>
+      <h4 className="text-sm font-medium text-gray-300 mb-1">{label}</h4>
       <p className={`text-2xl font-bold ${color}`}>{value}%</p>
     </div>
   );
@@ -427,7 +427,7 @@ function RobotsTxtSection({
                         ? 'bg-red-500/10 text-red-400 border border-red-500/20'
                         : allowed
                           ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                          : 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
+                          : 'bg-gray-500/10 text-gray-300 border border-gray-500/20'
                     }`}
                   >
                     {blocked ? (
@@ -464,7 +464,7 @@ function RobotsTxtSection({
                       {directive.rules.map((rule, j) => (
                         <div
                           key={j}
-                          className="ml-4 text-gray-400 font-mono text-xs"
+                          className="ml-4 text-gray-300 font-mono text-xs"
                         >
                           {rule.type === 'allow' ? (
                             <span className="text-green-400">Allow:</span>
@@ -500,14 +500,14 @@ function RobotsTxtSection({
                           ? 'text-yellow-400'
                           : issue.severity === 'minor'
                             ? 'text-blue-400'
-                            : 'text-gray-400'
+                            : 'text-gray-300'
                     }`}
                   />
                   <div>
                     <p className="text-sm font-medium text-white">
                       {issue.title}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-300 mt-1">
                       {issue.description}
                     </p>
                     <p className="text-xs text-orange-400 mt-1">
@@ -525,7 +525,7 @@ function RobotsTxtSection({
               <summary className="text-sm font-medium text-gray-300 cursor-pointer hover:text-white">
                 Raw robots.txt
               </summary>
-              <pre className="mt-2 p-4 bg-black/30 rounded-lg text-xs text-gray-400 font-mono overflow-x-auto max-h-64 overflow-y-auto whitespace-pre">
+              <pre className="mt-2 p-4 bg-black/30 rounded-lg text-xs text-gray-300 font-mono overflow-x-auto max-h-64 overflow-y-auto whitespace-pre">
                 {result.rawContent}
               </pre>
             </details>
@@ -563,7 +563,7 @@ export default function TechnicalSEOPage() {
         <div>
           <Link
             href="/dashboard/seo"
-            className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
+            className="text-sm text-gray-300 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to SEO Tools
@@ -572,7 +572,7 @@ export default function TechnicalSEOPage() {
             <Settings className="w-8 h-8 text-orange-400" />
             Technical SEO
           </h1>
-          <p className="text-gray-400 mt-2">
+          <p className="text-gray-300 mt-2">
             Monitor Core Web Vitals trends, check mobile/desktop parity, and
             validate robots.txt configuration.
           </p>
@@ -593,7 +593,7 @@ export default function TechnicalSEOPage() {
                   <Activity className="w-5 h-5 text-orange-400" />
                   Core Web Vitals History
                 </h2>
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="text-sm text-gray-300 mt-1">
                   Track LCP, CLS, and INP trends from your SEO audits
                 </p>
               </div>
@@ -632,7 +632,7 @@ export default function TechnicalSEOPage() {
                 <Monitor className="w-5 h-5 text-orange-400" />
                 Mobile Parity Checker
               </h2>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-300 mt-1">
                 Compare mobile vs desktop performance and content to ensure
                 mobile-first indexing compliance
               </p>
@@ -654,7 +654,7 @@ export default function TechnicalSEOPage() {
                 <FileSearch className="w-5 h-5 text-orange-400" />
                 Robots.txt Validator
               </h2>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-300 mt-1">
                 Validate robots.txt directives and check AI bot access
                 configuration
               </p>

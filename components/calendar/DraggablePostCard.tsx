@@ -244,7 +244,7 @@ export function DraggablePostCard({
       </p>
 
       {/* Footer */}
-      <div className="flex items-center justify-between text-xs text-gray-400">
+      <div className="flex items-center justify-between text-xs text-gray-300">
         <span>
           {new Date(post.scheduledFor).toLocaleString([], {
             month: 'short',

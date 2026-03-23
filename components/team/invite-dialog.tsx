@@ -55,13 +55,13 @@ export function InviteDialog({
       <DialogContent className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08]">
         <DialogHeader>
           <DialogTitle className="text-white">Invite Team Member</DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-slate-300">
             Send an invitation to join your team with specific role permissions.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div>
-            <Label htmlFor="email" className="text-slate-400">
+            <Label htmlFor="email" className="text-slate-300">
               Email Address
             </Label>
             <Input
@@ -74,7 +74,7 @@ export function InviteDialog({
             />
           </div>
           <div>
-            <Label htmlFor="role" className="text-slate-400">
+            <Label htmlFor="role" className="text-slate-300">
               Role
             </Label>
             <Select
@@ -90,7 +90,7 @@ export function InviteDialog({
                     <Crown className="mr-2 h-4 w-4 text-red-400" />
                     <div>
                       <div className="font-medium">Admin</div>
-                      <div className="text-xs text-slate-400">Full access to all features</div>
+                      <div className="text-xs text-slate-300">Full access to all features</div>
                     </div>
                   </div>
                 </SelectItem>
@@ -99,16 +99,16 @@ export function InviteDialog({
                     <Edit className="mr-2 h-4 w-4 text-blue-400" />
                     <div>
                       <div className="font-medium">Editor</div>
-                      <div className="text-xs text-slate-400">Can create and edit content</div>
+                      <div className="text-xs text-slate-300">Can create and edit content</div>
                     </div>
                   </div>
                 </SelectItem>
                 <SelectItem value="Viewer">
                   <div className="flex items-center">
-                    <Eye className="mr-2 h-4 w-4 text-slate-400" />
+                    <Eye className="mr-2 h-4 w-4 text-slate-300" />
                     <div>
                       <div className="font-medium">Viewer</div>
-                      <div className="text-xs text-slate-400">Read-only access</div>
+                      <div className="text-xs text-slate-300">Read-only access</div>
                     </div>
                   </div>
                 </SelectItem>
@@ -116,7 +116,7 @@ export function InviteDialog({
             </Select>
           </div>
           <div>
-            <Label htmlFor="message" className="text-slate-400">
+            <Label htmlFor="message" className="text-slate-300">
               Custom Message (Optional)
             </Label>
             <textarea

@@ -135,7 +135,7 @@ export function AdvancedTab({
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-white">Debug Mode</Label>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-slate-300">
                   Show detailed error messages and logs
                 </p>
               </div>
@@ -153,7 +153,7 @@ export function AdvancedTab({
                 <Beaker className="w-4 h-4 text-orange-500" />
                 <div>
                   <Label className="text-white">Beta Features</Label>
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-slate-300">
                     Try experimental features early
                   </p>
                 </div>

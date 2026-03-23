@@ -72,9 +72,9 @@ interface MetricCardProps {
 function MetricCard({ icon: Icon, label, value }: MetricCardProps) {
   return (
     <div className="flex flex-col items-center p-3 bg-white/5 border border-white/10 rounded-lg">
-      <Icon className="h-4 w-4 text-slate-400 mb-1.5" />
+      <Icon className="h-4 w-4 text-slate-300 mb-1.5" />
       <span className="text-lg font-semibold text-white">{value}</span>
-      <span className="text-xs text-slate-400 mt-0.5">{label}</span>
+      <span className="text-xs text-slate-300 mt-0.5">{label}</span>
     </div>
   );
 }
@@ -133,14 +133,14 @@ export function PostDetailSheet({ open, onOpenChange, post }: PostDetailSheetPro
           </div>
 
           {/* Published date */}
-          <div className="flex items-center gap-2 text-slate-400">
+          <div className="flex items-center gap-2 text-slate-300">
             <Calendar className="h-4 w-4" />
             <span className="text-sm">Published {publishedDate}</span>
           </div>
 
           {/* Engagement breakdown grid */}
           <div>
-            <h3 className="text-sm font-medium text-slate-400 mb-3">Engagement Breakdown</h3>
+            <h3 className="text-sm font-medium text-slate-300 mb-3">Engagement Breakdown</h3>
             <div className="grid grid-cols-2 gap-3">
               <MetricCard icon={Heart} label="Likes" value={formatNumber(likes)} />
               <MetricCard icon={MessageCircle} label="Comments" value={formatNumber(comments)} />
@@ -154,7 +154,7 @@ export function PostDetailSheet({ open, onOpenChange, post }: PostDetailSheetPro
             <span className="text-4xl font-bold text-white">
               {post.engagementRate.toFixed(1)}%
             </span>
-            <p className="text-sm text-slate-400 mt-1">Engagement Rate</p>
+            <p className="text-sm text-slate-300 mt-1">Engagement Rate</p>
           </div>
 
           {/* View full post button */}

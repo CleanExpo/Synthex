@@ -32,7 +32,7 @@ export function PlatformRadarChart() {
           <span>Platform Performance Matrix</span>
           <Activity className="h-4 w-4 text-orange-500" />
         </CardTitle>
-        <CardDescription className="text-gray-400">
+        <CardDescription className="text-gray-300">
           Comparative analysis across platforms
         </CardDescription>
       </CardHeader>

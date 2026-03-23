@@ -17,8 +17,8 @@ interface ReportsFiltersProps {
 export function ReportsFilters({ filterType, onFilterChange }: ReportsFiltersProps) {
   return (
     <div className="flex gap-2 items-center">
-      <Filter className="w-4 h-4 text-gray-400" />
-      <span className="text-sm text-gray-400">Filter by type:</span>
+      <Filter className="w-4 h-4 text-gray-300" />
+      <span className="text-sm text-gray-300">Filter by type:</span>
       <Button
         size="sm"
         variant={filterType === null ? 'default' : 'outline'}

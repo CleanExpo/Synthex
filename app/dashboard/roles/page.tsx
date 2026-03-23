@@ -89,7 +89,7 @@ function getRoleIcon(roleName: string, isSystem: boolean) {
     return <Edit className="h-5 w-5 text-blue-400" />;
   }
   if (name.includes('viewer') || name.includes('read')) {
-    return <Eye className="h-5 w-5 text-gray-400" />;
+    return <Eye className="h-5 w-5 text-gray-300" />;
   }
   return <Shield className="h-5 w-5 text-orange-400" />;
 }
@@ -103,7 +103,7 @@ function getRoleColor(roleName: string): string {
     return 'text-blue-400';
   }
   if (name.includes('viewer') || name.includes('read')) {
-    return 'text-gray-400';
+    return 'text-gray-300';
   }
   return 'text-orange-400';
 }
@@ -148,7 +148,7 @@ function RoleCard({ role, onEdit, onDelete, onViewUsers }: RoleCardProps) {
                 {role.name}
               </h3>
               {role.description && (
-                <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">
+                <p className="text-xs text-gray-300 line-clamp-1 mt-0.5">
                   {role.description}
                 </p>
               )}
@@ -175,7 +175,7 @@ function RoleCard({ role, onEdit, onDelete, onViewUsers }: RoleCardProps) {
         </div>
 
         {/* Stats */}
-        <div className="flex items-center gap-4 mb-4 text-sm text-gray-400">
+        <div className="flex items-center gap-4 mb-4 text-sm text-gray-300">
           <div className="flex items-center gap-1.5">
             <Shield className="h-4 w-4" />
             <span>{role.permissions.length} permissions</span>
@@ -337,7 +337,7 @@ function RoleDialog({
           <DialogTitle className="text-white">
             {role ? 'Edit Role' : 'Create New Role'}
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-gray-300">
             {role
               ? 'Update the role name, description, and permissions.'
               : 'Define a new role with specific permissions for your organization.'}
@@ -424,7 +424,7 @@ function RoleDialog({
                           </Label>
                           <Badge
                             variant="outline"
-                            className="text-xs bg-white/5 border-white/10 text-gray-400"
+                            className="text-xs bg-white/5 border-white/10 text-gray-300"
                           >
                             {
                               permissions.filter(p =>
@@ -444,7 +444,7 @@ function RoleDialog({
                                 className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
                                   selectedPermissions.has(permission)
                                     ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                                    : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+                                    : 'bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10'
                                 }`}
                               >
                                 {formatActionLabel(action)}
@@ -577,7 +577,7 @@ function UserSearchDialog({
             <UserPlus className="h-5 w-5 text-orange-400" />
             Add user to &quot;{role.name}&quot;
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-gray-300">
             Search for a team member to assign this role.
           </DialogDescription>
         </DialogHeader>
@@ -600,7 +600,7 @@ function UserSearchDialog({
                 <Loader2 className="h-5 w-5 text-orange-400 animate-spin" />
               </div>
             ) : filtered.length === 0 ? (
-              <div className="text-center py-10 text-gray-400 text-sm">
+              <div className="text-center py-10 text-gray-300 text-sm">
                 {query
                   ? 'No members match your search.'
                   : 'No team members found.'}
@@ -627,7 +627,7 @@ function UserSearchDialog({
                         <p className="text-sm font-medium text-white">
                           {member.name}
                         </p>
-                        <p className="text-xs text-gray-400">{member.email}</p>
+                        <p className="text-xs text-gray-300">{member.email}</p>
                       </div>
                     </div>
                     {assigning === member.id ? (
@@ -694,7 +694,7 @@ function RoleUsersDialog({
             {getRoleIcon(role.name, role.isSystem)}
             {role.name} Users
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-gray-300">
             {role.userCount} user{role.userCount !== 1 ? 's' : ''} with this
             role
           </DialogDescription>
@@ -708,7 +708,7 @@ function RoleUsersDialog({
           ) : users.length === 0 ? (
             <div className="text-center py-8">
               <Users className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-400">No users have this role yet.</p>
+              <p className="text-gray-300">No users have this role yet.</p>
             </div>
           ) : (
             <ScrollArea className="h-[300px]">
@@ -731,7 +731,7 @@ function RoleUsersDialog({
                         <p className="text-sm font-medium text-white">
                           {user.name}
                         </p>
-                        <p className="text-xs text-gray-400">{user.email}</p>
+                        <p className="text-xs text-gray-300">{user.email}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -810,7 +810,7 @@ function DeleteDialog({
             <AlertTriangle className="h-5 w-5 text-red-400" />
             Delete Role
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-gray-300">
             Are you sure you want to delete the role &quot;{role.name}&quot;?
             This action cannot be undone.
           </DialogDescription>
@@ -870,7 +870,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
           <h3 className="text-lg font-medium text-white mb-2">
             No custom roles yet
           </h3>
-          <p className="text-gray-400 mb-6 max-w-sm mx-auto">
+          <p className="text-gray-300 mb-6 max-w-sm mx-auto">
             Use the predefined system roles or create your own custom roles with
             specific permissions.
           </p>
@@ -1037,7 +1037,7 @@ export default function RolesPage() {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-white">Role Management</h1>
-            <p className="text-gray-400">Configure roles and permissions</p>
+            <p className="text-gray-300">Configure roles and permissions</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -1154,7 +1154,7 @@ export default function RolesPage() {
                   <h3 className="text-lg font-medium text-white mb-2">
                     No roles found
                   </h3>
-                  <p className="text-gray-400">
+                  <p className="text-gray-300">
                     No roles match your search &quot;{searchQuery}&quot;
                   </p>
                 </div>

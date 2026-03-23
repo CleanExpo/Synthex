@@ -65,7 +65,7 @@ export function ContentHistory({
                     <p className="text-sm font-medium truncate max-w-md">
                       {item.content.substring(0, 50)}...
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-300">
                       {new Date(item.metadata.generatedAt).toLocaleString()}
                     </p>
                   </div>

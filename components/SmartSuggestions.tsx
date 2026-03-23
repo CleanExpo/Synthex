@@ -100,7 +100,7 @@ export function SmartSuggestions({
       viral: 'text-orange-400',
       evergreen: 'text-orange-400',
     };
-    return colors[type] || 'text-gray-400';
+    return colors[type] || 'text-gray-300';
   };
 
   const getUrgencyColor = (urgency: string) => {
@@ -150,7 +150,7 @@ export function SmartSuggestions({
             <h2 className="text-xl font-semibold text-white">
               Smart Suggestions
             </h2>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-300">
               AI-powered content recommendations
             </p>
           </div>
@@ -160,7 +160,7 @@ export function SmartSuggestions({
           variant="ghost"
           size="sm"
           onClick={loadSuggestions}
-          className="text-gray-400"
+          className="text-gray-300"
         >
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
@@ -169,7 +169,7 @@ export function SmartSuggestions({
 
       {/* Type Filter */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-gray-400">Filter:</span>
+        <span className="text-sm text-gray-300">Filter:</span>
         {['all', 'trending', 'seasonal', 'performance', 'viral'].map(type => (
           <Badge
             key={type}
@@ -210,7 +210,7 @@ export function SmartSuggestions({
                       </CardDescription>
                     </div>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400" />
+                  <ChevronRight className="h-5 w-5 text-gray-300" />
                 </div>
               </CardHeader>
 
@@ -218,7 +218,7 @@ export function SmartSuggestions({
                 {/* Confidence Score */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-400">Confidence</span>
+                    <span className="text-gray-300">Confidence</span>
                     <span className="text-white font-medium">
                       {suggestion.confidence}%
                     </span>
@@ -229,7 +229,7 @@ export function SmartSuggestions({
                 {/* Metrics */}
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="p-2 bg-white/5 rounded">
-                    <p className="text-xs text-gray-400">Engagement</p>
+                    <p className="text-xs text-gray-300">Engagement</p>
                     <p className="text-sm font-semibold text-white">
                       {(suggestion.metrics.expectedEngagement / 1000).toFixed(
                         1
@@ -238,13 +238,13 @@ export function SmartSuggestions({
                     </p>
                   </div>
                   <div className="p-2 bg-white/5 rounded">
-                    <p className="text-xs text-gray-400">Reach</p>
+                    <p className="text-xs text-gray-300">Reach</p>
                     <p className="text-sm font-semibold text-white">
                       {(suggestion.metrics.expectedReach / 1000).toFixed(1)}K
                     </p>
                   </div>
                   <div className="p-2 bg-white/5 rounded">
-                    <p className="text-xs text-gray-400">Viral</p>
+                    <p className="text-xs text-gray-300">Viral</p>
                     <p className="text-sm font-semibold text-white">
                       {suggestion.metrics.viralPotential}%
                     </p>
@@ -254,7 +254,7 @@ export function SmartSuggestions({
                 {/* Timing */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-gray-400" />
+                    <Clock className="h-4 w-4 text-gray-300" />
                     <span className="text-sm text-gray-300">
                       Best at {suggestion.timing.bestTime}
                     </span>
@@ -269,7 +269,7 @@ export function SmartSuggestions({
                   {suggestion.reasoning.slice(0, 2).map((reason, i) => (
                     <div key={i} className="flex items-start gap-2">
                       <span className="text-orange-400 text-xs">•</span>
-                      <span className="text-xs text-gray-400">{reason}</span>
+                      <span className="text-xs text-gray-300">{reason}</span>
                     </div>
                   ))}
                 </div>
@@ -293,8 +293,8 @@ export function SmartSuggestions({
       {/* Empty State */}
       {filteredSuggestions.length === 0 && (
         <div className="text-center py-12">
-          <Lightbulb className="h-12 w-12 text-gray-400 mx-auto mb-4 opacity-50" />
-          <p className="text-gray-400">No suggestions available</p>
+          <Lightbulb className="h-12 w-12 text-gray-300 mx-auto mb-4 opacity-50" />
+          <p className="text-gray-300">No suggestions available</p>
           <Button variant="outline" className="mt-4" onClick={loadSuggestions}>
             Generate New Suggestions
           </Button>
@@ -336,12 +336,12 @@ function CompactSuggestions({
                 <p className="text-sm font-medium text-white truncate">
                   {suggestion.title}
                 </p>
-                <p className="text-xs text-gray-400 truncate">
+                <p className="text-xs text-gray-300 truncate">
                   {suggestion.confidence}% confidence •{' '}
                   {suggestion.timing.urgency} priority
                 </p>
               </div>
-              <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+              <ChevronRight className="h-4 w-4 text-gray-300 flex-shrink-0" />
             </div>
           </button>
         );
@@ -367,7 +367,7 @@ export function SuggestionCards() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-white mb-2">{timeSuggestion.title}</p>
-          <p className="text-xs text-gray-400">{timeSuggestion.description}</p>
+          <p className="text-xs text-gray-300">{timeSuggestion.description}</p>
           <div className="flex flex-wrap gap-1 mt-3">
             {timeSuggestion.hashtags.slice(0, 3).map(tag => (
               <Badge key={tag} variant="secondary" className="text-xs">
@@ -391,7 +391,7 @@ export function SuggestionCards() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-white mb-2">{suggestion.title}</p>
-            <div className="flex items-center gap-4 text-xs text-gray-400">
+            <div className="flex items-center gap-4 text-xs text-gray-300">
               <span>{suggestion.metrics.viralPotential}% viral</span>
               <span>{suggestion.timing.urgency} priority</span>
             </div>
@@ -432,11 +432,11 @@ export function IdeaScorer({ idea }: { idea: string }) {
   return (
     <div className="p-3 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm text-gray-400">Idea Score</span>
+        <span className="text-sm text-gray-300">Idea Score</span>
         <span className={`text-2xl font-bold ${getScoreColor()}`}>{score}</span>
       </div>
       <Progress value={score} className="h-2 mb-2" />
-      <p className="text-xs text-gray-400">{getScoreMessage()}</p>
+      <p className="text-xs text-gray-300">{getScoreMessage()}</p>
     </div>
   );
 }

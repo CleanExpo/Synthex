@@ -18,7 +18,7 @@ export function AnalysisProgress({ progress }: AnalysisProgressProps) {
       <CardContent className="pt-6">
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Analyzing viral patterns...</span>
+            <span className="text-gray-300">Analyzing viral patterns...</span>
             <span className="text-white">{progress}%</span>
           </div>
           <Progress value={progress} className="h-2" />

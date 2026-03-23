@@ -38,7 +38,7 @@ export function GrowthChart({ data }: GrowthChartProps) {
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Growth Metrics</CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-slate-300">
           Follower growth and engagement over time
         </CardDescription>
       </CardHeader>

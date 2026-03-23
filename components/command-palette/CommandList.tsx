@@ -54,7 +54,7 @@ export function CommandList({
                     </div>
                   )}
                 </div>
-                {isSelected && <ArrowRight className="w-4 h-4 text-gray-400" />}
+                {isSelected && <ArrowRight className="w-4 h-4 text-gray-300" />}
               </button>
             );
           })}

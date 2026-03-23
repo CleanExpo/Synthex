@@ -64,7 +64,7 @@ export function BOFeatureGate({
               Pro Plan Feature
             </div>
 
-            <p className="text-gray-400 mb-6 leading-relaxed">
+            <p className="text-gray-300 mb-6 leading-relaxed">
               {description ||
                 `Upgrade to the Pro plan to unlock ${feature.toLowerCase()} and adaptive AI parameter tuning for your organisation.`}
             </p>
@@ -91,7 +91,7 @@ export function BOFeatureGate({
             {subscription && (
               <p className="text-gray-500 text-sm mt-4">
                 Current plan:{' '}
-                <span className="text-gray-400 capitalize">
+                <span className="text-gray-300 capitalize">
                   {subscription.plan}
                 </span>
               </p>

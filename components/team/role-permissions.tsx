@@ -23,7 +23,7 @@ export function RolePermissionsCard() {
             <Crown className="h-4 w-4 text-red-400" />
             <span className="text-sm font-medium text-red-400">Admin</span>
           </div>
-          <ul className="text-xs text-slate-400 space-y-1 ml-6">
+          <ul className="text-xs text-slate-300 space-y-1 ml-6">
             <li>• Full system access</li>
             <li>• Manage team members</li>
             <li>• Billing and settings</li>
@@ -36,7 +36,7 @@ export function RolePermissionsCard() {
             <Edit className="h-4 w-4 text-blue-400" />
             <span className="text-sm font-medium text-blue-400">Editor</span>
           </div>
-          <ul className="text-xs text-slate-400 space-y-1 ml-6">
+          <ul className="text-xs text-slate-300 space-y-1 ml-6">
             <li>• Create and edit content</li>
             <li>• Schedule posts</li>
             <li>• Access analytics</li>
@@ -46,10 +46,10 @@ export function RolePermissionsCard() {
 
         <div>
           <div className="flex items-center space-x-2 mb-2">
-            <Eye className="h-4 w-4 text-slate-400" />
-            <span className="text-sm font-medium text-slate-400">Viewer</span>
+            <Eye className="h-4 w-4 text-slate-300" />
+            <span className="text-sm font-medium text-slate-300">Viewer</span>
           </div>
-          <ul className="text-xs text-slate-400 space-y-1 ml-6">
+          <ul className="text-xs text-slate-300 space-y-1 ml-6">
             <li>• View all content</li>
             <li>• Access reports</li>
             <li>• Export data</li>

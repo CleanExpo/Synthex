@@ -45,11 +45,11 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
       <p className="text-sm font-medium text-white mb-1">{data.gender}</p>
       <div className="space-y-1">
         <div className="flex justify-between gap-4">
-          <span className="text-gray-400 text-sm">Percentage</span>
+          <span className="text-gray-300 text-sm">Percentage</span>
           <span className="text-white font-medium">{data.percentage}%</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span className="text-gray-400 text-sm">Count</span>
+          <span className="text-gray-300 text-sm">Count</span>
           <span className="text-white font-medium">
             {formatNumber(data.count)}
           </span>
@@ -81,7 +81,7 @@ export function GenderChart({
           className
         )}
       >
-        <h4 className="text-sm font-medium text-gray-400 mb-4">
+        <h4 className="text-sm font-medium text-gray-300 mb-4">
           Gender Distribution
         </h4>
         <LoadingSkeleton />
@@ -97,7 +97,7 @@ export function GenderChart({
           className
         )}
       >
-        <h4 className="text-sm font-medium text-gray-400 mb-4">
+        <h4 className="text-sm font-medium text-gray-300 mb-4">
           Gender Distribution
         </h4>
         <p className="text-gray-500 text-sm text-center py-8">
@@ -116,7 +116,7 @@ export function GenderChart({
         className
       )}
     >
-      <h4 className="text-sm font-medium text-gray-400 mb-4">
+      <h4 className="text-sm font-medium text-gray-300 mb-4">
         Gender Distribution
       </h4>
       <div className="relative h-[200px]">
@@ -147,7 +147,7 @@ export function GenderChart({
           <span className="text-xl font-bold text-white">
             {formatNumber(total)}
           </span>
-          <span className="text-xs text-gray-400">Total</span>
+          <span className="text-xs text-gray-300">Total</span>
         </div>
       </div>
       {/* Legend */}
@@ -160,7 +160,7 @@ export function GenderChart({
                 backgroundColor: GENDER_COLORS[entry.gender] || '#6366f1',
               }}
             />
-            <span className="text-xs text-gray-400">{entry.gender}</span>
+            <span className="text-xs text-gray-300">{entry.gender}</span>
             <span className="text-xs text-white font-medium">
               {entry.percentage}%
             </span>

@@ -28,7 +28,7 @@ function gradeColour(grade: string): string {
     case 'F':
       return 'text-red-400';
     default:
-      return 'text-gray-400';
+      return 'text-gray-300';
   }
 }
 
@@ -189,7 +189,7 @@ export function HumannessScoreCard({
 
       {/* Score component bar */}
       <div className="border-t border-white/10 pt-4">
-        <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">
+        <p className="text-xs font-medium text-slate-300 uppercase tracking-wider mb-3">
           Score Breakdown
         </p>
         <div className="flex justify-around gap-2">
@@ -227,7 +227,7 @@ export function HumannessScoreCard({
       {/* Issues list */}
       {issues.length > 0 && (
         <div className="border-t border-white/10 pt-4 space-y-2">
-          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+          <p className="text-xs font-medium text-slate-300 uppercase tracking-wider">
             Issues
           </p>
           {issues.map((issue, i) => (
@@ -245,7 +245,7 @@ export function HumannessScoreCard({
       {/* Suggestions list */}
       {suggestions.length > 0 && (
         <div className="border-t border-white/10 pt-4 space-y-2">
-          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+          <p className="text-xs font-medium text-slate-300 uppercase tracking-wider">
             Suggestions
           </p>
           {suggestions.map((suggestion, i) => (

@@ -105,7 +105,7 @@ export default function CompetitorPagesPage() {
           <Button
             variant="ghost"
             size="icon"
-            className="text-gray-400 hover:text-white"
+            className="text-gray-300 hover:text-white"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -115,7 +115,7 @@ export default function CompetitorPagesPage() {
             <Target className="w-8 h-8 text-orange-400" />
             Competitor Pages
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="text-gray-300 mt-1">
             Generate SEO-optimized comparison and alternatives pages
           </p>
         </div>
@@ -131,7 +131,7 @@ export default function CompetitorPagesPage() {
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="text-sm text-gray-400 mb-1.5 block">
+                <label className="text-sm text-gray-300 mb-1.5 block">
                   Your Brand
                 </label>
                 <Input
@@ -142,7 +142,7 @@ export default function CompetitorPagesPage() {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-400 mb-1.5 block">
+                <label className="text-sm text-gray-300 mb-1.5 block">
                   Competitor
                 </label>
                 <Input
@@ -199,7 +199,7 @@ export default function CompetitorPagesPage() {
                         </span>
                       </div>
                       <CardTitle className="text-white">{page.title}</CardTitle>
-                      <p className="text-gray-400 text-sm mt-1">
+                      <p className="text-gray-300 text-sm mt-1">
                         {page.metaDescription}
                       </p>
                       <p className="text-orange-400/60 text-xs mt-1 font-mono">
@@ -283,7 +283,7 @@ export default function CompetitorPagesPage() {
             <h3 className="text-xl font-medium text-white mb-2">
               Generate Competitor Pages
             </h3>
-            <p className="text-gray-400 max-w-md mx-auto">
+            <p className="text-gray-300 max-w-md mx-auto">
               Enter your brand and a competitor name above to generate
               SEO-optimized comparison and alternatives page outlines with
               schema markup.

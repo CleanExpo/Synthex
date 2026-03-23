@@ -177,7 +177,7 @@ function WebhookCard({
           <div className="flex-1 min-w-0">
             {/* URL */}
             <div className="flex items-center gap-2 mb-2">
-              <ExternalLink className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              <ExternalLink className="w-4 h-4 text-gray-300 flex-shrink-0" />
               <span
                 className="text-white font-medium truncate"
                 title={webhook.url}
@@ -188,7 +188,7 @@ function WebhookCard({
 
             {/* Description */}
             {webhook.description && (
-              <p className="text-sm text-gray-400 mb-3">
+              <p className="text-sm text-gray-300 mb-3">
                 {webhook.description}
               </p>
             )}
@@ -207,7 +207,7 @@ function WebhookCard({
               {webhook.events.length > 5 && (
                 <Badge
                   variant="outline"
-                  className="bg-gray-500/20 text-gray-400 border-gray-500/30 text-xs"
+                  className="bg-gray-500/20 text-gray-300 border-gray-500/30 text-xs"
                 >
                   +{webhook.events.length - 5} more
                 </Badge>
@@ -232,7 +232,7 @@ function WebhookCard({
           {/* Actions */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-300">
                 {webhook.active ? 'Active' : 'Inactive'}
               </span>
               <Switch
@@ -249,7 +249,7 @@ function WebhookCard({
               className={
                 confirmDelete
                   ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10'
-                  : 'text-gray-400 hover:text-white'
+                  : 'text-gray-300 hover:text-white'
               }
             >
               {isDeleting ? (
@@ -415,7 +415,7 @@ function CreateWebhookDialog({
               <Check className="w-5 h-5 text-green-400" />
               Webhook Created
             </DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogDescription className="text-gray-300">
               Your webhook has been created successfully.
             </DialogDescription>
           </DialogHeader>
@@ -479,7 +479,7 @@ function CreateWebhookDialog({
       <DialogContent className="bg-surface-base/95 border-orange-500/20 backdrop-blur-xl sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-white">Create Webhook</DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-gray-300">
             Configure a webhook to receive real-time event notifications.
           </DialogDescription>
         </DialogHeader>
@@ -571,7 +571,7 @@ function CreateWebhookDialog({
                           variant="ghost"
                           size="sm"
                           onClick={() => deselectAllInCategory(category.events)}
-                          className="text-xs text-gray-400 hover:text-white h-auto py-1 px-2"
+                          className="text-xs text-gray-300 hover:text-white h-auto py-1 px-2"
                           disabled={!someSelected}
                         >
                           Deselect All
@@ -655,7 +655,7 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
           <h3 className="text-lg font-medium text-white mb-2">
             No webhooks configured
           </h3>
-          <p className="text-gray-400 mb-6 max-w-sm mx-auto">
+          <p className="text-gray-300 mb-6 max-w-sm mx-auto">
             Create a webhook to receive real-time notifications when events
             happen in your account.
           </p>
@@ -737,7 +737,7 @@ export default function WebhooksPage() {
       <div className="flex items-start justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Webhooks</h1>
-          <p className="text-gray-400">
+          <p className="text-gray-300">
             Send real-time event notifications to external systems
           </p>
         </div>

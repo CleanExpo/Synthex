@@ -180,7 +180,7 @@ function TrackingTab({ orgId }: { orgId: string }) {
       {trackers.length === 0 ? (
         <div className="rounded-xl border border-white/10 bg-white/5 p-8 text-center">
           <Sparkles className="w-8 h-8 text-slate-500 mx-auto mb-3" />
-          <p className="text-sm text-slate-400">No prompts tracked yet.</p>
+          <p className="text-sm text-slate-300">No prompts tracked yet.</p>
           <p className="text-xs text-slate-500 mt-1">
             Go to the Discovery tab to generate and track prompts.
           </p>
@@ -232,7 +232,7 @@ function GapsTab({ orgId }: { orgId: string }) {
     return (
       <div className="rounded-xl border border-white/10 bg-white/5 p-8 text-center">
         <TrendingUp className="w-8 h-8 text-slate-500 mx-auto mb-3" />
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-300">
           {data?.message ?? 'No tested prompts found.'}
         </p>
         <p className="text-xs text-slate-500 mt-1">
@@ -296,7 +296,7 @@ function PromptsPageContent() {
             <Sparkles className="w-6 h-6 text-orange-400" />
             Prompt Intelligence
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-300 mt-1">
             Discover which AI prompts trigger brand mentions — find gaps and
             track visibility across ChatGPT, Perplexity, and Claude.
           </p>
@@ -313,21 +313,21 @@ function PromptsPageContent() {
         <TabsList className="bg-white/5 border border-white/10">
           <TabsTrigger
             value="discovery"
-            className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+            className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-300"
           >
             <Search className="w-3.5 h-3.5 mr-1.5" />
             Discovery
           </TabsTrigger>
           <TabsTrigger
             value="tracking"
-            className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+            className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-300"
           >
             <Sparkles className="w-3.5 h-3.5 mr-1.5" />
             Tracking
           </TabsTrigger>
           <TabsTrigger
             value="gaps"
-            className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+            className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-300"
           >
             <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
             Gaps

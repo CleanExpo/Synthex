@@ -137,7 +137,7 @@ export function CalculatorTab({
               <div key={id}>
                 <Label htmlFor={id}>{label}</Label>
                 <div className="relative mt-1">
-                  <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                   <Input
                     id={id}
                     type="number"
@@ -161,7 +161,7 @@ export function CalculatorTab({
           <CardContent className="space-y-4">
             <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">Net Profit</span>
+                <span className="text-sm text-gray-300">Net Profit</span>
                 <span className="text-2xl font-bold text-white">
                   {formatCurrency(metrics.profit)}
                 </span>
@@ -174,13 +174,13 @@ export function CalculatorTab({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="p-3 bg-white/5 rounded-lg">
-                <p className="text-xs text-gray-400">Break-even Point</p>
+                <p className="text-xs text-gray-300">Break-even Point</p>
                 <p className="text-lg font-bold text-white">
                   {Math.ceil(metrics.breakEvenPoint)} sales
                 </p>
               </div>
               <div className="p-3 bg-white/5 rounded-lg">
-                <p className="text-xs text-gray-400">Payback Period</p>
+                <p className="text-xs text-gray-300">Payback Period</p>
                 <p className="text-lg font-bold text-white">
                   {metrics.paybackPeriod.toFixed(1)} months
                 </p>
@@ -189,7 +189,7 @@ export function CalculatorTab({
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">CLV to CAC Ratio</span>
+                <span className="text-sm text-gray-300">CLV to CAC Ratio</span>
                 <span className="text-sm font-medium text-white">
                   {metrics.customerAcquisitionCost > 0
                     ? (
@@ -201,7 +201,7 @@ export function CalculatorTab({
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-gray-300">
                   Monthly Conversions
                 </span>
                 <span className="text-sm font-medium text-white">
@@ -212,7 +212,7 @@ export function CalculatorTab({
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-gray-300">
                   Cost Per Conversion
                 </span>
                 <span className="text-sm font-medium text-white">

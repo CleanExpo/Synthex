@@ -73,7 +73,7 @@ export function AnalyzerTab({
               </div>
 
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">Confidence</span>
+                <span className="text-gray-300">Confidence</span>
                 <span className="text-white">
                   {testResult.confidence.toFixed(1)}%
                 </span>
@@ -81,7 +81,7 @@ export function AnalyzerTab({
 
               {testResult.emotions.length > 0 && (
                 <div>
-                  <p className="text-sm text-gray-400 mb-2">
+                  <p className="text-sm text-gray-300 mb-2">
                     Detected Emotions
                   </p>
                   <div className="flex gap-2">
@@ -100,7 +100,7 @@ export function AnalyzerTab({
 
               {testResult.keyPhrases?.length > 0 && (
                 <div>
-                  <p className="text-sm text-gray-400 mb-2">Key Phrases</p>
+                  <p className="text-sm text-gray-300 mb-2">Key Phrases</p>
                   <div className="flex flex-wrap gap-2">
                     {testResult.keyPhrases.map((phrase: string, i: number) => (
                       <Badge

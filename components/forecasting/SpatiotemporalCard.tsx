@@ -31,7 +31,7 @@ interface SpatiotemporalCardProps {
  */
 export function SpatiotemporalCard({ model, onPredict, isPredicting }: SpatiotemporalCardProps) {
   const metricDef = FORECAST_METRICS[model.targetMetric as keyof typeof FORECAST_METRICS];
-  const statusStyle = STATUS_STYLES[model.status] ?? 'bg-gray-500/20 text-gray-400';
+  const statusStyle = STATUS_STYLES[model.status] ?? 'bg-gray-500/20 text-gray-300';
   const canPredict = model.status === 'ready' && !isPredicting;
 
   // Display name: capitalise first character
@@ -64,7 +64,7 @@ export function SpatiotemporalCard({ model, onPredict, isPredicting }: Spatiotem
       </div>
 
       {/* Body */}
-      <div className="space-y-1 text-xs text-gray-400 flex-1">
+      <div className="space-y-1 text-xs text-gray-300 flex-1">
         <p>
           <span className="text-gray-500">Training data:</span>{' '}
           <span className="text-white">{model.trainingPoints}</span> training points

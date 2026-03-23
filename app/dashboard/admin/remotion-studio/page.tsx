@@ -140,7 +140,7 @@ export default function RemotionStudioPage() {
             <h1 className="text-xl font-semibold text-white">
               Remotion Studio
             </h1>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-300">
               Programmatic video composition preview
             </p>
           </div>
@@ -194,7 +194,7 @@ export default function RemotionStudioPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">
+                <label className="text-xs text-gray-300 mb-1 block">
                   Title
                 </label>
                 <input
@@ -205,7 +205,7 @@ export default function RemotionStudioPage() {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">
+                <label className="text-xs text-gray-300 mb-1 block">
                   Brand Colour
                 </label>
                 <div className="flex items-center gap-2">

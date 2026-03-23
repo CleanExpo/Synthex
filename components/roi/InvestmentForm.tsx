@@ -157,7 +157,7 @@ export function InvestmentForm({
             size="icon"
             onClick={onClose}
             aria-label="Close form"
-            className="text-gray-400 hover:text-white"
+            className="text-gray-300 hover:text-white"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -189,7 +189,7 @@ export function InvestmentForm({
                   >
                     {t.label}
                   </span>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-300 mt-0.5">
                     {t.description}
                   </p>
                 </button>

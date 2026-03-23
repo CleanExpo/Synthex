@@ -47,7 +47,7 @@ export function CreatePostModal({
               onChange={(e) => onNewPostChange({ ...newPost, content: e.target.value })}
               className="min-h-[150px] bg-white/5 border-white/10"
             />
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-300">
               {(editingPost ? editingPost.content : newPost.content).length} characters
             </p>
           </div>

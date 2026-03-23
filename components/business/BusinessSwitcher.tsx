@@ -54,7 +54,7 @@ export function BusinessSwitcher() {
           <Building className="mr-2 h-4 w-4 text-orange-400" />
           <span className="max-w-[200px] truncate">{displayName}</span>
           <ChevronDown
-            className={`ml-2 h-4 w-4 text-gray-400 transition-transform ${isSwitching ? 'animate-spin' : ''}`}
+            className={`ml-2 h-4 w-4 text-gray-300 transition-transform ${isSwitching ? 'animate-spin' : ''}`}
           />
         </Button>
       </DropdownMenuTrigger>
@@ -63,7 +63,7 @@ export function BusinessSwitcher() {
         align="start"
         className="w-[280px] bg-gray-950 border border-orange-500/10 backdrop-blur-xl"
       >
-        <DropdownMenuLabel className="text-gray-400 text-xs font-medium uppercase tracking-wider">
+        <DropdownMenuLabel className="text-gray-300 text-xs font-medium uppercase tracking-wider">
           Switch Business
         </DropdownMenuLabel>
 

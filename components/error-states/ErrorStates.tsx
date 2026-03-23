@@ -43,7 +43,7 @@ export function APIErrorCard({
           <AlertCircle className="w-8 h-8 text-red-400" />
         </div>
         <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-        <p className="text-gray-400 mb-6 max-w-md">{message}</p>
+        <p className="text-gray-300 mb-6 max-w-md">{message}</p>
         {onRetry && (
           <Button onClick={onRetry} variant="outline" className="gap-2">
             <RefreshCw className="w-4 h-4" />
@@ -65,7 +65,7 @@ export function NetworkErrorCard({ onRetry }: { onRetry?: () => void }) {
         <h3 className="text-lg font-semibold text-white mb-2">
           No Internet Connection
         </h3>
-        <p className="text-gray-400 mb-6 max-w-md">
+        <p className="text-gray-300 mb-6 max-w-md">
           Please check your internet connection and try again.
         </p>
         {onRetry && (
@@ -87,7 +87,7 @@ export function ServerErrorCard({ onRetry }: { onRetry?: () => void }) {
           <ServerOff className="w-8 h-8 text-red-400" />
         </div>
         <h3 className="text-lg font-semibold text-white mb-2">Server Error</h3>
-        <p className="text-gray-400 mb-6 max-w-md">
+        <p className="text-gray-300 mb-6 max-w-md">
           Our servers are experiencing issues. Please try again later.
         </p>
         {onRetry && (
@@ -127,10 +127,10 @@ export function EmptyState({
     <Card variant="glass">
       <CardContent className="flex flex-col items-center justify-center py-12 text-center">
         <div className="p-4 rounded-full bg-white/5 mb-4">
-          <IconComponent className="w-8 h-8 text-gray-400" />
+          <IconComponent className="w-8 h-8 text-gray-300" />
         </div>
         <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-        <p className="text-gray-400 mb-6 max-w-md">{message}</p>
+        <p className="text-gray-300 mb-6 max-w-md">{message}</p>
         {onAction && actionLabel && (
           <Button
             onClick={onAction}
@@ -156,12 +156,12 @@ export function NoResultsState({
     <Card variant="glass">
       <CardContent className="flex flex-col items-center justify-center py-12 text-center">
         <div className="p-4 rounded-full bg-white/5 mb-4">
-          <SearchX className="w-8 h-8 text-gray-400" />
+          <SearchX className="w-8 h-8 text-gray-300" />
         </div>
         <h3 className="text-lg font-semibold text-white mb-2">
           No results found
         </h3>
-        <p className="text-gray-400 mb-6 max-w-md">
+        <p className="text-gray-300 mb-6 max-w-md">
           {searchQuery
             ? `No results found for "${searchQuery}". Try a different search term.`
             : 'Try adjusting your search or filters.'}
@@ -189,12 +189,12 @@ export function NotFoundState({
     <Card variant="glass">
       <CardContent className="flex flex-col items-center justify-center py-12 text-center">
         <div className="p-4 rounded-full bg-white/5 mb-4">
-          <FileX className="w-8 h-8 text-gray-400" />
+          <FileX className="w-8 h-8 text-gray-300" />
         </div>
         <h3 className="text-lg font-semibold text-white mb-2">
           {resource.charAt(0).toUpperCase() + resource.slice(1)} Not Found
         </h3>
-        <p className="text-gray-400 mb-6 max-w-md">
+        <p className="text-gray-300 mb-6 max-w-md">
           The {resource} you're looking for doesn't exist or has been removed.
         </p>
         {onBack && (

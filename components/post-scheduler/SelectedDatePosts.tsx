@@ -32,9 +32,9 @@ export function SelectedDatePosts({ selectedDate, posts, onCreatePost }: Selecte
                     <div className="flex items-center gap-2 mb-2">
                       {post.platforms.map(platform => {
                         const Icon = platformIcons[platform as keyof typeof platformIcons] || Globe;
-                        return <Icon key={platform} className="w-4 h-4 text-gray-400" />;
+                        return <Icon key={platform} className="w-4 h-4 text-gray-300" />;
                       })}
-                      <span className="text-sm text-gray-400">
+                      <span className="text-sm text-gray-300">
                         {format(post.scheduledTime, 'h:mm a')}
                       </span>
                     </div>
@@ -50,7 +50,7 @@ export function SelectedDatePosts({ selectedDate, posts, onCreatePost }: Selecte
         ) : (
           <div className="text-center py-8">
             <CalendarIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400">No posts scheduled for this date</p>
+            <p className="text-gray-300">No posts scheduled for this date</p>
             <Button
               className="mt-4"
               variant="outline"

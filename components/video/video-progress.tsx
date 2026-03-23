@@ -95,7 +95,7 @@ export function VideoProgress({ status, errorMessage }: VideoProgressProps) {
       />
       <div className="flex items-center gap-2">
         <Loader2 className="w-3.5 h-3.5 text-orange-400 animate-spin" />
-        <span className="text-sm text-gray-400">
+        <span className="text-sm text-gray-300">
           {currentStep < PROGRESS_STEPS.length
             ? PROGRESS_STEPS[currentStep].label
             : 'Almost there...'}

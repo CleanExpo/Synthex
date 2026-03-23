@@ -94,7 +94,7 @@ export function CreateTaskDialog({
       <DialogContent className="bg-slate-900/95 border-white/10 max-w-lg">
         <DialogHeader>
           <DialogTitle>Create New Task</DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-slate-300">
             Add a new task to your marketing workflow
           </DialogDescription>
         </DialogHeader>
@@ -198,7 +198,7 @@ export function CreateTaskDialog({
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${
                     assignees.includes(member.id)
                       ? 'bg-orange-500/20 border-orange-500/50 text-orange-300'
-                      : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
+                      : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
                   }`}
                 >
                   <Avatar className="w-5 h-5">

@@ -56,7 +56,7 @@ export function SpatiotemporalFeatureGate({ children }: SpatiotemporalFeatureGat
               Scale Plan Feature
             </div>
 
-            <p className="text-gray-400 mb-6 leading-relaxed">
+            <p className="text-gray-300 mb-6 leading-relaxed">
               BayesNF spatiotemporal models predict performance across every platform simultaneously.
             </p>
 
@@ -78,7 +78,7 @@ export function SpatiotemporalFeatureGate({ children }: SpatiotemporalFeatureGat
 
             {subscription && (
               <p className="text-gray-500 text-sm mt-4">
-                Current plan: <span className="text-gray-400 capitalize">{subscription.plan}</span>
+                Current plan: <span className="text-gray-300 capitalize">{subscription.plan}</span>
               </p>
             )}
           </div>

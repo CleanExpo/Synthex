@@ -111,7 +111,7 @@ export function MetricsTable({ data, engagementData, contentData }: MetricsTable
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Detailed Metrics</CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-slate-300">
           Platform-specific performance data
         </CardDescription>
       </CardHeader>
@@ -130,12 +130,12 @@ export function MetricsTable({ data, engagementData, contentData }: MetricsTable
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-2 text-slate-400 font-medium">Platform</th>
-                    <th className="text-right py-2 text-slate-400 font-medium">Followers</th>
-                    <th className="text-right py-2 text-slate-400 font-medium">Posts</th>
-                    <th className="text-right py-2 text-slate-400 font-medium">Engagement</th>
-                    <th className="text-right py-2 text-slate-400 font-medium">Reach</th>
-                    <th className="text-right py-2 text-slate-400 font-medium">Growth</th>
+                    <th className="text-left py-2 text-slate-300 font-medium">Platform</th>
+                    <th className="text-right py-2 text-slate-300 font-medium">Followers</th>
+                    <th className="text-right py-2 text-slate-300 font-medium">Posts</th>
+                    <th className="text-right py-2 text-slate-300 font-medium">Engagement</th>
+                    <th className="text-right py-2 text-slate-300 font-medium">Reach</th>
+                    <th className="text-right py-2 text-slate-300 font-medium">Growth</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -179,11 +179,11 @@ export function MetricsTable({ data, engagementData, contentData }: MetricsTable
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-2 text-slate-400 font-medium">Platform</th>
-                    <th className="text-right py-2 text-slate-400 font-medium">Likes</th>
-                    <th className="text-right py-2 text-slate-400 font-medium">Comments</th>
-                    <th className="text-right py-2 text-slate-400 font-medium">Shares</th>
-                    <th className="text-right py-2 text-slate-400 font-medium">Total Engagement</th>
+                    <th className="text-left py-2 text-slate-300 font-medium">Platform</th>
+                    <th className="text-right py-2 text-slate-300 font-medium">Likes</th>
+                    <th className="text-right py-2 text-slate-300 font-medium">Comments</th>
+                    <th className="text-right py-2 text-slate-300 font-medium">Shares</th>
+                    <th className="text-right py-2 text-slate-300 font-medium">Total Engagement</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -218,10 +218,10 @@ export function MetricsTable({ data, engagementData, contentData }: MetricsTable
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-2 text-slate-400 font-medium">Platform</th>
-                    <th className="text-right py-2 text-slate-400 font-medium">Engagement Rate</th>
-                    <th className="text-right py-2 text-slate-400 font-medium">Growth Trend</th>
-                    <th className="text-right py-2 text-slate-400 font-medium">Best Time</th>
+                    <th className="text-left py-2 text-slate-300 font-medium">Platform</th>
+                    <th className="text-right py-2 text-slate-300 font-medium">Engagement Rate</th>
+                    <th className="text-right py-2 text-slate-300 font-medium">Growth Trend</th>
+                    <th className="text-right py-2 text-slate-300 font-medium">Best Time</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -259,10 +259,10 @@ export function MetricsTable({ data, engagementData, contentData }: MetricsTable
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-2 text-slate-400 font-medium">Platform</th>
-                    <th className="text-right py-2 text-slate-400 font-medium">Posts</th>
-                    <th className="text-right py-2 text-slate-400 font-medium">Avg Engagement Rate</th>
-                    <th className="text-right py-2 text-slate-400 font-medium">Best Posting Time</th>
+                    <th className="text-left py-2 text-slate-300 font-medium">Platform</th>
+                    <th className="text-right py-2 text-slate-300 font-medium">Posts</th>
+                    <th className="text-right py-2 text-slate-300 font-medium">Avg Engagement Rate</th>
+                    <th className="text-right py-2 text-slate-300 font-medium">Best Posting Time</th>
                   </tr>
                 </thead>
                 <tbody>

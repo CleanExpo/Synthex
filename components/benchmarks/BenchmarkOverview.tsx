@@ -169,7 +169,7 @@ export function BenchmarkOverview({
           {/* Quick insights */}
           {report.insights.length > 0 && (
             <div className="bg-white/5 rounded-lg p-4">
-              <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+              <h4 className="text-xs font-medium text-gray-300 uppercase tracking-wider mb-2">
                 Quick Insights
               </h4>
               <ul className="space-y-1">

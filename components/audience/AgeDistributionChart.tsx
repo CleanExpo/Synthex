@@ -56,11 +56,11 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
       <p className="text-sm font-medium text-white mb-1">{data.range} years</p>
       <div className="space-y-1">
         <div className="flex justify-between gap-4">
-          <span className="text-gray-400 text-sm">Percentage</span>
+          <span className="text-gray-300 text-sm">Percentage</span>
           <span className="text-white font-medium">{data.percentage}%</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span className="text-gray-400 text-sm">Count</span>
+          <span className="text-gray-300 text-sm">Count</span>
           <span className="text-white font-medium">
             {formatNumber(data.count)}
           </span>
@@ -99,7 +99,7 @@ export function AgeDistributionChart({
           className
         )}
       >
-        <h4 className="text-sm font-medium text-gray-400 mb-4">
+        <h4 className="text-sm font-medium text-gray-300 mb-4">
           Age Distribution
         </h4>
         <LoadingSkeleton />
@@ -115,7 +115,7 @@ export function AgeDistributionChart({
           className
         )}
       >
-        <h4 className="text-sm font-medium text-gray-400 mb-4">
+        <h4 className="text-sm font-medium text-gray-300 mb-4">
           Age Distribution
         </h4>
         <p className="text-gray-500 text-sm text-center py-8">
@@ -132,7 +132,7 @@ export function AgeDistributionChart({
         className
       )}
     >
-      <h4 className="text-sm font-medium text-gray-400 mb-4">
+      <h4 className="text-sm font-medium text-gray-300 mb-4">
         Age Distribution
       </h4>
       <div className="h-[200px]">

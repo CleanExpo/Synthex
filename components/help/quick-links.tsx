@@ -42,11 +42,11 @@ export function QuickLinks() {
             </div>
             <div>
               <h3 className="font-semibold text-white">Video Tutorials</h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-300">
                 Learn with step-by-step guides
               </p>
             </div>
-            <ChevronRight className="w-5 h-5 text-gray-400 ml-auto" />
+            <ChevronRight className="w-5 h-5 text-gray-300 ml-auto" />
           </div>
         </CardContent>
       </Card>
@@ -63,11 +63,11 @@ export function QuickLinks() {
             </div>
             <div>
               <h3 className="font-semibold text-white">Live Chat</h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-300">
                 Chat with our support team
               </p>
             </div>
-            <ChevronRight className="w-5 h-5 text-gray-400 ml-auto" />
+            <ChevronRight className="w-5 h-5 text-gray-300 ml-auto" />
           </div>
         </CardContent>
       </Card>
@@ -84,11 +84,11 @@ export function QuickLinks() {
               </div>
               <div>
                 <h3 className="font-semibold text-white">Documentation</h3>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-300">
                   Detailed technical guides
                 </p>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-400 ml-auto" />
+              <ChevronRight className="w-5 h-5 text-gray-300 ml-auto" />
             </div>
           </CardContent>
         </Link>

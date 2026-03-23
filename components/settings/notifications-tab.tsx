@@ -56,7 +56,7 @@ export function NotificationsTab({
                 <Mail className="w-5 h-5 text-orange-500" />
                 <div>
                   <p className="font-medium text-white">Email Notifications</p>
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-slate-300">
                     Receive updates via email
                   </p>
                 </div>
@@ -73,7 +73,7 @@ export function NotificationsTab({
                 <Bell className="w-5 h-5 text-orange-500" />
                 <div>
                   <p className="font-medium text-white">Push Notifications</p>
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-slate-300">
                     Browser and mobile push alerts
                   </p>
                 </div>
@@ -90,7 +90,7 @@ export function NotificationsTab({
                 <Smartphone className="w-5 h-5 text-orange-500" />
                 <div>
                   <p className="font-medium text-white">SMS Notifications</p>
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-slate-300">
                     Text message alerts for urgent updates
                   </p>
                 </div>
@@ -113,7 +113,7 @@ export function NotificationsTab({
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-white">Weekly Report</Label>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-slate-300">
                   Get a weekly summary of your performance
                 </p>
               </div>
@@ -129,7 +129,7 @@ export function NotificationsTab({
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-white">Viral Content Alert</Label>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-slate-300">
                   Get notified when your content goes viral
                 </p>
               </div>
@@ -145,7 +145,7 @@ export function NotificationsTab({
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-white">System Updates</Label>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-slate-300">
                   Important platform updates and announcements
                 </p>
               </div>

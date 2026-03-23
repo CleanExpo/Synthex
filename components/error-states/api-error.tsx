@@ -77,7 +77,7 @@ const ERROR_CONFIGS: Record<ErrorType, ErrorConfig> = {
     icon: AlertCircle,
     title: 'Not Found',
     description: 'The requested resource could not be found.',
-    color: 'text-gray-600 dark:text-gray-400',
+    color: 'text-gray-600 dark:text-gray-300',
     bgColor: 'bg-gray-50 dark:bg-gray-900/20',
   },
   validation: {
@@ -91,7 +91,7 @@ const ERROR_CONFIGS: Record<ErrorType, ErrorConfig> = {
     icon: AlertCircle,
     title: 'Something Went Wrong',
     description: 'An unexpected error occurred. Please try again.',
-    color: 'text-gray-600 dark:text-gray-400',
+    color: 'text-gray-600 dark:text-gray-300',
     bgColor: 'bg-gray-50 dark:bg-gray-900/20',
   },
 };
@@ -177,7 +177,7 @@ export function APIErrorCard({
             className="p-1.5 rounded-md hover:bg-white/50 dark:hover:bg-black/20 transition-colors"
             aria-label="Retry"
           >
-            <RefreshCw className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            <RefreshCw className="h-4 w-4 text-gray-600 dark:text-gray-300" />
           </button>
         )}
       </div>
@@ -197,7 +197,7 @@ export function APIErrorCard({
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
               {config.title}
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-gray-300">
               {config.description}
             </p>
             {showDetails && message && (
@@ -205,7 +205,7 @@ export function APIErrorCard({
                 <summary className="text-sm text-gray-500 dark:text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
                   Technical details
                 </summary>
-                <pre className="mt-2 p-3 bg-white dark:bg-gray-800 rounded-lg text-xs text-gray-600 dark:text-gray-400 overflow-x-auto">
+                <pre className="mt-2 p-3 bg-white dark:bg-gray-800 rounded-lg text-xs text-gray-600 dark:text-gray-300 overflow-x-auto">
                   {message}
                 </pre>
               </details>
@@ -351,14 +351,14 @@ export function EmptyState({
     >
       {Icon && (
         <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-full mb-4">
-          <Icon className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+          <Icon className="h-8 w-8 text-gray-300 dark:text-gray-500" />
         </div>
       )}
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
         {title}
       </h3>
       {description && (
-        <p className="text-gray-500 dark:text-gray-400 mb-4 max-w-sm">
+        <p className="text-gray-500 dark:text-gray-300 mb-4 max-w-sm">
           {description}
         </p>
       )}

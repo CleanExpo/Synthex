@@ -1,25 +1,20 @@
-import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
 import { patternScraper } from '@/lib/services/pattern-scraper';
 import { logger } from '@/lib/logger';
 
-// This route should be called by a cron job (e.g., Vercel Cron or external service)
-export async function GET(request: Request) {
-  try {
-    // Verify the request is from an authorized source
-    const headersList = await headers();
-    const authHeader = headersList.get('authorization');
-    
-    // In production, verify this is from your cron service
-    if (process.env.NODE_ENV === 'production') {
-      if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 401 }
-        );
-      }
-    }
+export const maxDuration = 300;
 
+// This route should be called by a cron job (e.g., Vercel Cron or external service)
+export async function GET(request: NextRequest) {
+  // Verify the request is from an authorized source
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
     // Scrape and analyze patterns from all platforms
     const patterns = await patternScraper.scrapeAllPlatforms();
 
@@ -32,7 +27,9 @@ export async function GET(request: Request) {
       stats: {
         patternsAnalyzed: patterns.length,
         avgViralityScore: insights.avgViralityScore,
-        topPlatform: (insights as { platformPerformance?: Array<{ platform: string }> }).platformPerformance?.[0]?.platform || 'N/A',
+        topPlatform:
+          (insights as { platformPerformance?: Array<{ platform: string }> })
+            .platformPerformance?.[0]?.platform || 'N/A',
       },
       timestamp: new Date().toISOString(),
     });
@@ -46,25 +43,22 @@ export async function GET(request: Request) {
 }
 
 // Manual trigger endpoint (for testing)
-export async function POST(request: Request) {
-  try {
-    // Check for API key in production
-    if (process.env.NODE_ENV === 'production') {
-      const body = await request.json();
-      if (body.apiKey !== process.env.ADMIN_API_KEY) {
-        return NextResponse.json(
-          { error: 'Invalid API key' },
-          { status: 401 }
-        );
-      }
-    }
+export async function POST(request: NextRequest) {
+  // Enforce CRON_SECRET on POST as well
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
 
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
     // Scrape and analyze patterns
     const patterns = await patternScraper.scrapeAllPlatforms();
-    
+
     // Get trending patterns
     const trending = await patternScraper.getTrendingPatterns(undefined, 5);
-    
+
     // Get insights
     const insights = await patternScraper.getInsights();
 

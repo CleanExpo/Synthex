@@ -40,7 +40,7 @@ const providerConfig = {
   email: {
     name: 'Email & Password',
     icon: Mail,
-    color: 'text-gray-400',
+    color: 'text-gray-300',
     description: 'Sign in with your email and password',
   },
   google: {

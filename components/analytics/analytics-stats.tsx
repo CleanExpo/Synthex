@@ -23,7 +23,7 @@ interface AnalyticsStatsProps {
 
 function GrowthIndicator({ change }: { change: number }) {
   if (change === 0) {
-    return <span className="text-xs text-slate-400">No change</span>;
+    return <span className="text-xs text-slate-300">No change</span>;
   }
   const isPositive = change > 0;
   return (
@@ -55,7 +55,7 @@ export function AnalyticsStats({ data, growth }: AnalyticsStatsProps) {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card variant="glass">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-400">
+          <CardTitle className="text-sm font-medium text-slate-300">
             Total Reach
           </CardTitle>
           <Eye className="h-4 w-4 text-orange-500" />
@@ -70,7 +70,7 @@ export function AnalyticsStats({ data, growth }: AnalyticsStatsProps) {
 
       <Card variant="glass">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-400">
+          <CardTitle className="text-sm font-medium text-slate-300">
             Total Engagement
           </CardTitle>
           <Heart className="h-4 w-4 text-orange-500" />
@@ -85,7 +85,7 @@ export function AnalyticsStats({ data, growth }: AnalyticsStatsProps) {
 
       <Card variant="glass">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-400">
+          <CardTitle className="text-sm font-medium text-slate-300">
             Engagement Rate
           </CardTitle>
           <Activity className="h-4 w-4 text-orange-500" />
@@ -112,7 +112,7 @@ export function AnalyticsStats({ data, growth }: AnalyticsStatsProps) {
 
       <Card variant="glass">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-400">
+          <CardTitle className="text-sm font-medium text-slate-300">
             Follower Growth
           </CardTitle>
           <Users className="h-4 w-4 text-orange-500" />

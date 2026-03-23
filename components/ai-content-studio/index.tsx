@@ -181,7 +181,7 @@ export function AIContentStudio() {
           <h2 className="text-3xl font-bold gradient-text">
             AI Content Studio
           </h2>
-          <p className="text-gray-400 mt-2">
+          <p className="text-gray-300 mt-2">
             Generate viral content with AI-powered creativity
           </p>
         </div>

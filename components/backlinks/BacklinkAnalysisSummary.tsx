@@ -135,7 +135,7 @@ export function BacklinkAnalysisSummary({
               .map(([type, count]) => (
                 <div
                   key={type}
-                  className="flex items-center gap-1 text-xs text-slate-400"
+                  className="flex items-center gap-1 text-xs text-slate-300"
                 >
                   <span
                     className={cn(

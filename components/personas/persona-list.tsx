@@ -41,7 +41,7 @@ export function PersonaList({
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Your Personas</CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-slate-300">
           Select a persona to view or train
         </CardDescription>
       </CardHeader>
@@ -59,7 +59,7 @@ export function PersonaList({
             <div className="flex items-start justify-between mb-2">
               <div>
                 <h3 className="font-semibold text-white">{persona.name}</h3>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-300 mt-1">
                   {persona.description}
                 </p>
               </div>

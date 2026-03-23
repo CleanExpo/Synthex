@@ -17,11 +17,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
         classNames: {
           toast:
             'group toast bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg group-[.toaster]:text-white group-[.toaster]:shadow-lg',
-          description: 'group-[.toast]:text-gray-400',
+          description: 'group-[.toast]:text-gray-300',
           actionButton:
             'group-[.toast]:bg-orange-500 group-[.toast]:text-white',
           cancelButton:
-            'group-[.toast]:bg-white/10 group-[.toast]:text-gray-400',
+            'group-[.toast]:bg-white/10 group-[.toast]:text-gray-300',
           error:
             'group-[.toaster]:bg-red-500/10 group-[.toaster]:border-red-500/20',
           success:

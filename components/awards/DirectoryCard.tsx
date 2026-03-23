@@ -60,7 +60,7 @@ function DABadge({ da }: { da: number }) {
         ? 'bg-blue-900/60 text-blue-300'
         : da >= 40
           ? 'bg-yellow-900/60 text-yellow-300'
-          : 'bg-slate-700/60 text-slate-400';
+          : 'bg-slate-700/60 text-slate-300';
 
   return (
     <span
@@ -103,7 +103,7 @@ export function DirectoryCard({
             {directoryName}
           </h3>
           {category && (
-            <p className="text-xs text-slate-400 truncate">{category}</p>
+            <p className="text-xs text-slate-300 truncate">{category}</p>
           )}
         </div>
 
@@ -113,14 +113,14 @@ export function DirectoryCard({
             href={displayUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white transition-colors"
             title={listingUrl ? 'View listing' : 'Open directory'}
           >
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
           <button
             onClick={() => onDelete(id)}
-            className="p-1.5 rounded-lg hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-red-500/20 text-slate-300 hover:text-red-400 transition-colors"
             title="Delete directory"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -152,7 +152,7 @@ export function DirectoryCard({
                   }}
                   className={cn(
                     'w-full text-left px-3 py-1.5 text-xs hover:bg-white/5',
-                    s === status ? 'text-white' : 'text-slate-400'
+                    s === status ? 'text-white' : 'text-slate-300'
                   )}
                 >
                   {STATUS_CONFIG[s].label}
@@ -171,7 +171,7 @@ export function DirectoryCard({
             'text-xs px-2 py-0.5 rounded-full',
             isFree
               ? 'bg-emerald-900/40 text-emerald-400'
-              : 'bg-slate-700/60 text-slate-400'
+              : 'bg-slate-700/60 text-slate-300'
           )}
         >
           {isFree ? 'Free' : 'Paid'}

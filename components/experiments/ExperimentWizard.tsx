@@ -193,7 +193,7 @@ export function ExperimentWizard({
                   ? 'bg-green-500 text-white'
                   : step === s
                     ? 'bg-orange-500 text-white'
-                    : 'bg-white/10 text-gray-400'
+                    : 'bg-white/10 text-gray-300'
               )}
             >
               {step > s ? <CheckCircle className="w-4 h-4" /> : s}
@@ -208,7 +208,7 @@ export function ExperimentWizard({
             )}
           </div>
         ))}
-        <span className="ml-2 text-xs text-gray-400">
+        <span className="ml-2 text-xs text-gray-300">
           {step === 1 && 'Select Type'}
           {step === 2 && 'Details'}
           {step === 3 && 'Values'}
@@ -222,7 +222,7 @@ export function ExperimentWizard({
             <h3 className="text-sm font-medium text-white mb-1">
               What element are you testing?
             </h3>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-300">
               Choose the SEO element you want to A/B test.
             </p>
           </div>
@@ -242,7 +242,7 @@ export function ExperimentWizard({
                 <type.icon className="w-5 h-5 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-white">{type.label}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-300 mt-0.5">
                     {type.description}
                   </p>
                 </div>
@@ -259,14 +259,14 @@ export function ExperimentWizard({
             <h3 className="text-sm font-medium text-white mb-1">
               Experiment details
             </h3>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-300">
               Describe what you are testing and why.
             </p>
           </div>
 
           <div className="space-y-3">
             <div>
-              <Label htmlFor="exp-name" className="text-xs text-gray-400">
+              <Label htmlFor="exp-name" className="text-xs text-gray-300">
                 Experiment name
               </Label>
               <Input
@@ -279,7 +279,7 @@ export function ExperimentWizard({
             </div>
 
             <div>
-              <Label htmlFor="exp-url" className="text-xs text-gray-400">
+              <Label htmlFor="exp-url" className="text-xs text-gray-300">
                 Target URL
               </Label>
               <Input
@@ -292,7 +292,7 @@ export function ExperimentWizard({
             </div>
 
             <div>
-              <Label htmlFor="exp-hypothesis" className="text-xs text-gray-400">
+              <Label htmlFor="exp-hypothesis" className="text-xs text-gray-300">
                 Hypothesis
               </Label>
               <Textarea
@@ -306,7 +306,7 @@ export function ExperimentWizard({
             </div>
 
             <div>
-              <Label className="text-xs text-gray-400">Metric to track</Label>
+              <Label className="text-xs text-gray-300">Metric to track</Label>
               <div className="flex flex-wrap gap-2 mt-2">
                 {METRICS.map(m => (
                   <button
@@ -316,7 +316,7 @@ export function ExperimentWizard({
                       'px-3 py-1.5 rounded-md text-xs font-medium transition-colors border',
                       metricToTrack === m.value
                         ? 'bg-orange-500/20 border-orange-500/50 text-orange-300'
-                        : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                        : 'bg-white/5 border-white/10 text-gray-300 hover:text-white'
                     )}
                   >
                     {m.label}
@@ -335,7 +335,7 @@ export function ExperimentWizard({
             <h3 className="text-sm font-medium text-white mb-1">
               Define the variants
             </h3>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-300">
               Enter the current value and the variant you want to test.
             </p>
             {experimentType && (
@@ -348,7 +348,7 @@ export function ExperimentWizard({
 
           <div className="space-y-3">
             <div>
-              <Label htmlFor="exp-original" className="text-xs text-gray-400">
+              <Label htmlFor="exp-original" className="text-xs text-gray-300">
                 Original (current value)
               </Label>
               <Textarea
@@ -362,7 +362,7 @@ export function ExperimentWizard({
             </div>
 
             <div>
-              <Label htmlFor="exp-variant" className="text-xs text-gray-400">
+              <Label htmlFor="exp-variant" className="text-xs text-gray-300">
                 Variant (what you want to test)
               </Label>
               <Textarea
@@ -398,7 +398,7 @@ export function ExperimentWizard({
               size="sm"
               onClick={onClose}
               disabled={submitting}
-              className="text-gray-400"
+              className="text-gray-300"
             >
               Cancel
             </Button>

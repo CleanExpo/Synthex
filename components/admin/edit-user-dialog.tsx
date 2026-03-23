@@ -54,7 +54,7 @@ export function EditUserDialog({
       <DialogContent className="sm:max-w-[425px] bg-gray-900 border-white/10">
         <DialogHeader>
           <DialogTitle className="text-white">Edit User</DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-gray-300">
             Update user details and permissions.
           </DialogDescription>
         </DialogHeader>
@@ -66,7 +66,7 @@ export function EditUserDialog({
                 id="edit-email"
                 value={user.email}
                 readOnly
-                className="bg-white/5 border-white/10 text-gray-400 cursor-not-allowed"
+                className="bg-white/5 border-white/10 text-gray-300 cursor-not-allowed"
               />
               <p className="text-xs text-gray-500">Email cannot be changed from the admin panel</p>
             </div>
@@ -107,13 +107,13 @@ export function EditUserDialog({
               </Select>
             </div>
             <div className="p-3 bg-white/5 rounded-lg">
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-300">
                 <strong>ID:</strong> {user.id}
               </p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-300">
                 <strong>Created:</strong> {new Date(user.createdAt).toLocaleDateString()}
               </p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-300">
                 <strong>Last Login:</strong> {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
               </p>
             </div>

@@ -36,7 +36,7 @@ export function OverallScore({ score }: OverallScoreProps) {
       </CardHeader>
       <CardContent>
         <Progress value={score} className={`h-3 ${getScoreBg(score)}`} />
-        <p className="text-sm text-gray-400 mt-2">{getScoreMessage(score)}</p>
+        <p className="text-sm text-gray-300 mt-2">{getScoreMessage(score)}</p>
       </CardContent>
     </Card>
   );

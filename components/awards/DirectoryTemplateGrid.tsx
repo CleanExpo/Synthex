@@ -50,7 +50,7 @@ export function DirectoryTemplateGrid({
             'text-xs px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5',
             aiOnly
               ? 'bg-orange-500/30 text-orange-300 border border-orange-500/40'
-              : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-transparent'
+              : 'bg-white/5 text-slate-300 hover:bg-white/10 border border-transparent'
           )}
         >
           <Sparkles className="h-3 w-3" />
@@ -62,7 +62,7 @@ export function DirectoryTemplateGrid({
             'text-xs px-3 py-1.5 rounded-lg font-medium transition-colors',
             freeOnly
               ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
-              : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-transparent'
+              : 'bg-white/5 text-slate-300 hover:bg-white/10 border border-transparent'
           )}
         >
           Free Only
@@ -100,7 +100,7 @@ export function DirectoryTemplateGrid({
                     <h4 className="text-sm font-medium text-white truncate">
                       {t.directoryName}
                     </h4>
-                    <p className="text-xs text-slate-400 truncate">
+                    <p className="text-xs text-slate-300 truncate">
                       {t.category}
                     </p>
                   </div>
@@ -118,7 +118,7 @@ export function DirectoryTemplateGrid({
                 </p>
 
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-400 font-mono">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300 font-mono">
                     DA {t.domainAuthority}
                   </span>
                   <span
@@ -126,7 +126,7 @@ export function DirectoryTemplateGrid({
                       'text-xs px-2 py-0.5 rounded-full',
                       t.isFree
                         ? 'bg-emerald-900/40 text-emerald-400'
-                        : 'bg-slate-700/60 text-slate-400'
+                        : 'bg-slate-700/60 text-slate-300'
                     )}
                   >
                     {t.isFree ? 'Free' : 'Paid'}

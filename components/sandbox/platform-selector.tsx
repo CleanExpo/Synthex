@@ -19,7 +19,7 @@ export function PlatformSelector({
 }: PlatformSelectorProps) {
   return (
     <div>
-      <Label className="text-gray-400">Platform</Label>
+      <Label className="text-gray-300">Platform</Label>
       <div className="grid grid-cols-5 gap-2 mt-2">
         {Object.entries(platformConfigs).map(([key, config]) => {
           const Icon = config.icon;

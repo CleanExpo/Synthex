@@ -47,7 +47,7 @@ export function ReportsList({
             <h3 className="text-lg font-medium text-white mb-2">
               No reports yet
             </h3>
-            <p className="text-gray-400 mb-4">
+            <p className="text-gray-300 mb-4">
               Generate your first report to see it here
             </p>
             <Button onClick={onNewReport}>
@@ -69,7 +69,7 @@ export function ReportsList({
                     </div>
                     <div>
                       <h3 className="font-medium text-white">{report.name}</h3>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-gray-300">
                         {new Date(report.createdAt).toLocaleDateString(
                           'en-US',
                           {

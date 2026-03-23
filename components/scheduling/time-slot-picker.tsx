@@ -121,7 +121,7 @@ function DayStrip({ days, selectedDay, onSelect }: DayStripProps) {
                 ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30 ring-1 ring-orange-500/20'
                 : isToday
                   ? 'bg-white/5 text-white border border-white/10'
-                  : 'bg-white/[0.02] text-slate-400 border border-white/[0.06] hover:bg-white/5 hover:text-slate-300'
+                  : 'bg-white/[0.02] text-slate-300 border border-white/[0.06] hover:bg-white/5 hover:text-slate-300'
             }`}
           >
             <span className="text-[10px] uppercase tracking-wide opacity-70">
@@ -259,7 +259,7 @@ function MinuteSelector({ selectedMinute, onSelect }: MinuteSelectorProps) {
           className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all border ${
             selectedMinute === minute
               ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
-              : 'bg-white/[0.03] text-slate-400 border-white/[0.06] hover:bg-white/5 hover:text-slate-300'
+              : 'bg-white/[0.03] text-slate-300 border-white/[0.06] hover:bg-white/5 hover:text-slate-300'
           }`}
         >
           :{minute.toString().padStart(2, '0')}
@@ -500,7 +500,7 @@ export function TimeSlotPicker({
           type="button"
           onClick={() => setWeekOffset(w => Math.max(0, w - 1))}
           disabled={weekOffset === 0}
-          className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="p-1 rounded text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -514,7 +514,7 @@ export function TimeSlotPicker({
         <button
           type="button"
           onClick={() => setWeekOffset(w => w + 1)}
-          className="p-1 rounded text-slate-400 hover:text-white transition-colors"
+          className="p-1 rounded text-slate-300 hover:text-white transition-colors"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
@@ -534,7 +534,7 @@ export function TimeSlotPicker({
       {/* Minute selector (shown after hour is selected) */}
       {selectedHour !== null && (
         <div className="space-y-1.5">
-          <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">
+          <span className="text-[10px] font-medium text-slate-300 uppercase tracking-wide">
             Minutes
           </span>
           <MinuteSelector

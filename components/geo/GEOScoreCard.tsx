@@ -117,7 +117,7 @@ export function GEOScoreCard({ score, loading }: GEOScoreCardProps) {
         {/* Overall Score */}
         <div className="text-center py-4">
           <div className="text-6xl font-bold text-white">{score.overall}</div>
-          <div className="text-sm text-gray-400 mt-1">out of 100</div>
+          <div className="text-sm text-gray-300 mt-1">out of 100</div>
         </div>
 
         {/* Dimension Breakdown */}

@@ -83,7 +83,7 @@ function PlatformCard({ platform, currency }: PlatformCardProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Globe className="w-4 h-4 text-gray-400" />
+          <Globe className="w-4 h-4 text-gray-300" />
           <span className="font-medium text-white">{platform.platform}</span>
         </div>
         <div
@@ -105,7 +105,7 @@ function PlatformCard({ platform, currency }: PlatformCardProps) {
       {/* Metrics */}
       <div className="space-y-3">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-400 flex items-center gap-1.5">
+          <span className="text-gray-300 flex items-center gap-1.5">
             <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
             Revenue
           </span>
@@ -114,7 +114,7 @@ function PlatformCard({ platform, currency }: PlatformCardProps) {
           </span>
         </div>
         <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-400 flex items-center gap-1.5">
+          <span className="text-gray-300 flex items-center gap-1.5">
             <DollarSign className="w-3.5 h-3.5 text-red-400" />
             Invested
           </span>
@@ -123,7 +123,7 @@ function PlatformCard({ platform, currency }: PlatformCardProps) {
           </span>
         </div>
         <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-400 flex items-center gap-1.5">
+          <span className="text-gray-300 flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-blue-400" />
             Hours
           </span>
@@ -132,7 +132,7 @@ function PlatformCard({ platform, currency }: PlatformCardProps) {
           </span>
         </div>
         <div className="pt-2 border-t border-white/5 flex items-center justify-between text-sm">
-          <span className="text-gray-400">ROI/Hour</span>
+          <span className="text-gray-300">ROI/Hour</span>
           <span className="text-orange-400 font-medium">
             {formatCurrency(platform.roiPerHour, currency)}/hr
           </span>
@@ -161,7 +161,7 @@ export function PlatformROICards({
         )}
       >
         <Globe className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-        <p className="text-gray-400">No platform data available</p>
+        <p className="text-gray-300">No platform data available</p>
         <p className="text-sm text-gray-500 mt-1">
           Track investments by platform to see ROI breakdown
         </p>

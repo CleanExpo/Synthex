@@ -108,7 +108,7 @@ function MetricCard({
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm text-gray-400">{label}</p>
+            <p className="text-sm text-gray-300">{label}</p>
             <p className="text-2xl font-bold text-white mt-1">{value}</p>
             {subtext && <p className="text-xs text-gray-500 mt-1">{subtext}</p>}
           </div>
@@ -150,7 +150,7 @@ function RankChange({
 function ConnectCTA({ platform, label }: { platform: string; label: string }) {
   return (
     <Card className="bg-surface-base/80 border border-orange-500/10">
-      <CardContent className="p-12 text-center text-gray-400">
+      <CardContent className="p-12 text-center text-gray-300">
         <Globe className="h-10 w-10 mx-auto mb-3 opacity-30" />
         <p>Connect {label} to see real data</p>
         <Button
@@ -344,7 +344,7 @@ export default function LocalPage() {
             <MapPin className="h-7 w-7 text-orange-400" />
             Local SEO Dashboard
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="text-gray-300 mt-1">
             Manage your Google Business Profile, track rankings, and grow local
             visibility
           </p>
@@ -435,7 +435,7 @@ export default function LocalPage() {
                           rating={Math.round(averageRating)}
                           size="md"
                         />
-                        <p className="text-sm text-gray-400 mt-1">
+                        <p className="text-sm text-gray-300 mt-1">
                           Based on {totalReviews} review
                           {totalReviews !== 1 ? 's' : ''}
                         </p>
@@ -507,7 +507,7 @@ export default function LocalPage() {
               <>
                 {/* Filter bar */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <div className="flex items-center gap-1.5 text-sm text-gray-400 mr-2">
+                  <div className="flex items-center gap-1.5 text-sm text-gray-300 mr-2">
                     <Filter className="h-4 w-4" />
                     Filter:
                   </div>
@@ -520,7 +520,7 @@ export default function LocalPage() {
                       className={`text-sm ${
                         ratingFilter === rating
                           ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
-                          : 'text-gray-400 hover:text-white'
+                          : 'text-gray-300 hover:text-white'
                       }`}
                     >
                       {rating === null ? 'All' : `${rating}\u2605`}
@@ -672,7 +672,7 @@ export default function LocalPage() {
                               <p className="text-xs text-orange-400 mb-1">
                                 Your reply:
                               </p>
-                              <p className="text-sm text-gray-400">
+                              <p className="text-sm text-gray-300">
                                 {review.replyText}
                               </p>
                             </div>
@@ -693,7 +693,7 @@ export default function LocalPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="text-gray-400"
+                                  className="text-gray-300"
                                   onClick={() => {
                                     setReplyingTo(null);
                                     setReplyText('');
@@ -718,7 +718,7 @@ export default function LocalPage() {
 
                     {reviews.length === 0 && (
                       <Card className="bg-surface-base/80 border border-orange-500/10">
-                        <CardContent className="p-12 text-center text-gray-400">
+                        <CardContent className="p-12 text-center text-gray-300">
                           <Star className="h-10 w-10 mx-auto mb-3 opacity-30" />
                           <p>
                             {ratingFilter
@@ -747,7 +747,7 @@ export default function LocalPage() {
               </div>
             ) : viewsChartData.length === 0 ? (
               <Card className="bg-surface-base/80 border border-orange-500/10">
-                <CardContent className="p-12 text-center text-gray-400">
+                <CardContent className="p-12 text-center text-gray-300">
                   <TrendingUp className="h-10 w-10 mx-auto mb-3 opacity-30" />
                   <p>
                     No insights data yet — check back once your listing has
@@ -862,15 +862,15 @@ export default function LocalPage() {
                       </div>
                       {/* Legend */}
                       <div className="flex items-center gap-6 mt-4 justify-center">
-                        <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <div className="flex items-center gap-2 text-sm text-gray-300">
                           <div className="w-3 h-3 rounded-sm bg-[#ffdcc2]" />
                           Website Clicks
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <div className="flex items-center gap-2 text-sm text-gray-300">
                           <div className="w-3 h-3 rounded-sm bg-emerald-400" />
                           Phone Calls
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <div className="flex items-center gap-2 text-sm text-gray-300">
                           <div className="w-3 h-3 rounded-sm bg-orange-400" />
                           Directions
                         </div>
@@ -907,16 +907,16 @@ export default function LocalPage() {
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-white/10">
-                            <th className="text-left py-3 px-4 text-gray-400 font-medium">
+                            <th className="text-left py-3 px-4 text-gray-300 font-medium">
                               Keyword
                             </th>
-                            <th className="text-center py-3 px-4 text-gray-400 font-medium">
+                            <th className="text-center py-3 px-4 text-gray-300 font-medium">
                               Position
                             </th>
-                            <th className="text-center py-3 px-4 text-gray-400 font-medium">
+                            <th className="text-center py-3 px-4 text-gray-300 font-medium">
                               Clicks
                             </th>
-                            <th className="text-right py-3 px-4 text-gray-400 font-medium">
+                            <th className="text-right py-3 px-4 text-gray-300 font-medium">
                               Impressions
                             </th>
                           </tr>
@@ -943,7 +943,7 @@ export default function LocalPage() {
                                         ? 'bg-emerald-500/20 text-emerald-400'
                                         : row.rank <= 10
                                           ? 'bg-orange-500/20 text-orange-400'
-                                          : 'bg-gray-500/20 text-gray-400'
+                                          : 'bg-gray-500/20 text-gray-300'
                                     }
                                   >
                                     #{row.rank}
@@ -992,7 +992,7 @@ export default function LocalPage() {
                   </div>
                 ) : posts.length === 0 ? (
                   <Card className="bg-surface-base/80 border border-orange-500/10">
-                    <CardContent className="p-12 text-center text-gray-400">
+                    <CardContent className="p-12 text-center text-gray-300">
                       <Calendar className="h-10 w-10 mx-auto mb-3 opacity-30" />
                       <p>No GBP posts yet</p>
                       <p className="text-sm mt-1">
@@ -1047,7 +1047,7 @@ export default function LocalPage() {
                 <h2 className="text-lg font-semibold text-white">
                   Local Case Studies
                 </h2>
-                <p className="text-sm text-gray-400 mt-0.5">
+                <p className="text-sm text-gray-300 mt-0.5">
                   Hyper-local case studies with NAP consistency and location
                   schema
                 </p>
@@ -1074,7 +1074,7 @@ export default function LocalPage() {
               </div>
             ) : caseStudies.length === 0 ? (
               <Card className="bg-surface-base/80 border border-orange-500/10">
-                <CardContent className="p-12 text-center text-gray-400">
+                <CardContent className="p-12 text-center text-gray-300">
                   <Map className="h-12 w-12 mx-auto mb-3 opacity-30" />
                   <p>No case studies yet</p>
                   <p className="text-sm mt-1">
@@ -1098,19 +1098,19 @@ export default function LocalPage() {
                           className={
                             cs.publishedAt
                               ? 'bg-emerald-500/20 text-emerald-400'
-                              : 'bg-gray-500/20 text-gray-400'
+                              : 'bg-gray-500/20 text-gray-300'
                           }
                         >
                           {cs.publishedAt ? 'Published' : 'Draft'}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
+                      <div className="flex items-center gap-2 text-sm text-gray-300 mb-3">
                         <MapPin className="h-4 w-4 text-orange-400" />
                         <span>
                           {cs.suburb}, {cs.city}, {cs.state} {cs.postcode}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-400 line-clamp-2">
+                      <p className="text-sm text-gray-300 line-clamp-2">
                         {cs.summary}
                       </p>
                       <div className="flex justify-end mt-3">

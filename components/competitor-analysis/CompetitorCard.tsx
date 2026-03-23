@@ -44,7 +44,7 @@ const getPlatformIcon = (platform: string) => {
 const getChangeIndicator = (change: number) => {
   if (change > 0) return <ArrowUp className="h-3 w-3 text-green-400" />;
   if (change < 0) return <ArrowDown className="h-3 w-3 text-red-400" />;
-  return <Minus className="h-3 w-3 text-gray-400" />;
+  return <Minus className="h-3 w-3 text-gray-300" />;
 };
 
 export function CompetitorCard({
@@ -74,7 +74,7 @@ export function CompetitorCard({
                   <Crown className="h-4 w-4 text-yellow-400" />
                 )}
               </h3>
-              <p className="text-xs text-gray-400">{competitor.domain}</p>
+              <p className="text-xs text-gray-300">{competitor.domain}</p>
             </div>
             {isComparing && (
               <input
@@ -90,13 +90,13 @@ export function CompetitorCard({
           {/* Key Metrics */}
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div>
-              <p className="text-xs text-gray-400">Followers</p>
+              <p className="text-xs text-gray-300">Followers</p>
               <p className="text-lg font-bold text-white">
                 {(competitor.metrics.followers.total / 1000000).toFixed(1)}M
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-400">Engagement</p>
+              <p className="text-xs text-gray-300">Engagement</p>
               <p className="text-lg font-bold text-white">
                 {competitor.metrics.engagement.total.toFixed(1)}%
               </p>
@@ -106,7 +106,7 @@ export function CompetitorCard({
           {/* Secondary Metrics */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-400">Growth Rate</span>
+              <span className="text-xs text-gray-300">Growth Rate</span>
               <div className="flex items-center gap-1">
                 {getChangeIndicator(competitor.metrics.growthRate)}
                 <span className="text-xs text-white">
@@ -116,7 +116,7 @@ export function CompetitorCard({
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-400">Share of Voice</span>
+              <span className="text-xs text-gray-300">Share of Voice</span>
               <Progress
                 value={competitor.metrics.shareOfVoice}
                 className="w-20 h-2"
@@ -124,7 +124,7 @@ export function CompetitorCard({
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-400">Sentiment</span>
+              <span className="text-xs text-gray-300">Sentiment</span>
               <Badge
                 variant={
                   competitor.metrics.sentimentScore > 70
@@ -154,7 +154,7 @@ export function CompetitorCard({
                     className="p-1.5 bg-white/5 rounded"
                     title={platform}
                   >
-                    <Icon className="h-3 w-3 text-gray-400" />
+                    <Icon className="h-3 w-3 text-gray-300" />
                   </div>
                 );
               })}

@@ -36,7 +36,7 @@ const sizeMap = {
 };
 
 const colorMap = {
-  default: 'text-slate-400',
+  default: 'text-slate-300',
   primary: 'text-orange-500',
   secondary: 'text-orange-500',
   white: 'text-white',
@@ -257,7 +257,7 @@ export function FullPageLoading({
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-slate-950 z-50">
       <Spinner size="xl" variant="gradient" {...spinner} />
-      {text && <p className="mt-4 text-slate-400">{text}</p>}
+      {text && <p className="mt-4 text-slate-300">{text}</p>}
     </div>
   );
 }

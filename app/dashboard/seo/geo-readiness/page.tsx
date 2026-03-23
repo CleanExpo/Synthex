@@ -185,7 +185,7 @@ function ReadinessCheckTab({
               <Globe className="w-5 h-5 text-orange-400" />
               Check GEO Readiness
             </h2>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-gray-300 mt-1">
               Paste your content to assess its readiness for AI search engines
             </p>
           </div>
@@ -206,7 +206,7 @@ function ReadinessCheckTab({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-1">
+                <label className="block text-sm text-gray-300 mb-1">
                   Content URL (optional)
                 </label>
                 <Input
@@ -218,7 +218,7 @@ function ReadinessCheckTab({
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">
+                <label className="block text-sm text-gray-300 mb-1">
                   Target Platform
                 </label>
                 <select
@@ -305,7 +305,7 @@ function ReadinessResults({ result }: { result: GeoReadinessResult }) {
 
         {/* Dimension Scores */}
         <div>
-          <h4 className="text-sm font-medium text-gray-400 mb-3">
+          <h4 className="text-sm font-medium text-gray-300 mb-3">
             Dimension Scores
           </h4>
           <div className="space-y-3">
@@ -337,7 +337,7 @@ function ReadinessResults({ result }: { result: GeoReadinessResult }) {
 
         {/* Platform Readiness */}
         <div>
-          <h4 className="text-sm font-medium text-gray-400 mb-3">
+          <h4 className="text-sm font-medium text-gray-300 mb-3">
             Platform Readiness
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -373,7 +373,7 @@ function ReadinessResults({ result }: { result: GeoReadinessResult }) {
 
         {/* Readiness Summaries */}
         <div>
-          <h4 className="text-sm font-medium text-gray-400 mb-3">
+          <h4 className="text-sm font-medium text-gray-300 mb-3">
             Assessment Summary
           </h4>
           <div className="space-y-2">
@@ -401,7 +401,7 @@ function PassagesTab({ result }: { result: GeoReadinessResult | null }) {
             <h3 className="text-lg font-medium text-white mb-2">
               No passages yet
             </h3>
-            <p className="text-gray-400">
+            <p className="text-gray-300">
               Run a readiness check to see citable passages extracted from your
               content.
             </p>
@@ -424,7 +424,7 @@ function PassagesTab({ result }: { result: GeoReadinessResult | null }) {
               <FileText className="w-5 h-5 text-orange-400" />
               Citable Passages
             </h2>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-gray-300 mt-1">
               {passages.length} passage{passages.length !== 1 ? 's' : ''} found
             </p>
           </div>
@@ -435,7 +435,7 @@ function PassagesTab({ result }: { result: GeoReadinessResult | null }) {
             className={`text-xs ${
               showOptimalOnly
                 ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
-                : 'border-white/10 text-gray-400 hover:bg-white/5'
+                : 'border-white/10 text-gray-300 hover:bg-white/5'
             }`}
           >
             {showOptimalOnly ? 'Show All' : 'Optimal Only'}
@@ -457,7 +457,7 @@ function PassagesTab({ result }: { result: GeoReadinessResult | null }) {
                 >
                   Score: {passage.score}
                 </span>
-                <span className="px-2 py-1 text-xs bg-white/5 text-gray-400 rounded">
+                <span className="px-2 py-1 text-xs bg-white/5 text-gray-300 rounded">
                   {passage.wordCount} words
                 </span>
                 {passage.isOptimalLength && (
@@ -525,7 +525,7 @@ function TrendsTab({
             <h3 className="text-lg font-medium text-white mb-2">
               No trend data yet
             </h3>
-            <p className="text-gray-400">
+            <p className="text-gray-300">
               Run GEO readiness analyses to start tracking score trends over
               time.
             </p>
@@ -565,7 +565,7 @@ function TrendsTab({
             <TrendingUp className="w-5 h-5 text-orange-400" />
             Score Trends
           </h2>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-gray-300 mt-1">
             Track your GEO readiness scores over the last 30 days
           </p>
         </div>
@@ -684,7 +684,7 @@ function HistoryTab({
             <h3 className="text-lg font-medium text-white mb-2">
               No analysis history
             </h3>
-            <p className="text-gray-400">
+            <p className="text-gray-300">
               Run your first GEO readiness analysis to see results tracked here.
             </p>
           </div>
@@ -701,7 +701,7 @@ function HistoryTab({
             <Activity className="w-5 h-5 text-orange-400" />
             Analysis History
           </h2>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-gray-300 mt-1">
             Past GEO readiness analyses and their results
           </p>
         </div>
@@ -827,7 +827,7 @@ export default function GeoReadinessPage() {
         <div>
           <Link
             href="/dashboard/seo"
-            className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
+            className="text-sm text-gray-300 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to SEO Tools
@@ -836,7 +836,7 @@ export default function GeoReadinessPage() {
             <Globe className="w-8 h-8 text-orange-400" />
             GEO Readiness
           </h1>
-          <p className="text-gray-400 mt-2">
+          <p className="text-gray-300 mt-2">
             Assess content readiness for AI search engines and track
             optimization progress
           </p>
@@ -858,7 +858,7 @@ export default function GeoReadinessPage() {
               className={`px-4 py-2 ${
                 activeTab === tab.id
                   ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  : 'text-gray-300 hover:text-white hover:bg-white/5'
               }`}
             >
               {tab.label}

@@ -89,7 +89,7 @@ export function ConnectDialog({
         <div className="space-y-4 py-2">
           {oauthSupported ? (
             <div className="space-y-3">
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-300">
                 Click the button below to authorize access via {providerName}
                 &apos;s secure OAuth flow.
               </p>

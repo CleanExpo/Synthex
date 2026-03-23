@@ -72,7 +72,7 @@ function SectionCard({
       className={`rounded-2xl bg-white/[0.02] border border-white/[0.07] p-5 ${className}`}
     >
       {title && (
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+        <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">
           {title}
         </h2>
       )}
@@ -133,7 +133,7 @@ export default function CitationDashboardPage() {
               <h1 className="text-2xl font-bold text-white">
                 Citation Performance Command Centre
               </h1>
-              <p className="text-sm text-gray-400 mt-0.5">
+              <p className="text-sm text-gray-300 mt-0.5">
                 Unified GEO + AI Citation Intelligence — all v5.0 modules in one
                 view
               </p>

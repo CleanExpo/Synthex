@@ -310,7 +310,7 @@ export default function VideoProductionPage() {
                     {result.error ? (
                       <p className="text-red-400/80 text-sm">{result.error}</p>
                     ) : (
-                      <p className="text-gray-400 text-sm">
+                      <p className="text-gray-300 text-sm">
                         {result.processedVideoPath || 'Processing complete'}
                       </p>
                     )}
@@ -338,7 +338,7 @@ export default function VideoProductionPage() {
       {results.length === 0 && !loading && (
         <div className="text-center py-12 rounded-xl bg-white/[0.02] border border-white/5">
           <Video className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-          <h3 className="text-gray-400 font-medium mb-1">No productions yet</h3>
+          <h3 className="text-gray-300 font-medium mb-1">No productions yet</h3>
           <p className="text-gray-500 text-sm max-w-md mx-auto">
             Select a workflow above to produce a marketing video. The pipeline
             captures real dashboard interactions, processes the video, and

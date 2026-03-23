@@ -143,7 +143,7 @@ export default function AuthorityPage() {
             <Shield className="h-7 w-7 text-orange-400" />
             Authority Engine
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="text-gray-300 mt-1">
             Validate claims, generate citations, and connect authoritative
             sources
           </p>
@@ -248,7 +248,7 @@ export default function AuthorityPage() {
                                     ? 'bg-red-500/20 text-red-400'
                                     : rec.priority === 'medium'
                                       ? 'bg-orange-500/20 text-orange-400'
-                                      : 'bg-slate-500/20 text-slate-400'
+                                      : 'bg-slate-500/20 text-slate-300'
                                 }`}
                               >
                                 {rec.priority}
@@ -260,7 +260,7 @@ export default function AuthorityPage() {
                             <p className="text-sm text-slate-300 line-clamp-2 mb-1 italic">
                               &quot;{rec.claim}&quot;
                             </p>
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-slate-300">
                               {rec.suggestion}
                             </p>
                           </div>
@@ -297,7 +297,7 @@ export default function AuthorityPage() {
                   <CardContent className="p-4">
                     <Shield className="h-8 w-8 text-orange-400 mb-3" />
                     <h3 className="text-white font-medium text-sm">{title}</h3>
-                    <p className="text-gray-400 text-xs mt-1">{desc}</p>
+                    <p className="text-gray-300 text-xs mt-1">{desc}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -320,7 +320,7 @@ export default function AuthorityPage() {
             </Card>
           ) : (
             <Card className="bg-surface-base/80 border border-orange-500/10">
-              <CardContent className="p-12 text-center text-gray-400">
+              <CardContent className="p-12 text-center text-gray-300">
                 <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 <p>No citations yet</p>
                 <p className="text-sm mt-1">
@@ -343,7 +343,7 @@ export default function AuthorityPage() {
               {connectors.length > 0 ? (
                 <AuthoritySourcePanel connectors={connectors} />
               ) : (
-                <p className="text-sm text-slate-400 text-center py-8">
+                <p className="text-sm text-slate-300 text-center py-8">
                   No source connectors configured. Contact support to enable
                   connectors.
                 </p>
@@ -370,7 +370,7 @@ export default function AuthorityPage() {
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       designAuditMode === 'url'
                         ? 'bg-orange-600 text-white'
-                        : 'bg-white/5 text-slate-400 hover:text-white'
+                        : 'bg-white/5 text-slate-300 hover:text-white'
                     }`}
                   >
                     URL
@@ -380,7 +380,7 @@ export default function AuthorityPage() {
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       designAuditMode === 'content'
                         ? 'bg-orange-600 text-white'
-                        : 'bg-white/5 text-slate-400 hover:text-white'
+                        : 'bg-white/5 text-slate-300 hover:text-white'
                     }`}
                   >
                     Paste Content
@@ -426,7 +426,7 @@ export default function AuthorityPage() {
                 <Card className="bg-white/5 border-orange-500/10 backdrop-blur-sm">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-slate-400">
+                      <p className="text-sm text-slate-300">
                         Overall Design Score
                       </p>
                       <p className="text-3xl font-bold text-white mt-0.5">
@@ -482,7 +482,7 @@ export default function AuthorityPage() {
                                     ? 'bg-red-500/20 text-red-400'
                                     : rec.priority === 'medium'
                                       ? 'bg-orange-500/20 text-orange-400'
-                                      : 'bg-slate-500/20 text-slate-400'
+                                      : 'bg-slate-500/20 text-slate-300'
                                 }`}
                               >
                                 {rec.priority}
@@ -494,7 +494,7 @@ export default function AuthorityPage() {
                             <p className="text-sm font-medium text-white mb-1">
                               {rec.title}
                             </p>
-                            <p className="text-xs text-slate-400 mb-1">
+                            <p className="text-xs text-slate-300 mb-1">
                               {rec.description}
                             </p>
                             <p className="text-xs text-emerald-400">

@@ -169,7 +169,7 @@ export function MediaAttacher({
     <div className="space-y-3">
       {/* File count */}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-400 flex items-center gap-1.5">
+        <span className="text-xs text-slate-300 flex items-center gap-1.5">
           <ImageIcon className="h-3.5 w-3.5" />
           Media
         </span>
@@ -251,8 +251,8 @@ export function MediaAttacher({
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
         >
-          <Upload className="h-5 w-5 text-slate-400" />
-          <span className="text-xs text-slate-400">
+          <Upload className="h-5 w-5 text-slate-300" />
+          <span className="text-xs text-slate-300">
             Drop files here or click to browse
           </span>
           <span className="text-[10px] text-slate-500">

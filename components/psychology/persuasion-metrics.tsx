@@ -28,7 +28,7 @@ export function PersuasionMetricsCard({ metrics }: PersuasionMetricsProps) {
         <div className="grid grid-cols-2 gap-4">
           {Object.entries(metrics).map(([key, value]) => (
             <div key={key} className="p-3 bg-white/5 rounded-lg">
-              <p className="text-sm text-gray-400 capitalize mb-1">{key}</p>
+              <p className="text-sm text-gray-300 capitalize mb-1">{key}</p>
               <div className="flex items-center gap-2">
                 <Progress value={value} className="h-2 flex-1" />
                 <span className={`text-sm font-bold ${getScoreColor(value)}`}>

@@ -66,7 +66,7 @@ export default function GEOOptimiserPage() {
       <div className="mb-4 flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-bold text-white">GEO Optimiser</h1>
-          <p className="text-slate-400 text-sm mt-0.5">
+          <p className="text-slate-300 text-sm mt-0.5">
             Real-time scoring against 9 Princeton GEO tactics
           </p>
         </div>
@@ -77,7 +77,7 @@ export default function GEOOptimiserPage() {
             >
               {compositeScore}
             </div>
-            <div className="text-xs text-slate-400 mt-0.5">Composite Score</div>
+            <div className="text-xs text-slate-300 mt-0.5">Composite Score</div>
           </div>
         )}
       </div>

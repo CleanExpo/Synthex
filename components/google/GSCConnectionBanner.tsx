@@ -31,7 +31,7 @@ export function GSCConnectionBanner({ onConnect }: GSCConnectionBannerProps) {
           <h3 className="text-lg font-semibold text-white mb-1">
             Connect Google Search Console
           </h3>
-          <p className="text-sm text-gray-400 mb-4">
+          <p className="text-sm text-gray-300 mb-4">
             Connect your Google account to access per-site search analytics, URL
             indexing, coverage reports, and sitemap management directly from
             Synthex.

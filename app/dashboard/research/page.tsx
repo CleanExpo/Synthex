@@ -374,7 +374,7 @@ export default function ResearchPage() {
   };
 
   const statusColors: Record<string, string> = {
-    draft: 'bg-gray-500/20 text-gray-400',
+    draft: 'bg-gray-500/20 text-gray-300',
     review: 'bg-orange-500/20 text-orange-400',
     published: 'bg-emerald-500/20 text-emerald-400',
   };
@@ -401,7 +401,7 @@ export default function ResearchPage() {
                 <Database className="h-7 w-7 text-orange-400" />
                 Research Reports
               </h1>
-              <p className="text-gray-400 mt-1">
+              <p className="text-gray-300 mt-1">
                 Create first-party data citation magnets for AI search engines
               </p>
             </div>
@@ -470,7 +470,7 @@ export default function ResearchPage() {
             </div>
           ) : reports.length === 0 ? (
             <Card className="bg-surface-base/80 border border-orange-500/10">
-              <CardContent className="p-12 text-center text-gray-400">
+              <CardContent className="p-12 text-center text-gray-300">
                 <Database className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 <p>No research reports yet</p>
                 <p className="text-sm mt-1">

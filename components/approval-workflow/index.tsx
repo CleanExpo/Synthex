@@ -247,7 +247,7 @@ export function ApprovalWorkflow() {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">Approval Workflow</h2>
-            <p className="text-gray-400">Manage content approvals</p>
+            <p className="text-gray-300">Manage content approvals</p>
           </div>
         </div>
 
@@ -282,8 +282,8 @@ export function ApprovalWorkflow() {
       {/* Empty State */}
       {filteredRequests.length === 0 && (
         <Card variant="glass" className="p-12 text-center">
-          <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-400">
+          <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-300">
             No {filter !== 'all' ? filter : ''} requests
           </p>
         </Card>

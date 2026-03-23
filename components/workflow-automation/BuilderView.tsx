@@ -206,8 +206,8 @@ export function BuilderView({
               {nodes.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
-                    <GitBranch className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-400">Start by adding a trigger</p>
+                    <GitBranch className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-300">Start by adding a trigger</p>
                     <p className="text-sm text-gray-500">
                       Drag elements from the sidebar
                     </p>

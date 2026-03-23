@@ -348,7 +348,7 @@ export function WorkflowAutomation() {
             <h2 className="text-2xl font-bold text-white">
               Workflow Automation
             </h2>
-            <p className="text-gray-400">Build powerful automation workflows</p>
+            <p className="text-gray-300">Build powerful automation workflows</p>
           </div>
         </div>
 

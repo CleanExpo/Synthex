@@ -29,7 +29,7 @@ const SOURCE_COLORS: Record<RevenueSource, { bg: string; text: string }> = {
   ads: { bg: 'bg-orange-500/10', text: 'text-orange-400' },
   tips: { bg: 'bg-orange-500/10', text: 'text-orange-400' },
   merchandise: { bg: 'bg-orange-500/10', text: 'text-orange-400' },
-  other: { bg: 'bg-gray-500/10', text: 'text-gray-400' },
+  other: { bg: 'bg-gray-500/10', text: 'text-gray-300' },
 };
 
 const SOURCE_LABELS: Record<RevenueSource, string> = {
@@ -180,7 +180,7 @@ export function RevenueEntryList({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-gray-400 hover:text-white"
+                    className="h-8 w-8 text-gray-300 hover:text-white"
                     aria-label="Edit revenue entry"
                     onClick={() => onEdit(entry)}
                   >
@@ -193,7 +193,7 @@ export function RevenueEntryList({
                       'h-8 w-8',
                       isConfirmingDelete
                         ? 'text-red-400 bg-red-500/10'
-                        : 'text-gray-400 hover:text-red-400'
+                        : 'text-gray-300 hover:text-red-400'
                     )}
                     aria-label={
                       isConfirmingDelete
@@ -207,7 +207,7 @@ export function RevenueEntryList({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-gray-400 hover:text-white md:hidden"
+                    className="h-8 w-8 text-gray-300 hover:text-white md:hidden"
                     aria-label={
                       isExpanded ? 'Collapse details' : 'Expand details'
                     }

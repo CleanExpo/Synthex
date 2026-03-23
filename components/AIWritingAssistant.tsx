@@ -243,14 +243,14 @@ export function AIWritingAssistant({
               <div className="p-4 bg-white/5 rounded-lg space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-400">Use Emojis</span>
+                    <span className="text-sm text-gray-300">Use Emojis</span>
                     <Switch
                       checked={useEmojis}
                       onCheckedChange={setUseEmojis}
                     />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-400">Use Hashtags</span>
+                    <span className="text-sm text-gray-300">Use Hashtags</span>
                     <Switch
                       checked={useHashtags}
                       onCheckedChange={setUseHashtags}
@@ -259,7 +259,7 @@ export function AIWritingAssistant({
                 </div>
 
                 <div>
-                  <label className="text-sm text-gray-400">
+                  <label className="text-sm text-gray-300">
                     Target Audience
                   </label>
                   <Select value={audience} onValueChange={setAudience}>
@@ -296,7 +296,7 @@ export function AIWritingAssistant({
           {/* Tone Selection */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-gray-400 mb-2 block">Tone</label>
+              <label className="text-sm text-gray-300 mb-2 block">Tone</label>
               <Select
                 value={tone}
                 onValueChange={v => setTone(v as WritingTone)}
@@ -318,7 +318,7 @@ export function AIWritingAssistant({
             </div>
 
             <div>
-              <label className="text-sm text-gray-400 mb-2 block">Length</label>
+              <label className="text-sm text-gray-300 mb-2 block">Length</label>
               <Select
                 value={length}
                 onValueChange={v => setLength(v as ContentLength)}
@@ -331,7 +331,7 @@ export function AIWritingAssistant({
                     <SelectItem key={l.value} value={l.value}>
                       <div className="flex items-center justify-between w-full">
                         <span>{l.label}</span>
-                        <span className="text-xs text-gray-400">{l.words}</span>
+                        <span className="text-xs text-gray-300">{l.words}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -395,7 +395,7 @@ export function AIWritingAssistant({
 
               {/* Content Metrics */}
               {response && (
-                <div className="flex items-center gap-4 mt-3 text-xs text-gray-400">
+                <div className="flex items-center gap-4 mt-3 text-xs text-gray-300">
                   <span>Score: {response.score}/100</span>
                   <span>Readability: {response.readability}/100</span>
                   <span>Sentiment: {response.sentiment}</span>
@@ -514,7 +514,7 @@ function CompactAIAssistant({
   return (
     <div className="flex items-center gap-2 p-2 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg">
       <Wand2 className="h-4 w-4 text-orange-400" />
-      <span className="text-sm text-gray-400">AI Assistant</span>
+      <span className="text-sm text-gray-300">AI Assistant</span>
       <Button
         size="sm"
         variant="ghost"

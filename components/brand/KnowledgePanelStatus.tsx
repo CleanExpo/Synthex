@@ -72,7 +72,7 @@ export function KnowledgePanelStatus({
       {/* No API Key state */}
       {!hasApiKey && (
         <div className="bg-gray-500/10 border border-gray-500/20 rounded-lg p-4">
-          <p className="text-xs text-gray-400 flex items-start gap-2">
+          <p className="text-xs text-gray-300 flex items-start gap-2">
             <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-gray-500" />
             Set{' '}
             <code className="font-mono text-gray-300">
@@ -88,7 +88,7 @@ export function KnowledgePanelStatus({
       {hasApiKey && !result && !loading && (
         <div className="py-6 text-center">
           <Info className="w-7 h-7 text-gray-500 mx-auto mb-2" />
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-300">
             Click "Check Knowledge Graph" to look up your entity in Google's
             Knowledge Graph.
           </p>
@@ -99,7 +99,7 @@ export function KnowledgePanelStatus({
       {loading && (
         <div className="py-6 text-center">
           <Loader2 className="w-7 h-7 text-gray-500 mx-auto mb-2 animate-spin" />
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-300">
             Querying Google Knowledge Graph…
           </p>
         </div>
@@ -138,7 +138,7 @@ export function KnowledgePanelStatus({
                 </div>
               )}
               {result.description && (
-                <p className="text-xs text-gray-400 line-clamp-2">
+                <p className="text-xs text-gray-300 line-clamp-2">
                   {result.description}
                 </p>
               )}
@@ -165,11 +165,11 @@ export function KnowledgePanelStatus({
               <p className="text-xs font-medium text-gray-300">
                 Not found in Knowledge Graph
               </p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-300">
                 To be eligible for a Knowledge Panel, your entity typically
                 needs:
               </p>
-              <ul className="space-y-1 text-xs text-gray-400">
+              <ul className="space-y-1 text-xs text-gray-300">
                 <li className="flex items-start gap-2">
                   <span className="text-gray-500">→</span>A Wikidata entry with
                   3+ properties

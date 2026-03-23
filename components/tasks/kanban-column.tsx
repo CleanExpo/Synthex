@@ -34,9 +34,9 @@ export function KanbanColumn({
     <div className="flex flex-col min-w-[320px] max-w-[320px]">
       <div className="flex items-center justify-between mb-4 px-1">
         <div className="flex items-center gap-2">
-          <Icon className="w-4 h-4 text-slate-400" />
+          <Icon className="w-4 h-4 text-slate-300" />
           <h3 className="font-semibold text-white">{config.label}</h3>
-          <Badge variant="outline" className="ml-1 bg-white/5 text-slate-400 border-white/10">
+          <Badge variant="outline" className="ml-1 bg-white/5 text-slate-300 border-white/10">
             {tasks.length}
           </Badge>
         </div>

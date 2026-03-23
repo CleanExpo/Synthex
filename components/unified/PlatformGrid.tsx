@@ -72,7 +72,7 @@ export function PlatformGrid({
           <Link2 className="w-8 h-8 text-gray-500" />
         </div>
         <h3 className="text-lg font-semibold text-white mb-2">No Platforms Available</h3>
-        <p className="text-gray-400 text-sm max-w-md mx-auto">
+        <p className="text-gray-300 text-sm max-w-md mx-auto">
           Connect your social media accounts to see unified metrics across all platforms.
         </p>
       </div>

@@ -41,7 +41,7 @@ export function Demographics({ demographics }: DemographicsProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Age Distribution */}
           <div>
-            <h4 className="text-sm font-medium text-gray-400 mb-3">
+            <h4 className="text-sm font-medium text-gray-300 mb-3">
               Age Groups
             </h4>
             <ResponsiveContainer width="100%" height={200}>
@@ -62,7 +62,7 @@ export function Demographics({ demographics }: DemographicsProps) {
 
           {/* Gender Distribution */}
           <div>
-            <h4 className="text-sm font-medium text-gray-400 mb-3">Gender</h4>
+            <h4 className="text-sm font-medium text-gray-300 mb-3">Gender</h4>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
@@ -97,7 +97,7 @@ export function Demographics({ demographics }: DemographicsProps) {
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   />
-                  <span className="text-sm text-gray-400">
+                  <span className="text-sm text-gray-300">
                     {item.type} ({item.percentage}%)
                   </span>
                 </div>
@@ -107,7 +107,7 @@ export function Demographics({ demographics }: DemographicsProps) {
 
           {/* Top Locations */}
           <div>
-            <h4 className="text-sm font-medium text-gray-400 mb-3">
+            <h4 className="text-sm font-medium text-gray-300 mb-3">
               Top Locations
             </h4>
             <div className="space-y-2">
@@ -117,7 +117,7 @@ export function Demographics({ demographics }: DemographicsProps) {
                   className="flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-gray-400" />
+                    <Globe className="w-4 h-4 text-gray-300" />
                     <span className="text-sm">{location.country}</span>
                   </div>
                   <div className="flex items-center gap-2">

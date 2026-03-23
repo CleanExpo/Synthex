@@ -53,7 +53,7 @@ async function fetchJson<T>(url: string): Promise<T> {
 const TIER_STYLES: Record<string, { label: string; className: string }> = {
   cold: {
     label: 'Cold',
-    className: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+    className: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
   },
   warm: {
     label: 'Warm',
@@ -127,7 +127,7 @@ export function JournalistList({ onSelectJournalist }: JournalistListProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12 text-gray-400">
+      <div className="flex items-center justify-center py-12 text-gray-300">
         <Loader2 className="h-6 w-6 animate-spin mr-2" />
         Loading journalists...
       </div>
@@ -199,7 +199,7 @@ export function JournalistList({ onSelectJournalist }: JournalistListProps) {
                       <AtSign className="h-3 w-3 text-green-400 flex-shrink-0" />
                     )}
                   </div>
-                  <div className="text-sm text-gray-400 truncate">
+                  <div className="text-sm text-gray-300 truncate">
                     {journalist.outlet} ·{' '}
                     {journalist.title ?? journalist.outletDomain}
                   </div>

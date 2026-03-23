@@ -46,7 +46,7 @@ export function SocialConnectBanner() {
           <p className="text-sm font-semibold text-white">
             Connect your first social account
           </p>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-300 mt-0.5">
             Link a platform to start publishing, scheduling, and tracking
             performance.
           </p>

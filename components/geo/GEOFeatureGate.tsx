@@ -68,7 +68,7 @@ export function GEOFeatureGate({
               Plan Feature
             </div>
 
-            <p className="text-gray-400 mb-6 leading-relaxed">
+            <p className="text-gray-300 mb-6 leading-relaxed">
               {description ||
                 `Upgrade to the ${requiredPlan} plan to unlock ${feature.toLowerCase()} and other advanced GEO optimization tools.`}
             </p>
@@ -96,7 +96,7 @@ export function GEOFeatureGate({
             {subscription && (
               <p className="text-gray-500 text-sm mt-4">
                 Current plan:{' '}
-                <span className="text-gray-400 capitalize">
+                <span className="text-gray-300 capitalize">
                   {subscription.plan}
                 </span>
               </p>

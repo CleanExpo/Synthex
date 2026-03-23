@@ -67,7 +67,7 @@ export function BusinessOverviewCards({
       case 'cancelled':
         return 'bg-red-500/20 text-red-400 border-red-500/30';
       default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
     }
   };
 
@@ -78,7 +78,7 @@ export function BusinessOverviewCards({
         {/* Total Businesses */}
         <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+            <CardTitle className="text-sm font-medium text-gray-300 flex items-center gap-2">
               <Building className="h-4 w-4 text-orange-400" />
               Total Businesses
             </CardTitle>
@@ -97,7 +97,7 @@ export function BusinessOverviewCards({
         {/* Total Campaigns */}
         <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+            <CardTitle className="text-sm font-medium text-gray-300 flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-orange-400" />
               Total Campaigns
             </CardTitle>
@@ -113,7 +113,7 @@ export function BusinessOverviewCards({
         {/* Total Engagement */}
         <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+            <CardTitle className="text-sm font-medium text-gray-300 flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-orange-400" />
               Total Engagement
             </CardTitle>
@@ -129,7 +129,7 @@ export function BusinessOverviewCards({
         {/* Monthly Spend */}
         <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+            <CardTitle className="text-sm font-medium text-gray-300 flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-orange-400" />
               Monthly Spend
             </CardTitle>
@@ -168,7 +168,7 @@ export function BusinessOverviewCards({
                       className={
                         business.isActive
                           ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                          : 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+                          : 'bg-gray-500/20 text-gray-300 border-gray-500/30'
                       }
                     >
                       {business.isActive ? 'Active' : 'Inactive'}

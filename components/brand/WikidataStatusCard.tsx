@@ -87,7 +87,7 @@ export function WikidataStatusCard({
       {!result && !loading && (
         <div className="py-6 text-center">
           <Info className="w-7 h-7 text-gray-500 mx-auto mb-2" />
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-300">
             Click "Check Wikidata" to look up your entity Q-ID and property
             completeness.
           </p>
@@ -98,7 +98,7 @@ export function WikidataStatusCard({
       {loading && (
         <div className="py-6 text-center">
           <Loader2 className="w-7 h-7 text-gray-500 mx-auto mb-2 animate-spin" />
-          <p className="text-xs text-gray-400">Querying Wikidata…</p>
+          <p className="text-xs text-gray-300">Querying Wikidata…</p>
         </div>
       )}
 
@@ -130,7 +130,7 @@ export function WikidataStatusCard({
                   : 'Not found on Wikidata'}
               </p>
               {result.entityLabel && (
-                <p className="text-xs text-gray-400">{result.entityLabel}</p>
+                <p className="text-xs text-gray-300">{result.entityLabel}</p>
               )}
             </div>
             {result.found && (
@@ -148,7 +148,7 @@ export function WikidataStatusCard({
           {/* Properties Checklist */}
           <div className="space-y-3">
             <div>
-              <p className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
+              <p className="text-xs font-medium text-gray-300 mb-2 uppercase tracking-wide">
                 Required Properties
               </p>
               <div className="space-y-1.5">
@@ -179,7 +179,7 @@ export function WikidataStatusCard({
             </div>
 
             <div>
-              <p className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
+              <p className="text-xs font-medium text-gray-300 mb-2 uppercase tracking-wide">
                 Recommended Properties
               </p>
               <div className="space-y-1.5">

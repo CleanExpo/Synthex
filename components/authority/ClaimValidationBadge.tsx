@@ -45,9 +45,9 @@ export function ClaimValidationBadge({ claim }: ClaimValidationBadgeProps) {
           </div>
         </div>
         {expanded ? (
-          <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
+          <ChevronUp className="h-4 w-4 text-slate-300 shrink-0" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+          <ChevronDown className="h-4 w-4 text-slate-300 shrink-0" />
         )}
       </button>
 

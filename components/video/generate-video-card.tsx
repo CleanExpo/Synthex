@@ -36,7 +36,7 @@ export function GenerateVideoCard({
         Generate Video
         <Sparkles className="w-3.5 h-3.5 text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity" />
       </h3>
-      <p className="text-gray-400 text-sm line-clamp-2">
+      <p className="text-gray-300 text-sm line-clamp-2">
         Create AI-powered marketing videos — social reels, explainers, and
         how-to guides.
       </p>

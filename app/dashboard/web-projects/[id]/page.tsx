@@ -245,7 +245,7 @@ export default function WebProjectDetailPage({
           <Button
             variant="ghost"
             size="icon"
-            className="mt-0.5 text-gray-400 hover:text-white"
+            className="mt-0.5 text-gray-300 hover:text-white"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -260,7 +260,7 @@ export default function WebProjectDetailPage({
                 status === 'active'
                   ? 'bg-green-500/10 text-green-400 border-green-500/20'
                   : status === 'archived'
-                    ? 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                    ? 'bg-gray-500/10 text-gray-300 border-gray-500/20'
                     : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
               }`}
             >
@@ -268,7 +268,7 @@ export default function WebProjectDetailPage({
             </span>
           </div>
           {project.description && (
-            <p className="text-gray-400 text-sm mt-1">{project.description}</p>
+            <p className="text-gray-300 text-sm mt-1">{project.description}</p>
           )}
           {project.websiteUrl && (
             <a
@@ -293,7 +293,7 @@ export default function WebProjectDetailPage({
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
               activeTab === tab.id
                 ? 'text-orange-400 border-orange-400'
-                : 'text-gray-400 border-transparent hover:text-gray-200'
+                : 'text-gray-300 border-transparent hover:text-gray-200'
             }`}
           >
             {tab.icon}
@@ -420,7 +420,7 @@ export default function WebProjectDetailPage({
 
       {activeTab === 'animation-templates' && (
         <div className="space-y-4">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             Copy these GSAP presets directly into your project. Each template
             uses GSAP 3 with ScrollTrigger — install with{' '}
             <code className="bg-white/10 px-1.5 py-0.5 rounded text-orange-300 text-xs">
@@ -437,14 +437,14 @@ export default function WebProjectDetailPage({
               <div className="flex items-start justify-between p-4 border-b border-white/[0.06]">
                 <div>
                   <h3 className="font-semibold text-white">{template.title}</h3>
-                  <p className="text-sm text-gray-400 mt-0.5">
+                  <p className="text-sm text-gray-300 mt-0.5">
                     {template.description}
                   </p>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-gray-400 hover:text-white gap-2 ml-4 shrink-0"
+                  className="text-gray-300 hover:text-white gap-2 ml-4 shrink-0"
                   onClick={() => copyCode(template.id, template.code)}
                 >
                   {copiedId === template.id ? (
@@ -500,7 +500,7 @@ export default function WebProjectDetailPage({
 
           <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-5">
             <h3 className="font-semibold text-red-400 mb-1">Danger Zone</h3>
-            <p className="text-sm text-gray-400 mb-3">
+            <p className="text-sm text-gray-300 mb-3">
               Permanently delete this project and all its data.
             </p>
             <Button

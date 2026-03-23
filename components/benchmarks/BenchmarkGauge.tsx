@@ -133,7 +133,7 @@ export function BenchmarkGauge({
 
       {/* Label */}
       {label && (
-        <p className={cn('text-gray-400 mt-2', config.labelSize)}>{label}</p>
+        <p className={cn('text-gray-300 mt-2', config.labelSize)}>{label}</p>
       )}
     </div>
   );

@@ -67,7 +67,7 @@ export function TrainingUpload({
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Add Training Data</CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-slate-300">
           Upload content to improve persona accuracy
         </CardDescription>
       </CardHeader>
@@ -102,11 +102,11 @@ export function TrainingUpload({
           onDragOver={handleDrag}
           onDrop={handleDrop}
         >
-          <Upload className="h-12 w-12 mx-auto mb-4 text-slate-400" />
+          <Upload className="h-12 w-12 mx-auto mb-4 text-slate-300" />
           <p className="text-white mb-2">
             Drag and drop files here, or click to browse
           </p>
-          <p className="text-xs text-slate-400 mb-4">
+          <p className="text-xs text-slate-300 mb-4">
             Supports: PDF, TXT, DOC, MP3, MP4, PNG, JPG
           </p>
           <input
@@ -130,7 +130,7 @@ export function TrainingUpload({
         {/* URL Input */}
         {selectedContentType === 'url' && (
           <div className="mt-4">
-            <Label htmlFor="url" className="text-slate-400">
+            <Label htmlFor="url" className="text-slate-300">
               Content URL
             </Label>
             <div className="flex space-x-2 mt-2">
@@ -157,7 +157,7 @@ export function TrainingUpload({
         {uploadProgress > 0 && uploadProgress < 100 && (
           <div className="mt-4 space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-slate-400">Uploading...</span>
+              <span className="text-slate-300">Uploading...</span>
               <span className="text-white">{uploadProgress}%</span>
             </div>
             <Progress value={uploadProgress} className="h-2" />
@@ -174,19 +174,19 @@ export function TrainingUpload({
               <p className="text-2xl font-bold text-white">
                 {persona.trainingData.sources}
               </p>
-              <p className="text-xs text-slate-400">Sources</p>
+              <p className="text-xs text-slate-300">Sources</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-white">
                 {(persona.trainingData.words / 1000).toFixed(0)}K
               </p>
-              <p className="text-xs text-slate-400">Words</p>
+              <p className="text-xs text-slate-300">Words</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-white">
                 {persona.trainingData.samples}
               </p>
-              <p className="text-xs text-slate-400">Samples</p>
+              <p className="text-xs text-slate-300">Samples</p>
             </div>
           </div>
         </div>

@@ -78,19 +78,19 @@ export function RequestDetail({
                     ) : stage.status === 'in_progress' ? (
                       <Clock className="h-4 w-4 text-yellow-400" />
                     ) : (
-                      <Circle className="h-4 w-4 text-gray-400" />
+                      <Circle className="h-4 w-4 text-gray-300" />
                     )}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-white">
                       Stage {index + 1}: {stage.name}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-300">
                       {stage.requireAll ? 'All approvers required' : 'Any approver'}
                     </p>
                   </div>
                   {index < request.stages.length - 1 && (
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                    <ChevronRight className="h-4 w-4 text-gray-300" />
                   )}
                 </div>
               ))}
@@ -110,7 +110,7 @@ export function RequestDetail({
                   </Avatar>
                   <div>
                     <p className="text-sm font-medium text-white">{approver.name}</p>
-                    <p className="text-xs text-gray-400">{approver.role}</p>
+                    <p className="text-xs text-gray-300">{approver.role}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -188,7 +188,7 @@ export function RequestDetail({
                     </div>
                     <p className="text-sm text-gray-300">{approver.feedback}</p>
                     {approver.approvedAt && (
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-gray-300 mt-1">
                         {new Date(approver.approvedAt).toLocaleString()}
                       </p>
                     )}

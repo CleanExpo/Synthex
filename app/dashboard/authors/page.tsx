@@ -107,7 +107,7 @@ export default function AuthorsPage() {
               <Users className="h-7 w-7 text-orange-400" />
               Author Profiles
             </h1>
-            <p className="text-gray-400 mt-1">
+            <p className="text-gray-300 mt-1">
               Manage expert author identities for E-E-A-T compliance
             </p>
           </div>
@@ -184,7 +184,7 @@ export default function AuthorsPage() {
           </div>
         ) : authors.length === 0 ? (
           <Card className="bg-surface-base/80 border border-orange-500/10">
-            <CardContent className="p-12 text-center text-gray-400">
+            <CardContent className="p-12 text-center text-gray-300">
               <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
               <p>No author profiles yet</p>
               <p className="text-sm mt-1">
@@ -214,7 +214,7 @@ export default function AuthorsPage() {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-gray-400 line-clamp-2 mb-3">
+                  <p className="text-sm text-gray-300 line-clamp-2 mb-3">
                     {author.bio}
                   </p>
                   {author.expertiseAreas.length > 0 && (

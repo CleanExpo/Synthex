@@ -193,7 +193,7 @@ export function AlgorithmUpdateTimeline({
                 </div>
 
                 {/* Description */}
-                <p className="text-xs text-gray-400 leading-relaxed">
+                <p className="text-xs text-gray-300 leading-relaxed">
                   {update.description}
                 </p>
 

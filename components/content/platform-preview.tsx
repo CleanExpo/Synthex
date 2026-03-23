@@ -112,7 +112,7 @@ function MediaGrid({
           />
         ))}
         {urls.length > 3 && (
-          <div className="flex items-center justify-center aspect-square bg-white/5 text-slate-400 text-sm font-medium">
+          <div className="flex items-center justify-center aspect-square bg-white/5 text-slate-300 text-sm font-medium">
             +{urls.length - 3}
           </div>
         )}

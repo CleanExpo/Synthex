@@ -35,7 +35,7 @@ export default function BayesianHealthPage() {
         <h1 className="text-2xl font-bold text-white">
           BayesNF Service Health
         </h1>
-        <p className="text-gray-400 mt-1">
+        <p className="text-gray-300 mt-1">
           Real-time status of the Python AI service (Prophet + BayesNF engines).
         </p>
       </div>
@@ -47,7 +47,7 @@ export default function BayesianHealthPage() {
           <button
             type="button"
             onClick={() => void mutate()}
-            className="text-xs text-gray-400 hover:text-white transition-colors"
+            className="text-xs text-gray-300 hover:text-white transition-colors"
           >
             Refresh
           </button>
@@ -79,7 +79,7 @@ export default function BayesianHealthPage() {
             )}
 
             {data?.data && (
-              <pre className="text-xs text-gray-400 bg-black/30 rounded p-3 overflow-auto max-h-48">
+              <pre className="text-xs text-gray-300 bg-black/30 rounded p-3 overflow-auto max-h-48">
                 {JSON.stringify(data.data, null, 2)}
               </pre>
             )}
@@ -96,7 +96,7 @@ export default function BayesianHealthPage() {
         <h2 className="text-lg font-semibold text-white mb-4">
           Spatiotemporal Models
         </h2>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-300">
           {models.length} model{models.length !== 1 ? 's' : ''} across all
           organisations
         </p>
@@ -106,7 +106,7 @@ export default function BayesianHealthPage() {
             {models.slice(0, 10).map(m => (
               <div
                 key={m.id}
-                className="flex items-center justify-between text-xs text-gray-400"
+                className="flex items-center justify-between text-xs text-gray-300"
               >
                 <span>
                   {m.name} ({m.orgId.slice(0, 8)}…)

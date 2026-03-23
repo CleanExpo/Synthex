@@ -118,7 +118,7 @@ export function QueueFilters({
         <Button
           size="sm"
           variant="ghost"
-          className="text-gray-400 hover:text-white"
+          className="text-gray-300 hover:text-white"
           onClick={onClearFilters}
         >
           <X className="mr-1 h-3.5 w-3.5" />

@@ -153,7 +153,7 @@ export default function PageAnalysisPage() {
           <Button
             variant="ghost"
             size="icon"
-            className="text-gray-400 hover:text-white"
+            className="text-gray-300 hover:text-white"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -163,7 +163,7 @@ export default function PageAnalysisPage() {
             <Search className="w-8 h-8 text-orange-400" />
             Page Analysis
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="text-gray-300 mt-1">
             Deep dive into single page SEO performance
           </p>
         </div>
@@ -228,7 +228,7 @@ export default function PageAnalysisPage() {
                   >
                     {result.score}
                   </div>
-                  <p className="text-gray-400 text-sm">Overall Score</p>
+                  <p className="text-gray-300 text-sm">Overall Score</p>
                 </CardContent>
               </Card>
               <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
@@ -236,7 +236,7 @@ export default function PageAnalysisPage() {
                   <div className="text-2xl font-bold text-white mb-1">
                     {result.content.wordCount}
                   </div>
-                  <p className="text-gray-400 text-sm">Words</p>
+                  <p className="text-gray-300 text-sm">Words</p>
                 </CardContent>
               </Card>
               <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
@@ -244,7 +244,7 @@ export default function PageAnalysisPage() {
                   <div className="text-2xl font-bold text-white mb-1">
                     {result.images.total}
                   </div>
-                  <p className="text-gray-400 text-sm">Images</p>
+                  <p className="text-gray-300 text-sm">Images</p>
                 </CardContent>
               </Card>
               <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
@@ -252,7 +252,7 @@ export default function PageAnalysisPage() {
                   <div className="text-2xl font-bold text-white mb-1">
                     {result.links.internal + result.links.external}
                   </div>
-                  <p className="text-gray-400 text-sm">Links</p>
+                  <p className="text-gray-300 text-sm">Links</p>
                 </CardContent>
               </Card>
             </div>
@@ -272,7 +272,7 @@ export default function PageAnalysisPage() {
                     <p className="text-white font-medium text-sm">
                       Title Tag ({result.meta.title.length} chars)
                     </p>
-                    <p className="text-gray-400 text-sm mt-1 break-all">
+                    <p className="text-gray-300 text-sm mt-1 break-all">
                       {result.meta.title.value || 'Not found'}
                     </p>
                   </div>
@@ -283,7 +283,7 @@ export default function PageAnalysisPage() {
                     <p className="text-white font-medium text-sm">
                       Meta Description ({result.meta.description.length} chars)
                     </p>
-                    <p className="text-gray-400 text-sm mt-1 break-all">
+                    <p className="text-gray-300 text-sm mt-1 break-all">
                       {result.meta.description.value || 'Not found'}
                     </p>
                   </div>
@@ -299,7 +299,7 @@ export default function PageAnalysisPage() {
                       <p className="text-white font-medium text-sm">
                         Canonical
                       </p>
-                      <p className="text-gray-400 text-xs truncate max-w-[250px]">
+                      <p className="text-gray-300 text-xs truncate max-w-[250px]">
                         {result.meta.canonical || 'Missing'}
                       </p>
                     </div>
@@ -314,7 +314,7 @@ export default function PageAnalysisPage() {
                       <p className="text-white font-medium text-sm">
                         Open Graph
                       </p>
-                      <p className="text-gray-400 text-xs truncate max-w-[250px]">
+                      <p className="text-gray-300 text-xs truncate max-w-[250px]">
                         {result.meta.ogTitle || 'Missing'}
                       </p>
                     </div>
@@ -380,13 +380,13 @@ export default function PageAnalysisPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between p-3 bg-white/5 rounded-lg">
-                    <span className="text-gray-400 text-sm">Total images</span>
+                    <span className="text-gray-300 text-sm">Total images</span>
                     <span className="text-white font-medium">
                       {result.images.total}
                     </span>
                   </div>
                   <div className="flex justify-between p-3 bg-white/5 rounded-lg">
-                    <span className="text-gray-400 text-sm">
+                    <span className="text-gray-300 text-sm">
                       Missing alt text
                     </span>
                     <span
@@ -407,7 +407,7 @@ export default function PageAnalysisPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between p-3 bg-white/5 rounded-lg">
-                    <span className="text-gray-400 text-sm">
+                    <span className="text-gray-300 text-sm">
                       Internal links
                     </span>
                     <span className="text-white font-medium">
@@ -415,7 +415,7 @@ export default function PageAnalysisPage() {
                     </span>
                   </div>
                   <div className="flex justify-between p-3 bg-white/5 rounded-lg">
-                    <span className="text-gray-400 text-sm">
+                    <span className="text-gray-300 text-sm">
                       External links
                     </span>
                     <span className="text-white font-medium">
@@ -468,7 +468,7 @@ export default function PageAnalysisPage() {
             <h3 className="text-xl font-medium text-white mb-2">
               Ready to Analyze
             </h3>
-            <p className="text-gray-400 max-w-md mx-auto">
+            <p className="text-gray-300 max-w-md mx-auto">
               Enter a page URL above to analyze its SEO elements including meta
               tags, heading structure, content quality, images, and schema
               markup.

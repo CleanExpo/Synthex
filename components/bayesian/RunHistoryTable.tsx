@@ -24,11 +24,11 @@ interface RunHistoryTableProps {
 }
 
 const STATUS_STYLES: Record<RunStatus, string> = {
-  pending: 'bg-gray-500/20 text-gray-400',
+  pending: 'bg-gray-500/20 text-gray-300',
   running: 'bg-orange-500/20 text-orange-400',
   completed: 'bg-emerald-500/20 text-emerald-400',
   failed: 'bg-red-500/20 text-red-400',
-  cancelled: 'bg-gray-500/20 text-gray-400',
+  cancelled: 'bg-gray-500/20 text-gray-300',
 };
 
 const STATUS_ICONS: Record<
@@ -110,22 +110,22 @@ export function RunHistoryTable({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/[0.08] bg-white/[0.02]">
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
               Surface
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
               Status
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
               Iterations
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
               Best Score
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
               Started
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
               Duration
             </th>
           </tr>
@@ -163,10 +163,10 @@ export function RunHistoryTable({
                 <td className="px-4 py-3 text-white font-medium">
                   {run.bestTarget !== null ? run.bestTarget.toFixed(3) : '—'}
                 </td>
-                <td className="px-4 py-3 text-gray-400 text-xs">
+                <td className="px-4 py-3 text-gray-300 text-xs">
                   {formatDate(run.startedAt)}
                 </td>
-                <td className="px-4 py-3 text-gray-400 text-xs font-mono">
+                <td className="px-4 py-3 text-gray-300 text-xs font-mono">
                   {formatDuration(run.startedAt, run.completedAt)}
                 </td>
               </tr>

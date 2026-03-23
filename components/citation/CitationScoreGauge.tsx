@@ -136,7 +136,7 @@ export function CitationScoreGauge({
         {/* Centre text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className={`text-4xl font-black ${text}`}>{overall}</span>
-          <span className="text-gray-400 text-xs font-semibold tracking-widest uppercase">
+          <span className="text-gray-300 text-xs font-semibold tracking-widest uppercase">
             /100
           </span>
           <span
@@ -148,7 +148,7 @@ export function CitationScoreGauge({
       </div>
 
       {/* Label */}
-      <p className="text-xs text-gray-400 font-medium tracking-wide text-center">
+      <p className="text-xs text-gray-300 font-medium tracking-wide text-center">
         Citation Readiness Score
       </p>
 

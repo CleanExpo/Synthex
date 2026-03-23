@@ -73,7 +73,7 @@ export function MonthView({
               size="sm"
               variant="ghost"
               onClick={() => navigateMonth('prev')}
-              className="text-slate-400"
+              className="text-slate-300"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -89,7 +89,7 @@ export function MonthView({
               size="sm"
               variant="ghost"
               onClick={() => navigateMonth('next')}
-              className="text-slate-400"
+              className="text-slate-300"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -101,7 +101,7 @@ export function MonthView({
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
             <div
               key={day}
-              className="bg-slate-900 p-2 text-center text-xs font-medium text-slate-400"
+              className="bg-slate-900 p-2 text-center text-xs font-medium text-slate-300"
             >
               {day}
             </div>
@@ -123,7 +123,7 @@ export function MonthView({
                 {date && (
                   <>
                     <div
-                      className={`text-sm mb-1 ${isToday ? 'text-orange-400 font-bold' : 'text-slate-400'}`}
+                      className={`text-sm mb-1 ${isToday ? 'text-orange-400 font-bold' : 'text-slate-300'}`}
                     >
                       {date.getDate()}
                     </div>

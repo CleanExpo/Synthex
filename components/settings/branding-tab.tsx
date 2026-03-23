@@ -267,7 +267,7 @@ export function BrandingTab({
         <CardContent className="py-12">
           <div className="flex flex-col items-center justify-center gap-3">
             <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
-            <p className="text-slate-400">Loading branding configuration...</p>
+            <p className="text-slate-300">Loading branding configuration...</p>
           </div>
         </CardContent>
       </Card>
@@ -469,7 +469,7 @@ export function BrandingTab({
           {config.footerLinks.length === 0 ? (
             <div className="text-center py-6">
               <Link2 className="w-8 h-8 text-slate-500 mx-auto mb-3" />
-              <p className="text-slate-400 text-sm">
+              <p className="text-slate-300 text-sm">
                 No footer links configured. Click &quot;Add Link&quot; to get
                 started.
               </p>
@@ -483,7 +483,7 @@ export function BrandingTab({
                 >
                   <div className="flex-1 grid gap-3 md:grid-cols-2">
                     <div className="space-y-1">
-                      <Label className="text-xs text-slate-400">Label</Label>
+                      <Label className="text-xs text-slate-300">Label</Label>
                       <Input
                         value={link.label}
                         onChange={e =>
@@ -495,7 +495,7 @@ export function BrandingTab({
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-slate-400">URL</Label>
+                      <Label className="text-xs text-slate-300">URL</Label>
                       <Input
                         value={link.url}
                         onChange={e =>
@@ -510,7 +510,7 @@ export function BrandingTab({
                     variant="ghost"
                     size="sm"
                     onClick={() => removeFooterLink(index)}
-                    className="text-slate-400 hover:text-red-400 mt-5"
+                    className="text-slate-300 hover:text-red-400 mt-5"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

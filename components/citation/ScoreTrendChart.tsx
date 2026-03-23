@@ -109,7 +109,7 @@ export function ScoreTrendChart({
               className="inline-block w-3 h-2 rounded-sm"
               style={{ background: colour }}
             />
-            <span className="text-xs text-gray-400">{label}</span>
+            <span className="text-xs text-gray-300">{label}</span>
           </div>
         ))}
       </div>

@@ -95,7 +95,7 @@ export default function GBPReviewsPage() {
       <div>
         <Link
           href="/dashboard/google-business"
-          className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
+          className="text-sm text-gray-300 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Google Business
@@ -104,7 +104,7 @@ export default function GBPReviewsPage() {
           <MessageSquare className="w-7 h-7 text-orange-400" />
           Review Management
         </h1>
-        <p className="text-gray-400 mt-1">
+        <p className="text-gray-300 mt-1">
           Respond to customer reviews with AI-assisted replies
         </p>
       </div>
@@ -115,7 +115,7 @@ export default function GBPReviewsPage() {
         <>
           {/* Filters */}
           <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="w-4 h-4 text-gray-400" />
+            <Filter className="w-4 h-4 text-gray-300" />
             {(
               ['all', '5', '4', '3', '2', '1', 'unreplied'] as RatingFilter[]
             ).map(f => (
@@ -130,7 +130,7 @@ export default function GBPReviewsPage() {
                 className={`text-xs ${
                   ratingFilter === f
                     ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
-                    : 'border-white/10 text-gray-400 hover:bg-white/5'
+                    : 'border-white/10 text-gray-300 hover:bg-white/5'
                 }`}
               >
                 {f === 'all'
@@ -260,7 +260,7 @@ export default function GBPReviewsPage() {
                               setReplyingTo(null);
                               setReplyText('');
                             }}
-                            className="text-gray-400"
+                            className="text-gray-300"
                           >
                             Cancel
                           </Button>
@@ -272,7 +272,7 @@ export default function GBPReviewsPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => setReplyingTo(review.id)}
-                          className="border-white/10 text-gray-400 hover:bg-white/5"
+                          className="border-white/10 text-gray-300 hover:bg-white/5"
                         >
                           Reply
                         </Button>
@@ -304,11 +304,11 @@ export default function GBPReviewsPage() {
                     size="sm"
                     disabled={page <= 1}
                     onClick={() => setPage(page - 1)}
-                    className="border-white/10 text-gray-400"
+                    className="border-white/10 text-gray-300"
                   >
                     Previous
                   </Button>
-                  <span className="text-sm text-gray-400">
+                  <span className="text-sm text-gray-300">
                     Page {page} of {pagination.totalPages}
                   </span>
                   <Button
@@ -316,7 +316,7 @@ export default function GBPReviewsPage() {
                     size="sm"
                     disabled={page >= pagination.totalPages}
                     onClick={() => setPage(page + 1)}
-                    className="border-white/10 text-gray-400"
+                    className="border-white/10 text-gray-300"
                   >
                     Next
                   </Button>
@@ -329,7 +329,7 @@ export default function GBPReviewsPage() {
               <h3 className="text-lg font-medium text-white mb-2">
                 No Reviews Found
               </h3>
-              <p className="text-gray-400">
+              <p className="text-gray-300">
                 {ratingFilter !== 'all'
                   ? 'No reviews match the current filter.'
                   : 'Reviews will appear after the daily sync runs.'}

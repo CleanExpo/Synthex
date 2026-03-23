@@ -34,7 +34,7 @@ const severityConfig: Record<
   },
   low: {
     label: 'Low',
-    className: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+    className: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
   },
 };
 
@@ -107,7 +107,7 @@ export function AnomalyAlerts() {
   if (anomalies.length === 0) {
     return (
       <Card className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
-        <CardContent className="p-6 flex items-center justify-center gap-2 text-sm text-gray-400">
+        <CardContent className="p-6 flex items-center justify-center gap-2 text-sm text-gray-300">
           <CheckCircle className="w-4 h-4 text-emerald-400" />
           No anomalies detected
         </CardContent>
@@ -173,7 +173,7 @@ export function AnomalyAlerts() {
                 </span>
               </div>
 
-              <div className="flex items-center gap-3 text-xs text-gray-400">
+              <div className="flex items-center gap-3 text-xs text-gray-300">
                 <span
                   className={cn(
                     'font-medium',
@@ -192,7 +192,7 @@ export function AnomalyAlerts() {
             <Button
               variant="ghost"
               size="sm"
-              className="shrink-0 text-xs text-gray-400 hover:text-white h-7 px-2"
+              className="shrink-0 text-xs text-gray-300 hover:text-white h-7 px-2"
               disabled={acknowledging === anomaly.id}
               onClick={() => handleAcknowledge(anomaly.id)}
             >

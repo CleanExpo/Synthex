@@ -214,7 +214,7 @@ function BacklinksPageContent() {
           </div>
           <h1 className="text-2xl font-bold text-white">Link Prospector</h1>
         </div>
-        <p className="text-sm text-slate-400 ml-12">
+        <p className="text-sm text-slate-300 ml-12">
           AI-powered backlink opportunity finder with outreach templates
         </p>
       </div>
@@ -266,7 +266,7 @@ function BacklinksPageContent() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">
+                <label className="block text-xs text-slate-300 mb-1">
                   Topic / Keyword *
                 </label>
                 <input
@@ -278,7 +278,7 @@ function BacklinksPageContent() {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">
+                <label className="block text-xs text-slate-300 mb-1">
                   Your domain
                 </label>
                 <input
@@ -290,7 +290,7 @@ function BacklinksPageContent() {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">
+                <label className="block text-xs text-slate-300 mb-1">
                   Competitor domains (comma-separated)
                 </label>
                 <input
@@ -354,7 +354,7 @@ function BacklinksPageContent() {
               {matrixFilter && (
                 <button
                   onClick={() => setMatrixFilter(null)}
-                  className="text-xs text-slate-400 hover:text-slate-200 underline"
+                  className="text-xs text-slate-300 hover:text-slate-200 underline"
                 >
                   Clear matrix filter
                 </button>
@@ -379,7 +379,7 @@ function BacklinksPageContent() {
           ) : filteredProspects.length === 0 ? (
             <div className="rounded-xl border border-dashed border-white/10 py-14 text-center">
               <LinkIcon className="mx-auto h-10 w-10 text-slate-600 mb-3" />
-              <p className="text-slate-400 text-sm font-medium">
+              <p className="text-slate-300 text-sm font-medium">
                 No prospects yet
               </p>
               <p className="text-slate-600 text-xs mt-1">
@@ -437,7 +437,7 @@ function BacklinksPageContent() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {/* Prospect selector */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2">
+              <label className="block text-xs text-slate-300 mb-2">
                 Select a prospect
               </label>
               <select
@@ -520,7 +520,7 @@ function BacklinksPageContent() {
           ) : (analysisData?.analyses ?? []).length === 0 ? (
             <div className="rounded-xl border border-dashed border-white/10 py-14 text-center">
               <BarChart3 className="mx-auto h-10 w-10 text-slate-600 mb-3" />
-              <p className="text-slate-400 text-sm font-medium">
+              <p className="text-slate-300 text-sm font-medium">
                 No analyses run yet
               </p>
               <p className="text-slate-600 text-xs mt-1">

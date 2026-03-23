@@ -26,7 +26,7 @@ export function UserSearchBar({
   return (
     <div className="flex gap-4 mb-6">
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-300" />
         <Input
           placeholder="Search users by email or ID..."
           value={searchTerm}

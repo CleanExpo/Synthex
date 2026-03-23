@@ -21,7 +21,7 @@ export function PersonaEmptyState({ onCreateClick }: PersonaEmptyStateProps) {
         <h3 className="text-xl font-semibold text-white mb-2">
           Define Your First Persona
         </h3>
-        <p className="text-slate-400 mb-6">
+        <p className="text-slate-300 mb-6">
           Personas teach the AI your unique voice and style. Your first persona
           takes 2 minutes to set up.
         </p>

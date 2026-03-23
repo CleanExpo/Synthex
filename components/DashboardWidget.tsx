@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  X, 
-  Move, 
-  Settings, 
-  Maximize2, 
+import {
+  X,
+  Move,
+  Settings,
+  Maximize2,
   Minimize2,
-  MoreVertical 
+  MoreVertical,
 } from '@/components/icons';
 import {
   DropdownMenu,
@@ -43,10 +43,10 @@ export function DashboardWidget({
   onResize,
   onConfigure,
   isDragging = false,
-  children
+  children,
 }: DashboardWidgetProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   const getSizeClasses = () => {
     switch (widget.size) {
       case 'small':
@@ -61,7 +61,7 @@ export function DashboardWidget({
         return 'col-span-1 row-span-1';
     }
   };
-  
+
   return (
     <Card
       variant="glass"
@@ -79,11 +79,15 @@ export function DashboardWidget({
           <Button
             size="icon"
             variant="ghost"
-            className="h-6 w-6 text-gray-400 hover:text-white"
+            className="h-6 w-6 text-gray-300 hover:text-white"
             aria-label={isExpanded ? 'Minimise widget' : 'Maximise widget'}
             onClick={() => setIsExpanded(!isExpanded)}
           >
-            {isExpanded ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
+            {isExpanded ? (
+              <Minimize2 className="h-3 w-3" />
+            ) : (
+              <Maximize2 className="h-3 w-3" />
+            )}
           </Button>
 
           <DropdownMenu>
@@ -91,13 +95,16 @@ export function DashboardWidget({
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-6 w-6 text-gray-400 hover:text-white"
+                className="h-6 w-6 text-gray-300 hover:text-white"
                 aria-label="Widget options"
               >
                 <MoreVertical className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-gray-900 border-gray-800">
+            <DropdownMenuContent
+              align="end"
+              className="bg-gray-900 border-gray-800"
+            >
               <DropdownMenuItem onClick={() => onConfigure(widget.id)}>
                 <Settings className="mr-2 h-4 w-4" />
                 Configure
@@ -111,7 +118,7 @@ export function DashboardWidget({
               <DropdownMenuItem onClick={() => onResize(widget.id, 'large')}>
                 Large
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => onRemove(widget.id)}
                 className="text-red-400"
               >
@@ -122,19 +129,17 @@ export function DashboardWidget({
           </DropdownMenu>
         </div>
       </div>
-      
+
       {/* Drag Handle */}
-      <div 
+      <div
         className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-move"
         data-drag-handle
       >
-        <Move className="h-4 w-4 text-gray-400" />
+        <Move className="h-4 w-4 text-gray-300" />
       </div>
-      
+
       {/* Widget Content */}
-      <div className={isExpanded ? 'h-full overflow-auto' : ''}>
-        {children}
-      </div>
+      <div className={isExpanded ? 'h-full overflow-auto' : ''}>{children}</div>
     </Card>
   );
 }
@@ -142,17 +147,65 @@ export function DashboardWidget({
 // Widget Library
 export const widgetLibrary = [
   { id: 'stats', type: 'stats', title: 'Key Metrics', size: 'medium' },
-  { id: 'engagement-chart', type: 'chart', title: 'Engagement Chart', size: 'large' },
-  { id: 'activity-feed', type: 'activity', title: 'Recent Activity', size: 'medium' },
-  { id: 'quick-actions', type: 'quick-actions', title: 'Quick Actions', size: 'small' },
-  { id: 'calendar', type: 'calendar', title: 'Content Calendar', size: 'large' },
+  {
+    id: 'engagement-chart',
+    type: 'chart',
+    title: 'Engagement Chart',
+    size: 'large',
+  },
+  {
+    id: 'activity-feed',
+    type: 'activity',
+    title: 'Recent Activity',
+    size: 'medium',
+  },
+  {
+    id: 'quick-actions',
+    type: 'quick-actions',
+    title: 'Quick Actions',
+    size: 'small',
+  },
+  {
+    id: 'calendar',
+    type: 'calendar',
+    title: 'Content Calendar',
+    size: 'large',
+  },
   { id: 'goals', type: 'goals', title: 'Goals & Milestones', size: 'medium' },
 ];
 
 // Default dashboard layout
 export const defaultDashboardLayout: WidgetConfig[] = [
-  { id: '1', type: 'stats', title: 'Key Metrics', size: 'large', position: { x: 0, y: 0 }, visible: true },
-  { id: '2', type: 'chart', title: 'Engagement Trends', size: 'large', position: { x: 2, y: 0 }, visible: true },
-  { id: '3', type: 'activity', title: 'Recent Activity', size: 'medium', position: { x: 0, y: 1 }, visible: true },
-  { id: '4', type: 'quick-actions', title: 'Quick Actions', size: 'small', position: { x: 2, y: 1 }, visible: true },
+  {
+    id: '1',
+    type: 'stats',
+    title: 'Key Metrics',
+    size: 'large',
+    position: { x: 0, y: 0 },
+    visible: true,
+  },
+  {
+    id: '2',
+    type: 'chart',
+    title: 'Engagement Trends',
+    size: 'large',
+    position: { x: 2, y: 0 },
+    visible: true,
+  },
+  {
+    id: '3',
+    type: 'activity',
+    title: 'Recent Activity',
+    size: 'medium',
+    position: { x: 0, y: 1 },
+    visible: true,
+  },
+  {
+    id: '4',
+    type: 'quick-actions',
+    title: 'Quick Actions',
+    size: 'small',
+    position: { x: 2, y: 1 },
+    visible: true,
+  },
 ];

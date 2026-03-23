@@ -30,7 +30,7 @@ function gradeColour(grade: string): string {
     case 'F':
       return 'text-red-400';
     default:
-      return 'text-gray-400';
+      return 'text-gray-300';
   }
 }
 
@@ -211,7 +211,7 @@ export function EEATAuditScoreCard({
         </div>
         <div className="flex flex-col gap-1 items-center sm:items-start">
           <p className="text-sm font-semibold text-white">E-E-A-T Score</p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-300">
             {wordCount.toLocaleString()} words analysed · {auditDate}
           </p>
           <div className="flex flex-wrap gap-1 mt-1">

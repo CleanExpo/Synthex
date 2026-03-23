@@ -18,7 +18,7 @@ export function AdminHeader({ onExport }: AdminHeaderProps) {
     <div className="flex justify-between items-center">
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">Admin Panel</h1>
-        <p className="text-gray-400">Manage users and system settings</p>
+        <p className="text-gray-300">Manage users and system settings</p>
       </div>
       <div className="flex gap-2">
         <Button onClick={onExport} variant="outline">

@@ -52,11 +52,11 @@ export function FAQList({
                 <HelpCircle className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
                 {faq.question}
               </h4>
-              <p className="text-sm text-gray-400 ml-6">{faq.answer}</p>
+              <p className="text-sm text-gray-300 ml-6">{faq.answer}</p>
             </div>
           ))}
           {faqs.length === 0 && (
-            <p className="text-gray-400 text-center py-8">
+            <p className="text-gray-300 text-center py-8">
               No FAQs found. Try adjusting your search or category filter.
             </p>
           )}

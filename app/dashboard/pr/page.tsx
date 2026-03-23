@@ -107,7 +107,7 @@ function PRManagerPageContent() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">PR Manager</h1>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             Journalist CRM · Pitch tracking · Coverage monitoring · Press
             releases
           </p>

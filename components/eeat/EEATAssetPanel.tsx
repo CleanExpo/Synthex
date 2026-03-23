@@ -27,7 +27,7 @@ function priorityClass(priority: EEATAssetPriority): string {
     case 'medium':
       return 'bg-orange-500/20 text-orange-400 border border-orange-500/30';
     case 'low':
-      return 'bg-gray-500/20 text-gray-400 border border-gray-500/30';
+      return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
   }
 }
 
@@ -169,7 +169,7 @@ export function EEATAssetPanel({
             implement
           </p>
           {estimatedScore !== undefined && (
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-300 mt-0.5">
               Implementing all assets could improve your score to ~
               {estimatedScore}
             </p>
@@ -183,7 +183,7 @@ export function EEATAssetPanel({
       {/* Quick wins section */}
       {quickWins.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider px-1">
+          <p className="text-xs font-medium text-slate-300 uppercase tracking-wider px-1">
             Quick Wins
           </p>
           {quickWins.map((asset, i) => (
@@ -195,7 +195,7 @@ export function EEATAssetPanel({
       {/* All assets */}
       <div className="space-y-2">
         {quickWins.length > 0 && (
-          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider px-1">
+          <p className="text-xs font-medium text-slate-300 uppercase tracking-wider px-1">
             All Assets
           </p>
         )}

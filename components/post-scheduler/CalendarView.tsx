@@ -34,7 +34,7 @@ export function CalendarView({
       {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
         <div
           key={day}
-          className="text-center text-sm font-medium text-gray-400 py-2"
+          className="text-center text-sm font-medium text-gray-300 py-2"
         >
           {day}
         </div>
@@ -76,13 +76,13 @@ export function CalendarView({
                       platformIcons[platform as keyof typeof platformIcons] ||
                       Globe;
                     return (
-                      <Icon key={platform} className="w-3 h-3 text-gray-400" />
+                      <Icon key={platform} className="w-3 h-3 text-gray-300" />
                     );
                   })}
                 </div>
               ))}
               {posts.length > 3 && (
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-gray-300">
                   +{posts.length - 3} more
                 </span>
               )}

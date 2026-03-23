@@ -57,7 +57,7 @@ function HealthGauge({ score }: { score: number }) {
   return (
     <div className="flex flex-col items-center">
       <div className={`text-5xl font-bold tabular-nums ${ring}`}>{score}</div>
-      <div className="text-xs text-gray-400 mt-1">{label}</div>
+      <div className="text-xs text-gray-300 mt-1">{label}</div>
     </div>
   );
 }
@@ -111,7 +111,7 @@ function CWVRow({ cwv }: { cwv: CoreWebVitals }) {
       ].map(({ label, value, status }) => (
         <div key={label} className="flex items-center gap-1.5">
           <CWVDot status={status} />
-          <span className="text-gray-400">{label}</span>
+          <span className="text-gray-300">{label}</span>
           <span className="text-white font-mono text-xs">{value}</span>
         </div>
       ))}
@@ -135,7 +135,7 @@ function MetricPill({
       >
         {value}
       </span>
-      <span className="text-xs text-gray-400 mt-0.5">{label}</span>
+      <span className="text-xs text-gray-300 mt-0.5">{label}</span>
     </div>
   );
 }
@@ -172,7 +172,7 @@ export function SiteHealthCard({
   if (!siteUrl) {
     return (
       <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center">
-        <p className="text-gray-400 text-sm">
+        <p className="text-gray-300 text-sm">
           No site URL configured. Add your website URL in{' '}
           <a href="/dashboard/settings" className="text-orange-400 underline">
             profile settings
@@ -189,7 +189,7 @@ export function SiteHealthCard({
       <div className="flex items-center justify-between mb-5">
         <div>
           <h3 className="font-semibold text-white">Site Health</h3>
-          <p className="text-xs text-gray-400 mt-0.5 font-mono">{siteUrl}</p>
+          <p className="text-xs text-gray-300 mt-0.5 font-mono">{siteUrl}</p>
         </div>
         <button
           onClick={handleCheckNow}

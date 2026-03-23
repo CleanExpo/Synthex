@@ -65,7 +65,7 @@ export function VideoScriptPreview({ script }: VideoScriptPreviewProps) {
             className="p-3 rounded-lg bg-white/[0.02] border border-white/5"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-gray-400">
+              <span className="text-xs font-medium text-gray-300">
                 Scene {scene.sceneNumber}
               </span>
               <span className="text-xs text-gray-500">{scene.duration}</span>
@@ -100,7 +100,7 @@ export function VideoScriptPreview({ script }: VideoScriptPreviewProps) {
           {script.hashtags.map(tag => (
             <span
               key={tag}
-              className="text-xs bg-white/5 text-gray-400 px-2 py-0.5 rounded-full"
+              className="text-xs bg-white/5 text-gray-300 px-2 py-0.5 rounded-full"
             >
               {tag}
             </span>

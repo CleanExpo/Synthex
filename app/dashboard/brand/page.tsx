@@ -168,7 +168,7 @@ function BrandIdentityForm({ onSuccess }: { onSuccess: () => void }) {
     required = false
   ) => (
     <div>
-      <label className="block text-xs font-medium text-gray-400 mb-1">
+      <label className="block text-xs font-medium text-gray-300 mb-1">
         {label}
         {required && <span className="text-red-400 ml-0.5">*</span>}
       </label>
@@ -223,7 +223,7 @@ function BrandIdentityForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
 
       <div>
-        <p className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
+        <p className="text-xs font-medium text-gray-300 mb-2 uppercase tracking-wide">
           sameAs URLs (optional)
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -392,7 +392,7 @@ function BrandBuilderPageContent() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">Brand Builder</h1>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-300">
               Entity graph, sameAs management, and Knowledge Panel signals
             </p>
           </div>
@@ -420,7 +420,7 @@ function BrandBuilderPageContent() {
                 'px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px',
                 activeTab === tab.id
                   ? 'text-white border-blue-500'
-                  : 'text-gray-400 border-transparent hover:text-gray-200 hover:border-white/20'
+                  : 'text-gray-300 border-transparent hover:text-gray-200 hover:border-white/20'
               )}
             >
               {tab.label}
@@ -449,7 +449,7 @@ function BrandBuilderPageContent() {
       {/* Brand selector (if multiple brands) */}
       {!isLoading && identities.length > 1 && activeTab !== 'identity' && (
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-400">Brand:</label>
+          <label className="text-xs text-gray-300">Brand:</label>
           <select
             value={selectedBrandId ?? identities[0]?.id ?? ''}
             onChange={e => setSelectedBrandId(e.target.value)}
@@ -520,7 +520,7 @@ function BrandBuilderPageContent() {
           {activeTab === 'consistency' && (
             <div className="space-y-6">
               {!effectiveBrandId ? (
-                <div className="text-center py-8 text-gray-400 text-sm">
+                <div className="text-center py-8 text-gray-300 text-sm">
                   Create a brand profile first to run consistency audits.
                 </div>
               ) : (
@@ -552,7 +552,7 @@ function BrandBuilderPageContent() {
           {activeTab === 'mentions' && (
             <>
               {!effectiveBrandId ? (
-                <div className="text-center py-8 text-gray-400 text-sm">
+                <div className="text-center py-8 text-gray-300 text-sm">
                   Create a brand profile first to monitor mentions.
                 </div>
               ) : (
@@ -565,7 +565,7 @@ function BrandBuilderPageContent() {
           {activeTab === 'calendar' && (
             <>
               {!effectiveBrandId ? (
-                <div className="text-center py-8 text-gray-400 text-sm">
+                <div className="text-center py-8 text-gray-300 text-sm">
                   Create a brand profile first to generate a calendar.
                 </div>
               ) : (

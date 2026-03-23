@@ -234,7 +234,7 @@ export function SentimentAnalysis() {
             <h2 className="text-2xl font-bold text-white">
               Sentiment Analysis
             </h2>
-            <p className="text-gray-400">AI-powered emotional intelligence</p>
+            <p className="text-gray-300">AI-powered emotional intelligence</p>
           </div>
         </div>
 
@@ -287,11 +287,11 @@ export function SentimentAnalysis() {
                     >
                       {(overallSentiment.score * 100).toFixed(0)}
                     </span>
-                    <span className="text-xs text-gray-400">Score</span>
+                    <span className="text-xs text-gray-300">Score</span>
                   </div>
                 </div>
               </div>
-              <p className="text-sm text-gray-400 mt-2">Overall Sentiment</p>
+              <p className="text-sm text-gray-300 mt-2">Overall Sentiment</p>
               <div className="flex items-center justify-center gap-1 mt-1">
                 {overallSentiment.trend > 0 ? (
                   <ArrowUp className="h-4 w-4 text-green-400" />
@@ -331,7 +331,7 @@ export function SentimentAnalysis() {
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: item.fill }}
                     />
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-gray-300">
                       {item.name}: {item.value.toFixed(1)}%
                     </span>
                   </div>
@@ -342,17 +342,17 @@ export function SentimentAnalysis() {
             {/* Key Metrics */}
             <div className="space-y-3">
               <div>
-                <p className="text-xs text-gray-400">Total Mentions</p>
+                <p className="text-xs text-gray-300">Total Mentions</p>
                 <p className="text-2xl font-bold text-white">
                   {sentimentData.length}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-400">Response Rate</p>
+                <p className="text-xs text-gray-300">Response Rate</p>
                 <p className="text-2xl font-bold text-white">78%</p>
               </div>
               <div>
-                <p className="text-xs text-gray-400">Avg. Confidence</p>
+                <p className="text-xs text-gray-300">Avg. Confidence</p>
                 <p className="text-2xl font-bold text-white">
                   {sentimentData.length > 0
                     ? (

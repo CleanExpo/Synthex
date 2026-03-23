@@ -111,7 +111,7 @@ function UniteHubIntegrationCard() {
           <>
             {/* Pull endpoint */}
             <div className="space-y-1.5">
-              <p className="text-xs font-medium text-gray-400">
+              <p className="text-xs font-medium text-gray-300">
                 Pull Endpoint{' '}
                 <span className="text-gray-600 font-normal">
                   (configure in Unite-Group)
@@ -129,7 +129,7 @@ function UniteHubIntegrationCard() {
                   disabled={copying}
                   aria-label="Copy pull endpoint URL"
                 >
-                  <Copy className="h-3.5 w-3.5 text-gray-400" />
+                  <Copy className="h-3.5 w-3.5 text-gray-300" />
                 </Button>
               </div>
             </div>
@@ -142,7 +142,7 @@ function UniteHubIntegrationCard() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 text-xs text-gray-400 hover:text-white hover:bg-white/[0.06] gap-1.5"
+                className="h-8 text-xs text-gray-300 hover:text-white hover:bg-white/[0.06] gap-1.5"
                 onClick={() =>
                   window.open(
                     'https://unite-hub.unite-group.com.au',
@@ -223,7 +223,7 @@ export function IntegrationsTab({
                   <div>
                     <p className="font-medium text-white">{platform.name}</p>
                     {platform.connected && platform.username && (
-                      <p className="text-sm text-slate-400">
+                      <p className="text-sm text-slate-300">
                         {platform.username}
                       </p>
                     )}
@@ -295,14 +295,14 @@ export function IntegrationsTab({
                   <Key className="w-5 h-5 text-orange-500" />
                   <div>
                     <p className="font-medium text-white">{apiKey.name}</p>
-                    <p className="text-sm text-slate-400 font-mono">
+                    <p className="text-sm text-slate-300 font-mono">
                       {apiKey.key}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right text-sm">
-                    <p className="text-slate-400">Created: {apiKey.created}</p>
+                    <p className="text-slate-300">Created: {apiKey.created}</p>
                     <p className="text-slate-500">
                       Last used: {apiKey.lastUsed}
                     </p>

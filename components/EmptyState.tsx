@@ -1,5 +1,5 @@
-import React from 'react'
-import { Button } from '@/components/ui/button'
+import React from 'react';
+import { Button } from '@/components/ui/button';
 import {
   FileText,
   BarChart3,
@@ -11,7 +11,7 @@ import {
   Search,
   Inbox,
   Link2,
-} from '@/components/icons'
+} from '@/components/icons';
 
 // ---------------------------------------------------------------------------
 // Inline SVG illustrations — amber-only palette, no cyan / green / blue
@@ -29,22 +29,125 @@ function AnalyticsIllustration() {
       className="mx-auto mb-2 opacity-60"
     >
       {/* Grid lines */}
-      <line x1="10" y1="70" x2="110" y2="70" stroke="#D97706" strokeWidth="1" strokeDasharray="3 3" opacity="0.3" />
-      <line x1="10" y1="50" x2="110" y2="50" stroke="#D97706" strokeWidth="1" strokeDasharray="3 3" opacity="0.2" />
-      <line x1="10" y1="30" x2="110" y2="30" stroke="#D97706" strokeWidth="1" strokeDasharray="3 3" opacity="0.15" />
+      <line
+        x1="10"
+        y1="70"
+        x2="110"
+        y2="70"
+        stroke="#D97706"
+        strokeWidth="1"
+        strokeDasharray="3 3"
+        opacity="0.3"
+      />
+      <line
+        x1="10"
+        y1="50"
+        x2="110"
+        y2="50"
+        stroke="#D97706"
+        strokeWidth="1"
+        strokeDasharray="3 3"
+        opacity="0.2"
+      />
+      <line
+        x1="10"
+        y1="30"
+        x2="110"
+        y2="30"
+        stroke="#D97706"
+        strokeWidth="1"
+        strokeDasharray="3 3"
+        opacity="0.15"
+      />
       {/* Empty bar outlines — no data yet */}
-      <rect x="15" y="40" width="18" height="30" rx="3" fill="none" stroke="#D97706" strokeWidth="1.5" opacity="0.4" strokeDasharray="4 3" />
-      <rect x="40" y="55" width="18" height="15" rx="3" fill="none" stroke="#D97706" strokeWidth="1.5" opacity="0.4" strokeDasharray="4 3" />
-      <rect x="65" y="30" width="18" height="40" rx="3" fill="none" stroke="#D97706" strokeWidth="1.5" opacity="0.4" strokeDasharray="4 3" />
-      <rect x="90" y="45" width="18" height="25" rx="3" fill="none" stroke="#D97706" strokeWidth="1.5" opacity="0.4" strokeDasharray="4 3" />
+      <rect
+        x="15"
+        y="40"
+        width="18"
+        height="30"
+        rx="3"
+        fill="none"
+        stroke="#D97706"
+        strokeWidth="1.5"
+        opacity="0.4"
+        strokeDasharray="4 3"
+      />
+      <rect
+        x="40"
+        y="55"
+        width="18"
+        height="15"
+        rx="3"
+        fill="none"
+        stroke="#D97706"
+        strokeWidth="1.5"
+        opacity="0.4"
+        strokeDasharray="4 3"
+      />
+      <rect
+        x="65"
+        y="30"
+        width="18"
+        height="40"
+        rx="3"
+        fill="none"
+        stroke="#D97706"
+        strokeWidth="1.5"
+        opacity="0.4"
+        strokeDasharray="4 3"
+      />
+      <rect
+        x="90"
+        y="45"
+        width="18"
+        height="25"
+        rx="3"
+        fill="none"
+        stroke="#D97706"
+        strokeWidth="1.5"
+        opacity="0.4"
+        strokeDasharray="4 3"
+      />
       {/* Sparkle / "no data" dot */}
       <circle cx="60" cy="15" r="5" fill="#D97706" opacity="0.5" />
-      <line x1="60" y1="8" x2="60" y2="4" stroke="#D97706" strokeWidth="1.5" opacity="0.4" />
-      <line x1="60" y1="26" x2="60" y2="22" stroke="#D97706" strokeWidth="1.5" opacity="0.4" />
-      <line x1="53" y1="15" x2="49" y2="15" stroke="#D97706" strokeWidth="1.5" opacity="0.4" />
-      <line x1="71" y1="15" x2="67" y2="15" stroke="#D97706" strokeWidth="1.5" opacity="0.4" />
+      <line
+        x1="60"
+        y1="8"
+        x2="60"
+        y2="4"
+        stroke="#D97706"
+        strokeWidth="1.5"
+        opacity="0.4"
+      />
+      <line
+        x1="60"
+        y1="26"
+        x2="60"
+        y2="22"
+        stroke="#D97706"
+        strokeWidth="1.5"
+        opacity="0.4"
+      />
+      <line
+        x1="53"
+        y1="15"
+        x2="49"
+        y2="15"
+        stroke="#D97706"
+        strokeWidth="1.5"
+        opacity="0.4"
+      />
+      <line
+        x1="71"
+        y1="15"
+        x2="67"
+        y2="15"
+        stroke="#D97706"
+        strokeWidth="1.5"
+        opacity="0.4"
+      />
     </svg>
-  )
+  );
 }
 
 /** No-platforms illustration: disconnected cloud with amber link indicator */
@@ -69,17 +172,90 @@ function PlatformsIllustration() {
         strokeLinejoin="round"
       />
       {/* Broken link indicator below cloud */}
-      <line x1="60" y1="55" x2="60" y2="63" stroke="#D97706" strokeWidth="1.5" opacity="0.4" />
-      <rect x="52" y="63" width="10" height="6" rx="2" fill="none" stroke="#D97706" strokeWidth="1.5" opacity="0.4" />
-      <line x1="62" y1="66" x2="67" y2="66" stroke="#D97706" strokeWidth="1.5" opacity="0.35" strokeDasharray="2 2" />
-      <rect x="67" y="63" width="10" height="6" rx="2" fill="none" stroke="#D97706" strokeWidth="1.5" opacity="0.4" />
+      <line
+        x1="60"
+        y1="55"
+        x2="60"
+        y2="63"
+        stroke="#D97706"
+        strokeWidth="1.5"
+        opacity="0.4"
+      />
+      <rect
+        x="52"
+        y="63"
+        width="10"
+        height="6"
+        rx="2"
+        fill="none"
+        stroke="#D97706"
+        strokeWidth="1.5"
+        opacity="0.4"
+      />
+      <line
+        x1="62"
+        y1="66"
+        x2="67"
+        y2="66"
+        stroke="#D97706"
+        strokeWidth="1.5"
+        opacity="0.35"
+        strokeDasharray="2 2"
+      />
+      <rect
+        x="67"
+        y="63"
+        width="10"
+        height="6"
+        rx="2"
+        fill="none"
+        stroke="#D97706"
+        strokeWidth="1.5"
+        opacity="0.4"
+      />
       {/* Small platform dots — disconnected */}
-      <circle cx="25" cy="65" r="7" fill="none" stroke="#D97706" strokeWidth="1.5" opacity="0.3" strokeDasharray="3 2" />
-      <circle cx="95" cy="65" r="7" fill="none" stroke="#D97706" strokeWidth="1.5" opacity="0.3" strokeDasharray="3 2" />
-      <line x1="32" y1="65" x2="40" y2="66" stroke="#D97706" strokeWidth="1" opacity="0.25" strokeDasharray="2 3" />
-      <line x1="80" y1="66" x2="88" y2="65" stroke="#D97706" strokeWidth="1" opacity="0.25" strokeDasharray="2 3" />
+      <circle
+        cx="25"
+        cy="65"
+        r="7"
+        fill="none"
+        stroke="#D97706"
+        strokeWidth="1.5"
+        opacity="0.3"
+        strokeDasharray="3 2"
+      />
+      <circle
+        cx="95"
+        cy="65"
+        r="7"
+        fill="none"
+        stroke="#D97706"
+        strokeWidth="1.5"
+        opacity="0.3"
+        strokeDasharray="3 2"
+      />
+      <line
+        x1="32"
+        y1="65"
+        x2="40"
+        y2="66"
+        stroke="#D97706"
+        strokeWidth="1"
+        opacity="0.25"
+        strokeDasharray="2 3"
+      />
+      <line
+        x1="80"
+        y1="66"
+        x2="88"
+        y2="65"
+        stroke="#D97706"
+        strokeWidth="1"
+        opacity="0.25"
+        strokeDasharray="2 3"
+      />
     </svg>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -87,12 +263,19 @@ function PlatformsIllustration() {
 // ---------------------------------------------------------------------------
 
 interface EmptyStateProps {
-  type: 'content' | 'analytics' | 'campaigns' | 'schedule' | 'search' | 'generic' | 'platforms'
-  title?: string
-  description?: string
-  actionLabel?: string
-  onAction?: () => void
-  className?: string
+  type:
+    | 'content'
+    | 'analytics'
+    | 'campaigns'
+    | 'schedule'
+    | 'search'
+    | 'generic'
+    | 'platforms';
+  title?: string;
+  description?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  className?: string;
 }
 
 const emptyStateConfigs = {
@@ -100,7 +283,8 @@ const emptyStateConfigs = {
     icon: FileText,
     illustration: null,
     title: 'No content yet',
-    description: 'Start creating engaging content for your social media channels',
+    description:
+      'Start creating engaging content for your social media channels',
     actionLabel: 'Generate First Content',
     gradient: 'from-amber-500 to-orange-500',
   },
@@ -108,7 +292,8 @@ const emptyStateConfigs = {
     icon: BarChart3,
     illustration: AnalyticsIllustration,
     title: 'No analytics data yet',
-    description: 'Once you start posting content, your performance metrics will appear here',
+    description:
+      'Once you start posting content, your performance metrics will appear here',
     actionLabel: 'View Sample Dashboard',
     gradient: 'from-amber-500 to-amber-600',
   },
@@ -124,7 +309,8 @@ const emptyStateConfigs = {
     icon: Calendar,
     illustration: null,
     title: 'Nothing scheduled',
-    description: 'Plan and schedule your content to maintain consistent posting',
+    description:
+      'Plan and schedule your content to maintain consistent posting',
     actionLabel: 'Schedule Content',
     gradient: 'from-amber-500 to-orange-500',
   },
@@ -148,11 +334,12 @@ const emptyStateConfigs = {
     icon: Link2,
     illustration: PlatformsIllustration,
     title: 'No platforms connected',
-    description: 'Connect your social media accounts to start scheduling posts and tracking performance',
+    description:
+      'Connect your social media accounts to start scheduling posts and tracking performance',
     actionLabel: 'Connect a Platform',
     gradient: 'from-amber-500 to-amber-600',
   },
-}
+};
 
 // ---------------------------------------------------------------------------
 // EmptyState component
@@ -166,9 +353,9 @@ export function EmptyState({
   onAction,
   className = '',
 }: EmptyStateProps) {
-  const config = emptyStateConfigs[type]
-  const Icon = config.icon
-  const Illustration = config.illustration
+  const config = emptyStateConfigs[type];
+  const Icon = config.icon;
+  const Illustration = config.illustration;
 
   return (
     <div
@@ -202,8 +389,12 @@ export function EmptyState({
       )}
 
       {/* Text content */}
-      <h3 className="text-xl font-semibold text-white mb-2">{title ?? config.title}</h3>
-      <p className="text-gray-400 max-w-md mb-6">{description ?? config.description}</p>
+      <h3 className="text-xl font-semibold text-white mb-2">
+        {title ?? config.title}
+      </h3>
+      <p className="text-gray-300 max-w-md mb-6">
+        {description ?? config.description}
+      </p>
 
       {/* Action button */}
       {(actionLabel ?? config.actionLabel) && (
@@ -222,17 +413,19 @@ export function EmptyState({
           <button className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
             <Upload className="w-5 h-5 text-amber-400 mb-2 mx-auto" />
             <span className="block text-white font-medium">Import Content</span>
-            <span className="text-gray-400">From file or URL</span>
+            <span className="text-gray-300">From file or URL</span>
           </button>
           <button className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
             <Sparkles className="w-5 h-5 text-amber-400 mb-2 mx-auto" />
-            <span className="block text-white font-medium">Use AI Assistant</span>
-            <span className="text-gray-400">Generate with AI</span>
+            <span className="block text-white font-medium">
+              Use AI Assistant
+            </span>
+            <span className="text-gray-300">Generate with AI</span>
           </button>
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -248,5 +441,5 @@ export function EmptyStateLoading() {
         <div className="h-4 w-64 bg-white/10 rounded mx-auto" />
       </div>
     </div>
-  )
+  );
 }

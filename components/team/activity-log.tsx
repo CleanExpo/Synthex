@@ -31,7 +31,7 @@ export function ActivityLogCard({
           <Activity className="mr-2 h-5 w-5" />
           Recent Activity
         </CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-slate-300">
           Team member activity and changes
         </CardDescription>
       </CardHeader>
@@ -44,7 +44,7 @@ export function ActivityLogCard({
             <div className="flex-1 min-w-0">
               <p className="text-sm text-white">
                 <span className="font-medium">{activity.userName}</span>
-                <span className="text-slate-400"> {activity.action}</span>
+                <span className="text-slate-300"> {activity.action}</span>
               </p>
               {activity.details && (
                 <p className="text-xs text-slate-500 mt-1">

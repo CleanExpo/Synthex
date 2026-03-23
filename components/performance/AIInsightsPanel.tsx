@@ -55,7 +55,7 @@ const IMPACT_STYLES: Record<
   low: {
     bg: 'bg-gray-500/10',
     border: 'border-gray-500/30',
-    text: 'text-gray-400',
+    text: 'text-gray-300',
   },
 };
 
@@ -97,7 +97,7 @@ function InsightCard({ insight }: InsightCardProps) {
               {insight.impact}
             </span>
           </div>
-          <p className="text-sm text-gray-400">{insight.description}</p>
+          <p className="text-sm text-gray-300">{insight.description}</p>
         </div>
       </div>
 
@@ -114,7 +114,7 @@ function InsightCard({ insight }: InsightCardProps) {
         <div>
           <button
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-400 transition-colors"
+            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-colors"
           >
             {expanded ? (
               <>
@@ -133,7 +133,7 @@ function InsightCard({ insight }: InsightCardProps) {
               {insight.evidence.map((item, idx) => (
                 <li
                   key={idx}
-                  className="text-xs text-gray-400 flex items-start gap-2"
+                  className="text-xs text-gray-300 flex items-start gap-2"
                 >
                   <span className="text-gray-600">•</span>
                   <span>{item}</span>
@@ -205,7 +205,7 @@ export function AIInsightsPanel({
         </div>
         <div className="text-center py-8">
           <Sparkles className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-          <p className="text-gray-400">Not enough data for AI insights</p>
+          <p className="text-gray-300">Not enough data for AI insights</p>
           <p className="text-sm text-gray-500 mt-1">
             Create more posts to unlock personalized recommendations
           </p>

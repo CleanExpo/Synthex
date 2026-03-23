@@ -43,7 +43,7 @@ export function PlatformChart({ data }: PlatformChartProps) {
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Platform Distribution</CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-slate-300">
           Engagement by platform
         </CardDescription>
       </CardHeader>

@@ -93,12 +93,12 @@ export function TaskCard({ task, onEdit, onDelete, onStatusChange }: TaskCardPro
         </div>
 
         <h3 className="font-semibold text-white mb-2 line-clamp-2">{task.title}</h3>
-        <p className="text-sm text-slate-400 mb-3 line-clamp-2">{task.description}</p>
+        <p className="text-sm text-slate-300 mb-3 line-clamp-2">{task.description}</p>
 
         {/* Subtasks Progress */}
         {task.subtasks.length > 0 && (
           <div className="mb-3">
-            <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+            <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
               <span>Subtasks</span>
               <span>{completedSubtasks}/{task.subtasks.length}</span>
             </div>
@@ -110,7 +110,7 @@ export function TaskCard({ task, onEdit, onDelete, onStatusChange }: TaskCardPro
         {task.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
             {task.tags.slice(0, 3).map((tag) => (
-              <span key={tag} className="text-xs px-2 py-0.5 rounded bg-white/5 text-slate-400">
+              <span key={tag} className="text-xs px-2 py-0.5 rounded bg-white/5 text-slate-300">
                 {tag}
               </span>
             ))}
@@ -139,7 +139,7 @@ export function TaskCard({ task, onEdit, onDelete, onStatusChange }: TaskCardPro
               )}
             </div>
           </div>
-          <div className={`flex items-center gap-1 text-xs ${isOverdue ? 'text-red-400' : 'text-slate-400'}`}>
+          <div className={`flex items-center gap-1 text-xs ${isOverdue ? 'text-red-400' : 'text-slate-300'}`}>
             <Calendar className="w-3 h-3" />
             {dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </div>

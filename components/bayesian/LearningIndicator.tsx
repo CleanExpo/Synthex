@@ -37,7 +37,7 @@ export function LearningIndicator({
   if (state === 'cold') {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-500/20 text-gray-400 text-xs font-medium ${className}`}
+        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-500/20 text-gray-300 text-xs font-medium ${className}`}
       >
         <Brain className="h-3 w-3" />
         No data yet

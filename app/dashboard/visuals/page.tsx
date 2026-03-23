@@ -100,7 +100,7 @@ export default function VisualsPage() {
               <ImageIcon className="h-7 w-7 text-orange-400" />
               Visual Library
             </h1>
-            <p className="text-gray-400 mt-1">
+            <p className="text-gray-300 mt-1">
               Paper Banana AI-generated academic diagrams and visualizations
             </p>
           </div>
@@ -168,7 +168,7 @@ export default function VisualsPage() {
           </div>
         ) : assets.length === 0 ? (
           <Card className="bg-surface-base/80 border border-orange-500/10">
-            <CardContent className="p-12 text-center text-gray-400">
+            <CardContent className="p-12 text-center text-gray-300">
               <ImageIcon className="h-12 w-12 mx-auto mb-3 opacity-30" />
               <p>No visuals generated yet</p>
               <p className="text-sm mt-1">
@@ -204,11 +204,11 @@ export default function VisualsPage() {
                 </div>
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between">
-                    <Badge className="bg-white/5 text-gray-400 text-xs">
+                    <Badge className="bg-white/5 text-gray-300 text-xs">
                       {typeLabels[asset.type] || asset.type}
                     </Badge>
                     <Badge
-                      className={`text-xs ${asset.status === 'approved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-400'}`}
+                      className={`text-xs ${asset.status === 'approved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-300'}`}
                     >
                       {asset.status}
                     </Badge>

@@ -338,7 +338,7 @@ export function VideoGenerationModal({
                         <SelectItem key={opt.value} value={opt.value}>
                           <span className="flex flex-col">
                             <span>{opt.label}</span>
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-gray-300">
                               {opt.description}
                             </span>
                           </span>
@@ -416,7 +416,7 @@ export function VideoGenerationModal({
                           className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                             isSelected
                               ? 'bg-orange-500/20 border border-orange-500/40 text-orange-400'
-                              : 'bg-white/[0.03] border border-white/[0.08] text-gray-400 hover:border-white/[0.15] hover:text-gray-300'
+                              : 'bg-white/[0.03] border border-white/[0.08] text-gray-300 hover:border-white/[0.15] hover:text-gray-300'
                           }`}
                         >
                           {p.label}
@@ -447,7 +447,7 @@ export function VideoGenerationModal({
                         setStatus('idle');
                         setGeneratedVideo(null);
                       }}
-                      className="px-4 py-2.5 rounded-lg bg-white/[0.03] border border-white/[0.08] text-gray-400 text-sm hover:bg-white/[0.06] hover:border-white/[0.15] transition-all"
+                      className="px-4 py-2.5 rounded-lg bg-white/[0.03] border border-white/[0.08] text-gray-300 text-sm hover:bg-white/[0.06] hover:border-white/[0.15] transition-all"
                     >
                       New Script
                     </button>

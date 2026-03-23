@@ -111,14 +111,14 @@ export function GenerationSettings({
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Generation Settings</CardTitle>
-        <CardDescription className="text-gray-400">
+        <CardDescription className="text-gray-300">
           Configure your content parameters
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Multi-platform toggle */}
         <label className="flex items-center justify-between cursor-pointer group">
-          <span className="flex items-center gap-2 text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+          <span className="flex items-center gap-2 text-sm text-gray-300 group-hover:text-gray-300 transition-colors">
             <Layers className="h-4 w-4" />
             Post to multiple platforms
           </span>
@@ -150,7 +150,7 @@ export function GenerationSettings({
 
         {/* Platform Selection */}
         <div>
-          <Label className="text-gray-400">
+          <Label className="text-gray-300">
             {multiPlatformEnabled
               ? 'Platforms (primary generates first)'
               : 'Platform'}
@@ -199,7 +199,7 @@ export function GenerationSettings({
 
         {/* Topic Input */}
         <div>
-          <Label htmlFor="topic" className="text-gray-400">
+          <Label htmlFor="topic" className="text-gray-300">
             Topic
           </Label>
           <Input
@@ -213,7 +213,7 @@ export function GenerationSettings({
 
         {/* Hook Type */}
         <div>
-          <Label className="text-gray-400">Hook Type</Label>
+          <Label className="text-gray-300">Hook Type</Label>
           <Select value={hookType} onValueChange={onHookTypeChange}>
             <SelectTrigger className="bg-white/5 border-white/10 text-white mt-2">
               <SelectValue />
@@ -223,7 +223,7 @@ export function GenerationSettings({
                 <SelectItem key={hook.value} value={hook.value}>
                   <div>
                     <div className="font-medium">{hook.label}</div>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-gray-300">
                       {hook.description}
                     </div>
                   </div>
@@ -235,7 +235,7 @@ export function GenerationSettings({
 
         {/* Tone */}
         <div>
-          <Label className="text-gray-400">Tone</Label>
+          <Label className="text-gray-300">Tone</Label>
           <Select value={tone} onValueChange={onToneChange}>
             <SelectTrigger className="bg-white/5 border-white/10 text-white mt-2">
               <SelectValue />
@@ -252,7 +252,7 @@ export function GenerationSettings({
 
         {/* Persona */}
         <div>
-          <Label className="text-gray-400">Persona (Optional)</Label>
+          <Label className="text-gray-300">Persona (Optional)</Label>
           <Select value={personaId} onValueChange={onPersonaChange}>
             <SelectTrigger className="bg-white/5 border-white/10 text-white mt-2">
               <SelectValue placeholder="Select a persona" />
@@ -276,7 +276,7 @@ export function GenerationSettings({
 
         {/* Length */}
         <div>
-          <Label className="text-gray-400">Content Length</Label>
+          <Label className="text-gray-300">Content Length</Label>
           <div className="grid grid-cols-3 gap-2 mt-2">
             {lengthOptions.map(length => (
               <button
@@ -303,7 +303,7 @@ export function GenerationSettings({
               onChange={e => onIncludeHashtagsChange(e.target.checked)}
               className="rounded border-gray-600 text-orange-500 focus:ring-orange-500"
             />
-            <Hash className="h-4 w-4 text-gray-400" />
+            <Hash className="h-4 w-4 text-gray-300" />
             <span className="text-sm text-white">Include Hashtags</span>
           </label>
           <label className="flex items-center space-x-2 cursor-pointer">
@@ -313,7 +313,7 @@ export function GenerationSettings({
               onChange={e => onIncludeEmojisChange(e.target.checked)}
               className="rounded border-gray-600 text-orange-500 focus:ring-orange-500"
             />
-            <Smile className="h-4 w-4 text-gray-400" />
+            <Smile className="h-4 w-4 text-gray-300" />
             <span className="text-sm text-white">Include Emojis</span>
           </label>
         </div>

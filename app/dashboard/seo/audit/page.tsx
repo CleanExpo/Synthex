@@ -603,7 +603,7 @@ export default function SEOAuditPage() {
             <h3 className="text-xl font-medium text-white mb-2">
               Ready to Audit
             </h3>
-            <p className="text-gray-400 max-w-md mx-auto">
+            <p className="text-gray-300 max-w-md mx-auto">
               Enter a website URL above to run a comprehensive SEO audit.
               We&apos;ll analyse technical issues, on-page elements, content
               quality, and Core Web Vitals.

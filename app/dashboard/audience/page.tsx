@@ -145,7 +145,7 @@ function GrowthTooltip({ active, payload }: CustomTooltipProps) {
 
   return (
     <div className="bg-gray-900 border border-white/10 rounded-lg p-3 shadow-xl">
-      <p className="text-sm text-gray-400 mb-2">{formatDate(data.date)}</p>
+      <p className="text-sm text-gray-300 mb-2">{formatDate(data.date)}</p>
       <div className="space-y-1">
         <div className="flex justify-between gap-4">
           <span className="text-sm text-white">Total</span>

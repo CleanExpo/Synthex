@@ -304,14 +304,14 @@ export default function BioPageEditor({ params }: PageProps) {
               <h1 className="text-lg font-semibold text-white">
                 {localPage?.title || currentPage.title}
               </h1>
-              <p className="text-sm text-gray-400">/{currentPage.slug}</p>
+              <p className="text-sm text-gray-300">/{currentPage.slug}</p>
             </div>
             <Badge
               variant={localPage?.isPublished ? 'default' : 'secondary'}
               className={cn(
                 localPage?.isPublished
                   ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                  : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                  : 'bg-gray-500/10 text-gray-300 border-gray-500/20'
               )}
             >
               {localPage?.isPublished ? 'Published' : 'Draft'}
@@ -426,7 +426,7 @@ export default function BioPageEditor({ params }: PageProps) {
             </div>
 
             {localLinks.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
+              <div className="text-center py-8 text-gray-300">
                 <p>No links yet. Add your first link above.</p>
               </div>
             ) : (
@@ -571,7 +571,7 @@ export default function BioPageEditor({ params }: PageProps) {
             <div className="flex items-center justify-between p-3 bg-gray-900/50 border border-white/10 rounded-lg">
               <div>
                 <p className="font-medium text-white">Show Branding</p>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-300">
                   Display "Powered by Synthex" in the footer
                 </p>
               </div>

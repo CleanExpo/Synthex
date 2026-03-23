@@ -66,7 +66,7 @@ export function MetricSelector({
       <div className="flex flex-wrap gap-4 items-end">
         {/* Metric selector */}
         <div className="space-y-1 min-w-[180px]">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+          <label className="text-xs font-medium text-gray-300 uppercase tracking-wide">
             Metric
           </label>
           <select
@@ -85,7 +85,7 @@ export function MetricSelector({
         {/* Platform selector — only render if metric supports per-platform breakdown */}
         {supportsPlatform && (
           <div className="space-y-1 min-w-[180px]">
-            <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            <label className="text-xs font-medium text-gray-300 uppercase tracking-wide">
               Platform
             </label>
             <select
@@ -110,7 +110,7 @@ export function MetricSelector({
 
         {/* Horizon buttons */}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+          <label className="text-xs font-medium text-gray-300 uppercase tracking-wide">
             Horizon
           </label>
           <div className="flex gap-1">
@@ -134,7 +134,7 @@ export function MetricSelector({
                       ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
                       : isDisabled
                       ? 'bg-white/[0.02] text-gray-600 border border-white/5 cursor-not-allowed'
-                      : 'bg-white/5 text-gray-400 border border-white/10 hover:border-emerald-500/30 hover:text-emerald-400',
+                      : 'bg-white/5 text-gray-300 border border-white/10 hover:border-emerald-500/30 hover:text-emerald-400',
                   ].join(' ')}
                 >
                   {HORIZON_LABELS[h]}

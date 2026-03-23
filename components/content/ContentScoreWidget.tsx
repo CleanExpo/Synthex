@@ -54,7 +54,7 @@ function ScoreGauge({ score }: { score: number }) {
         <span className="text-2xl font-bold text-white">
           {Math.round(score)}
         </span>
-        <span className="text-[10px] text-gray-400">/100</span>
+        <span className="text-[10px] text-gray-300">/100</span>
       </div>
     </div>
   );

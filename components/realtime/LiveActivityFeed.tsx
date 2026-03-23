@@ -90,7 +90,7 @@ const activityIcons: Record<ActivityType, React.ReactNode> = {
   team_member_action: <Activity className="h-4 w-4 text-blue-400" />,
   system_alert: <AlertTriangle className="h-4 w-4 text-orange-400" />,
   campaign_started: <CheckCircle className="h-4 w-4 text-green-400" />,
-  campaign_ended: <CheckCircle className="h-4 w-4 text-gray-400" />,
+  campaign_ended: <CheckCircle className="h-4 w-4 text-gray-300" />,
   milestone_reached: <TrendingUp className="h-4 w-4 text-yellow-400" />,
 };
 
@@ -318,7 +318,7 @@ export function LiveActivityFeed({
       {/* Activity Feed */}
       <div ref={feedRef} className="flex-1 overflow-y-auto">
         {activities.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400 p-8">
+          <div className="flex flex-col items-center justify-center h-full text-gray-300 p-8">
             <Activity className="h-12 w-12 mb-4 opacity-50" />
             <p className="text-center">{emptyMessage}</p>
           </div>
@@ -359,7 +359,7 @@ export function LiveActivityFeed({
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-400 mt-0.5 line-clamp-2">
+                    <p className="text-sm text-gray-300 mt-0.5 line-clamp-2">
                       {activity.description}
                     </p>
 
@@ -368,7 +368,7 @@ export function LiveActivityFeed({
                       <span
                         className={`
                           inline-flex items-center mt-2 px-2 py-0.5 rounded text-xs
-                          bg-white/5 text-gray-400 capitalize
+                          bg-white/5 text-gray-300 capitalize
                         `}
                       >
                         {activity.platform}

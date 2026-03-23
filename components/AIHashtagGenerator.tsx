@@ -225,7 +225,7 @@ export function AIHashtagGenerator({
           >
             {/* Selected Count */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-gray-300">
                 {selectedTags.size} hashtags selected
               </span>
               {selectedTags.size > 0 && (
@@ -274,7 +274,7 @@ export function AIHashtagGenerator({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-4 text-xs text-gray-400">
+                    <div className="flex items-center gap-4 text-xs text-gray-300">
                       <div className="flex items-center gap-1">
                         <Users className="h-3 w-3" />
                         {(tag.reach / 1000).toFixed(0)}K

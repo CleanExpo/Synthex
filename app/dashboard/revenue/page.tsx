@@ -7,7 +7,11 @@
  */
 
 import { useState, useCallback } from 'react';
-import { useRevenue, CreateRevenueInput, RevenueEntry } from '@/hooks/useRevenue';
+import {
+  useRevenue,
+  CreateRevenueInput,
+  RevenueEntry,
+} from '@/hooks/useRevenue';
 import { RevenueOverview } from '@/components/revenue/RevenueOverview';
 import { RevenueChart } from '@/components/revenue/RevenueChart';
 import { RevenueBySource } from '@/components/revenue/RevenueBySource';
@@ -33,7 +37,9 @@ import type { RevenueSource } from '@/lib/revenue/revenue-service';
 
 export default function RevenuePage() {
   const [source, setSource] = useState<RevenueSource | 'all'>('all');
-  const [dateRange, setDateRange] = useState<'30d' | '90d' | '365d' | 'all'>('all');
+  const [dateRange, setDateRange] = useState<'30d' | '90d' | '365d' | 'all'>(
+    'all'
+  );
 
   // Calculate date filters
   const getDateFilters = () => {
@@ -106,7 +112,9 @@ export default function RevenuePage() {
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-6 h-6 text-red-400" />
             <div>
-              <h3 className="text-lg font-semibold text-white">Failed to load revenue data</h3>
+              <h3 className="text-lg font-semibold text-white">
+                Failed to load revenue data
+              </h3>
               <p className="text-red-400">{error}</p>
             </div>
           </div>
@@ -132,7 +140,7 @@ export default function RevenuePage() {
         <div className="flex items-center gap-3">
           <Select
             value={source}
-            onValueChange={(v) => setSource(v as RevenueSource | 'all')}
+            onValueChange={v => setSource(v as RevenueSource | 'all')}
           >
             <SelectTrigger className="w-[140px] bg-gray-900/50 border-white/10">
               <SelectValue placeholder="Source" />
@@ -149,7 +157,7 @@ export default function RevenuePage() {
           </Select>
           <Select
             value={dateRange}
-            onValueChange={(v) => setDateRange(v as typeof dateRange)}
+            onValueChange={v => setDateRange(v as typeof dateRange)}
           >
             <SelectTrigger className="w-[120px] bg-gray-900/50 border-white/10">
               <SelectValue placeholder="Period" />
@@ -185,10 +193,12 @@ export default function RevenuePage() {
       {emptyData && !isLoading && (
         <div className="bg-gray-900/30 border border-white/10 rounded-xl p-12 text-center">
           <DollarSign className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">No Revenue Data Yet</h3>
-          <p className="text-gray-400 max-w-md mx-auto mb-6">
-            Start tracking your income by adding your first revenue entry.
-            Track sponsorships, affiliate commissions, ad revenue, and more.
+          <h3 className="text-xl font-semibold text-white mb-2">
+            No Revenue Data Yet
+          </h3>
+          <p className="text-gray-300 max-w-md mx-auto mb-6">
+            Start tracking your income by adding your first revenue entry. Track
+            sponsorships, affiliate commissions, ad revenue, and more.
           </p>
           <Button onClick={handleAddEntry} className="gap-2">
             <Plus className="w-4 h-4" />
@@ -199,7 +209,10 @@ export default function RevenuePage() {
 
       {/* Overview Stats */}
       {(!emptyData || isLoading) && (
-        <RevenueOverview summary={data?.summary || null} isLoading={isLoading} />
+        <RevenueOverview
+          summary={data?.summary || null}
+          isLoading={isLoading}
+        />
       )}
 
       {/* Charts Row */}
@@ -213,14 +226,16 @@ export default function RevenuePage() {
             />
           </div>
           <RevenueBySource
-            data={data?.summary.bySource || {
-              sponsorship: 0,
-              affiliate: 0,
-              ads: 0,
-              tips: 0,
-              merchandise: 0,
-              other: 0,
-            }}
+            data={
+              data?.summary.bySource || {
+                sponsorship: 0,
+                affiliate: 0,
+                ads: 0,
+                tips: 0,
+                merchandise: 0,
+                other: 0,
+              }
+            }
             currency={data?.summary.currency}
             isLoading={isLoading}
           />
@@ -231,7 +246,9 @@ export default function RevenuePage() {
       {(!emptyData || isLoading) && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">Revenue Entries</h3>
+            <h3 className="text-lg font-semibold text-white">
+              Revenue Entries
+            </h3>
             <span className="text-sm text-gray-500">
               {data?.entries.length || 0} entries
             </span>

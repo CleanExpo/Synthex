@@ -187,7 +187,7 @@ export function SASScore({
 
         {/* Score Breakdown */}
         <div className="space-y-3">
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-400">
+          <p className="text-xs font-medium uppercase tracking-wider text-gray-300">
             Score Breakdown
           </p>
           {factors.map((factor, index) => (
@@ -223,7 +223,7 @@ export function SASScore({
         {/* Methodology Note */}
         <div className="border-t border-white/10 pt-4">
           <details className="group">
-            <summary className="cursor-pointer text-xs text-gray-400 hover:text-gray-300 transition-colors">
+            <summary className="cursor-pointer text-xs text-gray-300 hover:text-gray-300 transition-colors">
               View scoring methodology
             </summary>
             <div className="mt-2 text-xs text-gray-500 space-y-1">
@@ -267,7 +267,7 @@ export function SASScoreInline({
   return (
     <div className={cn('inline-flex items-center gap-2', className)}>
       <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20">
-        <span className="text-xs font-medium text-gray-400">SAS</span>
+        <span className="text-xs font-medium text-gray-300">SAS</span>
         <span className="text-sm font-bold text-orange-400">
           {score.toFixed(1)}
         </span>

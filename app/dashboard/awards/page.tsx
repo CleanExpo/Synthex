@@ -205,7 +205,7 @@ function AddAwardForm({
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-400 text-sm rounded-lg transition-colors"
+          className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 text-sm rounded-lg transition-colors"
         >
           Cancel
         </button>
@@ -347,7 +347,7 @@ function AddDirectoryForm({
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-400 text-sm rounded-lg transition-colors"
+          className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 text-sm rounded-lg transition-colors"
         >
           Cancel
         </button>
@@ -542,7 +542,7 @@ function AwardsPageContent() {
             <h1 className="text-xl font-bold text-white">
               Awards &amp; Directories
             </h1>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-300">
               Track award nominations and directory listings for E-E-A-T signals
               and backlinks
             </p>
@@ -620,7 +620,7 @@ function AwardsPageContent() {
         {/* Awards Tab */}
         <TabsContent value="awards">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-300">
               {awards.length} award{awards.length !== 1 ? 's' : ''} tracked
             </p>
             <button
@@ -649,7 +649,7 @@ function AwardsPageContent() {
           {awards.length === 0 && !showAwardForm ? (
             <div className="text-center py-16">
               <Award className="h-12 w-12 text-slate-700 mx-auto mb-3" />
-              <p className="text-slate-400 text-sm font-medium">
+              <p className="text-slate-300 text-sm font-medium">
                 No awards tracked yet
               </p>
               <p className="text-slate-600 text-xs mt-1">
@@ -685,7 +685,7 @@ function AwardsPageContent() {
         {/* Directories Tab */}
         <TabsContent value="directories">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-300">
               {directories.length} director
               {directories.length !== 1 ? 'ies' : 'y'} tracked
             </p>
@@ -715,7 +715,7 @@ function AwardsPageContent() {
           {directories.length === 0 && !showDirForm ? (
             <div className="text-center py-16">
               <Globe className="h-12 w-12 text-slate-700 mx-auto mb-3" />
-              <p className="text-slate-400 text-sm font-medium">
+              <p className="text-slate-300 text-sm font-medium">
                 No directories tracked yet
               </p>
               <p className="text-slate-600 text-xs mt-1">

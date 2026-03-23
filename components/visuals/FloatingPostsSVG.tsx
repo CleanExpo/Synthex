@@ -103,7 +103,7 @@ function PostCard({ post, index }: { post: Post; index: number }) {
                 </svg>
               )}
             </div>
-            <span className="text-slate-400 text-sm">{post.handle}</span>
+            <span className="text-slate-300 text-sm">{post.handle}</span>
           </div>
         </div>
 
@@ -115,21 +115,21 @@ function PostCard({ post, index }: { post: Post; index: number }) {
         {/* Engagement */}
         <div className="flex items-center justify-between pt-4 border-t border-white/10">
           <button
-            className={`flex items-center gap-2 transition-all ${liked ? 'text-red-500 scale-110' : 'text-slate-400 hover:text-red-500'}`}
+            className={`flex items-center gap-2 transition-all ${liked ? 'text-red-500 scale-110' : 'text-slate-300 hover:text-red-500'}`}
             onClick={() => setLiked(!liked)}
           >
             <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
             <span className="text-sm">{post.likes}</span>
           </button>
-          <button className="flex items-center gap-2 text-slate-400 hover:text-blue-400 transition-colors">
+          <button className="flex items-center gap-2 text-slate-300 hover:text-blue-400 transition-colors">
             <MessageCircle className="w-5 h-5" />
             <span className="text-sm">{post.comments}</span>
           </button>
-          <button className="flex items-center gap-2 text-slate-400 hover:text-green-400 transition-colors">
+          <button className="flex items-center gap-2 text-slate-300 hover:text-green-400 transition-colors">
             <Share2 className="w-5 h-5" />
             <span className="text-sm">{post.shares}</span>
           </button>
-          <button className="text-slate-400 hover:text-orange-400 transition-colors">
+          <button className="text-slate-300 hover:text-orange-400 transition-colors">
             <Bookmark className="w-5 h-5" />
           </button>
         </div>

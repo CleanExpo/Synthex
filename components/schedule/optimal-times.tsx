@@ -74,7 +74,7 @@ export function OptimalTimes() {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-lg">Optimal Posting Times</CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription className="text-slate-300">
               {usingFallback
                 ? 'Industry-standard engagement patterns'
                 : 'Based on your audience engagement patterns'}
@@ -128,7 +128,7 @@ export function OptimalTimes() {
                         {times.map((time: string) => (
                           <span
                             key={time}
-                            className="text-xs bg-white/5 text-slate-400 px-2 py-1 rounded"
+                            className="text-xs bg-white/5 text-slate-300 px-2 py-1 rounded"
                           >
                             {time}
                           </span>
@@ -159,7 +159,7 @@ export function OptimalTimes() {
                       {topSlots.map(slot => (
                         <span
                           key={`${slot.day}-${slot.hour}`}
-                          className="text-xs bg-white/5 text-slate-400 px-2 py-1 rounded"
+                          className="text-xs bg-white/5 text-slate-300 px-2 py-1 rounded"
                           title={`${slot.day} — Score: ${slot.score}, Confidence: ${Math.round(slot.confidence * 100)}%`}
                         >
                           {formatHour(slot.hour)}

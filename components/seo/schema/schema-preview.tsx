@@ -101,11 +101,11 @@ ${JSON.stringify(schema, null, 2)}
               <h4 className="text-sm font-medium text-gray-300">
                 Recommendations
               </h4>
-              <div className="flex items-start gap-2 text-sm text-gray-400">
+              <div className="flex items-start gap-2 text-sm text-gray-300">
                 <AlertTriangle className="w-4 h-4 text-yellow-400 mt-0.5" />
                 <span>Test with Google Rich Results Test before deploying</span>
               </div>
-              <div className="flex items-start gap-2 text-sm text-gray-400">
+              <div className="flex items-start gap-2 text-sm text-gray-300">
                 <AlertTriangle className="w-4 h-4 text-yellow-400 mt-0.5" />
                 <span>
                   Add this script tag to your page&apos;s &lt;head&gt; section
@@ -119,7 +119,7 @@ ${JSON.stringify(schema, null, 2)}
             <h3 className="text-lg font-medium text-white mb-2">
               No Schema Generated
             </h3>
-            <p className="text-gray-400 max-w-sm mx-auto">
+            <p className="text-gray-300 max-w-sm mx-auto">
               Fill in the form on the left and click &quot;Generate Schema&quot;
               to create your JSON-LD structured data.
             </p>

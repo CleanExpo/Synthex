@@ -224,7 +224,7 @@ export function ModuleScoreGrid({
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-gray-400 group-hover:text-gray-300 transition-colors truncate pr-2">
+              <span className="text-xs font-medium text-gray-300 group-hover:text-gray-300 transition-colors truncate pr-2">
                 {module.label}
               </span>
               <StatusDot active={hasData} />

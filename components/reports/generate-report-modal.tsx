@@ -83,7 +83,7 @@ export function GenerateReportModal({
                     <type.icon className="w-5 h-5 text-orange-400" />
                     <div>
                       <p className="font-medium text-white">{type.name}</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-300">
                         {type.description}
                       </p>
                     </div>

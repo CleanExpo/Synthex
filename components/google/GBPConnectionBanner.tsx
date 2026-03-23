@@ -30,7 +30,7 @@ export function GBPConnectionBanner({ onConnect }: GBPConnectionBannerProps) {
           <h3 className="text-lg font-semibold text-white mb-1">
             Connect Google Business Profile
           </h3>
-          <p className="text-sm text-gray-400 mb-4">
+          <p className="text-sm text-gray-300 mb-4">
             Connect your Google account to manage your business listings,
             respond to reviews, post updates, and track local search performance
             — all from Synthex.

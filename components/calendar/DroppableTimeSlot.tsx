@@ -141,7 +141,7 @@ export function DroppableTimeSlot({
               bg-white/5 hover:bg-white/10 rounded
             `}
           >
-            <div className="flex items-center gap-2 text-gray-400 hover:text-white text-sm">
+            <div className="flex items-center gap-2 text-gray-300 hover:text-white text-sm">
               <Plus className="h-4 w-4" />
               <span>Schedule post</span>
             </div>

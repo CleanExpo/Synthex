@@ -488,7 +488,7 @@ export default function SchemaMarkupManagerPage() {
           <Button
             variant="ghost"
             size="icon"
-            className="text-gray-400 hover:text-white"
+            className="text-gray-300 hover:text-white"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -498,7 +498,7 @@ export default function SchemaMarkupManagerPage() {
             <Code className="w-8 h-8 text-orange-400" />
             Schema Markup Manager
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="text-gray-300 mt-1">
             Create, validate, and manage JSON-LD structured data for rich search
             results
           </p>
@@ -519,7 +519,7 @@ export default function SchemaMarkupManagerPage() {
               className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
                 activeTab === tab.id
                   ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30 border-b-transparent'
-                  : 'text-gray-400 hover:text-white'
+                  : 'text-gray-300 hover:text-white'
               }`}
             >
               {tab.label}
@@ -597,7 +597,7 @@ export default function SchemaMarkupManagerPage() {
                 {/* Inline validation score badge */}
                 {hook.validationResult && (
                   <div className="flex items-center gap-2 p-3 rounded-lg bg-white/5">
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-gray-300">
                       Validation score:
                     </span>
                     <ScoreBadge score={hook.validationResult.score} />
@@ -678,7 +678,7 @@ export default function SchemaMarkupManagerPage() {
                   <div className="space-y-4">
                     {/* Score */}
                     <div className="flex items-center justify-between p-4 rounded-lg bg-white/5">
-                      <span className="text-sm text-gray-400">
+                      <span className="text-sm text-gray-300">
                         Overall Score
                       </span>
                       <div className="flex items-center gap-3">
@@ -762,7 +762,7 @@ export default function SchemaMarkupManagerPage() {
                         <p className="text-xs text-orange-400 font-medium mb-1">
                           Fix Issues
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-300">
                           Add the missing required fields highlighted above.
                           Ensure all URLs use valid https:// format and dates
                           are in ISO 8601 format (e.g. 2024-01-15).
@@ -823,7 +823,7 @@ export default function SchemaMarkupManagerPage() {
             {hook.extractionResult && (
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-300">
                     Found{' '}
                     <span className="text-white font-medium">
                       {hook.extractionResult.totalFound}
@@ -867,7 +867,7 @@ export default function SchemaMarkupManagerPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleCopyExtracted(s.data, i)}
-                            className="text-gray-400 hover:text-white h-8"
+                            className="text-gray-300 hover:text-white h-8"
                           >
                             {copiedIndex === i ? (
                               <Check className="w-4 h-4 text-green-400" />
@@ -889,7 +889,7 @@ export default function SchemaMarkupManagerPage() {
                                 expandedSchemaIndex === i ? null : i
                               )
                             }
-                            className="text-gray-400 hover:text-white"
+                            className="text-gray-300 hover:text-white"
                           >
                             {expandedSchemaIndex === i ? (
                               <ChevronUp className="w-4 h-4" />
@@ -934,7 +934,7 @@ export default function SchemaMarkupManagerPage() {
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                     templateCategory === cat.id
                       ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                      : 'text-gray-400 hover:text-white bg-white/5 hover:bg-white/10'
+                      : 'text-gray-300 hover:text-white bg-white/5 hover:bg-white/10'
                   }`}
                 >
                   {cat.label}
@@ -979,7 +979,7 @@ export default function SchemaMarkupManagerPage() {
                       <h3 className="text-sm font-semibold text-white mb-1">
                         {template.name}
                       </h3>
-                      <p className="text-xs text-gray-400 leading-relaxed mb-4">
+                      <p className="text-xs text-gray-300 leading-relaxed mb-4">
                         {template.description}
                       </p>
                       <Button
@@ -1027,7 +1027,7 @@ export default function SchemaMarkupManagerPage() {
                     <h3 className="text-white font-medium">
                       Rich Results Preview
                     </h3>
-                    <p className="text-sm text-gray-400 mt-0.5">
+                    <p className="text-sm text-gray-300 mt-0.5">
                       How your schema may appear in Google Search results
                     </p>
                   </div>
@@ -1048,7 +1048,7 @@ export default function SchemaMarkupManagerPage() {
                   <div className="space-y-4">
                     {/* Preview type badge */}
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-400">
+                      <span className="text-sm text-gray-300">
                         Preview type:
                       </span>
                       <span className="px-2 py-0.5 text-xs font-semibold bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-full capitalize">
@@ -1061,7 +1061,7 @@ export default function SchemaMarkupManagerPage() {
                       <div className="flex items-center gap-2 mb-4">
                         <Search className="w-4 h-4 text-gray-500" />
                         <div className="flex-1 h-8 rounded-full bg-white/10 border border-white/20 flex items-center px-3">
-                          <span className="text-sm text-gray-400">
+                          <span className="text-sm text-gray-300">
                             Google Search preview
                           </span>
                         </div>

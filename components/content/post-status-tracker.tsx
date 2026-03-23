@@ -151,7 +151,7 @@ export function PostStatusTracker({
     return (
       <Card variant="glass">
         <CardContent className="py-6">
-          <div className="flex items-center justify-center gap-2 text-sm text-slate-400">
+          <div className="flex items-center justify-center gap-2 text-sm text-slate-300">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading post status...
           </div>
@@ -177,7 +177,7 @@ export function PostStatusTracker({
               variant="ghost"
               size="sm"
               onClick={handleRefresh}
-              className="h-7 px-2 text-slate-400 hover:text-white"
+              className="h-7 px-2 text-slate-300 hover:text-white"
             >
               <RefreshCw className="h-3.5 w-3.5" />
             </Button>
@@ -186,7 +186,7 @@ export function PostStatusTracker({
                 variant="ghost"
                 size="sm"
                 onClick={onDismiss}
-                className="h-7 px-2 text-slate-400 hover:text-white text-xs"
+                className="h-7 px-2 text-slate-300 hover:text-white text-xs"
               >
                 Dismiss
               </Button>
@@ -197,7 +197,7 @@ export function PostStatusTracker({
         {/* Progress bar */}
         {totalCount > 1 && (
           <div className="mt-2 space-y-1">
-            <div className="flex items-center justify-between text-[10px] text-slate-400">
+            <div className="flex items-center justify-between text-[10px] text-slate-300">
               <span>
                 {publishedCount}/{totalCount} platforms published
               </span>
@@ -237,7 +237,7 @@ export function PostStatusTracker({
 
               <div className="flex items-center gap-3">
                 {post.scheduledAt && (
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-[10px] text-slate-300">
                     {new Date(post.scheduledAt).toLocaleString('en-AU', {
                       day: '2-digit',
                       month: 'short',

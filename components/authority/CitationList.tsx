@@ -36,7 +36,7 @@ export function CitationList({ citations }: CitationListProps) {
 
   if (citations.length === 0) {
     return (
-      <p className="text-sm text-slate-400 text-center py-8">
+      <p className="text-sm text-slate-300 text-center py-8">
         No citations generated yet. Analyse content to generate citations.
       </p>
     );
@@ -81,7 +81,7 @@ export function CitationList({ citations }: CitationListProps) {
           </div>
           <button
             onClick={() => copy(citation.citationText, i)}
-            className="shrink-0 p-1.5 rounded hover:bg-white/10 text-slate-400 hover:text-slate-300 transition-colors"
+            className="shrink-0 p-1.5 rounded hover:bg-white/10 text-slate-300 hover:text-slate-300 transition-colors"
           >
             {copiedIndex === i ? (
               <Check className="h-3.5 w-3.5 text-emerald-400" />

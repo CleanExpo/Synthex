@@ -34,7 +34,7 @@ export function TopPosts({ posts, onViewDetails, onViewAll }: TopPostsProps) {
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Top Performing Posts</CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-slate-300">
           Your best content this period
         </CardDescription>
       </CardHeader>
@@ -52,11 +52,11 @@ export function TopPosts({ posts, onViewDetails, onViewAll }: TopPostsProps) {
                     {post.content}
                   </p>
                   <div className="flex items-center space-x-4 mt-1">
-                    <span className="text-xs text-slate-400 flex items-center">
+                    <span className="text-xs text-slate-300 flex items-center">
                       <Eye className="h-3 w-3 mr-1" />
                       {(post.impressions / 1000).toFixed(1)}K
                     </span>
-                    <span className="text-xs text-slate-400 flex items-center">
+                    <span className="text-xs text-slate-300 flex items-center">
                       <Heart className="h-3 w-3 mr-1" />
                       {(post.engagement / 1000).toFixed(1)}K
                     </span>
@@ -68,7 +68,7 @@ export function TopPosts({ posts, onViewDetails, onViewAll }: TopPostsProps) {
                 onClick={() => onViewDetails(post.id)}
                 size="sm"
                 variant="ghost"
-                className="text-slate-400"
+                className="text-slate-300"
               >
                 <BarChart3 className="h-4 w-4" />
               </Button>

@@ -332,7 +332,7 @@ export function SimplePagination({
         Previous
       </Button>
 
-      <span className="text-sm text-slate-400">
+      <span className="text-sm text-slate-300">
         Page {page} of {totalPages}
       </span>
 

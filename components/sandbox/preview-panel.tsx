@@ -56,7 +56,7 @@ export function PreviewPanel({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Live Preview</CardTitle>
-            <CardDescription className="text-gray-400">
+            <CardDescription className="text-gray-300">
               See how your content will look
             </CardDescription>
           </div>
@@ -72,7 +72,7 @@ export function PreviewPanel({
                     className={`p-2 rounded transition-all ${
                       device === key
                         ? 'bg-orange-500/20 text-orange-400'
-                        : 'text-gray-400 hover:text-white'
+                        : 'text-gray-300 hover:text-white'
                     }`}
                     title={preset.label}
                   >
@@ -85,7 +85,7 @@ export function PreviewPanel({
               size="sm"
               variant="ghost"
               onClick={onToggleFullscreen}
-              className="text-gray-400"
+              className="text-gray-300"
             >
               {isFullscreen ? (
                 <Minimize2 className="h-4 w-4" />

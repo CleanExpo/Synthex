@@ -93,7 +93,7 @@ export function MetricTrendChart({
 
   return (
     <div className="rounded-lg bg-white/5 p-3">
-      <div className="text-xs text-gray-400 font-medium mb-2">{label}</div>
+      <div className="text-xs text-gray-300 font-medium mb-2">{label}</div>
       <svg
         viewBox={`0 0 ${width} ${height}`}
         className="w-full overflow-visible"

@@ -89,7 +89,7 @@ const STATUS_CONFIG: Record<
 // ─── DA colour coding ───────────────────────────────────────────────────────
 
 function getDaColour(da: number | null): string {
-  if (da === null) return 'text-slate-400';
+  if (da === null) return 'text-slate-300';
   if (da >= 70) return 'text-emerald-400';
   if (da >= 40) return 'text-orange-400';
   return 'text-red-400';
@@ -166,7 +166,7 @@ export function BacklinkProspectCard({
             href={prospect.targetUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-1 flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+            className="mt-1 flex items-center gap-1 text-xs text-slate-300 hover:text-slate-200 transition-colors"
           >
             <ExternalLink className="h-3 w-3 shrink-0" />
             <span className="truncate">{truncateUrl(prospect.targetUrl)}</span>
@@ -205,7 +205,7 @@ export function BacklinkProspectCard({
 
       {/* Notes */}
       {prospect.notes && (
-        <p className="text-xs text-slate-400 mb-3 line-clamp-2">
+        <p className="text-xs text-slate-300 mb-3 line-clamp-2">
           {prospect.notes}
         </p>
       )}

@@ -91,7 +91,7 @@ const TrendIcon: React.FC<{ trend: 'up' | 'down' | 'stable' }> = ({
   }
   return (
     <svg
-      className="h-4 w-4 text-gray-400"
+      className="h-4 w-4 text-gray-300"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -219,7 +219,7 @@ export function ReverenceSidebar({
 
           {/* Social Share */}
           <div className="border-t border-white/10 pt-4">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-400">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-300">
               Share Research
             </p>
             <div className="flex gap-2">
@@ -239,7 +239,7 @@ export function ReverenceSidebar({
 
           {/* Cite This Research */}
           <div className="border-t border-white/10 pt-4">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-400">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-300">
               📋 Cite This Research
             </p>
             <div className="space-y-2">
@@ -267,7 +267,7 @@ export function ReverenceSidebar({
           {/* Download Options */}
           {downloadOptions.length > 0 && (
             <div className="border-t border-white/10 pt-4">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-400">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-300">
                 ⬇️ Download Report
               </p>
               <div className="flex gap-2">

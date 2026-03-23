@@ -125,7 +125,7 @@ function ScoreCircle({ score }: { score: number }) {
         <div className={`text-4xl font-bold ${getScoreColor(score)}`}>
           {score}
         </div>
-        <div className="text-xs text-slate-400 mt-0.5">/ 100</div>
+        <div className="text-xs text-slate-300 mt-0.5">/ 100</div>
       </div>
     </div>
   );
@@ -166,7 +166,7 @@ function TemplateSuggestionCard({
         <p className="text-sm font-medium text-white truncate">
           {template.name}
         </p>
-        <p className="text-xs text-slate-400 capitalize">{template.category}</p>
+        <p className="text-xs text-slate-300 capitalize">{template.category}</p>
       </div>
       <Button
         size="sm"
@@ -315,7 +315,7 @@ export default function ContentOptimizePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Platform selector */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+                  <label className="text-xs font-medium text-slate-300 uppercase tracking-wide">
                     Platform
                   </label>
                   <select
@@ -337,7 +337,7 @@ export default function ContentOptimizePage() {
 
                 {/* Goal selector */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+                  <label className="text-xs font-medium text-slate-300 uppercase tracking-wide">
                     Goal
                   </label>
                   <select
@@ -360,7 +360,7 @@ export default function ContentOptimizePage() {
 
               {/* Textarea */}
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+                <label className="text-xs font-medium text-slate-300 uppercase tracking-wide">
                   Content
                 </label>
                 <textarea
@@ -413,7 +413,7 @@ export default function ContentOptimizePage() {
                 <Sparkles className="w-5 h-5 text-orange-400" />
                 Content Score
                 {isScoring && (
-                  <span className="text-xs text-slate-400 font-normal ml-2 animate-pulse">
+                  <span className="text-xs text-slate-300 font-normal ml-2 animate-pulse">
                     Analyzing...
                   </span>
                 )}

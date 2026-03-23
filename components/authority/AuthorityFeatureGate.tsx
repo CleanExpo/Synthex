@@ -26,7 +26,7 @@ export function AuthorityFeatureGate({
         <h3 className="text-lg font-semibold text-white mb-2">
           Unlock {featureName}
         </h3>
-        <p className="text-sm text-slate-400 max-w-xs mb-6">
+        <p className="text-sm text-slate-300 max-w-xs mb-6">
           This feature requires the Authority Engine add-on at $22 AUD/month.
           Get verified citations, claim validation, and source connectors.
         </p>

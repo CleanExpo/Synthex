@@ -75,7 +75,7 @@ function getImpactColor(impact: 'positive' | 'neutral' | 'negative'): string {
     case 'negative':
       return 'text-red-400';
     default:
-      return 'text-slate-400';
+      return 'text-slate-300';
   }
 }
 
@@ -132,7 +132,7 @@ export function EngagementPredictor({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Content Text */}
           <div>
-            <label className="block text-sm text-slate-400 mb-1.5">
+            <label className="block text-sm text-slate-300 mb-1.5">
               Content Text
             </label>
             <textarea
@@ -148,7 +148,7 @@ export function EngagementPredictor({
           {/* Platform & Content Type */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-slate-400 mb-1.5">
+              <label className="block text-sm text-slate-300 mb-1.5">
                 Platform
               </label>
               <select
@@ -164,7 +164,7 @@ export function EngagementPredictor({
               </select>
             </div>
             <div>
-              <label className="block text-sm text-slate-400 mb-1.5">
+              <label className="block text-sm text-slate-300 mb-1.5">
                 Content Type
               </label>
               <select
@@ -183,7 +183,7 @@ export function EngagementPredictor({
 
           {/* Media Options */}
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
               <input
                 type="checkbox"
                 checked={hasMedia}
@@ -241,7 +241,7 @@ export function EngagementPredictor({
                     key={metric.label}
                     className="rounded-lg bg-white/5 border border-white/10 p-3"
                   >
-                    <p className="text-xs text-slate-400">{metric.label}</p>
+                    <p className="text-xs text-slate-300">{metric.label}</p>
                     <p className="text-lg font-semibold text-white">
                       {typeof metric.value === 'number'
                         ? metric.value.toLocaleString()
@@ -254,7 +254,7 @@ export function EngagementPredictor({
 
             {/* Confidence Badge */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-400">Confidence:</span>
+              <span className="text-sm text-slate-300">Confidence:</span>
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getConfidenceColor(
                   result.prediction.confidence
@@ -296,7 +296,7 @@ export function EngagementPredictor({
                   {result.recommendations.map((rec, i) => (
                     <li
                       key={i}
-                      className="flex items-start gap-2 text-sm text-slate-400"
+                      className="flex items-start gap-2 text-sm text-slate-300"
                     >
                       <span className="text-orange-400 mt-0.5">-</span>
                       <span>{rec}</span>

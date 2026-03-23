@@ -102,7 +102,7 @@ export default function SitemapAnalyzerPage() {
           <Button
             variant="ghost"
             size="icon"
-            className="text-gray-400 hover:text-white"
+            className="text-gray-300 hover:text-white"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -112,7 +112,7 @@ export default function SitemapAnalyzerPage() {
             <Map className="w-8 h-8 text-orange-400" />
             Sitemap Analyzer
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="text-gray-300 mt-1">
             Validate and analyze XML sitemaps
           </p>
         </div>
@@ -174,7 +174,7 @@ export default function SitemapAnalyzerPage() {
                   <p className="text-white font-medium">
                     {result.valid ? 'Valid' : 'Invalid'}
                   </p>
-                  <p className="text-gray-400 text-sm">XML Structure</p>
+                  <p className="text-gray-300 text-sm">XML Structure</p>
                 </CardContent>
               </Card>
               <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
@@ -182,7 +182,7 @@ export default function SitemapAnalyzerPage() {
                   <div className="text-2xl font-bold text-white mb-1">
                     {result.urlCount}
                   </div>
-                  <p className="text-gray-400 text-sm">Total URLs</p>
+                  <p className="text-gray-300 text-sm">Total URLs</p>
                 </CardContent>
               </Card>
               <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
@@ -192,7 +192,7 @@ export default function SitemapAnalyzerPage() {
                   >
                     {result.stats.duplicates}
                   </div>
-                  <p className="text-gray-400 text-sm">Duplicates</p>
+                  <p className="text-gray-300 text-sm">Duplicates</p>
                 </CardContent>
               </Card>
               <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
@@ -202,7 +202,7 @@ export default function SitemapAnalyzerPage() {
                   >
                     {result.stats.staleUrls}
                   </div>
-                  <p className="text-gray-400 text-sm">Stale URLs</p>
+                  <p className="text-gray-300 text-sm">Stale URLs</p>
                 </CardContent>
               </Card>
             </div>
@@ -267,7 +267,7 @@ export default function SitemapAnalyzerPage() {
                     className="flex items-center justify-between p-3 bg-white/5 rounded-lg"
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className="w-4 h-4 text-gray-400" />
+                      <Icon className="w-4 h-4 text-gray-300" />
                       <span className="text-gray-300 text-sm">
                         URLs with{' '}
                         <code className="text-orange-400">&lt;{label}&gt;</code>
@@ -334,7 +334,7 @@ export default function SitemapAnalyzerPage() {
             <h3 className="text-xl font-medium text-white mb-2">
               Ready to Analyze
             </h3>
-            <p className="text-gray-400 max-w-md mx-auto">
+            <p className="text-gray-300 max-w-md mx-auto">
               Enter a sitemap URL to validate its XML structure, check for
               duplicates, missing fields, and stale entries.
             </p>

@@ -30,7 +30,7 @@ const priorityConfig = {
     icon: TrendingUp,
   },
   low: {
-    color: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+    color: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
     icon: Check,
   },
 };
@@ -55,7 +55,7 @@ export function GEORecommendations({
                 key={i}
                 className="flex items-start gap-3 p-3 rounded-lg bg-white/[0.02] border border-white/[0.05]"
               >
-                <Icon className="h-5 w-5 mt-0.5 text-gray-400 shrink-0" />
+                <Icon className="h-5 w-5 mt-0.5 text-gray-300 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-medium text-white">
@@ -64,11 +64,11 @@ export function GEORecommendations({
                     <Badge className={`${config.color} text-xs`}>
                       {rec.priority}
                     </Badge>
-                    <Badge className="bg-white/5 text-gray-400 border-white/10 text-xs">
+                    <Badge className="bg-white/5 text-gray-300 border-white/10 text-xs">
                       +{rec.impact}pts
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-400">{rec.description}</p>
+                  <p className="text-xs text-gray-300">{rec.description}</p>
                 </div>
               </div>
             );

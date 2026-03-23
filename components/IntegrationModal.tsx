@@ -311,7 +311,7 @@ export function IntegrationModal({
                     className="bg-white/5 border-white/10"
                   />
                   {field.help && (
-                    <p className="text-xs text-gray-400">{field.help}</p>
+                    <p className="text-xs text-gray-300">{field.help}</p>
                   )}
                 </div>
               ))}

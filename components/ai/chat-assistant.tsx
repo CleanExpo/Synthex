@@ -54,7 +54,7 @@ export function ChatAssistant({
     return (
       <div className="h-full flex items-center justify-center">
         <div
-          className="flex flex-col items-center gap-3 text-gray-400"
+          className="flex flex-col items-center gap-3 text-gray-300"
           role="status"
         >
           <Loader2
@@ -79,7 +79,7 @@ export function ChatAssistant({
             <h3 className="text-lg font-medium text-white mb-1">
               Unable to load chat
             </h3>
-            <p className="text-sm text-gray-400">{error}</p>
+            <p className="text-sm text-gray-300">{error}</p>
           </div>
           <Button
             variant="outline"
@@ -113,7 +113,7 @@ export function ChatAssistant({
                 <h3 className="text-lg font-medium text-white mb-2">
                   Start a conversation
                 </h3>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-300">
                   Ask about content strategy, get ideas for posts, or optimize
                   your social media presence.
                 </p>
@@ -167,7 +167,7 @@ export function ChatAssistant({
           <div className="flex justify-start">
             <div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3">
               <div
-                className="flex items-center gap-2 text-gray-400"
+                className="flex items-center gap-2 text-gray-300"
                 role="status"
               >
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />

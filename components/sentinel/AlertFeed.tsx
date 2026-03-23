@@ -167,7 +167,7 @@ export function AlertFeed({
         <p className="text-lg font-medium text-white">
           No alerts — your site is healthy
         </p>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-sm text-gray-300 mt-1">
           Sentinel will notify you when regressions are detected.
         </p>
       </div>

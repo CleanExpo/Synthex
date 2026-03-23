@@ -58,7 +58,7 @@ export function AIDetectionPanel({
           </div>
         ) : (
           <div className="space-y-2">
-            <p className="text-sm text-gray-400 mb-3">
+            <p className="text-sm text-gray-300 mb-3">
               {flaggedPhrases.length} AI pattern
               {flaggedPhrases.length > 1 ? 's' : ''} flagged:
             </p>
@@ -74,11 +74,11 @@ export function AIDetectionPanel({
                       "{fp.phrase}"
                     </p>
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge className="bg-white/5 text-gray-400 text-xs">
+                      <Badge className="bg-white/5 text-gray-300 text-xs">
                         {categoryLabels[fp.category] || fp.category}
                       </Badge>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-300 mt-1">
                       Fix: {fp.suggestion}
                     </p>
                   </div>

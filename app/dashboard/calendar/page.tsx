@@ -264,7 +264,7 @@ function CalendarPageContent() {
       <div className="flex-1 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-          <p className="text-gray-400">Loading calendar...</p>
+          <p className="text-gray-300">Loading calendar...</p>
         </div>
       </div>
     );
@@ -279,7 +279,7 @@ function CalendarPageContent() {
           <h3 className="text-lg font-semibold text-white mb-2">
             Failed to Load Calendar
           </h3>
-          <p className="text-gray-400 mb-4">{error}</p>
+          <p className="text-gray-300 mb-4">{error}</p>
           <Button onClick={clearError} variant="outline">
             Try Again
           </Button>
@@ -303,7 +303,7 @@ function CalendarPageContent() {
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   viewMode === 'week'
                     ? 'bg-orange-500/20 text-orange-400'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <CalendarDays className="h-4 w-4" />
@@ -314,7 +314,7 @@ function CalendarPageContent() {
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   viewMode === 'month'
                     ? 'bg-orange-500/20 text-orange-400'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <Calendar className="h-4 w-4" />
@@ -325,7 +325,7 @@ function CalendarPageContent() {
             {/* Team Filter */}
             <Select value={selectedUserId} onValueChange={setSelectedUserId}>
               <SelectTrigger className="w-48 bg-gray-900/50 border-white/10">
-                <Users className="h-4 w-4 mr-2 text-gray-400" />
+                <Users className="h-4 w-4 mr-2 text-gray-300" />
                 <SelectValue placeholder="All Members" />
               </SelectTrigger>
               <SelectContent>
@@ -373,7 +373,7 @@ function CalendarPageContent() {
               <p className="text-2xl font-bold text-white">
                 {stats.totalPosts}
               </p>
-              <p className="text-sm text-gray-400">Total Posts</p>
+              <p className="text-sm text-gray-300">Total Posts</p>
             </div>
           </div>
         </div>
@@ -387,7 +387,7 @@ function CalendarPageContent() {
               <p className="text-2xl font-bold text-white">
                 {stats.scheduledPosts}
               </p>
-              <p className="text-sm text-gray-400">Scheduled</p>
+              <p className="text-sm text-gray-300">Scheduled</p>
             </div>
           </div>
         </div>
@@ -401,7 +401,7 @@ function CalendarPageContent() {
               <p className="text-2xl font-bold text-white">
                 {stats.publishedPosts}
               </p>
-              <p className="text-sm text-gray-400">Published</p>
+              <p className="text-sm text-gray-300">Published</p>
             </div>
           </div>
         </div>
@@ -415,7 +415,7 @@ function CalendarPageContent() {
               <p className="text-2xl font-bold text-white">
                 {stats.pendingApprovals || 0}
               </p>
-              <p className="text-sm text-gray-400">Pending Approvals</p>
+              <p className="text-sm text-gray-300">Pending Approvals</p>
             </div>
           </div>
         </div>
@@ -429,7 +429,7 @@ function CalendarPageContent() {
               <p className="text-2xl font-bold text-white">
                 {stats.conflictCount}
               </p>
-              <p className="text-sm text-gray-400">Conflicts</p>
+              <p className="text-sm text-gray-300">Conflicts</p>
             </div>
           </div>
         </div>

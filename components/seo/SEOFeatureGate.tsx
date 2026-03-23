@@ -66,7 +66,7 @@ export function SEOFeatureGate({
             </div>
 
             {/* Description */}
-            <p className="text-gray-400 mb-6 leading-relaxed">
+            <p className="text-gray-300 mb-6 leading-relaxed">
               {description ||
                 `Upgrade to the ${requiredPlan} plan to unlock ${feature.toLowerCase()} and other advanced SEO tools to optimize your content for maximum visibility.`}
             </p>
@@ -100,7 +100,7 @@ export function SEOFeatureGate({
             {subscription && (
               <p className="text-gray-500 text-sm mt-4">
                 Current plan:{' '}
-                <span className="text-gray-400 capitalize">
+                <span className="text-gray-300 capitalize">
                   {subscription.plan}
                 </span>
               </p>

@@ -37,7 +37,7 @@ export default function GSCPropertiesPage() {
       <div>
         <Link
           href="/dashboard/seo/search-console"
-          className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
+          className="text-sm text-gray-300 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Search Console
@@ -48,7 +48,7 @@ export default function GSCPropertiesPage() {
               <Globe className="w-7 h-7 text-orange-400" />
               GSC Properties
             </h1>
-            <p className="text-gray-400 mt-1">
+            <p className="text-gray-300 mt-1">
               Manage your connected Google Search Console properties
             </p>
           </div>

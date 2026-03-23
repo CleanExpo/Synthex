@@ -34,7 +34,7 @@ export function RequestCard({ request, currentUser, onSelect, onApprove }: Reque
               <h3 className="font-semibold text-white line-clamp-1">
                 {request.title}
               </h3>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-300 mt-1">
                 by {request.requester.name} &bull; {request.requester.role}
               </p>
             </div>
@@ -49,7 +49,7 @@ export function RequestCard({ request, currentUser, onSelect, onApprove }: Reque
           {request.stages.length > 1 && (
             <div className="mb-3">
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-400">Approval Progress</span>
+                <span className="text-gray-300">Approval Progress</span>
                 <span className="text-white">
                   {request.currentStage + 1}/{request.stages.length}
                 </span>
@@ -73,7 +73,7 @@ export function RequestCard({ request, currentUser, onSelect, onApprove }: Reque
               ))}
             </div>
             {request.approvers.length > 3 && (
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-300">
                 +{request.approvers.length - 3}
               </span>
             )}
@@ -89,7 +89,7 @@ export function RequestCard({ request, currentUser, onSelect, onApprove }: Reque
             </Badge>
 
             {request.deadline && (
-              <div className="flex items-center gap-1 text-xs text-gray-400">
+              <div className="flex items-center gap-1 text-xs text-gray-300">
                 <Clock className="h-3 w-3" />
                 {new Date(request.deadline).toLocaleDateString()}
               </div>

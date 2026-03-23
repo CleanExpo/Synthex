@@ -160,7 +160,7 @@ export function BestTimeHeatmap({ slots, isLoading }: BestTimeHeatmapProps) {
     <Card variant="glass">
       <CardHeader>
         <CardTitle className="text-white">Best Posting Times</CardTitle>
-        <p className="text-xs text-slate-400 mt-0.5">
+        <p className="text-xs text-slate-300 mt-0.5">
           Engagement score by day and hour
         </p>
       </CardHeader>
@@ -246,7 +246,7 @@ export function BestTimeHeatmap({ slots, isLoading }: BestTimeHeatmapProps) {
               <p className="text-orange-400">
                 Score: <span className="text-white">{tooltip.score}</span>
               </p>
-              <p className="text-slate-400">
+              <p className="text-slate-300">
                 Confidence: {Math.round(tooltip.confidence * 100)}%
               </p>
             </div>

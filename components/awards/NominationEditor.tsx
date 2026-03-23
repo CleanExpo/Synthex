@@ -50,7 +50,7 @@ export function NominationEditor({
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-sm font-medium text-white">{awardName}</h3>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-300">
             {isAiGenerated
               ? 'AI-generated nomination'
               : 'Template-based nomination'}

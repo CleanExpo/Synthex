@@ -76,7 +76,7 @@ export function TemplateSelector({
     <div className="space-y-6">
       {/* Search Bar */}
       <div className="relative">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-300" />
         <Input
           type="text"
           placeholder="Search templates..."
@@ -126,7 +126,7 @@ export function TemplateSelector({
                   <span className="text-3xl">{template.icon}</span>
                   <div>
                     <CardTitle className="text-lg">{template.name}</CardTitle>
-                    <CardDescription className="text-sm text-gray-400">
+                    <CardDescription className="text-sm text-gray-300">
                       {template.description}
                     </CardDescription>
                   </div>
@@ -171,7 +171,7 @@ export function TemplateSelector({
               {/* Tips Preview */}
               {template.tips && template.tips.length > 0 && (
                 <div className="pt-2 border-t border-white/10">
-                  <p className="text-xs text-gray-400 italic">
+                  <p className="text-xs text-gray-300 italic">
                     💡 {template.tips[0]}
                   </p>
                 </div>
@@ -184,7 +184,7 @@ export function TemplateSelector({
       {/* Empty State */}
       {filteredTemplates.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-gray-400">
+          <div className="text-gray-300">
             <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p className="text-lg">No templates found</p>
             <p className="text-sm mt-2">
@@ -198,7 +198,7 @@ export function TemplateSelector({
       <div className="flex items-center justify-between pt-4 border-t border-white/10">
         <Button
           variant="ghost"
-          className="text-gray-400"
+          className="text-gray-300"
           onClick={() => {
             setSearchQuery('');
             setSelectedCategory('all');
@@ -224,19 +224,19 @@ export function TemplatePreview({ template }: { template: ContentTemplate }) {
         <span className="text-4xl">{template.icon}</span>
         <div>
           <h3 className="text-xl font-semibold">{template.name}</h3>
-          <p className="text-gray-400">{template.description}</p>
+          <p className="text-gray-300">{template.description}</p>
         </div>
       </div>
 
       <div className="space-y-3 p-4 bg-white/5 rounded-lg">
         <div>
-          <p className="text-sm text-gray-400 mb-1">Hook:</p>
+          <p className="text-sm text-gray-300 mb-1">Hook:</p>
           <p className="text-white">{template.structure.hook}</p>
         </div>
 
         {template.structure.body && (
           <div>
-            <p className="text-sm text-gray-400 mb-1">Body:</p>
+            <p className="text-sm text-gray-300 mb-1">Body:</p>
             <p className="text-white whitespace-pre-wrap">
               {template.structure.body}
             </p>
@@ -245,14 +245,14 @@ export function TemplatePreview({ template }: { template: ContentTemplate }) {
 
         {template.structure.cta && (
           <div>
-            <p className="text-sm text-gray-400 mb-1">Call to Action:</p>
+            <p className="text-sm text-gray-300 mb-1">Call to Action:</p>
             <p className="text-white">{template.structure.cta}</p>
           </div>
         )}
 
         {template.structure.hashtags && (
           <div>
-            <p className="text-sm text-gray-400 mb-1">Hashtags:</p>
+            <p className="text-sm text-gray-300 mb-1">Hashtags:</p>
             <div className="flex flex-wrap gap-2">
               {template.structure.hashtags.map(tag => (
                 <Badge
@@ -274,7 +274,7 @@ export function TemplatePreview({ template }: { template: ContentTemplate }) {
           {template.tips.map((tip, index) => (
             <div key={index} className="flex items-start gap-2">
               <span className="text-orange-400">•</span>
-              <p className="text-sm text-gray-400">{tip}</p>
+              <p className="text-sm text-gray-300">{tip}</p>
             </div>
           ))}
         </div>

@@ -64,7 +64,7 @@ export function ForecastFeatureGate({
               Pro Plan Feature
             </div>
 
-            <p className="text-gray-400 mb-6 leading-relaxed">
+            <p className="text-gray-300 mb-6 leading-relaxed">
               {description ||
                 'Prophet AI forecasts your engagement, reach, and GEO score 7-90 days ahead with calibrated confidence intervals.'}
             </p>
@@ -87,7 +87,7 @@ export function ForecastFeatureGate({
 
             {subscription && (
               <p className="text-gray-500 text-sm mt-4">
-                Current plan: <span className="text-gray-400 capitalize">{subscription.plan}</span>
+                Current plan: <span className="text-gray-300 capitalize">{subscription.plan}</span>
               </p>
             )}
           </div>

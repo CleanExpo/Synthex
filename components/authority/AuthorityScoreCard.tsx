@@ -64,7 +64,7 @@ export function AuthorityScoreCard({
           <span className={`text-5xl font-bold ${tier.color}`}>
             {Math.round(score)}
           </span>
-          <span className="text-slate-400 text-lg">/100</span>
+          <span className="text-slate-300 text-lg">/100</span>
           <span
             className={`ml-auto px-2 py-1 rounded border text-xs font-medium ${tier.bg} ${tier.color}`}
           >
@@ -75,17 +75,17 @@ export function AuthorityScoreCard({
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="text-center">
             <p className="text-lg font-semibold text-white">{claimsFound}</p>
-            <p className="text-xs text-slate-400">Found</p>
+            <p className="text-xs text-slate-300">Found</p>
           </div>
           <div className="text-center">
             <p className="text-lg font-semibold text-emerald-400">
               {claimsVerified}
             </p>
-            <p className="text-xs text-slate-400">Verified</p>
+            <p className="text-xs text-slate-300">Verified</p>
           </div>
           <div className="text-center">
             <p className="text-lg font-semibold text-red-400">{claimsFailed}</p>
-            <p className="text-xs text-slate-400">Failed</p>
+            <p className="text-xs text-slate-300">Failed</p>
           </div>
         </div>
 

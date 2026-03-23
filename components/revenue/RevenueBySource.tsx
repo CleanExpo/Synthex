@@ -79,7 +79,7 @@ function CustomTooltip({ active, payload, currency }: CustomTooltipProps) {
   const { source, amount } = payload[0].payload;
   return (
     <div className="bg-gray-900 border border-white/10 rounded-lg p-3 shadow-xl">
-      <p className="text-sm text-gray-400">{SOURCE_LABELS[source]}</p>
+      <p className="text-sm text-gray-300">{SOURCE_LABELS[source]}</p>
       <p className="text-lg font-bold text-white">
         {formatCurrency(amount, currency)}
       </p>
@@ -119,7 +119,7 @@ export function RevenueBySource({
         )}
       >
         <PieChartIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-        <p className="text-gray-400">No revenue sources to display</p>
+        <p className="text-gray-300">No revenue sources to display</p>
       </div>
     );
   }
@@ -174,7 +174,7 @@ export function RevenueBySource({
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: item.color }}
                 />
-                <span className="text-gray-400">{item.name}</span>
+                <span className="text-gray-300">{item.name}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-500">{percent}%</span>

@@ -10,7 +10,7 @@ export interface SASScoreBadgeProps {
 
 export function SASScoreBadge({ score, size = 'md' }: SASScoreBadgeProps) {
   if (score === null || score === undefined) {
-    return <Badge className="bg-gray-500/20 text-gray-400">SAS: N/A</Badge>;
+    return <Badge className="bg-gray-500/20 text-gray-300">SAS: N/A</Badge>;
   }
 
   const color =

@@ -65,14 +65,14 @@ export function IssueCard({ issue, isExpanded, onToggle }: IssueCardProps) {
           <span className="font-medium text-white">{issue.title}</span>
         </div>
         {isExpanded ? (
-          <ChevronDown className="w-5 h-5 text-gray-400" />
+          <ChevronDown className="w-5 h-5 text-gray-300" />
         ) : (
-          <ChevronRight className="w-5 h-5 text-gray-400" />
+          <ChevronRight className="w-5 h-5 text-gray-300" />
         )}
       </button>
       {isExpanded && (
         <div className="px-4 pb-4 space-y-3">
-          <p className="text-gray-400 text-sm">{issue.description}</p>
+          <p className="text-gray-300 text-sm">{issue.description}</p>
           <div className="bg-surface-base/50 p-3 rounded-lg">
             <p className="text-orange-400 text-sm font-medium mb-1">
               Recommendation

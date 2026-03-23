@@ -63,7 +63,7 @@ export function FunnelTab({ funnelData }: FunnelTabProps) {
                   />
                 </div>
                 {index < funnelData.length - 1 && (
-                  <div className="ml-10 mt-2 flex items-center gap-2 text-xs text-gray-400">
+                  <div className="ml-10 mt-2 flex items-center gap-2 text-xs text-gray-300">
                     <ArrowDownRight className="h-3 w-3" />
                     <span>{stage.dropOff}% drop-off</span>
                   </div>

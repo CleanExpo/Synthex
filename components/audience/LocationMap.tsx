@@ -72,11 +72,11 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
       </p>
       <div className="space-y-1">
         <div className="flex justify-between gap-4">
-          <span className="text-gray-400 text-sm">Percentage</span>
+          <span className="text-gray-300 text-sm">Percentage</span>
           <span className="text-white font-medium">{data.percentage}%</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span className="text-gray-400 text-sm">Followers</span>
+          <span className="text-gray-300 text-sm">Followers</span>
           <span className="text-white font-medium">
             {formatNumber(data.count)}
           </span>
@@ -111,7 +111,7 @@ export function LocationMap({ data, isLoading, className }: LocationMapProps) {
           className
         )}
       >
-        <h4 className="text-sm font-medium text-gray-400 mb-4">
+        <h4 className="text-sm font-medium text-gray-300 mb-4">
           Top Locations
         </h4>
         <LoadingSkeleton />
@@ -127,7 +127,7 @@ export function LocationMap({ data, isLoading, className }: LocationMapProps) {
           className
         )}
       >
-        <h4 className="text-sm font-medium text-gray-400 mb-4">
+        <h4 className="text-sm font-medium text-gray-300 mb-4">
           Top Locations
         </h4>
         <p className="text-gray-500 text-sm text-center py-8">
@@ -150,7 +150,7 @@ export function LocationMap({ data, isLoading, className }: LocationMapProps) {
         className
       )}
     >
-      <h4 className="text-sm font-medium text-gray-400 mb-4">Top Locations</h4>
+      <h4 className="text-sm font-medium text-gray-300 mb-4">Top Locations</h4>
       <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart

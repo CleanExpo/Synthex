@@ -43,17 +43,17 @@ export function WorkflowList({
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3 text-center">
                   <div className="p-2 bg-white/5 rounded">
-                    <p className="text-xs text-gray-400">Runs</p>
+                    <p className="text-xs text-gray-300">Runs</p>
                     <p className="text-lg font-bold text-white">{workflow.runCount}</p>
                   </div>
                   <div className="p-2 bg-white/5 rounded">
-                    <p className="text-xs text-gray-400">Success</p>
+                    <p className="text-xs text-gray-300">Success</p>
                     <p className="text-lg font-bold text-white">{workflow.successRate}%</p>
                   </div>
                 </div>
 
                 {workflow.lastRun && (
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-gray-300">
                     Last run: {new Date(workflow.lastRun).toLocaleString()}
                   </div>
                 )}
@@ -118,8 +118,8 @@ export function WorkflowList({
           onClick={onNewWorkflow}
         >
           <CardContent className="flex flex-col items-center justify-center h-full min-h-[250px]">
-            <Plus className="h-12 w-12 text-gray-400 mb-3" />
-            <p className="text-gray-400">Create New Workflow</p>
+            <Plus className="h-12 w-12 text-gray-300 mb-3" />
+            <p className="text-gray-300">Create New Workflow</p>
           </CardContent>
         </Card>
       </div>
@@ -141,7 +141,7 @@ export function WorkflowList({
                       <p className="text-sm font-medium text-white">
                         {workflows.find(w => w.id === run.workflowId)?.name}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-300">
                         Started: {new Date(run.startedAt).toLocaleTimeString()}
                       </p>
                     </div>

@@ -391,7 +391,7 @@ export function AIABTesting() {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">A/B Testing</h2>
-            <p className="text-gray-400">AI-powered testing recommendations</p>
+            <p className="text-gray-300">AI-powered testing recommendations</p>
           </div>
         </div>
 
@@ -434,7 +434,7 @@ export function AIABTesting() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-gray-400 mb-2 block">
+                  <label className="text-sm text-gray-300 mb-2 block">
                     Variant A (Control)
                   </label>
                   <Textarea
@@ -446,7 +446,7 @@ export function AIABTesting() {
                 </div>
 
                 <div>
-                  <label className="text-sm text-gray-400 mb-2 block">
+                  <label className="text-sm text-gray-300 mb-2 block">
                     Variant B (Test)
                   </label>
                   <Textarea
@@ -459,7 +459,7 @@ export function AIABTesting() {
               </div>
 
               <div>
-                <label className="text-sm text-gray-400 mb-2 block">
+                <label className="text-sm text-gray-300 mb-2 block">
                   Test Duration: {duration} days
                 </label>
                 <input
@@ -509,7 +509,7 @@ export function AIABTesting() {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <h3 className="font-semibold text-white">{test.name}</h3>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-300 mt-1">
                       {test.hypothesis}
                     </p>
                   </div>
@@ -522,13 +522,13 @@ export function AIABTesting() {
                   {/* Metrics */}
                   <div className="grid grid-cols-2 gap-3 text-center">
                     <div className="p-2 bg-white/5 rounded">
-                      <p className="text-xs text-gray-400">Variant A</p>
+                      <p className="text-xs text-gray-300">Variant A</p>
                       <p className="text-lg font-bold text-white">
                         {test.variantA.conversionRate.toFixed(1)}%
                       </p>
                     </div>
                     <div className="p-2 bg-white/5 rounded">
-                      <p className="text-xs text-gray-400">Variant B</p>
+                      <p className="text-xs text-gray-300">Variant B</p>
                       <p className="text-lg font-bold text-white">
                         {test.variantB.conversionRate.toFixed(1)}%
                       </p>
@@ -538,7 +538,7 @@ export function AIABTesting() {
                   {/* Significance */}
                   <div>
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-400">
+                      <span className="text-gray-300">
                         Statistical Significance
                       </span>
                       <span className="text-white">
@@ -672,25 +672,25 @@ export function AIABTesting() {
                 </p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Impressions</span>
+                    <span className="text-gray-300">Impressions</span>
                     <span className="text-white">
                       {selectedTest.variantA.impressions}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Engagement</span>
+                    <span className="text-gray-300">Engagement</span>
                     <span className="text-white">
                       {selectedTest.variantA.engagement}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Conversions</span>
+                    <span className="text-gray-300">Conversions</span>
                     <span className="text-white">
                       {selectedTest.variantA.conversions}
                     </span>
                   </div>
                   <div className="flex justify-between font-medium">
-                    <span className="text-gray-400">Conversion Rate</span>
+                    <span className="text-gray-300">Conversion Rate</span>
                     <span className="text-white">
                       {selectedTest.variantA.conversionRate.toFixed(2)}%
                     </span>
@@ -707,25 +707,25 @@ export function AIABTesting() {
                 </p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Impressions</span>
+                    <span className="text-gray-300">Impressions</span>
                     <span className="text-white">
                       {selectedTest.variantB.impressions}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Engagement</span>
+                    <span className="text-gray-300">Engagement</span>
                     <span className="text-white">
                       {selectedTest.variantB.engagement}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Conversions</span>
+                    <span className="text-gray-300">Conversions</span>
                     <span className="text-white">
                       {selectedTest.variantB.conversions}
                     </span>
                   </div>
                   <div className="flex justify-between font-medium">
-                    <span className="text-gray-400">Conversion Rate</span>
+                    <span className="text-gray-300">Conversion Rate</span>
                     <span className="text-white">
                       {selectedTest.variantB.conversionRate.toFixed(2)}%
                     </span>

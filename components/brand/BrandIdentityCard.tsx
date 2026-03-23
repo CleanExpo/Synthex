@@ -153,7 +153,7 @@ export function BrandIdentityCard({
               href={identity.canonicalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-gray-400 hover:text-gray-300 flex items-center gap-1"
+              className="text-xs text-gray-300 hover:text-gray-300 flex items-center gap-1"
             >
               <Globe className="w-3 h-3" />
               {identity.canonicalUrl}
@@ -237,7 +237,7 @@ export function BrandIdentityCard({
         <div>
           <button
             onClick={() => setShowJsonLd(!showJsonLd)}
-            className="flex items-center gap-2 text-xs text-gray-400 hover:text-gray-200 transition-colors"
+            className="flex items-center gap-2 text-xs text-gray-300 hover:text-gray-200 transition-colors"
           >
             {showJsonLd ? (
               <EyeOff className="w-3.5 h-3.5" />

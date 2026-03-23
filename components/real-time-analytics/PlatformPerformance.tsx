@@ -42,22 +42,22 @@ export function PlatformPerformance({ platforms }: PlatformPerformanceProps) {
                   </div>
                   <div>
                     <p className="font-medium capitalize">{platform}</p>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-gray-300">
                       {formatNumber(data.followers)} followers
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-6">
                   <div className="text-right">
-                    <p className="text-sm text-gray-400">Engagement</p>
+                    <p className="text-sm text-gray-300">Engagement</p>
                     <p className="font-medium">{formatNumber(data.engagement)}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-400">Posts</p>
+                    <p className="text-sm text-gray-300">Posts</p>
                     <p className="font-medium">{data.posts}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-400">Reach</p>
+                    <p className="text-sm text-gray-300">Reach</p>
                     <p className="font-medium">{formatNumber(data.reach)}</p>
                   </div>
                   <div className="flex items-center gap-1">

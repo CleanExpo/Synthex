@@ -32,7 +32,7 @@ export function EngagementTimelineChart() {
           <span>Engagement Timeline</span>
           <BarChart3 className="h-4 w-4 text-orange-500" />
         </CardTitle>
-        <CardDescription className="text-gray-400">
+        <CardDescription className="text-gray-300">
           Peak engagement times by platform
         </CardDescription>
       </CardHeader>

@@ -50,7 +50,7 @@ export default function GBPPostsPage() {
       <div>
         <Link
           href="/dashboard/google-business"
-          className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
+          className="text-sm text-gray-300 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Google Business
@@ -61,7 +61,7 @@ export default function GBPPostsPage() {
               <Globe className="w-7 h-7 text-orange-400" />
               Google Posts
             </h1>
-            <p className="text-gray-400 mt-1">
+            <p className="text-gray-300 mt-1">
               Create and manage posts on your Google Business Profile
             </p>
           </div>
@@ -91,7 +91,7 @@ export default function GBPPostsPage() {
             <h2 className="text-lg font-semibold text-white mb-4">
               Create New Post
             </h2>
-            <p className="text-sm text-gray-400 mb-3">
+            <p className="text-sm text-gray-300 mb-3">
               Posting to: {primaryLocation.locationName}
             </p>
             <Textarea
@@ -113,7 +113,7 @@ export default function GBPPostsPage() {
                     setShowForm(false);
                     setSummary('');
                   }}
-                  className="text-gray-400"
+                  className="text-gray-300"
                 >
                   Cancel
                 </Button>
@@ -140,7 +140,7 @@ export default function GBPPostsPage() {
         <div className="text-center py-12">
           <Globe className="w-12 h-12 text-gray-600 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-white mb-2">Google Posts</h3>
-          <p className="text-gray-400 mb-4">
+          <p className="text-gray-300 mb-4">
             Create posts to share updates, offers, and events on your Google
             Business Profile.
           </p>

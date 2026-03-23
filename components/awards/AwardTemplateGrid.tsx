@@ -46,7 +46,7 @@ export function AwardTemplateGrid({ onSelect }: AwardTemplateGridProps) {
               'text-xs px-3 py-1.5 rounded-lg font-medium transition-colors',
               country === c
                 ? 'bg-orange-500/30 text-orange-300 border border-orange-500/40'
-                : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-transparent'
+                : 'bg-white/5 text-slate-300 hover:bg-white/10 border border-transparent'
             )}
           >
             {c === 'all' ? 'All' : c}
@@ -78,7 +78,7 @@ export function AwardTemplateGrid({ onSelect }: AwardTemplateGridProps) {
                   <h4 className="text-sm font-medium text-white truncate">
                     {t.name}
                   </h4>
-                  <p className="text-xs text-slate-400 truncate">
+                  <p className="text-xs text-slate-300 truncate">
                     {t.organizer}
                   </p>
                 </div>
@@ -90,7 +90,7 @@ export function AwardTemplateGrid({ onSelect }: AwardTemplateGridProps) {
               </p>
 
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-400">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300">
                   {t.country}
                 </span>
                 <span
@@ -98,7 +98,7 @@ export function AwardTemplateGrid({ onSelect }: AwardTemplateGridProps) {
                     'text-xs px-2 py-0.5 rounded-full',
                     t.entryFee === 'Free'
                       ? 'bg-emerald-900/40 text-emerald-400'
-                      : 'bg-slate-700/60 text-slate-400'
+                      : 'bg-slate-700/60 text-slate-300'
                   )}
                 >
                   {t.entryFee}

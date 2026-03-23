@@ -62,7 +62,7 @@ const CATEGORY_STYLES: Record<
     text: 'text-orange-400',
     label: 'Promotion',
   },
-  other: { bg: 'bg-gray-500/10', text: 'text-gray-400', label: 'Other' },
+  other: { bg: 'bg-gray-500/10', text: 'text-gray-300', label: 'Other' },
 };
 
 function formatCurrency(amount: number, currency: string = 'USD'): string {
@@ -222,7 +222,7 @@ export function InvestmentList({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-gray-400 hover:text-white"
+                    className="h-8 w-8 text-gray-300 hover:text-white"
                     aria-label="Edit investment"
                     onClick={() => onEdit(entry)}
                   >
@@ -235,7 +235,7 @@ export function InvestmentList({
                       'h-8 w-8',
                       isConfirmingDelete
                         ? 'text-red-400 bg-red-500/10'
-                        : 'text-gray-400 hover:text-red-400'
+                        : 'text-gray-300 hover:text-red-400'
                     )}
                     aria-label={
                       isConfirmingDelete
@@ -249,7 +249,7 @@ export function InvestmentList({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-gray-400 hover:text-white sm:hidden"
+                    className="h-8 w-8 text-gray-300 hover:text-white sm:hidden"
                     aria-label={
                       isExpanded ? 'Collapse details' : 'Expand details'
                     }

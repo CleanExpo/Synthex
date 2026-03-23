@@ -26,7 +26,7 @@ export function DatabaseTab({ metrics }: DatabaseTabProps) {
         <div className="space-y-4">
           <div>
             <div className="flex justify-between mb-2">
-              <span className="text-sm text-gray-400">Connection Pool</span>
+              <span className="text-sm text-gray-300">Connection Pool</span>
               <span className="text-sm text-white">
                 {metrics.connections} / {metrics.maxConnections}
               </span>
@@ -36,19 +36,19 @@ export function DatabaseTab({ metrics }: DatabaseTabProps) {
 
           <div className="grid grid-cols-2 gap-4 pt-4">
             <div>
-              <p className="text-sm text-gray-400">Average Query Time</p>
+              <p className="text-sm text-gray-300">Average Query Time</p>
               <p className="text-xl font-bold text-white">{metrics.queryTime}ms</p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Database Size</p>
+              <p className="text-sm text-gray-300">Database Size</p>
               <p className="text-xl font-bold text-white">{metrics.size}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Backup Status</p>
+              <p className="text-sm text-gray-300">Backup Status</p>
               <p className="text-xl font-bold text-green-400">{metrics.backupStatus}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Last Backup</p>
+              <p className="text-sm text-gray-300">Last Backup</p>
               <p className="text-xl font-bold text-white">2 hours ago</p>
             </div>
           </div>

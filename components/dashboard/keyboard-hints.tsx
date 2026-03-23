@@ -42,7 +42,7 @@ export function KeyboardHints() {
           </div>
           <button
             onClick={handleDismiss}
-            className="text-gray-400 hover:text-white"
+            className="text-gray-300 hover:text-white"
             aria-label="Dismiss keyboard shortcuts"
           >
             <X className="w-4 h-4" />
@@ -51,7 +51,7 @@ export function KeyboardHints() {
         <div className="space-y-2">
           {SHORTCUTS.map((shortcut, i) => (
             <div key={i} className="flex items-center justify-between text-sm">
-              <span className="text-gray-400">{shortcut.description}</span>
+              <span className="text-gray-300">{shortcut.description}</span>
               <div className="flex gap-1">
                 {shortcut.keys.map((key, j) => (
                   <kbd
@@ -69,7 +69,7 @@ export function KeyboardHints() {
           size="sm"
           variant="ghost"
           onClick={handleDismiss}
-          className="w-full mt-3 text-xs text-gray-400 hover:text-white"
+          className="w-full mt-3 text-xs text-gray-300 hover:text-white"
         >
           Got it!
         </Button>

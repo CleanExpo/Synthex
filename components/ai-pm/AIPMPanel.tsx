@@ -84,10 +84,10 @@ export default function AIPMPanel({
         >
           <div className="flex h-full flex-col items-center justify-center px-8 text-center">
             <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-500/20 ring-1 ring-white/10">
-              <Lock className="h-10 w-10 text-gray-400" />
+              <Lock className="h-10 w-10 text-gray-300" />
             </div>
             <h3 className="text-xl font-bold text-white">AI Project Manager</h3>
-            <p className="mt-3 text-sm text-gray-400">
+            <p className="mt-3 text-sm text-gray-300">
               Your dedicated AI Senior Project Manager learns your business,
               proactively surfaces insights, and becomes your daily marketing
               advisor.
@@ -128,7 +128,7 @@ export default function AIPMPanel({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-gray-400 hover:text-white"
+                className="h-8 w-8 text-gray-300 hover:text-white"
                 aria-label="Back to conversations"
                 onClick={handleBack}
               >
@@ -148,7 +148,7 @@ export default function AIPMPanel({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-gray-400 hover:text-white"
+            className="h-8 w-8 text-gray-300 hover:text-white"
             onClick={handleNewConversation}
             aria-label="New conversation"
           >
@@ -171,7 +171,7 @@ export default function AIPMPanel({
             ) : conversations.length === 0 ? (
               <div className="flex flex-col items-center justify-center px-8 py-12 text-center">
                 <Sparkles className="mb-4 h-12 w-12 text-orange-400/50" />
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-300">
                   No conversations yet. Start a new chat with your AI Project
                   Manager.
                 </p>

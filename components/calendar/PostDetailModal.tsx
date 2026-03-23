@@ -166,7 +166,7 @@ export function PostDetailModal({
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-300 hover:text-white"
           >
             <X className="h-5 w-5" />
           </button>
@@ -226,7 +226,7 @@ export function PostDetailModal({
 
           {/* Platforms */}
           <div>
-            <Label className="text-gray-400 mb-2 block">Platforms</Label>
+            <Label className="text-gray-300 mb-2 block">Platforms</Label>
             <div className="flex flex-wrap gap-2">
               {Object.entries(platformNames).map(([key, name]) => {
                 const Icon = platformIcons[key];
@@ -264,7 +264,7 @@ export function PostDetailModal({
                       />
                     )}
                     <span
-                      className={`text-sm ${isSelected ? '' : 'text-gray-400'}`}
+                      className={`text-sm ${isSelected ? '' : 'text-gray-300'}`}
                       style={{ color: isSelected ? color : undefined }}
                     >
                       {name}
@@ -277,7 +277,7 @@ export function PostDetailModal({
 
           {/* Content */}
           <div>
-            <Label htmlFor="content" className="text-gray-400 mb-2 block">
+            <Label htmlFor="content" className="text-gray-300 mb-2 block">
               Content
             </Label>
             <Textarea
@@ -297,7 +297,7 @@ export function PostDetailModal({
 
           {/* Schedule Time */}
           <div>
-            <Label htmlFor="scheduledFor" className="text-gray-400 mb-2 block">
+            <Label htmlFor="scheduledFor" className="text-gray-300 mb-2 block">
               Schedule Time
             </Label>
             <Input
@@ -317,7 +317,7 @@ export function PostDetailModal({
 
           {/* Hashtags */}
           <div>
-            <Label htmlFor="hashtags" className="text-gray-400 mb-2 block">
+            <Label htmlFor="hashtags" className="text-gray-300 mb-2 block">
               Hashtags
             </Label>
             <Input
@@ -341,31 +341,31 @@ export function PostDetailModal({
           {/* Engagement Stats (for published posts) */}
           {editedPost.status === 'published' && editedPost.engagement && (
             <div>
-              <Label className="text-gray-400 mb-2 block">Engagement</Label>
+              <Label className="text-gray-300 mb-2 block">Engagement</Label>
               <div className="grid grid-cols-4 gap-4">
                 <div className="p-3 bg-white/5 rounded-lg text-center">
                   <div className="text-lg font-semibold text-white">
                     {editedPost.engagement.likes || 0}
                   </div>
-                  <div className="text-xs text-gray-400">Likes</div>
+                  <div className="text-xs text-gray-300">Likes</div>
                 </div>
                 <div className="p-3 bg-white/5 rounded-lg text-center">
                   <div className="text-lg font-semibold text-white">
                     {editedPost.engagement.comments || 0}
                   </div>
-                  <div className="text-xs text-gray-400">Comments</div>
+                  <div className="text-xs text-gray-300">Comments</div>
                 </div>
                 <div className="p-3 bg-white/5 rounded-lg text-center">
                   <div className="text-lg font-semibold text-white">
                     {editedPost.engagement.shares || 0}
                   </div>
-                  <div className="text-xs text-gray-400">Shares</div>
+                  <div className="text-xs text-gray-300">Shares</div>
                 </div>
                 <div className="p-3 bg-white/5 rounded-lg text-center">
                   <div className="text-lg font-semibold text-green-400">
                     {editedPost.engagement.actual || 0}%
                   </div>
-                  <div className="text-xs text-gray-400">Engagement</div>
+                  <div className="text-xs text-gray-300">Engagement</div>
                 </div>
               </div>
             </div>
@@ -382,7 +382,7 @@ export function PostDetailModal({
               variant="ghost"
               size="sm"
               onClick={handleDuplicate}
-              className="text-gray-400 hover:text-white"
+              className="text-gray-300 hover:text-white"
             >
               <Copy className="h-4 w-4 mr-2" />
               Duplicate
@@ -527,7 +527,7 @@ function PostLifecycleTimeline({
 
   return (
     <div>
-      <Label className="text-gray-400 mb-3 block">History</Label>
+      <Label className="text-gray-300 mb-3 block">History</Label>
       <div className="relative space-y-0">
         {/* Vertical line */}
         <div className="absolute left-[9px] top-2 bottom-2 w-px bg-white/10" />
@@ -551,7 +551,7 @@ function PostLifecycleTimeline({
                   <span className="text-sm font-medium text-white">
                     {config.label}
                     {entry.attempt !== undefined && (
-                      <span className="text-xs text-gray-400 ml-1">
+                      <span className="text-xs text-gray-300 ml-1">
                         ({entry.attempt}/{(metadata?.maxRetries as number) ?? 3}
                         )
                       </span>
@@ -562,7 +562,7 @@ function PostLifecycleTimeline({
                   </span>
                 </div>
                 {entry.reason && (
-                  <p className="text-xs text-gray-400 mt-0.5 truncate">
+                  <p className="text-xs text-gray-300 mt-0.5 truncate">
                     {entry.reason}
                   </p>
                 )}

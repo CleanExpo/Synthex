@@ -94,7 +94,7 @@ export function QueueBulkActions({
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   rescheduleMode === 'exact'
                     ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
-                    : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+                    : 'bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10'
                 }`}
                 onClick={() => setRescheduleMode('exact')}
               >
@@ -105,7 +105,7 @@ export function QueueBulkActions({
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   rescheduleMode === 'offset'
                     ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
-                    : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+                    : 'bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10'
                 }`}
                 onClick={() => setRescheduleMode('offset')}
               >
@@ -133,7 +133,7 @@ export function QueueBulkActions({
                   className="w-24 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
                   step={1}
                 />
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-gray-300">
                   hours (negative = earlier)
                 </span>
               </div>
@@ -144,7 +144,7 @@ export function QueueBulkActions({
                 size="sm"
                 variant="ghost"
                 onClick={() => setShowReschedule(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-300 hover:text-white"
               >
                 Cancel
               </Button>
@@ -176,7 +176,7 @@ export function QueueBulkActions({
             <h3 className="text-lg font-semibold text-white mb-2">
               Delete {selectedCount} post{selectedCount > 1 ? 's' : ''}?
             </h3>
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm text-gray-300 mb-4">
               This action cannot be undone. All selected posts will be
               permanently removed.
             </p>
@@ -185,7 +185,7 @@ export function QueueBulkActions({
                 size="sm"
                 variant="ghost"
                 onClick={() => setShowDelete(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-300 hover:text-white"
               >
                 Cancel
               </Button>
@@ -274,7 +274,7 @@ export function QueueBulkActions({
             <Button
               size="sm"
               variant="ghost"
-              className="text-gray-400 hover:text-white"
+              className="text-gray-300 hover:text-white"
               onClick={onClearSelection}
             >
               <X className="mr-1.5 h-3.5 w-3.5" />

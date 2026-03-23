@@ -54,37 +54,37 @@ export function UsersTable({
             </th>
             <th
               scope="col"
-              className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+              className="text-left py-3 px-4 text-sm font-medium text-gray-300"
             >
               User
             </th>
             <th
               scope="col"
-              className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+              className="text-left py-3 px-4 text-sm font-medium text-gray-300"
             >
               Status
             </th>
             <th
               scope="col"
-              className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+              className="text-left py-3 px-4 text-sm font-medium text-gray-300"
             >
               Role
             </th>
             <th
               scope="col"
-              className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+              className="text-left py-3 px-4 text-sm font-medium text-gray-300"
             >
               Joined
             </th>
             <th
               scope="col"
-              className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+              className="text-left py-3 px-4 text-sm font-medium text-gray-300"
             >
               Last Active
             </th>
             <th
               scope="col"
-              className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+              className="text-left py-3 px-4 text-sm font-medium text-gray-300"
             >
               Actions
             </th>
@@ -93,13 +93,13 @@ export function UsersTable({
         <tbody>
           {isLoading ? (
             <tr>
-              <td colSpan={7} className="text-center py-8 text-gray-400">
+              <td colSpan={7} className="text-center py-8 text-gray-300">
                 Loading users...
               </td>
             </tr>
           ) : users.length === 0 ? (
             <tr>
-              <td colSpan={7} className="text-center py-8 text-gray-400">
+              <td colSpan={7} className="text-center py-8 text-gray-300">
                 No users found
               </td>
             </tr>
@@ -127,7 +127,7 @@ export function UsersTable({
                     </div>
                     <div>
                       <p className="text-white font-medium">{user.email}</p>
-                      <p className="text-xs text-gray-400">{user.id}</p>
+                      <p className="text-xs text-gray-300">{user.id}</p>
                     </div>
                   </div>
                 </td>
@@ -155,10 +155,10 @@ export function UsersTable({
                     {user.role || 'User'}
                   </Badge>
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-400">
+                <td className="py-3 px-4 text-sm text-gray-300">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-400">
+                <td className="py-3 px-4 text-sm text-gray-300">
                   {user.lastLogin
                     ? new Date(user.lastLogin).toLocaleDateString()
                     : 'Never'}
@@ -169,7 +169,7 @@ export function UsersTable({
                       size="sm"
                       variant="ghost"
                       onClick={() => onEditUser(user)}
-                      className="text-gray-400 hover:text-white"
+                      className="text-gray-300 hover:text-white"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -177,7 +177,7 @@ export function UsersTable({
                       size="sm"
                       variant="ghost"
                       onClick={() => onUserAction(user.id, 'reset-password')}
-                      className="text-gray-400 hover:text-white"
+                      className="text-gray-300 hover:text-white"
                     >
                       <Mail className="w-4 h-4" />
                     </Button>
@@ -190,7 +190,7 @@ export function UsersTable({
                           user.status === 'banned' ? 'unban' : 'ban'
                         )
                       }
-                      className="text-gray-400 hover:text-white"
+                      className="text-gray-300 hover:text-white"
                     >
                       <Ban className="w-4 h-4" />
                     </Button>

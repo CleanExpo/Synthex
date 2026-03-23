@@ -135,7 +135,7 @@ function DetailRow({ label, value }: { label: string; value: unknown }) {
   if (isHighlight && typeof value === 'string') {
     return (
       <div className="flex justify-between items-center p-2 bg-white/5 rounded">
-        <span className="text-xs text-gray-400">{formatLabel(label)}</span>
+        <span className="text-xs text-gray-300">{formatLabel(label)}</span>
         <span className="text-sm text-orange-400 font-mono">{value}</span>
       </div>
     );
@@ -145,7 +145,7 @@ function DetailRow({ label, value }: { label: string; value: unknown }) {
   if (typeof value === 'object' && value !== null) {
     return (
       <div className="space-y-1">
-        <span className="text-xs text-gray-400">{formatLabel(label)}</span>
+        <span className="text-xs text-gray-300">{formatLabel(label)}</span>
         <pre className="text-xs text-gray-300 bg-white/5 rounded p-2 overflow-x-auto font-mono whitespace-pre-wrap break-all">
           {JSON.stringify(value, null, 2)}
         </pre>
@@ -156,7 +156,7 @@ function DetailRow({ label, value }: { label: string; value: unknown }) {
   // Default: simple key-value
   return (
     <div className="flex justify-between items-center p-2 bg-white/5 rounded">
-      <span className="text-xs text-gray-400">{formatLabel(label)}</span>
+      <span className="text-xs text-gray-300">{formatLabel(label)}</span>
       <span className="text-sm text-white font-mono">
         {String(value ?? 'N/A')}
       </span>
@@ -276,7 +276,7 @@ export function AuditLogDrawer({ entry, open, onClose }: AuditLogDrawerProps) {
             <div className="space-y-2 text-xs">
               {entry.ipAddress && (
                 <div className="flex justify-between items-center p-2 bg-white/5 rounded">
-                  <span className="text-gray-400">IP Address</span>
+                  <span className="text-gray-300">IP Address</span>
                   <span className="text-white font-mono">
                     {entry.ipAddress}
                   </span>
@@ -284,7 +284,7 @@ export function AuditLogDrawer({ entry, open, onClose }: AuditLogDrawerProps) {
               )}
               {entry.userAgent && (
                 <div className="p-2 bg-white/5 rounded">
-                  <span className="text-gray-400">User Agent</span>
+                  <span className="text-gray-300">User Agent</span>
                   <p className="text-white font-mono text-xs mt-1 break-all">
                     {entry.userAgent}
                   </p>

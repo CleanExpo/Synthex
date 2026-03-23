@@ -149,7 +149,7 @@ export function AwardCard({
             />
             <h3 className="font-medium text-sm text-white truncate">{name}</h3>
           </div>
-          <p className="text-xs text-slate-400 truncate">{organizer}</p>
+          <p className="text-xs text-slate-300 truncate">{organizer}</p>
           <p className="text-xs text-slate-500 truncate mt-0.5">{category}</p>
         </div>
 
@@ -160,7 +160,7 @@ export function AwardCard({
               href={submissionUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+              className="p-1.5 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white transition-colors"
               title="Open submission URL"
             >
               <ExternalLink className="h-3.5 w-3.5" />
@@ -168,7 +168,7 @@ export function AwardCard({
           )}
           <button
             onClick={() => onDelete(id)}
-            className="p-1.5 rounded-lg hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-red-500/20 text-slate-300 hover:text-red-400 transition-colors"
             title="Delete award"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -200,7 +200,7 @@ export function AwardCard({
                   }}
                   className={cn(
                     'w-full text-left px-3 py-1.5 text-xs hover:bg-white/5',
-                    s === status ? 'text-white' : 'text-slate-400'
+                    s === status ? 'text-white' : 'text-slate-300'
                   )}
                 >
                   {STATUS_CONFIG[s].label}
@@ -216,7 +216,7 @@ export function AwardCard({
               'text-xs px-2 py-0.5 rounded-full',
               entryFee === 'Free'
                 ? 'bg-emerald-900/40 text-emerald-400'
-                : 'bg-slate-700/60 text-slate-400'
+                : 'bg-slate-700/60 text-slate-300'
             )}
           >
             {entryFee}
@@ -224,7 +224,7 @@ export function AwardCard({
         )}
 
         {isRecurring && (
-          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700/40 text-slate-400">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700/40 text-slate-300">
             Annual
           </span>
         )}

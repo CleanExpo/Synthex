@@ -253,7 +253,7 @@ export default function RealtimeNotifications() {
           {/* Notifications List */}
           <div className="overflow-y-auto max-h-[400px]">
             {notifications.length === 0 ? (
-              <div className="p-8 text-center text-gray-400">
+              <div className="p-8 text-center text-gray-300">
                 <Bell className="w-8 h-8 mx-auto mb-3 opacity-50" />
                 <p>No notifications yet</p>
               </div>
@@ -281,11 +281,11 @@ export default function RealtimeNotifications() {
                           <p className="font-medium text-white text-sm">
                             {notification.title}
                           </p>
-                          <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
+                          <span className="text-xs text-gray-300 whitespace-nowrap ml-2">
                             {formatTime(notification.timestamp)}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-400 mt-1 break-words">
+                        <p className="text-sm text-gray-300 mt-1 break-words">
                           {notification.message}
                         </p>
                         {notification.actionUrl && (

@@ -46,7 +46,7 @@ export function PrinciplesCard({ principles }: PrinciplesCardProps) {
                 </span>
               </div>
               <Progress value={principle.score} className="h-2 mb-2" />
-              <p className="text-xs text-gray-400">{principle.description}</p>
+              <p className="text-xs text-gray-300">{principle.description}</p>
               <p className="text-xs text-orange-300 mt-1">
                 <Lightbulb className="w-3 h-3 inline mr-1" />
                 {principle.recommendation}

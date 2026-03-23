@@ -70,7 +70,7 @@ export function RichTextEditor({
           'prose-headings:text-white prose-p:text-gray-300',
           'prose-strong:text-white prose-em:text-gray-300',
           'prose-ul:text-gray-300 prose-ol:text-gray-300',
-          'prose-blockquote:text-gray-400 prose-code:text-orange-400',
+          'prose-blockquote:text-gray-300 prose-code:text-orange-400',
           'min-h-[200px] p-4',
           className
         ),
@@ -319,7 +319,7 @@ export function RichTextEditor({
 
       {/* Status bar */}
       {showToolbar && (
-        <div className="border-t border-white/10 px-4 py-2 flex items-center justify-between text-xs text-gray-400">
+        <div className="border-t border-white/10 px-4 py-2 flex items-center justify-between text-xs text-gray-300">
           <div className="flex items-center gap-4">
             <span>{wordCount} words</span>
             <span>{charCount} characters</span>

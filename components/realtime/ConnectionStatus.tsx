@@ -41,7 +41,7 @@ const stateConfig = {
     pulse: false,
   },
   disconnected: {
-    color: 'text-gray-400',
+    color: 'text-gray-300',
     bgColor: 'bg-gray-400',
     label: 'Offline',
     pulse: false,

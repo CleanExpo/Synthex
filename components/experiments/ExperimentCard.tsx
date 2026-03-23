@@ -71,7 +71,7 @@ const TYPE_COLOURS: Record<string, string> = {
 };
 
 const STATUS_COLOURS: Record<string, string> = {
-  draft: 'bg-gray-500/20 text-gray-400',
+  draft: 'bg-gray-500/20 text-gray-300',
   running: 'bg-green-500/20 text-green-400',
   paused: 'bg-yellow-500/20 text-yellow-400',
   completed: 'bg-blue-500/20 text-blue-400',
@@ -174,7 +174,7 @@ export function ExperimentCard({ experiment, onRefresh }: ExperimentCardProps) {
                 </Badge>
               )}
               {experiment.winnerVariant === 'inconclusive' && (
-                <Badge className="bg-gray-500/20 text-gray-400">
+                <Badge className="bg-gray-500/20 text-gray-300">
                   Inconclusive
                 </Badge>
               )}
@@ -183,7 +183,7 @@ export function ExperimentCard({ experiment, onRefresh }: ExperimentCardProps) {
         </div>
 
         {/* Hypothesis */}
-        <p className="text-xs text-gray-400 mt-1 line-clamp-2">
+        <p className="text-xs text-gray-300 mt-1 line-clamp-2">
           <span className="text-gray-500">Hypothesis: </span>
           {experiment.hypothesis}
         </p>
@@ -198,7 +198,7 @@ export function ExperimentCard({ experiment, onRefresh }: ExperimentCardProps) {
         {/* Original vs Variant */}
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 bg-white/5 rounded-lg">
-            <p className="text-xs font-medium text-gray-400 mb-1">Original</p>
+            <p className="text-xs font-medium text-gray-300 mb-1">Original</p>
             <p className="text-sm text-white break-words line-clamp-3">
               {experiment.originalValue}
             </p>
@@ -215,7 +215,7 @@ export function ExperimentCard({ experiment, onRefresh }: ExperimentCardProps) {
         {hasScores && (
           <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg">
             <div className="flex-1">
-              <p className="text-xs text-gray-400 mb-1">{metricLabel}</p>
+              <p className="text-xs text-gray-300 mb-1">{metricLabel}</p>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-mono text-white">
                   {experiment.baselineScore?.toFixed(1)}

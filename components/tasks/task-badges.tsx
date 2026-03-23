@@ -67,7 +67,7 @@ export function AssigneeAvatars({
         </Avatar>
       ))}
       {overflow > 0 && (
-        <div className="w-7 h-7 rounded-full bg-white/10 border-2 border-slate-900 flex items-center justify-center text-xs text-slate-400">
+        <div className="w-7 h-7 rounded-full bg-white/10 border-2 border-slate-900 flex items-center justify-center text-xs text-slate-300">
           +{overflow}
         </div>
       )}

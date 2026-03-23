@@ -195,7 +195,7 @@ export function SearchBar({
       analytics: 'bg-orange-500/20 text-orange-400',
     };
     return (
-      colors[type as keyof typeof colors] || 'bg-gray-500/20 text-gray-400'
+      colors[type as keyof typeof colors] || 'bg-gray-500/20 text-gray-300'
     );
   };
 
@@ -203,7 +203,7 @@ export function SearchBar({
     <div ref={searchRef} className={`relative ${className}`}>
       {/* Search Input */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
         <Input
           type="text"
           placeholder={placeholder}
@@ -217,7 +217,7 @@ export function SearchBar({
         {/* Action Buttons */}
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
           {isLoading && (
-            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+            <Loader2 className="h-4 w-4 animate-spin text-gray-300" />
           )}
 
           {query && (
@@ -225,7 +225,7 @@ export function SearchBar({
               onClick={clearSearch}
               className="p-1 hover:bg-white/10 rounded transition-colors"
             >
-              <X className="h-4 w-4 text-gray-400" />
+              <X className="h-4 w-4 text-gray-300" />
             </button>
           )}
 
@@ -235,7 +235,7 @@ export function SearchBar({
               className={`p-1 hover:bg-white/10 rounded transition-colors ${
                 Object.keys(filters).length > 0
                   ? 'text-orange-400'
-                  : 'text-gray-400'
+                  : 'text-gray-300'
               }`}
             >
               <Filter className="h-4 w-4" />
@@ -255,7 +255,7 @@ export function SearchBar({
           >
             <div className="space-y-3">
               <div>
-                <p className="text-xs text-gray-400 mb-2">Filter by type:</p>
+                <p className="text-xs text-gray-300 mb-2">Filter by type:</p>
                 <div className="flex flex-wrap gap-2">
                   {['content', 'campaign', 'user', 'template', 'analytics'].map(
                     type => (
@@ -311,7 +311,7 @@ export function SearchBar({
                         </Badge>
                       </div>
                       {result.description && (
-                        <p className="text-sm text-gray-400 mb-2">
+                        <p className="text-sm text-gray-300 mb-2">
                           {result.description}
                         </p>
                       )}
@@ -347,7 +347,7 @@ export function SearchBar({
               exit="hidden"
               className="absolute top-full mt-2 w-full z-50 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg shadow-xl p-8 text-center"
             >
-              <p className="text-gray-400">No results found for "{query}"</p>
+              <p className="text-gray-300">No results found for "{query}"</p>
               <p className="text-sm text-gray-500 mt-2">
                 Try adjusting your filters or search terms
               </p>

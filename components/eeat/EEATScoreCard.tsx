@@ -99,7 +99,7 @@ export function EEATScoreCard({ score, tier, loading }: EEATScoreCardProps) {
       <CardContent className="space-y-6">
         <div className="text-center py-4">
           <div className="text-6xl font-bold text-white">{score.overall}</div>
-          <div className="text-sm text-gray-400 mt-1">out of 100</div>
+          <div className="text-sm text-gray-300 mt-1">out of 100</div>
         </div>
 
         <div className="space-y-3">

@@ -76,8 +76,12 @@ export default function PsychologyPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Psychology Analysis</h1>
-          <p className="text-gray-400">Analyze content for psychological persuasion effectiveness</p>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Psychology Analysis
+          </h1>
+          <p className="text-gray-300">
+            Analyze content for psychological persuasion effectiveness
+          </p>
         </div>
       </div>
 

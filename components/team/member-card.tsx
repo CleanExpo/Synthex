@@ -72,7 +72,7 @@ export function MemberCard({
               <Crown className="h-4 w-4 text-red-400" />
             )}
           </div>
-          <p className="text-sm text-slate-400">{member.email}</p>
+          <p className="text-sm text-slate-300">{member.email}</p>
           <div className="flex items-center space-x-2 mt-1">
             <Badge className={`text-xs ${getRoleBadgeColor(member.role)}`}>
               {member.role}
@@ -89,7 +89,7 @@ export function MemberCard({
 
       <div className="flex items-center space-x-2">
         <div className="text-right">
-          <p className="text-sm text-slate-400">Last active</p>
+          <p className="text-sm text-slate-300">Last active</p>
           <p className="text-xs text-slate-500">{member.lastActive}</p>
         </div>
 
@@ -98,7 +98,7 @@ export function MemberCard({
             <Button
               variant="ghost"
               size="icon"
-              className="text-slate-400"
+              className="text-slate-300"
               aria-label="Member actions"
             >
               <MoreVertical className="h-4 w-4" />
@@ -132,7 +132,7 @@ export function MemberCard({
                   <Edit className="mr-2 h-4 w-4 text-blue-400" />
                 )}
                 {role === 'Viewer' && (
-                  <Eye className="mr-2 h-4 w-4 text-slate-400" />
+                  <Eye className="mr-2 h-4 w-4 text-slate-300" />
                 )}
                 {role}
                 {member.role === role && (

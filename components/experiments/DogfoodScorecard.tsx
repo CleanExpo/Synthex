@@ -71,7 +71,7 @@ const STATUS_CONFIG: Record<
   },
   unknown: {
     label: 'Unknown',
-    colour: 'bg-gray-500/20 text-gray-400',
+    colour: 'bg-gray-500/20 text-gray-300',
     barColour: 'bg-gray-500',
   },
 };
@@ -105,13 +105,13 @@ function ModuleCard({ module }: { module: DogfoodModuleScore }) {
         {/* Score bar */}
         <div className="space-y-1">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-400">
+            <span className="text-gray-300">
               Score:{' '}
               <span className="text-white font-mono">{module.score}/100</span>
             </span>
             <span className="text-gray-500">
               Benchmark:{' '}
-              <span className="text-gray-400 font-mono">
+              <span className="text-gray-300 font-mono">
                 {module.benchmark}
               </span>
             </span>
@@ -132,7 +132,7 @@ function ModuleCard({ module }: { module: DogfoodModuleScore }) {
           </div>
         </div>
 
-        <p className="text-xs text-gray-400">{module.details}</p>
+        <p className="text-xs text-gray-300">{module.details}</p>
 
         {module.recommendations.length > 0 && (
           <div>
@@ -150,7 +150,7 @@ function ModuleCard({ module }: { module: DogfoodModuleScore }) {
                 {module.recommendations.map((rec, i) => (
                   <li
                     key={i}
-                    className="text-xs text-gray-400 flex items-start gap-2"
+                    className="text-xs text-gray-300 flex items-start gap-2"
                   >
                     <span className="text-orange-500 shrink-0 mt-0.5">•</span>
                     {rec}
@@ -200,7 +200,7 @@ export function DogfoodScorecard() {
           <Globe className="w-16 h-16 mx-auto text-orange-500/50" />
           <div>
             <h3 className="text-lg font-semibold text-white">Dog-food Check</h3>
-            <p className="text-sm text-gray-400 mt-1 max-w-sm mx-auto">
+            <p className="text-sm text-gray-300 mt-1 max-w-sm mx-auto">
               Run all Synthex analysers against{' '}
               <span className="text-orange-400">synthex.social</span> to see how
               well Synthex&apos;s own content scores on GEO, E-E-A-T, and more.
@@ -242,7 +242,7 @@ export function DogfoodScorecard() {
                 <Globe className="w-5 h-5 text-orange-400" />
                 synthex.social — Dog-food Report
               </CardTitle>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-300 mt-1">
                 Last checked: {formatDate(report.checkedAt)}
               </p>
             </div>
@@ -266,7 +266,7 @@ export function DogfoodScorecard() {
               <p className="text-5xl font-bold text-white">
                 {report.overallScore}
               </p>
-              <p className="text-xs text-gray-400 mt-1">Overall Score</p>
+              <p className="text-xs text-gray-300 mt-1">Overall Score</p>
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
@@ -275,7 +275,7 @@ export function DogfoodScorecard() {
                 </Badge>
               </div>
               <Progress value={report.overallScore} className="h-3" />
-              <p className="text-xs text-gray-400 mt-2">{report.summary}</p>
+              <p className="text-xs text-gray-300 mt-2">{report.summary}</p>
             </div>
           </div>
 
@@ -294,7 +294,7 @@ export function DogfoodScorecard() {
                     ) : (
                       <CheckCircle className="w-3 h-3 text-gray-500 shrink-0 mt-0.5" />
                     )}
-                    <p className="text-xs text-gray-400">{rec}</p>
+                    <p className="text-xs text-gray-300">{rec}</p>
                   </div>
                 ))}
               </div>

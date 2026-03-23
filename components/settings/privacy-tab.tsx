@@ -44,7 +44,7 @@ export function PrivacyTab({
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-white">Public Profile</Label>
-                <p className="text-sm text-slate-400">Allow others to see your profile</p>
+                <p className="text-sm text-slate-300">Allow others to see your profile</p>
               </div>
               <Switch
                 checked={settings.publicProfile}
@@ -56,7 +56,7 @@ export function PrivacyTab({
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-white">Show Analytics</Label>
-                <p className="text-sm text-slate-400">Display your performance metrics publicly</p>
+                <p className="text-sm text-slate-300">Display your performance metrics publicly</p>
               </div>
               <Switch
                 checked={settings.showAnalytics}
@@ -68,7 +68,7 @@ export function PrivacyTab({
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-white">Data Collection</Label>
-                <p className="text-sm text-slate-400">Allow us to collect usage data for improvements</p>
+                <p className="text-sm text-slate-300">Allow us to collect usage data for improvements</p>
               </div>
               <Switch
                 checked={settings.dataCollection}
@@ -104,7 +104,7 @@ export function PrivacyTab({
           <div className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10">
             <div>
               <p className="font-medium text-white">Export Your Data</p>
-              <p className="text-sm text-slate-400">Download a copy of all your data</p>
+              <p className="text-sm text-slate-300">Download a copy of all your data</p>
             </div>
             <Button
               variant="outline"

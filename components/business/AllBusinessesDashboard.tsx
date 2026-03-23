@@ -74,7 +74,7 @@ function billingBadgeClass(status: string): string {
     case 'cancelled':
       return 'bg-red-500/10 text-red-400 border-red-500/20';
     default:
-      return 'bg-white/[0.05] text-gray-400 border-white/10';
+      return 'bg-white/[0.05] text-gray-300 border-white/10';
   }
 }
 
@@ -124,7 +124,7 @@ export function AllBusinessesDashboard() {
     return (
       <div className="rounded-xl border border-white/10 bg-white/[0.03] p-8 text-center space-y-3">
         <Building2 className="h-10 w-10 text-gray-500 mx-auto" />
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-300">
           No businesses found on your account.
         </p>
         <Button
@@ -192,7 +192,7 @@ export function AllBusinessesDashboard() {
             <h2 className="text-base font-semibold text-white">
               All Businesses
             </h2>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-300 mt-0.5">
               Scale Enterprise — {businesses.length} business
               {businesses.length !== 1 ? 'es' : ''} managed
             </p>
@@ -291,7 +291,7 @@ export function AllBusinessesDashboard() {
                     <Building2
                       className={cn(
                         'h-4 w-4',
-                        business.isActive ? 'text-orange-400' : 'text-gray-400'
+                        business.isActive ? 'text-orange-400' : 'text-gray-300'
                       )}
                     />
                   </div>
@@ -369,7 +369,7 @@ export function AllBusinessesDashboard() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-8 text-xs text-gray-400 hover:text-white hover:bg-white/[0.08] border border-white/[0.08] px-3"
+                  className="h-8 text-xs text-gray-300 hover:text-white hover:bg-white/[0.08] border border-white/[0.08] px-3"
                   onClick={() =>
                     handleSwitch(business.organizationId, displayName)
                   }

@@ -83,7 +83,7 @@ function gradeColour(grade: string): string {
     case 'F':
       return 'text-red-400 bg-red-500/20 border-red-500/30';
     default:
-      return 'text-gray-400 bg-gray-500/20 border-gray-500/30';
+      return 'text-gray-300 bg-gray-500/20 border-gray-500/30';
   }
 }
 
@@ -108,7 +108,7 @@ function TabButton({
         'px-4 py-2 text-sm font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500',
         active
           ? 'bg-white/10 text-white'
-          : 'text-gray-400 hover:text-white hover:bg-white/5'
+          : 'text-gray-300 hover:text-white hover:bg-white/5'
       )}
     >
       {children}
@@ -178,7 +178,7 @@ function ScoreTab({
           <span
             className={cn(
               'text-xs tabular-nums',
-              words > 0 ? 'text-slate-400' : 'text-slate-600'
+              words > 0 ? 'text-slate-300' : 'text-slate-600'
             )}
           >
             {words.toLocaleString()} {words === 1 ? 'word' : 'words'}
@@ -257,7 +257,7 @@ function AssetsTab({
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
         <Award className="w-10 h-10 text-slate-600" />
-        <p className="text-slate-400 text-sm font-medium">No asset plan yet</p>
+        <p className="text-slate-300 text-sm font-medium">No asset plan yet</p>
         <p className="text-slate-600 text-xs">
           Run an audit with &ldquo;Generate asset plan&rdquo; ticked to see
           templates here.
@@ -308,7 +308,7 @@ function HistoryTab() {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
         <Award className="w-10 h-10 text-slate-600" />
-        <p className="text-slate-400 text-sm font-medium">
+        <p className="text-slate-300 text-sm font-medium">
           No saved audits yet
         </p>
         <p className="text-slate-600 text-xs">
@@ -419,7 +419,7 @@ function EEATBuilderPageContent() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">E-E-A-T Builder</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-300 mt-1">
             Score content across Experience, Expertise, Authority, and Trust
             \u2014 then generate templates to fix gaps.
           </p>

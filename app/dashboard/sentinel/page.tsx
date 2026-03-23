@@ -181,7 +181,7 @@ function SentinelPageContent() {
             <h1 className="text-2xl font-bold text-white">
               Algorithm Sentinel
             </h1>
-            <p className="text-sm text-gray-400 mt-0.5">
+            <p className="text-sm text-gray-300 mt-0.5">
               Autonomous site health monitoring and algorithm impact detection
             </p>
           </div>
@@ -271,7 +271,7 @@ function SentinelPageContent() {
                     className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
                       severityFilter === opt.value
                         ? 'bg-orange-500/30 text-orange-300'
-                        : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                        : 'bg-white/5 text-gray-300 hover:bg-white/10'
                     }`}
                   >
                     {opt.label}
@@ -283,7 +283,7 @@ function SentinelPageContent() {
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllRead}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 hover:bg-white/10 transition-colors"
+                  className="text-xs px-3 py-1.5 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition-colors"
                 >
                   Mark all read ({unreadCount})
                 </button>
@@ -307,7 +307,7 @@ function SentinelPageContent() {
                   className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
                     dayRange === opt.value
                       ? 'bg-orange-500/30 text-orange-300'
-                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                      : 'bg-white/5 text-gray-300 hover:bg-white/10'
                   }`}
                 >
                   {opt.label}

@@ -157,7 +157,7 @@ function EmptyState({ filtered }: { filtered: boolean }) {
       <h3 className="text-lg font-semibold text-white mb-2">
         {filtered ? 'No matching drafts' : 'No drafts yet'}
       </h3>
-      <p className="text-sm text-slate-400 max-w-xs mb-4">
+      <p className="text-sm text-slate-300 max-w-xs mb-4">
         {filtered
           ? 'Try adjusting the filters to find what you are looking for.'
           : 'Generate content and click Save to create your first draft.'}
@@ -258,7 +258,7 @@ function DraftCard({
           <span
             className={`flex-shrink-0 h-2.5 w-2.5 rounded-full ${platform.dot}`}
           />
-          <span className="text-xs font-medium text-slate-400 truncate">
+          <span className="text-xs font-medium text-slate-300 truncate">
             {platform.label}
           </span>
         </div>
@@ -303,7 +303,7 @@ function DraftCard({
               variant="ghost"
               onClick={handleEditCancel}
               disabled={isSaving}
-              className="h-7 px-3 text-xs text-slate-400 hover:text-white hover:bg-zinc-800/70 gap-1"
+              className="h-7 px-3 text-xs text-slate-300 hover:text-white hover:bg-zinc-800/70 gap-1"
             >
               <X className="h-3.5 w-3.5" />
               Cancel
@@ -326,7 +326,7 @@ function DraftCard({
       ) : (
         <>
           {/* Content preview */}
-          <p className="text-xs text-slate-400 leading-relaxed flex-1">
+          <p className="text-xs text-slate-300 leading-relaxed flex-1">
             {preview}
           </p>
 
@@ -365,7 +365,7 @@ function DraftCard({
               variant="ghost"
               onClick={() => setIsEditing(true)}
               title="Edit draft"
-              className="h-7 w-7 p-0 text-slate-400 hover:text-orange-400 hover:bg-orange-500/10"
+              className="h-7 w-7 p-0 text-slate-300 hover:text-orange-400 hover:bg-orange-500/10"
             >
               <Edit className="h-3.5 w-3.5" />
             </Button>
@@ -376,7 +376,7 @@ function DraftCard({
                 variant="ghost"
                 onClick={() => onSchedule(draft)}
                 title="Schedule draft"
-                className="h-7 w-7 p-0 text-slate-400 hover:text-orange-400 hover:bg-orange-500/10"
+                className="h-7 w-7 p-0 text-slate-300 hover:text-orange-400 hover:bg-orange-500/10"
               >
                 <Calendar className="h-3.5 w-3.5" />
               </Button>
@@ -387,7 +387,7 @@ function DraftCard({
               variant="ghost"
               onClick={handleCopy}
               title={copied ? 'Copied!' : 'Copy to clipboard'}
-              className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-zinc-800/70"
+              className="h-7 w-7 p-0 text-slate-300 hover:text-white hover:bg-zinc-800/70"
             >
               {copied ? (
                 <Check className="h-3.5 w-3.5 text-emerald-400" />
@@ -402,7 +402,7 @@ function DraftCard({
               onClick={() => onDelete(draft.id)}
               disabled={isDeleting}
               title="Delete draft"
-              className="h-7 w-7 p-0 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+              className="h-7 w-7 p-0 text-slate-300 hover:text-red-400 hover:bg-red-500/10"
             >
               {isDeleting ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -450,7 +450,7 @@ function FilterBar({
 }: FilterBarProps) {
   return (
     <div className="flex flex-wrap gap-3 items-center">
-      <div className="flex items-center gap-1.5 text-xs text-slate-400">
+      <div className="flex items-center gap-1.5 text-xs text-slate-300">
         <Filter className="h-3.5 w-3.5" />
         <span>Filter:</span>
       </div>
@@ -669,7 +669,7 @@ export default function DraftsLibraryPage() {
         actions={
           <div className="flex items-center gap-3">
             {!isLoading && (
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-300">
                 {total} {total === 1 ? 'draft' : 'drafts'}
               </span>
             )}

@@ -169,7 +169,7 @@ function SearchPerformanceSection({
 
       {/* Date Range Selector */}
       <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-400 mr-2">Period:</span>
+        <span className="text-sm text-gray-300 mr-2">Period:</span>
         {(['7d', '28d', '3mo', '6mo'] as DateRange[]).map(range => (
           <Button
             key={range}
@@ -179,7 +179,7 @@ function SearchPerformanceSection({
             className={`text-xs ${
               dateRange === range
                 ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
-                : 'border-white/10 text-gray-400 hover:bg-white/5'
+                : 'border-white/10 text-gray-300 hover:bg-white/5'
             }`}
           >
             {range === '7d'
@@ -231,7 +231,7 @@ function SearchPerformanceSection({
                   className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                     dimension === dim
                       ? 'bg-orange-500/20 text-orange-400'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      : 'text-gray-300 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   {dimensionLabels[dim]}
@@ -245,19 +245,19 @@ function SearchPerformanceSection({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/10">
-                  <th className="text-left py-3 px-2 text-gray-400 font-medium">
+                  <th className="text-left py-3 px-2 text-gray-300 font-medium">
                     {dimensionLabels[dimension].slice(0, -1)}
                   </th>
-                  <th className="text-right py-3 px-2 text-gray-400 font-medium">
+                  <th className="text-right py-3 px-2 text-gray-300 font-medium">
                     Clicks
                   </th>
-                  <th className="text-right py-3 px-2 text-gray-400 font-medium">
+                  <th className="text-right py-3 px-2 text-gray-300 font-medium">
                     Impressions
                   </th>
-                  <th className="text-right py-3 px-2 text-gray-400 font-medium">
+                  <th className="text-right py-3 px-2 text-gray-300 font-medium">
                     CTR
                   </th>
-                  <th className="text-right py-3 px-2 text-gray-400 font-medium">
+                  <th className="text-right py-3 px-2 text-gray-300 font-medium">
                     Position
                   </th>
                 </tr>
@@ -301,7 +301,7 @@ function SearchPerformanceSection({
           <h3 className="text-lg font-medium text-white mb-2">
             Connect Google Search Console
           </h3>
-          <p className="text-gray-400 mb-2">
+          <p className="text-gray-300 mb-2">
             Enter your site URL and click Fetch Data to see search performance
             data.
           </p>
@@ -317,7 +317,7 @@ function SearchPerformanceSection({
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="p-4 bg-white/5 rounded-lg">
-      <p className="text-sm text-gray-400 mb-1">{label}</p>
+      <p className="text-sm text-gray-300 mb-1">{label}</p>
       <p className="text-2xl font-bold text-white">{value}</p>
     </div>
   );
@@ -436,7 +436,7 @@ function IndexingStatusSection({
           <div className="flex flex-wrap items-center gap-3">
             {getStatusBadge(result.indexingState)}
             {result.verdict && result.verdict !== 'UNKNOWN' && (
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-gray-300">
                 Verdict: {result.verdict.replace(/_/g, ' ')}
               </span>
             )}
@@ -445,7 +445,7 @@ function IndexingStatusSection({
           {/* Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-white/5 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">
+              <h4 className="text-sm font-medium text-gray-300 mb-2">
                 Crawl State
               </h4>
               <p className="text-white font-medium">
@@ -453,7 +453,7 @@ function IndexingStatusSection({
               </p>
             </div>
             <div className="p-4 bg-white/5 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">
+              <h4 className="text-sm font-medium text-gray-300 mb-2">
                 Last Crawl Time
               </h4>
               <p className="text-white font-medium">
@@ -463,7 +463,7 @@ function IndexingStatusSection({
               </p>
             </div>
             <div className="p-4 bg-white/5 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">
+              <h4 className="text-sm font-medium text-gray-300 mb-2">
                 Robots.txt State
               </h4>
               <p className="text-white font-medium">
@@ -471,7 +471,7 @@ function IndexingStatusSection({
               </p>
             </div>
             <div className="p-4 bg-white/5 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">
+              <h4 className="text-sm font-medium text-gray-300 mb-2">
                 Page Fetch State
               </h4>
               <p className="text-white font-medium">
@@ -557,19 +557,19 @@ function SitemapHealthSection({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="text-left py-3 px-2 text-gray-400 font-medium">
+                <th className="text-left py-3 px-2 text-gray-300 font-medium">
                   Status
                 </th>
-                <th className="text-left py-3 px-2 text-gray-400 font-medium">
+                <th className="text-left py-3 px-2 text-gray-300 font-medium">
                   Sitemap Path
                 </th>
-                <th className="text-left py-3 px-2 text-gray-400 font-medium">
+                <th className="text-left py-3 px-2 text-gray-300 font-medium">
                   Last Submitted
                 </th>
-                <th className="text-right py-3 px-2 text-gray-400 font-medium">
+                <th className="text-right py-3 px-2 text-gray-300 font-medium">
                   Warnings
                 </th>
-                <th className="text-right py-3 px-2 text-gray-400 font-medium">
+                <th className="text-right py-3 px-2 text-gray-300 font-medium">
                   Errors
                 </th>
               </tr>
@@ -629,7 +629,7 @@ function SitemapHealthSection({
       ) : !loading && !error ? (
         <div className="text-center py-8">
           <Globe className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-300 text-sm">
             No sitemaps found. Enter your site URL and click Load Sitemaps.
           </p>
         </div>
@@ -665,7 +665,7 @@ export default function SearchConsolePage() {
         <div>
           <Link
             href="/dashboard/seo"
-            className="text-sm text-gray-400 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
+            className="text-sm text-gray-300 hover:text-orange-400 flex items-center gap-1 mb-2 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to SEO Tools
@@ -674,7 +674,7 @@ export default function SearchConsolePage() {
             <BarChart3 className="w-8 h-8 text-orange-400" />
             Search Console
           </h1>
-          <p className="text-gray-400 mt-2">
+          <p className="text-gray-300 mt-2">
             Search performance, indexing coverage, and sitemap health
           </p>
         </div>
@@ -693,7 +693,7 @@ export default function SearchConsolePage() {
                 <BarChart3 className="w-5 h-5 text-orange-400" />
                 Search Performance
               </h2>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-300 mt-1">
                 Top queries, pages, countries, and devices from Google Search
                 Console
               </p>
@@ -715,7 +715,7 @@ export default function SearchConsolePage() {
                 <Search className="w-5 h-5 text-orange-400" />
                 Indexing Status
               </h2>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-300 mt-1">
                 Check if specific URLs are indexed by Google and view crawl
                 details
               </p>
@@ -737,7 +737,7 @@ export default function SearchConsolePage() {
                 <Globe className="w-5 h-5 text-orange-400" />
                 Sitemap Health
               </h2>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-300 mt-1">
                 View sitemap submission status, warnings, and errors
               </p>
             </div>

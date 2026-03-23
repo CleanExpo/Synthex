@@ -31,7 +31,7 @@ export function LoadingSpinner({
       <Loader2
         className={cn(sizeClasses[size], 'animate-spin text-orange-400')}
       />
-      {text && <p className="text-sm text-gray-400 animate-pulse">{text}</p>}
+      {text && <p className="text-sm text-gray-300 animate-pulse">{text}</p>}
     </div>
   );
 }
@@ -49,7 +49,7 @@ export function PageLoading({ message = 'Loading...' }: PageLoadingProps) {
           <Loader2 className="w-8 h-8 animate-spin text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
         </div>
         <h2 className="text-2xl font-semibold text-white">{message}</h2>
-        <p className="text-gray-400">
+        <p className="text-gray-300">
           Please wait while we prepare your content
         </p>
       </div>

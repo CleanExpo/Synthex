@@ -135,7 +135,7 @@ function EmptyState({ filtered }: { filtered: boolean }) {
       <h3 className="text-lg font-semibold text-white mb-2">
         {filtered ? 'No matching content' : 'Your library is empty'}
       </h3>
-      <p className="text-sm text-slate-400 max-w-xs">
+      <p className="text-sm text-slate-300 max-w-xs">
         {filtered
           ? 'Try adjusting the filters to find what you are looking for.'
           : 'Generate content and click Save to build your drafts library.'}
@@ -179,7 +179,7 @@ function ContentCard({ item, onCopy, onDelete, isDeleting }: ContentCardProps) {
           <span
             className={`flex-shrink-0 h-2.5 w-2.5 rounded-full ${platform.dot}`}
           />
-          <span className="text-xs font-medium text-slate-400 truncate">
+          <span className="text-xs font-medium text-slate-300 truncate">
             {platform.label}
           </span>
         </div>
@@ -196,7 +196,7 @@ function ContentCard({ item, onCopy, onDelete, isDeleting }: ContentCardProps) {
       </h3>
 
       {/* Content preview */}
-      <p className="text-xs text-slate-400 leading-relaxed flex-1">{preview}</p>
+      <p className="text-xs text-slate-300 leading-relaxed flex-1">{preview}</p>
 
       {/* Footer: date + actions */}
       <div className="flex items-center justify-between pt-1 gap-2">
@@ -208,7 +208,7 @@ function ContentCard({ item, onCopy, onDelete, isDeleting }: ContentCardProps) {
             size="sm"
             variant="ghost"
             onClick={handleCopy}
-            className="h-7 px-2.5 text-xs text-slate-400 hover:text-white hover:bg-zinc-800/70 gap-1"
+            className="h-7 px-2.5 text-xs text-slate-300 hover:text-white hover:bg-zinc-800/70 gap-1"
           >
             {copied ? (
               <Check className="h-3.5 w-3.5 text-emerald-400" />
@@ -222,7 +222,7 @@ function ContentCard({ item, onCopy, onDelete, isDeleting }: ContentCardProps) {
             variant="ghost"
             onClick={() => onDelete(item.id)}
             disabled={isDeleting}
-            className="h-7 px-2.5 text-xs text-slate-400 hover:text-red-400 hover:bg-red-500/10 gap-1"
+            className="h-7 px-2.5 text-xs text-slate-300 hover:text-red-400 hover:bg-red-500/10 gap-1"
           >
             {isDeleting ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -277,7 +277,7 @@ function FilterBar({
 }: FilterBarProps) {
   return (
     <div className="flex flex-wrap gap-3 items-center">
-      <div className="flex items-center gap-1.5 text-xs text-slate-400">
+      <div className="flex items-center gap-1.5 text-xs text-slate-300">
         <Filter className="h-3.5 w-3.5" />
         <span>Filter:</span>
       </div>
@@ -405,7 +405,7 @@ export default function ContentLibraryPage() {
         title="Content Library"
         description="Your saved drafts and content snippets"
         actions={
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-slate-300">
             {!isLoading && (
               <span>
                 {items.length} {items.length === 1 ? 'item' : 'items'}

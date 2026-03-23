@@ -18,7 +18,7 @@ export function ScheduleStatsGrid({ stats }: ScheduleStatsGridProps) {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card variant="glass">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-400">
+          <CardTitle className="text-sm font-medium text-slate-300">
             Scheduled
           </CardTitle>
           <Clock className="h-4 w-4 text-orange-500" />
@@ -31,7 +31,7 @@ export function ScheduleStatsGrid({ stats }: ScheduleStatsGridProps) {
 
       <Card variant="glass">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-400">
+          <CardTitle className="text-sm font-medium text-slate-300">
             Published
           </CardTitle>
           <CheckCircle className="h-4 w-4 text-green-500" />
@@ -44,7 +44,7 @@ export function ScheduleStatsGrid({ stats }: ScheduleStatsGridProps) {
 
       <Card variant="glass">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-400">
+          <CardTitle className="text-sm font-medium text-slate-300">
             Avg Engagement
           </CardTitle>
           <TrendingUp className="h-4 w-4 text-orange-500" />
@@ -59,7 +59,7 @@ export function ScheduleStatsGrid({ stats }: ScheduleStatsGridProps) {
 
       <Card variant="glass">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-400">
+          <CardTitle className="text-sm font-medium text-slate-300">
             Best Time
           </CardTitle>
           <Zap className="h-4 w-4 text-yellow-500" />

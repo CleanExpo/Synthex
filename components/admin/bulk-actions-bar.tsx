@@ -34,7 +34,7 @@ export function BulkActionsBar({
           size="sm"
           variant="ghost"
           onClick={onClear}
-          className="text-gray-400 hover:text-white"
+          className="text-gray-300 hover:text-white"
         >
           Clear
         </Button>

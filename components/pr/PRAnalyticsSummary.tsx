@@ -49,7 +49,7 @@ function StatCard({ label, value, icon, colour, isLoading }: StatCardProps) {
           'p-2 rounded-lg',
           colour === 'orange' && 'bg-orange-500/10 text-orange-400',
           colour === 'green' && 'bg-green-500/10 text-green-400',
-          colour === 'gray' && 'bg-white/[0.04] text-gray-400',
+          colour === 'gray' && 'bg-white/[0.04] text-gray-300',
           colour === 'amber' && 'bg-orange-500/10 text-orange-400'
         )}
       >

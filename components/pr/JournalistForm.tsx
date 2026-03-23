@@ -138,7 +138,7 @@ export function JournalistForm({
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-gray-300 hover:text-white transition-colors"
           >
             <X className="h-5 w-5" />
           </button>

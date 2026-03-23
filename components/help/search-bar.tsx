@@ -19,7 +19,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
     <Card variant="glass" className="mb-8">
       <CardContent className="p-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-300 w-5 h-5" />
           <Input
             type="text"
             placeholder="Search for help articles, tutorials, or FAQs..."

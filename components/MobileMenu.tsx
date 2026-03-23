@@ -124,7 +124,7 @@ export default function MobileMenu() {
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                     isActive
                       ? 'bg-orange-500/20 text-orange-400 border-l-2 border-orange-400'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      : 'text-gray-300 hover:text-white hover:bg-white/5'
                   }`}
                   aria-current={isActive ? 'page' : undefined}
                 >
@@ -149,7 +149,7 @@ export default function MobileMenu() {
 
             <Button
               variant="ghost"
-              className="w-full mt-3 justify-start text-gray-400 hover:text-white hover:bg-white/5"
+              className="w-full mt-3 justify-start text-gray-300 hover:text-white hover:bg-white/5"
               onClick={() => {
                 // Handle logout
                 localStorage.clear();

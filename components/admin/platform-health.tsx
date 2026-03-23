@@ -188,7 +188,7 @@ export function PlatformHealth() {
         <CardContent>
           <p className="text-2xl font-bold text-white">{value}</p>
           {description && (
-            <p className="text-xs text-gray-400 mt-1">{description}</p>
+            <p className="text-xs text-gray-300 mt-1">{description}</p>
           )}
         </CardContent>
       </Card>
@@ -207,7 +207,7 @@ export function PlatformHealth() {
         </CardHeader>
         <CardContent>
           {platformLoading ? (
-            <p className="text-gray-400 text-sm">Loading...</p>
+            <p className="text-gray-300 text-sm">Loading...</p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <StatCard
@@ -234,7 +234,7 @@ export function PlatformHealth() {
                 label="Free Users"
                 value={platform?.freeUsers ?? 0}
                 icon={Users}
-                iconClass="text-gray-400"
+                iconClass="text-gray-300"
                 description="No active subscription"
               />
               <StatCard
@@ -285,7 +285,7 @@ export function PlatformHealth() {
               size="sm"
               variant="ghost"
               onClick={() => mutateJobs()}
-              className="text-gray-400 hover:text-white"
+              className="text-gray-300 hover:text-white"
             >
               <RefreshCw className="w-4 h-4" />
             </Button>
@@ -293,9 +293,9 @@ export function PlatformHealth() {
         </CardHeader>
         <CardContent>
           {jobsLoading ? (
-            <p className="text-gray-400 text-sm">Loading job stats...</p>
+            <p className="text-gray-300 text-sm">Loading job stats...</p>
           ) : queueStats.length === 0 ? (
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               No queue data available. Jobs may not be running.
             </p>
           ) : (
@@ -303,22 +303,22 @@ export function PlatformHealth() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-2 px-3 text-gray-400 font-medium">
+                    <th className="text-left py-2 px-3 text-gray-300 font-medium">
                       Queue
                     </th>
-                    <th className="text-right py-2 px-3 text-gray-400 font-medium">
+                    <th className="text-right py-2 px-3 text-gray-300 font-medium">
                       <Clock className="w-3 h-3 inline mr-1 text-yellow-400" />
                       Pending
                     </th>
-                    <th className="text-right py-2 px-3 text-gray-400 font-medium">
+                    <th className="text-right py-2 px-3 text-gray-300 font-medium">
                       <Activity className="w-3 h-3 inline mr-1 text-blue-400" />
                       Active
                     </th>
-                    <th className="text-right py-2 px-3 text-gray-400 font-medium">
+                    <th className="text-right py-2 px-3 text-gray-300 font-medium">
                       <CheckCircle className="w-3 h-3 inline mr-1 text-green-400" />
                       Completed
                     </th>
-                    <th className="text-right py-2 px-3 text-gray-400 font-medium">
+                    <th className="text-right py-2 px-3 text-gray-300 font-medium">
                       <XCircle className="w-3 h-3 inline mr-1 text-red-400" />
                       Failed
                     </th>

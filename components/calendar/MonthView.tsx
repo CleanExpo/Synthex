@@ -86,7 +86,7 @@ function DroppableDayCell({
           }}
           className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-white/10 transition-all"
         >
-          <Plus className="h-3 w-3 text-gray-400" />
+          <Plus className="h-3 w-3 text-gray-300" />
         </button>
       </div>
 
@@ -104,7 +104,7 @@ function DroppableDayCell({
 
         {/* Overflow indicator */}
         {overflowCount > 0 && (
-          <div className="text-xs text-gray-400 px-1.5 py-0.5 hover:text-orange-400 cursor-pointer transition-colors">
+          <div className="text-xs text-gray-300 px-1.5 py-0.5 hover:text-orange-400 cursor-pointer transition-colors">
             +{overflowCount} more
           </div>
         )}
@@ -238,14 +238,14 @@ export function MonthView({
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-gray-900/80">
           <button
             onClick={() => onMonthChange?.('prev')}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-300 hover:text-white"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <h2 className="text-lg font-semibold text-white">{monthYearText}</h2>
           <button
             onClick={() => onMonthChange?.('next')}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-300 hover:text-white"
           >
             <ChevronRight className="h-5 w-5" />
           </button>

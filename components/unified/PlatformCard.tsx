@@ -117,7 +117,7 @@ export function PlatformCard({ platform, onConnect, onViewDetails }: PlatformCar
         <div className="space-y-3">
           {/* Followers */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-gray-400">
+            <div className="flex items-center gap-2 text-gray-300">
               <Users className="w-4 h-4" />
               <span className="text-sm">Followers</span>
             </div>
@@ -128,7 +128,7 @@ export function PlatformCard({ platform, onConnect, onViewDetails }: PlatformCar
 
           {/* Engagement Rate */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-gray-400">
+            <div className="flex items-center gap-2 text-gray-300">
               <Activity className="w-4 h-4" />
               <span className="text-sm">Engagement</span>
             </div>
@@ -139,7 +139,7 @@ export function PlatformCard({ platform, onConnect, onViewDetails }: PlatformCar
 
           {/* Growth */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-gray-400">
+            <div className="flex items-center gap-2 text-gray-300">
               {isPositiveGrowth ? (
                 <TrendingUp className="w-4 h-4 text-green-400" />
               ) : (

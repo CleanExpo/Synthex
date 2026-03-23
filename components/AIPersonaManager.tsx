@@ -305,7 +305,7 @@ export function AIPersonaManager() {
             <h2 className="text-2xl font-bold text-white">
               AI Persona Learning
             </h2>
-            <p className="text-gray-400">Train AI to match your brand voice</p>
+            <p className="text-gray-300">Train AI to match your brand voice</p>
           </div>
         </div>
 
@@ -382,7 +382,7 @@ export function AIPersonaManager() {
                       <h3 className="font-semibold text-white">
                         {persona.name}
                       </h3>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-gray-300">
                         {persona.description || 'No description'}
                       </p>
                     </div>
@@ -400,7 +400,7 @@ export function AIPersonaManager() {
 
                   <div className="space-y-2 mt-4">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">Performance</span>
+                      <span className="text-gray-300">Performance</span>
                       <span
                         className={getScoreColor(
                           persona.performance.overallScore
@@ -414,7 +414,7 @@ export function AIPersonaManager() {
                       className="h-2"
                     />
 
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <div className="flex items-center gap-2 text-xs text-gray-300">
                       <Activity className="h-3 w-3" />
                       <span>
                         {persona.learningData.contentHistory.length} samples
@@ -527,7 +527,7 @@ export function AIPersonaManager() {
                     </h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-gray-400">Age Range:</span>
+                        <span className="text-gray-300">Age Range:</span>
                         <span className="ml-2 text-white">
                           {
                             selectedPersona.audienceInsights.demographics
@@ -536,7 +536,7 @@ export function AIPersonaManager() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-400">Interaction:</span>
+                        <span className="text-gray-300">Interaction:</span>
                         <span className="ml-2 text-white">
                           {
                             selectedPersona.audienceInsights.behavior
@@ -580,7 +580,7 @@ export function AIPersonaManager() {
                     .map((item, i) => (
                       <div key={i} className="p-3 bg-white/5 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-gray-400">
+                          <span className="text-sm text-gray-300">
                             {new Date(item.timestamp).toLocaleDateString()}
                           </span>
                           <Badge
@@ -596,7 +596,7 @@ export function AIPersonaManager() {
                         <p className="text-sm text-gray-300 line-clamp-2">
                           {item.content}
                         </p>
-                        <div className="flex gap-4 mt-2 text-xs text-gray-400">
+                        <div className="flex gap-4 mt-2 text-xs text-gray-300">
                           <span>❤️ {item.metrics.likes}</span>
                           <span>🔄 {item.metrics.shares}</span>
                           <span>💬 {item.metrics.comments}</span>
@@ -631,7 +631,7 @@ export function AIPersonaManager() {
                                 {exp.result}
                               </Badge>
                             </div>
-                            <p className="text-xs text-gray-400 mt-1">
+                            <p className="text-xs text-gray-300 mt-1">
                               {exp.learning}
                             </p>
                           </div>
@@ -648,11 +648,11 @@ export function AIPersonaManager() {
       {/* Empty State */}
       {personas.length === 0 && !showCreateForm && (
         <Card variant="glass" className="p-12 text-center">
-          <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <Brain className="h-12 w-12 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-white mb-2">
             No Personas Yet
           </h3>
-          <p className="text-gray-400 mb-6">
+          <p className="text-gray-300 mb-6">
             Create your first AI persona to start learning your brand voice
           </p>
           <Button
@@ -684,7 +684,7 @@ function MetricCard({
     <div className="p-4 bg-white/5 rounded-lg">
       <div className="flex items-center gap-2 mb-2">
         <Icon className={`h-4 w-4 ${color}`} />
-        <span className="text-xs text-gray-400">{label}</span>
+        <span className="text-xs text-gray-300">{label}</span>
       </div>
       <p className="text-xl font-bold text-white">{value}</p>
     </div>
@@ -703,13 +703,13 @@ function VoiceCharacteristicsDisplay({
         <h4 className="font-medium text-white mb-3">Tone Preferences</h4>
         <div className="space-y-2">
           <div>
-            <span className="text-sm text-gray-400">Primary:</span>
+            <span className="text-sm text-gray-300">Primary:</span>
             <Badge className="ml-2">
               {characteristics.tonePreferences.primary}
             </Badge>
           </div>
           <div>
-            <span className="text-sm text-gray-400">Secondary:</span>
+            <span className="text-sm text-gray-300">Secondary:</span>
             <div className="inline-flex gap-2 ml-2">
               {characteristics.tonePreferences.secondary.map(tone => (
                 <Badge key={tone} variant="secondary">
@@ -727,7 +727,7 @@ function VoiceCharacteristicsDisplay({
           {Object.entries(characteristics.emotionalTone).map(([key, value]) => (
             <div key={key}>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-400 capitalize">{key}</span>
+                <span className="text-gray-300 capitalize">{key}</span>
                 <span className="text-white">{value}%</span>
               </div>
               <Progress value={value} className="h-2" />

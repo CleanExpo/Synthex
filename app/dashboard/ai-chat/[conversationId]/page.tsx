@@ -152,7 +152,7 @@ export default function AIConversationPage({ params }: PageProps) {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-white">AI Chat Assistant</h1>
-            <p className="text-gray-400">
+            <p className="text-gray-300">
               Get AI-powered help with your content strategy
             </p>
           </div>
@@ -192,7 +192,7 @@ export default function AIConversationPage({ params }: PageProps) {
   if (isLoading && conversations.length === 0) {
     return (
       <div className="h-[calc(100vh-8rem)] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-gray-400">
+        <div className="flex flex-col items-center gap-3 text-gray-300">
           <Loader2 className="h-8 w-8 animate-spin text-orange-400" />
           <span>Loading conversations...</span>
         </div>
@@ -214,7 +214,7 @@ export default function AIConversationPage({ params }: PageProps) {
                 <h3 className="text-lg font-medium text-white mb-1">
                   Unable to load conversations
                 </h3>
-                <p className="text-sm text-gray-400">{error}</p>
+                <p className="text-sm text-gray-300">{error}</p>
               </div>
               <Button
                 variant="outline"
@@ -240,7 +240,7 @@ export default function AIConversationPage({ params }: PageProps) {
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">AI Chat Assistant</h1>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-300">
               Get help with content strategy and ideas
             </p>
           </div>
@@ -286,14 +286,14 @@ export default function AIConversationPage({ params }: PageProps) {
           {/* Conversation list */}
           <div className="flex-1 overflow-y-auto">
             {conversations.length === 0 ? (
-              <div className="p-4 text-center text-gray-400">
+              <div className="p-4 text-center text-gray-300">
                 <p className="text-sm">No conversations yet</p>
                 <p className="text-xs mt-1">
                   Click &quot;New Chat&quot; to start
                 </p>
               </div>
             ) : filteredConversations.length === 0 ? (
-              <div className="p-4 text-center text-gray-400">
+              <div className="p-4 text-center text-gray-300">
                 <p className="text-sm">
                   No results for &quot;{searchQuery}&quot;
                 </p>
@@ -334,7 +334,7 @@ export default function AIConversationPage({ params }: PageProps) {
                             onClick={e => handleArchiveConversation(conv.id, e)}
                             disabled={archivingId === conv.id}
                             title="Archive conversation"
-                            className="p-1.5 rounded hover:bg-orange-500/20 text-gray-400 hover:text-orange-400"
+                            className="p-1.5 rounded hover:bg-orange-500/20 text-gray-300 hover:text-orange-400"
                           >
                             {archivingId === conv.id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -346,7 +346,7 @@ export default function AIConversationPage({ params }: PageProps) {
                             onClick={e => handleDeleteConversation(conv.id, e)}
                             disabled={deletingId === conv.id}
                             title="Delete conversation"
-                            className="p-1.5 rounded hover:bg-red-500/20 text-gray-400 hover:text-red-400"
+                            className="p-1.5 rounded hover:bg-red-500/20 text-gray-300 hover:text-red-400"
                           >
                             {deletingId === conv.id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />

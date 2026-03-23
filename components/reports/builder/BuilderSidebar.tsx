@@ -67,7 +67,7 @@ export function BuilderSidebar({
         <CardContent className="space-y-2">
           {templatesLoading ? (
             <div className="flex items-center justify-center py-4">
-              <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+              <Loader2 className="h-5 w-5 animate-spin text-gray-300" />
             </div>
           ) : apiTemplates.length === 0 ? (
             <p className="text-sm text-gray-500 py-2">No templates available</p>

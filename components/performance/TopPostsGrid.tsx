@@ -79,7 +79,7 @@ function PostCard({ post, type }: PostCardProps) {
             className="w-2 h-2 rounded-full"
             style={{ backgroundColor: platformColor }}
           />
-          <span className="text-xs text-gray-400 capitalize">
+          <span className="text-xs text-gray-300 capitalize">
             {post.platform}
           </span>
         </div>
@@ -94,7 +94,7 @@ function PostCard({ post, type }: PostCardProps) {
       </p>
 
       {/* Metrics */}
-      <div className="flex items-center gap-4 text-xs text-gray-400">
+      <div className="flex items-center gap-4 text-xs text-gray-300">
         <div className="flex items-center gap-1">
           <Heart className="w-3 h-3" />
           <span>{formatNumber(post.metrics.likes)}</span>

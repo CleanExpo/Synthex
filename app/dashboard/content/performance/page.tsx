@@ -12,10 +12,34 @@ import dynamic from 'next/dynamic';
 import { useContentPerformance } from '@/hooks/useContentPerformance';
 
 // Dynamic imports for heavy chart/AI components
-const PerformanceOverview = dynamic(() => import('@/components/performance/PerformanceOverview').then(m => ({ default: m.PerformanceOverview })), { ssr: false });
-const AIInsightsPanel = dynamic(() => import('@/components/performance/AIInsightsPanel').then(m => ({ default: m.AIInsightsPanel })), { ssr: false });
-const PatternCharts = dynamic(() => import('@/components/performance/PatternCharts').then(m => ({ default: m.PatternCharts })), { ssr: false });
-const TopPostsGrid = dynamic(() => import('@/components/performance/TopPostsGrid').then(m => ({ default: m.TopPostsGrid })), { ssr: false });
+const PerformanceOverview = dynamic(
+  () =>
+    import('@/components/performance/PerformanceOverview').then(m => ({
+      default: m.PerformanceOverview,
+    })),
+  { ssr: false }
+);
+const AIInsightsPanel = dynamic(
+  () =>
+    import('@/components/performance/AIInsightsPanel').then(m => ({
+      default: m.AIInsightsPanel,
+    })),
+  { ssr: false }
+);
+const PatternCharts = dynamic(
+  () =>
+    import('@/components/performance/PatternCharts').then(m => ({
+      default: m.PatternCharts,
+    })),
+  { ssr: false }
+);
+const TopPostsGrid = dynamic(
+  () =>
+    import('@/components/performance/TopPostsGrid').then(m => ({
+      default: m.TopPostsGrid,
+    })),
+  { ssr: false }
+);
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -57,7 +81,9 @@ export default function ContentPerformancePage() {
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-6 h-6 text-red-400" />
             <div>
-              <h3 className="text-lg font-semibold text-white">Failed to load performance data</h3>
+              <h3 className="text-lg font-semibold text-white">
+                Failed to load performance data
+              </h3>
               <p className="text-red-400">{error}</p>
             </div>
           </div>
@@ -94,7 +120,10 @@ export default function ContentPerformancePage() {
               <SelectItem value="linkedin">LinkedIn</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={period} onValueChange={(v) => setPeriod(v as '7d' | '30d' | '90d')}>
+          <Select
+            value={period}
+            onValueChange={v => setPeriod(v as '7d' | '30d' | '90d')}
+          >
             <SelectTrigger className="w-[100px] bg-gray-900/50 border-white/10">
               <SelectValue placeholder="Period" />
             </SelectTrigger>
@@ -124,10 +153,12 @@ export default function ContentPerformancePage() {
       {emptyData && !isLoading && (
         <div className="bg-gray-900/30 border border-white/10 rounded-xl p-12 text-center">
           <Sparkles className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">No Performance Data Yet</h3>
-          <p className="text-gray-400 max-w-md mx-auto">
-            Connect your social platforms and publish some posts to see AI-powered
-            insights about what content performs best.
+          <h3 className="text-xl font-semibold text-white mb-2">
+            No Performance Data Yet
+          </h3>
+          <p className="text-gray-300 max-w-md mx-auto">
+            Connect your social platforms and publish some posts to see
+            AI-powered insights about what content performs best.
           </p>
         </div>
       )}
@@ -135,7 +166,14 @@ export default function ContentPerformancePage() {
       {/* Stats Row */}
       {(!emptyData || isLoading) && (
         <PerformanceOverview
-          summary={data?.summary || { totalPosts: 0, avgEngagement: 0, topPerforming: [], lowPerforming: [] }}
+          summary={
+            data?.summary || {
+              totalPosts: 0,
+              avgEngagement: 0,
+              topPerforming: [],
+              lowPerforming: [],
+            }
+          }
           isLoading={isLoading}
         />
       )}
@@ -151,9 +189,18 @@ export default function ContentPerformancePage() {
       {/* Pattern Charts */}
       {(!emptyData || isLoading) && (
         <div>
-          <h3 className="text-lg font-semibold text-white mb-4">Performance Patterns</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">
+            Performance Patterns
+          </h3>
           <PatternCharts
-            patterns={data?.patterns || { bestDays: [], bestHours: [], bestLength: { min: 0, max: 0, avgEngagement: 0 }, topHashtags: [] }}
+            patterns={
+              data?.patterns || {
+                bestDays: [],
+                bestHours: [],
+                bestLength: { min: 0, max: 0, avgEngagement: 0 },
+                topHashtags: [],
+              }
+            }
             isLoading={isLoading}
           />
         </div>
@@ -162,7 +209,9 @@ export default function ContentPerformancePage() {
       {/* Top/Low Posts */}
       {(!emptyData || isLoading) && (
         <div>
-          <h3 className="text-lg font-semibold text-white mb-4">Post Analysis</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">
+            Post Analysis
+          </h3>
           <TopPostsGrid
             topPerforming={data?.summary.topPerforming || []}
             lowPerforming={data?.summary.lowPerforming || []}
@@ -174,20 +223,36 @@ export default function ContentPerformancePage() {
       {/* Content Types (if available) */}
       {data?.contentTypes && data.contentTypes.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-white mb-4">Content Types</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">
+            Content Types
+          </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {data.contentTypes.map((ct) => (
+            {data.contentTypes.map(ct => (
               <div
                 key={ct.type}
                 className="bg-gray-900/30 border border-white/10 rounded-xl p-4 text-center"
               >
-                <p className="text-lg font-bold text-white capitalize">{ct.type}</p>
-                <p className="text-sm text-gray-400">{ct.count} posts</p>
-                <p className="text-xs text-emerald-400 mt-1">{ct.avgEngagement}% avg</p>
-                <p className={`text-xs mt-1 ${
-                  ct.trend === 'up' ? 'text-emerald-400' : ct.trend === 'down' ? 'text-red-400' : 'text-gray-500'
-                }`}>
-                  {ct.trend === 'up' ? '↑ Trending' : ct.trend === 'down' ? '↓ Declining' : '— Stable'}
+                <p className="text-lg font-bold text-white capitalize">
+                  {ct.type}
+                </p>
+                <p className="text-sm text-gray-300">{ct.count} posts</p>
+                <p className="text-xs text-emerald-400 mt-1">
+                  {ct.avgEngagement}% avg
+                </p>
+                <p
+                  className={`text-xs mt-1 ${
+                    ct.trend === 'up'
+                      ? 'text-emerald-400'
+                      : ct.trend === 'down'
+                        ? 'text-red-400'
+                        : 'text-gray-500'
+                  }`}
+                >
+                  {ct.trend === 'up'
+                    ? '↑ Trending'
+                    : ct.trend === 'down'
+                      ? '↓ Declining'
+                      : '— Stable'}
                 </p>
               </div>
             ))}

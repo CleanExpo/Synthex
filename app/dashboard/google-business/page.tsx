@@ -37,7 +37,7 @@ function MetricCard({
             <Icon className="w-5 h-5 text-orange-400" />
           </div>
           <div>
-            <p className="text-sm text-gray-400">{label}</p>
+            <p className="text-sm text-gray-300">{label}</p>
             <p className="text-2xl font-bold text-white">{value}</p>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function GoogleBusinessPage() {
           <Map className="w-8 h-8 text-orange-400" />
           Google Business Profile
         </h1>
-        <p className="text-gray-400 mt-2">
+        <p className="text-gray-300 mt-2">
           Manage your business listings, reviews, and local search performance
         </p>
       </div>
@@ -168,7 +168,7 @@ export default function GoogleBusinessPage() {
                     ))}
                   </div>
                 </div>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-300">
                   Based on {totalReviews} reviews
                 </p>
               </CardContent>
@@ -190,7 +190,7 @@ export default function GoogleBusinessPage() {
                 </div>
                 {reviewsLoading ? (
                   <div className="flex justify-center py-4">
-                    <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+                    <Loader2 className="w-5 h-5 text-gray-300 animate-spin" />
                   </div>
                 ) : reviews.length > 0 ? (
                   <div className="space-y-3">
@@ -217,7 +217,7 @@ export default function GoogleBusinessPage() {
                           </div>
                         </div>
                         {review.comment && (
-                          <p className="text-xs text-gray-400 line-clamp-2">
+                          <p className="text-xs text-gray-300 line-clamp-2">
                             {review.comment}
                           </p>
                         )}

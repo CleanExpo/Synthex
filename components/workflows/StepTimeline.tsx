@@ -47,7 +47,7 @@ function statusColour(status: string): {
 } {
   switch (status) {
     case 'pending':
-      return { dot: 'bg-gray-500', label: 'Pending', text: 'text-gray-400' };
+      return { dot: 'bg-gray-500', label: 'Pending', text: 'text-gray-300' };
     case 'running':
       return {
         dot: 'bg-blue-500 animate-pulse',
@@ -71,7 +71,7 @@ function statusColour(status: string): {
         text: 'text-orange-400',
       };
     default:
-      return { dot: 'bg-gray-500', label: status, text: 'text-gray-400' };
+      return { dot: 'bg-gray-500', label: status, text: 'text-gray-300' };
   }
 }
 

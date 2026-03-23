@@ -70,7 +70,7 @@ export function ReportsStats({ reports }: ReportsStatsProps) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-white">{value}</p>
-            <p className="text-xs text-gray-400 mt-1">{description}</p>
+            <p className="text-xs text-gray-300 mt-1">{description}</p>
           </CardContent>
         </Card>
       ))}

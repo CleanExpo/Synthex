@@ -55,7 +55,7 @@ function ActionItemsCard({ items }: { items: AIMessage['actionItems'] }) {
               />
               <div>
                 <span className="font-medium text-white">{item.title}</span>
-                <p className="text-gray-400">{item.description}</p>
+                <p className="text-gray-300">{item.description}</p>
               </div>
             </li>
           ))}
@@ -90,7 +90,7 @@ function SuggestionsCard({ items }: { items: AIMessage['suggestions'] }) {
                 {item.type}
               </span>
               <span className="font-medium text-white">{item.title}</span>
-              <p className="mt-0.5 text-gray-400">{item.description}</p>
+              <p className="mt-0.5 text-gray-300">{item.description}</p>
             </li>
           ))}
         </ul>
@@ -119,7 +119,7 @@ export default function AIPMChatThread({
         <h3 className="text-lg font-semibold text-white">
           Your AI Project Manager
         </h3>
-        <p className="mt-2 max-w-sm text-sm text-gray-400">
+        <p className="mt-2 max-w-sm text-sm text-gray-300">
           I know your business, your metrics, and your goals. Ask me anything
           about your marketing strategy, content performance, or what to focus
           on next.

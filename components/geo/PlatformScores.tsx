@@ -40,7 +40,7 @@ export function PlatformScores({ platformScores }: PlatformScoresProps) {
           {platformScores.map(ps => {
             const config = platformLabels[ps.platform] || {
               name: ps.platform,
-              color: 'text-gray-400',
+              color: 'text-gray-300',
             };
             return (
               <div

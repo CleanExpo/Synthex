@@ -81,8 +81,8 @@ function SentimentBadge({ sentiment }: { sentiment: string | null }) {
   const config = {
     positive: { icon: TrendingUp, color: 'text-green-400 bg-green-500/10' },
     negative: { icon: TrendingDown, color: 'text-red-400 bg-red-500/10' },
-    neutral: { icon: Minus, color: 'text-gray-400 bg-gray-500/10' },
-  }[sentiment] || { icon: Minus, color: 'text-gray-400 bg-gray-500/10' };
+    neutral: { icon: Minus, color: 'text-gray-300 bg-gray-500/10' },
+  }[sentiment] || { icon: Minus, color: 'text-gray-300 bg-gray-500/10' };
 
   const Icon = config.icon;
 
@@ -165,7 +165,7 @@ function MentionCard({
             />
           ) : (
             <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-gray-300">
                 {mention.authorHandle[0]?.toUpperCase()}
               </span>
             </div>
@@ -189,7 +189,7 @@ function MentionCard({
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-400">
+            <div className="flex items-center gap-2 text-sm text-gray-300">
               <span>@{mention.authorHandle}</span>
               <span>·</span>
               <span>{mention.platform}</span>
@@ -244,7 +244,7 @@ function MentionCard({
               variant="ghost"
               size="sm"
               onClick={onMarkRead}
-              className="h-8 px-2 text-gray-400 hover:text-white"
+              className="h-8 px-2 text-gray-300 hover:text-white"
             >
               <Check className="h-4 w-4" />
             </Button>
@@ -253,7 +253,7 @@ function MentionCard({
             variant="ghost"
             size="sm"
             onClick={onFlag}
-            className={`h-8 px-2 ${mention.isFlagged ? 'text-yellow-400' : 'text-gray-400 hover:text-white'}`}
+            className={`h-8 px-2 ${mention.isFlagged ? 'text-yellow-400' : 'text-gray-300 hover:text-white'}`}
           >
             <Flag className="h-4 w-4" />
           </Button>
@@ -261,7 +261,7 @@ function MentionCard({
             variant="ghost"
             size="sm"
             onClick={onArchive}
-            className="h-8 px-2 text-gray-400 hover:text-white"
+            className="h-8 px-2 text-gray-300 hover:text-white"
           >
             <Archive className="h-4 w-4" />
           </Button>
@@ -270,7 +270,7 @@ function MentionCard({
               href={mention.platformUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 text-gray-400 hover:text-white"
+              className="p-2 text-gray-300 hover:text-white"
             >
               <ExternalLink className="h-4 w-4" />
             </a>
@@ -369,7 +369,7 @@ function ListeningPageContent() {
       <div className="flex-1 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-          <p className="text-gray-400">Loading social listening...</p>
+          <p className="text-gray-300">Loading social listening...</p>
         </div>
       </div>
     );
@@ -384,7 +384,7 @@ function ListeningPageContent() {
           <h3 className="text-lg font-semibold text-white mb-2">
             Failed to Load
           </h3>
-          <p className="text-gray-400 mb-4">{error}</p>
+          <p className="text-gray-300 mb-4">{error}</p>
           <Button onClick={clearError} variant="outline">
             Try Again
           </Button>
@@ -403,7 +403,7 @@ function ListeningPageContent() {
           <div className="flex items-center gap-3">
             {/* Last refreshed */}
             {lastRefreshedAt && (
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-gray-300">
                 Updated{' '}
                 {formatDistanceToNow(lastRefreshedAt, { addSuffix: true })}
               </span>
@@ -438,11 +438,11 @@ function ListeningPageContent() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <p className="text-2xl font-bold text-white">{stats.total24h}</p>
-          <p className="text-sm text-gray-400">Mentions (24h)</p>
+          <p className="text-sm text-gray-300">Mentions (24h)</p>
         </div>
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <p className="text-2xl font-bold text-white">{stats.total7d}</p>
-          <p className="text-sm text-gray-400">Mentions (7d)</p>
+          <p className="text-sm text-gray-300">Mentions (7d)</p>
         </div>
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-2">
@@ -450,7 +450,7 @@ function ListeningPageContent() {
               {stats.sentimentBreakdown.positive}
             </span>
             <span className="text-gray-500">/</span>
-            <span className="text-gray-400">
+            <span className="text-gray-300">
               {stats.sentimentBreakdown.neutral}
             </span>
             <span className="text-gray-500">/</span>
@@ -458,11 +458,11 @@ function ListeningPageContent() {
               {stats.sentimentBreakdown.negative}
             </span>
           </div>
-          <p className="text-sm text-gray-400">Sentiment (P/N/Neg)</p>
+          <p className="text-sm text-gray-300">Sentiment (P/N/Neg)</p>
         </div>
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <p className="text-2xl font-bold text-white">{stats.unreadCount}</p>
-          <p className="text-sm text-gray-400">Unread</p>
+          <p className="text-sm text-gray-300">Unread</p>
         </div>
       </div>
 
@@ -482,7 +482,7 @@ function ListeningPageContent() {
           {/* Keywords sidebar */}
           <div className="w-64 flex-shrink-0">
             <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4 h-full">
-              <h3 className="text-sm font-medium text-gray-400 mb-3">
+              <h3 className="text-sm font-medium text-gray-300 mb-3">
                 Tracked Keywords
               </h3>
               <div className="space-y-2">
@@ -588,7 +588,7 @@ function ListeningPageContent() {
             {/* Mentions list */}
             <div className="flex-1 overflow-auto space-y-3">
               {mentions.length === 0 ? (
-                <div className="text-center py-12 text-gray-400">
+                <div className="text-center py-12 text-gray-300">
                   <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No mentions found</p>
                   <p className="text-sm mt-1">
@@ -620,7 +620,7 @@ function ListeningPageContent() {
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Previous
                 </Button>
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-gray-300">
                   Page {page} of {totalPages}
                 </span>
                 <Button
@@ -698,7 +698,7 @@ function ListeningPageContent() {
                       checked={newKeywordPlatforms.includes(platform.id)}
                       onCheckedChange={() => handlePlatformToggle(platform.id)}
                     />
-                    <platform.icon className="h-4 w-4 text-gray-400" />
+                    <platform.icon className="h-4 w-4 text-gray-300" />
                     <span className="text-sm text-gray-300">
                       {platform.label}
                     </span>

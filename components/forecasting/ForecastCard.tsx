@@ -30,7 +30,7 @@ export function ForecastCard({
   horizon,
 }: ForecastCardProps) {
   const metricDef = FORECAST_METRICS[model.metric as keyof typeof FORECAST_METRICS];
-  const statusStyle = STATUS_STYLES[model.status] ?? 'bg-gray-500/20 text-gray-400';
+  const statusStyle = STATUS_STYLES[model.status] ?? 'bg-gray-500/20 text-gray-300';
   const canPredict = model.status === 'ready' && !isPredicting;
 
   return (
@@ -58,7 +58,7 @@ export function ForecastCard({
       </div>
 
       {/* Body */}
-      <div className="space-y-1 text-xs text-gray-400 flex-1">
+      <div className="space-y-1 text-xs text-gray-300 flex-1">
         <p>
           <span className="text-gray-500">Training data:</span>{' '}
           <span className="text-white">{model.trainingPoints}</span> data points

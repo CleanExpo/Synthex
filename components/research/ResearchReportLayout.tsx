@@ -162,7 +162,7 @@ export function ResearchReportLayout({
           </h1>
 
           {/* Meta */}
-          <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-gray-400">
+          <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-gray-300">
             <span itemProp="author">{meta.author}</span>
             <span className="text-gray-600">•</span>
             <time itemProp="datePublished" dateTime={meta.publishDate}>
@@ -238,7 +238,7 @@ export function ResearchReportLayout({
               </h2>
               <div className="rounded-xl bg-white/5 border border-white/10 p-6 space-y-4">
                 <div>
-                  <h4 className="text-sm font-medium uppercase tracking-wider text-gray-400 mb-2">
+                  <h4 className="text-sm font-medium uppercase tracking-wider text-gray-300 mb-2">
                     Data Sources
                   </h4>
                   <ul className="list-disc list-inside text-gray-300 space-y-1">
@@ -249,14 +249,14 @@ export function ResearchReportLayout({
                 </div>
                 {methodology.sampleSize && (
                   <div>
-                    <h4 className="text-sm font-medium uppercase tracking-wider text-gray-400 mb-1">
+                    <h4 className="text-sm font-medium uppercase tracking-wider text-gray-300 mb-1">
                       Sample Size
                     </h4>
                     <p className="text-gray-300">{methodology.sampleSize}</p>
                   </div>
                 )}
                 <div>
-                  <h4 className="text-sm font-medium uppercase tracking-wider text-gray-400 mb-1">
+                  <h4 className="text-sm font-medium uppercase tracking-wider text-gray-300 mb-1">
                     Time Period
                   </h4>
                   <p className="text-gray-300">{methodology.timePeriod}</p>
@@ -264,7 +264,7 @@ export function ResearchReportLayout({
                 {methodology.limitations &&
                   methodology.limitations.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-medium uppercase tracking-wider text-gray-400 mb-2">
+                      <h4 className="text-sm font-medium uppercase tracking-wider text-gray-300 mb-2">
                         Limitations
                       </h4>
                       <ul className="list-disc list-inside text-gray-300 space-y-1">
@@ -290,7 +290,7 @@ export function ResearchReportLayout({
                         {table.headers.map((header, index) => (
                           <th
                             key={index}
-                            className="px-4 py-3 text-sm font-medium uppercase tracking-wider text-gray-400"
+                            className="px-4 py-3 text-sm font-medium uppercase tracking-wider text-gray-300"
                           >
                             {header}
                           </th>
@@ -329,7 +329,7 @@ export function ResearchReportLayout({
                   <p className="text-lg italic text-gray-200 mb-4">
                     &ldquo;{expertCommentary.quote}&rdquo;
                   </p>
-                  <footer className="text-gray-400">
+                  <footer className="text-gray-300">
                     <cite className="not-italic font-medium text-white">
                       {expertCommentary.expertName}
                     </cite>
@@ -376,7 +376,7 @@ export function ResearchReportLayout({
               </h2>
               <ol className="space-y-3 text-sm">
                 {sources.map(source => (
-                  <li key={source.number} className="text-gray-400">
+                  <li key={source.number} className="text-gray-300">
                     <span className="text-gray-500">[{source.number}]</span>{' '}
                     {source.url ? (
                       <a

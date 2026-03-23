@@ -64,7 +64,7 @@ export function CoreWebVitalsCard({ vitals }: CoreWebVitalsCardProps) {
                 key={key}
                 className={`p-4 rounded-lg border ${styles.bg} ${styles.border}`}
               >
-                <p className="text-gray-400 text-sm uppercase">
+                <p className="text-gray-300 text-sm uppercase">
                   {key.toUpperCase()}
                 </p>
                 <p className={`text-2xl font-bold ${styles.text}`}>

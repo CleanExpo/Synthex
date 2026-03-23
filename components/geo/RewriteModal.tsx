@@ -134,7 +134,7 @@ export function RewriteModal({
             <h2 className="text-base font-semibold text-white">
               Improving: <span className="text-orange-400">{tacticLabel}</span>
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-300 mt-0.5">
               {isStreaming
                 ? 'Rewriting your content...'
                 : isDone
@@ -144,7 +144,7 @@ export function RewriteModal({
           </div>
           <button
             onClick={onReject}
-            className="text-slate-400 hover:text-slate-200 transition-colors p-1"
+            className="text-slate-300 hover:text-slate-200 transition-colors p-1"
             aria-label="Close"
           >
             ✕

@@ -189,7 +189,7 @@ export function AuditLogViewer() {
             size="sm"
             variant="ghost"
             onClick={() => mutate()}
-            className="text-gray-400 hover:text-white"
+            className="text-gray-300 hover:text-white"
           >
             <RefreshCw className="w-4 h-4" />
           </Button>
@@ -201,7 +201,7 @@ export function AuditLogViewer() {
         {/* ---------------------------------------------------------------- */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <div className="space-y-1">
-            <Label className="text-xs text-gray-400">Category</Label>
+            <Label className="text-xs text-gray-300">Category</Label>
             <Select
               value={category}
               onValueChange={handleFilterChange(setCategory)}
@@ -220,7 +220,7 @@ export function AuditLogViewer() {
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs text-gray-400">Severity</Label>
+            <Label className="text-xs text-gray-300">Severity</Label>
             <Select
               value={severity}
               onValueChange={handleFilterChange(setSeverity)}
@@ -239,7 +239,7 @@ export function AuditLogViewer() {
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs text-gray-400">Outcome</Label>
+            <Label className="text-xs text-gray-300">Outcome</Label>
             <Select
               value={outcome}
               onValueChange={handleFilterChange(setOutcome)}
@@ -258,7 +258,7 @@ export function AuditLogViewer() {
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs text-gray-400">From</Label>
+            <Label className="text-xs text-gray-300">From</Label>
             <Input
               type="date"
               value={startDate}
@@ -271,7 +271,7 @@ export function AuditLogViewer() {
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs text-gray-400">To</Label>
+            <Label className="text-xs text-gray-300">To</Label>
             <Input
               type="date"
               value={endDate}
@@ -293,37 +293,37 @@ export function AuditLogViewer() {
               <tr className="border-b border-white/10">
                 <th
                   scope="col"
-                  className="text-left py-2 px-3 text-gray-400 font-medium"
+                  className="text-left py-2 px-3 text-gray-300 font-medium"
                 >
                   Timestamp
                 </th>
                 <th
                   scope="col"
-                  className="text-left py-2 px-3 text-gray-400 font-medium"
+                  className="text-left py-2 px-3 text-gray-300 font-medium"
                 >
                   User
                 </th>
                 <th
                   scope="col"
-                  className="text-left py-2 px-3 text-gray-400 font-medium"
+                  className="text-left py-2 px-3 text-gray-300 font-medium"
                 >
                   Action
                 </th>
                 <th
                   scope="col"
-                  className="text-left py-2 px-3 text-gray-400 font-medium"
+                  className="text-left py-2 px-3 text-gray-300 font-medium"
                 >
                   Resource
                 </th>
                 <th
                   scope="col"
-                  className="text-left py-2 px-3 text-gray-400 font-medium"
+                  className="text-left py-2 px-3 text-gray-300 font-medium"
                 >
                   Severity
                 </th>
                 <th
                   scope="col"
-                  className="text-left py-2 px-3 text-gray-400 font-medium"
+                  className="text-left py-2 px-3 text-gray-300 font-medium"
                 >
                   Outcome
                 </th>
@@ -333,13 +333,13 @@ export function AuditLogViewer() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-8 text-gray-400">
+                  <td colSpan={7} className="text-center py-8 text-gray-300">
                     Loading audit log...
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-8 text-gray-400">
+                  <td colSpan={7} className="text-center py-8 text-gray-300">
                     No audit log entries found
                   </td>
                 </tr>
@@ -359,7 +359,7 @@ export function AuditLogViewer() {
                       }
                     }}
                   >
-                    <td className="py-2 px-3 text-gray-400 whitespace-nowrap text-xs">
+                    <td className="py-2 px-3 text-gray-300 whitespace-nowrap text-xs">
                       {new Date(entry.createdAt).toLocaleString()}
                     </td>
                     <td className="py-2 px-3">
@@ -413,7 +413,7 @@ export function AuditLogViewer() {
         {/* ---------------------------------------------------------------- */}
         {pagination && pagination.totalPages > 1 && (
           <div className="flex items-center justify-between pt-2">
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-300">
               Page {pagination.page} of {pagination.totalPages} —{' '}
               {pagination.total} entries
             </p>
@@ -423,7 +423,7 @@ export function AuditLogViewer() {
                 variant="ghost"
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page <= 1 || isLoading}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-300 hover:text-white"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Previous
@@ -433,7 +433,7 @@ export function AuditLogViewer() {
                 variant="ghost"
                 onClick={() => setPage(p => p + 1)}
                 disabled={!pagination.hasMore || isLoading}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-300 hover:text-white"
               >
                 Next
                 <ChevronRight className="w-4 h-4" />

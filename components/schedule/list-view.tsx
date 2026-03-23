@@ -43,7 +43,7 @@ export function ListView({
           <h3 className="text-lg font-medium text-white mb-2">
             No posts found
           </h3>
-          <p className="text-slate-400 mb-4">
+          <p className="text-slate-300 mb-4">
             {hasFilters
               ? 'Try adjusting your filters'
               : 'Create your first scheduled post to get started'}
@@ -124,7 +124,7 @@ function PostListItem({
                     .map(p => p.charAt(0).toUpperCase() + p.slice(1))
                     .join(', ')}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-300">
                   {new Date(post.scheduledFor).toLocaleString()}
                 </p>
               </div>
@@ -147,7 +147,7 @@ function PostListItem({
               )}
             </div>
             <p className="text-white mb-3">{post.content}</p>
-            <div className="flex items-center space-x-4 text-xs text-slate-400">
+            <div className="flex items-center space-x-4 text-xs text-slate-300">
               {post.persona && <span>Persona: {post.persona}</span>}
               {post.status === 'published' && post.engagement ? (
                 <>
@@ -171,7 +171,7 @@ function PostListItem({
                 size="sm"
                 variant="ghost"
                 onClick={onPublishNow}
-                className="text-slate-400 hover:text-green-400"
+                className="text-slate-300 hover:text-green-400"
               >
                 <Send className="h-4 w-4" />
               </Button>

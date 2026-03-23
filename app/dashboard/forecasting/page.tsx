@@ -104,7 +104,7 @@ export default function ForecastingPage() {
             <TrendingUp className="h-7 w-7 text-emerald-400" />
             Forecasting
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="text-gray-300 mt-1">
             Prophet time-series forecasting and BayesNF cross-platform
             predictions
           </p>

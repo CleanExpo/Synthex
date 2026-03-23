@@ -223,7 +223,7 @@ export function FloatingActionButton() {
                   router.push(`/dashboard/content?type=${action.action}`);
                   notify.custom(`Opening ${action.action} creator...`);
                 }}
-                className="p-2 text-gray-400 hover:text-white transition-colors"
+                className="p-2 text-gray-300 hover:text-white transition-colors"
               >
                 <action.icon className="h-5 w-5" />
               </button>

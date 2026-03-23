@@ -61,24 +61,24 @@ const AccordionTrigger = React.forwardRef<
         {...props}
       >
         {iconPosition === 'left' && iconType === 'chevron' && Icon && (
-          <Icon className="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200" />
+          <Icon className="h-4 w-4 shrink-0 text-slate-300 transition-transform duration-200" />
         )}
         {iconPosition === 'left' && iconType === 'plus-minus' && (
           <>
-            <Plus className="plus-icon h-4 w-4 shrink-0 text-slate-400" />
-            <Minus className="minus-icon h-4 w-4 shrink-0 text-slate-400" />
+            <Plus className="plus-icon h-4 w-4 shrink-0 text-slate-300" />
+            <Minus className="minus-icon h-4 w-4 shrink-0 text-slate-300" />
           </>
         )}
 
         {children}
 
         {iconPosition === 'right' && iconType === 'chevron' && Icon && (
-          <Icon className="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200" />
+          <Icon className="h-4 w-4 shrink-0 text-slate-300 transition-transform duration-200" />
         )}
         {iconPosition === 'right' && iconType === 'plus-minus' && (
           <>
-            <Plus className="plus-icon h-4 w-4 shrink-0 text-slate-400" />
-            <Minus className="minus-icon h-4 w-4 shrink-0 text-slate-400" />
+            <Plus className="plus-icon h-4 w-4 shrink-0 text-slate-300" />
+            <Minus className="minus-icon h-4 w-4 shrink-0 text-slate-300" />
           </>
         )}
       </AccordionPrimitive.Trigger>

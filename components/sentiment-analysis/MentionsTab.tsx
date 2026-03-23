@@ -20,7 +20,7 @@ export function MentionsTab({ sentimentData }: MentionsTabProps) {
               <div className="flex items-center gap-2">
                 {getSentimentIcon(item.sentiment)}
                 <Badge variant="secondary">{item.platform}</Badge>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-gray-300">
                   @{item.author} • {new Date(item.timestamp).toLocaleString()}
                 </span>
               </div>
@@ -32,7 +32,7 @@ export function MentionsTab({ sentimentData }: MentionsTabProps) {
             <p className="text-sm text-gray-300 mb-3">{item.content}</p>
 
             <div className="flex items-center justify-between">
-              <div className="flex gap-4 text-xs text-gray-400">
+              <div className="flex gap-4 text-xs text-gray-300">
                 <span className="flex items-center gap-1">
                   <Heart className="h-3 w-3" />
                   {item.engagement.likes}
@@ -54,7 +54,7 @@ export function MentionsTab({ sentimentData }: MentionsTabProps) {
                 >
                   {item.actionable ? 'Action Required' : 'Monitor'}
                 </Badge>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-gray-300">
                   {item.confidence.toFixed(0)}% confidence
                 </span>
               </div>

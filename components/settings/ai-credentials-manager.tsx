@@ -399,7 +399,7 @@ export function AICredentialsManager() {
         ) : credentials.length === 0 && !showAddForm ? (
           <div className="text-center py-8">
             <Key className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-            <p className="text-slate-400 text-sm font-medium">
+            <p className="text-slate-300 text-sm font-medium">
               No AI provider keys configured
             </p>
             <p className="text-slate-500 text-xs mt-1 max-w-sm mx-auto">
@@ -439,7 +439,7 @@ export function AICredentialsManager() {
                     <p className="font-medium text-white">
                       {config?.name || cred.provider}
                     </p>
-                    <p className="text-sm text-slate-400 font-mono">
+                    <p className="text-sm text-slate-300 font-mono">
                       {cred.maskedKey}
                     </p>
                   </div>

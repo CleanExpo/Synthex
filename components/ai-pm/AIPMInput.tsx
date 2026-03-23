@@ -69,7 +69,7 @@ export default function AIPMInput({
               }
             }}
             disabled={isSending || disabled}
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-400 transition-colors hover:border-orange-500/30 hover:bg-orange-500/10 hover:text-orange-300 disabled:opacity-50"
+            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300 transition-colors hover:border-orange-500/30 hover:bg-orange-500/10 hover:text-orange-300 disabled:opacity-50"
           >
             {action.label}
           </button>

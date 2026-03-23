@@ -281,7 +281,7 @@ export function CollaborationTools({
           </Badge>
         )}
 
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-gray-300">
           {onlineUsers.length} {onlineUsers.length === 1 ? 'user' : 'users'}{' '}
           online
         </span>
@@ -355,7 +355,7 @@ export function CollaborationTools({
               ))}
 
               {comments.length === 0 && (
-                <div className="text-center py-8 text-gray-400">
+                <div className="text-center py-8 text-gray-300">
                   <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
                   <p>No comments yet</p>
                   <p className="text-sm mt-1">Be the first to comment!</p>
@@ -449,7 +449,7 @@ export function CollaborationTools({
                       <p className="text-sm text-white">
                         {notification.message}
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-gray-300 mt-1">
                         {new Date(notification.timestamp).toLocaleTimeString()}
                       </p>
                     </div>
@@ -461,7 +461,7 @@ export function CollaborationTools({
               ))}
 
               {notifications.length === 0 && (
-                <div className="text-center py-8 text-gray-400">
+                <div className="text-center py-8 text-gray-300">
                   <Bell className="h-12 w-12 mx-auto mb-3 opacity-50" />
                   <p>No notifications</p>
                 </div>
@@ -510,7 +510,7 @@ function CommentItem({
             <span className="text-sm font-medium text-white">
               {comment.userName}
             </span>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-300">
               {new Date(comment.timestamp).toLocaleTimeString()}
             </span>
             {comment.resolved && (
@@ -604,7 +604,7 @@ function CommentItem({
                       <span className="text-xs font-medium text-white">
                         {reply.userName}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-300">
                         {new Date(reply.timestamp).toLocaleTimeString()}
                       </span>
                     </div>

@@ -53,7 +53,7 @@ const STATUS_COLOURS: Record<string, string> = {
   published: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
   failed: 'bg-red-500/20 text-red-300 border-red-500/30',
   draft: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
-  cancelled: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+  cancelled: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -131,7 +131,7 @@ function SortableHeader({
   return (
     <button
       type="button"
-      className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-white transition-colors"
+      className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-gray-300 hover:text-white transition-colors"
       onClick={() =>
         onSortChange(field, isActive && sortOrder === 'asc' ? 'desc' : 'asc')
       }
@@ -221,7 +221,7 @@ export function QueueTable({
           sortOrder={sortOrder}
           onSortChange={onSortChange}
         />
-        <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-300">
           Content
         </span>
         <SortableHeader
@@ -238,7 +238,7 @@ export function QueueTable({
           sortOrder={sortOrder}
           onSortChange={onSortChange}
         />
-        <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 text-right">
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-300 text-right">
           Actions
         </span>
       </div>
@@ -303,7 +303,7 @@ export function QueueTable({
 
               {/* Scheduled For */}
               <div
-                className="flex items-center text-sm text-gray-400"
+                className="flex items-center text-sm text-gray-300"
                 onClick={() => onPostClick(post)}
               >
                 {formatScheduledDate(post.scheduledAt)}
@@ -328,7 +328,7 @@ export function QueueTable({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-7 w-7 p-0 text-gray-400 hover:text-red-400 hover:bg-white/10"
+                  className="h-7 w-7 p-0 text-gray-300 hover:text-red-400 hover:bg-white/10"
                   onClick={() => onDeletePost(post.id)}
                   aria-label="Delete post"
                 >

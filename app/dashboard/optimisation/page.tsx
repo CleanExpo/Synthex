@@ -62,7 +62,7 @@ export default function OptimisationPage() {
               <Brain className="h-7 w-7 text-orange-400" />
               AI Optimisation
             </h1>
-            <p className="text-gray-400 mt-1">
+            <p className="text-gray-300 mt-1">
               Bayesian Optimisation — adaptive parameter tuning per organisation
             </p>
           </div>

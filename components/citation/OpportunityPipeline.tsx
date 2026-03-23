@@ -104,7 +104,7 @@ export function OpportunityPipeline({
               <p className="text-sm font-medium text-white truncate">
                 {item.title}
               </p>
-              <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">
+              <p className="text-xs text-gray-300 mt-0.5 line-clamp-2">
                 {item.description}
               </p>
             </div>

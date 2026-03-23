@@ -169,7 +169,7 @@ export function BusinessSocialAccounts({
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 py-4 px-2 text-gray-400">
+      <div className="flex items-center gap-2 py-4 px-2 text-gray-300">
         <Loader2 className="h-4 w-4 animate-spin" />
         <span className="text-sm">Loading social accounts...</span>
       </div>
@@ -181,7 +181,7 @@ export function BusinessSocialAccounts({
       {/* Connected Platforms */}
       {connectedPlatforms.length > 0 ? (
         <div className="space-y-2">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wider px-1">
+          <p className="text-xs font-medium text-gray-300 uppercase tracking-wider px-1">
             Connected ({connectedPlatforms.length})
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -189,7 +189,7 @@ export function BusinessSocialAccounts({
               const meta = PLATFORM_META[conn.platform] || {
                 name: conn.platform,
                 icon: Link2,
-                color: 'text-gray-400',
+                color: 'text-gray-300',
                 bgColor: 'bg-gray-500/10',
                 borderColor: 'border-gray-500/20',
               };
@@ -207,7 +207,7 @@ export function BusinessSocialAccounts({
                         {meta.name}
                       </div>
                       {conn.username && (
-                        <div className="text-xs text-gray-400 truncate">
+                        <div className="text-xs text-gray-300 truncate">
                           @{conn.username}
                         </div>
                       )}
@@ -253,7 +253,7 @@ export function BusinessSocialAccounts({
       {/* Available Platforms (not connected) */}
       {disconnectedPlatforms.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wider px-1">
+          <p className="text-xs font-medium text-gray-300 uppercase tracking-wider px-1">
             Available ({disconnectedPlatforms.length})
           </p>
           <div className="flex flex-wrap gap-2">

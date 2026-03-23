@@ -208,7 +208,7 @@ export function ImagePreviewCard({
       {/* Metadata */}
       {showMetadata && image.metadata && (
         <div className="p-3 border-t border-white/10 space-y-1">
-          <div className="flex items-center justify-between text-xs text-gray-400">
+          <div className="flex items-center justify-between text-xs text-gray-300">
             <span>
               {image.metadata.width} × {image.metadata.height}
             </span>
