@@ -307,6 +307,37 @@ export default function DashboardPage() {
         ) : isNewUser ? (
           /* ── New user flow ──────────────────────────────────────────────── */
           <div className="space-y-4">
+            {/* Single-focus first-run card — shown only when user has no content and no platform connections */}
+            {stats.totalPosts === 0 && stats.connectedPlatforms === 0 && (
+              <div className="rounded-sm border-[0.5px] border-white/[0.08] bg-[#0a0a12] p-8 text-center max-w-lg mx-auto mt-2">
+                <div className="h-10 w-10 flex items-center justify-center border-[0.5px] border-amber-500/20 bg-amber-500/[0.06] rounded-sm mx-auto mb-4">
+                  <span className="text-amber-400 text-lg">✦</span>
+                </div>
+                <h2 className="text-lg font-light text-white mb-2">
+                  Create your first post in 2 minutes
+                </h2>
+                <p className="text-sm text-white/40 mb-6 leading-relaxed">
+                  Synthex uses your brand voice to generate posts for all 9
+                  platforms instantly.
+                </p>
+                <a
+                  href="/dashboard/content/drafts"
+                  className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-[#050508] font-medium text-sm py-2.5 px-6 rounded-sm transition-colors"
+                >
+                  Create First Post
+                  <span aria-hidden="true">→</span>
+                </a>
+                <p className="mt-3 text-xs text-white/30">
+                  or{' '}
+                  <a
+                    href="/dashboard/integrations"
+                    className="text-amber-500/70 hover:text-amber-500/90 transition-colors"
+                  >
+                    connect a platform first
+                  </a>
+                </p>
+              </div>
+            )}
             <WelcomeCard
               connectedPlatforms={stats.connectedPlatforms}
               totalPosts={stats.totalPosts}
