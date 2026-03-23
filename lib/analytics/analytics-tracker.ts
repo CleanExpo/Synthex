@@ -51,7 +51,7 @@ export interface AnalyticsEvent {
   campaignId?: string;
 }
 
-export type EventType = 
+export type EventType =
   | 'page_view'
   | 'login'
   | 'logout'
@@ -182,11 +182,13 @@ export class AnalyticsTracker {
   /**
    * Track a generic event
    */
-  async track(event: Omit<AnalyticsEvent, 'sessionId' | 'timestamp'>): Promise<void> {
+  async track(
+    event: Omit<AnalyticsEvent, 'sessionId' | 'timestamp'>
+  ): Promise<void> {
     const fullEvent: AnalyticsEvent = {
       ...event,
       sessionId: this.sessionId,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     this.buffer.push(fullEvent);
@@ -201,8 +203,8 @@ export class AnalyticsTracker {
    * Track page view
    */
   async trackPageView(
-    page: string, 
-    userId?: string, 
+    page: string,
+    userId?: string,
     referrer?: string
   ): Promise<void> {
     await this.track({
@@ -211,9 +213,10 @@ export class AnalyticsTracker {
       metadata: {
         page,
         referrer,
-        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
-        timestamp: new Date().toISOString()
-      }
+        userAgent:
+          typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 
@@ -233,8 +236,8 @@ export class AnalyticsTracker {
       metadata: {
         contentType,
         aiModel,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 
@@ -255,8 +258,8 @@ export class AnalyticsTracker {
       metadata: {
         platforms,
         platformCount: platforms.length,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 
@@ -275,9 +278,9 @@ export class AnalyticsTracker {
         data: {
           analytics: {
             ...metrics,
-            lastUpdated: new Date()
-          }
-        }
+            lastUpdated: new Date(),
+          },
+        },
       });
 
       // Calculate engagement rate
@@ -292,8 +295,8 @@ export class AnalyticsTracker {
           feature: 'engagement_update',
           metrics,
           engagementRate,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       });
     } catch (error) {
       console.error('Error tracking engagement:', error);
@@ -307,23 +310,28 @@ export class AnalyticsTracker {
     try {
       // Get user's posts
       const posts = await prisma.post.findMany({
-        where: { 
-          campaign: { userId }
+        where: {
+          campaign: { userId },
         },
         include: {
-          campaign: true
-        }
+          campaign: true,
+        },
       });
 
       // Get user's campaigns
       const campaigns = await prisma.campaign.findMany({
-        where: { userId }
+        where: { userId },
       });
 
       // Calculate metrics
       const totalEngagement = posts.reduce((sum, post) => {
         const analytics = post.analytics as PostAnalyticsJson | null;
-        return sum + (analytics?.likes || 0) + (analytics?.shares || 0) + (analytics?.comments || 0);
+        return (
+          sum +
+          (analytics?.likes || 0) +
+          (analytics?.shares || 0) +
+          (analytics?.comments || 0)
+        );
       }, 0);
 
       const platformStats = this.aggregatePlatformStats(posts);
@@ -332,20 +340,21 @@ export class AnalyticsTracker {
       // Get AI content generation count
       const contentGenerated = await prisma.campaign.count({
         where: {
-          userId
-        }
+          userId,
+        },
       });
 
       return {
         userId,
         totalPosts: posts.length,
         totalEngagement,
-        averageEngagementRate: posts.length > 0 ? totalEngagement / posts.length : 0,
+        averageEngagementRate:
+          posts.length > 0 ? totalEngagement / posts.length : 0,
         bestPerformingPlatform: bestPlatform,
         bestPerformingTime: this.findBestPostingTime(posts),
         contentGenerated,
         campaignsCreated: campaigns.length,
-        lastActive: new Date()
+        lastActive: new Date(),
       };
     } catch (error) {
       console.error('Error getting user analytics:', error);
@@ -364,30 +373,30 @@ export class AnalyticsTracker {
     try {
       const where: Prisma.PostWhereInput = {
         campaign: { userId },
-        platform
+        platform,
       };
 
       if (dateRange) {
         where.createdAt = {
           gte: dateRange.start,
-          lte: dateRange.end
+          lte: dateRange.end,
         };
       }
 
       const posts = await prisma.post.findMany({
         where,
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
       });
 
       // Calculate engagement metrics
       const engagement = this.aggregateEngagement(posts);
-      
+
       // Get top performing content
       const topContent = this.getTopContent(posts, 5);
-      
+
       // Find best posting times
       const bestTimes = this.analyzeBestTimes(posts);
-      
+
       // Calculate growth rate
       const growthRate = await this.calculateGrowthRate(userId, platform);
 
@@ -397,7 +406,7 @@ export class AnalyticsTracker {
         engagement,
         topContent,
         bestTimes,
-        growthRate
+        growthRate,
       };
     } catch (error) {
       console.error('Error getting platform analytics:', error);
@@ -408,10 +417,12 @@ export class AnalyticsTracker {
   /**
    * Get content performance metrics
    */
-  async getContentPerformance(contentId: string): Promise<ContentPerformance | null> {
+  async getContentPerformance(
+    contentId: string
+  ): Promise<ContentPerformance | null> {
     try {
       const post = await prisma.post.findUnique({
-        where: { id: contentId }
+        where: { id: contentId },
       });
 
       if (!post) return null;
@@ -433,10 +444,10 @@ export class AnalyticsTracker {
           impressions: analytics?.impressions || 0,
           reach: analytics?.reach || 0,
           engagementRate: this.calculateEngagementRate(analytics),
-          viralScore: analytics?.viralScore || 0
+          viralScore: analytics?.viralScore || 0,
         },
         hashtags: metadata?.hashtags || [],
-        viralScore: analytics?.viralScore || 0
+        viralScore: analytics?.viralScore || 0,
       };
     } catch (error) {
       console.error('Error getting content performance:', error);
@@ -452,7 +463,7 @@ export class AnalyticsTracker {
       const [userAnalytics, recentPosts, topPlatforms] = await Promise.all([
         this.getUserAnalytics(userId),
         this.getRecentPosts(userId, 10),
-        this.getTopPlatforms(userId)
+        this.getTopPlatforms(userId),
       ]);
 
       // Calculate trends
@@ -463,12 +474,12 @@ export class AnalyticsTracker {
           totalPosts: userAnalytics.totalPosts,
           totalEngagement: userAnalytics.totalEngagement,
           averageEngagementRate: userAnalytics.averageEngagementRate,
-          contentGenerated: userAnalytics.contentGenerated
+          contentGenerated: userAnalytics.contentGenerated,
         },
         recentActivity: recentPosts,
         platformBreakdown: topPlatforms,
         trends,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       };
     } catch (error) {
       console.error('Error getting dashboard metrics:', error);
@@ -479,10 +490,13 @@ export class AnalyticsTracker {
   /**
    * Calculate engagement rate
    */
-  private calculateEngagementRate(metrics: Partial<EngagementMetrics> | PostAnalyticsJson | null | undefined): number {
+  private calculateEngagementRate(
+    metrics: Partial<EngagementMetrics> | PostAnalyticsJson | null | undefined
+  ): number {
     if (!metrics) return 0;
 
-    const interactions = (metrics.likes || 0) + (metrics.shares || 0) + (metrics.comments || 0);
+    const interactions =
+      (metrics.likes || 0) + (metrics.shares || 0) + (metrics.comments || 0);
     const reach = metrics.reach || metrics.impressions || 1;
 
     return Math.round((interactions / reach) * 10000) / 100; // Percentage with 2 decimals
@@ -500,7 +514,7 @@ export class AnalyticsTracker {
         stats.set(platform, {
           posts: 0,
           engagement: 0,
-          avgEngagement: 0
+          avgEngagement: 0,
         });
       }
 
@@ -509,7 +523,10 @@ export class AnalyticsTracker {
 
       const analytics = post.analytics as PostAnalyticsJson | null;
       if (analytics) {
-        platformStats.engagement += (analytics.likes || 0) + (analytics.shares || 0) + (analytics.comments || 0);
+        platformStats.engagement +=
+          (analytics.likes || 0) +
+          (analytics.shares || 0) +
+          (analytics.comments || 0);
       }
     }
 
@@ -542,25 +559,31 @@ export class AnalyticsTracker {
    * Find best posting time
    */
   private findBestPostingTime(posts: Post[]): string {
-    const hourlyEngagement = new Map<number, { total: number; count: number }>();
+    const hourlyEngagement = new Map<
+      number,
+      { total: number; count: number }
+    >();
 
     for (const post of posts) {
       const hour = new Date(post.publishedAt || post.createdAt).getHours();
       const analytics = post.analytics as PostAnalyticsJson | null;
-      const engagement = (analytics?.likes || 0) + (analytics?.shares || 0) + (analytics?.comments || 0);
-      
+      const engagement =
+        (analytics?.likes || 0) +
+        (analytics?.shares || 0) +
+        (analytics?.comments || 0);
+
       if (!hourlyEngagement.has(hour)) {
         hourlyEngagement.set(hour, { total: 0, count: 0 });
       }
-      
+
       const hourData = hourlyEngagement.get(hour)!;
       hourData.total += engagement;
       hourData.count++;
     }
-    
+
     let bestHour = 0;
     let bestAvgEngagement = 0;
-    
+
     for (const [hour, data] of hourlyEngagement) {
       const avgEngagement = data.total / data.count;
       if (avgEngagement > bestAvgEngagement) {
@@ -568,7 +591,7 @@ export class AnalyticsTracker {
         bestHour = hour;
       }
     }
-    
+
     return `${bestHour}:00`;
   }
 
@@ -585,7 +608,7 @@ export class AnalyticsTracker {
       impressions: 0,
       reach: 0,
       engagementRate: 0,
-      viralScore: 0
+      viralScore: 0,
     };
 
     for (const post of posts) {
@@ -601,10 +624,10 @@ export class AnalyticsTracker {
         totals.viralScore += analytics.viralScore || 0;
       }
     }
-    
+
     totals.engagementRate = this.calculateEngagementRate(totals);
     totals.viralScore = posts.length > 0 ? totals.viralScore / posts.length : 0;
-    
+
     return totals;
   }
 
@@ -615,7 +638,10 @@ export class AnalyticsTracker {
     const postsWithEngagement: ContentWithEngagement[] = posts.map(post => {
       const analytics = post.analytics as PostAnalyticsJson | null;
       const metadata = post.metadata as PostMetadataJson | null;
-      const engagement = (analytics?.likes || 0) + (analytics?.shares || 0) + (analytics?.comments || 0);
+      const engagement =
+        (analytics?.likes || 0) +
+        (analytics?.shares || 0) +
+        (analytics?.comments || 0);
 
       return {
         contentId: post.id,
@@ -631,11 +657,11 @@ export class AnalyticsTracker {
           impressions: analytics?.impressions || 0,
           reach: analytics?.reach || 0,
           engagementRate: this.calculateEngagementRate(analytics),
-          viralScore: analytics?.viralScore || 0
+          viralScore: analytics?.viralScore || 0,
         },
         hashtags: metadata?.hashtags || [],
         viralScore: analytics?.viralScore || 0,
-        totalEngagement: engagement
+        totalEngagement: engagement,
       };
     });
 
@@ -655,48 +681,54 @@ export class AnalyticsTracker {
       const date = new Date(post.publishedAt || post.createdAt);
       const timeSlot = `${date.getHours()}:00`;
       const analytics = post.analytics as PostAnalyticsJson | null;
-      const engagement = (analytics?.likes || 0) + (analytics?.shares || 0) + (analytics?.comments || 0);
-      
+      const engagement =
+        (analytics?.likes || 0) +
+        (analytics?.shares || 0) +
+        (analytics?.comments || 0);
+
       if (!timeEngagement.has(timeSlot)) {
         timeEngagement.set(timeSlot, { total: 0, count: 0 });
       }
-      
+
       const slotData = timeEngagement.get(timeSlot)!;
       slotData.total += engagement;
       slotData.count++;
     }
-    
+
     // Sort by average engagement
     const sortedTimes = Array.from(timeEngagement.entries())
       .map(([time, data]) => ({
         time,
-        avgEngagement: data.total / data.count
+        avgEngagement: data.total / data.count,
       }))
       .sort((a, b) => b.avgEngagement - a.avgEngagement)
       .slice(0, 3)
       .map(item => item.time);
-    
+
     return sortedTimes.length > 0 ? sortedTimes : ['9:00', '12:00', '18:00'];
   }
 
   /**
    * Calculate growth rate
    */
-  private async calculateGrowthRate(userId: string, platform: string): Promise<number> {
+  private async calculateGrowthRate(
+    userId: string,
+    platform: string
+  ): Promise<number> {
     try {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
+
       const sixtyDaysAgo = new Date();
       sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-      
+
       const [currentPeriod, previousPeriod] = await Promise.all([
         prisma.post.count({
           where: {
             campaign: { userId },
             platform,
-            createdAt: { gte: thirtyDaysAgo }
-          }
+            createdAt: { gte: thirtyDaysAgo },
+          },
         }),
         prisma.post.count({
           where: {
@@ -704,15 +736,17 @@ export class AnalyticsTracker {
             platform,
             createdAt: {
               gte: sixtyDaysAgo,
-              lt: thirtyDaysAgo
-            }
-          }
-        })
+              lt: thirtyDaysAgo,
+            },
+          },
+        }),
       ]);
-      
+
       if (previousPeriod === 0) return currentPeriod > 0 ? 100 : 0;
-      
-      return Math.round(((currentPeriod - previousPeriod) / previousPeriod) * 100);
+
+      return Math.round(
+        ((currentPeriod - previousPeriod) / previousPeriod) * 100
+      );
     } catch (error) {
       console.error('Error calculating growth rate:', error);
       return 0;
@@ -722,30 +756,33 @@ export class AnalyticsTracker {
   /**
    * Get recent posts
    */
-  private async getRecentPosts(userId: string, limit: number): Promise<RecentPost[]> {
+  private async getRecentPosts(
+    userId: string,
+    limit: number
+  ): Promise<RecentPost[]> {
     try {
       const posts = await prisma.post.findMany({
         where: {
-          campaign: { userId }
+          campaign: { userId },
         },
         orderBy: { createdAt: 'desc' },
         take: limit,
         include: {
           campaign: {
             select: {
-              name: true
-            }
-          }
-        }
+              name: true,
+            },
+          },
+        },
       });
-      
+
       return posts.map(post => ({
         id: post.id,
         content: post.content.substring(0, 100) + '...',
         platform: post.platform,
         campaignName: post.campaign.name,
         status: post.status,
-        createdAt: post.createdAt
+        createdAt: post.createdAt,
       }));
     } catch (error) {
       console.error('Error getting recent posts:', error);
@@ -761,17 +798,17 @@ export class AnalyticsTracker {
       const platforms = await prisma.post.groupBy({
         by: ['platform'],
         where: {
-          campaign: { userId }
+          campaign: { userId },
         },
         _count: {
-          id: true
-        }
+          id: true,
+        },
       });
-      
+
       return platforms
         .map(p => ({
           platform: p.platform,
-          posts: p._count.id
+          posts: p._count.id,
         }))
         .sort((a, b) => b.posts - a.posts);
     } catch (error) {
@@ -787,37 +824,40 @@ export class AnalyticsTracker {
     try {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
+
       const fourteenDaysAgo = new Date();
       fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-      
+
       const [currentWeek, previousWeek] = await Promise.all([
         prisma.post.count({
           where: {
             campaign: { userId },
-            createdAt: { gte: sevenDaysAgo }
-          }
+            createdAt: { gte: sevenDaysAgo },
+          },
         }),
         prisma.post.count({
           where: {
             campaign: { userId },
             createdAt: {
               gte: fourteenDaysAgo,
-              lt: sevenDaysAgo
-            }
-          }
-        })
+              lt: sevenDaysAgo,
+            },
+          },
+        }),
       ]);
-      
-      const growthRate = previousWeek === 0 
-        ? (currentWeek > 0 ? 100 : 0)
-        : Math.round(((currentWeek - previousWeek) / previousWeek) * 100);
-      
+
+      const growthRate =
+        previousWeek === 0
+          ? currentWeek > 0
+            ? 100
+            : 0
+          : Math.round(((currentWeek - previousWeek) / previousWeek) * 100);
+
       return {
         postsThisWeek: currentWeek,
         postsLastWeek: previousWeek,
         growthRate,
-        trending: growthRate > 0 ? 'up' : growthRate < 0 ? 'down' : 'stable'
+        trending: growthRate > 0 ? 'up' : growthRate < 0 ? 'down' : 'stable',
       };
     } catch (error) {
       console.error('Error calculating trends:', error);
@@ -825,7 +865,7 @@ export class AnalyticsTracker {
         postsThisWeek: 0,
         postsLastWeek: 0,
         growthRate: 0,
-        trending: 'stable'
+        trending: 'stable',
       };
     }
   }
@@ -835,10 +875,10 @@ export class AnalyticsTracker {
    */
   private async flush(): Promise<void> {
     if (this.buffer.length === 0) return;
-    
+
     const events = [...this.buffer];
     this.buffer = [];
-    
+
     try {
       // Store events in database
       await prisma.analyticsEvent.createMany({
@@ -850,8 +890,8 @@ export class AnalyticsTracker {
           metadata: event.metadata as Prisma.InputJsonValue,
           platform: event.platform,
           contentId: event.contentId,
-          campaignId: event.campaignId
-        }))
+          campaignId: event.campaignId,
+        })),
       });
     } catch (error) {
       console.error('Error flushing analytics buffer:', error);
@@ -864,6 +904,7 @@ export class AnalyticsTracker {
    * Start auto-flush interval
    */
   private startAutoFlush(): void {
+    if (this.flushInterval) return; // Prevent double-start
     this.flushInterval = setInterval(() => {
       this.flush().catch(console.error);
     }, this.FLUSH_INTERVAL);
@@ -899,7 +940,7 @@ export class AnalyticsTracker {
       bestPerformingTime: '9:00',
       contentGenerated: 0,
       campaignsCreated: 0,
-      lastActive: new Date()
+      lastActive: new Date(),
     };
   }
 
@@ -919,11 +960,11 @@ export class AnalyticsTracker {
         impressions: 0,
         reach: 0,
         engagementRate: 0,
-        viralScore: 0
+        viralScore: 0,
       },
       topContent: [],
       bestTimes: ['9:00', '12:00', '18:00'],
-      growthRate: 0
+      growthRate: 0,
     };
   }
 
@@ -936,7 +977,7 @@ export class AnalyticsTracker {
         totalPosts: 0,
         totalEngagement: 0,
         averageEngagementRate: 0,
-        contentGenerated: 0
+        contentGenerated: 0,
       },
       recentActivity: [],
       platformBreakdown: [],
@@ -944,9 +985,9 @@ export class AnalyticsTracker {
         postsThisWeek: 0,
         postsLastWeek: 0,
         growthRate: 0,
-        trending: 'stable'
+        trending: 'stable',
       },
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
