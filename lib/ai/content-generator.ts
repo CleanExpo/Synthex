@@ -672,8 +672,14 @@ Keep the same message but change the style and tone.
         for (let post = 0; post < postsPerDay; post++) {
           const content = await this.generateContent({
             type: 'post',
-            platform: platform as any,
-            tone: ['professional', 'casual', 'inspirational'][post % 3] as any,
+            platform: platform as ContentRequest['platform'],
+            tone: (
+              [
+                'professional',
+                'casual',
+                'inspirational',
+              ] as ContentRequest['tone'][]
+            )[post % 3],
             includeHashtags: true,
             includeEmojis: true,
             includeCTA: post === postsPerDay - 1, // CTA on last post
