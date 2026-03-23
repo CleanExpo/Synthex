@@ -69,6 +69,7 @@ class MemoryCache {
   }
 
   private startCleanup() {
+    if (this.cleanupInterval) return; // Prevent double-start
     this.cleanupInterval = setInterval(() => {
       const now = Date.now();
       const entries = Array.from(this.cache.entries());
