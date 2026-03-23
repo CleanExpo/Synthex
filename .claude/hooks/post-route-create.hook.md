@@ -16,6 +16,7 @@ does not block the workflow — the developer can address warnings before commit
 ## Trigger Conditions
 
 This hook activates after:
+
 - A new file is created under `app/api/**/*.ts`
 - An existing file under `app/api/**/*.ts` is modified with >10 lines changed
 - A route handler function (GET, POST, PUT, DELETE, PATCH) is added or modified
@@ -23,48 +24,66 @@ This hook activates after:
 ## Quick Compliance Checks
 
 ### Check 1: Centralised Auth Import
+
 **Scan for:** Import of `getUserIdFromRequestOrCookies` from `@/lib/auth/jwt-utils` OR import of `APISecurityChecker` from `@/lib/security/api-security-checker`.
+
 ```bash
 grep -n "getUserIdFromRequestOrCookies\|APISecurityChecker" <file>
 ```
+
 **If missing:** WARN — "This route does not use centralised auth. Import `getUserIdFromRequestOrCookies` from `@/lib/auth/jwt-utils` or use `APISecurityChecker.check()`."
 
 ### Check 2: Auth Enforcement
+
 **Scan for:** `getUserIdFromRequestOrCookies(request)` call or `security.context.userId` usage in each handler.
+
 ```bash
 grep -n "getUserIdFromRequestOrCookies\|security\.context\.userId\|unauthorizedResponse" <file>
 ```
+
 **If missing:** WARN — "Handler functions should verify authentication. Add: `const userId = await getUserIdFromRequestOrCookies(request); if (!userId) return unauthorizedResponse();`"
 
 ### Check 3: No Raw JWT
+
 **Scan for:** Direct `jwt.verify()` calls or `as any` casts.
+
 ```bash
 grep -n "jwt\.verify\|as any" <file>
 ```
+
 **If found:** WARN — "Found raw JWT verification or `as any` cast. Use `getUserIdFromRequestOrCookies()` from `@/lib/auth/jwt-utils` instead."
 
 ### Check 4: Input Validation on Mutating Handlers
+
 **Scan for:** POST/PUT/DELETE/PATCH handlers that call `request.json()`.
 **Then check:** Whether the parsed body is validated with Zod (`.parse(`, `.safeParse(`).
+
 ```bash
 grep -n "request\.json()" <file>
 grep -n "\.parse(\|\.safeParse(" <file>
 ```
+
 **If `request.json()` exists without Zod validation:** WARN — "POST/PUT/DELETE body is not validated. Add Zod schema validation: `const body = schema.parse(await request.json())`"
 
 ### Check 5: NextRequest Type
+
 **Scan for:** Handler parameter type.
+
 ```bash
 grep -n "request: Request[^a-zA-Z]" <file>
 ```
+
 **If found:** WARN — "Use `NextRequest` from `next/server` instead of generic `Request` type."
 
 ### Check 6: Runtime Export for Prisma
+
 **Scan for:** Prisma usage without runtime export.
+
 ```bash
 grep -n "from '@/lib/prisma'\|from '../.*prisma'" <file>
 grep -n "export const runtime" <file>
 ```
+
 **If Prisma imported but no runtime export:** WARN — "This route uses Prisma but doesn't export `runtime = 'nodejs'`. Add: `export const runtime = 'nodejs';`"
 
 ## Output Format
@@ -93,7 +112,10 @@ When warnings are found, suggest this template as reference:
 
 ```typescript
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
@@ -156,3 +178,13 @@ See `app/api/campaigns/route.ts` for a recently-audited route that passes all ch
 - Non-blocking — allows development flow to continue
 - Warnings feed into **senior-reviewer** agent if a review is triggered
 - Complements **pre-deploy-security** hook which blocks at deploy time
+
+## Auto-Refresh Route Reference
+
+After confirming a new file was created at a path matching `app/api/**/route.ts`:
+
+1. Run: `bash .claude/scripts/refresh-routes.sh`
+2. If exit code 0: Route reference updated — include `.planning/ROUTE_REFERENCE.md` in the commit
+3. If exit code 1 (sentinel missing): Report the error to the user — do NOT block the route creation workflow
+
+**Condition:** Only fires for paths matching `app/api/**/route.ts`. Ignore all other file creations.
