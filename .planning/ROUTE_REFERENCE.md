@@ -868,6 +868,8 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ---
 
+<!-- HAND-MAINTAINED: Do not regenerate below this line -->
+
 ## Dashboard Pages
 
 | Page                            | URL                                      | API calls detected                                                                                                                                                             |
