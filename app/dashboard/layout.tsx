@@ -292,7 +292,12 @@ const sidebarGroups: SidebarNavGroup[] = [
     icon: GitPullRequest,
     label: 'AI AGENTS',
     items: [
-      { icon: Sparkles, label: 'Autopilot', href: '/dashboard/autonomous', isNew: true },
+      {
+        icon: Sparkles,
+        label: 'Autopilot',
+        href: '/dashboard/autonomous',
+        isNew: true,
+      },
       {
         icon: GitPullRequest,
         label: 'Workflows',
@@ -438,7 +443,11 @@ function NavGroup({ group }: { group: SidebarNavGroup }) {
                         'text-amber-500 bg-amber-500/[0.06] hover:text-amber-400'
                     )}
                   >
-                    <Link href={item.href} className="flex items-center gap-2 w-full">
+                    <Link
+                      href={item.href}
+                      className="flex items-center gap-2 w-full"
+                      aria-current={isActive ? 'page' : undefined}
+                    >
                       <item.icon className="h-3.5 w-3.5 flex-shrink-0" />
                       <span className="text-xs flex-1">{item.label}</span>
                       {item.isNew && (
