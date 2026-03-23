@@ -5,6 +5,7 @@ const FOOTER_LINKS = [
   { label: 'Terms', href: '/terms' },
   { label: 'Cookies', href: '/privacy#cookies' },
   { label: 'Contact', href: '/contact' },
+  { label: 'Status', href: 'https://status.synthex.social', external: true },
 ];
 
 /** Simple footer — warm charcoal bg, amber link hovers */
@@ -27,10 +28,12 @@ export function FooterSection() {
 
           {/* Nav links */}
           <nav className="flex items-center gap-6">
-            {FOOTER_LINKS.map(({ label, href }) => (
+            {FOOTER_LINKS.map(({ label, href, external }) => (
               <Link
                 key={href}
                 href={href}
+                target={external ? '_blank' : undefined}
+                rel={external ? 'noopener noreferrer' : undefined}
                 className="text-[11px] font-medium text-white/50 hover:text-orange-400 transition-colors"
               >
                 {label}
