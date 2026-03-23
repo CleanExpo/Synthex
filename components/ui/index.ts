@@ -22,9 +22,12 @@ export * from './form-field';
 // OVERLAY COMPONENTS
 // ============================================================================
 export * from './dialog';
+export * from './alert-dialog';
 export * from './popover';
 export * from './tooltip';
 export * from './sheet';
+export * from './drawer';
+export * from './hover-card';
 export * from './alert';
 export * from './toast';
 
@@ -32,6 +35,9 @@ export * from './toast';
 // NAVIGATION COMPONENTS
 // ============================================================================
 export * from './dropdown-menu';
+export * from './context-menu';
+export * from './menubar';
+export * from './navigation-menu';
 export * from './tabs';
 export * from './command';
 export * from './scroll-area';
@@ -49,6 +55,10 @@ export * from './progress';
 export * from './skeleton';
 export * from './skeleton-extended';
 export * from './accordion';
+export * from './collapsible';
+export * from './carousel';
+export * from './aspect-ratio';
+export * from './resizable';
 export * from './spinner';
 export * from './error-boundary';
 
@@ -56,6 +66,9 @@ export * from './error-boundary';
 // DATA DISPLAY COMPONENTS
 // ============================================================================
 export * from './data-table';
+export * from './toggle';
+export * from './toggle-group';
+export * from './input-otp';
 
 // ============================================================================
 // DATE & TIME COMPONENTS
