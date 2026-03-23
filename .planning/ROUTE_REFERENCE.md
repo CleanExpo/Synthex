@@ -1032,3 +1032,4 @@ Reverse lookup: which routes touch each model. Top 30 most-used models.
 | 2026-03-23 | /api/brand/profile      | SEC-2: Added auth + org check                                  | SEC-2  |
 | 2026-03-23 | middleware.ts           | SEC-5: JWT HMAC verification via jose                          | SEC-5  |
 | 2026-03-23 | /api/ws                 | COMP-5: WebSocket CORS restricted to synthex.social            | COMP-5 |
+| 2026-03-23 | /api/contact            | Created — public POST, Resend SDK, rate-limited (writeDefault) | —      |
