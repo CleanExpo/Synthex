@@ -3,7 +3,15 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
-  BarChart3, Table, TrendingUp, Type, Image as ImageIcon, Layout, Move, Settings, Trash2,
+  BarChart3,
+  Table,
+  TrendingUp,
+  Type,
+  Image as ImageIcon,
+  Layout,
+  Move,
+  Settings,
+  Trash2,
 } from '@/components/icons';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -17,26 +25,41 @@ interface SortableWidgetProps {
 
 function getWidgetIcon(type: string) {
   switch (type) {
-    case 'chart': return <BarChart3 className="h-4 w-4" />;
-    case 'table': return <Table className="h-4 w-4" />;
-    case 'metric': return <TrendingUp className="h-4 w-4" />;
-    case 'text': return <Type className="h-4 w-4" />;
-    case 'image': return <ImageIcon className="h-4 w-4" />;
-    default: return <Layout className="h-4 w-4" />;
+    case 'chart':
+      return <BarChart3 className="h-4 w-4" />;
+    case 'table':
+      return <Table className="h-4 w-4" />;
+    case 'metric':
+      return <TrendingUp className="h-4 w-4" />;
+    case 'text':
+      return <Type className="h-4 w-4" />;
+    case 'image':
+      return <ImageIcon className="h-4 w-4" />;
+    default:
+      return <Layout className="h-4 w-4" />;
   }
 }
 
 function getSizeClass(size: string) {
   switch (size) {
-    case 'small': return 'col-span-1';
-    case 'medium': return 'col-span-2';
-    case 'large': return 'col-span-3';
-    case 'full': return 'col-span-4';
-    default: return 'col-span-2';
+    case 'small':
+      return 'col-span-1';
+    case 'medium':
+      return 'col-span-2';
+    case 'large':
+      return 'col-span-3';
+    case 'full':
+      return 'col-span-4';
+    default:
+      return 'col-span-2';
   }
 }
 
-export function SortableWidget({ widget, onEdit, onDelete }: SortableWidgetProps) {
+export function SortableWidget({
+  widget,
+  onEdit,
+  onDelete,
+}: SortableWidgetProps) {
   const {
     attributes,
     listeners,
@@ -58,7 +81,10 @@ export function SortableWidget({ widget, onEdit, onDelete }: SortableWidgetProps
       style={style}
       className={`${getSizeClass(widget.size)}`}
     >
-      <Card variant="glass" className={`${!widget.visible ? 'opacity-50' : ''}`}>
+      <Card
+        variant="glass"
+        className={`${!widget.visible ? 'opacity-50' : ''}`}
+      >
         <CardHeader className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -72,7 +98,11 @@ export function SortableWidget({ widget, onEdit, onDelete }: SortableWidgetProps
               <Button size="sm" variant="ghost" onClick={() => onEdit(widget)}>
                 <Settings className="h-3 w-3" />
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => onDelete(widget.id)}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onDelete(widget.id)}
+              >
                 <Trash2 className="h-3 w-3" />
               </Button>
             </div>

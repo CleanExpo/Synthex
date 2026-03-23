@@ -3,11 +3,22 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Calendar as CalendarIcon, Clock, Plus, ChevronLeft, ChevronRight,
-  Filter, Sparkles
+  Calendar as CalendarIcon,
+  Clock,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Sparkles,
 } from '@/components/icons';
 import { format, addDays, isSameDay } from 'date-fns';
 import { toast } from 'sonner';
@@ -26,12 +37,14 @@ const defaultNewPost: NewPostData = {
   time: '12:00',
   hashtags: '',
   isRecurring: false,
-  recurringPattern: 'daily'
+  recurringPattern: 'daily',
 };
 
 export function PostScheduler() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [viewMode, setViewMode] = useState<'calendar' | 'list' | 'timeline'>('calendar');
+  const [viewMode, setViewMode] = useState<'calendar' | 'list' | 'timeline'>(
+    'calendar'
+  );
   const [selectedPlatform, setSelectedPlatform] = useState('all');
   const [isCreatingPost, setIsCreatingPost] = useState(false);
   const [editingPost, setEditingPost] = useState<ScheduledPost | null>(null);
@@ -39,30 +52,33 @@ export function PostScheduler() {
   const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([
     {
       id: '1',
-      content: 'Excited to share our latest AI-powered features! \u{1F680} Check out how SYNTHEX is revolutionizing social media management.',
+      content:
+        'Excited to share our latest AI-powered features! \u{1F680} Check out how SYNTHEX is revolutionizing social media management.',
       platforms: ['twitter', 'linkedin'],
       scheduledTime: addDays(new Date(), 1),
       status: 'scheduled',
       hashtags: ['#AI', '#SocialMedia', '#MarketingAutomation'],
-      analytics: { impressions: 0, engagement: 0, clicks: 0 }
+      analytics: { impressions: 0, engagement: 0, clicks: 0 },
     },
     {
       id: '2',
-      content: 'Behind the scenes of our product development process. Swipe to see how we build features that matter! \u{1F4F8}',
+      content:
+        'Behind the scenes of our product development process. Swipe to see how we build features that matter! \u{1F4F8}',
       platforms: ['instagram'],
       scheduledTime: addDays(new Date(), 2),
       status: 'scheduled',
       media: ['image1.jpg', 'image2.jpg'],
-      hashtags: ['#BehindTheScenes', '#ProductDevelopment', '#StartupLife']
+      hashtags: ['#BehindTheScenes', '#ProductDevelopment', '#StartupLife'],
     },
     {
       id: '3',
-      content: 'New video tutorial: "5 Ways to Boost Your Social Media Engagement" now live on our channel! \u{1F3A5}',
+      content:
+        'New video tutorial: "5 Ways to Boost Your Social Media Engagement" now live on our channel! \u{1F3A5}',
       platforms: ['youtube', 'facebook'],
       scheduledTime: new Date(),
       status: 'published',
-      analytics: { impressions: 12500, engagement: 890, clicks: 234 }
-    }
+      analytics: { impressions: 12500, engagement: 890, clicks: 234 },
+    },
   ]);
 
   const [newPost, setNewPost] = useState<NewPostData>(defaultNewPost);
@@ -83,9 +99,13 @@ export function PostScheduler() {
       platforms: newPost.platforms,
       scheduledTime,
       status: 'scheduled',
-      hashtags: newPost.hashtags ? newPost.hashtags.split(' ').filter(tag => tag.startsWith('#')) : [],
+      hashtags: newPost.hashtags
+        ? newPost.hashtags.split(' ').filter(tag => tag.startsWith('#'))
+        : [],
       isRecurring: newPost.isRecurring,
-      recurringPattern: newPost.isRecurring ? newPost.recurringPattern : undefined
+      recurringPattern: newPost.isRecurring
+        ? newPost.recurringPattern
+        : undefined,
     };
 
     setScheduledPosts([...scheduledPosts, post]);
@@ -104,16 +124,18 @@ export function PostScheduler() {
       ...post,
       id: Date.now().toString(),
       scheduledTime: addDays(post.scheduledTime, 1),
-      status: 'scheduled'
+      status: 'scheduled',
     };
     setScheduledPosts([...scheduledPosts, duplicatedPost]);
     toast.success('Post duplicated');
   };
 
   const getPostsForDate = (date: Date) => {
-    return scheduledPosts.filter(post =>
-      isSameDay(post.scheduledTime, date) &&
-      (selectedPlatform === 'all' || post.platforms.includes(selectedPlatform))
+    return scheduledPosts.filter(
+      post =>
+        isSameDay(post.scheduledTime, date) &&
+        (selectedPlatform === 'all' ||
+          post.platforms.includes(selectedPlatform))
     );
   };
 
@@ -123,7 +145,9 @@ export function PostScheduler() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold gradient-text">Content Calendar</h2>
-          <p className="text-gray-300 mt-2">Schedule and manage your posts across all platforms</p>
+          <p className="text-gray-300 mt-2">
+            Schedule and manage your posts across all platforms
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
@@ -155,7 +179,7 @@ export function PostScheduler() {
       </div>
 
       {/* View Tabs */}
-      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
+      <Tabs value={viewMode} onValueChange={v => setViewMode(v as any)}>
         <TabsList>
           <TabsTrigger value="calendar">
             <CalendarIcon className="w-4 h-4 mr-2" />

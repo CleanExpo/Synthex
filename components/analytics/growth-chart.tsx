@@ -21,11 +21,17 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from '@/components/ui/chart';
-import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
+import {
+  LineChart as RechartsLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts';
 import type { GrowthDataPoint } from './types';
 
 const growthConfig: ChartConfig = {
-  followers: { label: 'Followers', color: '#D97706' },   // amber-600
+  followers: { label: 'Followers', color: '#D97706' }, // amber-600
   engagement: { label: 'Engagement', color: '#FBBF24' }, // amber-400
 };
 
@@ -45,7 +51,10 @@ export function GrowthChart({ data }: GrowthChartProps) {
       <CardContent>
         <ChartContainer config={growthConfig} className="h-[250px]">
           <RechartsLineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="rgba(255,255,255,0.06)"
+            />
             <XAxis
               dataKey="month"
               stroke="rgba(255,255,255,0.3)"

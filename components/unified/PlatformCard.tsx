@@ -29,7 +29,10 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 
 // Platform icon mapping
-const PLATFORM_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const PLATFORM_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   twitter: Twitter,
   instagram: Instagram,
   youtube: Youtube,
@@ -67,7 +70,11 @@ function formatNumber(num: number): string {
   return num.toLocaleString();
 }
 
-export function PlatformCard({ platform, onConnect, onViewDetails }: PlatformCardProps) {
+export function PlatformCard({
+  platform,
+  onConnect,
+  onViewDetails,
+}: PlatformCardProps) {
   const Icon = PLATFORM_ICONS[platform.id] || Link2;
   const isPositiveGrowth = platform.growth >= 0;
 
@@ -95,7 +102,10 @@ export function PlatformCard({ platform, onConnect, onViewDetails }: PlatformCar
             <h3 className="font-semibold text-white">{platform.name}</h3>
             {platform.lastSync && platform.connected && (
               <p className="text-xs text-gray-500">
-                Synced {formatDistanceToNow(new Date(platform.lastSync), { addSuffix: true })}
+                Synced{' '}
+                {formatDistanceToNow(new Date(platform.lastSync), {
+                  addSuffix: true,
+                })}
               </p>
             )}
           </div>

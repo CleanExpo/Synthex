@@ -5,9 +5,24 @@
  * List of top performing posts
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Eye, Heart, BarChart3, Twitter, Linkedin, Instagram, Facebook, Video } from '@/components/icons';
+import {
+  Eye,
+  Heart,
+  BarChart3,
+  Twitter,
+  Linkedin,
+  Instagram,
+  Facebook,
+  Video,
+} from '@/components/icons';
 import type { TopPost } from './types';
 
 interface TopPostsProps {
@@ -16,7 +31,10 @@ interface TopPostsProps {
   onViewAll: () => void;
 }
 
-const platformIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+const platformIcons: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   twitter: Twitter,
   linkedin: Linkedin,
   instagram: Instagram,
@@ -40,7 +58,7 @@ export function TopPosts({ posts, onViewDetails, onViewAll }: TopPostsProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {posts.map((post) => (
+          {posts.map(post => (
             <div
               key={post.id}
               className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"

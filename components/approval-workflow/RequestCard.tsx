@@ -17,12 +17,14 @@ interface RequestCardProps {
   onApprove: (requestId: string) => void;
 }
 
-export function RequestCard({ request, currentUser, onSelect, onApprove }: RequestCardProps) {
+export function RequestCard({
+  request,
+  currentUser,
+  onSelect,
+  onApprove,
+}: RequestCardProps) {
   return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
+    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
       <Card
         variant="glass"
         className="cursor-pointer"
@@ -38,7 +40,9 @@ export function RequestCard({ request, currentUser, onSelect, onApprove }: Reque
                 by {request.requester.name} &bull; {request.requester.role}
               </p>
             </div>
-            <div className={`w-2 h-2 rounded-full ${getPriorityColor(request.priority)}`} />
+            <div
+              className={`w-2 h-2 rounded-full ${getPriorityColor(request.priority)}`}
+            />
           </div>
 
           <p className="text-sm text-gray-300 line-clamp-2 mb-3">
@@ -55,7 +59,9 @@ export function RequestCard({ request, currentUser, onSelect, onApprove }: Reque
                 </span>
               </div>
               <Progress
-                value={(request.currentStage + 1) / request.stages.length * 100}
+                value={
+                  ((request.currentStage + 1) / request.stages.length) * 100
+                }
                 className="h-2"
               />
             </div>
@@ -65,7 +71,10 @@ export function RequestCard({ request, currentUser, onSelect, onApprove }: Reque
           <div className="flex items-center gap-2 mb-3">
             <div className="flex -space-x-2">
               {request.approvers.slice(0, 3).map(approver => (
-                <Avatar key={approver.id} className="h-6 w-6 border-2 border-background">
+                <Avatar
+                  key={approver.id}
+                  className="h-6 w-6 border-2 border-background"
+                >
                   <AvatarFallback className="text-xs">
                     {approver.name.charAt(0)}
                   </AvatarFallback>
@@ -98,33 +107,35 @@ export function RequestCard({ request, currentUser, onSelect, onApprove }: Reque
 
           {/* Quick Actions for Pending */}
           {request.status === 'pending' &&
-           request.approvers.some(a => a.id === currentUser.id && a.status === 'pending') && (
-            <div className="flex gap-2 mt-3">
-              <Button
-                size="sm"
-                className="flex-1 bg-green-500/20 hover:bg-green-500/30 text-green-400"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onApprove(request.id);
-                }}
-              >
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Approve
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 border-red-500/30"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelect(request);
-                }}
-              >
-                <XCircle className="h-3 w-3 mr-1" />
-                Review
-              </Button>
-            </div>
-          )}
+            request.approvers.some(
+              a => a.id === currentUser.id && a.status === 'pending'
+            ) && (
+              <div className="flex gap-2 mt-3">
+                <Button
+                  size="sm"
+                  className="flex-1 bg-green-500/20 hover:bg-green-500/30 text-green-400"
+                  onClick={e => {
+                    e.stopPropagation();
+                    onApprove(request.id);
+                  }}
+                >
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Approve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 border-red-500/30"
+                  onClick={e => {
+                    e.stopPropagation();
+                    onSelect(request);
+                  }}
+                >
+                  <XCircle className="h-3 w-3 mr-1" />
+                  Review
+                </Button>
+              </div>
+            )}
         </CardContent>
       </Card>
     </motion.div>

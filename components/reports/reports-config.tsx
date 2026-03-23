@@ -20,11 +20,36 @@ import {
 import type { ReportType } from './types';
 
 export const reportTypes: ReportType[] = [
-  { id: 'campaign', name: 'Campaign Report', description: 'Campaign performance metrics', icon: TrendingUp },
-  { id: 'analytics', name: 'Analytics Report', description: 'Event tracking and behavior', icon: BarChart3 },
-  { id: 'ab-test', name: 'A/B Testing Report', description: 'Test results and analysis', icon: Beaker },
-  { id: 'psychology', name: 'Psychology Report', description: 'Principle effectiveness', icon: Brain },
-  { id: 'comprehensive', name: 'Comprehensive Report', description: 'Full platform analysis', icon: FileText },
+  {
+    id: 'campaign',
+    name: 'Campaign Report',
+    description: 'Campaign performance metrics',
+    icon: TrendingUp,
+  },
+  {
+    id: 'analytics',
+    name: 'Analytics Report',
+    description: 'Event tracking and behavior',
+    icon: BarChart3,
+  },
+  {
+    id: 'ab-test',
+    name: 'A/B Testing Report',
+    description: 'Test results and analysis',
+    icon: Beaker,
+  },
+  {
+    id: 'psychology',
+    name: 'Psychology Report',
+    description: 'Principle effectiveness',
+    icon: Brain,
+  },
+  {
+    id: 'comprehensive',
+    name: 'Comprehensive Report',
+    description: 'Full platform analysis',
+    icon: FileText,
+  },
 ];
 
 export const formatOptions = ['pdf', 'csv', 'json'] as const;

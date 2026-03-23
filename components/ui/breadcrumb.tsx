@@ -39,12 +39,7 @@ const Breadcrumb = React.forwardRef<
   HTMLElement,
   React.ComponentPropsWithoutRef<'nav'> & { separator?: React.ReactNode }
 >(({ className, separator, ...props }, ref) => (
-  <nav
-    ref={ref}
-    aria-label="breadcrumb"
-    className={className}
-    {...props}
-  />
+  <nav ref={ref} aria-label="breadcrumb" className={className} {...props} />
 ));
 Breadcrumb.displayName = 'Breadcrumb';
 
@@ -82,10 +77,7 @@ const BreadcrumbLink = React.forwardRef<
   return (
     <a
       ref={ref}
-      className={cn(
-        'transition-colors hover:text-slate-100',
-        className
-      )}
+      className={cn('transition-colors hover:text-slate-100', className)}
       {...props}
     />
   );
@@ -158,7 +150,13 @@ export function Breadcrumbs({
 
     // Show first, ellipsis, and last (maxItems - 1) items
     const lastItems = items.slice(-(maxItems - 1));
-    return [items[0], { label: '...', ellipsis: true } as BreadcrumbItem & { ellipsis?: boolean }, ...lastItems];
+    return [
+      items[0],
+      { label: '...', ellipsis: true } as BreadcrumbItem & {
+        ellipsis?: boolean;
+      },
+      ...lastItems,
+    ];
   }, [items, maxItems]);
 
   const variantClasses = {
@@ -197,10 +195,7 @@ export function Breadcrumbs({
                 ) : item.href ? (
                   <BreadcrumbLink
                     href={item.href}
-                    className={cn(
-                      'flex items-center',
-                      itemClasses[variant]
-                    )}
+                    className={cn('flex items-center', itemClasses[variant])}
                   >
                     {isFirst && homeIcon && !item.icon && (
                       <Home className="w-4 h-4 mr-1.5" />
@@ -209,7 +204,9 @@ export function Breadcrumbs({
                     {item.label}
                   </BreadcrumbLink>
                 ) : (
-                  <span className={cn('flex items-center', itemClasses[variant])}>
+                  <span
+                    className={cn('flex items-center', itemClasses[variant])}
+                  >
                     {isFirst && homeIcon && !item.icon && (
                       <Home className="w-4 h-4 mr-1.5" />
                     )}
@@ -220,9 +217,7 @@ export function Breadcrumbs({
               </BreadcrumbItem>
 
               {!isLast && (
-                <BreadcrumbSeparator>
-                  {separator}
-                </BreadcrumbSeparator>
+                <BreadcrumbSeparator>{separator}</BreadcrumbSeparator>
               )}
             </React.Fragment>
           );

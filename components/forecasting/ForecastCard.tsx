@@ -2,7 +2,10 @@
 
 import { format, parseISO } from 'date-fns';
 import { FORECAST_METRICS } from '@/lib/forecasting/metrics';
-import type { ForecastModelResponse, ForecastHorizon } from '@/lib/forecasting/types';
+import type {
+  ForecastModelResponse,
+  ForecastHorizon,
+} from '@/lib/forecasting/types';
 
 const STATUS_STYLES: Record<string, string> = {
   pending: 'bg-yellow-500/20 text-yellow-400',
@@ -29,8 +32,10 @@ export function ForecastCard({
   isPredicting,
   horizon,
 }: ForecastCardProps) {
-  const metricDef = FORECAST_METRICS[model.metric as keyof typeof FORECAST_METRICS];
-  const statusStyle = STATUS_STYLES[model.status] ?? 'bg-gray-500/20 text-gray-300';
+  const metricDef =
+    FORECAST_METRICS[model.metric as keyof typeof FORECAST_METRICS];
+  const statusStyle =
+    STATUS_STYLES[model.status] ?? 'bg-gray-500/20 text-gray-300';
   const canPredict = model.status === 'ready' && !isPredicting;
 
   return (

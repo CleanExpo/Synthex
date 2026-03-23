@@ -29,9 +29,15 @@ interface SpatiotemporalCardProps {
  * Shows name, target metric, status, training points, last trained date, and first accuracy metric.
  * Exposes a "Generate Predictions" button gated to ready models.
  */
-export function SpatiotemporalCard({ model, onPredict, isPredicting }: SpatiotemporalCardProps) {
-  const metricDef = FORECAST_METRICS[model.targetMetric as keyof typeof FORECAST_METRICS];
-  const statusStyle = STATUS_STYLES[model.status] ?? 'bg-gray-500/20 text-gray-300';
+export function SpatiotemporalCard({
+  model,
+  onPredict,
+  isPredicting,
+}: SpatiotemporalCardProps) {
+  const metricDef =
+    FORECAST_METRICS[model.targetMetric as keyof typeof FORECAST_METRICS];
+  const statusStyle =
+    STATUS_STYLES[model.status] ?? 'bg-gray-500/20 text-gray-300';
   const canPredict = model.status === 'ready' && !isPredicting;
 
   // Display name: capitalise first character
@@ -48,7 +54,9 @@ export function SpatiotemporalCard({ model, onPredict, isPredicting }: Spatiotem
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-semibold text-white">{displayName}</span>
+          <span className="text-sm font-semibold text-white">
+            {displayName}
+          </span>
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 capitalize w-fit">
             {metricDef?.label ?? model.targetMetric}
           </span>
@@ -67,7 +75,8 @@ export function SpatiotemporalCard({ model, onPredict, isPredicting }: Spatiotem
       <div className="space-y-1 text-xs text-gray-300 flex-1">
         <p>
           <span className="text-gray-500">Training data:</span>{' '}
-          <span className="text-white">{model.trainingPoints}</span> training points
+          <span className="text-white">{model.trainingPoints}</span> training
+          points
         </p>
         {model.lastTrainedAt && (
           <p>
@@ -79,7 +88,9 @@ export function SpatiotemporalCard({ model, onPredict, isPredicting }: Spatiotem
         )}
         {accuracyEntry && (
           <p>
-            <span className="text-gray-500 capitalize">{accuracyEntry[0]}:</span>{' '}
+            <span className="text-gray-500 capitalize">
+              {accuracyEntry[0]}:
+            </span>{' '}
             <span className="text-emerald-400 font-medium">
               {accuracyEntry[1].toFixed(3)}
             </span>

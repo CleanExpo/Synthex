@@ -5,10 +5,23 @@
  * Displays selected persona details and actions
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Edit, Trash2, Brain, Copy, Settings, Loader2 } from '@/components/icons';
+import {
+  Edit,
+  Trash2,
+  Brain,
+  Copy,
+  Settings,
+  Loader2,
+} from '@/components/icons';
 import type { Persona } from './types';
 
 interface PersonaDetailsProps {
@@ -41,7 +54,12 @@ export function PersonaDetails({
             </CardDescription>
           </div>
           <div className="flex space-x-2">
-            <Button size="sm" variant="ghost" className="text-slate-300" onClick={onEdit}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-slate-300"
+              onClick={onEdit}
+            >
               <Edit className="h-4 w-4" />
             </Button>
             <Button
@@ -96,11 +114,19 @@ export function PersonaDetails({
               </>
             )}
           </Button>
-          <Button onClick={onClone} variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+          <Button
+            onClick={onClone}
+            variant="outline"
+            className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+          >
             <Copy className="mr-2 h-4 w-4" />
             Clone
           </Button>
-          <Button onClick={onConfigure} variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+          <Button
+            onClick={onConfigure}
+            variant="outline"
+            className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+          >
             <Settings className="mr-2 h-4 w-4" />
             Configure
           </Button>

@@ -40,7 +40,13 @@ interface StatCardProps {
   highlightColour?: string;
 }
 
-function StatCard({ label, value, icon: Icon, highlight, highlightColour }: StatCardProps) {
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  highlight,
+  highlightColour,
+}: StatCardProps) {
   return (
     <div
       className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors ${
@@ -51,8 +57,10 @@ function StatCard({ label, value, icon: Icon, highlight, highlightColour }: Stat
       style={
         highlight
           ? {
-              borderColor: highlightColour === 'red' ? 'rgba(239,68,68,0.3)' : undefined,
-              backgroundColor: highlightColour === 'red' ? 'rgba(239,68,68,0.05)' : undefined,
+              borderColor:
+                highlightColour === 'red' ? 'rgba(239,68,68,0.3)' : undefined,
+              backgroundColor:
+                highlightColour === 'red' ? 'rgba(239,68,68,0.05)' : undefined,
             }
           : undefined
       }
@@ -63,13 +71,13 @@ function StatCard({ label, value, icon: Icon, highlight, highlightColour }: Stat
         }`}
       >
         <Icon
-          className={`h-4 w-4 ${
-            highlight ? 'text-red-400' : 'text-gray-300'
-          }`}
+          className={`h-4 w-4 ${highlight ? 'text-red-400' : 'text-gray-300'}`}
         />
       </div>
       <div>
-        <p className="text-xs text-gray-500 uppercase tracking-wider">{label}</p>
+        <p className="text-xs text-gray-500 uppercase tracking-wider">
+          {label}
+        </p>
         <p
           className={`text-lg font-semibold ${
             highlight ? 'text-red-400' : 'text-white'
@@ -100,7 +108,11 @@ export function QueueStats({
         highlight={failed > 0}
         highlightColour="red"
       />
-      <StatCard label="Published Today" value={publishedToday} icon={CheckCircle} />
+      <StatCard
+        label="Published Today"
+        value={publishedToday}
+        icon={CheckCircle}
+      />
       <StatCard
         label="Next Up"
         value={formatRelativeTime(nextScheduledAt)}

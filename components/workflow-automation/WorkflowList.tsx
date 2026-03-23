@@ -1,10 +1,21 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  Plus, Play, Pause, Settings, Copy, RefreshCw,
+  Plus,
+  Play,
+  Pause,
+  Settings,
+  Copy,
+  RefreshCw,
 } from '@/components/icons';
 import type { Workflow, WorkflowRun, WorkflowNode } from './types';
 import { getStatusColor } from './helpers';
@@ -20,8 +31,13 @@ interface WorkflowListProps {
 }
 
 export function WorkflowList({
-  workflows, workflowRuns,
-  onEditWorkflow, onToggleStatus, onRunWorkflow, onDuplicateWorkflow, onNewWorkflow,
+  workflows,
+  workflowRuns,
+  onEditWorkflow,
+  onToggleStatus,
+  onRunWorkflow,
+  onDuplicateWorkflow,
+  onNewWorkflow,
 }: WorkflowListProps) {
   return (
     <>
@@ -35,7 +51,9 @@ export function WorkflowList({
                   <CardTitle className="text-lg">{workflow.name}</CardTitle>
                   <CardDescription>{workflow.description}</CardDescription>
                 </div>
-                <div className={`w-2 h-2 rounded-full ${getStatusColor(workflow.status)}`} />
+                <div
+                  className={`w-2 h-2 rounded-full ${getStatusColor(workflow.status)}`}
+                />
               </div>
             </CardHeader>
 
@@ -44,11 +62,15 @@ export function WorkflowList({
                 <div className="grid grid-cols-2 gap-3 text-center">
                   <div className="p-2 bg-white/5 rounded">
                     <p className="text-xs text-gray-300">Runs</p>
-                    <p className="text-lg font-bold text-white">{workflow.runCount}</p>
+                    <p className="text-lg font-bold text-white">
+                      {workflow.runCount}
+                    </p>
                   </div>
                   <div className="p-2 bg-white/5 rounded">
                     <p className="text-xs text-gray-300">Success</p>
-                    <p className="text-lg font-bold text-white">{workflow.successRate}%</p>
+                    <p className="text-lg font-bold text-white">
+                      {workflow.successRate}%
+                    </p>
                   </div>
                 </div>
 
@@ -134,9 +156,14 @@ export function WorkflowList({
           <CardContent>
             <div className="space-y-3">
               {workflowRuns.slice(0, 5).map(run => (
-                <div key={run.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <div
+                  key={run.id}
+                  className="flex items-center justify-between p-3 bg-white/5 rounded-lg"
+                >
                   <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${getStatusColor(run.status)}`} />
+                    <div
+                      className={`w-2 h-2 rounded-full ${getStatusColor(run.status)}`}
+                    />
                     <div>
                       <p className="text-sm font-medium text-white">
                         {workflows.find(w => w.id === run.workflowId)?.name}
@@ -146,7 +173,11 @@ export function WorkflowList({
                       </p>
                     </div>
                   </div>
-                  <Badge variant={run.status === 'completed' ? 'default' : 'secondary'}>
+                  <Badge
+                    variant={
+                      run.status === 'completed' ? 'default' : 'secondary'
+                    }
+                  >
                     {run.status}
                   </Badge>
                 </div>

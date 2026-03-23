@@ -25,7 +25,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Plus, Loader2 } from '@/components/icons';
-import { toneOptions, styleOptions, vocabularyOptions, emotionOptions } from './personas-config';
+import {
+  toneOptions,
+  styleOptions,
+  vocabularyOptions,
+  emotionOptions,
+} from './personas-config';
 import type { NewPersonaForm } from './types';
 
 interface CreatePersonaDialogProps {
@@ -60,21 +65,25 @@ export function CreatePersonaDialog({
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-slate-300">Persona Name</Label>
+            <Label htmlFor="name" className="text-slate-300">
+              Persona Name
+            </Label>
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => updateField('name', e.target.value)}
+              onChange={e => updateField('name', e.target.value)}
               placeholder="e.g., Professional Voice"
               className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-slate-300">Description</Label>
+            <Label htmlFor="description" className="text-slate-300">
+              Description
+            </Label>
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => updateField('description', e.target.value)}
+              onChange={e => updateField('description', e.target.value)}
               placeholder="Describe the purpose and characteristics of this persona..."
               className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 min-h-[80px]"
             />
@@ -84,13 +93,13 @@ export function CreatePersonaDialog({
               <Label className="text-slate-300">Tone</Label>
               <Select
                 value={formData.tone}
-                onValueChange={(value) => updateField('tone', value)}
+                onValueChange={value => updateField('tone', value)}
               >
                 <SelectTrigger className="bg-white/5 border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {toneOptions.map((option) => (
+                  {toneOptions.map(option => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -102,13 +111,13 @@ export function CreatePersonaDialog({
               <Label className="text-slate-300">Style</Label>
               <Select
                 value={formData.style}
-                onValueChange={(value) => updateField('style', value)}
+                onValueChange={value => updateField('style', value)}
               >
                 <SelectTrigger className="bg-white/5 border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {styleOptions.map((option) => (
+                  {styleOptions.map(option => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -120,13 +129,13 @@ export function CreatePersonaDialog({
               <Label className="text-slate-300">Vocabulary</Label>
               <Select
                 value={formData.vocabulary}
-                onValueChange={(value) => updateField('vocabulary', value)}
+                onValueChange={value => updateField('vocabulary', value)}
               >
                 <SelectTrigger className="bg-white/5 border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {vocabularyOptions.map((option) => (
+                  {vocabularyOptions.map(option => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -138,13 +147,13 @@ export function CreatePersonaDialog({
               <Label className="text-slate-300">Emotion</Label>
               <Select
                 value={formData.emotion}
-                onValueChange={(value) => updateField('emotion', value)}
+                onValueChange={value => updateField('emotion', value)}
               >
                 <SelectTrigger className="bg-white/5 border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {emotionOptions.map((option) => (
+                  {emotionOptions.map(option => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>

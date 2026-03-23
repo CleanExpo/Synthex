@@ -14,7 +14,10 @@ interface ReportsFiltersProps {
   onFilterChange: (type: string | null) => void;
 }
 
-export function ReportsFilters({ filterType, onFilterChange }: ReportsFiltersProps) {
+export function ReportsFilters({
+  filterType,
+  onFilterChange,
+}: ReportsFiltersProps) {
   return (
     <div className="flex gap-2 items-center">
       <Filter className="w-4 h-4 text-gray-300" />
@@ -26,7 +29,7 @@ export function ReportsFilters({ filterType, onFilterChange }: ReportsFiltersPro
       >
         All
       </Button>
-      {reportTypes.map((type) => (
+      {reportTypes.map(type => (
         <Button
           key={type.id}
           size="sm"

@@ -71,7 +71,10 @@ export function ForecastFeatureGate({
 
             <div className="text-left bg-white/5 rounded-lg p-4 mb-6 space-y-2">
               {(benefits || defaultBenefits).map((benefit, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-gray-300">
+                <div
+                  key={i}
+                  className="flex items-center gap-2 text-sm text-gray-300"
+                >
                   <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span>{benefit}</span>
                 </div>
@@ -87,7 +90,10 @@ export function ForecastFeatureGate({
 
             {subscription && (
               <p className="text-gray-500 text-sm mt-4">
-                Current plan: <span className="text-gray-300 capitalize">{subscription.plan}</span>
+                Current plan:{' '}
+                <span className="text-gray-300 capitalize">
+                  {subscription.plan}
+                </span>
               </p>
             )}
           </div>

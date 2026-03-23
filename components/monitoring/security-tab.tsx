@@ -5,7 +5,13 @@
  * Security status and threat monitoring
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Globe } from '@/components/icons';
 import type { SecurityMetrics } from './types';
@@ -19,7 +25,9 @@ export function SecurityTab({ metrics }: SecurityTabProps) {
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Security Overview</CardTitle>
-        <CardDescription>Threat detection and prevention status</CardDescription>
+        <CardDescription>
+          Threat detection and prevention status
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -46,15 +54,23 @@ export function SecurityTab({ metrics }: SecurityTabProps) {
           <div className="space-y-2">
             <div className="flex justify-between py-2 border-b border-white/10">
               <span className="text-sm text-gray-300">Active Threats</span>
-              <span className="text-sm font-bold text-green-400">{metrics.threats}</span>
+              <span className="text-sm font-bold text-green-400">
+                {metrics.threats}
+              </span>
             </div>
             <div className="flex justify-between py-2 border-b border-white/10">
-              <span className="text-sm text-gray-300">Blocked Attempts (24h)</span>
-              <span className="text-sm font-bold text-yellow-400">{metrics.blockedAttempts}</span>
+              <span className="text-sm text-gray-300">
+                Blocked Attempts (24h)
+              </span>
+              <span className="text-sm font-bold text-yellow-400">
+                {metrics.blockedAttempts}
+              </span>
             </div>
             <div className="flex justify-between py-2 border-b border-white/10">
               <span className="text-sm text-gray-300">Last Security Scan</span>
-              <span className="text-sm font-bold text-white">{metrics.lastScan}</span>
+              <span className="text-sm font-bold text-white">
+                {metrics.lastScan}
+              </span>
             </div>
             <div className="flex justify-between py-2">
               <span className="text-sm text-gray-300">DDoS Protection</span>

@@ -29,8 +29,10 @@ const AccordionItem = React.forwardRef<
     className={cn(
       variant === 'default' && 'border-b border-white/[0.08]',
       variant === 'glass' && 'glass rounded-lg mb-2 overflow-hidden',
-      variant === 'bordered' && 'border border-white/[0.08] rounded-lg mb-2 overflow-hidden',
-      variant === 'separated' && 'bg-white/[0.02] rounded-lg mb-2 overflow-hidden',
+      variant === 'bordered' &&
+        'border border-white/[0.08] rounded-lg mb-2 overflow-hidden',
+      variant === 'separated' &&
+        'bg-white/[0.02] rounded-lg mb-2 overflow-hidden',
       className
     )}
     {...props}
@@ -44,47 +46,59 @@ const AccordionTrigger = React.forwardRef<
     iconType?: 'chevron' | 'plus-minus';
     iconPosition?: 'left' | 'right';
   }
->(({ className, children, iconType = 'chevron', iconPosition = 'right', ...props }, ref) => {
-  const Icon = iconType === 'chevron' ? ChevronDown : null;
+>(
+  (
+    {
+      className,
+      children,
+      iconType = 'chevron',
+      iconPosition = 'right',
+      ...props
+    },
+    ref
+  ) => {
+    const Icon = iconType === 'chevron' ? ChevronDown : null;
 
-  return (
-    <AccordionPrimitive.Header className="flex">
-      <AccordionPrimitive.Trigger
-        ref={ref}
-        className={cn(
-          'flex flex-1 items-center justify-between py-4 px-4 font-medium text-white transition-all hover:bg-white/[0.02]',
-          '[&[data-state=open]>svg]:rotate-180',
-          iconType === 'plus-minus' && '[&[data-state=open]_.plus-icon]:hidden [&[data-state=closed]_.minus-icon]:hidden',
-          iconPosition === 'left' && 'flex-row-reverse justify-end gap-4',
-          className
-        )}
-        {...props}
-      >
-        {iconPosition === 'left' && iconType === 'chevron' && Icon && (
-          <Icon className="h-4 w-4 shrink-0 text-slate-300 transition-transform duration-200" />
-        )}
-        {iconPosition === 'left' && iconType === 'plus-minus' && (
-          <>
-            <Plus className="plus-icon h-4 w-4 shrink-0 text-slate-300" />
-            <Minus className="minus-icon h-4 w-4 shrink-0 text-slate-300" />
-          </>
-        )}
+    return (
+      <AccordionPrimitive.Header className="flex">
+        <AccordionPrimitive.Trigger
+          ref={ref}
+          className={cn(
+            'flex flex-1 items-center justify-between py-4 px-4 font-medium text-white transition-all hover:bg-white/[0.02]',
+            '[&[data-state=open]>svg]:rotate-180',
+            iconType === 'plus-minus' &&
+              '[&[data-state=open]_.plus-icon]:hidden [&[data-state=closed]_.minus-icon]:hidden',
+            iconPosition === 'left' && 'flex-row-reverse justify-end gap-4',
+            className
+          )}
+          {...props}
+        >
+          {iconPosition === 'left' && iconType === 'chevron' && Icon && (
+            <Icon className="h-4 w-4 shrink-0 text-slate-300 transition-transform duration-200" />
+          )}
+          {iconPosition === 'left' && iconType === 'plus-minus' && (
+            <>
+              <Plus className="plus-icon h-4 w-4 shrink-0 text-slate-300" />
+              <Minus className="minus-icon h-4 w-4 shrink-0 text-slate-300" />
+            </>
+          )}
 
-        {children}
+          {children}
 
-        {iconPosition === 'right' && iconType === 'chevron' && Icon && (
-          <Icon className="h-4 w-4 shrink-0 text-slate-300 transition-transform duration-200" />
-        )}
-        {iconPosition === 'right' && iconType === 'plus-minus' && (
-          <>
-            <Plus className="plus-icon h-4 w-4 shrink-0 text-slate-300" />
-            <Minus className="minus-icon h-4 w-4 shrink-0 text-slate-300" />
-          </>
-        )}
-      </AccordionPrimitive.Trigger>
-    </AccordionPrimitive.Header>
-  );
-});
+          {iconPosition === 'right' && iconType === 'chevron' && Icon && (
+            <Icon className="h-4 w-4 shrink-0 text-slate-300 transition-transform duration-200" />
+          )}
+          {iconPosition === 'right' && iconType === 'plus-minus' && (
+            <>
+              <Plus className="plus-icon h-4 w-4 shrink-0 text-slate-300" />
+              <Minus className="minus-icon h-4 w-4 shrink-0 text-slate-300" />
+            </>
+          )}
+        </AccordionPrimitive.Trigger>
+      </AccordionPrimitive.Header>
+    );
+  }
+);
 AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName;
 
 const AccordionContent = React.forwardRef<
@@ -140,8 +154,13 @@ export function AccordionGroup({
       collapsible={type === 'single' ? collapsible : undefined}
       className={className}
     >
-      {items.map((item) => (
-        <AccordionItem key={item.id} value={item.id} disabled={item.disabled} variant={variant}>
+      {items.map(item => (
+        <AccordionItem
+          key={item.id}
+          value={item.id}
+          disabled={item.disabled}
+          variant={variant}
+        >
           <AccordionTrigger iconType={iconType} iconPosition={iconPosition}>
             {item.title}
           </AccordionTrigger>
@@ -183,11 +202,6 @@ export function FAQ({ items, variant = 'separated', className }: FAQProps) {
   );
 }
 
-export {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-};
+export { Accordion, AccordionItem, AccordionTrigger, AccordionContent };
 
 export default AccordionGroup;

@@ -21,15 +21,17 @@ export function ContentInput({
   onChange,
   maxChars,
   characterCount,
-  wordCount
+  wordCount,
 }: ContentInputProps) {
   return (
     <div>
-      <Label htmlFor="content" className="text-gray-300">Content</Label>
+      <Label htmlFor="content" className="text-gray-300">
+        Content
+      </Label>
       <Textarea
         id="content"
         value={content}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={e => onChange(e.target.value)}
         placeholder="Start typing your content..."
         className="min-h-[300px] bg-white/5 border-white/10 text-white placeholder:text-gray-500 mt-2"
         maxLength={maxChars}
@@ -38,7 +40,11 @@ export function ContentInput({
         <span className="text-gray-500">
           {wordCount} words · {characterCount} characters
         </span>
-        <span className={characterCount > maxChars ? 'text-red-400' : 'text-gray-500'}>
+        <span
+          className={
+            characterCount > maxChars ? 'text-red-400' : 'text-gray-500'
+          }
+        >
           {characterCount} / {maxChars}
         </span>
       </div>

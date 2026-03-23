@@ -7,7 +7,11 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip';
 import { Search, Filter, RefreshCw } from '@/components/icons';
 
 interface UserSearchBarProps {
@@ -21,7 +25,7 @@ export function UserSearchBar({
   searchTerm,
   onSearchChange,
   onRefresh,
-  isLoading
+  isLoading,
 }: UserSearchBarProps) {
   return (
     <div className="flex gap-4 mb-6">
@@ -30,7 +34,7 @@ export function UserSearchBar({
         <Input
           placeholder="Search users by email or ID..."
           value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={e => onSearchChange(e.target.value)}
           className="pl-10 bg-white/5 border-white/10"
         />
       </div>
@@ -50,7 +54,9 @@ export function UserSearchBar({
         <TooltipContent variant="glass-solid">Coming soon</TooltipContent>
       </Tooltip>
       <Button onClick={onRefresh} variant="outline" className="border-white/10">
-        <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+        <RefreshCw
+          className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`}
+        />
         Refresh
       </Button>
     </div>

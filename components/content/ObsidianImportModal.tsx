@@ -111,8 +111,7 @@ export function ObsidianImportModal({
   // ---- Step 3 state ----
   const [createdDraftId, setCreatedDraftId] = useState('');
 
-  const vaultEnabled =
-    process.env.NEXT_PUBLIC_OBSIDIAN_ENABLED === 'true';
+  const vaultEnabled = process.env.NEXT_PUBLIC_OBSIDIAN_ENABLED === 'true';
 
   // ---- Helpers ----
 
@@ -264,8 +263,7 @@ export function ObsidianImportModal({
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         setImportError(
-          (body as { error?: string }).error ??
-            `Import failed (${res.status}).`
+          (body as { error?: string }).error ?? `Import failed (${res.status}).`
         );
         return;
       }

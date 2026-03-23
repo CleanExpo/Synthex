@@ -5,7 +5,13 @@
  * List of team members with empty state
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Users } from '@/components/icons';
 import { MemberCard } from './member-card';
 import type { TeamMember, TeamRole } from './types';
@@ -32,7 +38,7 @@ export function MemberList({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {members.map((member) => (
+        {members.map(member => (
           <MemberCard
             key={member.id}
             member={member}
@@ -45,8 +51,12 @@ export function MemberList({
         {members.length === 0 && (
           <div className="text-center py-8">
             <Users className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-300">No team members found</h3>
-            <p className="text-slate-500">Try adjusting your search or filters.</p>
+            <h3 className="text-lg font-medium text-slate-300">
+              No team members found
+            </h3>
+            <p className="text-slate-500">
+              Try adjusting your search or filters.
+            </p>
           </div>
         )}
       </CardContent>

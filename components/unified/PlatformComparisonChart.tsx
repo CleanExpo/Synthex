@@ -104,10 +104,10 @@ export function PlatformComparisonChart({
 }: PlatformComparisonChartProps) {
   const [metricType, setMetricType] = useState<MetricType>('stacked');
   const [visiblePlatforms, setVisiblePlatforms] = useState<Set<string>>(
-    new Set(platforms.filter((p) => p.connected).map((p) => p.id))
+    new Set(platforms.filter(p => p.connected).map(p => p.id))
   );
 
-  const connectedPlatforms = platforms.filter((p) => p.connected);
+  const connectedPlatforms = platforms.filter(p => p.connected);
 
   const togglePlatform = (platformId: string) => {
     const newVisible = new Set(visiblePlatforms);
@@ -120,14 +120,19 @@ export function PlatformComparisonChart({
   };
 
   // Format data for chart
-  const chartData = data.map((point) => ({
+  const chartData = data.map(point => ({
     ...point,
     date: formatDate(point.date),
   }));
 
   if (connectedPlatforms.length === 0) {
     return (
-      <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-8', className)}>
+      <div
+        className={cn(
+          'bg-gray-900/30 border border-white/10 rounded-xl p-8',
+          className
+        )}
+      >
         <div className="text-center text-gray-300">
           <p>Connect platforms to see comparison data</p>
         </div>
@@ -136,10 +141,17 @@ export function PlatformComparisonChart({
   }
 
   return (
-    <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
+    <div
+      className={cn(
+        'bg-gray-900/30 border border-white/10 rounded-xl p-4',
+        className
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white">Platform Comparison</h3>
+        <h3 className="text-lg font-semibold text-white">
+          Platform Comparison
+        </h3>
         <div className="flex gap-2">
           <Button
             variant={metricType === 'stacked' ? 'default' : 'outline'}
@@ -160,7 +172,7 @@ export function PlatformComparisonChart({
 
       {/* Platform toggles */}
       <div className="flex flex-wrap gap-2 mb-4">
-        {connectedPlatforms.map((platform) => (
+        {connectedPlatforms.map(platform => (
           <button
             key={platform.id}
             onClick={() => togglePlatform(platform.id)}
@@ -186,9 +198,12 @@ export function PlatformComparisonChart({
       {/* Chart */}
       <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <AreaChart
+            data={chartData}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+          >
             <defs>
-              {connectedPlatforms.map((platform) => (
+              {connectedPlatforms.map(platform => (
                 <linearGradient
                   key={platform.id}
                   id={`gradient-${platform.id}`}
@@ -197,8 +212,16 @@ export function PlatformComparisonChart({
                   x2="0"
                   y2="1"
                 >
-                  <stop offset="5%" stopColor={platform.color} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={platform.color} stopOpacity={0} />
+                  <stop
+                    offset="5%"
+                    stopColor={platform.color}
+                    stopOpacity={0.3}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor={platform.color}
+                    stopOpacity={0}
+                  />
                 </linearGradient>
               ))}
             </defs>
@@ -218,11 +241,13 @@ export function PlatformComparisonChart({
             <Tooltip content={<CustomTooltip />} />
             <Legend
               wrapperStyle={{ paddingTop: 20 }}
-              formatter={(value) => <span className="text-gray-300">{value}</span>}
+              formatter={value => (
+                <span className="text-gray-300">{value}</span>
+              )}
             />
             {connectedPlatforms
-              .filter((p) => visiblePlatforms.has(p.id))
-              .map((platform) => (
+              .filter(p => visiblePlatforms.has(p.id))
+              .map(platform => (
                 <Area
                   key={platform.id}
                   type="monotone"

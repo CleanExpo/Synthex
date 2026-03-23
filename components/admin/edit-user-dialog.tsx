@@ -42,7 +42,7 @@ export function EditUserDialog({
   user,
   onUserChange,
   onSave,
-  isSaving
+  isSaving,
 }: EditUserDialogProps) {
   const handleClose = () => {
     onOpenChange(false);
@@ -61,26 +61,30 @@ export function EditUserDialog({
         {user && (
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-email" className="text-gray-300">Email</Label>
+              <Label htmlFor="edit-email" className="text-gray-300">
+                Email
+              </Label>
               <Input
                 id="edit-email"
                 value={user.email}
                 readOnly
                 className="bg-white/5 border-white/10 text-gray-300 cursor-not-allowed"
               />
-              <p className="text-xs text-gray-500">Email cannot be changed from the admin panel</p>
+              <p className="text-xs text-gray-500">
+                Email cannot be changed from the admin panel
+              </p>
             </div>
             <div className="space-y-2">
               <Label className="text-gray-300">Role</Label>
               <Select
                 value={user.role || 'user'}
-                onValueChange={(value) => onUserChange({ ...user, role: value })}
+                onValueChange={value => onUserChange({ ...user, role: value })}
               >
                 <SelectTrigger className="bg-white/5 border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {roleOptions.map((option) => (
+                  {roleOptions.map(option => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -92,13 +96,15 @@ export function EditUserDialog({
               <Label className="text-gray-300">Status</Label>
               <Select
                 value={user.status || 'active'}
-                onValueChange={(value) => onUserChange({ ...user, status: value })}
+                onValueChange={value =>
+                  onUserChange({ ...user, status: value })
+                }
               >
                 <SelectTrigger className="bg-white/5 border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {statusOptions.map((option) => (
+                  {statusOptions.map(option => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -111,10 +117,14 @@ export function EditUserDialog({
                 <strong>ID:</strong> {user.id}
               </p>
               <p className="text-xs text-gray-300">
-                <strong>Created:</strong> {new Date(user.createdAt).toLocaleDateString()}
+                <strong>Created:</strong>{' '}
+                {new Date(user.createdAt).toLocaleDateString()}
               </p>
               <p className="text-xs text-gray-300">
-                <strong>Last Login:</strong> {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+                <strong>Last Login:</strong>{' '}
+                {user.lastLogin
+                  ? new Date(user.lastLogin).toLocaleDateString()
+                  : 'Never'}
               </p>
             </div>
           </div>

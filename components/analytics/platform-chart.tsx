@@ -69,11 +69,7 @@ export function PlatformChart({ data }: PlatformChartProps) {
               ))}
             </Pie>
             <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  formatter={(value) => `${value}%`}
-                />
-              }
+              content={<ChartTooltipContent formatter={value => `${value}%`} />}
             />
           </RechartsPieChart>
         </ChartContainer>

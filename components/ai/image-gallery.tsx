@@ -8,7 +8,10 @@
 'use client';
 
 import { ImageResult } from '@/hooks/use-image-generation';
-import { ImagePreviewCard, ImagePreviewCardSkeleton } from './image-preview-card';
+import {
+  ImagePreviewCard,
+  ImagePreviewCardSkeleton,
+} from './image-preview-card';
 import { Image as ImageIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
@@ -148,12 +151,7 @@ export function SingleImageDisplay({
 }: SingleImageDisplayProps) {
   if (isLoading) {
     return (
-      <div
-        className={cn(
-          'w-full max-w-md mx-auto',
-          className
-        )}
-      >
+      <div className={cn('w-full max-w-md mx-auto', className)}>
         <ImagePreviewCardSkeleton />
       </div>
     );
@@ -180,12 +178,7 @@ export function SingleImageDisplay({
   }
 
   return (
-    <div
-      className={cn(
-        'w-full max-w-md mx-auto',
-        className
-      )}
-    >
+    <div className={cn('w-full max-w-md mx-auto', className)}>
       <ImagePreviewCard
         image={image}
         showMetadata={showMetadata}

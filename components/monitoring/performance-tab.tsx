@@ -5,7 +5,13 @@
  * System performance metrics
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { LineChart } from '@/components/icons';
 import type { SystemMetrics } from './types';
 
@@ -18,7 +24,9 @@ export function PerformanceTab({ metrics }: PerformanceTabProps) {
     <Card variant="glass">
       <CardHeader>
         <CardTitle>System Performance</CardTitle>
-        <CardDescription>Response time and request volume over 24 hours</CardDescription>
+        <CardDescription>
+          Response time and request volume over 24 hours
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -32,7 +40,9 @@ export function PerformanceTab({ metrics }: PerformanceTabProps) {
           <div className="grid grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-gray-300">Avg Response Time</p>
-              <p className="text-2xl font-bold text-white">{metrics.responseTime}ms</p>
+              <p className="text-2xl font-bold text-white">
+                {metrics.responseTime}ms
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-300">Total Requests</p>
@@ -42,7 +52,9 @@ export function PerformanceTab({ metrics }: PerformanceTabProps) {
             </div>
             <div>
               <p className="text-sm text-gray-300">Error Rate</p>
-              <p className="text-2xl font-bold text-white">{metrics.errorRate}%</p>
+              <p className="text-2xl font-bold text-white">
+                {metrics.errorRate}%
+              </p>
             </div>
           </div>
         </div>

@@ -6,7 +6,11 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip';
 import { Download, UserPlus } from '@/components/icons';
 
 interface AdminHeaderProps {

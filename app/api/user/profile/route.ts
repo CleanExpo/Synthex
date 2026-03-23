@@ -22,32 +22,60 @@ import { writeDefault } from '@/lib/rate-limit';
 export const runtime = 'nodejs';
 
 // Validation schemas
-const profileUpdateSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Name too long').optional(),
-  company: z.string().max(100, 'Company name too long').optional().or(z.literal('')),
-  role: z.string().max(50, 'Role too long').optional().or(z.literal('')),
-  bio: z.string().max(500, 'Bio too long').optional().or(z.literal('')),
-  phone: z.string().max(20, 'Phone number too long').regex(/^[+]?[\d\s\-()]*$/, 'Invalid phone format').optional().or(z.literal('')),
-  website: z.string().url('Invalid website URL').max(200).optional().or(z.literal('')),
-  socialLinks: z.object({
-    twitter: z.string().max(100).optional(),
-    linkedin: z.string().max(100).optional(),
-    github: z.string().max(100).optional(),
-  }).passthrough().optional(),
-  // Accept legacy snake_case field name for backward compatibility
-  social_links: z.object({
-    twitter: z.string().max(100).optional(),
-    linkedin: z.string().max(100).optional(),
-    github: z.string().max(100).optional(),
-  }).passthrough().optional(),
-  // AI model preference (stored in user.settings JSON)
-  openrouterModel: z.string().max(100).optional(),
-}).strip();
+const profileUpdateSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, 'Name is required')
+      .max(100, 'Name too long')
+      .optional(),
+    company: z
+      .string()
+      .max(100, 'Company name too long')
+      .optional()
+      .or(z.literal('')),
+    role: z.string().max(50, 'Role too long').optional().or(z.literal('')),
+    bio: z.string().max(500, 'Bio too long').optional().or(z.literal('')),
+    phone: z
+      .string()
+      .max(20, 'Phone number too long')
+      .regex(/^[+]?[\d\s\-()]*$/, 'Invalid phone format')
+      .optional()
+      .or(z.literal('')),
+    website: z
+      .string()
+      .url('Invalid website URL')
+      .max(200)
+      .optional()
+      .or(z.literal('')),
+    socialLinks: z
+      .object({
+        twitter: z.string().max(100).optional(),
+        linkedin: z.string().max(100).optional(),
+        github: z.string().max(100).optional(),
+      })
+      .passthrough()
+      .optional(),
+    // Accept legacy snake_case field name for backward compatibility
+    social_links: z
+      .object({
+        twitter: z.string().max(100).optional(),
+        linkedin: z.string().max(100).optional(),
+        github: z.string().max(100).optional(),
+      })
+      .passthrough()
+      .optional(),
+    // AI model preference (stored in user.settings JSON)
+    openrouterModel: z.string().max(100).optional(),
+  })
+  .strip();
 
 const deleteAccountSchema = z.object({
-  confirmation: z.literal('DELETE_MY_ACCOUNT', {
-    errorMap: () => ({ message: 'Must confirm with "DELETE_MY_ACCOUNT"' })
-  }).optional(),
+  confirmation: z
+    .literal('DELETE_MY_ACCOUNT', {
+      errorMap: () => ({ message: 'Must confirm with "DELETE_MY_ACCOUNT"' }),
+    })
+    .optional(),
 });
 
 // GET current user profile
@@ -94,7 +122,7 @@ export async function GET(request: NextRequest) {
           // Legacy snake_case aliases for backward compatibility
           avatar_url: '',
           social_links: {},
-        }
+        },
       });
     }
 
@@ -123,7 +151,7 @@ export async function GET(request: NextRequest) {
         social_links: socialLinks,
         created_at: createdAt,
         updated_at: updatedAt,
-      }
+      },
     });
   } catch (error: unknown) {
     logger.error('Profile fetch error:', error);
@@ -139,7 +167,7 @@ export async function GET(request: NextRequest) {
         bio: '',
         // Legacy snake_case alias for backward compatibility
         avatar_url: '',
-      }
+      },
     });
   }
 }
@@ -160,13 +188,23 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Validation failed',
-          details: validationResult.error.flatten().fieldErrors
+          details: validationResult.error.flatten().fieldErrors,
         },
         { status: 400 }
       );
     }
 
-    const { name, company, role, bio, phone, website, socialLinks, social_links, openrouterModel } = validationResult.data;
+    const {
+      name,
+      company,
+      role,
+      bio,
+      phone,
+      website,
+      socialLinks,
+      social_links,
+      openrouterModel,
+    } = validationResult.data;
 
     // Build update data — only include defined fields
     const updateData: Record<string, unknown> = {};
@@ -178,7 +216,8 @@ export async function PUT(request: NextRequest) {
     if (website !== undefined) updateData.website = website || null;
     // Accept both camelCase and legacy snake_case field names
     const resolvedSocialLinks = socialLinks ?? social_links;
-    if (resolvedSocialLinks !== undefined) updateData.socialLinks = resolvedSocialLinks;
+    if (resolvedSocialLinks !== undefined)
+      updateData.socialLinks = resolvedSocialLinks;
 
     // Merge openrouterModel into user.settings JSON
     if (openrouterModel !== undefined) {
@@ -186,7 +225,8 @@ export async function PUT(request: NextRequest) {
         where: { id: userId },
         select: { settings: true },
       });
-      const currentSettings = (existingUser?.settings as Record<string, unknown>) || {};
+      const currentSettings =
+        (existingUser?.settings as Record<string, unknown>) || {};
       updateData.settings = { ...currentSettings, openrouterModel };
     }
 
@@ -210,7 +250,8 @@ export async function PUT(request: NextRequest) {
     });
 
     const updatedAvatarUrl = updatedUser.avatar || '';
-    const updatedSocialLinks = (updatedUser.socialLinks as Record<string, string>) || {};
+    const updatedSocialLinks =
+      (updatedUser.socialLinks as Record<string, string>) || {};
     const updatedAtStr = updatedUser.updatedAt.toISOString();
 
     return NextResponse.json({
@@ -232,7 +273,7 @@ export async function PUT(request: NextRequest) {
         social_links: updatedSocialLinks,
         updated_at: updatedAtStr,
       },
-      message: 'Profile updated successfully'
+      message: 'Profile updated successfully',
     });
   } catch (error: unknown) {
     logger.error('Profile update error:', error);
@@ -277,8 +318,17 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
         );
       }
 
-      const { name, company, role, bio, phone, website, socialLinks, social_links, openrouterModel } =
-        validationResult.data;
+      const {
+        name,
+        company,
+        role,
+        bio,
+        phone,
+        website,
+        socialLinks,
+        social_links,
+        openrouterModel,
+      } = validationResult.data;
 
       // Require at least one field to be present
       const hasFields =
@@ -308,7 +358,8 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       if (phone !== undefined) updateData.phone = phone;
       if (website !== undefined) updateData.website = website || null;
       const resolvedSocialLinks = socialLinks ?? social_links;
-      if (resolvedSocialLinks !== undefined) updateData.socialLinks = resolvedSocialLinks;
+      if (resolvedSocialLinks !== undefined)
+        updateData.socialLinks = resolvedSocialLinks;
 
       // Merge openrouterModel into user.settings JSON without overwriting other settings
       if (openrouterModel !== undefined) {
@@ -391,7 +442,7 @@ export async function DELETE(request: NextRequest) {
         return NextResponse.json(
           {
             error: 'Account deletion requires confirmation',
-            message: 'Send { "confirmation": "DELETE_MY_ACCOUNT" } to confirm'
+            message: 'Send { "confirmation": "DELETE_MY_ACCOUNT" } to confirm',
           },
           { status: 400 }
         );
@@ -400,7 +451,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Account deletion requires confirmation',
-          message: 'Send { "confirmation": "DELETE_MY_ACCOUNT" } to confirm'
+          message: 'Send { "confirmation": "DELETE_MY_ACCOUNT" } to confirm',
         },
         { status: 400 }
       );
@@ -413,7 +464,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Account deleted successfully'
+      message: 'Account deleted successfully',
     });
   } catch (error: unknown) {
     logger.error('Account deletion error:', error);

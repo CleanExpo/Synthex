@@ -6,7 +6,13 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Copy, Share2 } from '@/components/icons';
 import { PlatformSelector } from './platform-selector';
 import { ContentInput } from './content-input';
@@ -82,7 +88,10 @@ export function ContentEditor({
             <Copy className="mr-2 h-4 w-4" />
             Copy
           </Button>
-          <Button onClick={onShare} className="flex-1 gradient-primary text-white">
+          <Button
+            onClick={onShare}
+            className="flex-1 gradient-primary text-white"
+          >
             <Share2 className="mr-2 h-4 w-4" />
             Share
           </Button>

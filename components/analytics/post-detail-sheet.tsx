@@ -35,7 +35,10 @@ interface PostDetailSheetProps {
   post: TopPostDetail | null;
 }
 
-const platformIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+const platformIcons: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   twitter: Twitter,
   linkedin: Linkedin,
   instagram: Instagram,
@@ -79,11 +82,19 @@ function MetricCard({ icon: Icon, label, value }: MetricCardProps) {
   );
 }
 
-export function PostDetailSheet({ open, onOpenChange, post }: PostDetailSheetProps) {
+export function PostDetailSheet({
+  open,
+  onOpenChange,
+  post,
+}: PostDetailSheetProps) {
   if (!post) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" variant="glass" className="w-[400px] sm:w-[480px]">
+        <SheetContent
+          side="right"
+          variant="glass"
+          className="w-[400px] sm:w-[480px]"
+        >
           <SheetHeader>
             <SheetTitle>Post Details</SheetTitle>
             <SheetDescription>No post selected.</SheetDescription>
@@ -103,9 +114,10 @@ export function PostDetailSheet({ open, onOpenChange, post }: PostDetailSheetPro
   const likes = Math.round(post.engagement * 0.6);
   const comments = Math.round(post.engagement * 0.25);
   const shares = Math.round(post.engagement * 0.15);
-  const impressions = post.engagementRate > 0
-    ? Math.round(post.engagement / (post.engagementRate / 100))
-    : post.engagement * 20;
+  const impressions =
+    post.engagementRate > 0
+      ? Math.round(post.engagement / (post.engagementRate / 100))
+      : post.engagement * 20;
 
   const formatNumber = (n: number): string => {
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -115,10 +127,16 @@ export function PostDetailSheet({ open, onOpenChange, post }: PostDetailSheetPro
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" variant="glass" className="w-[400px] sm:w-[480px] overflow-y-auto">
+      <SheetContent
+        side="right"
+        variant="glass"
+        className="w-[400px] sm:w-[480px] overflow-y-auto"
+      >
         <SheetHeader className="mb-6">
           <SheetTitle>Post Details</SheetTitle>
-          <SheetDescription>Engagement breakdown for this post</SheetDescription>
+          <SheetDescription>
+            Engagement breakdown for this post
+          </SheetDescription>
         </SheetHeader>
 
         <div className="space-y-6">
@@ -140,12 +158,30 @@ export function PostDetailSheet({ open, onOpenChange, post }: PostDetailSheetPro
 
           {/* Engagement breakdown grid */}
           <div>
-            <h3 className="text-sm font-medium text-slate-300 mb-3">Engagement Breakdown</h3>
+            <h3 className="text-sm font-medium text-slate-300 mb-3">
+              Engagement Breakdown
+            </h3>
             <div className="grid grid-cols-2 gap-3">
-              <MetricCard icon={Heart} label="Likes" value={formatNumber(likes)} />
-              <MetricCard icon={MessageCircle} label="Comments" value={formatNumber(comments)} />
-              <MetricCard icon={Share2} label="Shares" value={formatNumber(shares)} />
-              <MetricCard icon={Eye} label="Impressions" value={formatNumber(impressions)} />
+              <MetricCard
+                icon={Heart}
+                label="Likes"
+                value={formatNumber(likes)}
+              />
+              <MetricCard
+                icon={MessageCircle}
+                label="Comments"
+                value={formatNumber(comments)}
+              />
+              <MetricCard
+                icon={Share2}
+                label="Shares"
+                value={formatNumber(shares)}
+              />
+              <MetricCard
+                icon={Eye}
+                label="Impressions"
+                value={formatNumber(impressions)}
+              />
             </div>
           </div>
 

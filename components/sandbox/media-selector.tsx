@@ -24,7 +24,7 @@ export function MediaSelector({ value, onChange }: MediaSelectorProps) {
   return (
     <div>
       <Label className="text-gray-300">Media Attachment</Label>
-      <Select value={value} onValueChange={(v) => onChange(v as MediaType)}>
+      <Select value={value} onValueChange={v => onChange(v as MediaType)}>
         <SelectTrigger className="bg-white/5 border-white/10 text-white mt-2">
           <SelectValue />
         </SelectTrigger>

@@ -24,7 +24,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
             type="text"
             placeholder="Search for help articles, tutorials, or FAQs..."
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={e => onChange(e.target.value)}
             className="pl-10 bg-gray-800/50 border-white/10 text-white"
           />
         </div>

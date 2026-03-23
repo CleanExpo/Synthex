@@ -29,8 +29,10 @@ export function PlatformHeatmap({ predictions, metric }: PlatformHeatmapProps) {
   }
 
   // Extract unique platforms and dates, sorted
-  const platforms = [...new Set(predictions.map((p) => String(p.point.platform)))].sort();
-  const dates = [...new Set(predictions.map((p) => String(p.point.date)))].sort();
+  const platforms = [
+    ...new Set(predictions.map(p => String(p.point.platform))),
+  ].sort();
+  const dates = [...new Set(predictions.map(p => String(p.point.date)))].sort();
 
   // Lookup map: "platform__date" → result
   const lookup = new Map<string, SpatiotemporalPredictionResult>();
@@ -39,7 +41,7 @@ export function PlatformHeatmap({ predictions, metric }: PlatformHeatmapProps) {
   }
 
   // Normalise mean values to [0, 1]
-  const means = predictions.map((p) => p.mean);
+  const means = predictions.map(p => p.mean);
   const minVal = Math.min(...means);
   const maxVal = Math.max(...means);
   const normalise = (v: number): number =>
@@ -61,22 +63,24 @@ export function PlatformHeatmap({ predictions, metric }: PlatformHeatmapProps) {
       >
         {/* Header row — empty label cell + date headers */}
         <div />
-        {dates.map((d) => (
+        {dates.map(d => (
           <div key={d} className="text-xs text-gray-500 text-center pb-1">
             {format(parseISO(d), 'dd/MM')}
           </div>
         ))}
 
         {/* Data rows — one per platform */}
-        {platforms.map((platform) => (
+        {platforms.map(platform => (
           <React.Fragment key={platform}>
             <div className="text-xs text-gray-300 capitalize flex items-center pr-2">
               {platform}
             </div>
-            {dates.map((date) => {
+            {dates.map(date => {
               const result = lookup.get(`${platform}__${date}`);
               const norm = result ? normalise(result.mean) : 0;
-              const colour = result ? toEmeraldColour(norm) : 'rgba(255,255,255,0.03)';
+              const colour = result
+                ? toEmeraldColour(norm)
+                : 'rgba(255,255,255,0.03)';
               return (
                 <div
                   key={date}

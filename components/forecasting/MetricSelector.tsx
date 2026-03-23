@@ -4,7 +4,11 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { RefreshCw } from '@/components/icons';
 import { getForecastFeatureLimits } from '@/lib/forecasting/feature-limits';
 import { FORECAST_METRICS } from '@/lib/forecasting/metrics';
-import type { ForecastMetric, ForecastPlatform, ForecastHorizon } from '@/lib/forecasting/types';
+import type {
+  ForecastMetric,
+  ForecastPlatform,
+  ForecastHorizon,
+} from '@/lib/forecasting/types';
 
 const PLATFORMS: { value: ForecastPlatform; label: string }[] = [
   { value: 'instagram', label: 'Instagram' },
@@ -71,10 +75,10 @@ export function MetricSelector({
           </label>
           <select
             value={metric}
-            onChange={(e) => onMetricChange(e.target.value as ForecastMetric)}
+            onChange={e => onMetricChange(e.target.value as ForecastMetric)}
             className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
           >
-            {Object.values(FORECAST_METRICS).map((def) => (
+            {Object.values(FORECAST_METRICS).map(def => (
               <option key={def.id} value={def.id} className="bg-gray-900">
                 {def.label}
               </option>
@@ -90,7 +94,7 @@ export function MetricSelector({
             </label>
             <select
               value={platform ?? ''}
-              onChange={(e) => {
+              onChange={e => {
                 const val = e.target.value;
                 onPlatformChange(val === '' ? null : (val as ForecastPlatform));
               }}
@@ -99,7 +103,7 @@ export function MetricSelector({
               <option value="" className="bg-gray-900">
                 All platforms
               </option>
-              {PLATFORMS.map((p) => (
+              {PLATFORMS.map(p => (
                 <option key={p.value} value={p.value} className="bg-gray-900">
                   {p.label}
                 </option>
@@ -114,12 +118,13 @@ export function MetricSelector({
             Horizon
           </label>
           <div className="flex gap-1">
-            {([7, 30, 90] as ForecastHorizon[]).map((h) => {
+            {([7, 30, 90] as ForecastHorizon[]).map(h => {
               const isDisabled = h > limits.maxHorizonDays;
               const requiredPlan = HORIZON_REQUIRED_PLANS[h];
-              const title = isDisabled && requiredPlan
-                ? `Requires ${requiredPlan} plan`
-                : undefined;
+              const title =
+                isDisabled && requiredPlan
+                  ? `Requires ${requiredPlan} plan`
+                  : undefined;
 
               return (
                 <button
@@ -133,8 +138,8 @@ export function MetricSelector({
                     horizon === h && !isDisabled
                       ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
                       : isDisabled
-                      ? 'bg-white/[0.02] text-gray-600 border border-white/5 cursor-not-allowed'
-                      : 'bg-white/5 text-gray-300 border border-white/10 hover:border-emerald-500/30 hover:text-emerald-400',
+                        ? 'bg-white/[0.02] text-gray-600 border border-white/5 cursor-not-allowed'
+                        : 'bg-white/5 text-gray-300 border border-white/10 hover:border-emerald-500/30 hover:text-emerald-400',
                   ].join(' ')}
                 >
                   {HORIZON_LABELS[h]}

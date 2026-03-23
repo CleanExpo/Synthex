@@ -1,11 +1,23 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  FileText, Download, Mail, Printer, Database, Table, Loader2,
+  FileText,
+  Download,
+  Mail,
+  Printer,
+  Database,
+  Table,
+  Loader2,
 } from '@/components/icons';
 import type { ReportTemplate } from '@/hooks/use-report-templates';
 
@@ -23,9 +35,16 @@ interface BuilderSidebarProps {
 }
 
 export function BuilderSidebar({
-  reportName, setReportName, reportDescription, setReportDescription,
-  apiTemplates, templatesLoading, onLoadTemplate,
-  onExportReport, isGenerating, exportStatus,
+  reportName,
+  setReportName,
+  reportDescription,
+  setReportDescription,
+  apiTemplates,
+  templatesLoading,
+  onLoadTemplate,
+  onExportReport,
+  isGenerating,
+  exportStatus,
 }: BuilderSidebarProps) {
   return (
     <div className="lg:col-span-1 space-y-4">
@@ -40,7 +59,7 @@ export function BuilderSidebar({
             <Input
               id="report-name"
               value={reportName}
-              onChange={(e) => setReportName(e.target.value)}
+              onChange={e => setReportName(e.target.value)}
               placeholder="Monthly Performance Report"
               className="mt-1 bg-white/5 border-white/10"
             />
@@ -50,7 +69,7 @@ export function BuilderSidebar({
             <Input
               id="report-desc"
               value={reportDescription}
-              onChange={(e) => setReportDescription(e.target.value)}
+              onChange={e => setReportDescription(e.target.value)}
               placeholder="Brief description..."
               className="mt-1 bg-white/5 border-white/10"
             />
@@ -124,11 +143,17 @@ export function BuilderSidebar({
             <Table className="h-4 w-4 mr-2" />
             Export as JSON
           </Button>
-          <Button variant="outline" className="w-full justify-start bg-white/5 border-white/10">
+          <Button
+            variant="outline"
+            className="w-full justify-start bg-white/5 border-white/10"
+          >
             <Mail className="h-4 w-4 mr-2" />
             Email Report
           </Button>
-          <Button variant="outline" className="w-full justify-start bg-white/5 border-white/10">
+          <Button
+            variant="outline"
+            className="w-full justify-start bg-white/5 border-white/10"
+          >
             <Printer className="h-4 w-4 mr-2" />
             Print Report
           </Button>

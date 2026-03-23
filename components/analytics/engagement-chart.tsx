@@ -21,13 +21,7 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from '@/components/ui/chart';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import type { EngagementDataPoint } from './types';
 
 // Amber-first chart config — platform lines use their brand colours
@@ -72,7 +66,10 @@ export function EngagementChart({ data }: EngagementChartProps) {
                 <stop offset="95%" stopColor="#D97706" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="rgba(255,255,255,0.06)"
+            />
             <XAxis
               dataKey="date"
               stroke="rgba(255,255,255,0.3)"
@@ -82,9 +79,7 @@ export function EngagementChart({ data }: EngagementChartProps) {
               stroke="rgba(255,255,255,0.3)"
               tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }}
             />
-            <ChartTooltip
-              content={<ChartTooltipContent indicator="dot" />}
-            />
+            <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
             <ChartLegend content={<ChartLegendContent />} />
             <Area
               type="monotone"

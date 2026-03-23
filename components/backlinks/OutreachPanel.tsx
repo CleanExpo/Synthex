@@ -12,7 +12,12 @@
 import { useState, useEffect } from 'react';
 import { Check, Copy, Mail, X } from '@/components/icons';
 import { cn } from '@/lib/utils';
-import type { BacklinkOpportunityType, OutreachDraft, ScoredProspect, BrandIdentityBrief } from '@/lib/backlinks/types';
+import type {
+  BacklinkOpportunityType,
+  OutreachDraft,
+  ScoredProspect,
+  BrandIdentityBrief,
+} from '@/lib/backlinks/types';
 import { OPPORTUNITY_TYPE_LABELS } from '@/lib/backlinks/outreach-templates';
 import type { ProspectCardData } from './BacklinkProspectCard';
 
@@ -49,16 +54,21 @@ function buildClientTemplate(
     opportunityType: type,
     domainAuthority: prospect.domainAuthority ?? 30,
     pageRank: prospect.pageRank ?? 0,
-    authorityTier: (prospect.domainAuthority ?? 0) >= 70 ? 'high' : (prospect.domainAuthority ?? 0) >= 40 ? 'medium' : 'low',
+    authorityTier:
+      (prospect.domainAuthority ?? 0) >= 70
+        ? 'high'
+        : (prospect.domainAuthority ?? 0) >= 40
+          ? 'medium'
+          : 'low',
     outreachEmail: prospect.outreachEmail ?? undefined,
   };
 
   // Inline the templates here to avoid importing server-only code
   const subjectByType: Record<BacklinkOpportunityType, string> = {
-    'resource-page':      `Resource page suggestion for ${prospect.targetDomain}`,
-    'guest-post':         `Guest post pitch for ${prospect.targetDomain}`,
-    'broken-link':        `Broken link found on ${prospect.targetDomain}`,
-    'competitor-link':    `Alternative resource recommendation for ${prospect.targetDomain}`,
+    'resource-page': `Resource page suggestion for ${prospect.targetDomain}`,
+    'guest-post': `Guest post pitch for ${prospect.targetDomain}`,
+    'broken-link': `Broken link found on ${prospect.targetDomain}`,
+    'competitor-link': `Alternative resource recommendation for ${prospect.targetDomain}`,
     'journalist-mention': `Re: your content on ${prospect.targetDomain}`,
   };
 
@@ -172,28 +182,40 @@ export function OutreachPanel({
   const [selectedType, setSelectedType] = useState<BacklinkOpportunityType>(
     (prospect?.opportunityType as BacklinkOpportunityType) ?? 'resource-page'
   );
-  const [subject, setSubject]     = useState('');
-  const [body, setBody]           = useState('');
-  const [toEmail, setToEmail]     = useState('');
-  const [copied, setCopied]       = useState(false);
-  const [saving, setSaving]       = useState(false);
+  const [subject, setSubject] = useState('');
+  const [body, setBody] = useState('');
+  const [toEmail, setToEmail] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [saved, setSaved]         = useState(false);
+  const [saved, setSaved] = useState(false);
 
   // Re-generate template when prospect or type changes
   useEffect(() => {
     if (!prospect) return;
-    const draft = buildClientTemplate(selectedType, prospect, brandName, brandWebsiteUrl);
+    const draft = buildClientTemplate(
+      selectedType,
+      prospect,
+      brandName,
+      brandWebsiteUrl
+    );
     setSubject(draft.subject);
     setBody(draft.body);
     setToEmail(prospect.outreachEmail ?? '');
-    setSelectedType((prospect.opportunityType as BacklinkOpportunityType) ?? 'resource-page');
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setSelectedType(
+      (prospect.opportunityType as BacklinkOpportunityType) ?? 'resource-page'
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prospect?.id]);
 
   useEffect(() => {
     if (!prospect) return;
-    const draft = buildClientTemplate(selectedType, prospect, brandName, brandWebsiteUrl);
+    const draft = buildClientTemplate(
+      selectedType,
+      prospect,
+      brandName,
+      brandWebsiteUrl
+    );
     setSubject(draft.subject);
     setBody(draft.body);
   }, [selectedType, prospect, brandName, brandWebsiteUrl]);
@@ -215,8 +237,8 @@ export function OutreachPanel({
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prospectId:    prospect.id,
-          orgId:         'default',
+          prospectId: prospect.id,
+          orgId: 'default',
           outreachEmail: toEmail || undefined,
         }),
       });
@@ -243,7 +265,10 @@ export function OutreachPanel({
     );
   }
 
-  const typeOptions = Object.entries(OPPORTUNITY_TYPE_LABELS) as [BacklinkOpportunityType, string][];
+  const typeOptions = Object.entries(OPPORTUNITY_TYPE_LABELS) as [
+    BacklinkOpportunityType,
+    string,
+  ][];
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 p-5">
@@ -251,23 +276,34 @@ export function OutreachPanel({
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-sm font-semibold text-white">Outreach Email</h3>
-          <p className="text-xs text-slate-300 mt-0.5">{prospect.targetDomain}</p>
+          <p className="text-xs text-slate-300 mt-0.5">
+            {prospect.targetDomain}
+          </p>
         </div>
-        <button onClick={onClose} className="text-slate-500 hover:text-slate-200 transition-colors">
+        <button
+          onClick={onClose}
+          className="text-slate-500 hover:text-slate-200 transition-colors"
+        >
           <X className="h-4 w-4" />
         </button>
       </div>
 
       {/* Template selector */}
       <div className="mb-3">
-        <label className="block text-xs text-slate-300 mb-1">Template type</label>
+        <label className="block text-xs text-slate-300 mb-1">
+          Template type
+        </label>
         <select
           value={selectedType}
-          onChange={e => setSelectedType(e.target.value as BacklinkOpportunityType)}
+          onChange={e =>
+            setSelectedType(e.target.value as BacklinkOpportunityType)
+          }
           className="w-full rounded-lg bg-white/8 border border-white/10 text-white text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
         >
           {typeOptions.map(([val, label]) => (
-            <option key={val} value={val} className="bg-slate-900">{label}</option>
+            <option key={val} value={val} className="bg-slate-900">
+              {label}
+            </option>
           ))}
         </select>
       </div>
@@ -323,7 +359,11 @@ export function OutreachPanel({
               : 'bg-white/8 text-slate-300 border-white/10 hover:bg-white/15'
           )}
         >
-          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+          {copied ? (
+            <Check className="h-3.5 w-3.5" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
           {copied ? 'Copied!' : 'Copy to clipboard'}
         </button>
 
@@ -338,7 +378,11 @@ export function OutreachPanel({
           )}
         >
           <Mail className="h-3.5 w-3.5" />
-          {saving ? 'Saving…' : saved ? 'Marked Contacted' : 'Mark as Contacted'}
+          {saving
+            ? 'Saving…'
+            : saved
+              ? 'Marked Contacted'
+              : 'Mark as Contacted'}
         </button>
       </div>
     </div>

@@ -5,7 +5,13 @@
  * Database connection and query metrics
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import type { DatabaseMetrics } from './types';
 
@@ -14,7 +20,8 @@ interface DatabaseTabProps {
 }
 
 export function DatabaseTab({ metrics }: DatabaseTabProps) {
-  const connectionPercentage = (metrics.connections / metrics.maxConnections) * 100;
+  const connectionPercentage =
+    (metrics.connections / metrics.maxConnections) * 100;
 
   return (
     <Card variant="glass">
@@ -37,7 +44,9 @@ export function DatabaseTab({ metrics }: DatabaseTabProps) {
           <div className="grid grid-cols-2 gap-4 pt-4">
             <div>
               <p className="text-sm text-gray-300">Average Query Time</p>
-              <p className="text-xl font-bold text-white">{metrics.queryTime}ms</p>
+              <p className="text-xl font-bold text-white">
+                {metrics.queryTime}ms
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-300">Database Size</p>
@@ -45,7 +54,9 @@ export function DatabaseTab({ metrics }: DatabaseTabProps) {
             </div>
             <div>
               <p className="text-sm text-gray-300">Backup Status</p>
-              <p className="text-xl font-bold text-green-400">{metrics.backupStatus}</p>
+              <p className="text-xl font-bold text-green-400">
+                {metrics.backupStatus}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-300">Last Backup</p>

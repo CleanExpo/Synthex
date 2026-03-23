@@ -71,9 +71,12 @@ export function PlatformGrid({
         <div className="p-4 rounded-full bg-gray-800/50 w-fit mx-auto mb-4">
           <Link2 className="w-8 h-8 text-gray-500" />
         </div>
-        <h3 className="text-lg font-semibold text-white mb-2">No Platforms Available</h3>
+        <h3 className="text-lg font-semibold text-white mb-2">
+          No Platforms Available
+        </h3>
         <p className="text-gray-300 text-sm max-w-md mx-auto">
-          Connect your social media accounts to see unified metrics across all platforms.
+          Connect your social media accounts to see unified metrics across all
+          platforms.
         </p>
       </div>
     );
@@ -89,7 +92,7 @@ export function PlatformGrid({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {sortedPlatforms.map((platform) => (
+      {sortedPlatforms.map(platform => (
         <PlatformCard
           key={platform.id}
           platform={platform}

@@ -5,11 +5,23 @@
  * Privacy settings and data management
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { AlertTriangle, Download, Loader2, Save, Trash2 } from '@/components/icons';
+import {
+  AlertTriangle,
+  Download,
+  Loader2,
+  Save,
+  Trash2,
+} from '@/components/icons';
 import type { PrivacySettings } from './types';
 
 interface PrivacyTabProps {
@@ -44,11 +56,15 @@ export function PrivacyTab({
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-white">Public Profile</Label>
-                <p className="text-sm text-slate-300">Allow others to see your profile</p>
+                <p className="text-sm text-slate-300">
+                  Allow others to see your profile
+                </p>
               </div>
               <Switch
                 checked={settings.publicProfile}
-                onCheckedChange={(checked) => onSettingChange('publicProfile', checked)}
+                onCheckedChange={checked =>
+                  onSettingChange('publicProfile', checked)
+                }
                 aria-label="Public profile"
               />
             </div>
@@ -56,11 +72,15 @@ export function PrivacyTab({
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-white">Show Analytics</Label>
-                <p className="text-sm text-slate-300">Display your performance metrics publicly</p>
+                <p className="text-sm text-slate-300">
+                  Display your performance metrics publicly
+                </p>
               </div>
               <Switch
                 checked={settings.showAnalytics}
-                onCheckedChange={(checked) => onSettingChange('showAnalytics', checked)}
+                onCheckedChange={checked =>
+                  onSettingChange('showAnalytics', checked)
+                }
                 aria-label="Show analytics"
               />
             </div>
@@ -68,17 +88,25 @@ export function PrivacyTab({
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-white">Data Collection</Label>
-                <p className="text-sm text-slate-300">Allow us to collect usage data for improvements</p>
+                <p className="text-sm text-slate-300">
+                  Allow us to collect usage data for improvements
+                </p>
               </div>
               <Switch
                 checked={settings.dataCollection}
-                onCheckedChange={(checked) => onSettingChange('dataCollection', checked)}
+                onCheckedChange={checked =>
+                  onSettingChange('dataCollection', checked)
+                }
                 aria-label="Data collection"
               />
             </div>
           </div>
 
-          <Button onClick={onSave} disabled={isSaving} className="gradient-primary">
+          <Button
+            onClick={onSave}
+            disabled={isSaving}
+            className="gradient-primary"
+          >
             {isSaving ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -104,7 +132,9 @@ export function PrivacyTab({
           <div className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10">
             <div>
               <p className="font-medium text-white">Export Your Data</p>
-              <p className="text-sm text-slate-300">Download a copy of all your data</p>
+              <p className="text-sm text-slate-300">
+                Download a copy of all your data
+              </p>
             </div>
             <Button
               variant="outline"
@@ -131,7 +161,9 @@ export function PrivacyTab({
               <AlertTriangle className="w-5 h-5 text-red-500" />
               <div>
                 <p className="font-medium text-white">Delete Account</p>
-                <p className="text-sm text-red-400">Permanently delete your account and all data</p>
+                <p className="text-sm text-red-400">
+                  Permanently delete your account and all data
+                </p>
               </div>
             </div>
             <Button

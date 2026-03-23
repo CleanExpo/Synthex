@@ -34,8 +34,8 @@ import type { ContentPerformanceItem } from './types';
 // Amber-only palette for radar layers
 const performanceConfig: ChartConfig = {
   engagement: { label: 'Engagement', color: '#D97706' }, // amber-600
-  reach: { label: 'Reach', color: '#FBBF24' },           // amber-400
-  clicks: { label: 'Clicks', color: '#B45309' },         // amber-700
+  reach: { label: 'Reach', color: '#FBBF24' }, // amber-400
+  clicks: { label: 'Clicks', color: '#B45309' }, // amber-700
 };
 
 interface PerformanceChartProps {

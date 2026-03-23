@@ -59,7 +59,12 @@ interface CustomTooltipProps {
   currency: string;
 }
 
-function CustomTooltip({ active, payload, label, currency }: CustomTooltipProps) {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+  currency,
+}: CustomTooltipProps) {
   if (!active || !payload || !payload.length || !label) return null;
 
   return (
@@ -84,7 +89,12 @@ export function RevenueChart({
 
   if (!data || data.length === 0) {
     return (
-      <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl p-8 text-center', className)}>
+      <div
+        className={cn(
+          'bg-gray-900/50 border border-white/10 rounded-xl p-8 text-center',
+          className
+        )}
+      >
         <TrendingUp className="w-12 h-12 text-gray-600 mx-auto mb-3" />
         <p className="text-gray-300">No revenue data to display</p>
       </div>
@@ -92,14 +102,19 @@ export function RevenueChart({
   }
 
   // Prepare chart data
-  const chartData = data.map((d) => ({
+  const chartData = data.map(d => ({
     month: d.month,
     amount: d.amount,
     formattedMonth: formatMonth(d.month),
   }));
 
   return (
-    <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl p-5', className)}>
+    <div
+      className={cn(
+        'bg-gray-900/50 border border-white/10 rounded-xl p-5',
+        className
+      )}
+    >
       <div className="flex items-center gap-2 mb-4">
         <div className="p-2 bg-emerald-500/10 rounded-lg">
           <TrendingUp className="w-4 h-4 text-emerald-400" />
@@ -109,14 +124,20 @@ export function RevenueChart({
 
       <div className="h-[250px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <AreaChart
+            data={chartData}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+          >
             <defs>
               <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
                 <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="rgba(255,255,255,0.05)"
+            />
             <XAxis
               dataKey="formattedMonth"
               tick={{ fill: '#9ca3af', fontSize: 12 }}
@@ -127,7 +148,9 @@ export function RevenueChart({
               tick={{ fill: '#9ca3af', fontSize: 12 }}
               axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
               tickLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-              tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
+              tickFormatter={v =>
+                `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`
+              }
             />
             <Tooltip content={<CustomTooltip currency={currency} />} />
             <Area

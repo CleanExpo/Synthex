@@ -6,7 +6,11 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip';
 import { Brain, TrendingUp } from '@/components/icons';
 
 interface ContentHeaderProps {
@@ -38,7 +42,10 @@ export function ContentHeader({ onViewAnalytics }: ContentHeaderProps) {
           </TooltipTrigger>
           <TooltipContent variant="glass-solid">Coming soon</TooltipContent>
         </Tooltip>
-        <Button onClick={onViewAnalytics} className="gradient-primary text-white">
+        <Button
+          onClick={onViewAnalytics}
+          className="gradient-primary text-white"
+        >
           <TrendingUp className="mr-2 h-4 w-4" />
           View Analytics
         </Button>

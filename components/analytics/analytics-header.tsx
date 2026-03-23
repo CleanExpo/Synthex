@@ -45,7 +45,9 @@ export function AnalyticsHeader({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold gradient-text">Analytics Dashboard</h1>
+          <h1 className="text-3xl font-bold gradient-text">
+            Analytics Dashboard
+          </h1>
           <p className="text-slate-300 mt-1">
             Track your social media performance and insights
           </p>
@@ -56,7 +58,7 @@ export function AnalyticsHeader({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {timeRangeOptions.map((option) => (
+              {timeRangeOptions.map(option => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
@@ -69,7 +71,7 @@ export function AnalyticsHeader({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {platformFilterOptions.map((option) => (
+              {platformFilterOptions.map(option => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>

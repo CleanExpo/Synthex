@@ -69,7 +69,7 @@ export function InviteDialog({
               type="email"
               placeholder="member@company.com"
               value={formData.email}
-              onChange={(e) => onFormChange({ email: e.target.value })}
+              onChange={e => onFormChange({ email: e.target.value })}
               className="bg-white/5 border-white/10 mt-1"
             />
           </div>
@@ -79,7 +79,7 @@ export function InviteDialog({
             </Label>
             <Select
               value={formData.role}
-              onValueChange={(value) => onFormChange({ role: value as TeamRole })}
+              onValueChange={value => onFormChange({ role: value as TeamRole })}
             >
               <SelectTrigger className="bg-white/5 border-white/10 mt-1">
                 <SelectValue />
@@ -90,7 +90,9 @@ export function InviteDialog({
                     <Crown className="mr-2 h-4 w-4 text-red-400" />
                     <div>
                       <div className="font-medium">Admin</div>
-                      <div className="text-xs text-slate-300">Full access to all features</div>
+                      <div className="text-xs text-slate-300">
+                        Full access to all features
+                      </div>
                     </div>
                   </div>
                 </SelectItem>
@@ -99,7 +101,9 @@ export function InviteDialog({
                     <Edit className="mr-2 h-4 w-4 text-blue-400" />
                     <div>
                       <div className="font-medium">Editor</div>
-                      <div className="text-xs text-slate-300">Can create and edit content</div>
+                      <div className="text-xs text-slate-300">
+                        Can create and edit content
+                      </div>
                     </div>
                   </div>
                 </SelectItem>
@@ -108,7 +112,9 @@ export function InviteDialog({
                     <Eye className="mr-2 h-4 w-4 text-slate-300" />
                     <div>
                       <div className="font-medium">Viewer</div>
-                      <div className="text-xs text-slate-300">Read-only access</div>
+                      <div className="text-xs text-slate-300">
+                        Read-only access
+                      </div>
                     </div>
                   </div>
                 </SelectItem>
@@ -125,7 +131,7 @@ export function InviteDialog({
               placeholder="Welcome to our team! We're excited to have you..."
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white mt-1 placeholder:text-slate-500"
               value={formData.message || ''}
-              onChange={(e) => onFormChange({ message: e.target.value })}
+              onChange={e => onFormChange({ message: e.target.value })}
             />
           </div>
         </div>
@@ -137,7 +143,11 @@ export function InviteDialog({
           >
             Cancel
           </Button>
-          <Button onClick={onSubmit} disabled={isSubmitting} className="gradient-primary">
+          <Button
+            onClick={onSubmit}
+            disabled={isSubmitting}
+            className="gradient-primary"
+          >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -36,7 +36,10 @@ export function KanbanColumn({
         <div className="flex items-center gap-2">
           <Icon className="w-4 h-4 text-slate-300" />
           <h3 className="font-semibold text-white">{config.label}</h3>
-          <Badge variant="outline" className="ml-1 bg-white/5 text-slate-300 border-white/10">
+          <Badge
+            variant="outline"
+            className="ml-1 bg-white/5 text-slate-300 border-white/10"
+          >
             {tasks.length}
           </Badge>
         </div>
@@ -45,7 +48,7 @@ export function KanbanColumn({
         </Button>
       </div>
       <div className="flex flex-col gap-3 flex-1 overflow-y-auto">
-        {tasks.map((task) => (
+        {tasks.map(task => (
           <TaskCard
             key={task.id}
             task={task}

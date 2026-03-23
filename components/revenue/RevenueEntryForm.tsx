@@ -19,7 +19,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import type { RevenueEntry, RevenueSource, CreateRevenueInput } from '@/lib/revenue/revenue-service';
+import type {
+  RevenueEntry,
+  RevenueSource,
+  CreateRevenueInput,
+} from '@/lib/revenue/revenue-service';
 
 interface RevenueEntryFormProps {
   entry?: RevenueEntry | null;
@@ -69,14 +73,18 @@ export function RevenueEntryForm({
   const isEditing = !!entry;
 
   // Form state
-  const [source, setSource] = useState<RevenueSource>(entry?.source || 'sponsorship');
+  const [source, setSource] = useState<RevenueSource>(
+    entry?.source || 'sponsorship'
+  );
   const [amount, setAmount] = useState(entry?.amount?.toString() || '');
   const [currency, setCurrency] = useState(entry?.currency || 'USD');
   const [description, setDescription] = useState(entry?.description || '');
   const [platform, setPlatform] = useState(entry?.platform || '');
   const [brandName, setBrandName] = useState(entry?.brandName || '');
   const [paidAt, setPaidAt] = useState(
-    entry?.paidAt ? formatDateForInput(entry.paidAt) : formatDateForInput(new Date())
+    entry?.paidAt
+      ? formatDateForInput(entry.paidAt)
+      : formatDateForInput(new Date())
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -156,12 +164,15 @@ export function RevenueEntryForm({
           {/* Source */}
           <div className="space-y-2">
             <Label htmlFor="source">Source</Label>
-            <Select value={source} onValueChange={(v) => setSource(v as RevenueSource)}>
+            <Select
+              value={source}
+              onValueChange={v => setSource(v as RevenueSource)}
+            >
               <SelectTrigger className="bg-gray-800 border-white/10">
                 <SelectValue placeholder="Select source" />
               </SelectTrigger>
               <SelectContent>
-                {SOURCES.map((s) => (
+                {SOURCES.map(s => (
                   <SelectItem key={s.value} value={s.value}>
                     {s.label}
                   </SelectItem>
@@ -180,7 +191,7 @@ export function RevenueEntryForm({
                 step="0.01"
                 min="0"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={e => setAmount(e.target.value)}
                 placeholder="0.00"
                 className="bg-gray-800 border-white/10"
                 required
@@ -193,7 +204,7 @@ export function RevenueEntryForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {CURRENCIES.map((c) => (
+                  {CURRENCIES.map(c => (
                     <SelectItem key={c} value={c}>
                       {c}
                     </SelectItem>
@@ -209,7 +220,7 @@ export function RevenueEntryForm({
             <Input
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={e => setDescription(e.target.value)}
               placeholder="e.g., Brand deal with Nike"
               className="bg-gray-800 border-white/10"
             />
@@ -218,13 +229,16 @@ export function RevenueEntryForm({
           {/* Platform */}
           <div className="space-y-2">
             <Label htmlFor="platform">Platform (optional)</Label>
-            <Select value={platform || 'none'} onValueChange={(v) => setPlatform(v === 'none' ? '' : v)}>
+            <Select
+              value={platform || 'none'}
+              onValueChange={v => setPlatform(v === 'none' ? '' : v)}
+            >
               <SelectTrigger className="bg-gray-800 border-white/10">
                 <SelectValue placeholder="Select platform" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">No platform</SelectItem>
-                {PLATFORMS.map((p) => (
+                {PLATFORMS.map(p => (
                   <SelectItem key={p} value={p}>
                     {p}
                   </SelectItem>
@@ -240,7 +254,7 @@ export function RevenueEntryForm({
               <Input
                 id="brandName"
                 value={brandName}
-                onChange={(e) => setBrandName(e.target.value)}
+                onChange={e => setBrandName(e.target.value)}
                 placeholder="e.g., Nike, Adidas"
                 className="bg-gray-800 border-white/10"
               />
@@ -254,7 +268,7 @@ export function RevenueEntryForm({
               id="paidAt"
               type="date"
               value={paidAt}
-              onChange={(e) => setPaidAt(e.target.value)}
+              onChange={e => setPaidAt(e.target.value)}
               className="bg-gray-800 border-white/10"
               required
             />

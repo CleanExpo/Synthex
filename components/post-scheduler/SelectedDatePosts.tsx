@@ -1,8 +1,19 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, Plus, MoreVertical, Globe } from '@/components/icons';
+import {
+  Calendar as CalendarIcon,
+  Plus,
+  MoreVertical,
+  Globe,
+} from '@/components/icons';
 import { format } from 'date-fns';
 import { platformIcons } from './constants';
 import type { ScheduledPost } from './types';
@@ -13,14 +24,16 @@ interface SelectedDatePostsProps {
   onCreatePost: () => void;
 }
 
-export function SelectedDatePosts({ selectedDate, posts, onCreatePost }: SelectedDatePostsProps) {
+export function SelectedDatePosts({
+  selectedDate,
+  posts,
+  onCreatePost,
+}: SelectedDatePostsProps) {
   return (
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Posts for {format(selectedDate, 'MMMM d, yyyy')}</CardTitle>
-        <CardDescription>
-          {posts.length} scheduled posts
-        </CardDescription>
+        <CardDescription>{posts.length} scheduled posts</CardDescription>
       </CardHeader>
       <CardContent>
         {posts.length > 0 ? (
@@ -31,8 +44,16 @@ export function SelectedDatePosts({ selectedDate, posts, onCreatePost }: Selecte
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       {post.platforms.map(platform => {
-                        const Icon = platformIcons[platform as keyof typeof platformIcons] || Globe;
-                        return <Icon key={platform} className="w-4 h-4 text-gray-300" />;
+                        const Icon =
+                          platformIcons[
+                            platform as keyof typeof platformIcons
+                          ] || Globe;
+                        return (
+                          <Icon
+                            key={platform}
+                            className="w-4 h-4 text-gray-300"
+                          />
+                        );
                       })}
                       <span className="text-sm text-gray-300">
                         {format(post.scheduledTime, 'h:mm a')}
@@ -40,7 +61,11 @@ export function SelectedDatePosts({ selectedDate, posts, onCreatePost }: Selecte
                     </div>
                     <p className="text-sm">{post.content}</p>
                   </div>
-                  <Button size="icon" variant="ghost" aria-label="More post options">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label="More post options"
+                  >
                     <MoreVertical className="w-4 h-4" />
                   </Button>
                 </div>
@@ -51,11 +76,7 @@ export function SelectedDatePosts({ selectedDate, posts, onCreatePost }: Selecte
           <div className="text-center py-8">
             <CalendarIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
             <p className="text-gray-300">No posts scheduled for this date</p>
-            <Button
-              className="mt-4"
-              variant="outline"
-              onClick={onCreatePost}
-            >
+            <Button className="mt-4" variant="outline" onClick={onCreatePost}>
               <Plus className="w-4 h-4 mr-2" />
               Schedule Post
             </Button>

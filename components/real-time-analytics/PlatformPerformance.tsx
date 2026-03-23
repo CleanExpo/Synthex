@@ -1,6 +1,12 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Globe, ArrowUp, ArrowDown } from '@/components/icons';
 import { platformIcons, platformColors, formatNumber } from './constants';
 import type { AnalyticsData } from './types';
@@ -26,18 +32,28 @@ export function PlatformPerformance({ platforms }: PlatformPerformanceProps) {
     <Card variant="glass">
       <CardHeader>
         <CardTitle>Platform Performance</CardTitle>
-        <CardDescription>Detailed metrics for each social platform</CardDescription>
+        <CardDescription>
+          Detailed metrics for each social platform
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {Object.entries(platforms).map(([platform, data]) => {
-            const Icon = platformIcons[platform as keyof typeof platformIcons] || Globe;
-            const color = platformColors[platform as keyof typeof platformColors] || '#888';
+            const Icon =
+              platformIcons[platform as keyof typeof platformIcons] || Globe;
+            const color =
+              platformColors[platform as keyof typeof platformColors] || '#888';
 
             return (
-              <div key={platform} className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+              <div
+                key={platform}
+                className="flex items-center justify-between p-4 bg-white/5 rounded-lg"
+              >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg" style={{ backgroundColor: `${color}20` }}>
+                  <div
+                    className="p-2 rounded-lg"
+                    style={{ backgroundColor: `${color}20` }}
+                  >
                     <Icon className="w-5 h-5" style={{ color }} />
                   </div>
                   <div>
@@ -50,7 +66,9 @@ export function PlatformPerformance({ platforms }: PlatformPerformanceProps) {
                 <div className="flex items-center gap-6">
                   <div className="text-right">
                     <p className="text-sm text-gray-300">Engagement</p>
-                    <p className="font-medium">{formatNumber(data.engagement)}</p>
+                    <p className="font-medium">
+                      {formatNumber(data.engagement)}
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-gray-300">Posts</p>
@@ -62,7 +80,9 @@ export function PlatformPerformance({ platforms }: PlatformPerformanceProps) {
                   </div>
                   <div className="flex items-center gap-1">
                     {getChangeIcon(data.growth)}
-                    <span className={`text-sm font-medium ${getChangeColor(data.growth)}`}>
+                    <span
+                      className={`text-sm font-medium ${getChangeColor(data.growth)}`}
+                    >
                       {data.growth}%
                     </span>
                   </div>

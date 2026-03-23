@@ -15,7 +15,9 @@ interface SpatiotemporalFeatureGateProps {
  * behind the Scale plan. Shows upgrade prompt for non-Scale users.
  * Uses emerald accent colour consistent with Forecasting feature family.
  */
-export function SpatiotemporalFeatureGate({ children }: SpatiotemporalFeatureGateProps) {
+export function SpatiotemporalFeatureGate({
+  children,
+}: SpatiotemporalFeatureGateProps) {
   const { subscription, isLoading, hasAccess } = useSubscription();
 
   if (isLoading) {
@@ -49,7 +51,9 @@ export function SpatiotemporalFeatureGate({ children }: SpatiotemporalFeatureGat
               </div>
             </div>
 
-            <h3 className="text-2xl font-bold text-white mb-2">Cross-Platform Intelligence</h3>
+            <h3 className="text-2xl font-bold text-white mb-2">
+              Cross-Platform Intelligence
+            </h3>
 
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 text-sm font-medium mb-4">
               <Layers className="w-3.5 h-3.5" />
@@ -57,12 +61,16 @@ export function SpatiotemporalFeatureGate({ children }: SpatiotemporalFeatureGat
             </div>
 
             <p className="text-gray-300 mb-6 leading-relaxed">
-              BayesNF spatiotemporal models predict performance across every platform simultaneously.
+              BayesNF spatiotemporal models predict performance across every
+              platform simultaneously.
             </p>
 
             <div className="text-left bg-white/5 rounded-lg p-4 mb-6 space-y-2">
               {defaultBenefits.map((benefit, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-gray-300">
+                <div
+                  key={i}
+                  className="flex items-center gap-2 text-sm text-gray-300"
+                >
                   <Layers className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span>{benefit}</span>
                 </div>
@@ -78,7 +86,10 @@ export function SpatiotemporalFeatureGate({ children }: SpatiotemporalFeatureGat
 
             {subscription && (
               <p className="text-gray-500 text-sm mt-4">
-                Current plan: <span className="text-gray-300 capitalize">{subscription.plan}</span>
+                Current plan:{' '}
+                <span className="text-gray-300 capitalize">
+                  {subscription.plan}
+                </span>
               </p>
             )}
           </div>

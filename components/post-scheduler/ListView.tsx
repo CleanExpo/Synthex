@@ -4,8 +4,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  Calendar as CalendarIcon, Clock, Edit3, Trash2,
-  Globe, Repeat, Eye, Copy, CheckCircle, XCircle, TrendingUp
+  Calendar as CalendarIcon,
+  Clock,
+  Edit3,
+  Trash2,
+  Globe,
+  Repeat,
+  Eye,
+  Copy,
+  CheckCircle,
+  XCircle,
+  TrendingUp,
 } from '@/components/icons';
 import { format } from 'date-fns';
 import { platformIcons, platformColors } from './constants';
@@ -21,27 +30,46 @@ interface ListViewProps {
 
 function getStatusColor(status: string) {
   switch (status) {
-    case 'scheduled': return 'text-yellow-500';
-    case 'published': return 'text-green-500';
-    case 'failed': return 'text-red-500';
-    case 'draft': return 'text-gray-500';
-    default: return 'text-gray-300';
+    case 'scheduled':
+      return 'text-yellow-500';
+    case 'published':
+      return 'text-green-500';
+    case 'failed':
+      return 'text-red-500';
+    case 'draft':
+      return 'text-gray-500';
+    default:
+      return 'text-gray-300';
   }
 }
 
 function getStatusIcon(status: string) {
   switch (status) {
-    case 'scheduled': return <Clock className="w-4 h-4" />;
-    case 'published': return <CheckCircle className="w-4 h-4" />;
-    case 'failed': return <XCircle className="w-4 h-4" />;
-    case 'draft': return <Edit3 className="w-4 h-4" />;
-    default: return null;
+    case 'scheduled':
+      return <Clock className="w-4 h-4" />;
+    case 'published':
+      return <CheckCircle className="w-4 h-4" />;
+    case 'failed':
+      return <XCircle className="w-4 h-4" />;
+    case 'draft':
+      return <Edit3 className="w-4 h-4" />;
+    default:
+      return null;
   }
 }
 
-export function ListView({ scheduledPosts, selectedPlatform, onDuplicate, onEdit, onDelete }: ListViewProps) {
+export function ListView({
+  scheduledPosts,
+  selectedPlatform,
+  onDuplicate,
+  onEdit,
+  onDelete,
+}: ListViewProps) {
   const filteredPosts = scheduledPosts
-    .filter(post => selectedPlatform === 'all' || post.platforms.includes(selectedPlatform))
+    .filter(
+      post =>
+        selectedPlatform === 'all' || post.platforms.includes(selectedPlatform)
+    )
     .sort((a, b) => a.scheduledTime.getTime() - b.scheduledTime.getTime());
 
   return (
@@ -53,7 +81,9 @@ export function ListView({ scheduledPosts, selectedPlatform, onDuplicate, onEdit
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   {post.platforms.map(platform => {
-                    const Icon = platformIcons[platform as keyof typeof platformIcons] || Globe;
+                    const Icon =
+                      platformIcons[platform as keyof typeof platformIcons] ||
+                      Globe;
                     return (
                       <div
                         key={platform}
@@ -63,7 +93,9 @@ export function ListView({ scheduledPosts, selectedPlatform, onDuplicate, onEdit
                       </div>
                     );
                   })}
-                  <span className={`flex items-center gap-1 text-sm ${getStatusColor(post.status)}`}>
+                  <span
+                    className={`flex items-center gap-1 text-sm ${getStatusColor(post.status)}`}
+                  >
                     {getStatusIcon(post.status)}
                     {post.status}
                   </span>

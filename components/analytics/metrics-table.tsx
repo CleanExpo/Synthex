@@ -5,15 +5,22 @@
  * Detailed metrics table with tabs
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const defaultPlatforms = ['Twitter', 'LinkedIn', 'Instagram', 'TikTok', 'Facebook'];
+const defaultPlatforms = [
+  'Twitter',
+  'LinkedIn',
+  'Instagram',
+  'TikTok',
+  'Facebook',
+];
 
 export interface MetricsTableRow {
   platform: string;
@@ -47,23 +54,31 @@ interface MetricsTableProps {
 
 const EM_DASH = '\u2014';
 
-export function MetricsTable({ data, engagementData, contentData }: MetricsTableProps) {
+export function MetricsTable({
+  data,
+  engagementData,
+  contentData,
+}: MetricsTableProps) {
   const hasData = data && data.length > 0;
   const hasEngagementData = engagementData && engagementData.length > 0;
   const hasContentData = contentData && contentData.length > 0;
 
-  const overviewPlatforms = hasData ? data.map(d => d.platform) : defaultPlatforms;
+  const overviewPlatforms = hasData
+    ? data.map(d => d.platform)
+    : defaultPlatforms;
   const engagementPlatforms = hasEngagementData
     ? engagementData.map(d => d.platform)
     : defaultPlatforms;
-  const contentPlatforms = hasContentData ? contentData.map(d => d.platform) : defaultPlatforms;
+  const contentPlatforms = hasContentData
+    ? contentData.map(d => d.platform)
+    : defaultPlatforms;
 
   // Audience tab derives from engagementData or data (whichever is available)
   const audiencePlatforms = hasEngagementData
     ? engagementData.map(d => d.platform)
     : hasData
-    ? data.map(d => d.platform)
-    : defaultPlatforms;
+      ? data.map(d => d.platform)
+      : defaultPlatforms;
 
   const getOverviewRow = (platform: string) => {
     if (hasData) return data.find(d => d.platform === platform);
@@ -71,7 +86,8 @@ export function MetricsTable({ data, engagementData, contentData }: MetricsTable
   };
 
   const getEngagementRow = (platform: string) => {
-    if (hasEngagementData) return engagementData.find(d => d.platform === platform);
+    if (hasEngagementData)
+      return engagementData.find(d => d.platform === platform);
     return null;
   };
 
@@ -85,16 +101,25 @@ export function MetricsTable({ data, engagementData, contentData }: MetricsTable
     if (hasEngagementData) {
       const eng = engagementData.find(d => d.platform === platform);
       if (eng) {
-        const rate = eng.total > 0
-          ? ((eng.likes + eng.comments + eng.shares) / eng.total * 100).toFixed(1)
-          : EM_DASH;
-        return { engagementRate: rate, growthTrend: 'Stable', bestTime: EM_DASH };
+        const rate =
+          eng.total > 0
+            ? (
+                ((eng.likes + eng.comments + eng.shares) / eng.total) *
+                100
+              ).toFixed(1)
+            : EM_DASH;
+        return {
+          engagementRate: rate,
+          growthTrend: 'Stable',
+          bestTime: EM_DASH,
+        };
       }
     }
     if (hasData) {
       const row = data.find(d => d.platform === platform);
       if (row) {
-        const growthLabel = row.growth > 0 ? 'Growing' : row.growth < 0 ? 'Declining' : 'Stable';
+        const growthLabel =
+          row.growth > 0 ? 'Growing' : row.growth < 0 ? 'Declining' : 'Stable';
         return {
           engagementRate: `${row.engagement.toFixed(1)}%`,
           growthTrend: growthLabel,
@@ -130,16 +155,28 @@ export function MetricsTable({ data, engagementData, contentData }: MetricsTable
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-2 text-slate-300 font-medium">Platform</th>
-                    <th className="text-right py-2 text-slate-300 font-medium">Followers</th>
-                    <th className="text-right py-2 text-slate-300 font-medium">Posts</th>
-                    <th className="text-right py-2 text-slate-300 font-medium">Engagement</th>
-                    <th className="text-right py-2 text-slate-300 font-medium">Reach</th>
-                    <th className="text-right py-2 text-slate-300 font-medium">Growth</th>
+                    <th className="text-left py-2 text-slate-300 font-medium">
+                      Platform
+                    </th>
+                    <th className="text-right py-2 text-slate-300 font-medium">
+                      Followers
+                    </th>
+                    <th className="text-right py-2 text-slate-300 font-medium">
+                      Posts
+                    </th>
+                    <th className="text-right py-2 text-slate-300 font-medium">
+                      Engagement
+                    </th>
+                    <th className="text-right py-2 text-slate-300 font-medium">
+                      Reach
+                    </th>
+                    <th className="text-right py-2 text-slate-300 font-medium">
+                      Growth
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {overviewPlatforms.map((platform) => {
+                  {overviewPlatforms.map(platform => {
                     const row = getOverviewRow(platform);
                     return (
                       <tr key={platform} className="border-b border-white/5">
@@ -158,8 +195,15 @@ export function MetricsTable({ data, engagementData, contentData }: MetricsTable
                         </td>
                         <td className="text-right py-3">
                           {row ? (
-                            <span className={row.growth >= 0 ? 'text-green-500' : 'text-red-500'}>
-                              {row.growth >= 0 ? '+' : ''}{row.growth.toFixed(1)}%
+                            <span
+                              className={
+                                row.growth >= 0
+                                  ? 'text-green-500'
+                                  : 'text-red-500'
+                              }
+                            >
+                              {row.growth >= 0 ? '+' : ''}
+                              {row.growth.toFixed(1)}%
                             </span>
                           ) : (
                             <span className="text-slate-300">{EM_DASH}</span>
@@ -179,15 +223,25 @@ export function MetricsTable({ data, engagementData, contentData }: MetricsTable
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-2 text-slate-300 font-medium">Platform</th>
-                    <th className="text-right py-2 text-slate-300 font-medium">Likes</th>
-                    <th className="text-right py-2 text-slate-300 font-medium">Comments</th>
-                    <th className="text-right py-2 text-slate-300 font-medium">Shares</th>
-                    <th className="text-right py-2 text-slate-300 font-medium">Total Engagement</th>
+                    <th className="text-left py-2 text-slate-300 font-medium">
+                      Platform
+                    </th>
+                    <th className="text-right py-2 text-slate-300 font-medium">
+                      Likes
+                    </th>
+                    <th className="text-right py-2 text-slate-300 font-medium">
+                      Comments
+                    </th>
+                    <th className="text-right py-2 text-slate-300 font-medium">
+                      Shares
+                    </th>
+                    <th className="text-right py-2 text-slate-300 font-medium">
+                      Total Engagement
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {engagementPlatforms.map((platform) => {
+                  {engagementPlatforms.map(platform => {
                     const row = getEngagementRow(platform);
                     return (
                       <tr key={platform} className="border-b border-white/5">
@@ -218,28 +272,38 @@ export function MetricsTable({ data, engagementData, contentData }: MetricsTable
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-2 text-slate-300 font-medium">Platform</th>
-                    <th className="text-right py-2 text-slate-300 font-medium">Engagement Rate</th>
-                    <th className="text-right py-2 text-slate-300 font-medium">Growth Trend</th>
-                    <th className="text-right py-2 text-slate-300 font-medium">Best Time</th>
+                    <th className="text-left py-2 text-slate-300 font-medium">
+                      Platform
+                    </th>
+                    <th className="text-right py-2 text-slate-300 font-medium">
+                      Engagement Rate
+                    </th>
+                    <th className="text-right py-2 text-slate-300 font-medium">
+                      Growth Trend
+                    </th>
+                    <th className="text-right py-2 text-slate-300 font-medium">
+                      Best Time
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {audiencePlatforms.map((platform) => {
+                  {audiencePlatforms.map(platform => {
                     const row = getAudienceRow(platform);
                     const trendColor =
                       row?.growthTrend === 'Growing'
                         ? 'text-green-500'
                         : row?.growthTrend === 'Declining'
-                        ? 'text-red-500'
-                        : 'text-slate-300';
+                          ? 'text-red-500'
+                          : 'text-slate-300';
                     return (
                       <tr key={platform} className="border-b border-white/5">
                         <td className="py-3 text-white">{platform}</td>
                         <td className="text-right py-3 text-slate-300">
                           {row ? row.engagementRate : EM_DASH}
                         </td>
-                        <td className={`text-right py-3 ${row ? trendColor : 'text-slate-300'}`}>
+                        <td
+                          className={`text-right py-3 ${row ? trendColor : 'text-slate-300'}`}
+                        >
                           {row ? row.growthTrend : EM_DASH}
                         </td>
                         <td className="text-right py-3 text-slate-300">
@@ -259,14 +323,22 @@ export function MetricsTable({ data, engagementData, contentData }: MetricsTable
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-2 text-slate-300 font-medium">Platform</th>
-                    <th className="text-right py-2 text-slate-300 font-medium">Posts</th>
-                    <th className="text-right py-2 text-slate-300 font-medium">Avg Engagement Rate</th>
-                    <th className="text-right py-2 text-slate-300 font-medium">Best Posting Time</th>
+                    <th className="text-left py-2 text-slate-300 font-medium">
+                      Platform
+                    </th>
+                    <th className="text-right py-2 text-slate-300 font-medium">
+                      Posts
+                    </th>
+                    <th className="text-right py-2 text-slate-300 font-medium">
+                      Avg Engagement Rate
+                    </th>
+                    <th className="text-right py-2 text-slate-300 font-medium">
+                      Best Posting Time
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {contentPlatforms.map((platform) => {
+                  {contentPlatforms.map(platform => {
                     const row = getContentRow(platform);
                     return (
                       <tr key={platform} className="border-b border-white/5">
@@ -275,7 +347,9 @@ export function MetricsTable({ data, engagementData, contentData }: MetricsTable
                           {row ? row.topPosts : EM_DASH}
                         </td>
                         <td className="text-right py-3 text-slate-300">
-                          {row ? `${row.avgEngagementRate.toFixed(1)}%` : EM_DASH}
+                          {row
+                            ? `${row.avgEngagementRate.toFixed(1)}%`
+                            : EM_DASH}
                         </td>
                         <td className="text-right py-3 text-slate-300">
                           {row ? row.bestTime : EM_DASH}

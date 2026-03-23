@@ -5,7 +5,13 @@
  * API health and performance metrics
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Activity } from '@/components/icons';
 import { StatusBadge } from './config';
 import type { ApiMetrics } from './types';
@@ -28,7 +34,9 @@ export function ApiTab({ metrics }: ApiTabProps) {
               <Activity className="w-5 h-5 text-green-400 mr-3" />
               <div>
                 <p className="font-medium text-white">API Status</p>
-                <p className="text-sm text-gray-300">All endpoints operational</p>
+                <p className="text-sm text-gray-300">
+                  All endpoints operational
+                </p>
               </div>
             </div>
             <StatusBadge status={metrics.health} />
@@ -37,19 +45,27 @@ export function ApiTab({ metrics }: ApiTabProps) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-300">Success Rate</p>
-              <p className="text-2xl font-bold text-white">{metrics.successRate}%</p>
+              <p className="text-2xl font-bold text-white">
+                {metrics.successRate}%
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-300">Throughput</p>
-              <p className="text-2xl font-bold text-white">{metrics.throughput} req/s</p>
+              <p className="text-2xl font-bold text-white">
+                {metrics.throughput} req/s
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-300">Error Count (24h)</p>
-              <p className="text-2xl font-bold text-yellow-400">{metrics.errorCount}</p>
+              <p className="text-2xl font-bold text-yellow-400">
+                {metrics.errorCount}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-300">P95 Latency</p>
-              <p className="text-2xl font-bold text-white">{metrics.latency * 1.5}ms</p>
+              <p className="text-2xl font-bold text-white">
+                {metrics.latency * 1.5}ms
+              </p>
             </div>
           </div>
         </div>

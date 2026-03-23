@@ -52,34 +52,44 @@ export function TaskToolbar({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
           <Input
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={e => onSearchChange(e.target.value)}
             placeholder="Search tasks..."
             className="pl-10 w-64 bg-white/5 border-white/10"
           />
         </div>
 
         {/* Type Filter */}
-        <Select value={filterType} onValueChange={(v) => onFilterTypeChange(v as TaskType | 'all')}>
+        <Select
+          value={filterType}
+          onValueChange={v => onFilterTypeChange(v as TaskType | 'all')}
+        >
           <SelectTrigger className="w-32 bg-white/5 border-white/10">
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
             {Object.entries(typeConfig).map(([key, config]) => (
-              <SelectItem key={key} value={key}>{config.label}</SelectItem>
+              <SelectItem key={key} value={key}>
+                {config.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
         {/* Priority Filter */}
-        <Select value={filterPriority} onValueChange={(v) => onFilterPriorityChange(v as TaskPriority | 'all')}>
+        <Select
+          value={filterPriority}
+          onValueChange={v => onFilterPriorityChange(v as TaskPriority | 'all')}
+        >
           <SelectTrigger className="w-32 bg-white/5 border-white/10">
             <SelectValue placeholder="Priority" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Priorities</SelectItem>
             {Object.entries(priorityConfig).map(([key, config]) => (
-              <SelectItem key={key} value={key}>{config.label}</SelectItem>
+              <SelectItem key={key} value={key}>
+                {config.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>

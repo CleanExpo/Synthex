@@ -16,7 +16,11 @@ interface PersonasHeaderProps {
   onCreateClick: () => void;
 }
 
-export function PersonasHeader({ personas, isCreating, onCreateClick }: PersonasHeaderProps) {
+export function PersonasHeader({
+  personas,
+  isCreating,
+  onCreateClick,
+}: PersonasHeaderProps) {
   const handleExport = () => {
     const dataStr = JSON.stringify(personas, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
@@ -32,7 +36,9 @@ export function PersonasHeader({ personas, isCreating, onCreateClick }: Personas
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-3xl font-bold gradient-text">Persona Learning Engine</h1>
+        <h1 className="text-3xl font-bold gradient-text">
+          Persona Learning Engine
+        </h1>
         <p className="text-slate-300 mt-1">
           Train AI to match your unique voice and style
         </p>

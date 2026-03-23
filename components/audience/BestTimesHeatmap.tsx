@@ -56,12 +56,12 @@ function formatHour(hour: number): string {
 function LoadingSkeleton() {
   return (
     <div className="space-y-1">
-      {DAYS.map((day) => (
+      {DAYS.map(day => (
         <div key={day} className="flex gap-1">
           <div className="w-8 h-6 flex items-center">
             <span className="text-xs text-gray-500">{day}</span>
           </div>
-          {HOURS.map((hour) => (
+          {HOURS.map(hour => (
             <div
               key={hour}
               className="w-4 h-6 bg-white/5 rounded-sm animate-pulse"
@@ -87,12 +87,15 @@ export function BestTimesHeatmap({
   className,
 }: BestTimesHeatmapProps) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
-  const [selectedCell, setSelectedCell] = useState<{ day: number; hour: number } | null>(null);
+  const [selectedCell, setSelectedCell] = useState<{
+    day: number;
+    hour: number;
+  } | null>(null);
 
   // Build engagement map for O(1) lookup
   const engagementMap = useMemo(() => {
     const map = new Map<string, number>();
-    data?.forEach((item) => {
+    data?.forEach(item => {
       map.set(`${item.day}-${item.hour}`, item.engagement);
     });
     return map;
@@ -133,8 +136,15 @@ export function BestTimesHeatmap({
 
   if (isLoading) {
     return (
-      <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
-        <h4 className="text-sm font-medium text-gray-300 mb-4">Best Posting Times</h4>
+      <div
+        className={cn(
+          'bg-gray-900/30 border border-white/10 rounded-xl p-4',
+          className
+        )}
+      >
+        <h4 className="text-sm font-medium text-gray-300 mb-4">
+          Best Posting Times
+        </h4>
         <LoadingSkeleton />
       </div>
     );
@@ -142,29 +152,54 @@ export function BestTimesHeatmap({
 
   if (!data?.length) {
     return (
-      <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
-        <h4 className="text-sm font-medium text-gray-300 mb-4">Best Posting Times</h4>
-        <p className="text-gray-500 text-sm text-center py-8">No timing data available</p>
+      <div
+        className={cn(
+          'bg-gray-900/30 border border-white/10 rounded-xl p-4',
+          className
+        )}
+      >
+        <h4 className="text-sm font-medium text-gray-300 mb-4">
+          Best Posting Times
+        </h4>
+        <p className="text-gray-500 text-sm text-center py-8">
+          No timing data available
+        </p>
       </div>
     );
   }
 
   return (
-    <div className={cn('bg-gray-900/30 border border-white/10 rounded-xl p-4', className)}>
+    <div
+      className={cn(
+        'bg-gray-900/30 border border-white/10 rounded-xl p-4',
+        className
+      )}
+    >
       <div className="flex items-center justify-between mb-4">
-        <h4 className="text-sm font-medium text-gray-300">Best Posting Times</h4>
+        <h4 className="text-sm font-medium text-gray-300">
+          Best Posting Times
+        </h4>
         {/* Legend */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: getEngagementColor(20) }} />
+            <div
+              className="w-3 h-3 rounded-sm"
+              style={{ backgroundColor: getEngagementColor(20) }}
+            />
             <span className="text-xs text-gray-500">Low</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: getEngagementColor(50) }} />
+            <div
+              className="w-3 h-3 rounded-sm"
+              style={{ backgroundColor: getEngagementColor(50) }}
+            />
             <span className="text-xs text-gray-500">Medium</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: getEngagementColor(85) }} />
+            <div
+              className="w-3 h-3 rounded-sm"
+              style={{ backgroundColor: getEngagementColor(85) }}
+            />
             <span className="text-xs text-gray-500">High</span>
           </div>
         </div>
@@ -172,7 +207,7 @@ export function BestTimesHeatmap({
 
       {/* Hour labels */}
       <div className="flex gap-1 mb-1 ml-10">
-        {HOURS.filter((h) => h % 3 === 0).map((hour) => (
+        {HOURS.filter(h => h % 3 === 0).map(hour => (
           <div
             key={hour}
             className="text-xs text-gray-500 text-center"
@@ -191,10 +226,13 @@ export function BestTimesHeatmap({
               <span className="text-xs text-gray-500">{dayName}</span>
             </div>
             <div className="flex gap-0.5 flex-1">
-              {HOURS.map((hour) => {
-                const engagement = engagementMap.get(`${dayIndex}-${hour}`) || 0;
-                const isCurrentTime = dayIndex === currentDay && hour === currentHour;
-                const isSelected = selectedCell?.day === dayIndex && selectedCell?.hour === hour;
+              {HOURS.map(hour => {
+                const engagement =
+                  engagementMap.get(`${dayIndex}-${hour}`) || 0;
+                const isCurrentTime =
+                  dayIndex === currentDay && hour === currentHour;
+                const isSelected =
+                  selectedCell?.day === dayIndex && selectedCell?.hour === hour;
 
                 return (
                   <div
@@ -205,7 +243,9 @@ export function BestTimesHeatmap({
                       isSelected && 'ring-2 ring-white'
                     )}
                     style={{ backgroundColor: getEngagementColor(engagement) }}
-                    onMouseEnter={(e) => handleMouseEnter(e, dayIndex, hour, engagement)}
+                    onMouseEnter={e =>
+                      handleMouseEnter(e, dayIndex, hour, engagement)
+                    }
                     onMouseLeave={handleMouseLeave}
                     onClick={() => handleCellClick(dayIndex, hour)}
                   />
@@ -224,8 +264,14 @@ export function BestTimesHeatmap({
               {DAYS[selectedCell.day]} at {formatHour(selectedCell.hour)}
             </span>
             <span className="text-sm font-medium text-white">
-              {getEngagementLabel(engagementMap.get(`${selectedCell.day}-${selectedCell.hour}`) || 0)} engagement (
-              {engagementMap.get(`${selectedCell.day}-${selectedCell.hour}`) || 0}%)
+              {getEngagementLabel(
+                engagementMap.get(`${selectedCell.day}-${selectedCell.hour}`) ||
+                  0
+              )}{' '}
+              engagement (
+              {engagementMap.get(`${selectedCell.day}-${selectedCell.hour}`) ||
+                0}
+              %)
             </span>
           </div>
         </div>
