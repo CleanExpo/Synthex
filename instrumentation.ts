@@ -38,6 +38,20 @@ export async function onRequestError(
   } catch {
     // Never throw from onRequestError
   }
+
+  // Also route to Axiom via the error tracker (ships structured payload, fire-and-forget)
+  try {
+    const { trackError, ErrorSeverity, ErrorCategory } =
+      await import('@/lib/observability/error-tracker');
+    const err = error instanceof Error ? error : new Error(String(error));
+    trackError(err, {
+      severity: ErrorSeverity.HIGH,
+      category: ErrorCategory.INTERNAL,
+      operation: 'instrumentation/onRequestError',
+    });
+  } catch {
+    // Never throw from onRequestError
+  }
 }
 
 export async function register() {

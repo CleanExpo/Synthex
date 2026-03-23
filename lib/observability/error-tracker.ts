@@ -178,6 +178,49 @@ function determineSeverity(
 }
 
 // ============================================================================
+// AXIOM TRANSPORT (production-only, HTTP-based, no SDK cold-start hooks)
+// ============================================================================
+
+/**
+ * Ship a tracked error to Axiom via a plain fetch() POST.
+ *
+ * Design constraints:
+ *  - HTTP-only: no @axiomhq/js SDK import, so no OTel hooks at module-evaluation time
+ *  - Fire-and-forget: called without await from trackError() — never blocks response path
+ *  - Silenced: all exceptions swallowed so observability can never crash the app
+ *  - Gated: only runs in production when both AXIOM_TOKEN and AXIOM_DATASET are set
+ */
+async function reportToAxiom(error: TrackedError): Promise<void> {
+  const token = process.env.AXIOM_TOKEN;
+  const dataset = process.env.AXIOM_DATASET;
+  if (!token || !dataset || process.env.NODE_ENV !== 'production') return;
+
+  try {
+    await fetch(`https://api.axiom.co/v1/datasets/${dataset}/ingest`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify([
+        {
+          _time: error.timestamp.toISOString(),
+          severity: error.severity,
+          category: error.category,
+          message: error.message,
+          stack: error.stack,
+          fingerprint: error.fingerprint,
+          count: error.count,
+          ...error.context,
+        },
+      ]),
+    });
+  } catch {
+    // Never let observability failures crash the app
+  }
+}
+
+// ============================================================================
 // MAIN FUNCTIONS
 // ============================================================================
 
@@ -264,6 +307,11 @@ export function trackError(
       ...trackedError.context,
     });
   }
+
+  // Fire-and-forget: ship to Axiom in production (no SDK, no cold-start hooks)
+  reportToAxiom(trackedError).catch(() => {
+    // Never let observability failures affect application flow
+  });
 
   return trackedError;
 }
