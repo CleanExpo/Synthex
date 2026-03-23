@@ -435,7 +435,7 @@ function ListeningPageContent() {
       />
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <p className="text-2xl font-bold text-white">{stats.total24h}</p>
           <p className="text-sm text-gray-400">Mentions (24h)</p>

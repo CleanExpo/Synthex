@@ -363,7 +363,7 @@ function CalendarPageContent() {
       />
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-500/10 rounded-lg">
@@ -526,7 +526,7 @@ function CalendarPageContent() {
             {/* Platforms */}
             <div className="space-y-2">
               <Label className="text-gray-300">Platforms</Label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {PLATFORMS.map(platform => (
                   <label
                     key={platform.id}
