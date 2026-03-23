@@ -14,8 +14,17 @@
 
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
-import type { VisualType, GenerateVisualResponse, EvaluateVisualResponse } from './paper-banana-client';
-import { generateDiagram, evaluateVisual, generateWithQualityGate } from './paper-banana-client';
+import { Prisma } from '@prisma/client';
+import type {
+  VisualType,
+  GenerateVisualResponse,
+  EvaluateVisualResponse,
+} from './paper-banana-client';
+import {
+  generateDiagram,
+  evaluateVisual,
+  generateWithQualityGate,
+} from './paper-banana-client';
 
 // =============================================================================
 // Types
@@ -58,8 +67,13 @@ export interface AssetListOptions {
 /**
  * Generate a visual and store it as an asset in the database.
  */
-export async function createVisualAsset(input: CreateVisualAssetInput): Promise<VisualAssetResult> {
-  logger.info('Creating visual asset', { userId: input.userId, type: input.type });
+export async function createVisualAsset(
+  input: CreateVisualAssetInput
+): Promise<VisualAssetResult> {
+  logger.info('Creating visual asset', {
+    userId: input.userId,
+    type: input.type,
+  });
 
   try {
     // Generate the visual
@@ -67,7 +81,12 @@ export async function createVisualAsset(input: CreateVisualAssetInput): Promise<
 
     if (input.useQualityGate) {
       result = await generateWithQualityGate(
-        { type: input.type, prompt: input.prompt, data: input.data, style: input.style },
+        {
+          type: input.type,
+          prompt: input.prompt,
+          data: input.data,
+          style: input.style,
+        },
         { minQuality: input.minQuality || 70 }
       );
     } else {
@@ -101,7 +120,11 @@ export async function createVisualAsset(input: CreateVisualAssetInput): Promise<
       },
     });
 
-    logger.info('Visual asset created', { id: asset.id, qualityScore, status: asset.status });
+    logger.info('Visual asset created', {
+      id: asset.id,
+      qualityScore,
+      status: asset.status,
+    });
 
     return {
       id: asset.id,
@@ -113,7 +136,10 @@ export async function createVisualAsset(input: CreateVisualAssetInput): Promise<
       status: asset.status,
     };
   } catch (error) {
-    logger.error('Failed to create visual asset', { error, userId: input.userId });
+    logger.error('Failed to create visual asset', {
+      error,
+      userId: input.userId,
+    });
     throw error;
   }
 }
@@ -121,7 +147,9 @@ export async function createVisualAsset(input: CreateVisualAssetInput): Promise<
 /**
  * Re-evaluate an existing asset's quality.
  */
-export async function reevaluateAsset(assetId: number): Promise<EvaluateVisualResponse> {
+export async function reevaluateAsset(
+  assetId: number
+): Promise<EvaluateVisualResponse> {
   const asset = await prisma.visualAsset.findUnique({ where: { id: assetId } });
   if (!asset) throw new Error(`Visual asset ${assetId} not found`);
 
@@ -137,7 +165,7 @@ export async function reevaluateAsset(assetId: number): Promise<EvaluateVisualRe
       qualityScore: evaluation.qualityScore,
       status: evaluation.qualityScore >= 70 ? 'approved' : 'needs_improvement',
       metadata: {
-        ...(asset.metadata as Record<string, unknown> || {}),
+        ...((asset.metadata as Record<string, unknown>) || {}),
         lastEvaluation: {
           score: evaluation.qualityScore,
           feedback: evaluation.feedback,
@@ -159,7 +187,7 @@ export async function reevaluateAsset(assetId: number): Promise<EvaluateVisualRe
  * List visual assets with filtering.
  */
 export async function listVisualAssets(options: AssetListOptions) {
-  const where: Record<string, unknown> = { userId: options.userId };
+  const where: Prisma.VisualAssetWhereInput = { userId: options.userId };
 
   if (options.reportId) where.reportId = options.reportId;
   if (options.type) where.type = options.type;
@@ -167,12 +195,12 @@ export async function listVisualAssets(options: AssetListOptions) {
 
   const [assets, total] = await Promise.all([
     prisma.visualAsset.findMany({
-      where: where as any,
+      where,
       orderBy: { createdAt: 'desc' },
       take: options.limit || 20,
       skip: options.offset || 0,
     }),
-    prisma.visualAsset.count({ where: where as any }),
+    prisma.visualAsset.count({ where }),
   ]);
 
   return {
@@ -220,7 +248,10 @@ export async function getVisualAsset(assetId: number, userId: string) {
 /**
  * Delete a visual asset.
  */
-export async function deleteVisualAsset(assetId: number, userId: string): Promise<boolean> {
+export async function deleteVisualAsset(
+  assetId: number,
+  userId: string
+): Promise<boolean> {
   const asset = await prisma.visualAsset.findFirst({
     where: { id: assetId, userId },
   });
@@ -245,7 +276,8 @@ function generateAltText(type: VisualType, prompt: string): string {
   }[type];
 
   // Take first 120 chars of prompt for alt text
-  const description = prompt.length > 120 ? prompt.substring(0, 117) + '...' : prompt;
+  const description =
+    prompt.length > 120 ? prompt.substring(0, 117) + '...' : prompt;
   return `${prefix} ${description}`;
 }
 
@@ -257,6 +289,7 @@ function generateCaption(type: VisualType, prompt: string): string {
     before_after: 'Comparison:',
   }[type];
 
-  const description = prompt.length > 200 ? prompt.substring(0, 197) + '...' : prompt;
+  const description =
+    prompt.length > 200 ? prompt.substring(0, 197) + '...' : prompt;
   return `${prefix} ${description}. Generated via Paper Banana AI.`;
 }
