@@ -22,6 +22,8 @@
 3. All queries must be org-scoped (never expose cross-organisation data)
 4. No cross-layer imports — pages → components → hooks → lib services
 5. No new npm packages without stating: package name + reason + bundle impact
+6. Before touching any route or page file: check .planning/ROUTE_REFERENCE.md
+   for the exact path, auth level, and canonical lib/auth/ function required.
 
 ### Database
 
