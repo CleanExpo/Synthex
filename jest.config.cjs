@@ -78,7 +78,7 @@ module.exports = {
     '/coverage/',
     '/tests/e2e/',
     '/tests/playwright/',
-    '<rootDir>/.claude/',
+    '\\.claude',
   ],
 
   // Reporter configuration

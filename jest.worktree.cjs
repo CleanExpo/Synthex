@@ -31,6 +31,7 @@ module.exports = {
     '/coverage/',
     '/tests/e2e/',
     '/tests/playwright/',
+    '\\.claude',
   ],
 
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
