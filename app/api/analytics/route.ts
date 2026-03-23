@@ -142,18 +142,34 @@ export async function GET(request: NextRequest) {
       postWhere.platform = platform;
     }
 
-    // Get post statistics
-    const posts = await prisma.post.findMany({
-      where: postWhere,
-      select: {
-        id: true,
-        platform: true,
-        status: true,
-        analytics: true,
-        publishedAt: true,
-        createdAt: true,
-      },
-    });
+    // Get post statistics and recent activity in parallel — both queries depend
+    // only on already-computed values (campaignIds, userId, startDate).
+    const [posts, recentActivity] = await Promise.all([
+      prisma.post.findMany({
+        where: postWhere,
+        select: {
+          id: true,
+          platform: true,
+          status: true,
+          analytics: true,
+          publishedAt: true,
+          createdAt: true,
+        },
+      }),
+      prisma.apiUsage.findMany({
+        where: {
+          userId,
+          createdAt: { gte: startDate },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        select: {
+          endpoint: true,
+          status: true,
+          createdAt: true,
+        },
+      }),
+    ]);
 
     // Calculate totals
     const totals = {
@@ -198,21 +214,6 @@ export async function GET(request: NextRequest) {
       },
       {} as Record<string, { posts: number; published: number }>
     );
-
-    // Get recent activity (API usage)
-    const recentActivity = await prisma.apiUsage.findMany({
-      where: {
-        userId,
-        createdAt: { gte: startDate },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 10,
-      select: {
-        endpoint: true,
-        status: true,
-        createdAt: true,
-      },
-    });
 
     // Get daily post counts for chart
     const dailyCounts = posts.reduce(

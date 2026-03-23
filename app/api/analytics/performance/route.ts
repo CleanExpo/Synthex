@@ -16,7 +16,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
 import { analyticsTracker } from '@/lib/analytics/analytics-tracker';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
@@ -26,14 +29,18 @@ const PerformanceQuerySchema = z.object({
   period: z.enum(['7d', '30d', '90d', '1y']).default('30d'),
   platform: z.string().optional(),
   granularity: z.enum(['day', 'week', 'month']).default('day'),
-  startDate: z.string().optional().refine(
-    (val) => !val || !isNaN(Date.parse(val)),
-    { message: 'startDate must be a valid ISO date string' }
-  ),
-  endDate: z.string().optional().refine(
-    (val) => !val || !isNaN(Date.parse(val)),
-    { message: 'endDate must be a valid ISO date string' }
-  ),
+  startDate: z
+    .string()
+    .optional()
+    .refine(val => !val || !isNaN(Date.parse(val)), {
+      message: 'startDate must be a valid ISO date string',
+    }),
+  endDate: z
+    .string()
+    .optional()
+    .refine(val => !val || !isNaN(Date.parse(val)), {
+      message: 'endDate must be a valid ISO date string',
+    }),
 });
 
 const WebVitalsSchema = z.object({
@@ -160,12 +167,21 @@ export async function GET(request: NextRequest) {
 
     if (!parseResult.success) {
       return NextResponse.json(
-        { error: 'Invalid query parameters', details: parseResult.error.flatten() },
+        {
+          error: 'Invalid query parameters',
+          details: parseResult.error.flatten(),
+        },
         { status: 400 }
       );
     }
 
-    const { period, platform, granularity, startDate: customStartDate, endDate: customEndDate } = parseResult.data;
+    const {
+      period,
+      platform,
+      granularity,
+      startDate: customStartDate,
+      endDate: customEndDate,
+    } = parseResult.data;
 
     // Calculate date range — use custom dates if provided, otherwise compute from period
     let endDate: Date;
@@ -206,74 +222,84 @@ export async function GET(request: NextRequest) {
       whereClause.platform = platform;
     }
 
-    const posts = await prisma.post.findMany({
-      where: whereClause,
-      select: {
-        id: true,
-        content: true,
-        platform: true,
-        status: true,
-        publishedAt: true,
-        createdAt: true,
-        analytics: true,
-        campaign: {
-          select: {
-            name: true,
+    // Previous period dates — computed from already-known startDate/endDate,
+    // so both queries are independent and can run in parallel.
+    const periodMs = endDate.getTime() - startDate.getTime();
+    const previousEndDate = new Date(startDate);
+    const previousStartDate = new Date(startDate.getTime() - periodMs);
+
+    const [posts, previousPosts] = await Promise.all([
+      prisma.post.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          content: true,
+          platform: true,
+          status: true,
+          publishedAt: true,
+          createdAt: true,
+          analytics: true,
+          campaign: {
+            select: {
+              name: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 1000, // Safety cap for aggregation queries
-    });
-
-    // Calculate previous period for comparison
-    const previousStartDate = new Date(startDate);
-    const previousEndDate = new Date(startDate);
-    previousStartDate.setTime(
-      startDate.getTime() - (endDate.getTime() - startDate.getTime())
-    );
-
-    const previousPosts = await prisma.post.findMany({
-      where: {
-        campaign: { userId },
-        createdAt: {
-          gte: previousStartDate,
-          lte: previousEndDate,
+        orderBy: { createdAt: 'desc' },
+        take: 1000, // Safety cap for aggregation queries
+      }),
+      prisma.post.findMany({
+        where: {
+          campaign: { userId },
+          createdAt: {
+            gte: previousStartDate,
+            lte: previousEndDate,
+          },
+          ...(platform && { platform }),
         },
-        ...(platform && { platform }),
-      },
-      select: {
-        analytics: true,
-      },
-      take: 1000, // Safety cap for aggregation queries
-    });
+        select: {
+          analytics: true,
+        },
+        take: 1000, // Safety cap for aggregation queries
+      }),
+    ]);
 
     // Aggregate current period metrics
     const currentMetrics = aggregateMetrics(posts);
     const previousMetrics = aggregateMetrics(previousPosts);
 
     // Calculate growth
-    const engagementChange = previousMetrics.totalEngagement === 0
-      ? (currentMetrics.totalEngagement > 0 ? 100 : 0)
-      : Math.round(
-          ((currentMetrics.totalEngagement - previousMetrics.totalEngagement) /
-            previousMetrics.totalEngagement) *
-            100
-        );
+    const engagementChange =
+      previousMetrics.totalEngagement === 0
+        ? currentMetrics.totalEngagement > 0
+          ? 100
+          : 0
+        : Math.round(
+            ((currentMetrics.totalEngagement -
+              previousMetrics.totalEngagement) /
+              previousMetrics.totalEngagement) *
+              100
+          );
 
-    const reachChange = previousMetrics.totalReach === 0
-      ? (currentMetrics.totalReach > 0 ? 100 : 0)
-      : Math.round(
-          ((currentMetrics.totalReach - previousMetrics.totalReach) /
-            previousMetrics.totalReach) *
-            100
-        );
+    const reachChange =
+      previousMetrics.totalReach === 0
+        ? currentMetrics.totalReach > 0
+          ? 100
+          : 0
+        : Math.round(
+            ((currentMetrics.totalReach - previousMetrics.totalReach) /
+              previousMetrics.totalReach) *
+              100
+          );
 
-    const postsChange = previousPosts.length === 0
-      ? (posts.length > 0 ? 100 : 0)
-      : Math.round(
-          ((posts.length - previousPosts.length) / previousPosts.length) * 100
-        );
+    const postsChange =
+      previousPosts.length === 0
+        ? posts.length > 0
+          ? 100
+          : 0
+        : Math.round(
+            ((posts.length - previousPosts.length) / previousPosts.length) * 100
+          );
 
     // Build timeline
     const timeline = buildTimeline(posts, startDate, endDate, granularity);
@@ -283,7 +309,7 @@ export async function GET(request: NextRequest) {
 
     // Get top content
     const topContent = posts
-      .map((post) => {
+      .map(post => {
         const analytics = (post.analytics as PostAnalyticsData) || {};
         const engagement =
           (analytics.likes || 0) +
@@ -315,7 +341,11 @@ export async function GET(request: NextRequest) {
         reachChange,
         postsChange,
         trend:
-          engagementChange > 0 ? 'up' : engagementChange < 0 ? 'down' : 'stable',
+          engagementChange > 0
+            ? 'up'
+            : engagementChange < 0
+              ? 'down'
+              : 'stable',
       },
       timeline,
       platforms: platformStats,
@@ -331,7 +361,10 @@ export async function GET(request: NextRequest) {
       category: 'api',
       severity: 'low',
       outcome: 'success',
-      details: { period: customStartDate && customEndDate ? 'custom' : period, platform: platform || 'all' },
+      details: {
+        period: customStartDate && customEndDate ? 'custom' : period,
+        platform: platform || 'all',
+      },
     });
 
     return NextResponse.json({
@@ -415,7 +448,9 @@ export async function POST(request: NextRequest) {
 // HELPER FUNCTIONS
 // ============================================================================
 
-function aggregateMetrics(posts: Array<{ analytics: PostAnalyticsData | unknown }>) {
+function aggregateMetrics(
+  posts: Array<{ analytics: PostAnalyticsData | unknown }>
+) {
   let totalEngagement = 0;
   let totalReach = 0;
   let totalImpressions = 0;
@@ -481,13 +516,20 @@ function buildTimeline(
     }
 
     if (!buckets.has(bucketKey)) {
-      buckets.set(bucketKey, { engagement: 0, reach: 0, impressions: 0, posts: 0 });
+      buckets.set(bucketKey, {
+        engagement: 0,
+        reach: 0,
+        impressions: 0,
+        posts: 0,
+      });
     }
 
     const bucket = buckets.get(bucketKey)!;
     const analytics = (post.analytics as PostAnalyticsData) || {};
     bucket.engagement +=
-      (analytics.likes || 0) + (analytics.comments || 0) + (analytics.shares || 0);
+      (analytics.likes || 0) +
+      (analytics.comments || 0) +
+      (analytics.shares || 0);
     bucket.reach += analytics.reach || 0;
     bucket.impressions += analytics.impressions || 0;
     bucket.posts += 1;
@@ -530,7 +572,9 @@ function buildPlatformStats(posts: PostWithAnalytics[]) {
     const stats = platformMap.get(platform)!;
     const analytics = (post.analytics as PostAnalyticsData) || {};
     const engagement =
-      (analytics.likes || 0) + (analytics.comments || 0) + (analytics.shares || 0);
+      (analytics.likes || 0) +
+      (analytics.comments || 0) +
+      (analytics.shares || 0);
 
     stats.engagement += engagement;
     stats.impressions += analytics.impressions || analytics.reach || 0;
