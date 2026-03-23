@@ -89,7 +89,7 @@ export function parseObsidianNote(markdown: string): ObsidianParseResult {
   } else {
     const h1 = extractFirstH1(rawBody);
     if (h1) {
-      title = h1;
+      title = stripWikiLinks(h1);
     }
   }
 
