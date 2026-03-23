@@ -82,6 +82,52 @@ export default function ContactPage() {
     'idle' | 'success' | 'error'
   >('idle');
 
+  const [demoData, setDemoData] = useState({
+    name: '',
+    company: '',
+    email: '',
+    time: '',
+  });
+  const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
+  const [demoStatus, setDemoStatus] = useState<'idle' | 'success' | 'error'>(
+    'idle'
+  );
+
+  const handleDemoChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setDemoData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleDemoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsDemoSubmitting(true);
+    setDemoStatus('idle');
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: demoData.name,
+          email: demoData.email,
+          subject: 'demo',
+          message: `Demo request from ${demoData.company || 'N/A'}. Preferred time: ${demoData.time || 'Any'}.`,
+        }),
+      });
+      if (!res.ok) {
+        setDemoStatus('error');
+        return;
+      }
+      setDemoStatus('success');
+      setDemoData({ name: '', company: '', email: '', time: '' });
+      setTimeout(() => setDemoStatus('idle'), 5000);
+    } catch {
+      setDemoStatus('error');
+    } finally {
+      setIsDemoSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -366,6 +412,144 @@ export default function ContactPage() {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Demo Booking Section */}
+      <section className="px-6 pb-20">
+        <div className="container mx-auto">
+          <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-2xl p-8 max-w-3xl mx-auto">
+            <h2 className="text-3xl font-bold text-white mb-2 heading-serif">
+              See Synthex in{' '}
+              <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
+                Action
+              </span>
+            </h2>
+            <p className="text-gray-400 mb-6">
+              Book a free 15-minute demo and see how Synthex handles your social
+              media.
+            </p>
+
+            <form onSubmit={handleDemoSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label
+                    htmlFor="demo-name"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
+                    Your Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="demo-name"
+                    name="name"
+                    required
+                    value={demoData.name}
+                    onChange={handleDemoChange}
+                    placeholder="Your name"
+                    className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="demo-company"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
+                    Company
+                  </label>
+                  <input
+                    type="text"
+                    id="demo-company"
+                    name="company"
+                    value={demoData.company}
+                    onChange={handleDemoChange}
+                    placeholder="Company"
+                    className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="demo-email"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
+                  Work Email *
+                </label>
+                <input
+                  type="email"
+                  id="demo-email"
+                  name="email"
+                  required
+                  value={demoData.email}
+                  onChange={handleDemoChange}
+                  placeholder="Work email"
+                  className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="demo-time"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
+                  Best Time to Meet (AEST)
+                </label>
+                <select
+                  id="demo-time"
+                  name="time"
+                  value={demoData.time}
+                  onChange={handleDemoChange}
+                  className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                >
+                  <option value="">Best time to meet (AEST)</option>
+                  <option value="morning">Morning (9am–12pm)</option>
+                  <option value="afternoon">Afternoon (12pm–5pm)</option>
+                  <option value="evening">Evening (5pm–7pm)</option>
+                </select>
+              </div>
+
+              {demoStatus === 'success' && (
+                <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                  <p className="text-green-400 text-sm">
+                    Demo request received! We&apos;ll reach out within 2 hours
+                    to confirm your time.
+                  </p>
+                </div>
+              )}
+
+              {demoStatus === 'error' && (
+                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                  <p className="text-red-400 text-sm">
+                    Something went wrong. Please try again or email us directly.
+                  </p>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={isDemoSubmitting}
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white py-3 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDemoSubmitting ? (
+                  <>
+                    <Clock className="mr-2 w-5 h-5 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 w-5 h-5" />
+                    Request a Demo
+                  </>
+                )}
+              </Button>
+
+              <p className="text-xs text-gray-500">
+                We&apos;ll reach out within 2 hours to confirm your demo time.
+              </p>
+            </form>
           </div>
         </div>
       </section>
