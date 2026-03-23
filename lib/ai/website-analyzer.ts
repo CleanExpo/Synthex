@@ -111,10 +111,13 @@ async function scrapeWithFirecrawl(url: string): Promise<ScrapeResult | null> {
     const { default: FirecrawlApp } = await import('@mendable/firecrawl-js');
     const firecrawl = new FirecrawlApp({ apiKey });
 
+    // TODO(type-safety): @mendable/firecrawl-js v4 ScrapeParams type is stricter than
+    // runtime accepts — 'formats' key requires as-any until the package exports the
+    // correct ScrapeParams type. Remove once upstream types are fixed.
     // Firecrawl v4 returns a Document directly (throws on failure)
     const doc = await firecrawl.scrape(url, {
       formats: ['markdown'],
-    } as any);
+    } as Parameters<typeof firecrawl.scrape>[1]);
 
     if (!doc || !doc.markdown) {
       logger.warn('Firecrawl scrape returned empty document', { url });
