@@ -171,7 +171,7 @@ export function BrandIdentityCard({
       </div>
 
       {/* Score Row */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <div className="bg-white/[0.03] rounded-lg p-3 text-center">
           <div
             className={cn(
@@ -210,7 +210,7 @@ export function BrandIdentityCard({
         <p className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">
           sameAs Status
         </p>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {sameAsPlatforms.map(platform => (
             <div
               key={platform.key}

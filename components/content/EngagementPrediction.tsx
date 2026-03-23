@@ -58,7 +58,7 @@ export function EngagementPrediction({
             Predicting engagement...
           </span>
         </div>
-        <div className="mt-3 grid grid-cols-5 gap-3">
+        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
@@ -117,7 +117,7 @@ export function EngagementPrediction({
       </div>
 
       {/* Metrics grid */}
-      <div className="grid grid-cols-5 gap-3 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-4">
         {metrics.map(metric => (
           <div
             key={metric.label}

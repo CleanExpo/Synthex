@@ -182,7 +182,7 @@ export function BrandCalendarView({ brandId }: BrandCalendarViewProps) {
       {calendar && !loading && (
         <div className="space-y-4">
           {/* Summary Chips */}
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
               { label: 'Total Events', value: calendar.summary.totalEvents },
               { label: 'High Priority', value: calendar.summary.highPriority },
