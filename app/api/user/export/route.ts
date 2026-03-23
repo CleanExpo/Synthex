@@ -25,6 +25,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import prisma from '@/lib/prisma';
 import { authStrict } from '@/lib/rate-limit';
+import { logAuditEvent } from '@/lib/audit/audit-logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -111,6 +112,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
+
+    // Audit: record that a data export was requested (GDPR Art. 20 compliance trail)
+    await logAuditEvent({
+      event: 'account.data_exported',
+      userId,
+      metadata: { format: 'json' },
+      ipAddress: request.headers.get('x-forwarded-for') ?? undefined,
+      userAgent: request.headers.get('user-agent') ?? undefined,
+    });
 
     // 2. Fetch all user data in parallel
     const [user, campaigns, platformConnections] = await Promise.all([

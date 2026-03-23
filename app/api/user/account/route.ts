@@ -17,6 +17,7 @@ import { supabase } from '@/lib/supabase-client';
 import { createServerClient } from '@/lib/supabase-server';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { logAuditEvent } from '@/lib/audit/audit-logger';
 
 // Validation schema for account deletion
 const deleteAccountSchema = z.object({
@@ -110,6 +111,15 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Audit: record that deletion was requested before any data is removed
+    await logAuditEvent({
+      event: 'account.deletion_requested',
+      userId: user.id,
+      metadata: { provider: user.app_metadata?.provider ?? 'unknown' },
+      ipAddress: request.headers.get('x-forwarded-for') ?? undefined,
+      userAgent: request.headers.get('user-agent') ?? undefined,
+    });
 
     // Delete all user data — collect errors before touching the auth record.
     // GDPR Art. 17: auth deletion must not proceed if any DB deletion fails,
