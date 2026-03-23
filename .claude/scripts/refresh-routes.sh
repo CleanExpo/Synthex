@@ -35,9 +35,12 @@ while IFS= read -r route_file; do
   url_path=$(echo "$route_file" | sed 's|^app||; s|/route\.ts$||')
   [ -z "$url_path" ] && url_path="/"
 
-  # Extract HTTP methods exported from this file
-  methods=$(grep -oP '^export async function \K(GET|POST|PUT|PATCH|DELETE)' \
-    "$route_file" 2>/dev/null | sort -u | paste -sd, || true)
+  # Extract HTTP methods exported from this file (handles both async function and const patterns)
+  methods=$(
+    { grep -oP '^export async function \K(GET|POST|PUT|PATCH|DELETE)' "$route_file" 2>/dev/null || true; \
+      grep -oP '^export const \K(GET|POST|PUT|PATCH|DELETE)' "$route_file" 2>/dev/null || true; } \
+    | sort -u | paste -sd, || true
+  )
   [ -z "$methods" ] && continue
 
   # Determine auth level (admin > cron > user > public)
@@ -46,7 +49,7 @@ while IFS= read -r route_file; do
     auth="admin"
   elif grep -qE "CRON_SECRET" "$route_file" 2>/dev/null; then
     auth="cron"
-  elif grep -qE "getUserIdFromRequestOrCookies|getUserIdFromCookies|requireAuth|APISecurityChecker" \
+  elif grep -qE "getUserIdFromRequestOrCookies|getUserIdFromCookies|requireAuth|APISecurityChecker|withAuth" \
       "$route_file" 2>/dev/null; then
     auth="user"
   fi
@@ -72,6 +75,10 @@ public_count=$(awk -F'|' '$4=="public"' "$TMPWORK/routes.tsv" | wc -l | tr -d ' 
 model_count=$(awk -F'|' 'NF>=5 && $5!=""  {print $5}' "$TMPWORK/routes.tsv" \
   | tr ',' '\n' | grep -v '^$' | sort -u | wc -l | tr -d ' ')
 
+# Extract existing dashboard page count from Zone 2 (hand-maintained, cannot be recomputed)
+page_count=$(grep -oP '\*\*\K\d+(?= dashboard pages)' "$FILE" | head -1 || echo "0")
+[ "$page_count" = "0" ] && page_count="100"
+
 # 7. Build Zone 1 into a temp file (header + API routes only)
 {
   cat <<HEADER
@@ -79,7 +86,7 @@ model_count=$(awk -F'|' 'NF>=5 && $5!=""  {print $5}' "$TMPWORK/routes.tsv" \
 
 > Auto-generated $TODAY. Read before implementing. Update the "Known issues" and "Last audited" fields after each task.
 >
-> **$total API routes · 104 dashboard pages · $model_count Prisma models in use**
+> **$total API routes · $page_count dashboard pages · $model_count Prisma models in use**
 > Auth: $user_count user-authed · $admin_count admin-only · $cron_count cron · $public_count public
 
 ---
