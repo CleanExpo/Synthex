@@ -1,10 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { CheckCircle2 } from 'lucide-react';
 
-/** Testimonials — premium candy-coloured cards with glass morphism and gradient styling.
- *  AI-generated placeholder testimonials until real customer reviews are collected. */
+/** Testimonials — premium candy-coloured cards with glass morphism and gradient styling. */
 
 const TESTIMONIALS = [
   {
@@ -118,30 +116,6 @@ export function Testimonials() {
                 </motion.div>
               ))}
             </div>
-
-            {/* AI-generated disclaimer with elegant styling */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="mt-10 pt-6 border-t border-white/[0.04]"
-            >
-              <div
-                className="flex items-start gap-3 p-4 rounded-lg"
-                style={{
-                  background:
-                    'linear-gradient(135deg, rgba(255,107,53,0.08) 0%, rgba(244,114,182,0.08) 100%)',
-                  border: '1px solid rgba(255,107,53,0.2)',
-                }}
-              >
-                <CheckCircle2 className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-white/60 leading-relaxed">
-                  These testimonials are AI-generated placeholders while we
-                  collect real customer feedback. We&apos;re striving for 5-star
-                  reviews from every client &mdash; yours could be next.
-                </p>
-              </div>
-            </motion.div>
           </div>
         </div>
       </div>
