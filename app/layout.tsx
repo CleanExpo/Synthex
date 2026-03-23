@@ -3,6 +3,8 @@ import { Providers } from './providers';
 import { Toaster } from '@/components/ui/toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LazyClientComponents } from './LazyClientComponents';
+import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
+import { InstallPrompt } from '@/components/pwa/InstallPrompt';
 import './globals.css';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
@@ -342,9 +344,11 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
+        <ServiceWorkerRegistration />
         <ErrorBoundary>
           <Providers>
             <LazyClientComponents />
+            <InstallPrompt />
             <main id="main-content" role="main">
               {children}
             </main>
