@@ -506,11 +506,11 @@ Plans:
 **Goal**: Responsive design audit and accessibility (WCAG 2.1 AA) compliance
 **Depends on**: Phase 55
 **Research**: Unlikely (established guidelines)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
 
-- [ ] 56-01: TBD
+- [ ] 56-01: Responsive grids + aria-current nav + MobileMenu update (UNI-1635)
 
 #### Phase 57: Performance - Bundle
 
