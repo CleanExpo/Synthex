@@ -586,7 +586,7 @@ export default function BioPageEditor({ params }: PageProps) {
         </div>
 
         {/* Preview Panel */}
-        <div className="w-[400px] border-l border-white/10 bg-gray-900/30 p-6 flex items-start justify-center overflow-y-auto">
+        <div className="w-full md:w-[400px] border-l border-white/10 bg-gray-900/30 p-6 flex items-start justify-center overflow-y-auto">
           <BioPagePreview
             page={{
               title: localPage?.title || '',

@@ -6,7 +6,7 @@ export default function ContentLibraryLoading() {
         <div className="h-8 w-48 bg-white/[0.05] rounded-sm" />
       </div>
 
-      <div className="mt-8 grid grid-cols-4 gap-6">
+      <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-6">
         {[...Array(12)].map((_, i) => (
           <div
             key={i}

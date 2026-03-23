@@ -6,7 +6,7 @@ export default function AutonomousLoading() {
         <div className="h-8 w-48 bg-white/[0.05] rounded-sm" />
       </div>
 
-      <div className="mt-8 grid grid-cols-3 gap-6">
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
         {[...Array(3)].map((_, i) => (
           <div
             key={i}

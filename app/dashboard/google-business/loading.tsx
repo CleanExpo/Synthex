@@ -6,7 +6,7 @@ export default function GoogleBusinessLoading() {
         <div className="h-8 w-48 bg-white/[0.05] rounded-sm" />
       </div>
 
-      <div className="mt-8 grid grid-cols-4 gap-4">
+      <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
           <div
             key={i}
