@@ -235,7 +235,15 @@ grep -n "console\.\(log\|error\|warn\)" <file>
 
 ## Instructions
 
-1. **Identify target** — Accept file path or directory from user input
+0. **Look up in ROUTE_REFERENCE.md first** — Before reading any file, search `.planning/ROUTE_REFERENCE.md` for the target route:
+
+   ```bash
+   grep "<route-path-or-prefix>" .planning/ROUTE_REFERENCE.md
+   ```
+
+   Confirm: exact file path, HTTP methods, auth level, Prisma models used. If the route is not found, grep the filesystem (`find app/api -name "route.ts" | xargs grep -l "<path-segment>"`) and note that the reference may be stale — suggest running `npm run routes:refresh`.
+
+1. **Read only the confirmed file path** — Use the path derived from the reference (or filesystem grep result). Do not guess paths.
 2. **For each route file**, run all checks in order (Critical first)
 3. **Report findings** grouped by severity with line numbers
 4. **Suggest fixes** with code snippets referencing existing utilities
