@@ -9,8 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 127 (contact-form) — ALL PLANS COMPLETE ✅
-Last activity: 2026-03-23 — Contact form at /contact wired to Resend SDK. New public POST /api/contact: Zod validation, writeDefault rate limit (30 req/min), sends to phil@carsi.com.au with replyTo set to sender. Fake setTimeout removed from page. type-check 0, lint 0.
+Phase: 56 (ui-responsive) — ALL PLANS COMPLETE ✅
+Last activity: 2026-03-24 — WCAG aria-current nav + MobileMenu 12-item top-level groups + responsive grid breakpoints on 6 files (UNI-1635)
+
+Previous: Phase 127 (contact-form) — 2026-03-23 — Contact form at /contact wired to Resend SDK.
 Linear: —
 
 Previous: Phase 126 (marketing-redesign) — 2026-03-20 — UNI-1604 DONE.
