@@ -24,7 +24,10 @@ const mockJwtUtils = {
   getUserIdFromRequestOrCookies: jest.fn<() => Promise<string | null>, []>(),
   unauthorizedResponse: jest.fn(),
   forbiddenResponse: jest.fn(),
-  isOwnerEmail: jest.fn<(email: string | null | undefined) => boolean, [string | null | undefined]>(),
+  isOwnerEmail: jest.fn<
+    (email: string | null | undefined) => boolean,
+    [string | null | undefined]
+  >(),
 };
 
 const mockPrismaUser = {
@@ -51,7 +54,7 @@ jest.mock('next/server', () => {
   class NextResponse extends Response {
     static json(body: unknown, init?: ResponseInit): NextResponse {
       const serialised = JSON.stringify(body);
-      const status = (init && init.status) ? init.status : 200;
+      const status = init && init.status ? init.status : 200;
       const headers = new Headers({ 'content-type': 'application/json' });
       if (init && init.headers) {
         const extra = init.headers as Record<string, string>;
@@ -64,10 +67,16 @@ jest.mock('next/server', () => {
   // Wire up the auth helpers to return NextResponse instances so that the
   // route's `authResult instanceof NextResponse` check works correctly.
   mockJwtUtils.unauthorizedResponse.mockImplementation(() =>
-    NextResponse.json({ error: 'Unauthorized', message: 'Authentication required' }, { status: 401 })
+    NextResponse.json(
+      { error: 'Unauthorized', message: 'Authentication required' },
+      { status: 401 }
+    )
   );
   mockJwtUtils.forbiddenResponse.mockImplementation(() =>
-    NextResponse.json({ error: 'Forbidden', message: 'Access denied' }, { status: 403 })
+    NextResponse.json(
+      { error: 'Forbidden', message: 'Access denied' },
+      { status: 403 }
+    )
   );
 
   return {
@@ -113,7 +122,9 @@ async function parseJson(response: Response): Promise<Record<string, unknown>> {
  * Calls jest.resetModules() so the module-level constants (UNITE_HUB_URL,
  * UNITE_HUB_KEY) inside the route are re-evaluated against the supplied env.
  */
-function loadRoute(env: { UNITE_HUB_API_URL?: string; UNITE_HUB_API_KEY?: string } = {}): {
+function loadRoute(
+  env: { UNITE_HUB_API_URL?: string; UNITE_HUB_API_KEY?: string } = {}
+): {
   GET: (req: Request) => Promise<Response>;
   POST: (req: Request) => Promise<Response>;
 } {
@@ -129,7 +140,6 @@ function loadRoute(env: { UNITE_HUB_API_URL?: string; UNITE_HUB_API_KEY?: string
   }
 
   jest.resetModules();
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   return require('@/app/api/unite-hub/status/route') as {
     GET: (req: Request) => Promise<Response>;
     POST: (req: Request) => Promise<Response>;
@@ -163,7 +173,9 @@ describe('GET /api/unite-hub/status', () => {
 
   describe('when user is authenticated but does not have owner email', () => {
     it('returns 403 Forbidden', async () => {
-      mockJwtUtils.getUserIdFromRequestOrCookies.mockResolvedValue(NON_OWNER_USER_ID);
+      mockJwtUtils.getUserIdFromRequestOrCookies.mockResolvedValue(
+        NON_OWNER_USER_ID
+      );
       mockPrismaUser.findUnique.mockResolvedValue({ email: NON_OWNER_EMAIL });
       mockJwtUtils.isOwnerEmail.mockReturnValue(false);
 
@@ -180,7 +192,9 @@ describe('GET /api/unite-hub/status', () => {
 
   describe('when owner is authenticated but env vars are not set', () => {
     it('returns { configured: false, reachable: false, domain: null }', async () => {
-      mockJwtUtils.getUserIdFromRequestOrCookies.mockResolvedValue(OWNER_USER_ID);
+      mockJwtUtils.getUserIdFromRequestOrCookies.mockResolvedValue(
+        OWNER_USER_ID
+      );
       mockPrismaUser.findUnique.mockResolvedValue({ email: OWNER_EMAIL });
       mockJwtUtils.isOwnerEmail.mockReturnValue(true);
       const fetchSpy = jest.fn();
@@ -202,7 +216,9 @@ describe('GET /api/unite-hub/status', () => {
 
   describe('when owner is authenticated, env vars are set, and HEAD ping succeeds', () => {
     it('returns { configured: true, reachable: true, domain: string }', async () => {
-      mockJwtUtils.getUserIdFromRequestOrCookies.mockResolvedValue(OWNER_USER_ID);
+      mockJwtUtils.getUserIdFromRequestOrCookies.mockResolvedValue(
+        OWNER_USER_ID
+      );
       mockPrismaUser.findUnique.mockResolvedValue({ email: OWNER_EMAIL });
       mockJwtUtils.isOwnerEmail.mockReturnValue(true);
 
@@ -226,7 +242,9 @@ describe('GET /api/unite-hub/status', () => {
         'https://nexus.unite.group/api/events',
         expect.objectContaining({
           method: 'HEAD',
-          headers: expect.objectContaining({ 'x-api-key': 'test-api-key-abc123' }),
+          headers: expect.objectContaining({
+            'x-api-key': 'test-api-key-abc123',
+          }),
         })
       );
     });
@@ -236,11 +254,16 @@ describe('GET /api/unite-hub/status', () => {
 
   describe('when owner is authenticated, env vars are set, but HEAD ping times out', () => {
     it('returns { configured: true, reachable: false }', async () => {
-      mockJwtUtils.getUserIdFromRequestOrCookies.mockResolvedValue(OWNER_USER_ID);
+      mockJwtUtils.getUserIdFromRequestOrCookies.mockResolvedValue(
+        OWNER_USER_ID
+      );
       mockPrismaUser.findUnique.mockResolvedValue({ email: OWNER_EMAIL });
       mockJwtUtils.isOwnerEmail.mockReturnValue(true);
 
-      const abortError = Object.assign(new Error('The operation was aborted.'), { name: 'AbortError' });
+      const abortError = Object.assign(
+        new Error('The operation was aborted.'),
+        { name: 'AbortError' }
+      );
       global.fetch = jest.fn().mockRejectedValue(abortError);
 
       const { GET } = loadRoute({
@@ -268,7 +291,9 @@ describe('POST /api/unite-hub/status', () => {
 
   describe('when owner is authenticated but Unite-Hub is not configured', () => {
     it('returns { success: false } with status 400', async () => {
-      mockJwtUtils.getUserIdFromRequestOrCookies.mockResolvedValue(OWNER_USER_ID);
+      mockJwtUtils.getUserIdFromRequestOrCookies.mockResolvedValue(
+        OWNER_USER_ID
+      );
       mockPrismaUser.findUnique.mockResolvedValue({ email: OWNER_EMAIL });
       mockJwtUtils.isOwnerEmail.mockReturnValue(true);
 
@@ -286,7 +311,9 @@ describe('POST /api/unite-hub/status', () => {
 
   describe('when owner is authenticated, configured, and event POST succeeds', () => {
     it('returns { success: true, latencyMs: number, statusCode: number }', async () => {
-      mockJwtUtils.getUserIdFromRequestOrCookies.mockResolvedValue(OWNER_USER_ID);
+      mockJwtUtils.getUserIdFromRequestOrCookies.mockResolvedValue(
+        OWNER_USER_ID
+      );
       mockPrismaUser.findUnique.mockResolvedValue({ email: OWNER_EMAIL });
       mockJwtUtils.isOwnerEmail.mockReturnValue(true);
 
@@ -325,12 +352,17 @@ describe('POST /api/unite-hub/status', () => {
 
   describe('when owner is authenticated, configured, but event POST times out', () => {
     it('returns { success: false, error: string }', async () => {
-      mockJwtUtils.getUserIdFromRequestOrCookies.mockResolvedValue(OWNER_USER_ID);
+      mockJwtUtils.getUserIdFromRequestOrCookies.mockResolvedValue(
+        OWNER_USER_ID
+      );
       mockPrismaUser.findUnique.mockResolvedValue({ email: OWNER_EMAIL });
       mockJwtUtils.isOwnerEmail.mockReturnValue(true);
 
       // Simulate AbortError from the 5-second timeout controller
-      const abortError = Object.assign(new Error('The operation was aborted.'), { name: 'AbortError' });
+      const abortError = Object.assign(
+        new Error('The operation was aborted.'),
+        { name: 'AbortError' }
+      );
       global.fetch = jest.fn().mockRejectedValue(abortError);
 
       const { POST } = loadRoute({

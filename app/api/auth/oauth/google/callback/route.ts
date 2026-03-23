@@ -23,7 +23,6 @@ import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
 // Supabase createClient generic parameter requires `any` when the database schema is not provided at this call site
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseAdmin = ReturnType<typeof createClient<any>>;
 
 // Create Supabase admin client (bypasses RLS, uses REST API instead of connection pooler)
@@ -31,7 +30,9 @@ function getSupabaseAdmin(): SupabaseAdmin {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) {
-    throw new Error('NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured');
+    throw new Error(
+      'NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured'
+    );
   }
   return createClient(url, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -77,20 +78,30 @@ export async function GET(request: NextRequest) {
 
     // Handle OAuth errors from Google
     if (error) {
-      logger.error('[Google OAuth] Error from Google:', error, errorDescription ? { description: errorDescription } : undefined);
+      logger.error(
+        '[Google OAuth] Error from Google:',
+        error,
+        errorDescription ? { description: errorDescription } : undefined
+      );
       return redirectWithError(effectiveBaseUrl, errorDescription || error);
     }
 
     // Validate required parameters
     if (!code || !state) {
-      return redirectWithError(effectiveBaseUrl, 'Missing authorization code or state');
+      return redirectWithError(
+        effectiveBaseUrl,
+        'Missing authorization code or state'
+      );
     }
 
     // Retrieve and verify PKCE state
     const pkceState = await retrievePKCEState(state.split('|')[0]); // Handle state|returnTo format
 
     if (!pkceState) {
-      return redirectWithError(effectiveBaseUrl, 'Invalid or expired state. Please try again.');
+      return redirectWithError(
+        effectiveBaseUrl,
+        'Invalid or expired state. Please try again.'
+      );
     }
 
     // Validate Google OAuth is configured
@@ -106,14 +117,20 @@ export async function GET(request: NextRequest) {
     );
 
     if (!tokens) {
-      return redirectWithError(effectiveBaseUrl, 'Failed to exchange authorization code');
+      return redirectWithError(
+        effectiveBaseUrl,
+        'Failed to exchange authorization code'
+      );
     }
 
     // Get user info from Google
     const googleUser = await getGoogleUserInfo(tokens.accessToken);
 
     if (!googleUser) {
-      return redirectWithError(effectiveBaseUrl, 'Failed to get user information from Google');
+      return redirectWithError(
+        effectiveBaseUrl,
+        'Failed to get user information from Google'
+      );
     }
 
     // Create Supabase admin client for database operations (uses REST API, not connection pooler)
@@ -136,7 +153,10 @@ export async function GET(request: NextRequest) {
         if (linkError) throw linkError;
       } catch (error) {
         logger.error('[Google OAuth] Link error:', error);
-        return redirectWithError(effectiveBaseUrl, 'Failed to link Google account');
+        return redirectWithError(
+          effectiveBaseUrl,
+          'Failed to link Google account'
+        );
       }
 
       // Redirect to account settings with success
@@ -156,8 +176,19 @@ export async function GET(request: NextRequest) {
     if (existingByGoogleId) {
       // Existing Google user - login
       // Ensure profiles row exists (may be missing for users created before onboarding migration)
-      await ensureProfileExists(supabaseAdmin, existingByGoogleId.id, existingByGoogleId.email, googleUser.name, googleUser.picture);
-      const session = await createSessionForUser(supabaseAdmin, existingByGoogleId.id, googleUser, tokens);
+      await ensureProfileExists(
+        supabaseAdmin,
+        existingByGoogleId.id,
+        existingByGoogleId.email,
+        googleUser.name,
+        googleUser.picture
+      );
+      const session = await createSessionForUser(
+        supabaseAdmin,
+        existingByGoogleId.id,
+        googleUser,
+        tokens
+      );
       return redirectWithSession(effectiveBaseUrl, session);
     }
 
@@ -178,7 +209,9 @@ export async function GET(request: NextRequest) {
           existingProvider: 'email',
           newProvider: 'google',
         });
-        return NextResponse.redirect(`${effectiveBaseUrl}/login?${params.toString()}`);
+        return NextResponse.redirect(
+          `${effectiveBaseUrl}/login?${params.toString()}`
+        );
       }
 
       // No password or already has Google - auto-link Google and login
@@ -193,24 +226,43 @@ export async function GET(request: NextRequest) {
         .eq('id', existingByEmail.id);
 
       // Login the existing user — ensure profile exists
-      await ensureProfileExists(supabaseAdmin, existingByEmail.id, existingByEmail.email, googleUser.name, googleUser.picture);
-      const session = await createSessionForUser(supabaseAdmin, existingByEmail.id, googleUser, tokens);
+      await ensureProfileExists(
+        supabaseAdmin,
+        existingByEmail.id,
+        existingByEmail.email,
+        googleUser.name,
+        googleUser.picture
+      );
+      const session = await createSessionForUser(
+        supabaseAdmin,
+        existingByEmail.id,
+        googleUser,
+        tokens
+      );
       return redirectWithSession(effectiveBaseUrl, session);
     }
 
     // New user - create account
     const newUser = await createNewGoogleUser(supabaseAdmin, googleUser);
     // Create profiles row with onboarding_completed = false (triggers onboarding flow)
-    await ensureProfileExists(supabaseAdmin, newUser.id, googleUser.email, googleUser.name, googleUser.picture);
-    const session = await createSessionForUser(supabaseAdmin, newUser.id, googleUser, tokens);
+    await ensureProfileExists(
+      supabaseAdmin,
+      newUser.id,
+      googleUser.email,
+      googleUser.name,
+      googleUser.picture
+    );
+    const session = await createSessionForUser(
+      supabaseAdmin,
+      newUser.id,
+      googleUser,
+      tokens
+    );
 
     return redirectWithSession(effectiveBaseUrl, session);
   } catch (error) {
     logger.error('[Google OAuth] Callback error:', error);
-    return redirectWithError(
-      effectiveBaseUrl,
-      'authentication_failed'
-    );
+    return redirectWithError(effectiveBaseUrl, 'authentication_failed');
   }
 }
 
@@ -230,25 +282,25 @@ async function ensureProfileExists(
   avatar?: string
 ): Promise<void> {
   try {
-    const { error } = await supabaseAdmin
-      .from('profiles')
-      .upsert(
-        {
-          id: userId,
-          email,
-          name: name || null,
-          avatar_url: avatar || null,
-          // Only set onboarding_completed = false for NEW rows (ON CONFLICT DO NOTHING for this field)
-          onboarding_completed: false,
-        },
-        {
-          onConflict: 'id',
-          ignoreDuplicates: true, // Don't overwrite existing profiles (preserves onboarding_completed)
-        }
-      );
+    const { error } = await supabaseAdmin.from('profiles').upsert(
+      {
+        id: userId,
+        email,
+        name: name || null,
+        avatar_url: avatar || null,
+        // Only set onboarding_completed = false for NEW rows (ON CONFLICT DO NOTHING for this field)
+        onboarding_completed: false,
+      },
+      {
+        onConflict: 'id',
+        ignoreDuplicates: true, // Don't overwrite existing profiles (preserves onboarding_completed)
+      }
+    );
 
     if (error) {
-      logger.warn('[Google OAuth] Failed to ensure profile exists:', { message: error.message });
+      logger.warn('[Google OAuth] Failed to ensure profile exists:', {
+        message: error.message,
+      });
       // Non-fatal — user can still log in, onboarding check will be skipped
     }
   } catch (err) {
@@ -310,7 +362,9 @@ async function exchangeCodeForTokens(
   }
 }
 
-async function getGoogleUserInfo(accessToken: string): Promise<GoogleUserInfo | null> {
+async function getGoogleUserInfo(
+  accessToken: string
+): Promise<GoogleUserInfo | null> {
   try {
     const response = await fetch(GOOGLE_CONFIG.userInfoUrl, {
       headers: {
@@ -332,7 +386,7 @@ async function getGoogleUserInfo(accessToken: string): Promise<GoogleUserInfo | 
 
 async function createNewGoogleUser(
   supabaseAdmin: SupabaseAdmin,
-  googleUser: GoogleUserInfo,
+  googleUser: GoogleUserInfo
 ): Promise<{ id: string }> {
   // Create user (password is null for OAuth-only users)
   const userId = randomUUID();
@@ -386,17 +440,21 @@ async function createSessionForUser(
     .from('users')
     .update({
       last_login: new Date().toISOString(),
-      ...(ownerBypass ? { onboarding_complete: true, api_key_configured: true } : {}),
+      ...(ownerBypass
+        ? { onboarding_complete: true, api_key_configured: true }
+        : {}),
     })
     .eq('id', userId);
 
   // Generate JWT token directly (bypass signInFlow to avoid Account table)
-  const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 days
+  const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
   const accessToken = generateToken({
     userId,
     email: googleUser.email,
     // Owner bypass: force full-access flags in JWT
-    ...(ownerBypass ? { onboardingComplete: true, apiKeyConfigured: true } : {}),
+    ...(ownerBypass
+      ? { onboardingComplete: true, apiKeyConfigured: true }
+      : {}),
   });
 
   return {
@@ -457,7 +515,10 @@ function redirectWithSession(
   return response;
 }
 
-function redirectWithError(effectiveBaseUrl: string, error: string): NextResponse {
+function redirectWithError(
+  effectiveBaseUrl: string,
+  error: string
+): NextResponse {
   // Use /login — the active login page with our custom PKCE Google flow
   // lives at app/(auth)/login/page.tsx which resolves to /login
   const redirectUrl = new URL('/login', effectiveBaseUrl);

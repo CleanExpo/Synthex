@@ -16,7 +16,10 @@ import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 
 interface PostAnalytics {
   reach?: number;
@@ -124,7 +127,6 @@ export async function GET(request: NextRequest) {
     });
 
     // teamInvitation is a Prisma model not yet in the generated client type — runtime access via dynamic client
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pendingInvitations = await (prisma as any).teamInvitation.count({
       where: {
         organizationId,
@@ -138,7 +140,7 @@ export async function GET(request: NextRequest) {
         where: { organizationId },
         select: { id: true },
       })
-      .then((users) => users.map((u) => u.id));
+      .then(users => users.map(u => u.id));
 
     const totalCampaigns = await prisma.campaign.count({
       where: { userId: { in: memberIds } },
@@ -164,7 +166,7 @@ export async function GET(request: NextRequest) {
         where: { userId: { in: memberIds } },
         select: { id: true },
       })
-      .then((campaigns) => campaigns.map((c) => c.id));
+      .then(campaigns => campaigns.map(c => c.id));
 
     const totalContent = await prisma.post.count({
       where: { campaignId: { in: campaignIds } },
@@ -217,7 +219,7 @@ export async function GET(request: NextRequest) {
       _count: { id: true },
     });
 
-    const platformBreakdown = contentByPlatform.map((p) => ({
+    const platformBreakdown = contentByPlatform.map(p => ({
       platform: p.platform,
       count: p._count.id,
     }));
@@ -236,7 +238,7 @@ export async function GET(request: NextRequest) {
       memberContributions
         .sort((a, b) => b._count.id - a._count.id)
         .slice(0, 5)
-        .map(async (c) => {
+        .map(async c => {
           const user = await prisma.user.findUnique({
             where: { id: c.userId },
             select: { id: true, name: true, email: true, avatar: true },
@@ -317,7 +319,10 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     logger.error('Failed to fetch team stats', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to fetch team stats', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to fetch team stats',
+      500
+    );
   }
 }
 

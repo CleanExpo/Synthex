@@ -112,7 +112,9 @@ export function useAIChat(): UseAIChatResult {
       setUpgradeRequired(false);
     } catch (err) {
       if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : 'Failed to load conversations');
+        setError(
+          err instanceof Error ? err.message : 'Failed to load conversations'
+        );
       }
     } finally {
       if (mountedRef.current) {
@@ -121,36 +123,41 @@ export function useAIChat(): UseAIChatResult {
     }
   }, []);
 
-  const createConversation = useCallback(async (title?: string): Promise<ChatConversation | null> => {
-    try {
-      setError(null);
+  const createConversation = useCallback(
+    async (title?: string): Promise<ChatConversation | null> => {
+      try {
+        setError(null);
 
-      const response = await fetchWithCSRF('/api/ai/chat/conversations', {
-        method: 'POST',
-        body: JSON.stringify({ title }),
-      });
+        const response = await fetchWithCSRF('/api/ai/chat/conversations', {
+          method: 'POST',
+          body: JSON.stringify({ title }),
+        });
 
-      const data: CreateConversationResponse = await response.json();
+        const data: CreateConversationResponse = await response.json();
 
-      if (data.upgradeRequired) {
-        setUpgradeRequired(true);
-        setError(data.error || 'Professional subscription required');
+        if (data.upgradeRequired) {
+          setUpgradeRequired(true);
+          setError(data.error || 'Professional subscription required');
+          return null;
+        }
+
+        if (!data.success) {
+          setError(data.error || 'Failed to create conversation');
+          return null;
+        }
+
+        // Add to list at the top (newest first)
+        setConversations(prev => [data.conversation, ...prev]);
+        return data.conversation;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : 'Failed to create conversation'
+        );
         return null;
       }
-
-      if (!data.success) {
-        setError(data.error || 'Failed to create conversation');
-        return null;
-      }
-
-      // Add to list at the top (newest first)
-      setConversations(prev => [data.conversation, ...prev]);
-      return data.conversation;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create conversation');
-      return null;
-    }
-  }, []);
+    },
+    []
+  );
 
   const deleteConversation = useCallback(async (id: string): Promise<void> => {
     try {
@@ -170,7 +177,9 @@ export function useAIChat(): UseAIChatResult {
       // Remove from list
       setConversations(prev => prev.filter(c => c.id !== id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete conversation');
+      setError(
+        err instanceof Error ? err.message : 'Failed to delete conversation'
+      );
     }
   }, []);
 
@@ -187,7 +196,9 @@ export function useAIChat(): UseAIChatResult {
       // Remove from active list (archived conversations are filtered out)
       setConversations(prev => prev.filter(c => c.id !== id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to archive conversation');
+      setError(
+        err instanceof Error ? err.message : 'Failed to archive conversation'
+      );
     }
   }, []);
 
@@ -231,7 +242,9 @@ export function useAIChatConversation(
   conversationId: string | null,
   options?: { onTitleUpdated?: (title: string) => void }
 ): UseAIChatConversationResult {
-  const [conversation, setConversation] = useState<ChatConversation | null>(null);
+  const [conversation, setConversation] = useState<ChatConversation | null>(
+    null
+  );
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -254,7 +267,9 @@ export function useAIChatConversation(
       setIsLoading(true);
       setError(null);
 
-      const response = await fetchWithCSRF(`/api/ai/chat/conversations/${conversationId}`);
+      const response = await fetchWithCSRF(
+        `/api/ai/chat/conversations/${conversationId}`
+      );
 
       const data: ConversationResponse = await response.json();
 
@@ -269,7 +284,9 @@ export function useAIChatConversation(
       setMessages(data.messages);
     } catch (err) {
       if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : 'Failed to load conversation');
+        setError(
+          err instanceof Error ? err.message : 'Failed to load conversation'
+        );
       }
     } finally {
       if (mountedRef.current) {
@@ -279,162 +296,184 @@ export function useAIChatConversation(
   }, [conversationId]);
 
   // Send message with SSE streaming
-  const sendMessage = useCallback(async (content: string): Promise<void> => {
-    if (!conversationId || !content.trim() || isStreaming) return;
+  const sendMessage = useCallback(
+    async (content: string): Promise<void> => {
+      if (!conversationId || !content.trim() || isStreaming) return;
 
-    // Abort any existing stream
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
-
-    try {
-      setError(null);
-      setIsStreaming(true);
-      setStreamingContent('');
-
-      // Optimistically add user message
-      const userMessage: ChatMessage = {
-        id: `temp-${Date.now()}`,
-        role: 'user',
-        content: content.trim(),
-        createdAt: new Date().toISOString(),
-      };
-      setMessages(prev => [...prev, userMessage]);
-
-      // Send request for SSE stream
-      const response = await fetchWithCSRF(`/api/ai/chat/conversations/${conversationId}/messages`, {
-        method: 'POST',
-        body: JSON.stringify({ message: content.trim() }),
-        signal: abortControllerRef.current.signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
+      // Abort any existing stream
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
+      abortControllerRef.current = new AbortController();
 
-      // Process SSE stream
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('Stream not available');
-      }
+      try {
+        setError(null);
+        setIsStreaming(true);
+        setStreamingContent('');
 
-      const decoder = new TextDecoder();
-      let fullContent = '';
-      let userMessageId: string | undefined;
-      let assistantMessageId: string | undefined;
+        // Optimistically add user message
+        const userMessage: ChatMessage = {
+          id: `temp-${Date.now()}`,
+          role: 'user',
+          content: content.trim(),
+          createdAt: new Date().toISOString(),
+        };
+        setMessages(prev => [...prev, userMessage]);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        // Send request for SSE stream
+        const response = await fetchWithCSRF(
+          `/api/ai/chat/conversations/${conversationId}/messages`,
+          {
+            method: 'POST',
+            body: JSON.stringify({ message: content.trim() }),
+            signal: abortControllerRef.current.signal,
+          }
+        );
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
 
-        for (const line of lines) {
-          if (!line.trim()) continue;
+        // Process SSE stream
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Stream not available');
+        }
 
-          // Parse SSE events
-          if (line.startsWith('event:')) {
-            const eventType = line.slice(6).trim();
+        const decoder = new TextDecoder();
+        let fullContent = '';
+        let userMessageId: string | undefined;
+        let assistantMessageId: string | undefined;
 
-            // Read the next data line
-            const dataLineIndex = lines.indexOf(line) + 1;
-            if (dataLineIndex < lines.length && lines[dataLineIndex].startsWith('data:')) {
-              const dataStr = lines[dataLineIndex].slice(5).trim();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+
+            // Parse SSE events
+            if (line.startsWith('event:')) {
+              const eventType = line.slice(6).trim();
+
+              // Read the next data line
+              const dataLineIndex = lines.indexOf(line) + 1;
+              if (
+                dataLineIndex < lines.length &&
+                lines[dataLineIndex].startsWith('data:')
+              ) {
+                const dataStr = lines[dataLineIndex].slice(5).trim();
+                try {
+                  const data = JSON.parse(dataStr);
+
+                  if (eventType === 'message_start') {
+                    userMessageId = data.userMessageId;
+                    // Update temp user message with real ID
+                    setMessages(prev =>
+                      prev.map(m =>
+                        m.id === userMessage.id
+                          ? { ...m, id: userMessageId! }
+                          : m
+                      )
+                    );
+                  } else if (eventType === 'message_complete') {
+                    assistantMessageId = data.assistantMessageId;
+                  } else if (eventType === 'error') {
+                    throw new Error(data.error || 'Stream error');
+                  }
+                } catch {
+                  // Not JSON, skip
+                }
+              }
+            } else if (line.startsWith('data:')) {
+              const dataStr = line.slice(5).trim();
               try {
                 const data = JSON.parse(dataStr);
-
-                if (eventType === 'message_start') {
-                  userMessageId = data.userMessageId;
-                  // Update temp user message with real ID
-                  setMessages(prev =>
-                    prev.map(m =>
-                      m.id === userMessage.id ? { ...m, id: userMessageId! } : m
-                    )
-                  );
-                } else if (eventType === 'message_complete') {
-                  assistantMessageId = data.assistantMessageId;
-                } else if (eventType === 'error') {
-                  throw new Error(data.error || 'Stream error');
+                if (data.token) {
+                  fullContent += data.token;
+                  if (mountedRef.current) {
+                    setStreamingContent(fullContent);
+                  }
                 }
               } catch {
                 // Not JSON, skip
               }
             }
-          } else if (line.startsWith('data:')) {
-            const dataStr = line.slice(5).trim();
-            try {
-              const data = JSON.parse(dataStr);
-              if (data.token) {
-                fullContent += data.token;
-                if (mountedRef.current) {
-                  setStreamingContent(fullContent);
-                }
-              }
-            } catch {
-              // Not JSON, skip
-            }
           }
         }
-      }
 
-      // Add assistant message to state
-      if (mountedRef.current && fullContent) {
-        const assistantMessage: ChatMessage = {
-          id: assistantMessageId || `assistant-${Date.now()}`,
-          role: 'assistant',
-          content: fullContent,
-          createdAt: new Date().toISOString(),
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-        setStreamingContent('');
+        // Add assistant message to state
+        if (mountedRef.current && fullContent) {
+          const assistantMessage: ChatMessage = {
+            id: assistantMessageId || `assistant-${Date.now()}`,
+            role: 'assistant',
+            content: fullContent,
+            createdAt: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, assistantMessage]);
+          setStreamingContent('');
 
-        // Auto-title: fire after first response completes (fire-and-forget)
-        if (isFirstMessageRef.current && conversationId) {
-          isFirstMessageRef.current = false;
-          fetchWithCSRF(`/api/ai/chat/conversations/${conversationId}/auto-title`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({}),
-          })
-            .then((res) => res.json())
-            .then((data) => {
-              if (!mountedRef.current) return;
-              if (data.success && !data.skipped && data.title) {
-                // Title was freshly updated — sync it locally
-                setConversation(prev => prev ? { ...prev, title: data.title } : null);
+          // Auto-title: fire after first response completes (fire-and-forget)
+          if (isFirstMessageRef.current && conversationId) {
+            isFirstMessageRef.current = false;
+            fetchWithCSRF(
+              `/api/ai/chat/conversations/${conversationId}/auto-title`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
               }
-              // Always refresh sidebar after first message — title may have been
-              // updated inline by the messages route even if auto-title was skipped
-              if (data.success) {
-                setTitleUpdated(true);
-                options?.onTitleUpdated?.(data.title ?? '');
-              }
-            })
-            .catch(() => {
-              // Non-blocking — title update failure is not a critical error
-            });
+            )
+              .then(res => res.json())
+              .then(data => {
+                if (!mountedRef.current) return;
+                if (data.success && !data.skipped && data.title) {
+                  // Title was freshly updated — sync it locally
+                  setConversation(prev =>
+                    prev ? { ...prev, title: data.title } : null
+                  );
+                }
+                // Always refresh sidebar after first message — title may have been
+                // updated inline by the messages route even if auto-title was skipped
+                if (data.success) {
+                  setTitleUpdated(true);
+                  options?.onTitleUpdated?.(data.title ?? '');
+                }
+              })
+              .catch(() => {
+                // Non-blocking — title update failure is not a critical error
+              });
+          }
+        }
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          // Stream was aborted, don't show error
+          return;
+        }
+        if (mountedRef.current) {
+          setError(
+            err instanceof Error ? err.message : 'Failed to send message'
+          );
+          // Remove optimistic user message on error
+          setMessages(prev => prev.filter(m => m.id !== `temp-${Date.now()}`));
+        }
+      } finally {
+        if (mountedRef.current) {
+          setIsStreaming(false);
+          setStreamingContent('');
         }
       }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        // Stream was aborted, don't show error
-        return;
-      }
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : 'Failed to send message');
-        // Remove optimistic user message on error
-        setMessages(prev => prev.filter(m => m.id !== `temp-${Date.now()}`));
-      }
-    } finally {
-      if (mountedRef.current) {
-        setIsStreaming(false);
-        setStreamingContent('');
-      }
-    }
-  }, [conversationId, isStreaming, conversation?.title]);
+      // `options` is intentionally excluded from deps — it is a plain object literal created on every
+      // render by the caller, so including it would trigger infinite re-renders. The callback reads
+      // options?.onTitleUpdated at call time via closure, which is safe (invoked asynchronously).
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [conversationId, isStreaming, conversation?.title]
+  );
 
   // Fetch on mount or conversationId change; reset first-message tracker
   useEffect(() => {

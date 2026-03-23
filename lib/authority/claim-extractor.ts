@@ -10,14 +10,20 @@ import type { ExtractedClaim, ClaimType } from './types';
 import type { AuthorityValidationWeights } from '@/lib/bayesian/surfaces/authority-validation';
 
 // Sentence splitter that respects common abbreviations
-function splitIntoSentences(content: string): Array<{ text: string; start: number; end: number }> {
+function splitIntoSentences(
+  content: string
+): Array<{ text: string; start: number; end: number }> {
   const sentences: Array<{ text: string; start: number; end: number }> = [];
 
   // Abbreviations that should NOT end a sentence
-  const abbrevPattern = /\b(?:Mr|Mrs|Ms|Dr|Prof|Sr|Jr|vs|etc|eg|ie|approx|est|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec|AS|NZS|ISO|No|Vol|pp|Fig|Inc|Ltd|Pty|Corp|Co)\./gi;
+  const abbrevPattern =
+    /\b(?:Mr|Mrs|Ms|Dr|Prof|Sr|Jr|vs|etc|eg|ie|approx|est|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec|AS|NZS|ISO|No|Vol|pp|Fig|Inc|Ltd|Pty|Corp|Co)\./gi;
   // Temporarily replace abbreviation periods with a placeholder
   const placeholder = '\x00';
-  const sanitised = content.replace(abbrevPattern, match => match.slice(0, -1) + placeholder);
+  const sanitised = content.replace(
+    abbrevPattern,
+    match => match.slice(0, -1) + placeholder
+  );
 
   // Split on sentence-ending punctuation followed by whitespace + capital letter, or end of string
   const splitRegex = /([.!?])\s+(?=[A-Z"'])/g;
@@ -25,12 +31,15 @@ function splitIntoSentences(content: string): Array<{ text: string; start: numbe
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  // eslint-disable-next-line no-cond-assign
   while ((match = splitRegex.exec(sanitised)) !== null) {
     const end = match.index + match[1].length;
     const rawText = content.slice(lastIndex, end).trim();
     if (rawText.length > 10) {
-      sentences.push({ text: rawText, start: lastIndex, end: lastIndex + rawText.length });
+      sentences.push({
+        text: rawText,
+        start: lastIndex,
+        end: lastIndex + rawText.length,
+      });
     }
     lastIndex = match.index + match[0].length;
   }
@@ -38,7 +47,11 @@ function splitIntoSentences(content: string): Array<{ text: string; start: numbe
   // Remaining content after last split
   const remaining = content.slice(lastIndex).trim();
   if (remaining.length > 10) {
-    sentences.push({ text: remaining, start: lastIndex, end: lastIndex + remaining.length });
+    sentences.push({
+      text: remaining,
+      start: lastIndex,
+      end: lastIndex + remaining.length,
+    });
   }
 
   return sentences;
@@ -118,7 +131,8 @@ const CLAIM_PATTERNS: Record<ClaimType, RegExp[]> = {
 // Entity extraction via capitalisation heuristic
 function extractEntities(text: string): string[] {
   // Match sequences of capitalised words (proper nouns), excluding sentence starts
-  const properNounRegex = /(?<!\. )(?<![A-Z])(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+|[A-Z]{2,}(?:\s+[A-Z]{2,})*)/g;
+  const properNounRegex =
+    /(?<!\. )(?<![A-Z])(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+|[A-Z]{2,}(?:\s+[A-Z]{2,})*)/g;
   const matches = text.match(properNounRegex) || [];
 
   // Deduplicate and filter very short matches
@@ -139,13 +153,23 @@ function assignConfidence(text: string, type: ClaimType): number {
   if (/\b\d+(?:\.\d+)?/.test(text)) score += 0.2;
 
   // Has a source attribution
-  if (/\baccording\s+to\b|\bsource[s:]|\bby\s+[A-Z]|\bcited\s+(?:from|by)/i.test(text)) score += 0.2;
+  if (
+    /\baccording\s+to\b|\bsource[s:]|\bby\s+[A-Z]|\bcited\s+(?:from|by)/i.test(
+      text
+    )
+  )
+    score += 0.2;
 
   // Has specific verbs that indicate verifiable facts
-  if (/\b(?:is|was|are|were|has been|have been|will be)\b/i.test(text)) score += 0.1;
+  if (/\b(?:is|was|are|were|has been|have been|will be)\b/i.test(text))
+    score += 0.1;
 
   // Regulatory / ISO / AS NZS specificity → very credible
-  if (type === 'regulatory' && /AS\/NZS\s+\d+|ISO\s+\d+|[A-Z]{2,4}\s+\d+/i.test(text)) score += 0.2;
+  if (
+    type === 'regulatory' &&
+    /AS\/NZS\s+\d+|ISO\s+\d+|[A-Z]{2,4}\s+\d+/i.test(text)
+  )
+    score += 0.2;
 
   // Specific year or date → higher confidence
   if (/\b(?:19|20)\d{2}\b/.test(text)) score += 0.1;
@@ -161,31 +185,37 @@ function assignConfidence(text: string, type: ClaimType): number {
 
 // Mapping from ClaimType to AuthorityValidationWeights key
 const TYPE_TO_WEIGHT_KEY: Record<string, keyof AuthorityValidationWeights> = {
-  regulatory:  'regulatoryPriority',
+  regulatory: 'regulatoryPriority',
   statistical: 'statisticalPriority',
-  temporal:    'temporalPriority',
-  causal:      'causalPriority',
+  temporal: 'temporalPriority',
+  causal: 'causalPriority',
   comparative: 'comparativePriority',
-  factual:     'factualPriority',
+  factual: 'factualPriority',
 };
 
-function detectClaimType(text: string, priorityWeights?: AuthorityValidationWeights): ClaimType | null {
+function detectClaimType(
+  text: string,
+  priorityWeights?: AuthorityValidationWeights
+): ClaimType | null {
   if (priorityWeights) {
     // Weighted scoring: pick the claim type with the highest matchCount × priorityWeight
     let bestType: ClaimType | null = null;
     let bestScore = 0;
 
-    for (const [type, patterns] of Object.entries(CLAIM_PATTERNS) as [ClaimType, RegExp[]][]) {
+    for (const [type, patterns] of Object.entries(CLAIM_PATTERNS) as [
+      ClaimType,
+      RegExp[],
+    ][]) {
       const matchCount = patterns.filter(p => p.test(text)).length;
       if (matchCount === 0) continue;
 
       const weightKey = TYPE_TO_WEIGHT_KEY[type];
-      const w = weightKey ? (priorityWeights[weightKey] ?? 0.10) : 0.10;
+      const w = weightKey ? (priorityWeights[weightKey] ?? 0.1) : 0.1;
       const score = matchCount * w;
 
       if (score > bestScore) {
         bestScore = score;
-        bestType  = type;
+        bestType = type;
       }
     }
 
@@ -193,7 +223,14 @@ function detectClaimType(text: string, priorityWeights?: AuthorityValidationWeig
   }
 
   // Fallback (no weights): original priority-order logic
-  const priority: ClaimType[] = ['regulatory', 'statistical', 'temporal', 'causal', 'comparative', 'factual'];
+  const priority: ClaimType[] = [
+    'regulatory',
+    'statistical',
+    'temporal',
+    'causal',
+    'comparative',
+    'factual',
+  ];
   for (const type of priority) {
     const patterns = CLAIM_PATTERNS[type];
     if (patterns.some(p => p.test(text))) {
@@ -212,7 +249,7 @@ function detectClaimType(text: string, priorityWeights?: AuthorityValidationWeig
  */
 export function extractClaims(
   content: string,
-  priorityWeights?: AuthorityValidationWeights,
+  priorityWeights?: AuthorityValidationWeights
 ): ExtractedClaim[] {
   const sentences = splitIntoSentences(content);
   const claims: ExtractedClaim[] = [];
@@ -234,7 +271,5 @@ export function extractClaims(
   }
 
   // Sort by confidence descending, return top 50
-  return claims
-    .sort((a, b) => b.confidence - a.confidence)
-    .slice(0, 50);
+  return claims.sort((a, b) => b.confidence - a.confidence).slice(0, 50);
 }

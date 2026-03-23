@@ -62,7 +62,6 @@ interface PostResult {
  * produces plain JSON-compatible objects/arrays.
  */
 // Return type must be `any` so callers can pass it to Prisma's InputJsonValue without further casting
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function jsonSafe(obj: Record<string, unknown>): any {
   return JSON.parse(JSON.stringify(obj));
 }
@@ -80,15 +79,26 @@ const BACKOFF_MINUTES = [5, 15, 60]; // Exponential backoff schedule
  */
 function isRetryableError(error: string): boolean {
   const retryablePatterns = [
-    'rate limit', 'too many requests', '429',
-    'timeout', 'etimedout', 'econnreset', 'econnrefused',
-    'temporarily unavailable', '503', '502', '500',
-    'token refresh', 'refresh token',
-    'network error', 'fetch failed',
-    'socket hang up', 'abort',
+    'rate limit',
+    'too many requests',
+    '429',
+    'timeout',
+    'etimedout',
+    'econnreset',
+    'econnrefused',
+    'temporarily unavailable',
+    '503',
+    '502',
+    '500',
+    'token refresh',
+    'refresh token',
+    'network error',
+    'fetch failed',
+    'socket hang up',
+    'abort',
   ];
   const lowerError = error.toLowerCase();
-  return retryablePatterns.some((p) => lowerError.includes(p));
+  return retryablePatterns.some(p => lowerError.includes(p));
 }
 
 // ---------------------------------------------------------------------------
@@ -121,8 +131,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     where: {
       status: 'scheduled',
       scheduledAt: { lte: now },
-      publishedAt: null,  // Idempotency guard: skip already-published posts
-      deletedAt: null,    // Never publish soft-deleted posts
+      publishedAt: null, // Idempotency guard: skip already-published posts
+      deletedAt: null, // Never publish soft-deleted posts
     },
     select: {
       id: true,
@@ -152,14 +162,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         select: { status: true, publishedAt: true },
       });
       if (freshPost?.publishedAt || freshPost?.status === 'published') {
-        logger.warn('[publish-scheduled] Skipping already-published post', { postId: post.id });
+        logger.warn('[publish-scheduled] Skipping already-published post', {
+          postId: post.id,
+        });
         continue;
       }
 
       const platform = (post.platform || post.campaign.platform).toLowerCase();
       const userId = post.campaign.userId;
       const metadata = (post.metadata as Record<string, unknown>) || {};
-      const existingHistory = (metadata.history as Record<string, unknown>[]) || [];
+      const existingHistory =
+        (metadata.history as Record<string, unknown>[]) || [];
       const retryCount = (metadata.retryCount as number) || 0;
 
       // -- Guard: unsupported platform ---------------------------------------
@@ -170,13 +183,29 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         await markPostFailed(post.id, errorMessage, {
           history: [
             ...existingHistory,
-            { event: 'failed_permanently', at: new Date().toISOString(), reason: errorMessage, attempts: retryCount },
+            {
+              event: 'failed_permanently',
+              at: new Date().toISOString(),
+              reason: errorMessage,
+              attempts: retryCount,
+            },
           ],
         });
-        await createNotification(userId, 'post_failed', `Post failed on ${platform}`, `Your scheduled post failed to publish to ${platform}: ${errorMessage}`, { postId: post.id, platform, error: errorMessage, retryCount });
+        await createNotification(
+          userId,
+          'post_failed',
+          `Post failed on ${platform}`,
+          `Your scheduled post failed to publish to ${platform}: ${errorMessage}`,
+          { postId: post.id, platform, error: errorMessage, retryCount }
+        );
 
         failed++;
-        results.push({ id: post.id, platform, status: 'failed', error: errorMessage });
+        results.push({
+          id: post.id,
+          platform,
+          status: 'failed',
+          error: errorMessage,
+        });
         continue;
       }
 
@@ -188,13 +217,29 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         await markPostFailed(post.id, errorMessage, {
           history: [
             ...existingHistory,
-            { event: 'failed_permanently', at: new Date().toISOString(), reason: errorMessage, attempts: retryCount },
+            {
+              event: 'failed_permanently',
+              at: new Date().toISOString(),
+              reason: errorMessage,
+              attempts: retryCount,
+            },
           ],
         });
-        await createNotification(userId, 'post_failed', `Post failed on ${platform}`, `Your scheduled post failed to publish to ${platform}: ${errorMessage}`, { postId: post.id, platform, error: errorMessage, retryCount });
+        await createNotification(
+          userId,
+          'post_failed',
+          `Post failed on ${platform}`,
+          `Your scheduled post failed to publish to ${platform}: ${errorMessage}`,
+          { postId: post.id, platform, error: errorMessage, retryCount }
+        );
 
         failed++;
-        results.push({ id: post.id, platform, status: 'failed', error: errorMessage });
+        results.push({
+          id: post.id,
+          platform,
+          status: 'failed',
+          error: errorMessage,
+        });
         continue;
       }
 
@@ -242,19 +287,37 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         const errorMessage = organizationId
           ? `No connected ${platform} account for organization ${organizationId}`
           : `No connected ${platform} account`;
-        logger.error(`[publish-scheduled] Post ${post.id}: ${errorMessage} (userId=${userId}, orgId=${organizationId ?? 'none'})`);
+        logger.error(
+          `[publish-scheduled] Post ${post.id}: ${errorMessage} (userId=${userId}, orgId=${organizationId ?? 'none'})`
+        );
 
         // No connection is not retryable — fail permanently
         await markPostFailed(post.id, errorMessage, {
           history: [
             ...existingHistory,
-            { event: 'failed_permanently', at: new Date().toISOString(), reason: errorMessage, attempts: retryCount },
+            {
+              event: 'failed_permanently',
+              at: new Date().toISOString(),
+              reason: errorMessage,
+              attempts: retryCount,
+            },
           ],
         });
-        await createNotification(userId, 'post_failed', `Post failed on ${platform}`, `Your scheduled post failed to publish to ${platform}: ${errorMessage}`, { postId: post.id, platform, error: errorMessage, retryCount });
+        await createNotification(
+          userId,
+          'post_failed',
+          `Post failed on ${platform}`,
+          `Your scheduled post failed to publish to ${platform}: ${errorMessage}`,
+          { postId: post.id, platform, error: errorMessage, retryCount }
+        );
 
         failed++;
-        results.push({ id: post.id, platform, status: 'failed', error: errorMessage });
+        results.push({
+          id: post.id,
+          platform,
+          status: 'failed',
+          error: errorMessage,
+        });
         continue;
       }
 
@@ -265,19 +328,36 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         : undefined;
 
       if (!accessToken) {
-        const errorMessage = 'Failed to decrypt access token for platform connection';
+        const errorMessage =
+          'Failed to decrypt access token for platform connection';
         logger.error(`[publish-scheduled] Post ${post.id}: ${errorMessage}`);
 
         await markPostFailed(post.id, errorMessage, {
           history: [
             ...existingHistory,
-            { event: 'failed_permanently', at: new Date().toISOString(), reason: errorMessage, attempts: retryCount },
+            {
+              event: 'failed_permanently',
+              at: new Date().toISOString(),
+              reason: errorMessage,
+              attempts: retryCount,
+            },
           ],
         });
-        await createNotification(userId, 'post_failed', `Post failed on ${platform}`, `Your scheduled post failed to publish to ${platform}: ${errorMessage}`, { postId: post.id, platform, error: errorMessage, retryCount });
+        await createNotification(
+          userId,
+          'post_failed',
+          `Post failed on ${platform}`,
+          `Your scheduled post failed to publish to ${platform}: ${errorMessage}`,
+          { postId: post.id, platform, error: errorMessage, retryCount }
+        );
 
         failed++;
-        results.push({ id: post.id, platform, status: 'failed', error: errorMessage });
+        results.push({
+          id: post.id,
+          platform,
+          status: 'failed',
+          error: errorMessage,
+        });
         continue;
       }
 
@@ -300,10 +380,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           await prisma.platformConnection.update({
             where: { id: connectionId },
             data: {
-              accessToken: encryptField(newCreds.accessToken) ?? newCreds.accessToken,
+              accessToken:
+                encryptField(newCreds.accessToken) ?? newCreds.accessToken,
               refreshToken:
                 newCreds.refreshToken !== undefined
-                  ? encryptField(newCreds.refreshToken) ?? newCreds.refreshToken
+                  ? (encryptField(newCreds.refreshToken) ??
+                    newCreds.refreshToken)
                   : undefined,
               expiresAt: newCreds.expiresAt,
             },
@@ -331,13 +413,29 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         await markPostFailed(post.id, errorMessage, {
           history: [
             ...existingHistory,
-            { event: 'failed_permanently', at: new Date().toISOString(), reason: errorMessage, attempts: retryCount },
+            {
+              event: 'failed_permanently',
+              at: new Date().toISOString(),
+              reason: errorMessage,
+              attempts: retryCount,
+            },
           ],
         });
-        await createNotification(userId, 'post_failed', `Post failed on ${platform}`, `Your scheduled post failed to publish to ${platform}: ${errorMessage}`, { postId: post.id, platform, error: errorMessage, retryCount });
+        await createNotification(
+          userId,
+          'post_failed',
+          `Post failed on ${platform}`,
+          `Your scheduled post failed to publish to ${platform}: ${errorMessage}`,
+          { postId: post.id, platform, error: errorMessage, retryCount }
+        );
 
         failed++;
-        results.push({ id: post.id, platform, status: 'failed', error: errorMessage });
+        results.push({
+          id: post.id,
+          platform,
+          status: 'failed',
+          error: errorMessage,
+        });
         continue;
       }
 
@@ -367,7 +465,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
               ...metadata,
               history: [
                 ...existingHistory,
-                { event: 'published', at: new Date().toISOString(), platformPostId: postResult.postId },
+                {
+                  event: 'published',
+                  at: new Date().toISOString(),
+                  platformPostId: postResult.postId,
+                },
               ],
             }),
           },
@@ -406,12 +508,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         });
 
         // Create success notification
-        await createNotification(userId, 'post_published', `Post published on ${platform}`, `Your scheduled post was successfully published to ${platform}.`, { postId: post.id, platform, publishedAt: new Date().toISOString() });
+        await createNotification(
+          userId,
+          'post_published',
+          `Post published on ${platform}`,
+          `Your scheduled post was successfully published to ${platform}.`,
+          { postId: post.id, platform, publishedAt: new Date().toISOString() }
+        );
 
         published++;
         results.push({ id: post.id, platform, status: 'published' });
       } else {
-        const errorMessage = postResult.error ?? 'Platform returned failure without error detail';
+        const errorMessage =
+          postResult.error ?? 'Platform returned failure without error detail';
         logger.error(
           `[publish-scheduled] Post ${post.id} publish failed: ${errorMessage}`
         );
@@ -464,7 +573,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           finalFailure: true,
           history: [
             ...existingHistory,
-            { event: 'failed_permanently', at: new Date().toISOString(), reason: errorMessage, attempts: retryCount },
+            {
+              event: 'failed_permanently',
+              at: new Date().toISOString(),
+              reason: errorMessage,
+              attempts: retryCount,
+            },
           ],
         });
         await createNotification(
@@ -478,15 +592,23 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         );
 
         failed++;
-        results.push({ id: post.id, platform, status: 'failed', error: errorMessage });
+        results.push({
+          id: post.id,
+          platform,
+          status: 'failed',
+          error: errorMessage,
+        });
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : String(err);
-      logger.error(`[publish-scheduled] Unexpected error for post ${post.id}:`, err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logger.error(
+        `[publish-scheduled] Unexpected error for post ${post.id}:`,
+        err
+      );
 
       const metadata = (post.metadata as Record<string, unknown>) || {};
-      const existingHistory = (metadata.history as Record<string, unknown>[]) || [];
+      const existingHistory =
+        (metadata.history as Record<string, unknown>[]) || [];
       const retryCount = (metadata.retryCount as number) || 0;
       const userId = post.campaign.userId;
       const platform = (post.platform || post.campaign.platform).toLowerCase();
@@ -543,7 +665,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           finalFailure: true,
           history: [
             ...existingHistory,
-            { event: 'failed_permanently', at: new Date().toISOString(), reason: errorMessage, attempts: retryCount },
+            {
+              event: 'failed_permanently',
+              at: new Date().toISOString(),
+              reason: errorMessage,
+              attempts: retryCount,
+            },
           ],
         });
         await createNotification(
@@ -573,7 +700,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   const durationMs = Date.now() - startTime;
-  logger.info('cron:publish-scheduled:end', { timestamp: new Date().toISOString(), durationMs, processed, published, failed, retried });
+  logger.info('cron:publish-scheduled:end', {
+    timestamp: new Date().toISOString(),
+    durationMs,
+    processed,
+    published,
+    failed,
+    retried,
+  });
 
   return NextResponse.json({
     success: true,

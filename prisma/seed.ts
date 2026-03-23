@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting seed...');
+  console.info('🌱 Starting seed...');
 
   // Create demo user
   const demoPassword = await bcrypt.hash('Rrw6qRd1IIIY5Br9!', 12);
@@ -21,12 +21,12 @@ async function main() {
       preferences: {
         onboardingCompleted: true,
         userType: 'marketer',
-        platforms: ['instagram', 'twitter', 'linkedin']
-      }
-    }
+        platforms: ['instagram', 'twitter', 'linkedin'],
+      },
+    },
   });
 
-  console.log('✅ Created demo user:', demoUser.email);
+  console.info('✅ Created demo user:', demoUser.email);
 
   // Create admin user
   const adminPassword = await bcrypt.hash('IBkxhZpGPQW3a5B2!', 12);
@@ -43,12 +43,12 @@ async function main() {
       preferences: {
         onboardingCompleted: true,
         userType: 'admin',
-        platforms: ['all']
-      }
-    }
+        platforms: ['all'],
+      },
+    },
   });
 
-  console.log('✅ Created admin user:', adminUser.email);
+  console.info('✅ Created admin user:', adminUser.email);
 
   // Create a sample campaign for demo user
   const sampleCampaign = await prisma.campaign.create({
@@ -63,18 +63,18 @@ async function main() {
         hashtags: ['#marketing', '#automation', '#synthex'],
         variations: [
           'Discover the future of marketing automation',
-          'Transform your marketing with AI-powered tools'
-        ]
+          'Transform your marketing with AI-powered tools',
+        ],
       },
       settings: {
         targetAudience: 'B2B marketers',
         postFrequency: 'daily',
-        optimalTimes: ['9:00 AM', '2:00 PM', '6:00 PM']
-      }
-    }
+        optimalTimes: ['9:00 AM', '2:00 PM', '6:00 PM'],
+      },
+    },
   });
 
-  console.log('✅ Created sample campaign:', sampleCampaign.name);
+  console.info('✅ Created sample campaign:', sampleCampaign.name);
 
   // Create sample posts for the campaign
   const posts = await Promise.all([
@@ -86,9 +86,9 @@ async function main() {
         campaignId: sampleCampaign.id,
         metadata: {
           hashtags: ['#AI', '#Marketing', '#Automation'],
-          imageUrl: 'https://example.com/image1.jpg'
-        }
-      }
+          imageUrl: 'https://example.com/image1.jpg',
+        },
+      },
     }),
     prisma.post.create({
       data: {
@@ -99,13 +99,13 @@ async function main() {
         campaignId: sampleCampaign.id,
         metadata: {
           hashtags: ['#Productivity', '#TimeSaver'],
-          imageUrl: 'https://example.com/image2.jpg'
-        }
-      }
-    })
+          imageUrl: 'https://example.com/image2.jpg',
+        },
+      },
+    }),
   ]);
 
-  console.log(`✅ Created ${posts.length} sample posts`);
+  console.info(`✅ Created ${posts.length} sample posts`);
 
   // Create a sample project
   const sampleProject = await prisma.project.create({
@@ -117,12 +117,12 @@ async function main() {
       data: {
         goals: ['Increase brand awareness', 'Generate 1000 leads'],
         budget: 10000,
-        timeline: '3 months'
-      }
-    }
+        timeline: '3 months',
+      },
+    },
   });
 
-  console.log('✅ Created sample project:', sampleProject.name);
+  console.info('✅ Created sample project:', sampleProject.name);
 
   // ---------------------------------------------------------------------------
   // Onboarding QA test users (UNI-1030)
@@ -224,13 +224,15 @@ async function main() {
     },
   });
 
-  console.log('✅ Created 5 onboarding QA test users (test-new, test-step1..3, test-complete)');
+  console.info(
+    '✅ Created 5 onboarding QA test users (test-new, test-step1..3, test-complete)'
+  );
 
-  console.log('🎉 Seed completed successfully!');
+  console.info('🎉 Seed completed successfully!');
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error('❌ Seed failed:', e);
     process.exit(1);
   })

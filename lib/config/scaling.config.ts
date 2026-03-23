@@ -60,7 +60,8 @@ export function getRateLimitConfig(): RateLimitTier {
     premium: {
       windowMs,
       maxRequests: parseInt(process.env.RATE_LIMIT_PREMIUM_MAX || '500', 10),
-      message: 'Rate limit exceeded. Contact support if you need higher limits.',
+      message:
+        'Rate limit exceeded. Contact support if you need higher limits.',
       statusCode: 429,
       keyGenerator: (userId: string) => `ratelimit:premium:${userId}`,
       skipFailedRequests: true,
@@ -68,7 +69,10 @@ export function getRateLimitConfig(): RateLimitTier {
     },
     enterprise: {
       windowMs,
-      maxRequests: parseInt(process.env.RATE_LIMIT_ENTERPRISE_MAX || '2000', 10),
+      maxRequests: parseInt(
+        process.env.RATE_LIMIT_ENTERPRISE_MAX || '2000',
+        10
+      ),
       message: 'Rate limit exceeded. Please contact your account manager.',
       statusCode: 429,
       keyGenerator: (userId: string) => `ratelimit:enterprise:${userId}`,
@@ -163,21 +167,36 @@ export interface ScalingConfig {
 export function getScalingConfig(): ScalingConfig {
   return {
     // Max concurrent requests per instance
-    maxConcurrentRequests: parseInt(process.env.SCALING_MAX_CONCURRENT || '100', 10),
+    maxConcurrentRequests: parseInt(
+      process.env.SCALING_MAX_CONCURRENT || '100',
+      10
+    ),
 
     // Request queue settings
     queueSize: parseInt(process.env.SCALING_QUEUE_SIZE || '500', 10),
     queueTimeout: parseInt(process.env.SCALING_QUEUE_TIMEOUT || '30000', 10), // 30s
 
     // Circuit breaker settings
-    circuitBreakerThreshold: parseInt(process.env.CIRCUIT_BREAKER_THRESHOLD || '50', 10), // 50% failure rate
-    circuitBreakerTimeout: parseInt(process.env.CIRCUIT_BREAKER_TIMEOUT || '30000', 10), // 30s
+    circuitBreakerThreshold: parseInt(
+      process.env.CIRCUIT_BREAKER_THRESHOLD || '50',
+      10
+    ), // 50% failure rate
+    circuitBreakerTimeout: parseInt(
+      process.env.CIRCUIT_BREAKER_TIMEOUT || '30000',
+      10
+    ), // 30s
 
     // Health check settings
-    healthCheckInterval: parseInt(process.env.HEALTH_CHECK_INTERVAL || '10000', 10), // 10s
+    healthCheckInterval: parseInt(
+      process.env.HEALTH_CHECK_INTERVAL || '10000',
+      10
+    ), // 10s
 
     // Graceful shutdown
-    gracefulShutdownTimeout: parseInt(process.env.GRACEFUL_SHUTDOWN_TIMEOUT || '30000', 10), // 30s
+    gracefulShutdownTimeout: parseInt(
+      process.env.GRACEFUL_SHUTDOWN_TIMEOUT || '30000',
+      10
+    ), // 30s
   };
 }
 
@@ -205,7 +224,10 @@ export function getCachingConfig(): CachingConfig {
     enabled: process.env.CACHING_ENABLED !== 'false',
     defaultTTL: parseInt(process.env.CACHE_DEFAULT_TTL || '60', 10), // 60s
     maxCacheSize: parseInt(process.env.CACHE_MAX_SIZE || '1000', 10), // items
-    staleWhileRevalidate: parseInt(process.env.CACHE_STALE_WHILE_REVALIDATE || '300', 10), // 5 min
+    staleWhileRevalidate: parseInt(
+      process.env.CACHE_STALE_WHILE_REVALIDATE || '300',
+      10
+    ), // 5 min
 
     // TTL by endpoint pattern (in seconds)
     ttlByEndpoint: {
@@ -323,7 +345,9 @@ export interface MonitoringThresholds {
 export function getMonitoringThresholds(): MonitoringThresholds {
   return {
     errorRateWarning: parseFloat(process.env.MONITOR_ERROR_RATE_WARN || '0.05'), // 5%
-    errorRateCritical: parseFloat(process.env.MONITOR_ERROR_RATE_CRIT || '0.10'), // 10%
+    errorRateCritical: parseFloat(
+      process.env.MONITOR_ERROR_RATE_CRIT || '0.10'
+    ), // 10%
     latencyWarning: parseInt(process.env.MONITOR_LATENCY_WARN || '1000', 10), // 1s
     latencyCritical: parseInt(process.env.MONITOR_LATENCY_CRIT || '5000', 10), // 5s
     memoryWarning: parseFloat(process.env.MONITOR_MEMORY_WARN || '0.80'), // 80%
@@ -365,7 +389,7 @@ export function getAutoScalingConfig(): AutoScalingConfig {
 }
 
 // Export default configuration
-export default {
+const scalingConfig = {
   getRateLimitConfig,
   getEndpointRateLimits,
   getScalingConfig,
@@ -376,3 +400,4 @@ export default {
   getMonitoringThresholds,
   getAutoScalingConfig,
 };
+export default scalingConfig;

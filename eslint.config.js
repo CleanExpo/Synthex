@@ -49,6 +49,10 @@ const eslintConfig = [
       'tests/setup.js',
       'playwright-continuous-test.js',
       'test-server.js',
+      // Temporary utility/migration scripts — not part of the production app
+      'tmp/**',
+      // Claude superpowers / skill-runner scripts — not part of the production app
+      '.superpowers/**',
     ],
   },
   ...coreWebVitals,

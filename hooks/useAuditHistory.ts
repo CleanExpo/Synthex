@@ -107,7 +107,9 @@ export function useAuditHistory() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(
+          errorData.error || `HTTP ${response.status}: ${response.statusText}`
+        );
       }
 
       const data: HistoryResponse = await response.json();
@@ -127,6 +129,9 @@ export function useAuditHistory() {
         setHistoryLoading(false);
       }
     }
+    // `extractRegressions` is defined after this callback (const hoisting limitation) and has no
+    // external deps itself, so its reference is stable — safe to omit from the dependency array.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**
@@ -148,14 +153,17 @@ export function useAuditHistory() {
     for (const [url, urlAudits] of byUrl) {
       // Sort by date descending
       const sorted = [...urlAudits].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
 
       for (let i = 0; i < sorted.length - 1; i++) {
         const current = sorted[i];
         const previous = sorted[i + 1];
         const dropPercent = Math.round(
-          ((previous.overallScore - current.overallScore) / previous.overallScore) * 100
+          ((previous.overallScore - current.overallScore) /
+            previous.overallScore) *
+            100
         );
 
         // Check if this is a significant regression (10%+ drop)
@@ -182,7 +190,8 @@ export function useAuditHistory() {
 
     // Sort by date descending
     regressionList.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
     setRegressions(regressionList);
@@ -238,7 +247,9 @@ export function useAuditHistory() {
       // Calculate average per date
       const trendPoints: AuditTrendPoint[] = [];
       for (const [date, scores] of byDate) {
-        const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+        const avg = Math.round(
+          scores.reduce((a, b) => a + b, 0) / scores.length
+        );
         trendPoints.push({ date, score: avg, url });
       }
 

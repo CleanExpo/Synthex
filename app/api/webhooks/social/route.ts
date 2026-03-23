@@ -52,8 +52,10 @@ function getWebhookSecret(platform: string): string | undefined {
     twitter: process.env.TWITTER_WEBHOOK_SECRET,
     linkedin: process.env.LINKEDIN_WEBHOOK_SECRET,
     // Meta platforms share a secret; fall back to platform-specific
-    facebook: process.env.META_WEBHOOK_SECRET || process.env.FACEBOOK_WEBHOOK_SECRET,
-    instagram: process.env.META_WEBHOOK_SECRET || process.env.INSTAGRAM_WEBHOOK_SECRET,
+    facebook:
+      process.env.META_WEBHOOK_SECRET || process.env.FACEBOOK_WEBHOOK_SECRET,
+    instagram:
+      process.env.META_WEBHOOK_SECRET || process.env.INSTAGRAM_WEBHOOK_SECRET,
     threads: process.env.META_WEBHOOK_SECRET,
     tiktok: process.env.TIKTOK_WEBHOOK_SECRET,
     pinterest: process.env.PINTEREST_WEBHOOK_SECRET,
@@ -210,7 +212,11 @@ function extractSignatureHeader(
         ''
       );
     case 'linkedin':
-      return request.headers.get('x-li-signature') || request.headers.get('x-linkedin-signature') || '';
+      return (
+        request.headers.get('x-li-signature') ||
+        request.headers.get('x-linkedin-signature') ||
+        ''
+      );
     case 'tiktok':
       return request.headers.get('x-tiktok-signature') || '';
     case 'pinterest':
@@ -406,7 +412,6 @@ async function handleAccountUpdate(event: WebhookEvent) {
 function parseWebhookEvent(
   platform: string,
   // Third-party social platform webhook payloads have varying shapes — no shared typed interface available
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body: Record<string, any>
 ): WebhookEvent {
   switch (platform) {
@@ -465,7 +470,8 @@ function parseWebhookEvent(
       return {
         platform,
         type: body.eventType || body.type || 'unknown',
-        externalId: body.videoId || body.data?.videoId || body.resourceId?.videoId,
+        externalId:
+          body.videoId || body.data?.videoId || body.resourceId?.videoId,
         data: body.data || body,
         timestamp: new Date(),
       };
@@ -502,7 +508,9 @@ export async function GET(request: NextRequest) {
   const token = searchParams.get('hub.verify_token');
   const challenge = searchParams.get('hub.challenge');
 
-  const verifyToken = process.env.META_WEBHOOK_VERIFY_TOKEN || process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN;
+  const verifyToken =
+    process.env.META_WEBHOOK_VERIFY_TOKEN ||
+    process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN;
 
   if (mode === 'subscribe' && token && token === verifyToken) {
     logger.info('Social webhook verification succeeded');
@@ -543,7 +551,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Third-party webhook body is a raw JSON object with platform-specific shape
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let body: Record<string, any>;
 
     try {
@@ -563,7 +570,10 @@ export async function POST(request: NextRequest) {
       // Log verification failure for security monitoring
       logger.error('[SECURITY] Webhook signature verification failed', {
         platform,
-        ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+        ip:
+          request.headers.get('x-forwarded-for') ||
+          request.headers.get('x-real-ip') ||
+          'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
       });
 
@@ -576,7 +586,10 @@ export async function POST(request: NextRequest) {
             resourceId: platform,
             details: {
               platform,
-              ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+              ip:
+                request.headers.get('x-forwarded-for') ||
+                request.headers.get('x-real-ip') ||
+                'unknown',
               userAgent: request.headers.get('user-agent') || 'unknown',
               timestamp: new Date().toISOString(),
             },
@@ -586,7 +599,9 @@ export async function POST(request: NextRequest) {
           },
         });
       } catch (auditError) {
-        logger.error('Failed to log signature verification failure', { auditError });
+        logger.error('Failed to log signature verification failure', {
+          auditError,
+        });
       }
 
       return NextResponse.json(
@@ -652,7 +667,10 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Social webhook error', { error });
     // Return 200 anyway to prevent retries on processing errors
-    return NextResponse.json({ success: false, error: 'Webhook processing failed' }, { status: 200 });
+    return NextResponse.json(
+      { success: false, error: 'Webhook processing failed' },
+      { status: 200 }
+    );
   }
 }
 

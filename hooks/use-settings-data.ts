@@ -49,7 +49,8 @@ export function useSettingsData() {
   });
 
   // Notification settings state
-  const [notifications, setNotifications] = useState<NotificationSettings>(defaultNotifications);
+  const [notifications, setNotifications] =
+    useState<NotificationSettings>(defaultNotifications);
 
   // Privacy settings state
   const [privacy, setPrivacy] = useState<PrivacySettings>(defaultPrivacy);
@@ -58,7 +59,8 @@ export function useSettingsData() {
   const [advanced, setAdvanced] = useState<AdvancedSettings>(defaultAdvanced);
 
   // Platform connections state
-  const [platforms, setPlatforms] = useState<PlatformConnection[]>(initialPlatforms);
+  const [platforms, setPlatforms] =
+    useState<PlatformConnection[]>(initialPlatforms);
 
   // API keys state
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
@@ -126,11 +128,15 @@ export function useSettingsData() {
           setPrivacy({
             publicProfile: settingsData.settings.privacy.profilePublic ?? false,
             showAnalytics: settingsData.settings.privacy.showAnalytics ?? true,
-            dataCollection: settingsData.settings.privacy.allowDataCollection ?? true,
+            dataCollection:
+              settingsData.settings.privacy.allowDataCollection ?? true,
           });
         }
         if (settingsData.settings.theme) {
-          setAdvanced(prev => ({ ...prev, theme: settingsData.settings.theme }));
+          setAdvanced(prev => ({
+            ...prev,
+            theme: settingsData.settings.theme,
+          }));
         }
       }
     } catch (settingsError) {
@@ -142,11 +148,14 @@ export function useSettingsData() {
 
     // Fetch real billing/subscription data (independent)
     try {
-      const subRes = await fetch('/api/user/subscription', { credentials: 'include' });
+      const subRes = await fetch('/api/user/subscription', {
+        credentials: 'include',
+      });
       if (subRes.ok) {
         const subData = await subRes.json();
         if (subData.plan) {
-          const planName = subData.plan.charAt(0).toUpperCase() + subData.plan.slice(1);
+          const planName =
+            subData.plan.charAt(0).toUpperCase() + subData.plan.slice(1);
           setBilling(prev => ({
             ...prev,
             plan: planName,
@@ -171,13 +180,26 @@ export function useSettingsData() {
         const invData = await invRes.json();
         if (invData.invoices?.length) {
           setInvoices(
-            invData.invoices.map((inv: { id: string; number?: string; amount: number; currency: string; status: string; created: number; pdfUrl?: string | null }) => ({
-              id: inv.number || inv.id,
-              date: new Date(inv.created * 1000).toLocaleDateString(),
-              amount: `$${(inv.amount / 100).toFixed(2)}`,
-              status: inv.status === 'paid' ? 'paid' as const : 'pending' as const,
-              pdfUrl: inv.pdfUrl ?? null,
-            }))
+            invData.invoices.map(
+              (inv: {
+                id: string;
+                number?: string;
+                amount: number;
+                currency: string;
+                status: string;
+                created: number;
+                pdfUrl?: string | null;
+              }) => ({
+                id: inv.number || inv.id,
+                date: new Date(inv.created * 1000).toLocaleDateString(),
+                amount: `$${(inv.amount / 100).toFixed(2)}`,
+                status:
+                  inv.status === 'paid'
+                    ? ('paid' as const)
+                    : ('pending' as const),
+                pdfUrl: inv.pdfUrl ?? null,
+              })
+            )
           );
         }
       }
@@ -191,23 +213,29 @@ export function useSettingsData() {
   }, [loadUserData]);
 
   // Reload integrations when active business changes
+  // `activeBusiness` object reference changes on every render; depend on the stable
+  // `organizationId` scalar instead to avoid infinite reload loops.
   useEffect(() => {
     if (activeBusiness !== undefined) {
       loadIntegrations();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeBusiness?.organizationId, loadIntegrations]);
 
   // ---- Handlers ----
 
-  const handleProfileChange = useCallback((field: keyof UserProfile, value: string) => {
-    setProfile(prev => ({ ...prev, [field]: value }));
-  }, []);
+  const handleProfileChange = useCallback(
+    (field: keyof UserProfile, value: string) => {
+      setProfile(prev => ({ ...prev, [field]: value }));
+    },
+    []
+  );
 
   const handleAvatarUpload = useCallback(async () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = async (e) => {
+    input.onchange = async e => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
 
@@ -216,29 +244,42 @@ export function useSettingsData() {
         setProfile(prev => ({ ...prev, avatar: result.avatar_url }));
         toast.success('Avatar uploaded successfully!');
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Failed to upload avatar');
+        toast.error(
+          error instanceof Error ? error.message : 'Failed to upload avatar'
+        );
       }
     };
     input.click();
   }, []);
 
-  const handleNotificationChange = useCallback((field: keyof NotificationSettings, value: boolean) => {
-    setNotifications(prev => ({ ...prev, [field]: value }));
-  }, []);
+  const handleNotificationChange = useCallback(
+    (field: keyof NotificationSettings, value: boolean) => {
+      setNotifications(prev => ({ ...prev, [field]: value }));
+    },
+    []
+  );
 
-  const handlePrivacyChange = useCallback((field: keyof PrivacySettings, value: boolean) => {
-    setPrivacy(prev => ({ ...prev, [field]: value }));
-  }, []);
+  const handlePrivacyChange = useCallback(
+    (field: keyof PrivacySettings, value: boolean) => {
+      setPrivacy(prev => ({ ...prev, [field]: value }));
+    },
+    []
+  );
 
-  const handleAdvancedChange = useCallback(<K extends keyof AdvancedSettings>(
-    field: K,
-    value: AdvancedSettings[K]
-  ) => {
-    setAdvanced(prev => ({ ...prev, [field]: value }));
-    if (field === 'debugMode' || field === 'betaFeatures') {
-      toast.success(`${field === 'debugMode' ? 'Debug mode' : 'Beta features'} ${value ? 'enabled' : 'disabled'}`);
-    }
-  }, []);
+  const handleAdvancedChange = useCallback(
+    <K extends keyof AdvancedSettings>(
+      field: K,
+      value: AdvancedSettings[K]
+    ) => {
+      setAdvanced(prev => ({ ...prev, [field]: value }));
+      if (field === 'debugMode' || field === 'betaFeatures') {
+        toast.success(
+          `${field === 'debugMode' ? 'Debug mode' : 'Beta features'} ${value ? 'enabled' : 'disabled'}`
+        );
+      }
+    },
+    []
+  );
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
@@ -250,13 +291,19 @@ export function useSettingsData() {
           role: profile.role,
           bio: profile.bio,
         }),
-        settingsAPI.updateSettings('notifications', notifications as unknown as Record<string, unknown>),
+        settingsAPI.updateSettings(
+          'notifications',
+          notifications as unknown as Record<string, unknown>
+        ),
         settingsAPI.updateSettings('privacy', {
           profilePublic: privacy.publicProfile,
           showAnalytics: privacy.showAnalytics,
           allowDataCollection: privacy.dataCollection,
         } as Record<string, unknown>),
-        settingsAPI.updateSettings('theme', advanced.theme as unknown as Record<string, unknown>),
+        settingsAPI.updateSettings(
+          'theme',
+          advanced.theme as unknown as Record<string, unknown>
+        ),
       ]);
 
       const failures = results.filter(r => r.status === 'rejected');
@@ -276,10 +323,16 @@ export function useSettingsData() {
         } else {
           toast.error(`Failed to save: ${failedItems.join(', ')}`);
         }
-        console.error('Partial save failures:', failures.map(f => f.status === 'rejected' ? f.reason : null));
+        console.error(
+          'Partial save failures:',
+          failures.map(f => (f.status === 'rejected' ? f.reason : null))
+        );
       } else {
         toast.error('Failed to save settings');
-        console.error('All saves failed:', failures.map(f => f.status === 'rejected' ? f.reason : null));
+        console.error(
+          'All saves failed:',
+          failures.map(f => (f.status === 'rejected' ? f.reason : null))
+        );
       }
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -289,25 +342,34 @@ export function useSettingsData() {
     }
   }, [profile, notifications, privacy, advanced.theme]);
 
-  const handleConnect = useCallback(async (platformId: string) => {
-    try {
-      toast.loading(`Connecting to ${platformId}...`);
-      await integrationsAPI.connectPlatform(platformId);
-      await loadUserData();
-      toast.dismiss();
-      toast.success(`Connected to ${platformId} successfully!`);
-    } catch (error) {
-      toast.dismiss();
-      toast.error(error instanceof Error ? error.message : `Failed to connect to ${platformId}`);
-    }
-  }, [loadUserData]);
+  const handleConnect = useCallback(
+    async (platformId: string) => {
+      try {
+        toast.loading(`Connecting to ${platformId}...`);
+        await integrationsAPI.connectPlatform(platformId);
+        await loadUserData();
+        toast.dismiss();
+        toast.success(`Connected to ${platformId} successfully!`);
+      } catch (error) {
+        toast.dismiss();
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : `Failed to connect to ${platformId}`
+        );
+      }
+    },
+    [loadUserData]
+  );
 
   const handleDisconnect = useCallback(async (platformId: string) => {
     try {
       await integrationsAPI.disconnectPlatform(platformId);
       setPlatforms(prev =>
         prev.map(p =>
-          p.id === platformId ? { ...p, connected: false, username: undefined } : p
+          p.id === platformId
+            ? { ...p, connected: false, username: undefined }
+            : p
         )
       );
       toast.success(`Disconnected from ${platformId}`);
@@ -318,12 +380,15 @@ export function useSettingsData() {
 
   const handleCreateApiKey = useCallback(async () => {
     try {
-      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
+      const token =
+        localStorage.getItem('auth_token') ||
+        sessionStorage.getItem('auth_token') ||
+        localStorage.getItem('token');
       const response = await fetch('/api/user/api-keys', {
         method: 'POST',
         credentials: 'include',
         headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ name: 'New API Key' }),
@@ -358,7 +423,9 @@ export function useSettingsData() {
     setIsExporting(true);
     try {
       const data = { profile, notifications, privacy, advanced };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: 'application/json',
+      });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -373,8 +440,14 @@ export function useSettingsData() {
   }, [profile, notifications, privacy, advanced]);
 
   const handleDeleteAccount = useCallback(() => {
-    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      toast.error('Account deletion requires email confirmation. Check your inbox.');
+    if (
+      confirm(
+        'Are you sure you want to delete your account? This action cannot be undone.'
+      )
+    ) {
+      toast.error(
+        'Account deletion requires email confirmation. Check your inbox.'
+      );
     }
   }, []);
 
@@ -405,18 +478,23 @@ export function useSettingsData() {
       }
     } catch (err) {
       toast.dismiss('billing-portal');
-      toast.error(err instanceof Error ? err.message : 'Failed to open billing portal');
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to open billing portal'
+      );
     }
   }, []);
 
-  const handleDownloadInvoice = useCallback((invoiceId: string) => {
-    const invoice = invoices.find(inv => inv.id === invoiceId);
-    if (invoice?.pdfUrl) {
-      window.open(invoice.pdfUrl, '_blank', 'noopener,noreferrer');
-    } else {
-      toast.error('Invoice PDF not available');
-    }
-  }, [invoices]);
+  const handleDownloadInvoice = useCallback(
+    (invoiceId: string) => {
+      const invoice = invoices.find(inv => inv.id === invoiceId);
+      if (invoice?.pdfUrl) {
+        window.open(invoice.pdfUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        toast.error('Invoice PDF not available');
+      }
+    },
+    [invoices]
+  );
 
   return {
     // State

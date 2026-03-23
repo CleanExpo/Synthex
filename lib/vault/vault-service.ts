@@ -37,7 +37,6 @@ interface CacheEntry<T> {
 }
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const metadataCache = new Map<string, CacheEntry<any>>();
 
 function getCacheKey(orgId: string, extra?: string): string {
@@ -89,7 +88,9 @@ async function logAccess(params: {
         outcome: params.outcome,
         ipAddress: params.actor.ipAddress ?? null,
         userAgent: params.actor.userAgent ?? null,
-        details: params.details ? (params.details as Prisma.InputJsonValue) : Prisma.JsonNull,
+        details: params.details
+          ? (params.details as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
       },
     });
   } catch (err) {
@@ -183,7 +184,11 @@ export const VaultService = {
       action: 'create',
       actor,
       outcome: 'success',
-      details: { slug: input.slug, secretType: input.secretType, provider: input.provider },
+      details: {
+        slug: input.slug,
+        secretType: input.secretType,
+        provider: input.provider,
+      },
     });
 
     invalidateOrgCache(input.organizationId);
@@ -218,7 +223,10 @@ export const VaultService = {
     try {
       decrypted = decryptField(row.encryptedValue);
     } catch (err) {
-      logger.error('[Vault] Decryption failed', { slug, orgId: organizationId });
+      logger.error('[Vault] Decryption failed', {
+        slug,
+        orgId: organizationId,
+      });
       await logAccess({
         vaultSecretId: row.id,
         organizationId,
@@ -237,7 +245,9 @@ export const VaultService = {
         data: { lastUsedAt: new Date(), usageCount: { increment: 1 } },
       })
       .catch((updateErr: unknown) => {
-        logger.error('[Vault] Failed to update usage stats', { error: String(updateErr) });
+        logger.error('[Vault] Failed to update usage stats', {
+          error: String(updateErr),
+        });
       });
 
     await logAccess({
@@ -461,7 +471,7 @@ export const VaultService = {
       prisma.vaultAccessLog.count({ where }),
     ]);
 
-    const logs: VaultAccessLogEntry[] = rows.map((row) => ({
+    const logs: VaultAccessLogEntry[] = rows.map(row => ({
       id: row.id,
       vaultSecretId: row.vaultSecretId,
       organizationId: row.organizationId,
@@ -486,7 +496,9 @@ export const VaultService = {
    * Encrypt a raw value and generate its masked display form.
    * Returns null if encryption fails.
    */
-  prepareSecret(rawValue: string): { encrypted: string; masked: string } | null {
+  prepareSecret(
+    rawValue: string
+  ): { encrypted: string; masked: string } | null {
     const encrypted = encryptField(rawValue);
     if (!encrypted) return null;
     const masked = maskApiKey(rawValue);

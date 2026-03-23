@@ -6,7 +6,6 @@
 // NOTE: Sentry removed (2026-03-12, Phase 114-02).
 // require('@sentry/nextjs') at module level registers OTel hooks that hang
 // ALL Lambda cold starts for 10+ seconds. Using permanent no-op stub.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const Sentry = {
   init: (..._args: any[]) => {},
   captureException: (..._args: any[]) => {},
@@ -53,11 +52,11 @@ export class AuthMonitor {
   private events: AuthEvent[] = [];
   private failureThreshold = 5; // Alert after 5 failures
   private recentFailures = new Map<string, number>();
-  
+
   private constructor() {
     // NOTE: Sentry.init() removed — server-side Sentry is disabled (Phase 114-02).
   }
-  
+
   static getInstance(): AuthMonitor {
     if (!AuthMonitor.instance) {
       AuthMonitor.instance = new AuthMonitor();
@@ -78,23 +77,25 @@ export class AuthMonitor {
       error: metadata.error as string | undefined,
       sessionId: metadata.sessionId as string | undefined,
       ipAddress: metadata.ipAddress as string | undefined,
-      userAgent: metadata.userAgent as string | undefined
+      userAgent: metadata.userAgent as string | undefined,
     });
   }
 
   /**
    * Log authentication event
    */
-  async logEvent(event: Omit<AuthEvent, 'timestamp' | 'environment'>): Promise<void> {
+  async logEvent(
+    event: Omit<AuthEvent, 'timestamp' | 'environment'>
+  ): Promise<void> {
     const fullEvent: AuthEvent = {
       ...event,
       timestamp: new Date(),
-      environment: process.env.NODE_ENV || 'development'
+      environment: process.env.NODE_ENV || 'development',
     };
 
     // Store event
     this.events.push(fullEvent);
-    
+
     // Keep only last 1000 events in memory
     if (this.events.length > 1000) {
       this.events = this.events.slice(-1000);
@@ -121,13 +122,16 @@ export class AuthMonitor {
     // Send to Sentry
     if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
       if (event.type === 'error') {
-        Sentry.captureException(new Error(event.error || 'Unknown auth error'), {
-          tags: {
-            auth_method: event.method,
-            auth_provider: event.provider,
-          },
-          extra: event
-        });
+        Sentry.captureException(
+          new Error(event.error || 'Unknown auth error'),
+          {
+            tags: {
+              auth_method: event.method,
+              auth_provider: event.provider,
+            },
+            extra: event,
+          }
+        );
       } else if (event.type === 'failure') {
         Sentry.captureMessage(`Auth failure: ${event.method}`, {
           level: 'warning',
@@ -135,7 +139,7 @@ export class AuthMonitor {
             auth_method: event.method,
             auth_provider: event.provider,
           },
-          extra: event
+          extra: event,
         });
       }
     }
@@ -146,7 +150,7 @@ export class AuthMonitor {
         await fetch(process.env.AUTH_MONITORING_WEBHOOK, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(event)
+          body: JSON.stringify(event),
         });
       } catch (error) {
         console.error('Failed to send to monitoring webhook:', error);
@@ -169,17 +173,20 @@ export class AuthMonitor {
           type: 'BRUTE_FORCE_ATTEMPT',
           email: event.email,
           failures: failures + 1,
-          timestamp: event.timestamp
+          timestamp: event.timestamp,
         });
-        
+
         // Reset counter
         this.recentFailures.delete(event.email);
       }
 
       // Clean up old entries (older than 1 hour)
-      setTimeout(() => {
-        this.recentFailures.delete(event.email!);
-      }, 60 * 60 * 1000);
+      setTimeout(
+        () => {
+          this.recentFailures.delete(event.email!);
+        },
+        60 * 60 * 1000
+      );
     }
 
     // Check for OAuth provider failures
@@ -188,7 +195,7 @@ export class AuthMonitor {
         type: 'OAUTH_PROVIDER_ERROR',
         provider: event.provider,
         error: event.error,
-        timestamp: event.timestamp
+        timestamp: event.timestamp,
       });
     }
   }
@@ -203,7 +210,7 @@ export class AuthMonitor {
     if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
       Sentry.captureMessage(`Auth Alert: ${alert.type}`, {
         level: 'error',
-        extra: alert
+        extra: alert,
       });
     }
 
@@ -220,11 +227,11 @@ export class AuthMonitor {
                 type: 'section',
                 text: {
                   type: 'mrkdwn',
-                  text: `*Alert Type:* ${alert.type}\n*Details:* ${JSON.stringify(alert, null, 2)}`
-                }
-              }
-            ]
-          })
+                  text: `*Alert Type:* ${alert.type}\n*Details:* ${JSON.stringify(alert, null, 2)}`,
+                },
+              },
+            ],
+          }),
         });
       } catch (error) {
         console.error('Failed to send alert:', error);
@@ -237,14 +244,20 @@ export class AuthMonitor {
    */
   private async storeInDatabase(event: AuthEvent): Promise<void> {
     // Skip in development unless explicitly enabled
-    if (process.env.NODE_ENV === 'development' && !process.env.ENABLE_AUTH_AUDIT) {
+    if (
+      process.env.NODE_ENV === 'development' &&
+      !process.env.ENABLE_AUTH_AUDIT
+    ) {
       return;
     }
 
     try {
       // Store in Supabase if configured
-      if (process.env.NEXT_PUBLIC_SUPABASE_URL && 
-          process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co') {
+      if (
+        process.env.NEXT_PUBLIC_SUPABASE_URL &&
+        process.env.NEXT_PUBLIC_SUPABASE_URL !==
+          'https://placeholder.supabase.co'
+      ) {
         const { createClient } = await import('@supabase/supabase-js');
         const supabase = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -261,7 +274,7 @@ export class AuthMonitor {
           environment: event.environment,
           session_id: event.sessionId,
           ip_address: event.ipAddress,
-          user_agent: event.userAgent
+          user_agent: event.userAgent,
         });
       }
     } catch (error) {
@@ -289,12 +302,12 @@ export class AuthMonitor {
     const failures = this.events.filter(e => e.type === 'failure').length;
     const successes = this.events.filter(e => e.type === 'success').length;
     const total = failures + successes;
-    
+
     return {
       totalEvents: this.events.length,
       failures,
       successRate: total > 0 ? (successes / total) * 100 : 0,
-      recentFailures: this.recentFailures
+      recentFailures: this.recentFailures,
     };
   }
 

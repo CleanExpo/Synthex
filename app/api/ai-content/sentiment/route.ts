@@ -15,10 +15,16 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { z } from 'zod';
 import { aiGeneration } from '@/lib/middleware/api-rate-limit';
-import { resolveAIProvider, hasAIAccess } from '@/lib/ai/api-credential-injector';
+import {
+  resolveAIProvider,
+  hasAIAccess,
+} from '@/lib/ai/api-credential-injector';
 import { requireApiKey } from '@/lib/middleware/require-api-key';
 import type { AIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
@@ -63,7 +69,10 @@ interface EngagementPrediction {
 /**
  * Analyze sentiment using AI (uses user's own API key if available, else platform key)
  */
-async function analyzeSentiment(text: string, ai?: AIProvider): Promise<SentimentResult> {
+async function analyzeSentiment(
+  text: string,
+  ai?: AIProvider
+): Promise<SentimentResult> {
   if (!ai) {
     // No AI provider available — fall back to rule-based analysis
     return analyzeWithRules(text);
@@ -126,21 +135,83 @@ function analyzeWithRules(text: string): SentimentResult {
 
   // Sentiment word lists
   const positiveWords = [
-    'love', 'great', 'amazing', 'awesome', 'excellent', 'fantastic', 'wonderful',
-    'happy', 'excited', 'thrilled', 'beautiful', 'perfect', 'best', 'good',
-    'brilliant', 'outstanding', 'superb', 'incredible', 'remarkable', 'success',
-    'joy', 'delighted', 'grateful', 'blessed', 'proud', 'impressive', 'innovative',
+    'love',
+    'great',
+    'amazing',
+    'awesome',
+    'excellent',
+    'fantastic',
+    'wonderful',
+    'happy',
+    'excited',
+    'thrilled',
+    'beautiful',
+    'perfect',
+    'best',
+    'good',
+    'brilliant',
+    'outstanding',
+    'superb',
+    'incredible',
+    'remarkable',
+    'success',
+    'joy',
+    'delighted',
+    'grateful',
+    'blessed',
+    'proud',
+    'impressive',
+    'innovative',
   ];
 
   const negativeWords = [
-    'hate', 'terrible', 'awful', 'horrible', 'bad', 'worst', 'disappointing',
-    'sad', 'angry', 'frustrated', 'annoying', 'poor', 'fail', 'failure',
-    'ugly', 'boring', 'useless', 'waste', 'problem', 'issue', 'broken',
-    'upset', 'worried', 'concerned', 'unfortunately', 'difficult', 'wrong',
+    'hate',
+    'terrible',
+    'awful',
+    'horrible',
+    'bad',
+    'worst',
+    'disappointing',
+    'sad',
+    'angry',
+    'frustrated',
+    'annoying',
+    'poor',
+    'fail',
+    'failure',
+    'ugly',
+    'boring',
+    'useless',
+    'waste',
+    'problem',
+    'issue',
+    'broken',
+    'upset',
+    'worried',
+    'concerned',
+    'unfortunately',
+    'difficult',
+    'wrong',
   ];
 
-  const intensifiers = ['very', 'extremely', 'incredibly', 'absolutely', 'totally', 'really'];
-  const negators = ['not', "don't", "doesn't", "didn't", "won't", "can't", "never", "no"];
+  const intensifiers = [
+    'very',
+    'extremely',
+    'incredibly',
+    'absolutely',
+    'totally',
+    'really',
+  ];
+  const negators = [
+    'not',
+    "don't",
+    "doesn't",
+    "didn't",
+    "won't",
+    "can't",
+    'never',
+    'no',
+  ];
 
   // Count sentiment words
   let positiveCount = 0;
@@ -157,7 +228,8 @@ function analyzeWithRules(text: string): SentimentResult {
       continue;
     }
 
-    const isIntensified = i > 0 && intensifiers.includes(words[i - 1].replace(/[^a-z]/g, ''));
+    const isIntensified =
+      i > 0 && intensifiers.includes(words[i - 1].replace(/[^a-z]/g, ''));
     const weight = isIntensified ? 2 : 1;
 
     if (positiveWords.includes(word)) {
@@ -185,7 +257,11 @@ function analyzeWithRules(text: string): SentimentResult {
   if (total > 0) {
     score = ((positiveCount - negativeCount) / total) * 100;
 
-    if (positiveCount > 0 && negativeCount > 0 && Math.abs(positiveCount - negativeCount) <= 2) {
+    if (
+      positiveCount > 0 &&
+      negativeCount > 0 &&
+      Math.abs(positiveCount - negativeCount) <= 2
+    ) {
       sentiment = 'mixed';
     } else if (score > 20) {
       sentiment = 'positive';
@@ -285,10 +361,15 @@ function predictEngagement(
     tiktok: 2.0,
   };
 
-  const platformMult = platform ? platformMultipliers[platform.toLowerCase()] || 1.0 : 1.0;
+  const platformMult = platform
+    ? platformMultipliers[platform.toLowerCase()] || 1.0
+    : 1.0;
 
   // Content features
-  const hasEmoji = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]/u.test(text);
+  const hasEmoji =
+    /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]/u.test(
+      text
+    );
   const hasHashtag = /#\w+/.test(text);
   const hasMention = /@\w+/.test(text);
   const hasQuestion = /\?/.test(text);
@@ -302,7 +383,7 @@ function predictEngagement(
   if (wordCount > 50 && wordCount < 150) multiplier += 0.1;
 
   // Emotion boost
-  const joyEmotion = sentiment.emotions.find((e) => e.emotion === 'joy');
+  const joyEmotion = sentiment.emotions.find(e => e.emotion === 'joy');
   if (joyEmotion) multiplier += joyEmotion.intensity * 0.2;
 
   const engagementRate = base * platformMult * multiplier;
@@ -328,109 +409,119 @@ function predictEngagement(
 // ============================================================================
 
 export async function POST(request: NextRequest) {
-  return requireApiKey(request, async () => {
-  // Distributed rate limiting via Upstash Redis
-  return aiGeneration(request, async () => {
-  try {
-    // Security check
-    const security = await APISecurityChecker.check(
-      request,
-      DEFAULT_POLICIES.AUTHENTICATED_WRITE
-    );
+  return requireApiKey(
+    request,
+    async () => {
+      // Distributed rate limiting via Upstash Redis
+      return aiGeneration(request, async () => {
+        try {
+          // Security check
+          const security = await APISecurityChecker.check(
+            request,
+            DEFAULT_POLICIES.AUTHENTICATED_WRITE
+          );
 
-    if (!security.allowed) {
-      return APISecurityChecker.createSecureResponse(
-        { error: security.error },
-        401
-      );
-    }
+          if (!security.allowed) {
+            return APISecurityChecker.createSecureResponse(
+              { error: security.error },
+              401
+            );
+          }
 
-    const userId = security.context.userId!;
-    const body = await request.json();
+          const userId = security.context.userId!;
+          const body = await request.json();
 
-    // Validate input
-    const validation = analyzeSentimentSchema.safeParse(body);
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
-        { status: 400 }
-      );
-    }
+          // Validate input
+          const validation = analyzeSentimentSchema.safeParse(body);
+          if (!validation.success) {
+            return NextResponse.json(
+              { error: 'Invalid input', details: validation.error.errors },
+              { status: 400 }
+            );
+          }
 
-    const { text, contentType, contentId, platform, predictEngagement: shouldPredict } = validation.data;
+          const {
+            text,
+            contentType,
+            contentId,
+            platform,
+            predictEngagement: shouldPredict,
+          } = validation.data;
 
-    // Resolve AI provider (user key → platform key → null)
-    const aiAvailable = await hasAIAccess(userId);
-    const ai = aiAvailable ? await resolveAIProvider(userId) : undefined;
+          // Resolve AI provider (user key → platform key → null)
+          const aiAvailable = await hasAIAccess(userId);
+          const ai = aiAvailable ? await resolveAIProvider(userId) : undefined;
 
-    // Analyze sentiment
-    const sentiment = await analyzeSentiment(text, ai);
+          // Analyze sentiment
+          const sentiment = await analyzeSentiment(text, ai);
 
-    // Get engagement prediction if requested
-    let engagementPrediction: EngagementPrediction | null = null;
-    if (shouldPredict) {
-      engagementPrediction = predictEngagement(sentiment, text, platform);
-    }
+          // Get engagement prediction if requested
+          let engagementPrediction: EngagementPrediction | null = null;
+          if (shouldPredict) {
+            engagementPrediction = predictEngagement(sentiment, text, platform);
+          }
 
-    // Store analysis
-    // Prisma client type does not expose sentimentAnalysis in the generated type union — runtime model
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const analysis = await (prisma as any).sentimentAnalysis?.create({
-      data: {
-        userId,
-        contentType,
-        contentId,
-        text: text.substring(0, 5000), // Limit stored text
-        sentiment: sentiment.sentiment,
-        score: sentiment.score,
-        confidence: sentiment.confidence,
-        emotions: sentiment.emotions,
-        toneIndicators: sentiment.toneIndicators,
-        keyPhrases: sentiment.keyPhrases,
-        predictedEngagement: engagementPrediction,
-        platform,
-        model: ai ? ai.name : 'rule-based',
-      },
-    });
+          // Store analysis
+          // Prisma client type does not expose sentimentAnalysis in the generated type union — runtime model
+          const analysis = await (prisma as any).sentimentAnalysis?.create({
+            data: {
+              userId,
+              contentType,
+              contentId,
+              text: text.substring(0, 5000), // Limit stored text
+              sentiment: sentiment.sentiment,
+              score: sentiment.score,
+              confidence: sentiment.confidence,
+              emotions: sentiment.emotions,
+              toneIndicators: sentiment.toneIndicators,
+              keyPhrases: sentiment.keyPhrases,
+              predictedEngagement: engagementPrediction,
+              platform,
+              model: ai ? ai.name : 'rule-based',
+            },
+          });
 
-    // If analyzing a comment, update the comment's sentiment
-    if (contentType === 'comment' && contentId) {
-      // Prisma client type does not expose contentComment in the generated type union — runtime model
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (prisma as any).contentComment?.update({
-        where: { id: contentId },
-        data: {
-          sentiment: sentiment.sentiment,
-          sentimentScore: sentiment.score,
-          emotions: sentiment.emotions,
-        },
-      }).catch(() => {
-        // Comment might not exist, ignore
+          // If analyzing a comment, update the comment's sentiment
+          if (contentType === 'comment' && contentId) {
+            // Prisma client type does not expose contentComment in the generated type union — runtime model
+            await (prisma as any).contentComment
+              ?.update({
+                where: { id: contentId },
+                data: {
+                  sentiment: sentiment.sentiment,
+                  sentimentScore: sentiment.score,
+                  emotions: sentiment.emotions,
+                },
+              })
+              .catch(() => {
+                // Comment might not exist, ignore
+              });
+          }
+
+          return NextResponse.json({
+            analysis: {
+              id: analysis?.id,
+              sentiment: sentiment.sentiment,
+              score: sentiment.score,
+              confidence: sentiment.confidence,
+              emotions: sentiment.emotions,
+              toneIndicators: sentiment.toneIndicators,
+              keyPhrases: sentiment.keyPhrases,
+            },
+            engagementPrediction,
+            analyzedAt: new Date().toISOString(),
+          });
+        } catch (error) {
+          logger.error('Sentiment analysis error:', error);
+          return NextResponse.json(
+            { error: 'Failed to analyze sentiment' },
+            { status: 500 }
+          );
+        }
       });
-    }
-
-    return NextResponse.json({
-      analysis: {
-        id: analysis?.id,
-        sentiment: sentiment.sentiment,
-        score: sentiment.score,
-        confidence: sentiment.confidence,
-        emotions: sentiment.emotions,
-        toneIndicators: sentiment.toneIndicators,
-        keyPhrases: sentiment.keyPhrases,
-      },
-      engagementPrediction,
-      analyzedAt: new Date().toISOString(),
-    });
-  } catch (error) {
-    logger.error('Sentiment analysis error:', error);
-    return NextResponse.json(
-      { error: 'Failed to analyze sentiment' },
-      { status: 500 }
-    );
-  }
-  });
-  }, { allowWithoutKey: true });
+    },
+    { allowWithoutKey: true }
+  );
 }
 
 // ============================================================================
@@ -459,7 +550,10 @@ export async function GET(request: NextRequest) {
     const contentType = searchParams.get('contentType');
     const contentId = searchParams.get('contentId');
     const sentiment = searchParams.get('sentiment');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || '20', 10),
+      100
+    );
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Build query
@@ -476,7 +570,6 @@ export async function GET(request: NextRequest) {
 
     const [analyses, total] = await Promise.all([
       // Prisma client type does not expose sentimentAnalysis in the generated type union — runtime model
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (prisma as any).sentimentAnalysis?.findMany({
         where,
         orderBy: { analyzedAt: 'desc' },
@@ -495,7 +588,6 @@ export async function GET(request: NextRequest) {
           analyzedAt: true,
         },
       }) || [],
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (prisma as any).sentimentAnalysis?.count({ where }) || 0,
     ]);
 

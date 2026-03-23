@@ -5,7 +5,12 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { getWebSocketClient, isWebSocketAvailable, type WebSocketMessage, type NotificationData } from '@/lib/websocket/client';
+import {
+  getWebSocketClient,
+  isWebSocketAvailable,
+  type WebSocketMessage,
+  type NotificationData,
+} from '@/lib/websocket/client';
 
 export interface UseWebSocketOptions {
   autoConnect?: boolean;
@@ -22,19 +27,21 @@ export interface UseWebSocketReturn {
   isConnected: boolean;
   connectionState: string;
   reconnectCount: number;
-  
+
   // Actions
   connect: (token?: string) => void;
   disconnect: () => void;
   send: (message: Omit<WebSocketMessage, 'timestamp'>) => void;
   subscribe: (channel: string) => void;
   unsubscribe: (channel: string) => void;
-  
+
   // Utilities
   sendNotification: (notification: NotificationData) => void;
 }
 
-export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketReturn {
+export function useWebSocket(
+  options: UseWebSocketOptions = {}
+): UseWebSocketReturn {
   const {
     autoConnect = true,
     token,
@@ -48,7 +55,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   const [isConnected, setIsConnected] = useState(false);
   const [connectionState, setConnectionState] = useState('CLOSED');
   const [reconnectCount, setReconnectCount] = useState(0);
-  
+
   const wsAvailable = isWebSocketAvailable();
   const wsClient = useRef(wsAvailable ? getWebSocketClient() : null);
   const subscriptions = useRef(new Set<string>());
@@ -62,15 +69,18 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   }, []);
 
   // Connect to WebSocket
-  const connect = useCallback((authToken?: string) => {
-    if (!wsClient.current) return;
-    try {
-      wsClient.current.connect(authToken || token);
-    } catch (error) {
-      console.error('Failed to connect WebSocket:', error);
-      onError?.(error);
-    }
-  }, [token, onError]);
+  const connect = useCallback(
+    (authToken?: string) => {
+      if (!wsClient.current) return;
+      try {
+        wsClient.current.connect(authToken || token);
+      } catch (error) {
+        console.error('Failed to connect WebSocket:', error);
+        onError?.(error);
+      }
+    },
+    [token, onError]
+  );
 
   // Disconnect from WebSocket
   const disconnect = useCallback(() => {
@@ -96,34 +106,43 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   }, []);
 
   // Subscribe to channel
-  const subscribe = useCallback((channel: string) => {
-    if (!subscriptions.current.has(channel)) {
-      subscriptions.current.add(channel);
-      send({
-        type: 'subscribe',
-        channel,
-      });
-    }
-  }, [send]);
+  const subscribe = useCallback(
+    (channel: string) => {
+      if (!subscriptions.current.has(channel)) {
+        subscriptions.current.add(channel);
+        send({
+          type: 'subscribe',
+          channel,
+        });
+      }
+    },
+    [send]
+  );
 
   // Unsubscribe from channel
-  const unsubscribe = useCallback((channel: string) => {
-    if (subscriptions.current.has(channel)) {
-      subscriptions.current.delete(channel);
-      send({
-        type: 'unsubscribe',
-        channel,
-      });
-    }
-  }, [send]);
+  const unsubscribe = useCallback(
+    (channel: string) => {
+      if (subscriptions.current.has(channel)) {
+        subscriptions.current.delete(channel);
+        send({
+          type: 'unsubscribe',
+          channel,
+        });
+      }
+    },
+    [send]
+  );
 
   // Send notification (for testing/admin purposes)
-  const sendNotification = useCallback((notification: NotificationData) => {
-    send({
-      type: 'notification',
-      data: notification,
-    });
-  }, [send]);
+  const sendNotification = useCallback(
+    (notification: NotificationData) => {
+      send({
+        type: 'notification',
+        data: notification,
+      });
+    },
+    [send]
+  );
 
   // Set up event listeners
   useEffect(() => {
@@ -181,7 +200,16 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       client.off('notification', handleNotification);
       client.off('error', handleError);
     };
-  }, [autoConnect, connect, updateConnectionState, onConnect, onDisconnect, onMessage, onNotification, onError]);
+  }, [
+    autoConnect,
+    connect,
+    updateConnectionState,
+    onConnect,
+    onDisconnect,
+    onMessage,
+    onNotification,
+    onError,
+  ]);
 
   // Auto-reconnect on page focus
   useEffect(() => {
@@ -197,8 +225,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
 
   // Cleanup on unmount
   useEffect(() => {
+    // Capture the current Map reference so the cleanup function uses the same instance
+    // even if the ref is reassigned before the cleanup runs.
+    const subs = subscriptions.current;
     return () => {
-      subscriptions.current.clear();
+      subs.clear();
       // Don't disconnect on unmount in case other components are using the same connection
     };
   }, []);
@@ -208,14 +239,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     isConnected,
     connectionState,
     reconnectCount,
-    
+
     // Actions
     connect,
     disconnect,
     send,
     subscribe,
     unsubscribe,
-    
+
     // Utilities
     sendNotification,
   };

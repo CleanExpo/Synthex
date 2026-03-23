@@ -20,7 +20,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
 // Type for route params
@@ -32,7 +35,9 @@ interface RouteParams {
 const updateContentSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   content: z.string().min(1).max(50000).optional(),
-  contentType: z.enum(['post', 'caption', 'story', 'thread', 'template', 'snippet']).optional(),
+  contentType: z
+    .enum(['post', 'caption', 'story', 'thread', 'template', 'snippet'])
+    .optional(),
   platform: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
@@ -169,21 +174,24 @@ export async function PATCH(
     const { incrementUsage, ...updateData } = validation.data;
 
     // Build update object — dynamic field names prevent a fully-typed accumulator here
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updatePayload: Record<string, any> = {};
 
     if (updateData.title !== undefined) updatePayload.title = updateData.title;
-    if (updateData.content !== undefined) updatePayload.content = updateData.content;
-    if (updateData.contentType !== undefined) updatePayload.contentType = updateData.contentType;
-    if (updateData.platform !== undefined) updatePayload.platform = updateData.platform;
-    if (updateData.category !== undefined) updatePayload.category = updateData.category;
+    if (updateData.content !== undefined)
+      updatePayload.content = updateData.content;
+    if (updateData.contentType !== undefined)
+      updatePayload.contentType = updateData.contentType;
+    if (updateData.platform !== undefined)
+      updatePayload.platform = updateData.platform;
+    if (updateData.category !== undefined)
+      updatePayload.category = updateData.category;
     if (updateData.tags !== undefined) updatePayload.tags = updateData.tags;
-    if (updateData.status !== undefined) updatePayload.status = updateData.status;
+    if (updateData.status !== undefined)
+      updatePayload.status = updateData.status;
     if (updateData.metadata !== undefined) {
       // Prisma requires special handling for JSON null
-      updatePayload.metadata = updateData.metadata === null
-        ? { set: null }
-        : updateData.metadata;
+      updatePayload.metadata =
+        updateData.metadata === null ? { set: null } : updateData.metadata;
     }
 
     // Handle usage tracking
@@ -197,7 +205,11 @@ export async function PATCH(
       data: updatePayload,
     });
 
-    return APISecurityChecker.createSecureResponse(updated, 200, security.context);
+    return APISecurityChecker.createSecureResponse(
+      updated,
+      200,
+      security.context
+    );
   } catch (error) {
     logger.error('Error updating content library item:', error);
     return APISecurityChecker.createSecureResponse(

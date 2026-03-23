@@ -38,7 +38,9 @@ interface UseUserReturn {
  *
  * @param options.redirectOnUnauth If true, redirect to login on 401 (use in dashboard pages)
  */
-export function useUser({ redirectOnUnauth = false }: UseUserOptions = {}): UseUserReturn {
+export function useUser({
+  redirectOnUnauth = false,
+}: UseUserOptions = {}): UseUserReturn {
   const [user, setUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -78,7 +80,7 @@ export function useUser({ redirectOnUnauth = false }: UseUserOptions = {}): UseU
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [redirectOnUnauth]);
 
   useEffect(() => {
     fetchUser();

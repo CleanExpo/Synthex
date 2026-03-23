@@ -30,7 +30,7 @@ export function useInfiniteScroll<T>({
   loadMore,
   onError,
   threshold = 200,
-  enabled = true
+  enabled = true,
 }: UseInfiniteScrollOptions<T>): UseInfiniteScrollReturn<T> {
   const [items, setItems] = useState<T[]>(initialData);
   const [page, setPage] = useState(1);
@@ -39,32 +39,32 @@ export function useInfiniteScroll<T>({
   const [error, setError] = useState<Error | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const loadingRef = useRef(false);
-  
+
   // Load more items
   const loadMoreItems = useCallback(async () => {
     if (loadingRef.current || !hasMore || !enabled) return;
-    
+
     loadingRef.current = true;
     setIsLoadingMore(true);
     setError(null);
-    
+
     try {
       const newItems = await loadMore(page, pageSize);
-      
+
       if (newItems.length === 0 || newItems.length < pageSize) {
         setHasMore(false);
         if (newItems.length === 0) {
           notify.info('No more items to load');
         }
       }
-      
+
       setItems(prev => [...prev, ...newItems]);
       setPage(prev => prev + 1);
     } catch (err) {
       const error = err as Error;
       setError(error);
       setHasMore(false);
-      
+
       if (onError) {
         onError(error);
       } else {
@@ -76,7 +76,7 @@ export function useInfiniteScroll<T>({
       setLoading(false);
     }
   }, [page, pageSize, loadMore, hasMore, enabled, onError]);
-  
+
   // Reset the infinite scroll
   const reset = useCallback(() => {
     setItems(initialData);
@@ -87,15 +87,17 @@ export function useInfiniteScroll<T>({
     setHasMore(true);
     loadingRef.current = false;
   }, [initialData]);
-  
-  // Initial load
+
+  // Initial load — intentionally runs only on mount; adding the listed deps would cause
+  // re-fetches whenever items arrive, creating an infinite load loop.
   useEffect(() => {
     if (items.length === 0 && hasMore && enabled) {
       setLoading(true);
       loadMoreItems();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
+
   return {
     items,
     loading,
@@ -105,7 +107,7 @@ export function useInfiniteScroll<T>({
     reset,
     page,
     isLoadingMore,
-    totalLoaded: items.length
+    totalLoaded: items.length,
   };
 }
 
@@ -120,10 +122,10 @@ export function useInfiniteScrollTrigger(
 ) {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
-  
+
   useEffect(() => {
     if (options?.enabled === false) return;
-    
+
     const handleIntersection = (entries: IntersectionObserverEntry[]) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -131,23 +133,23 @@ export function useInfiniteScrollTrigger(
         }
       });
     };
-    
+
     observerRef.current = new IntersectionObserver(handleIntersection, {
       threshold: options?.threshold || 0.1,
-      rootMargin: options?.rootMargin || '100px'
+      rootMargin: options?.rootMargin || '100px',
     });
-    
+
     if (triggerRef.current) {
       observerRef.current.observe(triggerRef.current);
     }
-    
+
     return () => {
       if (observerRef.current) {
         observerRef.current.disconnect();
       }
     };
   }, [callback, options?.enabled, options?.threshold, options?.rootMargin]);
-  
+
   return triggerRef;
 }
 
@@ -156,7 +158,7 @@ export function useVirtualScroll<T>({
   items,
   itemHeight,
   containerHeight,
-  overscan = 3
+  overscan = 3,
 }: {
   items: T[];
   itemHeight: number;
@@ -164,28 +166,28 @@ export function useVirtualScroll<T>({
   overscan?: number;
 }) {
   const [scrollTop, setScrollTop] = useState(0);
-  
+
   const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
   const endIndex = Math.min(
     items.length - 1,
     Math.ceil((scrollTop + containerHeight) / itemHeight) + overscan
   );
-  
+
   const visibleItems = items.slice(startIndex, endIndex + 1);
   const totalHeight = items.length * itemHeight;
   const offsetY = startIndex * itemHeight;
-  
+
   const handleScroll = (e: React.UIEvent<HTMLElement>) => {
     setScrollTop(e.currentTarget.scrollTop);
   };
-  
+
   return {
     visibleItems,
     totalHeight,
     offsetY,
     handleScroll,
     startIndex,
-    endIndex
+    endIndex,
   };
 }
 
@@ -193,28 +195,28 @@ export function useVirtualScroll<T>({
 export function usePagination<T>({
   data,
   pageSize = 10,
-  initialPage = 1
+  initialPage = 1,
 }: {
   data: T[];
   pageSize?: number;
   initialPage?: number;
 }) {
   const [currentPage, setCurrentPage] = useState(initialPage);
-  
+
   const totalPages = Math.ceil(data.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, data.length);
   const currentData = data.slice(startIndex, endIndex);
-  
+
   const goToPage = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
-  
+
   const nextPage = () => goToPage(currentPage + 1);
   const prevPage = () => goToPage(currentPage - 1);
   const firstPage = () => goToPage(1);
   const lastPage = () => goToPage(totalPages);
-  
+
   return {
     currentData,
     currentPage,
@@ -227,6 +229,6 @@ export function usePagination<T>({
     nextPage,
     prevPage,
     firstPage,
-    lastPage
+    lastPage,
   };
 }

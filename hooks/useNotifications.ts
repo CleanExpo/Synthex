@@ -25,7 +25,14 @@ import { toast } from 'sonner';
 
 export interface Notification {
   id: string;
-  type: 'info' | 'success' | 'warning' | 'error' | 'mention' | 'engagement' | 'system';
+  type:
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'error'
+    | 'mention'
+    | 'engagement'
+    | 'system';
   title: string;
   message: string;
   data?: Record<string, unknown>;
@@ -137,7 +144,8 @@ export function useNotifications(
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
-  const [connectionMethod, setConnectionMethod] = useState<ConnectionMethod>('none');
+  const [connectionMethod, setConnectionMethod] =
+    useState<ConnectionMethod>('none');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -163,28 +171,29 @@ export function useNotifications(
       if (!mountedRef.current) return;
 
       // Add to state
-      setNotifications((prev) => {
-        const exists = prev.some((n) => n.id === notification.id);
+      setNotifications(prev => {
+        const exists = prev.some(n => n.id === notification.id);
         if (exists) return prev;
         return [notification, ...prev].slice(0, 100); // Keep last 100
       });
 
       // Update unread count
       if (!notification.read) {
-        setUnreadCount((prev) => prev + 1);
+        setUnreadCount(prev => prev + 1);
       }
 
       // Show toast
       if (showToasts) {
-        const toastFn = {
-          success: toast.success,
-          error: toast.error,
-          warning: toast.warning,
-          info: toast.info,
-          mention: toast.info,
-          engagement: toast.success,
-          system: toast.info,
-        }[notification.type] || toast.info;
+        const toastFn =
+          {
+            success: toast.success,
+            error: toast.error,
+            warning: toast.warning,
+            info: toast.info,
+            mention: toast.info,
+            engagement: toast.success,
+            system: toast.info,
+          }[notification.type] || toast.info;
 
         toastFn(`${notification.title}: ${notification.message}`);
       }
@@ -226,7 +235,7 @@ export function useNotifications(
         onConnectionChange?.('sse', true);
       };
 
-      eventSource.onmessage = (event) => {
+      eventSource.onmessage = event => {
         if (!mountedRef.current) return;
         try {
           const notification = JSON.parse(event.data) as Notification;
@@ -241,7 +250,7 @@ export function useNotifications(
         }
       };
 
-      eventSource.onerror = (err) => {
+      eventSource.onerror = err => {
         if (!mountedRef.current) return;
         console.error('SSE error:', err);
         eventSource.close();
@@ -265,6 +274,9 @@ export function useNotifications(
       // Fall back to polling
       startPolling();
     }
+    // `startPolling` is defined after this callback (const hoisting limitation) yet has a stable
+    // reference because its own deps are stable — safe to omit to avoid a circular dependency chain.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [buildSSEUrl, handleNotification, onConnectionChange, onError]);
 
   // Fetch notifications via polling
@@ -382,13 +394,13 @@ export function useNotifications(
 
       // Update local state
       if (notificationId === 'all') {
-        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
         setUnreadCount(0);
       } else {
-        setNotifications((prev) =>
-          prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+        setNotifications(prev =>
+          prev.map(n => (n.id === notificationId ? { ...n, read: true } : n))
         );
-        setUnreadCount((prev) => Math.max(0, prev - 1));
+        setUnreadCount(prev => Math.max(0, prev - 1));
       }
     } catch (err) {
       console.error('Failed to mark notification as read:', err);
@@ -410,6 +422,8 @@ export function useNotifications(
   }, [fetchNotifications]);
 
   // Auto-connect on mount
+  // `connect` and `disconnect` are intentionally excluded — including them would trigger
+  // reconnection on every render cycle, causing an infinite reconnect loop.
   useEffect(() => {
     mountedRef.current = true;
 
@@ -421,7 +435,8 @@ export function useNotifications(
       mountedRef.current = false;
       disconnect();
     };
-  }, [autoConnect]); // Only depend on autoConnect to avoid reconnection loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoConnect]);
 
   // Reconnect on window focus
   useEffect(() => {
@@ -435,12 +450,14 @@ export function useNotifications(
     return () => window.removeEventListener('focus', handleFocus);
   }, [isConnected, autoConnect, connect]);
 
-  // Initial notification fetch
+  // Initial notification fetch — intentionally runs only on mount; adding `autoConnect` or
+  // `refreshNotifications` would cause repeated fetches on every connection state change.
   useEffect(() => {
     if (autoConnect) {
       refreshNotifications();
     }
-  }, []); // Only on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     // State

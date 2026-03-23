@@ -69,7 +69,10 @@ export interface RedisClusterConfig {
     retryDelayOnTryAgain: number;
     slotsRefreshTimeout: number;
     slotsRefreshInterval: number;
-    dnsLookup?: (address: string, callback: (err: Error | null, address: string, family: number) => void) => void;
+    dnsLookup?: (
+      address: string,
+      callback: (err: Error | null, address: string, family: number) => void
+    ) => void;
     natMap?: Record<string, { host: string; port: number }>;
   };
   redisOptions: {
@@ -142,7 +145,9 @@ export function getRedisConfig(): RedisConfig {
   let redisUrl = process.env.REDIS_URL;
 
   if (!redisUrl && process.env.REDIS_HOST) {
-    const auth = process.env.REDIS_PASSWORD ? `:${process.env.REDIS_PASSWORD}@` : '';
+    const auth = process.env.REDIS_PASSWORD
+      ? `:${process.env.REDIS_PASSWORD}@`
+      : '';
     const host = process.env.REDIS_HOST || 'localhost';
     const port = process.env.REDIS_PORT || '6379';
     const db = process.env.REDIS_DB || '0';
@@ -193,7 +198,7 @@ export function getRedisClusterConfig(): RedisClusterConfig {
   const nodes: RedisClusterNode[] = nodesString
     .split(',')
     .filter(Boolean)
-    .map((nodeStr) => {
+    .map(nodeStr => {
       const [host, portStr] = nodeStr.trim().split(':');
       return {
         host: host || 'localhost',
@@ -221,7 +226,9 @@ export function getRedisClusterConfig(): RedisClusterConfig {
           return null; // Stop retrying
         }
         const delay = Math.min(times * 100, 3000);
-        console.log(`[Redis Cluster] Retry attempt ${times}, waiting ${delay}ms`);
+        console.info(
+          `[Redis Cluster] Retry attempt ${times}, waiting ${delay}ms`
+        );
         return delay;
       },
       enableReadyCheck: true,
@@ -253,7 +260,7 @@ export function getRedisSentinelConfig(): RedisSentinelConfig {
   const sentinels: RedisClusterNode[] = nodesString
     .split(',')
     .filter(Boolean)
-    .map((nodeStr) => {
+    .map(nodeStr => {
       const [host, portStr] = nodeStr.trim().split(':');
       return {
         host: host || 'localhost',
@@ -263,7 +270,8 @@ export function getRedisSentinelConfig(): RedisSentinelConfig {
 
   return {
     enabled,
-    sentinels: sentinels.length > 0 ? sentinels : [{ host: 'localhost', port: 26379 }],
+    sentinels:
+      sentinels.length > 0 ? sentinels : [{ host: 'localhost', port: 26379 }],
     name: process.env.REDIS_SENTINEL_MASTER || 'mymaster',
     options: {
       sentinelPassword: process.env.REDIS_SENTINEL_PASSWORD,
@@ -276,12 +284,14 @@ export function getRedisSentinelConfig(): RedisSentinelConfig {
           return null;
         }
         const delay = Math.min(times * 100, 3000);
-        console.log(`[Redis Sentinel] Retry attempt ${times}, waiting ${delay}ms`);
+        console.info(
+          `[Redis Sentinel] Retry attempt ${times}, waiting ${delay}ms`
+        );
         return delay;
       },
       reconnectOnError: (err: Error) => {
         const targetErrors = ['READONLY', 'CLUSTERDOWN', 'MOVED'];
-        if (targetErrors.some((e) => err.message.includes(e))) {
+        if (targetErrors.some(e => err.message.includes(e))) {
           return 2;
         }
         return false;
@@ -298,9 +308,15 @@ export function getRedisPoolConfig(): RedisPoolConfig {
   return {
     maxConnections: parseInt(process.env.REDIS_POOL_SIZE || '10', 10),
     minConnections: parseInt(process.env.REDIS_POOL_MIN || '2', 10),
-    acquireTimeout: parseInt(process.env.REDIS_POOL_ACQUIRE_TIMEOUT || '10000', 10),
+    acquireTimeout: parseInt(
+      process.env.REDIS_POOL_ACQUIRE_TIMEOUT || '10000',
+      10
+    ),
     idleTimeout: parseInt(process.env.REDIS_POOL_IDLE_TIMEOUT || '30000', 10),
-    evictionRunInterval: parseInt(process.env.REDIS_POOL_EVICTION_INTERVAL || '60000', 10),
+    evictionRunInterval: parseInt(
+      process.env.REDIS_POOL_EVICTION_INTERVAL || '60000',
+      10
+    ),
   };
 }
 
@@ -327,7 +343,10 @@ export function getCacheConfig(): CacheConfig {
     maxMemoryItems: parseInt(process.env.CACHE_MAX_MEMORY_ITEMS || '1000', 10),
     enableRedis: process.env.DISABLE_REDIS !== 'true',
     enableInMemoryFallback: true,
-    cleanupInterval: parseInt(process.env.CACHE_CLEANUP_INTERVAL || '300000', 10), // 5 minutes
+    cleanupInterval: parseInt(
+      process.env.CACHE_CLEANUP_INTERVAL || '300000',
+      10
+    ), // 5 minutes
   };
 }
 
@@ -335,7 +354,10 @@ export function getCacheConfig(): CacheConfig {
  * Get Upstash configuration for Vercel deployments
  */
 export function getUpstashConfig(): UpstashConfig | null {
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+  if (
+    !process.env.UPSTASH_REDIS_REST_URL ||
+    !process.env.UPSTASH_REDIS_REST_TOKEN
+  ) {
     return null;
   }
 
@@ -348,7 +370,12 @@ export function getUpstashConfig(): UpstashConfig | null {
 /**
  * Determine the best Redis mode based on configuration
  */
-export function determineRedisMode(): 'cluster' | 'sentinel' | 'standalone' | 'upstash' | 'memory' {
+export function determineRedisMode():
+  | 'cluster'
+  | 'sentinel'
+  | 'standalone'
+  | 'upstash'
+  | 'memory' {
   // Check if Redis is disabled
   if (process.env.DISABLE_REDIS === 'true') {
     return 'memory';
@@ -437,7 +464,7 @@ export function getRedisConfigSummary(): {
 }
 
 // Export default configuration getter
-export default {
+const redisConfig = {
   getRedisConfig,
   getRedisClusterConfig,
   getRedisSentinelConfig,
@@ -447,3 +474,4 @@ export default {
   determineRedisMode,
   getRedisConfigSummary,
 };
+export default redisConfig;
