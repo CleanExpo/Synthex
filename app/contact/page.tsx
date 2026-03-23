@@ -362,7 +362,7 @@ export default function ContactPage() {
                   </div>
                 </div>
                 <p className="text-sm text-gray-400 mt-4">
-                  All times are in Pacific Standard Time (PST)
+                  All times are in AEST (Brisbane time)
                 </p>
               </div>
             </div>
