@@ -61,6 +61,24 @@ Activate this skill when:
 - **Build**: `next.config.mjs` with strict TypeScript enforcement
 - **Deploy**: Vercel serverless
 
+## Pre-Scan: Extract Public Route Surface
+
+Before running any security checks, extract the verified list of public (unauthenticated) routes from the route reference. This is the authoritative starting surface for the auth audit — no ad-hoc filesystem scan needed.
+
+```bash
+grep "— public" .planning/ROUTE_REFERENCE.md
+```
+
+If the output looks stale (e.g., routes you recently added are missing), run `npm run routes:refresh` first to regenerate Zone 1.
+
+Use this list for:
+
+- S3 secret exposure scan scoping (public routes are highest risk)
+- S6 rate limiting check (public routes most need rate limiting)
+- Manual review: any public route without a documented reason to be public is a finding
+
+---
+
 ## Security Checks
 
 ### CRITICAL (Deployment Blockers)
