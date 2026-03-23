@@ -115,7 +115,7 @@ function ExperimentsTab() {
   if (typeFilter !== 'all') queryParams.set('type', typeFilter);
   const queryString = queryParams.toString();
 
-  const { data, isLoading, mutate } = useSWR<{
+  const { data, isLoading, error, mutate } = useSWR<{
     experiments: Experiment[];
     pagination: { total: number };
   }>(
@@ -224,10 +224,19 @@ function ExperimentsTab() {
         </Button>
       </div>
 
+      {/* Error State */}
+      {error && !isLoading && (
+        <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-sm">
+          <p className="text-red-400 text-sm">
+            Failed to load experiments. Please refresh the page.
+          </p>
+        </div>
+      )}
+
       {/* Experiment grid */}
       {isLoading ? (
         <DashboardSkeleton />
-      ) : experiments.length === 0 ? (
+      ) : error ? null : experiments.length === 0 ? (
         <div className="text-center py-16 border border-white/10 rounded-xl bg-white/[0.02]">
           <Beaker className="w-16 h-16 mx-auto text-gray-600 mb-4" />
           <h3 className="text-lg font-semibold text-white mb-2">

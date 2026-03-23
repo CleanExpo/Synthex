@@ -35,6 +35,7 @@ import {
   Loader2,
   FileText,
   Check,
+  AlertCircle,
 } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
@@ -165,6 +166,18 @@ function BioPagesPageContent() {
         </div>
       </div>
 
+      {/* Error State */}
+      {error && (
+        <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-sm">
+          <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+          <p className="text-red-400 text-sm">
+            {typeof error === 'string'
+              ? error
+              : 'Failed to load bio pages. Please refresh.'}
+          </p>
+        </div>
+      )}
+
       {/* Loading State */}
       {isLoading && pages.length === 0 && (
         <div className="flex items-center justify-center py-12">
@@ -173,7 +186,7 @@ function BioPagesPageContent() {
       )}
 
       {/* Empty State */}
-      {!isLoading && pages.length === 0 && (
+      {!isLoading && !error && pages.length === 0 && (
         <DashboardEmptyState
           icon={Link2}
           title="Create your first Link in Bio page"
