@@ -2,8 +2,8 @@
 
 > Auto-generated 2026-03-23. Read before implementing. Update the "Known issues" and "Last audited" fields after each task.
 >
-> **498 API routes · 100 dashboard pages · 104 Prisma models in use**
-> Auth: 389 user-authed · 22 admin-only · 24 cron · 62 public (1 route counted once in "line total" = 498 lines, 497 distinct paths)
+> **496 API routes · 100 dashboard pages · 105 Prisma models in use**
+> Auth: 398 user-authed · 22 admin-only · 24 cron · 52 public
 
 ---
 
@@ -24,40 +24,40 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### ab-testing
 
+- `DELETE,GET,PUT /api/ab-testing/tests/[testId]` — user — _aBTest_
+- `GET,POST /api/ab-testing/tests/[testId]/results` — user — _aBTest,aBTestResult,aBTestVariant_
 - `GET,POST /api/ab-testing/tests` — user — _aBTest_
-- `GET,PUT,DELETE /api/ab-testing/tests/[testId]` — user — _aBTest_
-- `GET,POST /api/ab-testing/tests/[testId]/results` — user — _aBTest, aBTestResult, aBTestVariant_
 
 ### activity
 
-- `GET,POST /api/activity` — user — _post, auditLog_
+- `GET,POST /api/activity` — user — _auditLog,post_
 
 ### admin
 
-- `GET /api/admin/audit-log` — admin — _auditLog_
-- `GET /api/admin/bayesian-health` — admin
+- `DELETE,GET,PATCH,POST /api/admin/vault` — admin — _user,vaultSecret_
+- `DELETE,GET,POST /api/admin/platform-credentials` — admin — _platformOAuthCredential,user_
+- `GET,PATCH,POST /api/admin/users` — admin — _user_
+- `GET,PATCH /api/admin/org-brand-profile` — admin — _organization,user_
 - `GET,POST /api/admin/invites` — admin — _inviteCode_
 - `GET,POST /api/admin/jobs` — admin
-- `GET,PATCH /api/admin/org-brand-profile` — admin — _user, organization_
-- `GET,POST,DELETE /api/admin/platform-credentials` — admin — _user, platformOAuthCredential_
-- `GET /api/admin/platform-stats` — admin — _user, subscription_
 - `GET,POST /api/admin/remotion` — admin
+- `GET,POST /api/admin/vault/seed-all` — admin — _organization,user,vaultSecret_
+- `GET /api/admin/audit-log` — admin — _auditLog_
+- `GET /api/admin/bayesian-health` — admin
+- `GET /api/admin/platform-stats` — admin — _subscription,user_
+- `GET /api/admin/vault/access-log` — admin — _user,vaultAccessLog_
 - `POST /api/admin/upgrade-subscription` — admin
-- `GET,POST,PATCH /api/admin/users` — admin — _user_
-- `GET,POST,PATCH,DELETE /api/admin/vault` — admin — _user_
-- `GET /api/admin/vault/access-log` — admin — _user_
-- `POST /api/admin/vault/decrypt` — admin — _user_
+- `POST /api/admin/vault/decrypt` — admin — _user,vaultSecret_
+- `POST /api/admin/vault/import-doc/confirm` — admin — _businessOwnership,user,vaultSecret_
 - `POST /api/admin/vault/import-doc` — admin — _user_
-- `POST /api/admin/vault/import-doc/confirm` — admin — _user, businessOwnership, vaultSecret_
-- `GET,POST /api/admin/vault/seed-all` — admin — _user, organization, vaultSecret_
 
 ### affiliates
 
+- `DELETE,GET,PUT /api/affiliates/links/[linkId]` — user
+- `DELETE,GET,PUT /api/affiliates/networks/[networkId]` — user
 - `GET,POST /api/affiliates/links` — user
-- `GET,PUT,DELETE /api/affiliates/links/[linkId]` — user
-- `GET /api/affiliates/links/[linkId]/clicks` — user
 - `GET,POST /api/affiliates/networks` — user
-- `GET,PUT,DELETE /api/affiliates/networks/[networkId]` — user
+- `GET /api/affiliates/links/[linkId]/clicks` — user
 - `GET /api/affiliates/stats` — user
 - `GET /api/affiliates/track/[shortCode]` — public
 - `POST /api/affiliates/webhook` — public
@@ -65,99 +65,112 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 ### agents
 
 - `POST /api/agents/dispatch-campaign` — user — _campaign_
-- `POST /api/agents/enhance-post` — user — _post, organization_
+- `POST /api/agents/enhance-post` — user — _organization,post_
 
 ### ai
 
+- `DELETE,GET,PATCH /api/ai/chat/conversations/[conversationId]` — user — _aIConversation,aIMessage_
 - `GET,POST /api/ai/chat/conversations` — user — _aIConversation_
-- `GET,PATCH,DELETE /api/ai/chat/conversations/[conversationId]` — user — _aIConversation, aIMessage_
-- `POST /api/ai/chat/conversations/[conversationId]/auto-title` — user — _aIConversation, aIMessage_
-- `POST /api/ai/chat/conversations/[conversationId]/messages` — user — _aIConversation, aIMessage_
 - `GET,POST /api/ai/generate-content` — user — _user_
 - `GET,POST /api/ai/pm/conversations` — user — _aIConversation_
-- `POST /api/ai/pm/conversations/[conversationId]/messages` — user — _aIConversation, aIMessage_
 - `GET /api/ai/pm/digest` — user — _aIWeeklyDigest_
-- `POST /api/ai/pm/feedback` — user — _aIMessage_
 - `GET /api/ai/pm/suggestions` — user
+- `POST /api/ai/chat/conversations/[conversationId]/auto-title` — user — _aIConversation,aIMessage_
+- `POST /api/ai/chat/conversations/[conversationId]/messages` — user — _aIConversation,aIMessage_
+- `POST /api/ai/pm/conversations/[conversationId]/messages` — user — _aIConversation,aIMessage_
+- `POST /api/ai/pm/feedback` — user — _aIMessage_
 
 ### ai-content
 
+- `GET,POST /api/ai-content/sentiment` — user
+- `GET,POST /api/ai-content/translate` — user
 - `POST /api/ai-content/hashtags` — user
 - `POST /api/ai-content/optimize` — user
-- `GET,POST /api/ai-content/sentiment` — user
 - `POST /api/ai-content/sentiment/batch` — user
-- `GET,POST /api/ai-content/translate` — user
 
 ### analytics
 
-- `GET /api/analytics` — user — _campaign, post, apiUsage_
+- `DELETE,GET,POST /api/analytics/reports/scheduled` — user — _report_
 - `GET,POST,PUT /api/analytics/anomalies` — user
-- `GET /api/analytics/benchmarks` — user — _platformConnection, platformPost_
-- `GET /api/analytics/dashboard` — user
-- `GET /api/analytics/dashboard-stats` — user — _campaign, post_
-- `POST /api/analytics/engagement` — public
-- `GET,POST /api/analytics/export` — user — _post, campaign_
-- `GET /api/analytics/insights` — user — _campaign, post, analyticsEvent_
+- `GET,POST /api/analytics/export` — user — _campaign,post_
 - `GET,POST /api/analytics/performance` — user — _post_
 - `GET,POST /api/analytics/predict-engagement` — user
-- `GET /api/analytics/realtime` — user — _campaign, analyticsEvent, post_
 - `GET,POST /api/analytics/reports` — user
-- `GET,POST,DELETE /api/analytics/reports/scheduled` — user — _report_
+- `GET /api/analytics/benchmarks` — user — _platformConnection,platformPost_
+- `GET /api/analytics/dashboard` — user
+- `GET /api/analytics/dashboard-stats` — user — _campaign,post_
+- `GET /api/analytics/insights` — user — _analyticsEvent,campaign,post_
+- `GET /api/analytics/realtime` — user — _analyticsEvent,campaign,post_
 - `GET /api/analytics/sentiment` — user
+- `GET /api/analytics` — user — _apiUsage,campaign,post_
+- `POST /api/analytics/engagement` — user
 
 ### approvals
 
-- `GET,POST /api/approvals` — user — _user, approvalRequest, workflowTemplate_
-- `GET,PATCH,DELETE /api/approvals/[id]` — user — _teamNotification, user, approvalRequest_
+- `DELETE,GET,PATCH /api/approvals/[id]` — user — _approvalRequest,teamNotification,user_
+- `GET,POST /api/approvals` — user — _approvalRequest,user,workflowTemplate_
 
 ### audience
 
-- `GET /api/audience/insights` — user — _platformConnection, platformPost_
+- `GET /api/audience/insights` — user — _platformConnection,platformPost_
 
 ### auth
 
+- `DELETE,GET,POST /api/auth/api-keys` — user — _user_
+- `DELETE,GET,POST /api/auth/connections` — user — _businessOwnership,platformConnection_
+- `DELETE,POST /api/auth/logout` — user — _auditLog,session_
+- `DELETE,POST /api/auth/unlink/github` — user
+- `DELETE,POST /api/auth/unlink/google` — user
+- `GET,POST /api/auth/reset` — public
+- `GET,POST /api/auth/unified` — admin — _user_
+- `GET,POST /api/auth/unified-login` — public
+- `GET,POST /api/auth/verify-email` — public
+- `GET,POST /api/auth/verify-token` — public
+- `GET,PUT /api/auth/profile` — user — _user_
+- `GET,PUT /api/auth/user` — user — _auditLog,user_
 - `GET /api/auth/accounts` — user
-- `GET,POST,DELETE /api/auth/api-keys` — user — _user_
-- `GET /api/auth/callback/[platform]` — admin — _platformConnection, user_
-- `GET,POST,DELETE /api/auth/connections` — user — _businessOwnership, platformConnection_
+- `GET /api/auth/callback/[platform]` — admin — _platformConnection,user_
 - `GET /api/auth/connections/status` — user — _platformConnection_
 - `GET /api/auth/link/github` — user
 - `GET /api/auth/link/google` — user
-- `POST /api/auth/login` — user — _user, auditLog, session_
-- `POST,DELETE /api/auth/logout` — user — _session, auditLog_
 - `GET /api/auth/oauth/[platform]` — user — _user_
-- `GET /api/auth/oauth/github` — user
-- `GET /api/auth/oauth/github/callback` — user — _user_
-- `GET /api/auth/oauth/google` — user
+- `GET /api/auth/oauth/github/callback` — public — _user_
+- `GET /api/auth/oauth/github` — public
 - `GET /api/auth/oauth/google/callback` — admin
-- `GET,PUT /api/auth/profile` — user — _user_
-- `POST /api/auth/refresh` — user — _user_
+- `GET /api/auth/oauth/google` — public
+- `POST /api/auth/login` — public — _auditLog,session,user_
+- `POST /api/auth/refresh` — public — _user_
 - `POST /api/auth/request-reset` — public — _user_
 - `POST /api/auth/resend-verification` — user — _user_
-- `GET,POST /api/auth/reset` — public
-- `POST /api/auth/signup` — user — _inviteCode, user_
-- `GET,POST /api/auth/unified` — admin — _user_
-- `GET,POST /api/auth/unified-login` — public
-- `POST,DELETE /api/auth/unlink/github` — user
-- `POST,DELETE /api/auth/unlink/google` — user
-- `GET,PUT /api/auth/user` — user — _user, auditLog_
+- `POST /api/auth/signup` — public — _inviteCode,user_
 - `POST /api/auth/validate-invite` — public — _inviteCode_
-- `GET,POST /api/auth/verify-email` — user
-- `GET,POST /api/auth/verify-token` — user
 
 ### authority
 
-- `POST /api/authority/analyze` — user — _user_
-- `GET /api/authority/citations` — user — _authorityAnalysis, authorityCitation_
-- `POST /api/authority/design-audit` — user
+- `GET /api/authority/citations` — user — _authorityAnalysis,authorityCitation_
 - `GET /api/authority/sources` — user
+- `POST /api/authority/analyze` — user — _user_
+- `POST /api/authority/design-audit` — user
 - `POST /api/authority/validate-claim` — user
 
 ### authors
 
+- `DELETE,GET,PATCH /api/authors/[id]` — user — _authorProfile_
 - `GET,POST /api/authors` — user — _authorProfile_
-- `GET,PATCH,DELETE /api/authors/[id]` — user — _authorProfile_
 - `GET /api/authors/[id]/schema` — user — _authorProfile_
+
+### autonomous
+
+- `POST /api/autonomous/execute` — user — _user,workflowExecution_
+- `POST /api/autonomous/parse` — user
+
+### autopilot
+
+- `GET,PATCH /api/autopilot/config` — user — _autopilotConfig_
+- `GET /api/autopilot/runs/[runId]` — user — _autopilotRun,post_
+- `GET /api/autopilot/runs` — user — _autopilotRun_
+- `GET /api/autopilot/stats` — user — _autopilotConfig,autopilotRun_
+- `POST /api/autopilot/preview` — user — _autopilotConfig_
 
 ### auto-research
 
@@ -165,32 +178,19 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET /api/auto-research/[id]` — user — _autoResearchRun_
 - `GET /api/auto-research/insights` — user — _trendInsight_
 
-### autonomous
-
-- `POST /api/autonomous/execute` — user — _user, workflowExecution_
-- `POST /api/autonomous/parse` — user
-
-### autopilot
-
-- `GET,PATCH /api/autopilot/config` — user — _autopilotConfig_
-- `POST /api/autopilot/preview` — user — _autopilotConfig_
-- `GET /api/autopilot/runs` — user — _autopilotRun_
-- `GET /api/autopilot/runs/[runId]` — user — _autopilotRun, post_
-- `GET /api/autopilot/stats` — user — _autopilotRun, autopilotConfig_
-
 ### awards
 
+- `DELETE,PATCH /api/awards/[id]` — user — _awardListing_
 - `GET,POST /api/awards` — user — _awardListing_
-- `PATCH,DELETE /api/awards/[id]` — user — _awardListing_
-- `POST /api/awards/[id]/generate-nomination` — user — _awardListing_
 - `GET /api/awards/templates` — user
+- `POST /api/awards/[id]/generate-nomination` — user — _awardListing_
 
 ### backlinks
 
-- `GET /api/backlinks/analysis` — user — _backlinkAnalysis_
-- `POST /api/backlinks/analyze` — user — _user, backlinkAnalysis, backlinkProspect_
-- `POST /api/backlinks/outreach` — user — _backlinkProspect_
 - `GET,POST /api/backlinks/prospects` — user — _backlinkProspect_
+- `GET /api/backlinks/analysis` — user — _backlinkAnalysis_
+- `POST /api/backlinks/analyze` — user — _backlinkAnalysis,backlinkProspect,user_
+- `POST /api/backlinks/outreach` — user — _backlinkProspect_
 
 ### backup
 
@@ -198,34 +198,30 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### bayesian
 
-- `POST /api/bayesian/observe` — user — _user, bOSpace, bOObservation_
-- `POST /api/bayesian/run` — user — _user, bOSpace, bOOptimisationRun_
-- `GET,POST /api/bayesian/spaces` — user — _user, bOSpace_
-- `GET /api/bayesian/status/[jobId]` — user — _user, bOOptimisationRun_
-- `POST /api/bayesian/suggest` — user — _user, bOSpace, bOObservation_
-
-### billing
-
-- `GET /api/billing/subscription` — public
+- `GET,POST /api/bayesian/spaces` — user — _bOSpace,user_
+- `GET /api/bayesian/status/[jobId]` — user — _bOOptimisationRun,user_
+- `POST /api/bayesian/observe` — user — _bOObservation,bOSpace,user_
+- `POST /api/bayesian/run` — user — _bOOptimisationRun,bOSpace,user_
+- `POST /api/bayesian/suggest` — user — _bOObservation,bOSpace,user_
 
 ### bio
 
+- `DELETE,GET,PATCH,POST /api/bio/[pageId]/links` — user — _linkBioLink,linkBioPage_
+- `DELETE,GET,PATCH /api/bio/[pageId]` — user — _linkBioPage_
 - `GET,POST /api/bio` — user — _linkBioPage_
-- `GET,PATCH,DELETE /api/bio/[pageId]` — user — _linkBioPage_
-- `GET,POST,PATCH,DELETE /api/bio/[pageId]/links` — user — _linkBioPage, linkBioLink_
-- `POST /api/bio/[pageId]/track` — public — _linkBioPage, linkBioLink_
+- `POST /api/bio/[pageId]/track` — public — _linkBioLink,linkBioPage_
 
 ### brand
 
-- `POST /api/brand/calendar` — user — _brandIdentity_
-- `POST /api/brand/consistency` — user — _brandIdentity_
-- `GET,POST /api/brand/generate` — user — _brandGeneration, userPsychologyPreference, psychologyPrinciple_
+- `GET,POST /api/brand/generate` — user — _brandGeneration,psychologyPrinciple,userPsychologyPreference_
 - `GET,POST /api/brand/identity` — user — _brandIdentity_
 - `GET /api/brand/kg-check` — user — _brandIdentity_
-- `GET /api/brand/mentions` — user — _brandIdentity, brandMention_
-- `POST /api/brand/mentions/poll` — user — _brandIdentity, brandMention_
+- `GET /api/brand/mentions` — user — _brandIdentity,brandMention_
 - `GET /api/brand/profile` — user — _brandDNA_
 - `GET /api/brand/wikidata` — user — _brandIdentity_
+- `POST /api/brand/calendar` — user — _brandIdentity_
+- `POST /api/brand/consistency` — user — _brandIdentity_
+- `POST /api/brand/mentions/poll` — user — _brandIdentity,brandMention_
 
 ### brand-dna
 
@@ -235,25 +231,25 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### brand-profile
 
-- `GET,PATCH /api/brand-profile` — user — _user, organization_
+- `GET,PATCH /api/brand-profile` — user — _organization,user_
 
 ### brand-voice
 
-- `GET /api/brand-voice/review-queue` — user — _user, stepExecution_
-- `POST /api/brand-voice/review-queue/[stepId]/approve` — user — _user, stepExecution_
-- `POST /api/brand-voice/review-queue/[stepId]/reject` — user — _user, stepExecution, workflowExecution_
-- `POST /api/brand-voice/score` — user — _user, persona_
+- `GET /api/brand-voice/review-queue` — user — _stepExecution,user_
+- `POST /api/brand-voice/review-queue/[stepId]/approve` — user — _stepExecution,user_
+- `POST /api/brand-voice/review-queue/[stepId]/reject` — user — _stepExecution,user,workflowExecution_
+- `POST /api/brand-voice/score` — user — _persona,user_
 
 ### businesses
 
+- `DELETE,PATCH /api/businesses/[id]` — user — _businessOwnership,user_
 - `GET,POST /api/businesses` — user — _user_
-- `PATCH,DELETE /api/businesses/[id]` — user — _businessOwnership, user_
 - `GET /api/businesses/overview` — user
 - `PATCH /api/businesses/switch` — user — _businessOwnership_
 
 ### campaigns
 
-- `GET,POST,PUT,DELETE /api/campaigns` — user — _campaign_
+- `DELETE,GET,POST,PUT /api/campaigns` — user — _campaign_
 
 ### citation
 
@@ -263,83 +259,88 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### clients
 
-- `GET,POST,PUT,DELETE /api/clients` — user
+- `DELETE,GET,POST,PUT /api/clients` — user
 
 ### command-centre
 
 - `GET /api/command-centre/activity` — user — _autopilotRun_
-- `POST /api/command-centre/autopilot` — user — _autopilotConfig_
 - `GET /api/command-centre/pending` — user — _post_
 - `GET /api/command-centre/performance` — user — _post_
-- `GET /api/command-centre/stats` — user — _post, autopilotRun, platformConnection_
-- `GET /api/command-centre/status` — user — _autopilotConfig, autopilotRun, persona, platformConnection_
+- `GET /api/command-centre/stats` — user — _autopilotRun,platformConnection,post_
+- `GET /api/command-centre/status` — user — _autopilotConfig,autopilotRun,persona,platformConnection_
+- `POST /api/command-centre/autopilot` — user — _autopilotConfig_
 
 ### comments
 
+- `DELETE,GET,PATCH /api/comments/[id]` — user — _contentComment_
 - `GET,POST /api/comments` — user — _contentComment_
-- `GET,PATCH,DELETE /api/comments/[id]` — user — _contentComment_
 
 ### competitors
 
-- `GET,POST /api/competitors` — user — _competitiveAnalysis, brandGeneration_
-- `GET,POST /api/competitors/[competitorId]/analyze` — user
+- `DELETE,GET,PATCH /api/competitors/track/[id]` — user
 - `GET,PATCH /api/competitors/alerts` — user
-- `GET,POST /api/competitors/track` — user
-- `GET,PATCH,DELETE /api/competitors/track/[id]` — user
+- `GET,POST /api/competitors/[competitorId]/analyze` — user
 - `GET,POST /api/competitors/track/[id]/snapshot` — user
+- `GET,POST /api/competitors/track` — user
+- `GET,POST /api/competitors` — user — _brandGeneration,competitiveAnalysis_
 - `POST /api/competitors/track/execute` — cron
 
 ### content
 
-- `GET /api/content` — user — _post_
-- `GET /api/content-drafts` — user — _contentDraft_
-- `GET,POST /api/content-drafts` — user — _contentDraft_
-- `PATCH,DELETE /api/content-drafts/[id]` — user — _contentDraft_
-- `GET,POST /api/content-library` — user — _contentLibrary_
-- `GET,PATCH,DELETE /api/content-library/[id]` — user — _contentLibrary_
-- `GET,PATCH,DELETE /api/content/[id]` — user — _post_
-- `POST /api/content/branded` — user
-- `POST /api/content/bulk` — user — _post, campaign_
-- `GET,POST,PATCH /api/content/calendar` — user — _user, approvalRequest_
+- `DELETE,GET,PATCH,POST /api/content/comments` — user — _auditLog,campaign,post,user_
+- `DELETE,GET,PATCH /api/content/[id]` — user — _post_
+- `DELETE,GET,POST /api/content/share` — user — _user_
+- `GET,PATCH,POST /api/content/calendar` — user — _approvalRequest,user_
+- `GET,POST /api/content/variations` — user
 - `GET /api/content/calendar/optimal-times` — user
-- `GET,POST,PATCH,DELETE /api/content/comments` — user — _user, campaign, post, auditLog_
-- `POST /api/content/cross-post` — user
+- `GET /api/content/performance` — user — _platformConnection,platformPost_
+- `GET /api/content` — user — _post_
 - `POST,PUT /api/content/generate` — user — _persona_
-- `POST /api/content/multi-format` — public
-- `GET /api/content/performance` — user — _platformConnection, platformPost_
-- `POST /api/content/repurpose` — public
-- `POST /api/content/score` — user — _user, promptTemplate_
-- `GET,POST,DELETE /api/content/share` — user — _user_
-- `GET,POST /api/content/variations` — public
+- `POST /api/content/branded` — user
+- `POST /api/content/bulk` — user — _campaign,post_
+- `POST /api/content/cross-post` — user
+- `POST /api/content/multi-format` — user
+- `POST /api/content/repurpose` — user
+- `POST /api/content/score` — user — _promptTemplate,user_
+
+### content-drafts
+
+- `DELETE,PATCH /api/content-drafts/[id]` — user — _contentDraft_
+- `GET,POST /api/content-drafts` — user — _contentDraft_
+
+### content-library
+
+- `DELETE,GET,PATCH /api/content-library/[id]` — user — _contentLibrary_
+- `GET,POST /api/content-library` — user — _contentLibrary_
 
 ### cron
 
-- `GET /api/cron/analytics-sync` — cron — _organization, platformConnection_
 - `GET,POST /api/cron/analyze-patterns` — cron
-- `GET /api/cron/autopilot` — cron — _autopilotConfig, campaign, autopilotRun, post_
+- `GET,POST /api/cron/insights` — cron — _organization_
+- `GET,POST /api/cron/sentinel` — cron
+- `GET /api/cron/analytics-sync` — cron — _organization,platformConnection_
+- `GET /api/cron/autopilot` — cron — _autopilotConfig,autopilotRun,campaign,post_
 - `GET /api/cron/autopilot-learn` — cron — _autopilotConfig_
 - `GET /api/cron/daily-post` — cron — _post_
-- `GET /api/cron/fetch-mentions` — cron — _trackedKeyword, platformConnection, socialMention_
+- `GET /api/cron/fetch-mentions` — cron — _platformConnection,socialMention,trackedKeyword_
 - `GET /api/cron/forecast-training` — cron — _forecastModel_
-- `GET /api/cron/gbp-monitor` — cron — _gBPLocation, gBPSnapshot, gBPReview_
-- `GET /api/cron/gsc-auto-index` — cron — _gSCProperty, platformPost, organization_
-- `GET /api/cron/gsc-monitor` — cron — _gSCProperty, gSCSnapshot, user, notification_
+- `GET /api/cron/gbp-monitor` — cron — _gBPLocation,gBPReview,gBPSnapshot_
+- `GET /api/cron/gsc-auto-index` — cron — _gSCProperty,organization,platformPost_
+- `GET /api/cron/gsc-monitor` — cron — _gSCProperty,gSCSnapshot,notification,user_
 - `GET /api/cron/health-score` — cron
-- `GET,POST /api/cron/insights` — cron — _organization_
-- `GET /api/cron/proactive-insights` — cron — _subscription, userHealthScore, platformMetrics, userStreak, analyticsEvent, notification_
-- `GET /api/cron/publish-scheduled` — cron — _post, platformConnection, platformPost, notification_
-- `GET /api/cron/refresh-tokens` — cron — _notification, platformConnection_
+- `GET /api/cron/proactive-insights` — cron — _analyticsEvent,notification,platformMetrics,subscription,userHealthScore,userStreak_
+- `GET /api/cron/publish-scheduled` — cron — _notification,platformConnection,platformPost,post_
+- `GET /api/cron/refresh-tokens` — cron — _notification,platformConnection_
 - `GET /api/cron/revalidate-api-keys` — cron — _aPICredential_
-- `GET,POST /api/cron/sentinel` — cron
 - `GET /api/cron/seo-audits` — cron — _sEOAudit_
 - `GET /api/cron/unite-hub-revenue` — cron — _subscription_
-- `GET /api/cron/weekly-digest` — cron — _subscription, aIWeeklyDigest, user_
-- `GET /api/cron/welcome-sequence` — cron — _user, subscription_
+- `GET /api/cron/weekly-digest` — cron — _aIWeeklyDigest,subscription,user_
+- `GET /api/cron/welcome-sequence` — cron — _subscription,user_
 
 ### dashboard
 
-- `GET /api/dashboard/onboarding-summary` — user — _organization, onboardingProgress, user_
-- `GET /api/dashboard/stats` — user — _post, platformConnection, platformMetrics, campaign_
+- `GET /api/dashboard/onboarding-summary` — user — _onboardingProgress,organization,user_
+- `GET /api/dashboard/stats` — user — _campaign,platformConnection,platformMetrics,post_
 
 ### demo
 
@@ -349,14 +350,14 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### directories
 
+- `DELETE,PATCH /api/directories/[id]` — user — _directoryListing_
 - `GET,POST /api/directories` — user — _directoryListing_
-- `PATCH,DELETE /api/directories/[id]` — user — _directoryListing_
 - `GET /api/directories/templates` — user
 
 ### eeat
 
-- `POST /api/eeat/v2/assets` — user
 - `GET,POST /api/eeat/v2/audit` — user — _eEATAudit_
+- `POST /api/eeat/v2/assets` — user
 
 ### email
 
@@ -364,12 +365,12 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### experiments
 
+- `GET,POST /api/experiments/experiments` — user — _sEOExperiment,user_
 - `GET /api/experiments/dogfood` — user
-- `GET,POST /api/experiments/experiments` — user — _sEOExperiment, user_
-- `POST /api/experiments/experiments/[id]/complete` — user — _sEOExperiment, user_
-- `POST /api/experiments/experiments/[id]/record` — user — _sEOExperiment, experimentObservation_
-- `POST /api/experiments/experiments/[id]/start` — user — _sEOExperiment_
 - `GET /api/experiments/healing` — user — _healingAction_
+- `POST /api/experiments/experiments/[id]/complete` — user — _sEOExperiment,user_
+- `POST /api/experiments/experiments/[id]/record` — user — _experimentObservation,sEOExperiment_
+- `POST /api/experiments/experiments/[id]/start` — user — _sEOExperiment_
 - `POST /api/experiments/healing/analyze` — user — _user_
 - `POST /api/experiments/suggest` — user — _user_
 
@@ -379,14 +380,14 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### forecast
 
-- `GET /api/forecast/[modelId]` — user — _user, forecastModel_
-- `GET,POST /api/forecast/models` — user — _user, forecastModel_
-- `POST /api/forecast/predict` — user — _user, forecast, forecastModel_
+- `GET,POST /api/forecast/models` — user — _forecastModel,user_
+- `GET /api/forecast/[modelId]` — user — _forecastModel,user_
+- `POST /api/forecast/predict` — user — _forecast,forecastModel,user_
 
 ### gamification
 
-- `GET /api/gamification/achievements` — user — _userAchievement_
 - `GET,POST /api/gamification/streak` — user — _userStreak_
+- `GET /api/gamification/achievements` — user — _userAchievement_
 
 ### generate
 
@@ -395,7 +396,7 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### geo
 
-- `POST /api/geo/analyze` — user — _user, gEOAnalysis, entityAnalysis_
+- `POST /api/geo/analyze` — user — _entityAnalysis,gEOAnalysis,user_
 - `POST /api/geo/passages` — user
 - `POST /api/geo/rewrite` — user
 - `POST /api/geo/score` — user
@@ -403,54 +404,54 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### google-business
 
-- `GET /api/google-business/insights` — user — _gBPLocation, gBPSnapshot_
-- `GET,POST /api/google-business/locations` — user — _gBPLocation_
+- `DELETE,POST /api/google-business/reviews/[reviewId]/reply` — user — _gBPReview_
 - `GET,PATCH /api/google-business/locations/[locationId]` — user — _gBPLocation_
-- `GET /api/google-business/photos` — user — _gBPLocation_
+- `GET,POST /api/google-business/locations` — user — _gBPLocation_
 - `GET,POST /api/google-business/posts` — user — _gBPLocation_
+- `GET /api/google-business/insights` — user — _gBPLocation,gBPSnapshot_
+- `GET /api/google-business/photos` — user — _gBPLocation_
 - `GET /api/google-business/reviews` — user — _gBPReview_
-- `POST /api/google-business/reviews/[reviewId]/auto-reply` — user — _gBPReview, organization_
-- `POST,DELETE /api/google-business/reviews/[reviewId]/reply` — user — _gBPReview_
+- `POST /api/google-business/reviews/[reviewId]/auto-reply` — user — _gBPReview,organization_
 
 ### health
 
-- `GET,HEAD /api/health` — public
+- `DELETE,GET,POST /api/health/redis` — public
+- `GET,POST /api/health/scaling` — public
 - `GET /api/health/ai` — public
 - `GET /api/health/auth` — public
 - `GET /api/health/composite` — user — _user_
 - `GET /api/health/db` — public
 - `GET /api/health/email` — public
-- `GET,HEAD /api/health/live` — public
-- `GET,HEAD /api/health/ready` — public
-- `GET,POST,DELETE /api/health/redis` — admin
-- `GET,POST /api/health/scaling` — public
+- `GET /api/health/live` — public
+- `GET /api/health/ready` — public
 - `GET /api/health/stripe` — public
+- `GET /api/health` — public
 
 ### indexing
 
-- `POST /api/indexing` — public
+- `POST /api/indexing` — user
 
 ### insights
 
-- `GET /api/insights` — user — _user, workflowExecution_
+- `GET /api/insights` — user — _user,workflowExecution_
 
 ### integrations
 
-- `GET,POST,DELETE /api/integrations` — user — _platformConnection_
-- `GET,POST,DELETE /api/integrations/[integrationId]/connect` — user
-- `GET /api/integrations/[integrationId]/status` — user — _platformConnection_
-- `GET,POST /api/integrations/[integrationId]/sync` — user — _platformConnection, platformPost, platformMetrics_
-- `GET /api/integrations/third-party` — user — _platformConnection_
-- `GET,POST,DELETE /api/integrations/third-party/[provider]` — user — _platformConnection_
+- `DELETE,GET,POST /api/integrations/[integrationId]/connect` — public
+- `DELETE,GET,POST /api/integrations/third-party/[provider]` — user — _platformConnection_
+- `DELETE,GET,POST /api/integrations` — user — _platformConnection_
+- `GET,POST /api/integrations/[integrationId]/sync` — user — _platformConnection,platformMetrics,platformPost_
 - `GET,PUT /api/integrations/third-party/[provider]/config` — user — _platformConnection_
+- `GET /api/integrations/[integrationId]/status` — user — _platformConnection_
+- `GET /api/integrations/third-party` — user — _platformConnection_
 
 ### intelligence
 
-- `GET,POST,DELETE /api/intelligence/competitors` — user
+- `DELETE,GET,POST /api/intelligence/competitors` — user
 
 ### internal
 
-- `POST /api/internal/bo-callback` — public — _bOOptimisationRun, bOSpace_
+- `POST /api/internal/bo-callback` — public — _bOOptimisationRun,bOSpace_
 
 ### invoices
 
@@ -458,14 +459,14 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### library
 
+- `DELETE,GET,PATCH /api/library/content/[contentId]` — user — _contentLibrary_
 - `GET,POST /api/library/content` — user — _contentLibrary_
-- `GET,PATCH,DELETE /api/library/content/[contentId]` — user — _contentLibrary_
 
 ### listening
 
-- `GET /api/listening` — user — _socialMention, trackedKeyword_
-- `GET,POST,DELETE /api/listening/keywords` — user — _trackedKeyword, socialMention_
+- `DELETE,GET,POST /api/listening/keywords` — user — _socialMention,trackedKeyword_
 - `GET,PATCH /api/listening/mentions` — user — _socialMention_
+- `GET /api/listening` — user — _socialMention,trackedKeyword_
 
 ### local
 
@@ -477,10 +478,10 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### media
 
+- `DELETE,GET,POST,PUT /api/media/generate/voice` — user
+- `DELETE,GET,POST,PUT /api/media/library` — user
 - `GET,POST,PUT /api/media/generate/image` — user
 - `GET,POST,PUT /api/media/generate/video` — admin — _user_
-- `GET,POST,PUT,DELETE /api/media/generate/voice` — user
-- `GET,POST,PUT,DELETE /api/media/library` — user
 - `POST /api/media/upload` — user
 
 ### mobile
@@ -495,32 +496,28 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 ### monitoring
 
 - `GET,POST /api/monitoring/alerts` — user
-- `GET /api/monitoring/business-metrics` — user
 - `GET,POST /api/monitoring/errors` — user
 - `GET,POST /api/monitoring/events` — user
+- `GET,POST /api/monitoring/performance` — public
+- `GET /api/monitoring/business-metrics` — user
 - `GET /api/monitoring/health-dashboard` — public
 - `GET /api/monitoring/metrics` — public
-- `GET,POST /api/monitoring/performance` — public
 
 ### notifications
 
 - `GET,POST /api/notifications` — user — _notification_
-- `PATCH /api/notifications/[notificationId]/read` — user — _notification_
 - `GET,PUT /api/notifications/settings` — user — _user_
 - `GET /api/notifications/stream` — user
-
-### og
-
-- `GET /api/og` — public
+- `PATCH /api/notifications/[notificationId]/read` — user — _notification_
 
 ### onboarding
 
 - `GET,POST /api/onboarding/api-credentials` — user — _aPICredential_
-- `POST /api/onboarding/complete` — user — _user, organization, onboardingProgress_
-- `GET,POST /api/onboarding/kickstart` — user — _user, post, onboardingProgress, platformConnection_
-- `POST /api/onboarding/pipeline` — user — _organization, onboardingProgress_
-- `GET,POST /api/onboarding/progress` — user — _organization, onboardingProgress_
-- `POST /api/onboarding/review` — user — _organization, onboardingProgress_
+- `GET,POST /api/onboarding/kickstart` — user — _onboardingProgress,platformConnection,post,user_
+- `GET,POST /api/onboarding/progress` — user — _onboardingProgress,organization_
+- `POST /api/onboarding/complete` — user — _onboardingProgress,organization,user_
+- `POST /api/onboarding/pipeline` — user — _onboardingProgress,organization_
+- `POST /api/onboarding/review` — user — _onboardingProgress,organization_
 - `POST /api/onboarding/validate-key` — user — _user_
 
 ### optimize
@@ -529,12 +526,12 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### organizations
 
+- `DELETE,GET,PATCH /api/organizations/[orgId]` — user — _organization,user_
 - `GET,POST /api/organizations` — user — _organization_
-- `GET,PATCH,DELETE /api/organizations/[orgId]` — user — _user, organization_
 
 ### patterns
 
-- `GET,POST /api/patterns/analyze` — user
+- `GET,POST /api/patterns/analyze` — public
 - `GET /api/patterns/cached` — public
 
 ### performance
@@ -543,8 +540,8 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### personas
 
-- `GET,POST,PATCH,DELETE /api/personas` — user — _persona_
-- `GET,POST /api/personas/[id]/optimize` — user — _persona, campaign, post_
+- `DELETE,GET,PATCH,POST /api/personas` — user — _persona_
+- `GET,POST /api/personas/[id]/optimize` — user — _campaign,persona,post_
 - `GET,POST /api/personas/[id]/train` — user — _persona_
 
 ### ping
@@ -553,43 +550,43 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### platforms
 
-- `GET /api/platforms/[platform]/metrics` — user — _platformConnection, post_
-- `GET /api/platforms/metrics` — user — _platformConnection, post_
+- `GET /api/platforms/[platform]/metrics` — user — _platformConnection,post_
+- `GET /api/platforms/metrics` — user — _platformConnection,post_
 
 ### pr
 
-- `GET /api/pr/channels` — public
-- `GET,POST /api/pr/coverage` — user — _mediaCoverage_
-- `POST /api/pr/coverage/poll` — user — _pRPitch, mediaCoverage_
-- `GET,POST /api/pr/journalists` — user — _journalistContact_
-- `GET,PATCH,DELETE /api/pr/journalists/[id]` — user — _journalistContact_
-- `POST /api/pr/journalists/[id]/enrich` — user — _journalistContact_
-- `GET,POST /api/pr/pitches` — user — _pRPitch, journalistContact_
+- `DELETE,GET,PATCH /api/pr/journalists/[id]` — user — _journalistContact_
+- `DELETE,GET,PATCH /api/pr/press-releases/[id]` — user — _pressRelease_
 - `GET,PATCH /api/pr/pitches/[id]` — user — _pRPitch_
+- `GET,PATCH /api/pr/press-releases/[id]/distributions` — user — _pRDistribution,pressRelease_
+- `GET,POST /api/pr/coverage` — user — _mediaCoverage_
+- `GET,POST /api/pr/journalists` — user — _journalistContact_
+- `GET,POST /api/pr/pitches` — user — _journalistContact,pRPitch_
 - `GET,POST /api/pr/press-releases` — user — _pressRelease_
-- `GET,PATCH,DELETE /api/pr/press-releases/[id]` — user — _pressRelease_
-- `POST /api/pr/press-releases/[id]/distribute` — user — _pressRelease, pRDistribution_
-- `GET,PATCH /api/pr/press-releases/[id]/distributions` — user — _pressRelease, pRDistribution_
+- `GET /api/pr/channels` — public
+- `GET /api/pr/press-releases/newsroom/[orgSlug]/[slug]` — public — _organization,pressRelease_
+- `POST /api/pr/coverage/poll` — user — _mediaCoverage,pRPitch_
+- `POST /api/pr/journalists/[id]/enrich` — user — _journalistContact_
+- `POST /api/pr/press-releases/[id]/distribute` — user — _pRDistribution,pressRelease_
 - `POST /api/pr/press-releases/generate` — user
-- `GET /api/pr/press-releases/newsroom/[orgSlug]/[slug]` — public — _organization, pressRelease_
 
 ### predict
 
-- `GET /api/predict/models` — user — _user, spatiotemporalModel_
-- `POST /api/predict/predict` — user — _user, spatiotemporalModel, platformConnection_
-- `POST /api/predict/train` — user — _platformConnection, platformPost, platformMetrics, user, spatiotemporalModel_
 - `GET,POST /api/predict/trends` — user
+- `GET /api/predict/models` — user — _spatiotemporalModel,user_
+- `POST /api/predict/predict` — user — _platformConnection,spatiotemporalModel,user_
+- `POST /api/predict/train` — user — _platformConnection,platformMetrics,platformPost,spatiotemporalModel,user_
 
 ### prompts
 
+- `GET,POST /api/prompts/trackers` — user — _promptTracker_
 - `GET /api/prompts/gaps` — user — _promptTracker_
 - `POST /api/prompts/generate` — user
-- `POST /api/prompts/test` — user — _promptTracker, user, promptResult_
-- `GET,POST /api/prompts/trackers` — user — _promptTracker_
+- `POST /api/prompts/test` — user — _promptResult,promptTracker,user_
 
 ### psychology
 
-- `GET,POST /api/psychology/analyze` — user — _user_
+- `GET,POST /api/psychology/analyze` — public — _user_
 - `GET,POST /api/psychology/principles` — user — _userPsychologyPreference_
 
 ### quality
@@ -599,12 +596,12 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### quotes
 
-- `GET,POST,DELETE /api/quotes` — user — _quote_
-- `GET,PUT,PATCH,DELETE /api/quotes/[id]` — user — _quote_
+- `DELETE,GET,PATCH,PUT /api/quotes/[id]` — user — _quote_
+- `DELETE,GET,POST /api/quotes` — user — _quote_
 
 ### rate-limit
 
-- `GET,POST,PATCH /api/rate-limit` — user
+- `GET,PATCH,POST /api/rate-limit` — user
 
 ### recommendations
 
@@ -612,107 +609,107 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### referrals
 
-- `GET,POST /api/referrals` — user — _referral, user_
+- `GET,POST /api/referrals` — user — _referral,user_
 - `POST /api/referrals/redeem` — user — _referral_
 
 ### reporting
 
+- `DELETE,GET /api/reporting/reports/[reportId]` — user
 - `GET,POST /api/reporting/generate` — user
-- `GET /api/reporting/reports` — user
-- `GET,DELETE /api/reporting/reports/[reportId]` — user
 - `GET /api/reporting/reports/[reportId]/download` — user
+- `GET /api/reporting/reports` — user
 
 ### reports
 
-- `GET,POST,PATCH,DELETE /api/reports/scheduled` — user — _user, auditLog_
-- `GET,POST /api/reports/scheduled/execute` — cron — _analyticsEvent, report_
-- `GET,POST,PATCH,DELETE /api/reports/templates` — user — _user, auditLog_
+- `DELETE,GET,PATCH,POST /api/reports/scheduled` — user — _auditLog,user_
+- `DELETE,GET,PATCH,POST /api/reports/templates` — user — _auditLog,user_
+- `GET,POST /api/reports/scheduled/execute` — cron — _analyticsEvent,report_
 
 ### research
 
+- `DELETE,GET,PATCH /api/research/[id]` — user — _gEOResearchReport_
 - `GET,POST /api/research` — user — _gEOResearchReport_
-- `GET,PATCH,DELETE /api/research/[id]` — user — _gEOResearchReport_
 - `GET /api/research/capabilities` — user
-- `POST /api/research/implementation-plan` — user
 - `GET /api/research/trends` — user
+- `POST /api/research/implementation-plan` — user
 
 ### revenue
 
+- `DELETE,GET,PUT /api/revenue/[id]` — user
 - `GET,POST /api/revenue` — user
-- `GET,PUT,DELETE /api/revenue/[id]` — user
 
 ### roi
 
-- `GET /api/roi` — user — _user_
+- `DELETE,GET,PUT /api/roi/investments/[id]` — user
 - `GET,POST /api/roi/investments` — user
-- `GET,PUT,DELETE /api/roi/investments/[id]` — user
+- `GET /api/roi` — user — _user_
 
 ### roles
 
-- `GET,POST /api/roles` — user — _user, userRole_
-- `GET,PATCH,DELETE /api/roles/[id]` — user — _user, role, userRole_
-- `GET,POST,DELETE /api/roles/[id]/users` — user — _user, role_
+- `DELETE,GET,PATCH /api/roles/[id]` — user — _role,user,userRole_
+- `DELETE,GET,POST /api/roles/[id]/users` — user — _role,user_
+- `GET,POST /api/roles` — user — _user,userRole_
 
 ### scheduler
 
-- `GET,POST,PATCH,DELETE /api/scheduler/posts` — user — _campaign, post_
-- `GET,PATCH,DELETE /api/scheduler/posts/[postId]` — user — _post_
+- `DELETE,GET,PATCH,POST /api/scheduler/posts` — user — _campaign,post_
+- `DELETE,GET,PATCH /api/scheduler/posts/[postId]` — user — _post_
+- `GET /api/scheduler/stats` — user — _campaign,post_
 - `POST /api/scheduler/posts/bulk` — user — _post_
-- `GET /api/scheduler/stats` — user — _campaign, post_
 
 ### search
 
-- `POST /api/search` — user — _campaign, post_
+- `POST /api/search` — user — _campaign,post_
 
 ### sentinel
 
 - `GET /api/sentinel/alerts` — user — _sentinelAlert_
+- `GET /api/sentinel/status` — user — _sentinelAlert,user_
+- `GET /api/sentinel/updates` — user
 - `POST /api/sentinel/alerts/[id]/acknowledge` — user — _sentinelAlert_
 - `POST /api/sentinel/check` — user — _user_
-- `GET /api/sentinel/status` — user — _user, sentinelAlert_
-- `GET /api/sentinel/updates` — public
 
 ### seo
 
+- `DELETE,GET,PATCH /api/seo/scheduled-audits/[id]` — user — _scheduledAuditTarget,sEOAudit_
+- `GET,POST /api/seo/audit` — user — _sEOAudit,user_
+- `GET,POST /api/seo/scheduled-audits` — user — _scheduledAuditTarget,sEOAudit_
+- `GET,POST /api/seo/schema` — user
+- `GET,POST /api/seo/search-console/properties` — user — _gSCProperty_
 - `GET,POST /api/seo` — user — _sEOAudit_
-- `GET,POST /api/seo/audit` — user — _sEOAudit, user_
-- `POST /api/seo/competitor` — public
-- `GET /api/seo/dashboard-stats` — user — _sEOAudit, gEOAnalysis_
-- `POST /api/seo/enhancements` — user — _user_
-- `POST /api/seo/enhancements/execute` — user — _user_
-- `POST /api/seo/geo-readiness/analyze` — user — _gEOAnalysis_
+- `GET /api/seo/dashboard-stats` — user — _gEOAnalysis,sEOAudit_
 - `GET /api/seo/geo-readiness/history` — user
 - `GET /api/seo/geo-readiness/trends` — user
-- `POST /api/seo/page-analysis` — public
-- `POST /api/seo/pagespeed/analyze` — user
 - `GET /api/seo/pagespeed/history` — user
 - `GET /api/seo/pagespeed/trends` — user
-- `GET,POST /api/seo/scheduled-audits` — user — _scheduledAuditTarget, sEOAudit_
-- `GET,PATCH,DELETE /api/seo/scheduled-audits/[id]` — user — _scheduledAuditTarget, sEOAudit_
-- `GET,POST /api/seo/schema` — user
+- `GET /api/seo/schema-markup/templates` — user
+- `GET /api/seo/search-console/coverage` — user — _gSCSnapshot_
+- `GET /api/seo/search-console/sitemaps` — user
+- `GET /api/seo/technical/cwv-history` — user
+- `POST /api/seo/competitor` — user
+- `POST /api/seo/enhancements/execute` — user — _user_
+- `POST /api/seo/enhancements` — user — _user_
+- `POST /api/seo/geo-readiness/analyze` — user — _gEOAnalysis_
+- `POST /api/seo/page-analysis` — user
+- `POST /api/seo/pagespeed/analyze` — user
 - `POST /api/seo/schema-markup/extract` — user
-- `GET /api/seo/schema-markup/templates` — public
 - `POST /api/seo/schema-markup/validate` — user
 - `POST /api/seo/search-console/analytics` — user
-- `GET /api/seo/search-console/coverage` — user — _gSCSnapshot_
 - `POST /api/seo/search-console/indexing` — user
 - `POST /api/seo/search-console/indexing-status` — user
-- `GET,POST /api/seo/search-console/properties` — user — _gSCProperty_
-- `GET /api/seo/search-console/sitemaps` — user
 - `POST /api/seo/search-console/sitemaps/submit` — user
-- `POST /api/seo/sitemap` — public
-- `GET /api/seo/technical/cwv-history` — user
+- `POST /api/seo/sitemap` — user
 - `POST /api/seo/technical/mobile-parity` — user
 - `POST /api/seo/technical/robots-txt` — user
 
 ### settings
 
-- `GET,POST,DELETE /api/settings/api-credentials` — user — _aPICredential_
+- `DELETE,GET,POST /api/settings/api-credentials` — user — _aPICredential_
 
 ### shares
 
+- `DELETE,GET,PATCH /api/shares/[id]` — user — _contentShare_
 - `GET,POST /api/shares` — user — _contentShare_
-- `GET,PATCH,DELETE /api/shares/[id]` — user — _contentShare_
 
 ### social
 
@@ -720,7 +717,7 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET,POST /api/social/instagram/post` — user
 - `GET,POST /api/social/linkedin/post` — user
 - `GET,POST /api/social/pinterest/post` — user
-- `GET,POST /api/social/post` — user — _platformConnection, post_
+- `GET,POST /api/social/post` — user — _platformConnection,post_
 - `GET,POST /api/social/reddit/post` — user
 - `GET,POST /api/social/threads/post` — user
 - `GET,POST /api/social/tiktok/post` — user
@@ -729,27 +726,27 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### sponsors
 
-- `GET,POST /api/sponsors` — user
-- `GET,PUT,DELETE /api/sponsors/[id]` — user
-- `GET,POST /api/sponsors/[id]/deals` — user
-- `GET,PUT,DELETE /api/sponsors/[id]/deals/[dealId]` — user
+- `DELETE,GET,PUT /api/sponsors/[id]/deals/[dealId]` — user
+- `DELETE,GET,PUT /api/sponsors/[id]` — user
+- `DELETE,PUT /api/sponsors/[id]/deals/[dealId]/deliverables/[deliverableId]` — user
 - `GET,POST /api/sponsors/[id]/deals/[dealId]/deliverables` — user
-- `PUT,DELETE /api/sponsors/[id]/deals/[dealId]/deliverables/[deliverableId]` — user
+- `GET,POST /api/sponsors/[id]/deals` — user
+- `GET,POST /api/sponsors` — user
 - `GET /api/sponsors/pipeline` — user
 
 ### stats
 
-- `GET /api/stats` — user — _user, campaign, post, platformMetrics_
+- `GET /api/stats` — user — _campaign,platformMetrics,post,user_
 
 ### stripe
 
-- `POST /api/stripe/billing-portal` — user — _user_
 - `GET,POST /api/stripe/change-plan` — user — _subscription_
+- `POST /api/stripe/billing-portal` — user — _user_
 - `POST /api/stripe/checkout` — user
 
 ### submissions
 
-- `GET /api/submissions` — user — _awardListing, directoryListing_
+- `GET /api/submissions` — user — _awardListing,directoryListing_
 
 ### system
 
@@ -757,32 +754,32 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### tasks
 
-- `GET,POST,PATCH,DELETE /api/tasks` — user — _task_
-- `PATCH,DELETE /api/tasks/bulk` — user — _task_
+- `DELETE,GET,PATCH,POST /api/tasks` — user — _task_
+- `DELETE,PATCH /api/tasks/bulk` — user — _task_
 
 ### team
 
-- `GET,POST /api/team` — user — _user, post, teamInvitation_
+- `GET,POST /api/team` — user — _post,teamInvitation,user_
 
 ### teams
 
-- `GET,PATCH,DELETE /api/teams/[id]/settings` — user — _user, organization_
-- `GET /api/teams/activity` — user — _user, auditLog_
+- `DELETE,GET,PATCH,POST /api/teams/notifications` — user — _user_
+- `DELETE,GET,PATCH /api/teams/[id]/settings` — user — _organization,user_
+- `DELETE,GET,PATCH /api/teams/invitations/[id]` — user — _user_
+- `DELETE,GET,PATCH /api/teams/members/[memberId]` — user — _user_
+- `GET,PATCH /api/teams/members/[memberId]/role` — user — _user_
 - `GET,POST /api/teams/invitations` — user — _user_
-- `GET,PATCH,DELETE /api/teams/invitations/[id]` — user — _user_
-- `POST /api/teams/invite` — user
-- `GET,POST /api/teams/members` — admin — _user, userRole, teamInvitation_
-- `GET,PATCH,DELETE /api/teams/members/[memberId]` — user — _user_
-- `GET,PATCH /api/teams/members/[memberId]/role` — admin — _user_
+- `GET,POST /api/teams/members` — user — _teamInvitation,user,userRole_
+- `GET /api/teams/activity` — user — _auditLog,user_
 - `GET /api/teams/members/search` — user — _user_
-- `GET,POST,PATCH,DELETE /api/teams/notifications` — user — _user_
-- `GET /api/teams/stats` — user — _user, campaign, post_
+- `GET /api/teams/stats` — user — _campaign,post,user_
+- `POST /api/teams/invite` — user
 
 ### templates
 
-- `GET,POST /api/templates` — user — _user, promptTemplate_
-- `GET,PUT,DELETE /api/templates/[id]` — user — _user, promptTemplate_
-- `POST /api/templates/[id]/use` — user — _user, promptTemplate_
+- `DELETE,GET,PUT /api/templates/[id]` — user — _promptTemplate,user_
+- `GET,POST /api/templates` — user — _promptTemplate,user_
+- `POST /api/templates/[id]/use` — user — _promptTemplate,user_
 
 ### trending
 
@@ -790,32 +787,32 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### unified
 
-- `GET /api/unified/metrics` — user — _platformConnection, post_
+- `GET /api/unified/metrics` — user — _platformConnection,post_
 
 ### unite-hub
 
-- `GET /api/unite-hub` — public — _subscription, platformPost_
 - `GET,POST /api/unite-hub/status` — admin — _user_
+- `GET /api/unite-hub` — public — _platformPost,subscription_
 
 ### user
 
-- `GET,DELETE /api/user/account` — user
-- `GET,POST,DELETE /api/user/api-keys` — user — _user_
-- `POST,DELETE /api/user/avatar` — user — _user_
-- `POST /api/user/change-password` — user
-- `POST /api/user/export` — user — _user, campaign, platformConnection, post, subscription_
-- `GET /api/user/health-score` — user — _userHealthScore_
-- `GET /api/user/loyalty` — user — _userStreak, userAchievement_
-- `GET,PUT,DELETE /api/user/profile` — user — _user_
+- `DELETE,GET,POST /api/user/api-keys` — user — _user_
+- `DELETE,GET,PUT /api/user/profile` — user — _user_
+- `DELETE,GET /api/user/account` — public
+- `DELETE,POST /api/user/avatar` — user — _user_
 - `GET,PUT /api/user/settings` — user — _user_
+- `GET /api/user/health-score` — user — _userHealthScore_
+- `GET /api/user/loyalty` — user — _userAchievement,userStreak_
 - `GET /api/user/subscription` — user
-- `GET /api/user/usage` — user — _subscription, platformConnection, persona_
+- `GET /api/user/usage` — user — _persona,platformConnection,subscription_
+- `POST /api/user/change-password` — public
+- `POST /api/user/export` — user — _campaign,platformConnection,post,subscription,user_
 
 ### video
 
 - `GET,POST /api/video` — user
 - `GET /api/video/[id]` — user — _videoGeneration_
-- `POST /api/video/[id]/publish` — user — _videoGeneration, campaign, post_
+- `POST /api/video/[id]/publish` — user — _campaign,post,videoGeneration_
 - `POST /api/video/generate` — user — _videoGeneration_
 
 ### visuals
@@ -830,41 +827,41 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `POST /api/voice/context` — user — _voiceProfile_
 - `POST /api/voice/slop-scan` — user
 
-### web-projects
-
-- `GET,POST /api/web-projects` — user — _project_
-- `GET,PATCH,DELETE /api/web-projects/[id]` — user — _project_
-
 ### webhooks
 
+- `DELETE,GET,PATCH,POST /api/webhooks/user` — user — _auditLog,webhookEndpoint_
 - `GET,POST /api/webhooks/[platform]` — public
-- `POST /api/webhooks/email/sendgrid` — user — _notification, user_
-- `POST,PUT /api/webhooks/internal` — user
-- `POST /api/webhooks/linear` — public
-- `GET,POST /api/webhooks/social` — user — _post, auditLog, platformConnection_
+- `GET,POST /api/webhooks/social` — public — _auditLog,platformConnection,post_
 - `GET,POST /api/webhooks/stats` — public
-- `POST /api/webhooks/stripe` — public
-- `GET,POST,PATCH,DELETE /api/webhooks/user` — user — _webhookEndpoint, auditLog_
 - `GET,POST /api/webhooks/zapier` — public
+- `POST,PUT /api/webhooks/internal` — public
+- `POST /api/webhooks/email/sendgrid` — public — _notification,user_
+- `POST /api/webhooks/linear` — public
+- `POST /api/webhooks/stripe` — public
+
+### web-projects
+
+- `DELETE,GET,PATCH /api/web-projects/[id]` — user — _project_
+- `GET,POST /api/web-projects` — user — _project_
 
 ### white-label
 
-- `GET,PUT /api/white-label/config` — user — _user, organization_
+- `GET,PUT /api/white-label/config` — user — _organization,user_
 
 ### workflows
 
-- `GET,POST /api/workflows/batch` — user — _user, workflowTemplate, workflowExecution_
+- `GET,POST /api/workflows/batch` — user — _user,workflowExecution,workflowTemplate_
+- `GET,POST /api/workflows/executions` — user — _user,workflowExecution_
+- `GET,POST /api/workflows/intelligence` — user — _stepExecution,user,workflowExecution,workflowTemplate_
+- `GET,POST /api/workflows/templates` — user — _user,workflowTemplate_
 - `GET /api/workflows/batch/[batchId]` — user — _user_
-- `GET,POST /api/workflows/executions` — user — _user, workflowExecution_
-- `GET /api/workflows/executions/[id]` — user — _user, workflowExecution_
-- `POST /api/workflows/executions/[id]/approve` — user — _user, workflowExecution, stepExecution_
-- `POST /api/workflows/executions/[id]/cancel` — user — _user, workflowExecution_
-- `GET,POST /api/workflows/intelligence` — user — _user, workflowExecution, stepExecution, workflowTemplate_
-- `GET,POST /api/workflows/templates` — user — _user, workflowTemplate_
+- `GET /api/workflows/executions/[id]` — user — _user,workflowExecution_
+- `POST /api/workflows/executions/[id]/approve` — user — _stepExecution,user,workflowExecution_
+- `POST /api/workflows/executions/[id]/cancel` — user — _user,workflowExecution_
 
 ### ws
 
-- `GET,POST,OPTIONS /api/ws` — user
+- `GET,POST /api/ws` — user
 
 ---
 
