@@ -34,6 +34,7 @@ import { toast } from 'sonner';
 import { fetchWithCSRF } from '@/lib/csrf';
 import { PublishConfirmModal, type PublishOptions } from '@/components/content';
 import { HelpVideo } from '@/components/ui/HelpVideo';
+import { ObsidianImportModal } from '@/components/content/ObsidianImportModal';
 
 // =============================================================================
 // Types
@@ -498,6 +499,9 @@ export default function DraftsLibraryPage() {
   const [platformFilter, setPlatformFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
+  // Obsidian import modal state
+  const [obsidianModalOpen, setObsidianModalOpen] = useState(false);
+
   // Publish confirmation modal state
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [schedulingDraft, setSchedulingDraft] = useState<ContentDraft | null>(
@@ -671,6 +675,13 @@ export default function DraftsLibraryPage() {
             )}
             <HelpVideo videoId="how-to-create-content" />
             <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setObsidianModalOpen(true)}
+            >
+              Import from Obsidian
+            </Button>
+            <Button
               onClick={() => router.push('/dashboard/content')}
               className="gradient-primary text-white"
               size="sm"
@@ -730,6 +741,16 @@ export default function DraftsLibraryPage() {
           onConfirm={handlePublishConfirm}
         />
       )}
+
+      {/* Obsidian import modal */}
+      <ObsidianImportModal
+        open={obsidianModalOpen}
+        onOpenChange={setObsidianModalOpen}
+        onImported={() => {
+          setObsidianModalOpen(false);
+          fetchDrafts();
+        }}
+      />
     </div>
   );
 }
