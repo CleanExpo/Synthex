@@ -69,6 +69,7 @@ npm run lint             # ESLint
 npm run release:check    # Full pre-release validation
 npx prisma validate      # Validate schema (run before any db push)
 npx prisma db push       # Push schema to DB
+npm run routes:refresh   # Regenerate ROUTE_REFERENCE.md Zone 1 — run before any audit, run after adding/renaming routes
 ```
 
 **Pre-PR gate (run all three):** `npm run type-check && npm run lint && npm test`
