@@ -68,7 +68,7 @@ export function ChatMessage({
         <div
           className={cn(
             'text-xs mt-2',
-            isUser ? 'text-orange-300/50' : 'text-gray-500'
+            isUser ? 'text-orange-300/50' : 'text-gray-400'
           )}
         >
           {formatRelativeTime(message.createdAt)}

@@ -257,7 +257,7 @@ export function AllBusinessesDashboard() {
               <p className="text-xl font-bold text-white leading-none">
                 {value}
               </p>
-              <p className="text-[11px] text-gray-500 mt-1">{label}</p>
+              <p className="text-[11px] text-gray-400 mt-1">{label}</p>
             </div>
           </div>
         ))}
@@ -299,7 +299,7 @@ export function AllBusinessesDashboard() {
                     <p className="text-sm font-semibold text-white truncate">
                       {displayName}
                     </p>
-                    <p className="text-[10px] text-gray-500 truncate">
+                    <p className="text-[10px] text-gray-400 truncate">
                       {business.organizationSlug}
                     </p>
                   </div>
@@ -347,7 +347,7 @@ export function AllBusinessesDashboard() {
                         <p className="text-xs font-semibold text-white">
                           {value}
                         </p>
-                        <p className="text-[10px] text-gray-500">{label}</p>
+                        <p className="text-[10px] text-gray-400">{label}</p>
                       </div>
                     </div>
                   ))}
@@ -384,7 +384,7 @@ export function AllBusinessesDashboard() {
       </div>
 
       {/* ── Footer link ──────────────────────────────────────────────────────── */}
-      <p className="text-center text-xs text-gray-500">
+      <p className="text-center text-xs text-gray-400">
         {activePlatforms} platform connection{activePlatforms !== 1 ? 's' : ''}{' '}
         active across all businesses ·{' '}
         <button

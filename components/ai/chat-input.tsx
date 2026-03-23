@@ -108,10 +108,10 @@ export function ChatInput({
 
       {/* Character count */}
       <div className="flex justify-between items-center px-1 text-xs">
-        <span className="text-gray-500">
+        <span className="text-gray-400">
           Press Enter to send, Shift+Enter for new line
         </span>
-        <span className={cn(isOverLimit ? 'text-red-400' : 'text-gray-500')}>
+        <span className={cn(isOverLimit ? 'text-red-400' : 'text-gray-400')}>
           {charCount}/{MAX_LENGTH}
         </span>
       </div>

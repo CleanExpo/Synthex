@@ -104,7 +104,7 @@ export function ContentStats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">{value}</div>
-            <p className="text-xs text-gray-500 mt-1">{change}</p>
+            <p className="text-xs text-gray-400 mt-1">{change}</p>
           </CardContent>
         </Card>
       ))}

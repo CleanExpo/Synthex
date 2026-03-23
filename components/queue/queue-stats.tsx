@@ -75,7 +75,7 @@ function StatCard({
         />
       </div>
       <div>
-        <p className="text-xs text-gray-500 uppercase tracking-wider">
+        <p className="text-xs text-gray-400 uppercase tracking-wider">
           {label}
         </p>
         <p

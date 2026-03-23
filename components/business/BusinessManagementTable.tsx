@@ -238,7 +238,7 @@ export function BusinessManagementTable({
                               </Button>
                             </div>
                           )}
-                          <div className="text-xs text-gray-500 mt-1">
+                          <div className="text-xs text-gray-400 mt-1">
                             @{business.organizationSlug}
                           </div>
                         </div>
@@ -269,7 +269,7 @@ export function BusinessManagementTable({
                         <span className="text-sm text-white font-medium">
                           {formatCurrency(business.monthlyRate)}
                         </span>
-                        <span className="text-xs text-gray-500">/month</span>
+                        <span className="text-xs text-gray-400">/month</span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
@@ -425,7 +425,7 @@ export function BusinessManagementTable({
                         </Button>
                       </div>
                     )}
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-gray-400 mt-1">
                       @{business.organizationSlug}
                     </p>
                   </div>
@@ -455,7 +455,7 @@ export function BusinessManagementTable({
                     <span className="text-sm text-gray-300">Monthly Rate</span>
                     <span className="text-lg font-semibold text-white">
                       {formatCurrency(business.monthlyRate)}
-                      <span className="text-xs text-gray-500">/month</span>
+                      <span className="text-xs text-gray-400">/month</span>
                     </span>
                   </div>
                 </div>

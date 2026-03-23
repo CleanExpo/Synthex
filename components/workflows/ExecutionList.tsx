@@ -159,7 +159,7 @@ function ExecutionCard({
       {/* Progress bar */}
       {execution.totalSteps > 0 && (
         <div className="mb-2">
-          <div className="flex justify-between text-[10px] text-gray-500 mb-0.5">
+          <div className="flex justify-between text-[10px] text-gray-400 mb-0.5">
             <span>
               Step {execution.currentStepIndex}/{execution.totalSteps}
             </span>
@@ -175,7 +175,7 @@ function ExecutionCard({
       )}
 
       {/* Meta row */}
-      <div className="flex items-center gap-2 text-[11px] text-gray-500">
+      <div className="flex items-center gap-2 text-[11px] text-gray-400">
         <span className="capitalize">
           {triggerLabel(execution.triggerType)}
         </span>
@@ -212,7 +212,7 @@ export function ExecutionList({
   if (!executions.length) {
     return (
       <div className={cn('py-8 text-center', className)}>
-        <p className="text-sm text-gray-500">No executions found.</p>
+        <p className="text-sm text-gray-400">No executions found.</p>
       </div>
     );
   }

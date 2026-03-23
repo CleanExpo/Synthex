@@ -86,11 +86,11 @@ export function BusinessOverviewCards({
           <CardContent>
             <div className="text-3xl font-bold text-white">
               {overview.activeBusinesses}
-              <span className="text-lg text-gray-500">
+              <span className="text-lg text-gray-400">
                 /{overview.totalBusinesses}
               </span>
             </div>
-            <p className="text-xs text-gray-500 mt-1">Active businesses</p>
+            <p className="text-xs text-gray-400 mt-1">Active businesses</p>
           </CardContent>
         </Card>
 
@@ -106,7 +106,7 @@ export function BusinessOverviewCards({
             <div className="text-3xl font-bold text-white">
               {formatNumber(overview.totalCampaigns)}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Across all businesses</p>
+            <p className="text-xs text-gray-400 mt-1">Across all businesses</p>
           </CardContent>
         </Card>
 
@@ -122,7 +122,7 @@ export function BusinessOverviewCards({
             <div className="text-3xl font-bold text-white">
               {formatNumber(overview.totalEngagement)}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Combined interactions</p>
+            <p className="text-xs text-gray-400 mt-1">Combined interactions</p>
           </CardContent>
         </Card>
 
@@ -138,7 +138,7 @@ export function BusinessOverviewCards({
             <div className="text-3xl font-bold text-white">
               {formatCurrency(overview.totalMonthlySpend)}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Per month</p>
+            <p className="text-xs text-gray-400 mt-1">Per month</p>
           </CardContent>
         </Card>
       </div>
@@ -158,7 +158,7 @@ export function BusinessOverviewCards({
                     <CardTitle className="text-base font-semibold text-white truncate">
                       {business.organizationName}
                     </CardTitle>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-gray-400 mt-1">
                       @{business.organizationSlug}
                     </p>
                   </div>
@@ -185,19 +185,19 @@ export function BusinessOverviewCards({
               <CardContent>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <p className="text-xs text-gray-500">Campaigns</p>
+                    <p className="text-xs text-gray-400">Campaigns</p>
                     <p className="text-lg font-semibold text-white mt-1">
                       {business.stats?.totalCampaigns || 0}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Posts</p>
+                    <p className="text-xs text-gray-400">Posts</p>
                     <p className="text-lg font-semibold text-white mt-1">
                       {business.stats?.totalPosts || 0}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Monthly</p>
+                    <p className="text-xs text-gray-400">Monthly</p>
                     <p className="text-lg font-semibold text-orange-400 mt-1">
                       {formatCurrency(business.monthlyRate)}
                     </p>

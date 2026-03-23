@@ -139,7 +139,7 @@ export function CommandPalette() {
           />
 
           {/* Footer */}
-          <div className="border-t border-white/10 px-4 py-2 flex items-center justify-between text-xs text-gray-500">
+          <div className="border-t border-white/10 px-4 py-2 flex items-center justify-between text-xs text-gray-400">
             <div className="flex gap-4">
               <span>
                 <kbd>&#8593;&#8595;</kbd> Navigate

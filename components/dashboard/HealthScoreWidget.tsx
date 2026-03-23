@@ -208,7 +208,7 @@ export function HealthScoreWidget() {
 
         {/* Last updated */}
         {formattedDate && (
-          <p className="text-[10px] text-gray-500 text-right">
+          <p className="text-[10px] text-gray-400 text-right">
             Last updated: {formattedDate}
           </p>
         )}

@@ -87,7 +87,7 @@ function PillarBar({
         </span>
       </div>
       <Progress value={pct} className="h-2" />
-      {details && <p className="text-[10px] text-gray-500">{details}</p>}
+      {details && <p className="text-[10px] text-gray-400">{details}</p>}
     </div>
   );
 }
@@ -176,7 +176,7 @@ export function CompositeHealthWidget() {
             <ChevronDown className="w-3.5 h-3.5" />
           )}
           {expanded ? 'Hide checklist' : 'Show full checklist'}
-          <span className="ml-auto text-gray-500">
+          <span className="ml-auto text-gray-400">
             {checklist.filter(c => c.completed).length}/{checklist.length}
           </span>
         </button>

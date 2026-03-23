@@ -131,7 +131,7 @@ export function NotificationBell() {
 
             <div className="max-h-80 overflow-y-auto">
               {notifications.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
+                <div className="p-8 text-center text-gray-400">
                   <Bell className="h-12 w-12 mx-auto mb-3 opacity-30" />
                   <p className="text-sm">No notifications yet</p>
                 </div>
@@ -161,7 +161,7 @@ export function NotificationBell() {
                         >
                           {notification.message}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-400 mt-1">
                           {new Date(
                             notification.timestamp
                           ).toLocaleTimeString()}

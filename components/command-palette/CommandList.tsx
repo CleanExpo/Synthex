@@ -24,7 +24,7 @@ export function CommandList({
     <div ref={listRef} className="max-h-96 overflow-y-auto p-2">
       {Object.entries(groupedCommands).map(([category, items]) => (
         <div key={category} className="mb-4">
-          <div className="px-2 py-1 text-xs text-gray-500 uppercase">
+          <div className="px-2 py-1 text-xs text-gray-400 uppercase">
             {category}
           </div>
           {items.map(cmd => {
@@ -49,7 +49,7 @@ export function CommandList({
                 <div className="flex-1 min-w-0">
                   <div className="font-medium">{cmd.title}</div>
                   {cmd.description && (
-                    <div className="text-xs text-gray-500 truncate">
+                    <div className="text-xs text-gray-400 truncate">
                       {cmd.description}
                     </div>
                   )}
@@ -62,7 +62,7 @@ export function CommandList({
       ))}
 
       {filteredCommands.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-400">
           No commands found for &quot;{search}&quot;
         </div>
       )}

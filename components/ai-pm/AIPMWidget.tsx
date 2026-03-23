@@ -30,7 +30,7 @@ export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
             <h3 className="text-sm font-semibold text-white">
               AI Project Manager
             </h3>
-            <p className="text-[10px] text-gray-500">Personalized insights</p>
+            <p className="text-[10px] text-gray-400">Personalized insights</p>
           </div>
         </div>
         <Button
@@ -80,7 +80,7 @@ export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
                 <p className="text-xs font-medium text-white">
                   {suggestion.title}
                 </p>
-                <p className="mt-0.5 text-[11px] text-gray-500 line-clamp-2">
+                <p className="mt-0.5 text-[11px] text-gray-400 line-clamp-2">
                   {suggestion.description}
                 </p>
               </div>
@@ -92,7 +92,7 @@ export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
       {/* Fallback if no data yet */}
       {!greeting && dashboardSuggestions.length === 0 && (
         <div className="mt-3 text-center">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-400">
             Your AI PM is analyzing your account...
           </p>
           <Button

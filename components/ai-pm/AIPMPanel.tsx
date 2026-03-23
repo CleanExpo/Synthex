@@ -243,7 +243,7 @@ function ConversationItem({
         <p className="truncate text-sm font-medium text-white">
           {conversation.title}
         </p>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-400">
           {conversation.messageCount} messages · {timeAgo}
         </p>
       </div>
