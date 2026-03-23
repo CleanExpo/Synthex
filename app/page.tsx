@@ -14,6 +14,7 @@ import { FAQSection } from '@/components/landing/faq-section';
 import { buildFaqSchemaJson } from '@/lib/seo/faq-data';
 import { UrlHealthCheck } from '@/components/landing/UrlHealthCheck';
 import { CTASection } from '@/components/landing/cta-section';
+import { EmailCaptureSection } from '@/components/landing/email-capture-section';
 import { FooterSection } from '@/components/landing/footer-section';
 
 export const metadata: Metadata = PAGE_METADATA.home;
@@ -53,6 +54,9 @@ export default function HomePage() {
 
       {/* Final CTA */}
       <CTASection />
+
+      {/* Newsletter / Email capture */}
+      <EmailCaptureSection />
 
       {/* Footer */}
       <FooterSection />
