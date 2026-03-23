@@ -470,8 +470,8 @@ export function useAIChatConversation(
       // `options` is intentionally excluded from deps — it is a plain object literal created on every
       // render by the caller, so including it would trigger infinite re-renders. The callback reads
       // options?.onTitleUpdated at call time via closure, which is safe (invoked asynchronously).
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [conversationId, isStreaming, conversation?.title]
   );
 
