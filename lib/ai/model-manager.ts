@@ -3,7 +3,7 @@
  *
  * CRITICAL SYSTEM COMPONENT
  * Ensures SYNTHEX always operates with the latest available LLM models.
- * 
+ *
  * Prevents model degradation by:
  * 1. Hard-coding latest model selection
  * 2. Blocking fallback to deprecated models
@@ -50,7 +50,8 @@ export interface ModelManagerState {
 class ModelManagerAgent {
   private state: ModelManagerState;
   private readonly UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
-  private updateTimer?: NodeJS.Timeout;
+  private updateTimer: NodeJS.Timeout | null = null;
+  private initialCheckTimer: NodeJS.Timeout | null = null;
 
   constructor() {
     this.state = {
@@ -69,14 +70,22 @@ class ModelManagerAgent {
    * This runs on system startup
    */
   private initializeLatestModels(): void {
-    const providers: AIProvider[] = ['openai', 'anthropic', 'google', 'openrouter'];
+    const providers: AIProvider[] = [
+      'openai',
+      'anthropic',
+      'google',
+      'openrouter',
+    ];
 
     for (const provider of providers) {
       try {
         const latest = getLatestModel(provider);
         this.state.activeModels.set(provider, latest);
       } catch (error) {
-        console.error(`❌ [ModelManager] Failed to initialize ${provider}:`, error);
+        console.error(
+          `❌ [ModelManager] Failed to initialize ${provider}:`,
+          error
+        );
       }
     }
   }
@@ -108,7 +117,8 @@ class ModelManagerAgent {
    * Enforces that only available, non-deprecated models are used
    */
   public selectModel(strategy: ModelSelectionStrategy): ModelConfig {
-    const { provider, preferredModels, fallbackStrategy, requirements } = strategy;
+    const { provider, preferredModels, fallbackStrategy, requirements } =
+      strategy;
 
     // Try preferred models in order
     for (const modelId of preferredModels) {
@@ -196,14 +206,18 @@ class ModelManagerAgent {
    * Checks for new models every 24 hours
    */
   private startAutoUpdate(): void {
+    if (this.updateTimer) return; // Prevent double-start
     this.updateTimer = setInterval(() => {
       this.forceUpdate();
     }, this.UPDATE_INTERVAL);
 
     // Also run once on first load after delay
-    setTimeout(() => {
-      this.forceUpdate();
-    }, 60000); // Check after 1 minute
+    if (!this.initialCheckTimer) {
+      this.initialCheckTimer = setTimeout(() => {
+        this.initialCheckTimer = null;
+        this.forceUpdate();
+      }, 60000); // Check after 1 minute
+    }
   }
 
   /**
@@ -247,7 +261,11 @@ class ModelManagerAgent {
   public getHealthReport(): {
     timestamp: Date;
     activeModels: Record<AIProvider, string>;
-    unhealthyModels: Array<{ modelId: string; failureCount: number; lastFailure: Date }>;
+    unhealthyModels: Array<{
+      modelId: string;
+      failureCount: number;
+      lastFailure: Date;
+    }>;
     registryLastUpdated: Date;
   } {
     return {
@@ -256,7 +274,8 @@ class ModelManagerAgent {
         openai: this.state.activeModels.get('openai')?.name || 'UNKNOWN',
         anthropic: this.state.activeModels.get('anthropic')?.name || 'UNKNOWN',
         google: this.state.activeModels.get('google')?.name || 'UNKNOWN',
-        openrouter: this.state.activeModels.get('openrouter')?.name || 'UNKNOWN',
+        openrouter:
+          this.state.activeModels.get('openrouter')?.name || 'UNKNOWN',
       },
       unhealthyModels: Array.from(this.state.modelHealth.entries())
         .filter(([_, health]) => health.failureCount > 0)
@@ -275,6 +294,11 @@ class ModelManagerAgent {
   public destroy(): void {
     if (this.updateTimer) {
       clearInterval(this.updateTimer);
+      this.updateTimer = null;
+    }
+    if (this.initialCheckTimer) {
+      clearTimeout(this.initialCheckTimer);
+      this.initialCheckTimer = null;
     }
   }
 }
