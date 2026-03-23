@@ -76,6 +76,7 @@ class MemoryCacheLayer implements CacheLayer {
   }
 
   private startCleanup() {
+    if (this.cleanupInterval) return; // Prevent double-start
     // Clean expired entries every 30 seconds
     this.cleanupInterval = setInterval(() => {
       const now = Date.now();
@@ -217,7 +218,7 @@ export class CacheManager {
 
   private constructor() {
     this.layers = [
-      new MemoryCacheLayer(500),  // L1: Memory (500 entries)
+      new MemoryCacheLayer(500), // L1: Memory (500 entries)
       new RedisCacheLayer('synthex:'), // L2: Redis
     ];
 
@@ -277,7 +278,11 @@ export class CacheManager {
   /**
    * Set value in all cache layers
    */
-  async set<T>(key: string, data: T, options: CacheOptions = {}): Promise<void> {
+  async set<T>(
+    key: string,
+    data: T,
+    options: CacheOptions = {}
+  ): Promise<void> {
     const { ttl = 300, tags = [], skipLayers = [] } = options;
 
     const entry: CacheEntry<T> = {
@@ -374,7 +379,11 @@ export class CacheManager {
    * Warm cache with predicted access patterns
    */
   async warmCache(
-    predictions: Array<{ key: string; factory: () => Promise<unknown>; options?: CacheOptions }>
+    predictions: Array<{
+      key: string;
+      factory: () => Promise<unknown>;
+      options?: CacheOptions;
+    }>
   ): Promise<void> {
     await Promise.all(
       predictions.map(async ({ key, factory, options }) => {
@@ -476,7 +485,11 @@ export function cached<T>(
       const cache = getCache();
       const key = keyGenerator(...args);
 
-      return cache.getOrSet(key, () => originalMethod.apply(this, args), options);
+      return cache.getOrSet(
+        key,
+        () => originalMethod.apply(this, args),
+        options
+      );
     };
 
     return descriptor;
