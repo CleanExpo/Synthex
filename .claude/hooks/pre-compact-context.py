@@ -52,6 +52,9 @@ def build_compaction_guidance() -> str:
         "PRESERVE_SUMMARY: Current Linear issue identifiers | Recent architectural decisions | "
         "Active task state from .claude/scratchpad/current-session.md | "
         "Key file paths modified in this session | "
+        "DRIFT_RECOVERY: Before touching any route or page file, consult "
+        ".planning/ROUTE_REFERENCE.md for exact path, auth level, and canonical "
+        "lib/auth/ function — run `npm run routes:refresh` if reference looks stale | "
         "DISCARD: Resolved debug output | Completed tool outputs | "
         "Repeated search results already acted upon | Old file read contents"
     )
