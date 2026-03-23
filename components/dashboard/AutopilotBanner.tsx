@@ -89,7 +89,7 @@ export function AutopilotBanner({
             <span
               className={cn(
                 'flex items-center gap-1.5 text-[10px] tracking-wide uppercase',
-                isPlatformStep ? 'text-amber-500' : 'text-white/25'
+                isPlatformStep ? 'text-amber-500' : 'text-white/50'
               )}
             >
               <span
@@ -104,11 +104,11 @@ export function AutopilotBanner({
               </span>
               Connect platform
             </span>
-            <ChevronRight className="h-3 w-3 text-white/15" />
+            <ChevronRight className="h-3 w-3 text-white/40" />
             <span
               className={cn(
                 'flex items-center gap-1.5 text-[10px] tracking-wide uppercase',
-                !isPlatformStep ? 'text-amber-500' : 'text-white/25'
+                !isPlatformStep ? 'text-amber-500' : 'text-white/50'
               )}
             >
               <span
@@ -129,7 +129,9 @@ export function AutopilotBanner({
         {/* CTA + dismiss */}
         <div className="shrink-0 flex items-center gap-2 mt-0.5">
           <Link
-            href={isPlatformStep ? '/dashboard/platforms' : '/dashboard/autonomous'}
+            href={
+              isPlatformStep ? '/dashboard/platforms' : '/dashboard/autonomous'
+            }
             className={cn(
               'inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium rounded-sm transition-colors',
               'bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 hover:text-amber-300',

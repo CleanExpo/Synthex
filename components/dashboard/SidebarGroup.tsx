@@ -64,7 +64,7 @@ export function SidebarGroup({
         className={cn(
           'w-full flex items-center justify-between px-3 py-1.5 rounded-sm transition-colors',
           'text-[9px] uppercase tracking-[0.25em] font-medium',
-          hasActiveItem ? 'text-white/60' : 'text-white/40',
+          hasActiveItem ? 'text-white/70' : 'text-white/55',
           'hover:text-white/60 hover:bg-white/[0.02]'
         )}
         aria-expanded={isOpen}
@@ -74,14 +74,14 @@ export function SidebarGroup({
           <Icon
             className={cn(
               'w-3.5 h-3.5',
-              hasActiveItem ? 'text-orange-400/60' : 'text-white/40'
+              hasActiveItem ? 'text-orange-400/70' : 'text-white/55'
             )}
           />
           <span>{label}</span>
         </div>
         <ChevronDown
           className={cn(
-            'w-3 h-3 transition-transform text-white/40',
+            'w-3 h-3 transition-transform text-white/55',
             isOpen ? 'rotate-0' : '-rotate-90'
           )}
         />
@@ -111,7 +111,7 @@ export function SidebarGroup({
                 {isActive ? (
                   <div className="w-1 h-1 rounded-full bg-orange-400 flex-shrink-0" />
                 ) : (
-                  <ItemIcon className="w-3.5 h-3.5 flex-shrink-0 text-white/40" />
+                  <ItemIcon className="w-3.5 h-3.5 flex-shrink-0 text-white/55" />
                 )}
                 <span className="truncate tracking-wide">{item.label}</span>
               </Link>

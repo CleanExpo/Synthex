@@ -145,7 +145,7 @@ function Field({
 
 const inputCls = (err?: string) =>
   cn(
-    'w-full px-3 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/80 placeholder:text-white/20 rounded-sm',
+    'w-full px-3 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/80 placeholder:text-white/40 rounded-sm',
     'focus:outline-none focus:border-amber-500/30 transition-colors',
     err ? 'border-red-500/30' : 'border-white/[0.06]'
   );
