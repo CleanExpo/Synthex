@@ -6,21 +6,35 @@ import {
   X,
   Home,
   BarChart3,
-  FileText,
   Calendar,
   Settings,
   LogOut,
   User,
+  Sparkles,
+  DollarSign,
+  Brain,
+  Search,
+  Megaphone,
+  Database,
+  GitBranch as GitPullRequest,
+  Users,
 } from '@/components/icons';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
 const menuItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: Home },
-  { href: '/dashboard/content', label: 'Content', icon: FileText },
+  { href: '/dashboard', label: 'Home', icon: Home },
+  { href: '/dashboard/creative-suite', label: 'Content', icon: Sparkles },
+  { href: '/dashboard/calendar', label: 'Planning', icon: Calendar },
   { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
-  { href: '/dashboard/schedule', label: 'Schedule', icon: Calendar },
+  { href: '/dashboard/revenue', label: 'Monetization', icon: DollarSign },
+  { href: '/dashboard/audience', label: 'Business Intel', icon: Brain },
+  { href: '/dashboard/seo', label: 'SEO', icon: Search },
+  { href: '/dashboard/brand', label: 'Authority & PR', icon: Megaphone },
+  { href: '/dashboard/research', label: 'Research & Media', icon: Database },
+  { href: '/dashboard/autonomous', label: 'AI Agents', icon: GitPullRequest },
+  { href: '/dashboard/team', label: 'Team & Admin', icon: Users },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 
