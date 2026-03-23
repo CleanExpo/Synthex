@@ -272,10 +272,10 @@ export default function SignupPage() {
               </div>
             </div>
             <h1 className="text-lg font-light text-white mb-1 text-center">
-              Check your email
+              You&apos;re in!
             </h1>
             <p className="text-xs text-white/40 text-center mb-1">
-              Your account has been created. We sent a verification link to:
+              Account created. We&apos;ve sent a verification link to:
             </p>
             <p className="text-xs text-amber-500/80 text-center font-medium mb-6">
               {verificationEmail}
@@ -287,40 +287,43 @@ export default function SignupPage() {
 
             <div className="space-y-2">
               <button
-                onClick={() => router.push('/onboarding')}
+                onClick={() => router.push('/dashboard')}
                 className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-medium rounded-sm bg-amber-500 hover:bg-amber-400 text-[#050508] transition-colors"
               >
-                Continue to onboarding
+                Continue to Synthex
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
+            </div>
 
+            <p className="text-[10px] text-white/40 text-center mt-3 leading-relaxed">
+              Your account is ready — you can verify your email later from
+              account settings.
+            </p>
+
+            <div className="border-t-[0.5px] border-white/[0.06] mt-4 pt-4">
               <button
                 type="button"
                 onClick={handleResendVerification}
                 disabled={resendLoading || resendStatus === 'sent'}
-                className="w-full flex items-center justify-center gap-2 py-2.5 text-xs text-white/50 hover:text-white/70 bg-white/[0.02] hover:bg-white/[0.04] border-[0.5px] border-white/[0.06] hover:border-white/[0.12] rounded-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 py-2 text-[11px] text-white/40 hover:text-white/60 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {resendLoading ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-3 h-3 animate-spin" />
                 ) : resendStatus === 'sent' ? (
-                  <CheckCircle className="w-3.5 h-3.5 text-amber-500/70" />
+                  <CheckCircle className="w-3 h-3 text-amber-500/70" />
                 ) : (
-                  <RefreshCw className="w-3.5 h-3.5" />
+                  <RefreshCw className="w-3 h-3" />
                 )}
                 {resendStatus === 'sent'
                   ? 'Verification email sent'
                   : 'Resend verification email'}
               </button>
+              {resendStatus === 'error' && (
+                <p className="text-[10px] text-red-400/70 text-center mt-2">
+                  Failed to resend. Please try again.
+                </p>
+              )}
             </div>
-
-            {resendStatus === 'error' && (
-              <p className="text-[10px] text-red-400/70 text-center mt-3">
-                Failed to resend. Please try again.
-              </p>
-            )}
-            <p className="text-[10px] text-white/50 text-center mt-4">
-              You can verify your email later from account settings.
-            </p>
           </div>
 
           <p className="text-center text-[10px] text-white/30 mt-5">
