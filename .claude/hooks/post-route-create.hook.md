@@ -184,7 +184,8 @@ See `app/api/campaigns/route.ts` for a recently-audited route that passes all ch
 After confirming a new file was created at a path matching `app/api/**/route.ts`:
 
 1. Run: `bash .claude/scripts/refresh-routes.sh`
-2. If exit code 0: Route reference updated — include `.planning/ROUTE_REFERENCE.md` in the commit
+2. If exit code 0: Route reference updated — stage `.planning/ROUTE_REFERENCE.md` (`git add .planning/ROUTE_REFERENCE.md`) and include it in the commit
 3. If exit code 1 (sentinel missing): Report the error to the user — do NOT block the route creation workflow
+4. If any other non-zero exit code: Report the raw error output to the user — do NOT block the route creation workflow
 
 **Condition:** Only fires for paths matching `app/api/**/route.ts`. Ignore all other file creations.
