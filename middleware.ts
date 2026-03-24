@@ -11,7 +11,7 @@ const securityHeaders = {
   // Content Security Policy
   'Content-Security-Policy': [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdn.tailwindcss.com https://js.stripe.com",
+    "script-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://cdn.tailwindcss.com https://js.stripe.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: blob: https:",
