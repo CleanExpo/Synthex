@@ -12,10 +12,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { decryptField } from '@/lib/security/field-encryption';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
-import { createPlatformService, type SupportedPlatform, type PlatformCredentials } from '@/lib/social';
+import {
+  createPlatformService,
+  type SupportedPlatform,
+  type PlatformCredentials,
+} from '@/lib/social';
 import { logger } from '@/lib/logger';
 
 const socialPostSchema = z.object({
@@ -27,7 +34,6 @@ const socialPostSchema = z.object({
   mentions: z.array(z.string()).optional().default([]),
   campaignId: z.string().optional(),
 });
-
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,11 +62,11 @@ export async function POST(request: NextRequest) {
       scheduledAt,
       hashtags,
       mentions,
-      campaignId
+      campaignId,
     } = validation.data;
 
     // Process hashtags
-    const processedHashtags = hashtags.map(tag => 
+    const processedHashtags = hashtags.map(tag =>
       tag.startsWith('#') ? tag : `#${tag}`
     );
 
@@ -72,7 +78,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Post to each platform (external API calls — must happen outside transaction)
-    const platformResults: { platform: string; postId: string; url: string }[] = [];
+    const platformResults: { platform: string; postId: string; url: string }[] =
+      [];
     const errors: { platform: string; success: boolean; error: string }[] = [];
 
     for (const platform of platforms) {
@@ -83,15 +90,15 @@ export async function POST(request: NextRequest) {
             userId,
             platform,
             organizationId: organizationId ?? null,
-            isActive: true
-          }
+            isActive: true,
+          },
         });
 
         if (!connection) {
           errors.push({
             platform,
             success: false,
-            error: `Not connected to ${platform}. Please connect your ${platform} account in Settings.`
+            error: `Not connected to ${platform}. Please connect your ${platform} account in Settings.`,
           });
           continue;
         }
@@ -102,31 +109,39 @@ export async function POST(request: NextRequest) {
           errors.push({
             platform,
             success: false,
-            error: `Access token for ${platform} could not be decrypted. Please reconnect your account.`
+            error: `Access token for ${platform} could not be decrypted. Please reconnect your account.`,
           });
           continue;
         }
         const credentials: PlatformCredentials = {
           accessToken,
-          refreshToken: connection.refreshToken ? decryptField(connection.refreshToken) ?? undefined : undefined,
+          refreshToken: connection.refreshToken
+            ? (decryptField(connection.refreshToken) ?? undefined)
+            : undefined,
           expiresAt: connection.expiresAt ?? undefined,
           platformUserId: connection.profileId ?? undefined,
           platformUsername: connection.profileName ?? undefined,
         };
 
-        const service = createPlatformService(platform as SupportedPlatform, credentials);
+        const service = createPlatformService(
+          platform as SupportedPlatform,
+          credentials
+        );
 
         if (!service) {
           errors.push({
             platform,
             success: false,
-            error: `Platform ${platform} is not supported`
+            error: `Platform ${platform} is not supported`,
           });
           continue;
         }
 
         // Post via per-user OAuth token
-        const result = await service.createPost({ text: finalContent, mediaUrls });
+        const result = await service.createPost({
+          text: finalContent,
+          mediaUrls,
+        });
 
         if (!result.success || !result.postId) {
           throw new Error(result.error || `Failed to post to ${platform}`);
@@ -137,19 +152,18 @@ export async function POST(request: NextRequest) {
           postId: result.postId,
           url: result.url || '',
         });
-
       } catch (error: unknown) {
         logger.error(`Error posting to ${platform}:`, error);
         errors.push({
           platform,
           success: false,
-          error: `Failed to post to ${platform}`
+          error: `Failed to post to ${platform}`,
         });
       }
     }
 
     // Persist all DB writes atomically: campaign creation + post records + analytics
-    const { finalCampaignId, results } = await prisma.$transaction(async (tx) => {
+    const { finalCampaignId, results } = await prisma.$transaction(async tx => {
       // Create campaign if not provided
       let txCampaignId = campaignId;
       if (!campaignId) {
@@ -159,14 +173,21 @@ export async function POST(request: NextRequest) {
             description: 'Auto-generated campaign for social media post',
             platform: platforms.join(','),
             status: 'active',
-            userId
-          }
+            userId,
+          },
         });
         txCampaignId = campaign.id;
       }
 
       // Save all successful platform posts to database
-      const postResults: { platform: string; success: boolean; postId: string; platformPostId: string; url: string; message: string }[] = [];
+      const postResults: {
+        platform: string;
+        success: boolean;
+        postId: string;
+        platformPostId: string;
+        url: string;
+        message: string;
+      }[] = [];
 
       for (const result of platformResults) {
         const post = await tx.post.create({
@@ -182,9 +203,9 @@ export async function POST(request: NextRequest) {
               url: result.url,
               hashtags: processedHashtags,
               mentions,
-              mediaUrls
-            }
-          }
+              mediaUrls,
+            },
+          },
         });
 
         postResults.push({
@@ -193,7 +214,7 @@ export async function POST(request: NextRequest) {
           postId: post.id,
           platformPostId: result.postId,
           url: result.url,
-          message: `Successfully posted to ${result.platform}`
+          message: `Successfully posted to ${result.platform}`,
         });
       }
 
@@ -205,9 +226,9 @@ export async function POST(request: NextRequest) {
             analytics: {
               postsCreated: postResults.length,
               platformsUsed: platforms,
-              lastPostedAt: new Date()
-            }
-          }
+              lastPostedAt: new Date(),
+            },
+          },
         });
       }
 
@@ -222,16 +243,15 @@ export async function POST(request: NextRequest) {
       errors: errors.length > 0 ? errors : undefined,
       campaign: {
         id: finalCampaignId,
-        postsCreated: results.length
-      }
+        postsCreated: results.length,
+      },
     });
-
   } catch (error: unknown) {
     logger.error('Social posting error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to post to social media',
-        message: 'An unexpected error occurred. Please try again.'
+        message: 'An unexpected error occurred. Please try again.',
       },
       { status: 500 }
     );
@@ -260,40 +280,37 @@ export async function GET(request: NextRequest) {
     // Scope to current user via campaign relation
     where['campaign'] = { userId };
 
-    // Get posts from database
-    const posts = await prisma.post.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      include: {
-        campaign: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
-      }
-    });
-
-    // Get platform statistics
-    const stats = await prisma.post.groupBy({
-      by: ['platform', 'status'],
-      where: { campaign: { userId } },
-      _count: {
-        id: true
-      }
-    });
+    // posts (filtered) and stats (all for user) are independent — run in parallel
+    const [posts, stats] = await Promise.all([
+      prisma.post.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        include: {
+          campaign: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      }),
+      prisma.post.groupBy({
+        by: ['platform', 'status'],
+        where: { campaign: { userId } },
+        _count: { id: true },
+      }),
+    ]);
 
     return NextResponse.json({
       posts,
       stats: stats.map(s => ({
         platform: s.platform,
         status: s.status,
-        count: s._count.id
+        count: s._count.id,
       })),
-      total: posts.length
+      total: posts.length,
     });
-
   } catch (error: unknown) {
     logger.error('Get posts error:', error);
     return NextResponse.json(
