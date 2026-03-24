@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useGBPLocations } from '@/hooks/useGBPLocations';
 import { useGBPInsights } from '@/hooks/useGBPInsights';
 import { useGBPReviews } from '@/hooks/useGBPReviews';
+import { useNAPAudit } from '@/hooks/useNAPAudit';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import { GBPConnectionBanner } from '@/components/google/GBPConnectionBanner';
 import Link from 'next/link';
 import {
@@ -15,10 +18,167 @@ import {
   Globe,
   TrendingUp,
   MessageSquare,
+  Quote,
   ArrowRight,
   MapPin,
   Loader2,
+  Shield,
+  AlertTriangle,
+  CheckCircle,
+  Code,
+  Copy,
 } from '@/components/icons';
+
+const FIELD_LABELS: Record<'name' | 'phone' | 'website', string> = {
+  name: 'Name',
+  phone: 'Phone',
+  website: 'Website',
+};
+
+function NAPConsistencyWidget({ show }: { show: boolean }) {
+  const { mismatches, allMatch, isLoading, error } = useNAPAudit();
+
+  if (!show) return null;
+
+  return (
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+      <CardContent className="p-6">
+        <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          {allMatch && !isLoading ? (
+            <Shield className="w-5 h-5 text-orange-400" />
+          ) : (
+            <AlertTriangle className="w-5 h-5 text-orange-400" />
+          )}
+          NAP Consistency
+        </h2>
+
+        {isLoading ? (
+          <div className="flex justify-center py-4">
+            <Loader2 className="w-5 h-5 text-gray-300 animate-spin" />
+          </div>
+        ) : error ? (
+          <p className="text-sm text-gray-500 py-2">
+            Unable to load NAP audit data.
+          </p>
+        ) : allMatch ? (
+          <div className="flex items-center gap-2 text-green-400">
+            <CheckCircle className="w-5 h-5 flex-shrink-0" />
+            <p className="text-sm font-medium">
+              All details consistent across platforms
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {mismatches.map(mismatch => (
+              <div
+                key={mismatch.field}
+                className="p-3 bg-white/5 rounded-lg space-y-2"
+              >
+                <p className="text-sm font-semibold text-white">
+                  {FIELD_LABELS[mismatch.field]}
+                </p>
+                <div className="flex items-start gap-2">
+                  <span className="text-xs text-gray-500 w-28 shrink-0 pt-0.5">
+                    Google (canonical)
+                  </span>
+                  <span className="text-xs text-orange-400 break-all">
+                    {mismatch.canonical}
+                  </span>
+                </div>
+                {mismatch.sources.map(src => (
+                  <div key={src.source} className="flex items-start gap-2">
+                    <span className="text-xs text-gray-500 w-28 shrink-0 pt-0.5">
+                      {src.label}
+                    </span>
+                    <span className="text-xs text-white break-all flex-1">
+                      {src.value}
+                    </span>
+                    {src.editUrl && (
+                      <a
+                        href={src.editUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-orange-400 hover:text-orange-300 shrink-0 underline"
+                      >
+                        Fix
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ReviewEmbedWidget({
+  show,
+  orgSlug,
+}: {
+  show: boolean;
+  orgSlug: string | null;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  if (!show || !orgSlug) return null;
+
+  const origin =
+    typeof window !== 'undefined'
+      ? window.location.origin
+      : 'https://synthex.social';
+  const reviewsApiUrl = `${origin}/api/public/reviews/${orgSlug}?min_rating=4&limit=6`;
+
+  const embedSnippet = `<div id="synthex-reviews"></div>\n<script>\n(function(){\n  var el=document.getElementById('synthex-reviews');\n  fetch('${reviewsApiUrl}')\n    .then(function(r){return r.json()})\n    .then(function(d){\n      el.innerHTML=d.reviews.map(function(r){\n        return '<div class="synthex-review"><strong>'+r.reviewerName+'</strong><span>'+('\u2605'.repeat(r.rating))+'</span><p>'+r.comment+'</p></div>';\n      }).join('');\n    });\n})();\n<\/script>`;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(embedSnippet);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = embedSnippet;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-2">
+          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+            <Code className="w-5 h-5 text-orange-400" />
+            Embed Reviews on Your Website
+          </h2>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleCopy}
+            className="flex items-center gap-1.5 border-orange-500/30 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 shrink-0"
+          >
+            <Copy className="w-3.5 h-3.5" />
+            {copied ? 'Copied!' : 'Copy to Clipboard'}
+          </Button>
+        </div>
+        <p className="text-sm text-gray-300 mb-4">
+          Copy this snippet and paste it into your website&apos;s HTML to
+          display your Google reviews.
+        </p>
+        <pre className="bg-black/40 rounded border border-white/10 p-4 overflow-x-auto">
+          <code className="text-xs text-gray-300 font-mono whitespace-pre">
+            {embedSnippet}
+          </code>
+        </pre>
+      </CardContent>
+    </Card>
+  );
+}
 
 function MetricCard({
   label,
@@ -62,9 +222,13 @@ export default function GoogleBusinessPage() {
     locationId: primaryLocation?.id,
     limit: 5,
   });
+  const { activeBusiness } = useActiveBusiness();
 
   const isLoading = locationsLoading || insightsLoading;
   const hasLocations = locations.length > 0;
+
+  // Derive org slug from the active business for the embed widget
+  const orgSlug = activeBusiness?.organizationSlug ?? null;
 
   return (
     <div className="space-y-6">
@@ -142,6 +306,9 @@ export default function GoogleBusinessPage() {
               icon={TrendingUp}
             />
           </div>
+
+          {/* NAP Consistency Audit — after metrics grid, before rating summary */}
+          <NAPConsistencyWidget show={hasLocations} />
 
           {/* Rating + Reviews Summary */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -239,7 +406,7 @@ export default function GoogleBusinessPage() {
           </div>
 
           {/* Quick Links */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link href="/dashboard/google-business/reviews">
               <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 hover:border-orange-500/30 transition-colors cursor-pointer">
                 <CardContent className="p-4 flex items-center gap-3">
@@ -271,7 +438,18 @@ export default function GoogleBusinessPage() {
                 </CardContent>
               </Card>
             </Link>
+            <Link href="/dashboard/google-business/testimonials">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 hover:border-orange-500/30 transition-colors cursor-pointer">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Quote className="w-5 h-5 text-orange-400" />
+                  <span className="text-white font-medium">Testimonials</span>
+                  <ArrowRight className="w-4 h-4 text-gray-500 ml-auto" />
+                </CardContent>
+              </Card>
+            </Link>
           </div>
+          {/* Review Embed Snippet — after quick links */}
+          <ReviewEmbedWidget show={hasLocations} orgSlug={orgSlug} />
         </>
       ) : null}
     </div>
