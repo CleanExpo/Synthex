@@ -162,9 +162,9 @@ export function decryptField(
     return plaintext.toString('utf8');
   } catch (error) {
     if (
-      error instanceof Error && error instanceof Error
-        ? error.message
-        : String(error).includes('Unsupported state')
+      (error instanceof Error ? error.message : String(error)).includes(
+        'Unsupported state'
+      )
     ) {
       throw new Error(
         'Decryption failed: Invalid authentication tag. Data may be corrupted or tampered.'

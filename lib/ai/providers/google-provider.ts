@@ -73,10 +73,10 @@ export class GoogleProvider implements AIProvider {
     }
 
     // Convert chat messages to Gemini format
-    const systemMsg = request.messages.find((m) => m.role === 'system');
-    const conversationMsgs = request.messages.filter((m) => m.role !== 'system');
+    const systemMsg = request.messages.find(m => m.role === 'system');
+    const conversationMsgs = request.messages.filter(m => m.role !== 'system');
 
-    const contents = conversationMsgs.map((m) => ({
+    const contents = conversationMsgs.map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }],
     }));
@@ -103,8 +103,13 @@ export class GoogleProvider implements AIProvider {
       });
 
       if (!res.ok) {
-        const errBody: GoogleAIErrorResponse = await res.json().catch(() => ({}));
-        logger.error('Google AI API error', { status: res.status, body: errBody });
+        const errBody: GoogleAIErrorResponse = await res
+          .json()
+          .catch(() => ({}));
+        logger.error('Google AI API error', {
+          status: res.status,
+          body: errBody,
+        });
         throw new Error(
           errBody.error?.message || `Google AI error ${res.status}`
         );
@@ -134,7 +139,11 @@ export class GoogleProvider implements AIProvider {
           : undefined,
       };
     } catch (error) {
-      if (error instanceof Error && error instanceof Error ? error.message : String(error).includes('Google AI')) {
+      if (
+        (error instanceof Error ? error.message : String(error)).includes(
+          'Google AI'
+        )
+      ) {
         throw error;
       }
       logger.error('Google provider error', { error });
@@ -149,10 +158,10 @@ export class GoogleProvider implements AIProvider {
       throw new Error('Google AI API key not configured');
     }
 
-    const systemMsg = request.messages.find((m) => m.role === 'system');
-    const conversationMsgs = request.messages.filter((m) => m.role !== 'system');
+    const systemMsg = request.messages.find(m => m.role === 'system');
+    const conversationMsgs = request.messages.filter(m => m.role !== 'system');
 
-    const contents = conversationMsgs.map((m) => ({
+    const contents = conversationMsgs.map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }],
     }));
