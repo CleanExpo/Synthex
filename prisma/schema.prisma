@@ -4976,3 +4976,130 @@ model ConnectedProject {
   @@index([founderId])
   @@map("connected_projects")
 }
+
+// ── Invoicing ──────────────────────────────────────────────────────────────
+
+/// A customer invoice — created manually or auto-generated from a campaign/project.
+/// Org-scoped via organizationId. Invoice numbers are per-org sequential (INV-0001).
+/// UNI-173
+model Invoice {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  invoiceNumber  String    @map("invoice_number") // e.g. "INV-0001"
+  status         String    @default("draft") // draft | sent | paid | overdue | cancelled
+  currency       String    @default("AUD")
+  subtotalCents  Int       @map("subtotal_cents")
+  taxCents       Int       @default(0) @map("tax_cents")
+  totalCents     Int       @map("total_cents")
+  clientName     String    @map("client_name")
+  clientEmail    String    @map("client_email")
+  clientAddress  String?   @map("client_address") @db.Text
+  clientAbn      String?   @map("client_abn")
+  notes          String?   @db.Text
+  dueDate        DateTime? @map("due_date")
+  issuedAt       DateTime? @map("issued_at")
+  paidAt         DateTime? @map("paid_at")
+  stripeInvoiceId String?  @map("stripe_invoice_id")
+  xeroInvoiceId   String?  @map("xero_invoice_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  lineItems InvoiceLineItem[]
+
+  @@index([organizationId, status])
+  @@index([organizationId])
+  @@map("invoices")
+}
+
+/// A single line item on an invoice.
+/// UNI-173
+model InvoiceLineItem {
+  id          String   @id @default(cuid())
+  invoiceId   String   @map("invoice_id")
+  description String
+  quantity    Decimal  @default(1) @db.Decimal(10, 2)
+  unitCents   Int      @map("unit_cents")
+  totalCents  Int      @map("total_cents")
+  taxRate     Decimal  @default(0.10) @map("tax_rate") @db.Decimal(5, 4) // 0.10 = 10% GST
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_line_items")
+}
+
+// ── Marketplace ────────────────────────────────────────────────────────────
+
+/// A product listing synced across one or more marketplace channels.
+/// UNI-1580 / UNI-1581 / UNI-1582 — Marketplace Phase A1
+model MarketplaceProduct {
+  id          String   @id @default(cuid())
+  orgId       String   @map("org_id")
+  sku         String
+  title       String
+  description String?  @db.Text
+  priceCents  Int      @map("price_cents")
+  currency    String   @default("AUD")
+  stockQty    Int      @default(0) @map("stock_qty")
+  images      String[] @default([])
+  categories  String[] @default([])
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  channelListings MarketplaceChannelListing[]
+
+  @@unique([orgId, sku])
+  @@index([orgId])
+  @@map("marketplace_products")
+}
+
+/// A product listed on a specific marketplace channel.
+/// UNI-1580 / UNI-1581 / UNI-1582 — Marketplace Phase A1
+model MarketplaceChannelListing {
+  id               String    @id @default(cuid())
+  productId        String    @map("product_id")
+  orgId            String    @map("org_id")
+  channelId        String    @map("channel_id") // 'shopify' | 'ebay' | 'facebook'
+  channelListingId String    @map("channel_listing_id")
+  status           String    @default("active")
+  channelData      Json?     @map("channel_data")
+  lastSyncedAt     DateTime? @map("last_synced_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  product MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, channelId, channelListingId])
+  @@index([orgId])
+  @@index([productId])
+  @@map("marketplace_channel_listings")
+}
+
+/// An order received from a marketplace channel.
+/// UNI-1580 / UNI-1581 / UNI-1582 — Marketplace Phase A1
+model MarketplaceOrder {
+  id             String   @id @default(cuid())
+  orgId          String   @map("org_id")
+  channelId      String   @map("channel_id")
+  channelOrderId String   @map("channel_order_id")
+  status         String   @default("pending")
+  totalCents     Int      @map("total_cents")
+  currency       String   @default("AUD")
+  shippingCents  Int      @default(0) @map("shipping_cents")
+  taxCents       Int      @default(0) @map("tax_cents")
+  customerName   String   @map("customer_name")
+  customerEmail  String   @map("customer_email")
+  shippingAddr   Json?    @map("shipping_addr")
+  lineItems      Json     @map("line_items")
+  channelData    Json?    @map("channel_data")
+  placedAt       DateTime @map("placed_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@unique([orgId, channelId, channelOrderId])
+  @@index([orgId, status])
+  @@index([orgId, channelId])
+  @@map("marketplace_orders")
+}
