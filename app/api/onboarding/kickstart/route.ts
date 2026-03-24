@@ -16,7 +16,10 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { generateKickstartContent } from '@/lib/ai/content-kickstart';
@@ -26,10 +29,13 @@ import type { KickstartInput } from '@/lib/ai/content-kickstart';
 // Validation — body is optional (endpoint is auth-gated)
 // ============================================================================
 
-const kickstartBodySchema = z.object({
-  platforms: z.array(z.string()).optional(),
-  postingMode: z.enum(['autopilot', 'assisted', 'manual']).optional(),
-}).strict().optional();
+const kickstartBodySchema = z
+  .object({
+    platforms: z.array(z.string()).optional(),
+    postingMode: z.enum(['autopilot', 'assisted', 'manual']).optional(),
+  })
+  .strict()
+  .optional();
 
 // ============================================================================
 // GET — Return kickstart status (for FirstWeekWidget)
@@ -46,7 +52,12 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user?.activeOrganizationId) {
-      return NextResponse.json({ hasKickstart: false, draftsCount: 0, scheduledCount: 0, platforms: [] });
+      return NextResponse.json({
+        hasKickstart: false,
+        draftsCount: 0,
+        scheduledCount: 0,
+        platforms: [],
+      });
     }
 
     const orgId = user.activeOrganizationId;
@@ -67,9 +78,11 @@ export async function GET(request: NextRequest) {
       orderBy: { scheduledAt: 'asc' },
     });
 
-    const platforms = [...new Set(kickstartPosts.map((p) => p.platform))];
-    const scheduledCount = kickstartPosts.filter((p) => p.status === 'scheduled').length;
-    const draftCount = kickstartPosts.filter((p) => p.status === 'draft').length;
+    const platforms = [...new Set(kickstartPosts.map(p => p.platform))];
+    const scheduledCount = kickstartPosts.filter(
+      p => p.status === 'scheduled'
+    ).length;
+    const draftCount = kickstartPosts.filter(p => p.status === 'draft').length;
 
     return NextResponse.json({
       hasKickstart: kickstartPosts.length > 0,
@@ -77,7 +90,7 @@ export async function GET(request: NextRequest) {
       scheduledCount,
       totalCount: kickstartPosts.length,
       platforms,
-      posts: kickstartPosts.slice(0, 5).map((p) => ({
+      posts: kickstartPosts.slice(0, 5).map(p => ({
         id: p.id,
         platform: p.platform,
         status: p.status,
@@ -88,7 +101,12 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     logger.error('[kickstart] GET status failed', undefined, { message: msg });
-    return NextResponse.json({ hasKickstart: false, draftsCount: 0, scheduledCount: 0, platforms: [] });
+    return NextResponse.json({
+      hasKickstart: false,
+      draftsCount: 0,
+      scheduledCount: 0,
+      platforms: [],
+    });
   }
 }
 
@@ -123,7 +141,7 @@ export async function POST(request: NextRequest) {
     if (!user || !user.onboardingComplete) {
       return NextResponse.json(
         { error: 'Onboarding must be complete before kickstart' },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -131,7 +149,7 @@ export async function POST(request: NextRequest) {
     if (!orgId) {
       return NextResponse.json(
         { error: 'No active organisation found' },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -150,31 +168,35 @@ export async function POST(request: NextRequest) {
         userId: userId,
         orgId,
       });
-      return NextResponse.json({ success: true, alreadyRun: true, draftsCreated: 0 });
+      return NextResponse.json({
+        success: true,
+        alreadyRun: true,
+        draftsCreated: 0,
+      });
     }
 
-    // Load onboarding pipeline data
-    const progress = await prisma.onboardingProgress.findFirst({
-      where: { userId: userId, organizationId: orgId },
-      select: {
-        auditData: true,
-        postingMode: true,
-        businessName: true,
-        selectedPlatforms: true,
-      },
-    });
+    // Load onboarding data and platform connections — independent, run in parallel
+    const [progress, connections] = await Promise.all([
+      prisma.onboardingProgress.findFirst({
+        where: { userId: userId, organizationId: orgId },
+        select: {
+          auditData: true,
+          postingMode: true,
+          businessName: true,
+          selectedPlatforms: true,
+        },
+      }),
+      prisma.platformConnection.findMany({
+        where: { userId: userId, organizationId: orgId, isActive: true },
+        select: { platform: true },
+      }),
+    ]);
 
     const auditData = (progress?.auditData ?? {}) as Record<string, unknown>;
 
-    // Load connected OAuth platforms
-    const connections = await prisma.platformConnection.findMany({
-      where: { userId: userId, organizationId: orgId, isActive: true },
-      select: { platform: true },
-    });
-
     const connectedPlatforms =
       connections.length > 0
-        ? connections.map((c) => c.platform.toLowerCase())
+        ? connections.map(c => c.platform.toLowerCase())
         : ((progress?.selectedPlatforms ?? []) as string[]);
 
     const kickstartInput: KickstartInput = {
@@ -189,9 +211,12 @@ export async function POST(request: NextRequest) {
       keyTopics: auditData.keyTopics as string[] | undefined,
       targetAudience: auditData.targetAudience as string | undefined,
       suggestedTone: auditData.suggestedTone as string | undefined,
-      suggestedPersonaName: auditData.suggestedPersonaName as string | undefined,
+      suggestedPersonaName: auditData.suggestedPersonaName as
+        | string
+        | undefined,
       connectedPlatforms,
-      postingMode: (progress?.postingMode as KickstartInput['postingMode']) ?? 'assisted',
+      postingMode:
+        (progress?.postingMode as KickstartInput['postingMode']) ?? 'assisted',
     };
 
     logger.info('[kickstart] Starting AI content generation', {
@@ -210,12 +235,19 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    logger.error('[kickstart] Kickstart failed', error instanceof Error ? error : undefined, {
-      message: msg,
-    });
+    logger.error(
+      '[kickstart] Kickstart failed',
+      error instanceof Error ? error : undefined,
+      {
+        message: msg,
+      }
+    );
     return NextResponse.json(
-      { error: 'Kickstart failed. Content drafts can be generated from the dashboard.' },
-      { status: 500 },
+      {
+        error:
+          'Kickstart failed. Content drafts can be generated from the dashboard.',
+      },
+      { status: 500 }
     );
   }
 }
