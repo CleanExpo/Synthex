@@ -121,6 +121,7 @@ interface SidebarNavItem {
   label: string;
   href: string;
   isNew?: boolean; // renders an amber pulse badge in sidebar
+  starterHidden?: boolean; // hidden until Advanced Mode is enabled
 }
 
 interface SidebarNavGroup {
@@ -131,24 +132,19 @@ interface SidebarNavGroup {
   defaultOpen?: boolean;
 }
 
-const sidebarGroups: SidebarNavGroup[] = [
+// Quick Actions — pinned at the top of the sidebar, always visible
+const QUICK_ACTIONS: SidebarNavItem[] = [
   {
-    id: 'home',
-    icon: Home,
-    label: 'HOME',
-    defaultOpen: true,
-    items: [
-      { icon: Home, label: 'Dashboard', href: '/dashboard' },
-      { icon: Grid, label: 'Unified View', href: '/dashboard/unified' },
-      {
-        icon: CommandLine,
-        label: 'Citation Dashboard',
-        href: '/dashboard/citation',
-      },
-      { icon: Globe, label: 'Platforms', href: '/dashboard/platforms' },
-      { icon: Gift, label: 'Referrals', href: '/dashboard/referrals' },
-    ],
+    icon: Sparkles,
+    label: 'Create Content',
+    href: '/dashboard/creative-suite',
   },
+  { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
+  { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
+];
+
+const sidebarGroups: SidebarNavGroup[] = [
+  // ── Starter groups (visible by default) ────────────────────────────────────
   {
     id: 'content',
     icon: Sparkles,
@@ -161,10 +157,21 @@ const sidebarGroups: SidebarNavGroup[] = [
         href: '/dashboard/creative-suite',
       },
       { icon: FileText, label: 'Content', href: '/dashboard/content' },
+      { icon: Globe, label: 'Platforms', href: '/dashboard/platforms' },
       { icon: MessageSquare, label: 'AI Chat', href: '/dashboard/ai-chat' },
       { icon: Image, label: 'AI Images', href: '/dashboard/ai-images' },
-      { icon: BookOpen, label: 'Library', href: '/dashboard/content/library' },
-      { icon: Palette, label: 'Sandbox', href: '/dashboard/sandbox' },
+      {
+        icon: BookOpen,
+        label: 'Library',
+        href: '/dashboard/content/library',
+        starterHidden: true,
+      },
+      {
+        icon: Palette,
+        label: 'Sandbox',
+        href: '/dashboard/sandbox',
+        starterHidden: true,
+      },
     ],
   },
   {
@@ -174,7 +181,6 @@ const sidebarGroups: SidebarNavGroup[] = [
     defaultOpen: true,
     items: [
       { icon: Calendar, label: 'Calendar', href: '/dashboard/calendar' },
-      { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
       { icon: List, label: 'Queue', href: '/dashboard/schedule/queue' },
       { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
     ],
@@ -186,20 +192,39 @@ const sidebarGroups: SidebarNavGroup[] = [
     defaultOpen: true,
     items: [
       { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
-      { icon: Lightbulb, label: 'Predictions', href: '/dashboard/predictions' },
+      { icon: File, label: 'Reports', href: '/dashboard/reports' },
       {
         icon: Target,
         label: 'Benchmarks',
         href: '/dashboard/analytics/benchmarks',
       },
-      { icon: File, label: 'Reports', href: '/dashboard/reports' },
+      {
+        icon: Lightbulb,
+        label: 'Predictions',
+        href: '/dashboard/predictions',
+        starterHidden: true,
+      },
       {
         icon: Layout,
         label: 'Report Builder',
         href: '/dashboard/reports/builder',
+        starterHidden: true,
+      },
+      {
+        icon: Grid,
+        label: 'Unified View',
+        href: '/dashboard/unified',
+        starterHidden: true,
+      },
+      {
+        icon: CommandLine,
+        label: 'Citation Dashboard',
+        href: '/dashboard/citation',
+        starterHidden: true,
       },
     ],
   },
+  // ── Advanced groups (visible in Advanced Mode) ──────────────────────────────
   {
     id: 'monetization',
     icon: DollarSign,
@@ -228,9 +253,9 @@ const sidebarGroups: SidebarNavGroup[] = [
     ],
   },
   {
-    id: 'seo',
+    id: 'seo-authority',
     icon: Search,
-    label: 'SEO',
+    label: 'SEO & AUTHORITY',
     items: [
       { icon: Search, label: 'SEO Tools', href: '/dashboard/seo' },
       { icon: Globe, label: 'GEO Analysis', href: '/dashboard/geo' },
@@ -244,13 +269,6 @@ const sidebarGroups: SidebarNavGroup[] = [
       },
       { icon: BadgeCheck, label: 'E-E-A-T Builder', href: '/dashboard/eeat' },
       { icon: Shield, label: 'Quality Gate', href: '/dashboard/quality' },
-    ],
-  },
-  {
-    id: 'authority-pr',
-    icon: Megaphone,
-    label: 'AUTHORITY & PR',
-    items: [
       { icon: Building2, label: 'Brand Builder', href: '/dashboard/brand' },
       { icon: Shield, label: 'Authority', href: '/dashboard/authority' },
       {
@@ -259,16 +277,10 @@ const sidebarGroups: SidebarNavGroup[] = [
         href: '/dashboard/sentinel',
       },
       { icon: Newspaper, label: 'PR Manager', href: '/dashboard/pr' },
-      { icon: Award, label: 'Awards & Directories', href: '/dashboard/awards' },
       {
         icon: LinkIcon,
         label: 'Link Prospector',
         href: '/dashboard/backlinks',
-      },
-      {
-        icon: Wand2,
-        label: 'Prompt Intelligence',
-        href: '/dashboard/prompts',
       },
     ],
   },
@@ -326,12 +338,14 @@ const sidebarGroups: SidebarNavGroup[] = [
         href: '/dashboard/approvals',
       },
       { icon: Globe, label: 'Projects', href: '/dashboard/web-projects' },
+      { icon: Gift, label: 'Referrals', href: '/dashboard/referrals' },
       { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
     ],
   },
 ];
 
-const STARTER_GROUP_IDS = new Set(['home', 'content', 'planning', 'analytics']);
+// Groups shown by default (before Advanced Mode is enabled)
+const STARTER_GROUP_IDS = new Set(['content', 'planning', 'analytics']);
 const SIDEBAR_EXPANDED_KEY = 'sidebar-show-all-groups';
 
 const MOBILE_NAV_ITEMS: NavItem[] = [
@@ -468,6 +482,91 @@ function NavGroup({ group }: { group: SidebarNavGroup }) {
 }
 
 // ---------------------------------------------------------------------------
+// QUICK ACTIONS (pinned non-collapsible block at top of sidebar)
+// ---------------------------------------------------------------------------
+
+function QuickActionsGroup() {
+  const pathname = usePathname();
+  const { state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
+
+  if (isCollapsed) {
+    return (
+      <>
+        {QUICK_ACTIONS.map(item => {
+          const isActive =
+            pathname === item.href || pathname.startsWith(item.href + '/');
+          return (
+            <SidebarMenuItem key={item.href}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SidebarMenuButton asChild size="sm">
+                    <Link href={item.href}>
+                      <item.icon
+                        className={cn(
+                          'h-4 w-4',
+                          isActive ? 'text-amber-500' : ''
+                        )}
+                      />
+                    </Link>
+                  </SidebarMenuButton>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="right"
+                  className="bg-[#0a0a12] border-white/10 text-white/70 text-xs"
+                >
+                  {item.label}
+                </TooltipContent>
+              </Tooltip>
+            </SidebarMenuItem>
+          );
+        })}
+      </>
+    );
+  }
+
+  return (
+    <SidebarGroup className="pb-0">
+      <SidebarGroupLabel className="text-[10px] tracking-[0.2em] uppercase text-white/30 px-3 py-1.5">
+        Quick Actions
+      </SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {QUICK_ACTIONS.map(item => {
+            const isActive =
+              pathname === item.href || pathname.startsWith(item.href + '/');
+            return (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive}
+                  size="sm"
+                  className={cn(
+                    'text-white/50 hover:text-white hover:bg-white/[0.04] rounded-sm transition-all',
+                    isActive &&
+                      'text-amber-500 bg-amber-500/[0.06] hover:text-amber-400'
+                  )}
+                >
+                  <Link
+                    href={item.href}
+                    className="flex items-center gap-2 w-full"
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    <item.icon className="h-3.5 w-3.5 flex-shrink-0" />
+                    <span className="text-xs flex-1">{item.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
+      <SidebarSeparator className="mt-2 bg-white/[0.04]" />
+    </SidebarGroup>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // DASHBOARD SIDEBAR (uses Shadcn Sidebar shell)
 // ---------------------------------------------------------------------------
 
@@ -492,14 +591,16 @@ function DashboardSidebar() {
 
   useEffect(() => {
     if (showAllGroups) return;
-    const isInHiddenGroup = sidebarGroups.some(
-      g =>
-        !STARTER_GROUP_IDS.has(g.id) &&
-        g.items.some(
-          item => pathname === item.href || pathname.startsWith(item.href + '/')
-        )
-    );
-    if (isInHiddenGroup) {
+    // Auto-expand if the current path is in a hidden group or hidden item
+    const isInHiddenContent = sidebarGroups.some(g => {
+      const groupHidden = !STARTER_GROUP_IDS.has(g.id);
+      return g.items.some(
+        item =>
+          (groupHidden || item.starterHidden) &&
+          (pathname === item.href || pathname.startsWith(item.href + '/'))
+      );
+    });
+    if (isInHiddenContent) {
       setShowAllGroups(true);
       localStorage.setItem(SIDEBAR_EXPANDED_KEY, 'true');
     }
@@ -519,15 +620,19 @@ function DashboardSidebar() {
       ]
     : sidebarGroups;
 
-  const visibleGroups = showAllGroups
-    ? dynamicSidebarGroups
-    : dynamicSidebarGroups.filter(
-        g => STARTER_GROUP_IDS.has(g.id) || g.id === 'businesses'
-      );
-
-  const hiddenGroupCount = dynamicSidebarGroups.filter(
-    g => !STARTER_GROUP_IDS.has(g.id) && g.id !== 'businesses'
-  ).length;
+  // Filter groups and items based on Advanced Mode state
+  const visibleGroups = (
+    showAllGroups
+      ? dynamicSidebarGroups
+      : dynamicSidebarGroups.filter(
+          g => STARTER_GROUP_IDS.has(g.id) || g.id === 'businesses'
+        )
+  ).map(group => ({
+    ...group,
+    items: showAllGroups
+      ? group.items
+      : group.items.filter(item => !item.starterHidden),
+  }));
 
   return (
     <Sidebar
@@ -554,12 +659,14 @@ function DashboardSidebar() {
         <TooltipProvider delayDuration={0}>
           {isCollapsed ? (
             <SidebarMenu className="py-3 px-2 gap-1">
+              <QuickActionsGroup />
               {visibleGroups.map(group => (
                 <NavGroup key={group.id} group={group} />
               ))}
             </SidebarMenu>
           ) : (
             <>
+              <QuickActionsGroup />
               {visibleGroups.map(group =>
                 group.id === 'businesses' ? (
                   <SidebarGroup key="businesses">
@@ -575,35 +682,42 @@ function DashboardSidebar() {
                   <NavGroup key={group.id} group={group} />
                 )
               )}
-
-              {/* Show More / Less */}
-              <button
-                onClick={toggleShowAllGroups}
-                aria-expanded={showAllGroups}
-                className="w-full flex items-center gap-2 px-3 py-2 mt-2 text-[10px] tracking-[0.2em] uppercase text-white/50 hover:text-white/70 hover:bg-white/[0.02] rounded-sm transition-colors"
-              >
-                <ChevronDown
-                  className={cn(
-                    'w-3 h-3 transition-transform flex-shrink-0',
-                    showAllGroups && 'rotate-180'
-                  )}
-                />
-                {showAllGroups
-                  ? 'Show less'
-                  : `Show ${hiddenGroupCount} more sections`}
-              </button>
             </>
           )}
         </TooltipProvider>
       </SidebarContent>
 
-      {/* Footer */}
-      <SidebarFooter className="border-t border-[0.5px] border-white/[0.06] p-2">
+      {/* Footer — Advanced Mode toggle */}
+      <SidebarFooter className="border-t border-[0.5px] border-white/[0.06] p-2 space-y-1">
         {!isCollapsed && (
-          <div className="flex items-center gap-2 px-2 py-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span className="text-[10px] text-white/50">Online</span>
-          </div>
+          <>
+            <div className="flex items-center gap-2 px-2 py-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="text-[10px] text-white/50">Online</span>
+            </div>
+            <button
+              onClick={toggleShowAllGroups}
+              aria-pressed={showAllGroups}
+              className="w-full flex items-center gap-2 px-2 py-1.5 text-[10px] tracking-[0.15em] uppercase text-white/40 hover:text-white/60 hover:bg-white/[0.02] rounded-sm transition-colors"
+            >
+              <Layers className="w-3 h-3 flex-shrink-0" />
+              <span className="flex-1 text-left">Advanced Mode</span>
+              {/* Toggle pill */}
+              <div
+                className={cn(
+                  'relative w-7 h-3.5 rounded-full transition-colors flex-shrink-0',
+                  showAllGroups ? 'bg-amber-500/70' : 'bg-white/10'
+                )}
+              >
+                <div
+                  className={cn(
+                    'absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white shadow-sm transition-all',
+                    showAllGroups ? 'left-[calc(100%-12px)]' : 'left-0.5'
+                  )}
+                />
+              </div>
+            </button>
+          </>
         )}
       </SidebarFooter>
 
