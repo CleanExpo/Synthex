@@ -44,6 +44,18 @@ interface ContentLibraryItem {
   updatedAt: string;
 }
 
+// Content modes (SYN-483)
+const CONTENT_MODE_BADGES: Record<string, { class: string; label: string }> = {
+  aeo: {
+    class: 'bg-sky-500/15 text-sky-300 border-sky-500/20',
+    label: 'AEO',
+  },
+  geo: {
+    class: 'bg-green-500/15 text-green-300 border-green-500/20',
+    label: 'GEO',
+  },
+};
+
 // SEO content types (SYN-479)
 const SEO_CONTENT_TYPE_BADGES: Record<
   string,
@@ -196,6 +208,12 @@ function ContentCard({ item, onCopy, onDelete, isDeleting }: ContentCardProps) {
     typeof item.metadata.seoContentType === 'string'
       ? SEO_CONTENT_TYPE_BADGES[item.metadata.seoContentType]
       : null;
+  const modeBadge =
+    item.metadata?.contentMode &&
+    typeof item.metadata.contentMode === 'string' &&
+    item.metadata.contentMode !== 'standard'
+      ? CONTENT_MODE_BADGES[item.metadata.contentMode]
+      : null;
   const preview =
     item.content.length > 150
       ? item.content.slice(0, 150) + '...'
@@ -230,6 +248,13 @@ function ContentCard({ item, onCopy, onDelete, isDeleting }: ContentCardProps) {
               className={`text-xs font-medium px-2 py-0.5 rounded-full border ${seoBadge.class}`}
             >
               {seoBadge.label}
+            </span>
+          )}
+          {modeBadge && (
+            <span
+              className={`text-xs font-medium px-2 py-0.5 rounded-full border ${modeBadge.class}`}
+            >
+              {modeBadge.label}
             </span>
           )}
         </div>

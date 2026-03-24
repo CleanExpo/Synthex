@@ -37,11 +37,14 @@ interface OrgData {
 // MAIN EXPORT
 // ============================================================================
 
+export type ContentMode = 'standard' | 'aeo' | 'geo';
+
 export function injectLayoutSignals(
   html: string,
   orgData: OrgData,
   author: AuthorBlockProps,
-  seoContentType: SeoContentType
+  seoContentType: SeoContentType,
+  contentMode?: ContentMode
 ): string {
   let result = html;
 
@@ -62,6 +65,25 @@ export function injectLayoutSignals(
     result =
       result +
       `\n<script type="application/ld+json">\n${JSON.stringify(schema, null, 2)}\n</script>`;
+  }
+
+  // 5. GEO mode: inject LocalBusiness JSON-LD + NAP block
+  if (contentMode === 'geo') {
+    result = injectNAPBlock(result, orgData);
+    const localBusinessSchema = buildLocalBusinessSchema(orgData, author);
+    result =
+      result +
+      `\n<script type="application/ld+json">\n${JSON.stringify(localBusinessSchema, null, 2)}\n</script>`;
+  }
+
+  // 6. AEO mode: inject FAQ JSON-LD from Q:/A: pairs
+  if (contentMode === 'aeo') {
+    const faqSchema = buildFAQSchema(result);
+    if (faqSchema) {
+      result =
+        result +
+        `\n<script type="application/ld+json">\n${JSON.stringify(faqSchema, null, 2)}\n</script>`;
+    }
   }
 
   return result;
@@ -191,4 +213,61 @@ function escapeHtml(str: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function injectNAPBlock(html: string, orgData: OrgData): string {
+  const napHtml = `<div class="nap-block" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin:24px 0;font-size:0.9em;color:#374151;">
+  <strong>${escapeHtml(orgData.name)}</strong><br/>
+  ${orgData.suburb ? `${escapeHtml(orgData.suburb)}<br/>` : ''}
+  ${orgData.phone ? `<a href="tel:${orgData.phone}" style="color:#f97316;">${escapeHtml(orgData.phone)}</a>` : ''}
+</div>`;
+  // Insert before the CTA block or at the end of the article
+  return (
+    html.replace(/(<div class="cta-block")/, `${napHtml}\n$1`) ||
+    html + '\n' + napHtml
+  );
+}
+
+function buildLocalBusinessSchema(
+  orgData: OrgData,
+  author: AuthorBlockProps
+): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: orgData.name,
+    description: author.bio ?? undefined,
+    ...(orgData.suburb
+      ? {
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: orgData.suburb,
+            addressCountry: 'AU',
+          },
+        }
+      : {}),
+    ...(orgData.phone ? { telephone: orgData.phone } : {}),
+    ...(author.gbpLink ? { url: author.gbpLink } : {}),
+  };
+}
+
+function buildFAQSchema(html: string): Record<string, unknown> | null {
+  // Extract Q:/A: pairs from the article
+  const pairs: { q: string; a: string }[] = [];
+  const regex = /Q:\s*([^\n]+)\s*\nA:\s*([^\n]+)/g;
+  let match;
+  while ((match = regex.exec(html)) !== null) {
+    pairs.push({ q: match[1].trim(), a: match[2].trim() });
+  }
+  if (pairs.length === 0) return null;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: pairs.map(p => ({
+      '@type': 'Question',
+      name: p.q,
+      acceptedAnswer: { '@type': 'Answer', text: p.a },
+    })),
+  };
 }

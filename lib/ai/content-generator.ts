@@ -80,6 +80,8 @@ export interface ContentRequest {
     | 'news_item'
     | 'comparison'
     | 'case_study';
+  /** AEO/GEO mode — drives answer-engine and local-search optimisations (SYN-483). */
+  contentMode?: 'standard' | 'aeo' | 'geo';
 }
 
 export interface GeneratedContent {
@@ -177,6 +179,11 @@ export class AIContentGenerator {
       request.seoContentType = inferSeoContentType(request.topic);
     }
 
+    // Auto-select contentMode for articles when not explicitly provided (SYN-483)
+    if (request.type === 'article' && !request.contentMode) {
+      request.contentMode = 'aeo'; // default: optimise for AI Overviews
+    }
+
     // Auto-pick topic from GSC suggestions when no topic supplied (SYN-472)
     if (!request.topic && request.orgId) {
       try {
@@ -261,10 +268,12 @@ export class AIContentGenerator {
             mainContent,
             authorData.orgData,
             authorData.author,
-            request.seoContentType
+            request.seoContentType,
+            request.contentMode
           );
           layoutData = {
             seoContentType: request.seoContentType,
+            contentMode: request.contentMode ?? 'standard',
             authorName: authorData.author.name,
             suburb: authorData.orgData.suburb,
           };
@@ -422,6 +431,8 @@ IMPORTANT: Match this persona's unique voice exactly. The content should sound l
 
     // Build SEO content type structure directive (SYN-475)
     const seoStructure = buildSeoContentTypeDirective(request.seoContentType);
+    // Build AEO/GEO content mode directive (SYN-483)
+    const modeDirective = buildContentModeDirective(request.contentMode);
 
     return `
 ${personaInstructions}
@@ -442,6 +453,7 @@ Requirements:
 ${request.keywords?.length ? `- Include keywords: ${request.keywords.join(', ')}` : ''}
 ${persona ? '- CRITICAL: Match the persona voice profile exactly' : ''}
 ${seoStructure}
+${modeDirective}
 
 Generate content that will maximize engagement and shares.
     `.trim();
@@ -965,4 +977,42 @@ CONTENT STRUCTURE — CASE STUDY:
     default:
       return '';
   }
+}
+
+// ============================================================================
+// AEO / GEO CONTENT MODE DIRECTIVES (SYN-483)
+// ============================================================================
+
+/**
+ * Returns an additional prompt directive for the given content mode.
+ * AEO = Answer Engine Optimisation (Google AI Overviews, Perplexity, ChatGPT).
+ * GEO = Generative Engine Optimisation for local search.
+ */
+function buildContentModeDirective(
+  contentMode: ContentRequest['contentMode']
+): string {
+  if (!contentMode || contentMode === 'standard') return '';
+
+  if (contentMode === 'aeo') {
+    return `
+AEO MODE — ANSWER ENGINE OPTIMISATION:
+- Open with a direct 40-word answer paragraph (the AI snippet bait) — no preamble
+- Include a "Quick Answer" H2 section in the first third of the article
+- End with an FAQ section: 5 questions formatted as Q: / A: pairs
+- Cite 2–3 statistics inline with source attribution (e.g. "According to the ABS, ...")
+- End with a 3-column summary table: Topic | Key Point | Source
+- Write in a factual, authoritative tone — optimise for zero-click answers`;
+  }
+
+  if (contentMode === 'geo') {
+    return `
+GEO MODE — LOCAL SEARCH OPTIMISATION:
+- H1 must contain suburb + service + current year (e.g. "Plumber in Parramatta — 2026 Guide")
+- Include at least 3 locality signals in the body: street names, local landmarks, council area, or postcodes
+- NAP block as the last element before the CTA: Name | Address | Phone in plain text
+- Reference local competition (e.g. "Unlike other [service] providers in [suburb], ...")
+- Use a conversational tone — write as if speaking to a local resident`;
+  }
+
+  return '';
 }
