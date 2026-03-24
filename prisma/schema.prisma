@@ -5006,6 +5006,7 @@ model Invoice {
 
   lineItems InvoiceLineItem[]
 
+  @@unique([organizationId, invoiceNumber]) // prevents duplicate numbers under concurrent creation
   @@index([organizationId, status])
   @@index([organizationId])
   @@map("invoices")

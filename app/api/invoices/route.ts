@@ -188,64 +188,88 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  try {
-    // Generate sequential invoice number per org
-    const count = await prisma.invoice.count({
-      where: { organizationId: orgId },
-    });
-    const invoiceNumber = `INV-${String(count + 1).padStart(4, '0')}`;
+  // Calculate line item totals and overall totals (outside the retry loop)
+  const lineItemsWithTotals = parsed.data.lineItems.map(item => ({
+    description: item.description,
+    quantity: item.quantity,
+    unitCents: item.unitCents,
+    totalCents: Math.round(item.quantity * item.unitCents),
+    taxRate: item.taxRate,
+  }));
+  const subtotalCents = lineItemsWithTotals.reduce(
+    (sum, item) => sum + item.totalCents,
+    0
+  );
+  const taxCents = lineItemsWithTotals.reduce(
+    (sum, item) => sum + Math.round(item.totalCents * item.taxRate),
+    0
+  );
+  const totalCents = subtotalCents + taxCents;
 
-    // Calculate line item totals and overall totals
-    const lineItemsWithTotals = parsed.data.lineItems.map(item => ({
-      description: item.description,
-      quantity: item.quantity,
-      unitCents: item.unitCents,
-      totalCents: Math.round(item.quantity * item.unitCents),
-      taxRate: item.taxRate,
-    }));
+  // Invoice number generation uses MAX + 1 with a retry loop to handle the
+  // unique constraint (@@unique([organizationId, invoiceNumber])) under
+  // concurrent creation. Retries up to 3 times before giving up.
+  const MAX_RETRIES = 3;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      // Derive next number from the highest existing number (race-condition-safe via unique constraint)
+      const latest = await prisma.invoice.findFirst({
+        where: { organizationId: orgId },
+        orderBy: { invoiceNumber: 'desc' },
+        select: { invoiceNumber: true },
+      });
+      const nextSeq = latest
+        ? parseInt(latest.invoiceNumber.replace(/\D/g, ''), 10) + 1
+        : 1;
+      const invoiceNumber = `INV-${String(nextSeq).padStart(4, '0')}`;
 
-    const subtotalCents = lineItemsWithTotals.reduce(
-      (sum, item) => sum + item.totalCents,
-      0
-    );
-    const taxCents = lineItemsWithTotals.reduce(
-      (sum, item) => sum + Math.round(item.totalCents * item.taxRate),
-      0
-    );
-    const totalCents = subtotalCents + taxCents;
-
-    const invoice = await prisma.invoice.create({
-      data: {
-        organizationId: orgId,
-        invoiceNumber,
-        status: 'draft',
-        currency: parsed.data.currency,
-        clientName: parsed.data.clientName,
-        clientEmail: parsed.data.clientEmail,
-        clientAddress: parsed.data.clientAddress,
-        clientAbn: parsed.data.clientAbn,
-        notes: parsed.data.notes,
-        dueDate: parsed.data.dueDate
-          ? new Date(parsed.data.dueDate)
-          : undefined,
-        subtotalCents,
-        taxCents,
-        totalCents,
-        lineItems: {
-          create: lineItemsWithTotals,
+      const invoice = await prisma.invoice.create({
+        data: {
+          organizationId: orgId,
+          invoiceNumber,
+          status: 'draft',
+          currency: parsed.data.currency,
+          clientName: parsed.data.clientName,
+          clientEmail: parsed.data.clientEmail,
+          clientAddress: parsed.data.clientAddress,
+          clientAbn: parsed.data.clientAbn,
+          notes: parsed.data.notes,
+          dueDate: parsed.data.dueDate
+            ? new Date(parsed.data.dueDate)
+            : undefined,
+          subtotalCents,
+          taxCents,
+          totalCents,
+          lineItems: {
+            create: lineItemsWithTotals,
+          },
         },
-      },
-      include: { lineItems: true },
-    });
+        include: { lineItems: true },
+      });
 
-    return NextResponse.json({ invoice }, { status: 201 });
-  } catch (error) {
-    logger.error('[invoices] POST error', { error, orgId });
-    return NextResponse.json(
-      { error: 'Failed to create invoice' },
-      { status: 500 }
-    );
+      return NextResponse.json({ invoice }, { status: 201 });
+    } catch (error) {
+      // Retry on unique constraint violation (P2002) — another request grabbed the same number
+      const isPrismaUniqueError =
+        error instanceof Error &&
+        'code' in error &&
+        (error as { code: string }).code === 'P2002';
+      if (isPrismaUniqueError && attempt < MAX_RETRIES - 1) {
+        continue;
+      }
+      logger.error('[invoices] POST error', { error, orgId });
+      return NextResponse.json(
+        { error: 'Failed to create invoice' },
+        { status: 500 }
+      );
+    }
   }
+
+  // Exhausted retries (should not reach here — last iteration always returns or throws)
+  return NextResponse.json(
+    { error: 'Failed to generate invoice number after retries' },
+    { status: 500 }
+  );
 }
 
 export const runtime = 'nodejs';
