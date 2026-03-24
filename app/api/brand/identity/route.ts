@@ -275,6 +275,7 @@ export async function GET(request: NextRequest) {
         createdAt: true,
         updatedAt: true,
       },
+      take: 100,
     });
 
     return NextResponse.json({ identities });

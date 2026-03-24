@@ -21,7 +21,10 @@ export async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const organizationId = await getEffectiveOrganizationId(userId);
@@ -29,9 +32,10 @@ export async function GET(request: NextRequest) {
     const connections = await prisma.platformConnection.findMany({
       where: { userId, organizationId: organizationId ?? null, isActive: true },
       select: { platform: true },
+      take: 50,
     });
 
-    const connectedPlatforms = connections.map((c) => c.platform);
+    const connectedPlatforms = connections.map(c => c.platform);
     const allPlatforms = getSupportedPlatforms();
 
     return NextResponse.json({
@@ -41,7 +45,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Failed to get connection status', { error });
-    return NextResponse.json({ error: 'Failed to get connection status' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to get connection status' },
+      { status: 500 }
+    );
   }
 }
 

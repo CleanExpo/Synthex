@@ -82,6 +82,7 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { updatedAt: 'desc' },
+      take: 50,
     });
 
     // Calculate totals

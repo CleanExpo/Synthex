@@ -17,12 +17,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { z } from 'zod';
-import { getSupportedPlatforms, getOAuthProvider, isSupportedPlatform } from '@/lib/oauth';
+import {
+  getSupportedPlatforms,
+  getOAuthProvider,
+  isSupportedPlatform,
+} from '@/lib/oauth';
 import type { OAuthPlatform } from '@/lib/oauth/types';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { decryptField, encryptField } from '@/lib/security/field-encryption';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 
 // Zod schema for POST body
@@ -80,7 +87,8 @@ export async function GET(request: NextRequest) {
     // Get org scope — allow explicit override via query param for business management
     const { searchParams } = new URL(request.url);
     const orgOverride = searchParams.get('organizationId');
-    const organizationId = orgOverride || await getEffectiveOrganizationId(userId);
+    const organizationId =
+      orgOverride || (await getEffectiveOrganizationId(userId));
 
     // If org override requested, verify user owns that organization
     if (orgOverride) {
@@ -106,16 +114,15 @@ export async function GET(request: NextRequest) {
         createdAt: true,
         metadata: true,
       },
+      take: 50, // max 9 social platforms; 50 is a generous safety cap
     });
 
     // Build connection status map
-    const connectionMap = new Map(
-      connections.map((c) => [c.platform, c])
-    );
+    const connectionMap = new Map(connections.map(c => [c.platform, c]));
 
     // Build status for all platforms
     const platforms = getSupportedPlatforms();
-    const statuses: ConnectionStatus[] = platforms.map((platform) => {
+    const statuses: ConnectionStatus[] = platforms.map(platform => {
       const connection = connectionMap.get(platform);
 
       if (!connection) {
@@ -144,7 +151,8 @@ export async function GET(request: NextRequest) {
         avatar?: string;
         userInfo?: { avatar?: string };
       } | null;
-      const avatar = metadata?.avatar || metadata?.userInfo?.avatar || undefined;
+      const avatar =
+        metadata?.avatar || metadata?.userInfo?.avatar || undefined;
 
       return {
         platform,
@@ -162,8 +170,9 @@ export async function GET(request: NextRequest) {
       connections: statuses,
       summary: {
         total: platforms.length,
-        connected: statuses.filter((s) => s.connected).length,
-        needsAttention: statuses.filter((s) => s.isExpired || s.needsRefresh).length,
+        connected: statuses.filter(s => s.connected).length,
+        needsAttention: statuses.filter(s => s.isExpired || s.needsRefresh)
+          .length,
       },
     });
   } catch (error) {
@@ -320,25 +329,39 @@ export async function DELETE(request: NextRequest) {
       DEFAULT_POLICIES.AUTHENTICATED_WRITE
     );
     if (!security.allowed) {
-      return APISecurityChecker.createSecureResponse({ error: security.error }, 403);
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error },
+        403
+      );
     }
 
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
     const platform = searchParams.get('platform');
     if (!platform) {
-      return NextResponse.json({ error: 'platform query parameter is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'platform query parameter is required' },
+        { status: 400 }
+      );
     }
 
     const organizationId = await getEffectiveOrganizationId(userId);
 
     // Verify connection exists before attempting delete
     const connection = await prisma.platformConnection.findFirst({
-      where: { userId, platform, organizationId: organizationId ?? null, isActive: true },
+      where: {
+        userId,
+        platform,
+        organizationId: organizationId ?? null,
+        isActive: true,
+      },
       select: { id: true },
     });
 
@@ -380,7 +403,10 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Failed to disconnect platform', { error });
-    return NextResponse.json({ error: 'Failed to disconnect platform' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to disconnect platform' },
+      { status: 500 }
+    );
   }
 }
 

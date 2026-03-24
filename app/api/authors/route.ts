@@ -66,6 +66,7 @@ export async function GET(request: NextRequest) {
       where: { userId },
       orderBy: { createdAt: 'desc' },
       include: { _count: { select: { articles: true, geoAnalyses: true } } },
+      take: 100,
     });
 
     return NextResponse.json({ authors, total: authors.length });
