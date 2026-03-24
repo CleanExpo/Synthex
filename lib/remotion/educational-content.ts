@@ -3122,6 +3122,7 @@ Claim now: https://synthex.social
     fps: 30,
     width: 1920,
     height: 1080,
+    youtubeVideoId: 'K2QqYXi05Do',
   },
 
   {
@@ -3141,6 +3142,7 @@ Claim now: https://synthex.social
     fps: 30,
     width: 1920,
     height: 1080,
+    youtubeVideoId: 'V6d5bcnJ0z4',
   },
 
   {
@@ -3169,6 +3171,7 @@ Claim now: https://synthex.social
     fps: 30,
     width: 1920,
     height: 1080,
+    youtubeVideoId: 'k6lRhET7QDY',
   },
 
   {
@@ -3191,6 +3194,7 @@ Claim now: https://synthex.social
     fps: 30,
     width: 1920,
     height: 1080,
+    youtubeVideoId: 'g8YRmVvnBj0',
   },
 
   {
@@ -3213,6 +3217,7 @@ Claim now: https://synthex.social
     fps: 30,
     width: 1920,
     height: 1080,
+    youtubeVideoId: 'No4TI4lLIiM',
   },
 
   {
@@ -3235,6 +3240,7 @@ Claim now: https://synthex.social
     fps: 30,
     width: 1920,
     height: 1080,
+    youtubeVideoId: 'e3UZQ_OwEtw',
   },
 
   {
@@ -3263,6 +3269,7 @@ Claim now: https://synthex.social
     fps: 30,
     width: 1920,
     height: 1080,
+    youtubeVideoId: 'GibdVExEn-c',
   },
 
   {
@@ -3290,5 +3297,6 @@ Claim now: https://synthex.social
     fps: 30,
     width: 1920,
     height: 1080,
+    youtubeVideoId: 'j7Vyf8OLbAc',
   },
 ];

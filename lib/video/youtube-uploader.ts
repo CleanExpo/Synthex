@@ -1,7 +1,7 @@
 /**
  * SYNTHEX YouTube Uploader Service
  *
- * Uploads videos to YouTube Data API v3 with SEO metadata.
+ * Uploads videos to YouTube Data API v3 using native fetch (no googleapis dep).
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - YOUTUBE_CLIENT_ID: OAuth client ID
@@ -10,14 +10,7 @@
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
 import { logger } from '@/lib/logger';
-
-// Lazy-load googleapis to avoid pulling the entire SDK into every bundle
-async function loadGoogle() {
-  const { google } = await import('googleapis');
-  return google;
-}
 
 export interface VideoMetadata {
   title: string;
@@ -55,12 +48,13 @@ export const YOUTUBE_CATEGORIES = {
   NONPROFITS_ACTIVISM: '29',
 };
 
-export class YouTubeUploader {
-  private oauth2Client: any;
-  private youtube: any;
+const TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const YT_UPLOAD_URL =
+  'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status';
+const YT_API_URL = 'https://www.googleapis.com/youtube/v3';
 
+export class YouTubeUploader {
   private _configured: boolean;
-  private _initialised: boolean = false;
   private _credentials: {
     clientId?: string;
     clientSecret?: string;
@@ -86,31 +80,6 @@ export class YouTubeUploader {
     this._credentials = { clientId, clientSecret, refreshToken };
   }
 
-  /**
-   * Lazily initialise the Google API clients on first use.
-   */
-  private async ensureInitialised(): Promise<void> {
-    if (this._initialised) return;
-    const google = await loadGoogle();
-    this.oauth2Client = new google.auth.OAuth2(
-      this._credentials.clientId,
-      this._credentials.clientSecret
-    );
-    if (this._credentials.refreshToken) {
-      this.oauth2Client.setCredentials({
-        refresh_token: this._credentials.refreshToken,
-      });
-    }
-    this.youtube = google.youtube({
-      version: 'v3',
-      auth: this.oauth2Client,
-    });
-    this._initialised = true;
-  }
-
-  /**
-   * Create an uploader from explicit credentials (e.g. decrypted DB tokens)
-   */
   static fromCredentials(
     clientId: string,
     clientSecret: string,
@@ -119,44 +88,92 @@ export class YouTubeUploader {
     return new YouTubeUploader({ clientId, clientSecret, refreshToken });
   }
 
-  /**
-   * Check if credentials are configured
-   */
   isConfigured(): boolean {
     return this._configured;
   }
 
-  /**
-   * Upload video to YouTube
-   */
+  // ── Private helpers ────────────────────────────────────────────────────────
+
+  private async getAccessToken(): Promise<string> {
+    const res = await fetch(TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: this._credentials.clientId!,
+        client_secret: this._credentials.clientSecret!,
+        refresh_token: this._credentials.refreshToken!,
+        grant_type: 'refresh_token',
+      }).toString(),
+    });
+    const data = (await res.json()) as {
+      access_token?: string;
+      error?: string;
+    };
+    if (!data.access_token) {
+      throw new Error(
+        `Failed to get access token: ${data.error ?? JSON.stringify(data)}`
+      );
+    }
+    return data.access_token;
+  }
+
+  private async apiGet(path: string, token: string): Promise<unknown> {
+    const res = await fetch(`${YT_API_URL}${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.json();
+  }
+
+  private async apiPost(
+    path: string,
+    body: unknown,
+    token: string
+  ): Promise<unknown> {
+    const res = await fetch(`${YT_API_URL}${path}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    return res.json();
+  }
+
+  // ── Public methods ─────────────────────────────────────────────────────────
+
   async uploadVideo(
     videoPath: string,
     metadata: VideoMetadata
   ): Promise<UploadResult> {
-    await this.ensureInitialised();
     if (!this.isConfigured()) {
       throw new Error(
         'YouTube API not configured. Set YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, and YOUTUBE_REFRESH_TOKEN'
       );
     }
-
     if (!fs.existsSync(videoPath)) {
       throw new Error(`Video file not found: ${videoPath}`);
     }
 
+    const token = await this.getAccessToken();
+
+    const fileSize = fs.statSync(videoPath).size;
     logger.info('YouTubeUploader starting upload', {
       videoPath,
       title: metadata.title,
-    });
-
-    const fileSize = fs.statSync(videoPath).size;
-    logger.info('YouTubeUploader file info', {
       fileSizeMB: (fileSize / 1024 / 1024).toFixed(2),
     });
 
-    const response = await this.youtube.videos.insert({
-      part: ['snippet', 'status'],
-      requestBody: {
+    // Step 1: Initiate resumable upload — get upload URL
+    const initRes = await fetch(YT_UPLOAD_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'X-Upload-Content-Type': 'video/*',
+        'X-Upload-Content-Length': String(fileSize),
+      },
+      body: JSON.stringify({
         snippet: {
           title: metadata.title,
           description: metadata.description,
@@ -167,20 +184,37 @@ export class YouTubeUploader {
           privacyStatus: metadata.privacyStatus,
           selfDeclaredMadeForKids: false,
         },
-      },
-      media: {
-        body: fs.createReadStream(videoPath),
-      },
+      }),
     });
 
-    const videoId = response.data.id;
-    if (!videoId) {
-      throw new Error('Upload failed - no video ID returned');
+    const uploadUrl = initRes.headers.get('location');
+    if (!uploadUrl) {
+      const errText = await initRes.text();
+      throw new Error(`Failed to initiate upload: ${errText}`);
     }
 
+    // Step 2: Upload the file (single PUT for small files < 256 MB)
+    const videoBuffer = fs.readFileSync(videoPath);
+    const uploadRes = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'video/*',
+        'Content-Length': String(fileSize),
+      },
+      body: videoBuffer,
+    });
+
+    const result = (await uploadRes.json()) as { id?: string; error?: unknown };
+    if (!result.id) {
+      throw new Error(
+        `Upload failed — no video ID returned: ${JSON.stringify(result)}`
+      );
+    }
+
+    const videoId = result.id;
     logger.info('YouTubeUploader upload complete', { videoId });
 
-    // Upload thumbnail if provided (non-fatal — requires 1000+ subscribers for custom thumbnails)
+    // Upload thumbnail if provided (non-fatal)
     if (metadata.thumbnailPath && fs.existsSync(metadata.thumbnailPath)) {
       try {
         await this.uploadThumbnail(videoId, metadata.thumbnailPath);
@@ -206,92 +240,69 @@ export class YouTubeUploader {
     };
   }
 
-  /**
-   * Upload custom thumbnail
-   */
   async uploadThumbnail(videoId: string, thumbnailPath: string): Promise<void> {
-    await this.ensureInitialised();
+    const token = await this.getAccessToken();
     logger.info('YouTubeUploader uploading thumbnail', { videoId });
-
-    await this.youtube.thumbnails.set({
-      videoId,
-      media: {
-        body: fs.createReadStream(thumbnailPath),
-      },
-    });
-
+    const buffer = fs.readFileSync(thumbnailPath);
+    await fetch(
+      `${YT_API_URL}/thumbnails/set?videoId=${encodeURIComponent(videoId)}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'image/jpeg',
+        },
+        body: buffer,
+      }
+    );
     logger.info('YouTubeUploader thumbnail uploaded');
   }
 
-  /**
-   * Add video to playlist
-   */
   async addToPlaylist(videoId: string, playlistId: string): Promise<void> {
-    await this.ensureInitialised();
+    const token = await this.getAccessToken();
     logger.info('YouTubeUploader adding to playlist', { videoId, playlistId });
-
-    await this.youtube.playlistItems.insert({
-      part: ['snippet'],
-      requestBody: {
+    await this.apiPost(
+      '/playlistItems?part=snippet',
+      {
         snippet: {
           playlistId,
-          resourceId: {
-            kind: 'youtube#video',
-            videoId,
-          },
+          resourceId: { kind: 'youtube#video', videoId },
         },
       },
-    });
-
+      token
+    );
     logger.info('YouTubeUploader added to playlist');
   }
 
-  /**
-   * Create a new playlist
-   */
   async createPlaylist(
     title: string,
     description: string,
     privacyStatus: 'public' | 'private' | 'unlisted' = 'public'
   ): Promise<string> {
-    await this.ensureInitialised();
+    const token = await this.getAccessToken();
     logger.info('YouTubeUploader creating playlist', { title });
-
-    const response = await this.youtube.playlists.insert({
-      part: ['snippet', 'status'],
-      requestBody: {
-        snippet: {
-          title,
-          description,
-        },
-        status: {
-          privacyStatus,
-        },
+    const data = (await this.apiPost(
+      '/playlists?part=snippet,status',
+      {
+        snippet: { title, description },
+        status: { privacyStatus },
       },
-    });
-
-    const playlistId = response.data.id;
-    if (!playlistId) {
-      throw new Error('Failed to create playlist');
-    }
-
-    logger.info('YouTubeUploader playlist created', { playlistId });
-    return playlistId;
+      token
+    )) as { id?: string };
+    if (!data.id) throw new Error('Failed to create playlist');
+    logger.info('YouTubeUploader playlist created', { playlistId: data.id });
+    return data.id;
   }
 
-  /**
-   * Update video metadata
-   */
   async updateVideo(
     videoId: string,
     metadata: Partial<VideoMetadata>
   ): Promise<void> {
-    await this.ensureInitialised();
+    const token = await this.getAccessToken();
     logger.info('YouTubeUploader updating video', { videoId });
-
-    await this.youtube.videos.update({
-      part: ['snippet', 'status'],
-      requestBody: {
+    await this.apiPost(
+      '/videos?part=snippet,status',
+      {
         id: videoId,
         snippet: {
           title: metadata.title,
@@ -300,25 +311,20 @@ export class YouTubeUploader {
           categoryId: metadata.categoryId,
         },
         status: metadata.privacyStatus
-          ? {
-              privacyStatus: metadata.privacyStatus,
-            }
+          ? { privacyStatus: metadata.privacyStatus }
           : undefined,
       },
-    });
-
+      token
+    );
     logger.info('YouTubeUploader video updated');
   }
 
-  /**
-   * Get video details
-   */
   async getVideo(videoId: string) {
-    await this.ensureInitialised();
-    return this.youtube.videos.list({
-      part: ['snippet', 'statistics', 'status'],
-      id: [videoId],
-    });
+    const token = await this.getAccessToken();
+    return this.apiGet(
+      `/videos?part=snippet,statistics,status&id=${encodeURIComponent(videoId)}`,
+      token
+    );
   }
 }
 
@@ -435,7 +441,7 @@ Learn about:
 • Trend identification
 • Competitive insights
 
-Analyze patterns: https://synthex.social
+Analyse patterns: https://synthex.social
 #ViralContent #ContentStrategy #MarketingInsights`,
     tags: [
       'viral content',
