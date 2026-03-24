@@ -192,6 +192,10 @@
     {
       "path": "/api/cron/visibility-push",
       "schedule": "0 21 * * 0"
+    },
+    {
+      "path": "/api/cron/ab-rollout",
+      "schedule": "0 22 * * 0"
     }
   ]
 }

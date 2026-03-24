@@ -566,6 +566,11 @@ export function AIABTesting() {
                         Winner: Variant {test.winner}
                       </Badge>
                     )}
+                    {test.status === 'completed' && test.winner && (
+                      <Badge className="bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                        Auto-promoted
+                      </Badge>
+                    )}
                   </div>
                 </div>
 
