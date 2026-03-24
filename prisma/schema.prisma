@@ -4899,6 +4899,63 @@ model NexusDatabase {
   @@map("nexus_databases")
 }
 
+/// Bookkeeper transactions synced from Xero.
+/// raw_xero_data (legacy plaintext JSONB) is superseded by raw_xero_data_encrypted (AES-256-GCM).
+/// On READ: prefer rawXeroDataEncrypted; fall back to rawXeroData JSON for unencrypted legacy rows.
+/// On WRITE: always populate rawXeroDataEncrypted via lib/security/field-encryption.ts encryptField().
+/// The enc:v1: prefix format embeds IV + authTag in one field — rawXeroDataIv / rawXeroDataSalt are
+/// legacy columns from a prior implementation and are NOT used by the current encryption path.
+/// UNI-1593
+model BookkeeperTransaction {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  runId             String   @map("run_id") @db.Uuid
+  founderId         String   @map("founder_id") @db.Uuid
+  businessKey       String   @map("business_key")
+  xeroTenantId      String   @map("xero_tenant_id")
+  xeroTransactionId String   @map("xero_transaction_id")
+
+  transactionDate      DateTime @map("transaction_date") @db.Date
+  description          String?  @db.Text
+  amountCents          BigInt   @map("amount_cents")
+  currency             String   @default("AUD")
+  reconciliationStatus String   @map("reconciliation_status")
+  confidenceScore      Decimal  @default(0) @map("confidence_score")
+
+  matchedInvoiceId String? @map("matched_invoice_id")
+  matchedBillId    String? @map("matched_bill_id")
+
+  taxCode       String?  @map("tax_code")
+  gstAmountCents BigInt  @default(0) @map("gst_amount_cents")
+  taxCategory   String?  @map("tax_category")
+
+  isDeductible       Boolean @default(false) @map("is_deductible")
+  deductionCategory  String? @map("deduction_category")
+  deductionNotes     String? @map("deduction_notes") @db.Text
+
+  approvalQueueId String?   @map("approval_queue_id") @db.Uuid
+  approvedBy      String?   @map("approved_by") @db.Uuid
+  approvedAt      DateTime? @map("approved_at")
+
+  // Raw Xero API payload — contains PII (bank account details, customer data, invoice data)
+  /// @deprecated Unencrypted JSONB. Use rawXeroDataEncrypted for all new writes. Retained for
+  ///             backward-compatibility; null out once migration script has back-filled all rows.
+  rawXeroData          Json?   @map("raw_xero_data")
+  /// AES-256-GCM encrypted Xero JSON (format: enc:v1:<iv_b64>:<authTag_b64>:<ciphertext_b64>).
+  /// Encrypted/decrypted via lib/security/field-encryption.ts — encryptField() / decryptField().
+  rawXeroDataEncrypted String? @map("raw_xero_data_encrypted") @db.Text
+  /// Legacy columns from a prior encryption attempt — NOT used by the current enc:v1: path.
+  rawXeroDataIv   String? @map("raw_xero_data_iv") @db.Text
+  rawXeroDataSalt String? @map("raw_xero_data_salt") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([founderId, xeroTransactionId])
+  @@index([founderId])
+  @@index([transactionDate])
+  @@map("bookkeeper_transactions")
+}
+
 /// External projects connected to a user's (founder's) Synthex account.
 /// Indexes: (founder_id) for fast listing of all connected projects per user.
 model ConnectedProject {
