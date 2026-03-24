@@ -23,6 +23,9 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  Download,
+  Mail,
+  Link,
 } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
@@ -55,6 +58,7 @@ interface Invoice {
   dueDate?: string;
   issuedAt?: string;
   paidAt?: string;
+  stripePaymentLinkUrl?: string;
   createdAt: string;
   updatedAt: string;
   lineItems: InvoiceLineItem[];
@@ -290,7 +294,21 @@ function InvoicesTable({
   invoices: Invoice[];
   onRefresh: () => void;
 }) {
+  const [actionLoading, setActionLoading] = useState<Record<string, string>>(
+    {}
+  );
+
+  const setLoading = (id: string, action: string) =>
+    setActionLoading(prev => ({ ...prev, [id]: action }));
+  const clearLoading = (id: string) =>
+    setActionLoading(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+
   const handleMarkPaid = async (id: string) => {
+    setLoading(id, 'paid');
     try {
       const res = await fetch(`/api/invoices/${id}`, {
         method: 'PATCH',
@@ -303,6 +321,68 @@ function InvoicesTable({
       onRefresh();
     } catch {
       toast.error('Failed to mark invoice as paid');
+    } finally {
+      clearLoading(id);
+    }
+  };
+
+  const handleDownloadPdf = (invoice: Invoice) => {
+    window.open(`/api/invoices/${invoice.id}/pdf`, '_blank');
+  };
+
+  const handleSend = async (id: string) => {
+    setLoading(id, 'send');
+    try {
+      const res = await fetch(`/api/invoices/${id}/send`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(
+          (err as { error?: string }).error ?? 'Failed to send invoice'
+        );
+      }
+      toast.success('Invoice sent to client');
+      onRefresh();
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to send invoice'
+      );
+    } finally {
+      clearLoading(id);
+    }
+  };
+
+  const handlePaymentLink = async (invoice: Invoice) => {
+    // Already have a link — copy it
+    if (invoice.stripePaymentLinkUrl) {
+      await navigator.clipboard.writeText(invoice.stripePaymentLinkUrl);
+      toast.success('Payment link copied to clipboard');
+      return;
+    }
+    setLoading(invoice.id, 'link');
+    try {
+      const res = await fetch(`/api/invoices/${invoice.id}/payment-link`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(
+          (err as { error?: string }).error ?? 'Failed to create payment link'
+        );
+      }
+      const data: { paymentLinkUrl: string } = await res.json();
+      await navigator.clipboard.writeText(data.paymentLinkUrl);
+      toast.success('Payment link created and copied to clipboard');
+      onRefresh();
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to create payment link'
+      );
+    } finally {
+      clearLoading(invoice.id);
     }
   };
 
@@ -311,22 +391,30 @@ function InvoicesTable({
       <table className="w-full text-sm">
         <thead className="bg-slate-800 border-b border-slate-700">
           <tr>
-            {['Invoice', 'Client', 'Amount', 'Due Date', 'Status', ''].map(
-              col => (
-                <th
-                  key={col}
-                  className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider"
-                >
-                  {col}
-                </th>
-              )
-            )}
+            {[
+              'Invoice',
+              'Client',
+              'Amount',
+              'Due Date',
+              'Status',
+              'Actions',
+            ].map(col => (
+              <th
+                key={col}
+                className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider"
+              >
+                {col}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-700/50">
           {invoices.map(invoice => {
             const cfg = STATUS_CONFIG[invoice.status];
             const StatusIcon = cfg.icon;
+            const loading = actionLoading[invoice.id];
+            const isPaid = invoice.status === 'paid';
+            const isCancelled = invoice.status === 'cancelled';
             return (
               <tr
                 key={invoice.id}
@@ -359,18 +447,70 @@ function InvoicesTable({
                     {cfg.label}
                   </Badge>
                 </td>
-                <td className="px-4 py-3 text-right">
-                  {(invoice.status === 'sent' ||
-                    invoice.status === 'overdue') && (
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {/* PDF download — always available */}
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="text-xs h-7"
-                      onClick={() => handleMarkPaid(invoice.id)}
+                      variant="ghost"
+                      className="h-7 w-7 p-0 text-slate-400 hover:text-white"
+                      title="Download PDF"
+                      onClick={() => handleDownloadPdf(invoice)}
                     >
-                      Mark Paid
+                      <Download className="h-3.5 w-3.5" />
                     </Button>
-                  )}
+
+                    {/* Send — draft/sent/overdue */}
+                    {!isPaid && !isCancelled && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 text-slate-400 hover:text-cyan-400"
+                        title="Email to client"
+                        disabled={loading === 'send'}
+                        onClick={() => handleSend(invoice.id)}
+                      >
+                        <Mail className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+
+                    {/* Payment link — draft/sent/overdue */}
+                    {!isPaid && !isCancelled && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className={cn(
+                          'h-7 w-7 p-0',
+                          invoice.stripePaymentLinkUrl
+                            ? 'text-green-400 hover:text-green-300'
+                            : 'text-slate-400 hover:text-cyan-400'
+                        )}
+                        title={
+                          invoice.stripePaymentLinkUrl
+                            ? 'Copy payment link'
+                            : 'Create payment link'
+                        }
+                        disabled={loading === 'link'}
+                        onClick={() => handlePaymentLink(invoice)}
+                      >
+                        <Link className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+
+                    {/* Mark paid — sent/overdue */}
+                    {(invoice.status === 'sent' ||
+                      invoice.status === 'overdue') && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-7 px-2"
+                        disabled={loading === 'paid'}
+                        onClick={() => handleMarkPaid(invoice.id)}
+                      >
+                        Mark Paid
+                      </Button>
+                    )}
+                  </div>
                 </td>
               </tr>
             );

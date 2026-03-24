@@ -4999,8 +4999,10 @@ model Invoice {
   dueDate        DateTime? @map("due_date")
   issuedAt       DateTime? @map("issued_at")
   paidAt         DateTime? @map("paid_at")
-  stripeInvoiceId String?  @map("stripe_invoice_id")
-  xeroInvoiceId   String?  @map("xero_invoice_id")
+  stripeInvoiceId      String? @map("stripe_invoice_id")
+  stripePaymentLinkId  String? @map("stripe_payment_link_id")
+  stripePaymentLinkUrl String? @map("stripe_payment_link_url")
+  xeroInvoiceId        String? @map("xero_invoice_id")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
