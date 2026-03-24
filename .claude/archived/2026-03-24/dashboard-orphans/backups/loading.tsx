@@ -1,4 +1,4 @@
-export default function MonitoringLoading() {
+export default function BackupsLoading() {
   return (
     <div className="space-y-6 animate-pulse">
       <div className="mb-6">
@@ -8,7 +8,10 @@ export default function MonitoringLoading() {
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+          <div
+            key={i}
+            className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4"
+          >
             <div className="h-3 w-16 bg-white/[0.05] rounded-sm mb-2" />
             <div className="h-6 w-24 bg-white/[0.05] rounded-sm" />
           </div>
