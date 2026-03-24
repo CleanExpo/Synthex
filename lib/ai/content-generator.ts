@@ -10,6 +10,10 @@ import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import { buildContextForGeneration } from '@/lib/obsidian/client-knowledge-base';
 import { THINKING_EFFORTS } from '@/lib/ai/constants';
+import {
+  injectLayoutSignals,
+  type AuthorBlockProps,
+} from '@/lib/content/layout-renderer';
 
 /** Optional user-supplied API credentials that override the platform key. */
 export interface UserProviderCredentials {
@@ -89,6 +93,8 @@ export interface GeneratedContent {
   cta?: string;
   estimatedEngagement: number;
   viralScore: number;
+  /** Structured layout data injected for SEO article types (SYN-478). */
+  layoutData?: Record<string, unknown>;
   metadata: {
     generatedAt: Date;
     model: string;
@@ -225,13 +231,36 @@ export class AIContentGenerator {
 
     try {
       // Generate main content
-      const mainContent = await this.callAI(
+      let mainContent = await this.callAI(
         prompt,
         model,
         aiClient,
         thinkingEffort,
         orgContext
       );
+
+      // Inject E-E-A-T layout signals for SEO articles (SYN-478)
+      let layoutData: Record<string, unknown> | undefined;
+      if (
+        request.type === 'article' &&
+        request.seoContentType &&
+        request.orgId
+      ) {
+        const authorData = await this.buildAuthorData(request.orgId);
+        if (authorData) {
+          mainContent = injectLayoutSignals(
+            mainContent,
+            authorData.orgData,
+            authorData.author,
+            request.seoContentType
+          );
+          layoutData = {
+            seoContentType: request.seoContentType,
+            authorName: authorData.author.name,
+            suburb: authorData.orgData.suburb,
+          };
+        }
+      }
 
       // Generate variations for A/B testing
       const variations = await this.generateVariations(
@@ -264,6 +293,7 @@ export class AIContentGenerator {
         cta: request.includeCTA ? this.generateCTA(request) : undefined,
         estimatedEngagement,
         viralScore,
+        ...(layoutData ? { layoutData } : {}),
         metadata: {
           generatedAt: new Date(),
           model,
@@ -433,6 +463,59 @@ Generate content that will maximize engagement and shares.
         industry: org.industry,
         location,
         brandVoice,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Fetch author and org data for E-E-A-T layout injection (SYN-478).
+   * Returns null when the org has insufficient data (no GBP, no users).
+   */
+  private async buildAuthorData(orgId: string): Promise<{
+    orgData: { name: string; suburb: string; phone?: string };
+    author: AuthorBlockProps;
+  } | null> {
+    try {
+      const [org, gbpLocation, owner] = await Promise.all([
+        prisma.organization.findUnique({
+          where: { id: orgId },
+          select: { name: true, aiGeneratedData: true },
+        }),
+        prisma.gBPLocation.findFirst({
+          where: { organizationId: orgId, isPrimary: true },
+          select: { phone: true, newReviewUri: true },
+        }),
+        prisma.user.findFirst({
+          where: { organizationId: orgId },
+          select: { name: true },
+          orderBy: { createdAt: 'asc' },
+        }),
+      ]);
+
+      if (!org) return null;
+
+      const aiData = org.aiGeneratedData as Record<string, unknown> | null;
+      const suburb =
+        (aiData?.suburb as string) ??
+        (aiData?.city as string) ??
+        (aiData?.location as string) ??
+        '';
+
+      const phone =
+        gbpLocation?.phone ??
+        (aiData?.phone as string | undefined) ??
+        undefined;
+
+      return {
+        orgData: { name: org.name, suburb, phone },
+        author: {
+          name: owner?.name ?? org.name,
+          credential: (aiData?.industry as string) ?? 'Business Owner',
+          experienceYears: 0,
+          gbpLink: gbpLocation?.newReviewUri ?? undefined,
+        },
       };
     } catch {
       return null;
