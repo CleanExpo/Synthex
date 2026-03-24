@@ -20,6 +20,7 @@ export interface BreadcrumbItem {
   href?: string;
   icon?: React.ReactNode;
   current?: boolean;
+  ellipsis?: boolean;
 }
 
 export interface BreadcrumbProps {
@@ -152,9 +153,7 @@ export function Breadcrumbs({
     const lastItems = items.slice(-(maxItems - 1));
     return [
       items[0],
-      { label: '...', ellipsis: true } as BreadcrumbItem & {
-        ellipsis?: boolean;
-      },
+      { label: '...', ellipsis: true } as BreadcrumbItem,
       ...lastItems,
     ];
   }, [items, maxItems]);
@@ -177,7 +176,7 @@ export function Breadcrumbs({
         {displayItems.map((item, index) => {
           const isFirst = index === 0;
           const isLast = index === displayItems.length - 1;
-          const isEllipsis = (item as any).ellipsis;
+          const isEllipsis = item.ellipsis;
 
           return (
             <React.Fragment key={`${item.label}-${index}`}>

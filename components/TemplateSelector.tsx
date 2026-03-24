@@ -54,7 +54,9 @@ export function TemplateSelector({
       ? contentTemplates
       : selectedCategory === 'popular'
         ? getMostPopularTemplates(10)
-        : getTemplatesByCategory(selectedCategory as any);
+        : getTemplatesByCategory(
+            selectedCategory as ContentTemplate['category']
+          );
 
   const categories = [
     { id: 'all', label: 'All Templates', icon: Sparkles },

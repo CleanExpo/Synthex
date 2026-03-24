@@ -203,7 +203,13 @@ export function AIContentStudio() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ContentConfigForm
           formData={formData}
-          setFormData={setFormData as any}
+          setFormData={
+            setFormData as (
+              data:
+                | ContentFormData
+                | ((prev: ContentFormData) => ContentFormData)
+            ) => void
+          }
           businesses={businesses}
           selectedBusinessId={selectedBusinessId}
           setSelectedBusinessId={setSelectedBusinessId}

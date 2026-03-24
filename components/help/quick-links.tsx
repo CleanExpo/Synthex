@@ -20,8 +20,9 @@ export function QuickLinks() {
   };
 
   const handleChatClick = () => {
-    if (typeof window !== 'undefined' && (window as any).Intercom) {
-      (window as any).Intercom('show');
+    type IntercomWindow = Window & { Intercom?: (action: string) => void };
+    if (typeof window !== 'undefined' && (window as IntercomWindow).Intercom) {
+      (window as IntercomWindow).Intercom!('show');
     } else {
       window.location.href =
         'mailto:support@synthex.social?subject=Support Request';

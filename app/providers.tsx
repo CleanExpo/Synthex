@@ -15,7 +15,9 @@ import { DynamicBrandProvider } from '@/components/providers/dynamic-brand-provi
 function BrandedProviders({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
 
-  const orgId = (user as any)?.organizationId ?? null;
+  const orgId =
+    (user as (typeof user & { organizationId?: string }) | null)
+      ?.organizationId ?? null;
 
   return (
     <DynamicBrandProvider orgId={orgId}>

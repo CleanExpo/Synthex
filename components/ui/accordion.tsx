@@ -147,26 +147,40 @@ export function AccordionGroup({
   iconPosition = 'right',
   className,
 }: AccordionGroupProps) {
+  const children = items.map(item => (
+    <AccordionItem
+      key={item.id}
+      value={item.id}
+      disabled={item.disabled}
+      variant={variant}
+    >
+      <AccordionTrigger iconType={iconType} iconPosition={iconPosition}>
+        {item.title}
+      </AccordionTrigger>
+      <AccordionContent>{item.content}</AccordionContent>
+    </AccordionItem>
+  ));
+
+  if (type === 'multiple') {
+    return (
+      <Accordion
+        type="multiple"
+        defaultValue={defaultValue as string[] | undefined}
+        className={className}
+      >
+        {children}
+      </Accordion>
+    );
+  }
+
   return (
     <Accordion
-      type={type as any}
-      defaultValue={defaultValue as any}
-      collapsible={type === 'single' ? collapsible : undefined}
+      type="single"
+      defaultValue={defaultValue as string | undefined}
+      collapsible={collapsible}
       className={className}
     >
-      {items.map(item => (
-        <AccordionItem
-          key={item.id}
-          value={item.id}
-          disabled={item.disabled}
-          variant={variant}
-        >
-          <AccordionTrigger iconType={iconType} iconPosition={iconPosition}>
-            {item.title}
-          </AccordionTrigger>
-          <AccordionContent>{item.content}</AccordionContent>
-        </AccordionItem>
-      ))}
+      {children}
     </Accordion>
   );
 }

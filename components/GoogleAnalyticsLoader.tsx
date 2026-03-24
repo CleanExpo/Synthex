@@ -5,9 +5,11 @@ import { getConsentCookie } from '@/lib/cookie-consent';
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
+type GAWindow = Window & { __GA_LOADED__?: boolean };
+
 function injectGA() {
-  if (!GA_ID || (window as any).__GA_LOADED__) return;
-  (window as any).__GA_LOADED__ = true;
+  if (!GA_ID || (window as GAWindow).__GA_LOADED__) return;
+  (window as GAWindow).__GA_LOADED__ = true;
 
   const script1 = document.createElement('script');
   script1.async = true;

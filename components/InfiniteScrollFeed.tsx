@@ -176,7 +176,7 @@ export function InfiniteScrollFeed<T extends FeedItem>({
       {/* Infinite scroll trigger */}
       {hasMore && !isLoadingMore && (
         <div
-          ref={triggerRef as any}
+          ref={triggerRef as React.RefObject<HTMLDivElement>}
           className="h-20 flex items-center justify-center"
         >
           <span className="text-sm text-gray-300">Loading more...</span>

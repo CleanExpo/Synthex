@@ -171,9 +171,9 @@ export default function PsychologyBrandGenerator() {
   const [formData, setFormData] = useState({
     businessType: '',
     targetAudience: {
-      demographics: [],
-      psychographics: [],
-      painPoints: [],
+      demographics: [] as string[],
+      psychographics: [] as string[],
+      painPoints: [] as string[],
     },
     brandGoals: [] as string[],
     tonePreference: '',
@@ -303,7 +303,7 @@ export default function PsychologyBrandGenerator() {
                         ...formData,
                         targetAudience: {
                           ...formData.targetAudience,
-                          demographics: [e.target.value] as any,
+                          demographics: [e.target.value],
                         },
                       })
                     }
@@ -326,17 +326,13 @@ export default function PsychologyBrandGenerator() {
                         onClick={() =>
                           setFormData({
                             ...formData,
-                            brandGoals: (formData.brandGoals as any[]).includes(
-                              goal
-                            )
-                              ? (formData.brandGoals as any[]).filter(
-                                  (g: any) => g !== goal
-                                )
-                              : [...(formData.brandGoals as any[]), goal],
+                            brandGoals: formData.brandGoals.includes(goal)
+                              ? formData.brandGoals.filter(g => g !== goal)
+                              : [...formData.brandGoals, goal],
                           })
                         }
                         className={`px-4 py-3 rounded-xl border transition-all ${
-                          (formData.brandGoals as any[]).includes(goal)
+                          formData.brandGoals.includes(goal)
                             ? 'bg-orange-500 border-orange-500 text-white'
                             : 'bg-surface-dark/50 border-orange-500/30 text-gray-300 hover:border-orange-500'
                         }`}

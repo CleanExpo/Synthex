@@ -11,7 +11,10 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { ScheduledPost, ConflictInfo } from '@/components/calendar/CalendarTypes';
+import type {
+  ScheduledPost,
+  ConflictInfo,
+} from '@/components/calendar/CalendarTypes';
 
 // ============================================================================
 // TYPES
@@ -137,223 +140,252 @@ export function useCalendar(options: UseCalendarOptions) {
   /**
    * Fetch calendar view data from API
    */
-  const fetchCalendarView = useCallback(async (
-    start: Date = currentStartDate,
-    end: Date = currentEndDate
-  ): Promise<void> => {
-    if (!organizationId) {
-      setError('Organization ID is required');
-      return;
-    }
-
-    // Cancel any in-flight request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const params = new URLSearchParams({
-        organizationId,
-        startDate: start.toISOString(),
-        endDate: end.toISOString(),
-      });
-
-      if (userId) {
-        params.set('userId', userId);
-      }
-
-      const response = await fetch(`/api/content/calendar?${params.toString()}`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: getAuthHeaders(),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch calendar');
-      }
-
-      if (mountedRef.current) {
-        const calendarData = data.calendar as CalendarViewData;
-
-        // Transform posts to match ScheduledPost type
-         
-        const transformedPosts: ScheduledPost[] = (calendarData.posts as any[]).map((post) => ({
-          id: post.id as string,
-          title: post.title as string | undefined,
-          content: post.content as string,
-          platforms: post.platforms as string[],
-          scheduledFor: new Date(post.scheduledFor as string),
-          status: post.status as 'draft' | 'scheduled' | 'published' | 'failed',
-          mediaUrls: post.mediaUrls as string[] | undefined,
-          tags: post.tags as string[] | undefined,
-          hashtags: post.hashtags as string[] | undefined,
-          engagement: post.engagement as ScheduledPost['engagement'],
-          persona: post.persona as string | undefined,
-          recurrence: post.recurrence as ScheduledPost['recurrence'],
-          approvalStatus: post.approvalStatus as ScheduledPost['approvalStatus'],
-          approvalId: post.approvalId as string | undefined,
-        }));
-
-        setPosts(transformedPosts);
-        setConflicts(calendarData.conflicts || []);
-        setSuggestions(calendarData.suggestions || []);
-        setStats(calendarData.stats || {
-          totalPosts: transformedPosts.length,
-          scheduledPosts: transformedPosts.filter(p => p.status === 'scheduled').length,
-          publishedPosts: transformedPosts.filter(p => p.status === 'published').length,
-          conflictCount: calendarData.conflicts?.length || 0,
-          pendingApprovals: 0,
-        });
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
+  const fetchCalendarView = useCallback(
+    async (
+      start: Date = currentStartDate,
+      end: Date = currentEndDate
+    ): Promise<void> => {
+      if (!organizationId) {
+        setError('Organization ID is required');
         return;
       }
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : String(err));
+
+      // Cancel any in-flight request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
-    } finally {
-      if (mountedRef.current) {
-        setIsLoading(false);
+
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const params = new URLSearchParams({
+          organizationId,
+          startDate: start.toISOString(),
+          endDate: end.toISOString(),
+        });
+
+        if (userId) {
+          params.set('userId', userId);
+        }
+
+        const response = await fetch(
+          `/api/content/calendar?${params.toString()}`,
+          {
+            method: 'GET',
+            credentials: 'include',
+            headers: getAuthHeaders(),
+            signal: controller.signal,
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.error || `HTTP ${response.status}: ${response.statusText}`
+          );
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to fetch calendar');
+        }
+
+        if (mountedRef.current) {
+          const calendarData = data.calendar as CalendarViewData;
+
+          // Transform posts to match ScheduledPost type
+
+          const transformedPosts: ScheduledPost[] = (
+            calendarData.posts as unknown as Record<string, unknown>[]
+          ).map(post => ({
+            id: post.id as string,
+            title: post.title as string | undefined,
+            content: post.content as string,
+            platforms: post.platforms as string[],
+            scheduledFor: new Date(post.scheduledFor as string),
+            status: post.status as
+              | 'draft'
+              | 'scheduled'
+              | 'published'
+              | 'failed',
+            mediaUrls: post.mediaUrls as string[] | undefined,
+            tags: post.tags as string[] | undefined,
+            hashtags: post.hashtags as string[] | undefined,
+            engagement: post.engagement as ScheduledPost['engagement'],
+            persona: post.persona as string | undefined,
+            recurrence: post.recurrence as ScheduledPost['recurrence'],
+            approvalStatus:
+              post.approvalStatus as ScheduledPost['approvalStatus'],
+            approvalId: post.approvalId as string | undefined,
+          }));
+
+          setPosts(transformedPosts);
+          setConflicts(calendarData.conflicts || []);
+          setSuggestions(calendarData.suggestions || []);
+          setStats(
+            calendarData.stats || {
+              totalPosts: transformedPosts.length,
+              scheduledPosts: transformedPosts.filter(
+                p => p.status === 'scheduled'
+              ).length,
+              publishedPosts: transformedPosts.filter(
+                p => p.status === 'published'
+              ).length,
+              conflictCount: calendarData.conflicts?.length || 0,
+              pendingApprovals: 0,
+            }
+          );
+        }
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
+        if (mountedRef.current) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      } finally {
+        if (mountedRef.current) {
+          setIsLoading(false);
+        }
       }
-    }
-  }, [organizationId, userId, currentStartDate, currentEndDate]);
+    },
+    [organizationId, userId, currentStartDate, currentEndDate]
+  );
 
   /**
    * Schedule a new post
    */
-  const schedulePost = useCallback(async (options: SchedulePostOptions): Promise<ScheduledPost | null> => {
-    if (!organizationId) {
-      setError('Organization ID is required');
-      return null;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/content/calendar', {
-        method: 'POST',
-        credentials: 'include',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          organizationId,
-          ...options,
-          scheduledFor: options.scheduledFor.toISOString(),
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+  const schedulePost = useCallback(
+    async (options: SchedulePostOptions): Promise<ScheduledPost | null> => {
+      if (!organizationId) {
+        setError('Organization ID is required');
+        return null;
       }
 
-      const data = await response.json();
+      setIsLoading(true);
+      setError(null);
 
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to schedule post');
-      }
+      try {
+        const response = await fetch('/api/content/calendar', {
+          method: 'POST',
+          credentials: 'include',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            organizationId,
+            ...options,
+            scheduledFor: options.scheduledFor.toISOString(),
+          }),
+        });
 
-      // Add new post to local state (optimistic update)
-      const newPost: ScheduledPost = {
-        id: data.post.id,
-        title: data.post.title,
-        content: data.post.content,
-        platforms: data.post.platforms,
-        scheduledFor: new Date(data.post.scheduledFor),
-        status: data.post.status,
-        mediaUrls: data.post.mediaUrls,
-        tags: data.post.tags,
-      };
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.error || `HTTP ${response.status}: ${response.statusText}`
+          );
+        }
 
-      if (mountedRef.current) {
-        setPosts(prev => [...prev, newPost]);
-        setStats(prev => ({
-          ...prev,
-          totalPosts: prev.totalPosts + 1,
-          scheduledPosts: prev.scheduledPosts + 1,
-        }));
-      }
+        const data = await response.json();
 
-      return newPost;
-    } catch (err) {
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : String(err));
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to schedule post');
+        }
+
+        // Add new post to local state (optimistic update)
+        const newPost: ScheduledPost = {
+          id: data.post.id,
+          title: data.post.title,
+          content: data.post.content,
+          platforms: data.post.platforms,
+          scheduledFor: new Date(data.post.scheduledFor),
+          status: data.post.status,
+          mediaUrls: data.post.mediaUrls,
+          tags: data.post.tags,
+        };
+
+        if (mountedRef.current) {
+          setPosts(prev => [...prev, newPost]);
+          setStats(prev => ({
+            ...prev,
+            totalPosts: prev.totalPosts + 1,
+            scheduledPosts: prev.scheduledPosts + 1,
+          }));
+        }
+
+        return newPost;
+      } catch (err) {
+        if (mountedRef.current) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+        return null;
+      } finally {
+        if (mountedRef.current) {
+          setIsLoading(false);
+        }
       }
-      return null;
-    } finally {
-      if (mountedRef.current) {
-        setIsLoading(false);
-      }
-    }
-  }, [organizationId]);
+    },
+    [organizationId]
+  );
 
   /**
    * Reschedule a post (drag-and-drop support)
    */
-  const reschedulePost = useCallback(async (postId: string, newTime: Date): Promise<boolean> => {
-    if (!organizationId) {
-      setError('Organization ID is required');
-      return false;
-    }
-
-    // Optimistic update - update local state immediately
-    const previousPosts = posts;
-    setPosts(prev =>
-      prev.map(post =>
-        post.id === postId
-          ? { ...post, scheduledFor: newTime }
-          : post
-      )
-    );
-
-    try {
-      const response = await fetch('/api/content/calendar', {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          organizationId,
-          postId,
-          newTime: newTime.toISOString(),
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+  const reschedulePost = useCallback(
+    async (postId: string, newTime: Date): Promise<boolean> => {
+      if (!organizationId) {
+        setError('Organization ID is required');
+        return false;
       }
 
-      const data = await response.json();
+      // Optimistic update - update local state immediately
+      const previousPosts = posts;
+      setPosts(prev =>
+        prev.map(post =>
+          post.id === postId ? { ...post, scheduledFor: newTime } : post
+        )
+      );
 
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to reschedule post');
-      }
+      try {
+        const response = await fetch('/api/content/calendar', {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            organizationId,
+            postId,
+            newTime: newTime.toISOString(),
+          }),
+        });
 
-      return true;
-    } catch (err) {
-      // Rollback optimistic update on error
-      if (mountedRef.current) {
-        setPosts(previousPosts);
-        setError(err instanceof Error ? err.message : String(err));
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.error || `HTTP ${response.status}: ${response.statusText}`
+          );
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to reschedule post');
+        }
+
+        return true;
+      } catch (err) {
+        // Rollback optimistic update on error
+        if (mountedRef.current) {
+          setPosts(previousPosts);
+          setError(err instanceof Error ? err.message : String(err));
+        }
+        return false;
       }
-      return false;
-    }
-  }, [organizationId, posts]);
+    },
+    [organizationId, posts]
+  );
 
   /**
    * Navigate to previous week
@@ -409,7 +441,13 @@ export function useCalendar(options: UseCalendarOptions) {
     if (organizationId) {
       fetchCalendarView(currentStartDate, currentEndDate);
     }
-  }, [organizationId, userId, currentStartDate, currentEndDate, fetchCalendarView]);
+  }, [
+    organizationId,
+    userId,
+    currentStartDate,
+    currentEndDate,
+    fetchCalendarView,
+  ]);
 
   // Cleanup on unmount
   useEffect(() => {

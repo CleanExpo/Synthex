@@ -95,7 +95,15 @@ export class TestDatabase {
       const ids = this.createdIds.get(table);
       if (ids && ids.size > 0) {
         try {
-          await (this.prisma as any)[table].deleteMany({
+          const prismaRecord = this.prisma as unknown as Record<
+            string,
+            {
+              deleteMany: (args: {
+                where: { id: { in: string[] } };
+              }) => Promise<unknown>;
+            }
+          >;
+          await prismaRecord[table].deleteMany({
             where: { id: { in: Array.from(ids) } },
           });
         } catch (error) {
@@ -125,7 +133,9 @@ export class TestDatabase {
    * Create transaction for test isolation
    */
   async inTransaction<T>(fn: (prisma: PrismaClient) => Promise<T>): Promise<T> {
-    return this.prisma.$transaction(fn as any) as Promise<T>;
+    return this.prisma.$transaction(
+      fn as unknown as Parameters<PrismaClient['$transaction']>[0]
+    ) as Promise<T>;
   }
 }
 

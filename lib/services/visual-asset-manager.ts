@@ -112,7 +112,7 @@ export async function createVisualAsset(
         prompt: input.prompt,
         imageUrl: result.imageUrl,
         thumbnailUrl: result.thumbnailUrl || null,
-        metadata: result.metadata as any,
+        metadata: result.metadata as Prisma.InputJsonValue,
         qualityScore: qualityScore || null,
         altText,
         caption,

@@ -179,7 +179,10 @@ export function PostScheduler() {
       </div>
 
       {/* View Tabs */}
-      <Tabs value={viewMode} onValueChange={v => setViewMode(v as any)}>
+      <Tabs
+        value={viewMode}
+        onValueChange={v => setViewMode(v as 'calendar' | 'list' | 'timeline')}
+      >
         <TabsList>
           <TabsTrigger value="calendar">
             <CalendarIcon className="w-4 h-4 mr-2" />
