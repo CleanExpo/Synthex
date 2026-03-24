@@ -562,6 +562,10 @@ model Organization {
   autopilotConfig AutopilotConfig?
   autopilotRuns   AutopilotRun[]
 
+  // Testimonials (UNI-1637)
+  testimonialRequests TestimonialRequest[]
+  testimonials        Testimonial[]
+
   // Indices for multi-tenant queries
   @@index([slug])
   @@index([status])
@@ -4603,4 +4607,56 @@ model AutopilotRun {
   @@index([runType])
   @@index([status])
   @@map("autopilot_runs")
+}
+
+// ============================================================================
+// Testimonials (UNI-1637)
+// ============================================================================
+
+/// Shareable link that lets a business collect customer testimonials.
+/// One organisation can have multiple active request links.
+model TestimonialRequest {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  token          String    @unique @default(cuid()) // URL token
+  title          String    @default("Share Your Experience")
+  subtitle       String    @default("We'd love to hear what you think!")
+  isActive       Boolean   @default(true) @map("is_active")
+  expiresAt      DateTime? @map("expires_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  testimonials Testimonial[]
+
+  @@index([organizationId])
+  @@index([token])
+  @@map("testimonial_requests")
+}
+
+/// A single customer testimonial submitted via a TestimonialRequest link.
+model Testimonial {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  requestId      String    @map("request_id")
+  submitterName  String    @map("submitter_name")
+  submitterEmail String?   @map("submitter_email")
+  rating         Int       // 1–5 stars
+  text           String    @db.Text
+  photoUrls      Json      @default("[]") @map("photo_urls") // string[]
+  videoUrl       String?   @map("video_url") // Supabase Storage or YouTube URL
+  status         String    @default("pending") // pending | approved | posted_to_gmb | rejected
+  gbpPostId      String?   @map("gbp_post_id") // GMB localPost resource name after posting
+  postedToGmbAt  DateTime? @map("posted_to_gmb_at")
+  ipAddress      String?   @map("ip_address") // Spam prevention
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  request      TestimonialRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([requestId])
+  @@index([status])
+  @@map("testimonials")
 }
