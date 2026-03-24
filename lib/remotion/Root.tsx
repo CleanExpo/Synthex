@@ -16,6 +16,7 @@ import { ExplainerVideo } from './compositions/ExplainerVideo';
 import { BrandShowcase } from './compositions/BrandShowcase';
 import { BrandReel } from './compositions/BrandReel';
 import { BrandSquare } from './compositions/BrandSquare';
+import { HowToVideo } from './compositions/HowToVideo';
 import { COMPOSITION_REGISTRY } from './registry';
 
 export { COMPOSITION_REGISTRY };
@@ -26,6 +27,7 @@ const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
   BrandShowcase,
   BrandReel,
   BrandSquare,
+  HowToVideo,
 };
 
 // ── Root Component ───────────────────────────────────────────────────────────

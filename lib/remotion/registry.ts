@@ -16,6 +16,7 @@ import type {
   BrandShowcaseProps,
   BrandReelProps,
   BrandSquareProps,
+  HowToVideoProps,
 } from './types';
 
 // ── Default Props ─────────────────────────────────────────────────────────────
@@ -90,6 +91,28 @@ const DEFAULT_BRAND_SQUARE_PROPS: BrandSquareProps = {
   ctaText: 'Get Started',
 };
 
+const DEFAULT_HOW_TO_PROPS: HowToVideoProps = {
+  title: 'How To Get Started',
+  scenes: [],
+  steps: [
+    { step: 'Visit synthex.social', detail: 'Click Get Started Free' },
+    {
+      step: 'Create your account',
+      detail: 'Enter your business name and email',
+    },
+    {
+      step: 'Verify your email',
+      detail: 'Check your inbox and click the link',
+    },
+    { step: 'Complete activation', detail: 'Follow the 5-step checklist' },
+    {
+      step: 'Generate your first post',
+      detail: 'AI creates content in seconds',
+    },
+  ],
+  brandColour: '#f59e0b',
+};
+
 // ── Registry ──────────────────────────────────────────────────────────────────
 
 export const COMPOSITION_REGISTRY: CompositionMeta[] = [
@@ -143,5 +166,15 @@ export const COMPOSITION_REGISTRY: CompositionMeta[] = [
     height: 1080,
     fps: 30,
     durationInFrames: 600, // 20 seconds
+  },
+  {
+    id: 'HowToVideo',
+    name: 'How-To Guide',
+    description: 'Step-by-step tutorial video with animated steps (16:9)',
+    defaultProps: DEFAULT_HOW_TO_PROPS,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 1200, // 40 seconds
   },
 ];
