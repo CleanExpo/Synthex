@@ -231,6 +231,7 @@ const sidebarGroups: SidebarNavGroup[] = [
     label: 'MONETIZATION',
     items: [
       { icon: DollarSign, label: 'Revenue', href: '/dashboard/revenue' },
+      { icon: FileText, label: 'Invoices', href: '/dashboard/invoices' },
       { icon: Calculator, label: 'ROI', href: '/dashboard/roi' },
       { icon: Briefcase, label: 'Sponsors', href: '/dashboard/sponsors' },
       { icon: LinkIcon, label: 'Affiliates', href: '/dashboard/affiliates' },
