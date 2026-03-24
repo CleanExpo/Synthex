@@ -15,6 +15,7 @@
 
 import crypto from 'crypto';
 import type { PKCEChallenge, PKCEState, AuthProvider } from '@/types/auth';
+import { logger } from '@/lib/logger';
 
 // ==========================================
 // PKCE Code Generation
@@ -119,7 +120,10 @@ export async function storePKCEState(
     await storeInDatabase(state, pkceState);
     return;
   } catch (dbError) {
-    console.warn('[PKCE] Database storage failed, falling back to in-memory:', dbError);
+    logger.error(
+      '[PKCE] Database storage failed, falling back to in-memory',
+      dbError
+    );
   }
 
   // Last resort: in-memory (development only — will fail across Vercel workers)
@@ -130,7 +134,9 @@ export async function storePKCEState(
 /**
  * Retrieve and consume PKCE state (one-time use)
  */
-export async function retrievePKCEState(state: string): Promise<PKCEState | null> {
+export async function retrievePKCEState(
+  state: string
+): Promise<PKCEState | null> {
   // Try Redis first
   if (await isRedisAvailable()) {
     return retrieveFromRedis(state);
@@ -141,7 +147,7 @@ export async function retrievePKCEState(state: string): Promise<PKCEState | null
     const dbResult = await retrieveFromDatabase(state);
     if (dbResult) return dbResult;
   } catch (dbError) {
-    console.warn('[PKCE] Database retrieval failed, trying in-memory:', dbError);
+    logger.error('[PKCE] Database retrieval failed, trying in-memory', dbError);
   }
 
   // Last resort: in-memory
@@ -199,21 +205,26 @@ async function isRedisAvailable(): Promise<boolean> {
 
   try {
     // Dynamic import to avoid requiring redis in development
-     
-    const { createClient } = await (import('redis' as string) as Promise<{ createClient: (opts: { url: string }) => RedisClientLike }>);
+
+    const { createClient } = await (import('redis' as string) as Promise<{
+      createClient: (opts: { url: string }) => RedisClientLike;
+    }>);
     const client = createClient({ url: redisUrl });
     await client.connect();
     redisClient = client;
     redisAvailable = true;
     return true;
   } catch (error) {
-    console.warn('[PKCE] Redis not available, using in-memory storage:', error);
+    logger.error('[PKCE] Redis not available, using in-memory storage', error);
     redisAvailable = false;
     return false;
   }
 }
 
-async function storeInRedis(state: string, pkceState: PKCEState): Promise<void> {
+async function storeInRedis(
+  state: string,
+  pkceState: PKCEState
+): Promise<void> {
   if (!redisClient) return;
 
   const key = `pkce:${state}`;
@@ -245,7 +256,10 @@ async function retrieveFromRedis(state: string): Promise<PKCEState | null> {
 // Survives serverless cold starts and multi-worker deployments
 // ==========================================
 
-async function storeInDatabase(state: string, pkceState: PKCEState): Promise<void> {
+async function storeInDatabase(
+  state: string,
+  pkceState: PKCEState
+): Promise<void> {
   const prisma = (await import('@/lib/prisma')).default;
 
   await prisma.oAuthPKCEState.create({
@@ -260,9 +274,13 @@ async function storeInDatabase(state: string, pkceState: PKCEState): Promise<voi
   });
 
   // Cleanup expired entries (best-effort, non-blocking)
-  prisma.oAuthPKCEState.deleteMany({
-    where: { expiresAt: { lt: new Date() } },
-  }).catch(() => { /* ignore cleanup errors */ });
+  prisma.oAuthPKCEState
+    .deleteMany({
+      where: { expiresAt: { lt: new Date() } },
+    })
+    .catch(() => {
+      /* ignore cleanup errors */
+    });
 }
 
 async function retrieveFromDatabase(state: string): Promise<PKCEState | null> {

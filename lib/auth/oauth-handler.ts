@@ -5,6 +5,7 @@
 
 import type { ReactElement } from 'react';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface OAuthProvider {
   name: string;
@@ -68,7 +69,7 @@ export async function signInWithOAuth(provider: string) {
       throw new Error('No authorization URL received');
     }
   } catch (error) {
-    console.error(`OAuth ${provider} error:`, error);
+    logger.error(`OAuth ${provider} error`, error);
 
     // Provide helpful error messages
     if (
@@ -129,7 +130,7 @@ export async function handleOAuthCallback(
       throw new Error(data.error || 'OAuth connection failed');
     }
   } catch (error) {
-    console.error('OAuth callback error:', error);
+    logger.error('OAuth callback error', error);
     toast.error(
       error instanceof Error
         ? error.message
@@ -162,7 +163,7 @@ export async function disconnectOAuth(platform: string) {
     toast.success(`${platform} disconnected successfully`);
     return true;
   } catch (error) {
-    console.error('Disconnect error:', error);
+    logger.error('Disconnect error', error);
     toast.error(`Failed to disconnect ${platform}`);
     return false;
   }

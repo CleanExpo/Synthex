@@ -3,6 +3,8 @@
  * Tracks all auth events and sends alerts on failures
  */
 
+import { logger } from '@/lib/logger';
+
 // NOTE: Sentry removed (2026-03-12, Phase 114-02).
 // require('@sentry/nextjs') at module level registers OTel hooks that hang
 // ALL Lambda cold starts for 10+ seconds. Using permanent no-op stub.
@@ -153,7 +155,7 @@ export class AuthMonitor {
           body: JSON.stringify(event),
         });
       } catch (error) {
-        console.error('Failed to send to monitoring webhook:', error);
+        logger.error('Failed to send to monitoring webhook', error);
       }
     }
   }
@@ -204,7 +206,7 @@ export class AuthMonitor {
    * Send alert notification
    */
   private async sendAlert(alert: AlertData): Promise<void> {
-    console.error('[AUTH_ALERT]', alert);
+    logger.warn('[AUTH_ALERT]', alert as unknown as Record<string, unknown>);
 
     // Send to Sentry as critical
     if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
@@ -234,7 +236,7 @@ export class AuthMonitor {
           }),
         });
       } catch (error) {
-        console.error('Failed to send alert:', error);
+        logger.error('Failed to send alert', error);
       }
     }
   }
@@ -278,7 +280,7 @@ export class AuthMonitor {
         });
       }
     } catch (error) {
-      console.error('Failed to store auth event:', error);
+      logger.error('Failed to store auth event', error);
       // Don't throw - logging should not break auth flow
     }
   }

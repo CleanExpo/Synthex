@@ -13,6 +13,7 @@
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // Types
@@ -80,7 +81,7 @@ function getJWTSecret(): string {
 
   // Warn if secret is too short (should be at least 32 characters)
   if (secret.length < 32) {
-    console.warn(
+    logger.warn(
       '[SECURITY WARNING] JWT_SECRET should be at least 32 characters long. ' +
         'Current length: ' +
         secret.length
@@ -175,7 +176,7 @@ export async function getUserIdFromRequest(
     return payload.userId || null;
   } catch (error) {
     // Log for debugging but don't expose details
-    console.error(
+    logger.error(
       '[AUTH] Token verification failed:',
       error instanceof Error ? error.message : 'Unknown error'
     );
@@ -280,7 +281,7 @@ export async function getUserIdFromCookies(): Promise<string | null> {
     return payload?.userId || null;
   } catch (error) {
     // Cookie access may fail in certain contexts
-    console.error(
+    logger.error(
       '[AUTH] Cookie access failed:',
       error instanceof Error ? error.message : 'Unknown error'
     );

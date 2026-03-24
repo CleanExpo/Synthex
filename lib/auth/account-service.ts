@@ -18,6 +18,7 @@
 
 import prisma from '@/lib/prisma';
 import { encryptField, decryptField } from '@/lib/security/field-encryption';
+import { logger } from '@/lib/logger';
 import type {
   AuthProvider,
   OAuthProfile,
@@ -48,12 +49,32 @@ type PrismaAccount = {
 /** Dynamic Prisma account model interface for safe access */
 interface PrismaAccountModel {
   create: (args: { data: Record<string, unknown> }) => Promise<PrismaAccount>;
-  findUnique: (args: { where: Record<string, unknown>; include?: Record<string, unknown> }) => Promise<(PrismaAccount & { user: { id: string; email: string } }) | null>;
-  findFirst: (args: { where: Record<string, unknown>; select?: Record<string, boolean> }) => Promise<PrismaAccount | null>;
-  findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string>; select?: Record<string, boolean> }) => Promise<PrismaAccount[]>;
-  update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<PrismaAccount>;
-  updateMany: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<{ count: number }>;
-  deleteMany: (args: { where: Record<string, unknown> }) => Promise<{ count: number }>;
+  findUnique: (args: {
+    where: Record<string, unknown>;
+    include?: Record<string, unknown>;
+  }) => Promise<
+    (PrismaAccount & { user: { id: string; email: string } }) | null
+  >;
+  findFirst: (args: {
+    where: Record<string, unknown>;
+    select?: Record<string, boolean>;
+  }) => Promise<PrismaAccount | null>;
+  findMany: (args: {
+    where: Record<string, unknown>;
+    orderBy?: Record<string, string>;
+    select?: Record<string, boolean>;
+  }) => Promise<PrismaAccount[]>;
+  update: (args: {
+    where: { id: string };
+    data: Record<string, unknown>;
+  }) => Promise<PrismaAccount>;
+  updateMany: (args: {
+    where: Record<string, unknown>;
+    data: Record<string, unknown>;
+  }) => Promise<{ count: number }>;
+  deleteMany: (args: {
+    where: Record<string, unknown>;
+  }) => Promise<{ count: number }>;
 }
 
 /** Prisma client with optional account model */
@@ -128,7 +149,10 @@ export class AccountService {
   /**
    * Create an email/password account record
    */
-  async createEmailAccount(userId: string, email: string): Promise<LinkedAccount> {
+  async createEmailAccount(
+    userId: string,
+    email: string
+  ): Promise<LinkedAccount> {
     const accountModel = getAccountModel();
     if (!accountModel) {
       return {
@@ -207,7 +231,12 @@ export class AccountService {
       }
 
       // Create new link
-      const account = await this.createAccount(userId, provider, profile, tokens);
+      const account = await this.createAccount(
+        userId,
+        provider,
+        profile,
+        tokens
+      );
 
       // Update user's legacy fields for backwards compatibility
       if (provider === 'google') {
@@ -226,10 +255,15 @@ export class AccountService {
         account,
       };
     } catch (error) {
-      console.error('[AccountService] Link error:', error);
+      logger.error('[AccountService] Link error', error);
       return {
         success: false,
-        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to link account',
+        error:
+          error instanceof Error
+            ? error instanceof Error
+              ? error.message
+              : String(error)
+            : 'Failed to link account',
       };
     }
   }
@@ -262,10 +296,10 @@ export class AccountService {
       select: { password: true, email: true, googleId: true },
     });
 
-    const linkedAccounts = accounts.map((a) => this.toLinkedAccount(a));
+    const linkedAccounts = accounts.map(a => this.toLinkedAccount(a));
 
     // If user has password but no email account record, include implicit email account
-    const hasEmailAccount = accounts.some((a) => a.provider === 'email');
+    const hasEmailAccount = accounts.some(a => a.provider === 'email');
     if (user?.password && !hasEmailAccount) {
       linkedAccounts.unshift({
         id: 'implicit-email',
@@ -277,7 +311,7 @@ export class AccountService {
     }
 
     // Include legacy Google account if not in Account table
-    const hasGoogleAccount = accounts.some((a) => a.provider === 'google');
+    const hasGoogleAccount = accounts.some(a => a.provider === 'google');
     if (user?.googleId && !hasGoogleAccount) {
       linkedAccounts.push({
         id: 'legacy-google',
@@ -404,7 +438,8 @@ export class AccountService {
           where: { userId: user.id },
           select: { provider: true },
         });
-        accountProviders = accounts?.map((a: { provider: string }) => a.provider) || [];
+        accountProviders =
+          accounts?.map((a: { provider: string }) => a.provider) || [];
       } catch {
         // Account table may not exist yet - fall back to legacy fields
         if (user.googleId) {
@@ -418,7 +453,9 @@ export class AccountService {
       }
     }
 
-    const providers: AuthProvider[] = accountProviders.map((p: string) => p as AuthProvider);
+    const providers: AuthProvider[] = accountProviders.map(
+      (p: string) => p as AuthProvider
+    );
 
     // Include email if user has a password
     if (user.password) {
@@ -451,23 +488,24 @@ export class AccountService {
     });
 
     // Calculate remaining auth methods after unlinking
-    const remainingAccounts = accounts.filter((a) => a.provider !== provider);
+    const remainingAccounts = accounts.filter(a => a.provider !== provider);
     const hasPassword = !!user?.password;
     const hasRemainingOAuth = remainingAccounts.some(
-      (a) => a.provider !== 'email'
+      a => a.provider !== 'email'
     );
 
     // User must have at least one auth method remaining
     if (!hasPassword && !hasRemainingOAuth && remainingAccounts.length === 0) {
       return {
         canUnlink: false,
-        reason: 'Cannot unlink the only authentication method. Please add a password or link another provider first.',
+        reason:
+          'Cannot unlink the only authentication method. Please add a password or link another provider first.',
         remainingMethods: [],
       };
     }
 
     const remainingMethods: AuthProvider[] = remainingAccounts.map(
-      (a) => a.provider as AuthProvider
+      a => a.provider as AuthProvider
     );
     if (hasPassword && !remainingMethods.includes('email')) {
       remainingMethods.unshift('email');
@@ -527,10 +565,15 @@ export class AccountService {
         remainingMethods: canUnlink.remainingMethods,
       };
     } catch (error) {
-      console.error('[AccountService] Unlink error:', error);
+      logger.error('[AccountService] Unlink error', error);
       return {
         success: false,
-        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to unlink account',
+        error:
+          error instanceof Error
+            ? error instanceof Error
+              ? error.message
+              : String(error)
+            : 'Failed to unlink account',
       };
     }
   }
@@ -614,14 +657,12 @@ export class AccountService {
   // Helper Methods
   // ==========================================
 
-  private toLinkedAccount(
-    account: {
-      id: string;
-      provider: string;
-      providerAccountId: string;
-      createdAt: Date;
-    }
-  ): LinkedAccount {
+  private toLinkedAccount(account: {
+    id: string;
+    provider: string;
+    providerAccountId: string;
+    createdAt: Date;
+  }): LinkedAccount {
     return {
       id: account.id,
       provider: account.provider as AuthProvider,
