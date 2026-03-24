@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
   const properties = await prisma.gSCProperty.findMany({
     where: { organizationId },
     orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+    take: 100, // orgs rarely have > 10 GSC properties
   });
 
   return NextResponse.json({ success: true, properties });
