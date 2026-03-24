@@ -87,11 +87,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : 'Content generation failed';
     console.error('[API] Branded content error:', err);
     return NextResponse.json(
-      { success: false, error: message },
+      { success: false, error: 'Content generation failed' },
       { status: 500 }
     );
   }

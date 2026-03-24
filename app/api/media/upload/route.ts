@@ -18,10 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
-import {
-  validateFile,
-  uploadToStorage,
-} from '@/lib/storage/supabase-storage';
+import { validateFile, uploadToStorage } from '@/lib/storage/supabase-storage';
 
 // ---------------------------------------------------------------------------
 // Validation — multipart form fields (file validated separately)
@@ -91,8 +88,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({ data: result }, { status: 201 });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Upload failed';
-    logger.error('[media/upload] Upload error:', message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    logger.error(
+      '[media/upload] Upload error:',
+      err instanceof Error ? err.message : err
+    );
+    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromCookies, isOwnerEmail } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 
@@ -81,11 +81,19 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: query recent client errors from AuditLog (admin only)
+// GET: query recent client errors from AuditLog (owner only)
 export async function GET(request: NextRequest) {
   const authUserId = await getUserIdFromCookies().catch(() => null);
   if (!authUserId) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: authUserId },
+    select: { email: true },
+  });
+  if (!user?.email || !isOwnerEmail(user.email)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const errors = await prisma.auditLog.findMany({
