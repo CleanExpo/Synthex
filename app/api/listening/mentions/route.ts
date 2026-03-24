@@ -14,7 +14,6 @@ import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
-
 // =============================================================================
 // GET - Fetch mentions with filters
 // =============================================================================
@@ -23,7 +22,10 @@ export async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -47,25 +49,25 @@ export async function GET(request: NextRequest) {
       where.isRead = isRead === 'true';
     }
 
-    // Get total count
-    const total = await prisma.socialMention.count({ where });
-
-    // Get paginated mentions
-    const mentions = await prisma.socialMention.findMany({
-      where,
-      include: {
-        keyword: {
-          select: {
-            id: true,
-            keyword: true,
-            type: true,
+    // count and findMany are independent — run in parallel
+    const [total, mentions] = await Promise.all([
+      prisma.socialMention.count({ where }),
+      prisma.socialMention.findMany({
+        where,
+        include: {
+          keyword: {
+            select: {
+              id: true,
+              keyword: true,
+              type: true,
+            },
           },
         },
-      },
-      orderBy: { postedAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+        orderBy: { postedAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,
@@ -79,7 +81,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Failed to fetch mentions', { error });
-    return NextResponse.json({ error: 'Failed to fetch mentions' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch mentions' },
+      { status: 500 }
+    );
   }
 }
 
@@ -98,14 +103,19 @@ export async function PATCH(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const body = await request.json();
     const validation = updateMentionSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: `Invalid request: ${validation.error.issues.map(i => i.message).join(', ')}` },
+        {
+          error: `Invalid request: ${validation.error.issues.map(i => i.message).join(', ')}`,
+        },
         { status: 400 }
       );
     }
@@ -141,7 +151,10 @@ export async function PATCH(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Failed to update mention', { error });
-    return NextResponse.json({ error: 'Failed to update mention' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to update mention' },
+      { status: 500 }
+    );
   }
 }
 
