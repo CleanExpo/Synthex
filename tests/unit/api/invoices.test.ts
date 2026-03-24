@@ -168,8 +168,8 @@ describe('POST /api/invoices', () => {
     // Default: authenticated user with org context
     mockGetUserIdFromRequestOrCookies.mockResolvedValue('user-123');
     mockGetEffectiveOrganizationId.mockResolvedValue('org-123');
-    // Default: 0 existing invoices
-    mockPrisma.invoice.count.mockResolvedValue(0);
+    // Default: no existing invoices → next number = INV-0001
+    mockPrisma.invoice.findFirst.mockResolvedValue(null);
     mockPrisma.invoice.create.mockResolvedValue(MOCK_INVOICE);
   });
 
@@ -235,10 +235,13 @@ describe('POST /api/invoices', () => {
     expect(res.status).toBe(201);
     expect(body.invoice).toBeDefined();
 
-    // Verify count was queried for the correct org
-    expect(mockPrisma.invoice.count).toHaveBeenCalledWith({
-      where: { organizationId: 'org-123' },
-    });
+    // Verify findFirst was queried for the latest invoice in the correct org
+    expect(mockPrisma.invoice.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { organizationId: 'org-123' },
+        orderBy: { invoiceNumber: 'desc' },
+      })
+    );
 
     // Verify create was called with correct totals
     // quantity=2, unitCents=15000 → totalCents=30000
@@ -270,8 +273,10 @@ describe('POST /api/invoices', () => {
   });
 
   it('should generate sequential invoice numbers', async () => {
-    // count = 5 → invoiceNumber = 'INV-0006'
-    mockPrisma.invoice.count.mockResolvedValue(5);
+    // latest = INV-0005 → next = INV-0006
+    mockPrisma.invoice.findFirst.mockResolvedValue({
+      invoiceNumber: 'INV-0005',
+    });
     const invoiceWithCount6 = { ...MOCK_INVOICE, invoiceNumber: 'INV-0006' };
     mockPrisma.invoice.create.mockResolvedValue(invoiceWithCount6);
 
