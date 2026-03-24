@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { sendTeamInviteEmail } from '@/lib/email';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
-type InvitePayload = {
-  email?: string;
-  role?: string;
-  message?: string;
-  campaignAccess?: string[] | string;
-};
+const InviteSchema = z.object({
+  email: z.string().email(),
+  role: z.string().min(1).max(50).optional(),
+  message: z.string().max(2000).optional(),
+  campaignAccess: z.union([z.array(z.string()), z.string()]).optional(),
+});
 
 /**
  * POST /api/teams/invite
@@ -41,30 +45,37 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    let payload: InvitePayload = {};
+    let rawPayload: unknown = {};
     try {
-      payload = await req.json();
+      rawPayload = await req.json();
     } catch {
-      // allow empty body -> treat as invalid
+      // allow empty body -> treat as invalid below
     }
 
-    const email = (payload.email || '').toString().trim();
-    const role = (payload.role || '').toString().trim() || 'viewer';
-    const message = (payload.message || '').toString();
-    let campaignAccess = payload.campaignAccess;
-
-    if (!email) {
+    const parsed = InviteSchema.safeParse(rawPayload);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Email is required' },
+        {
+          success: false,
+          error: 'Invalid request',
+          details: parsed.error.flatten(),
+        },
         { status: 400 }
       );
     }
 
+    const email = parsed.data.email;
+    const role = parsed.data.role?.trim() || 'viewer';
+    const message = parsed.data.message || '';
+
     // Normalize campaignAccess to array of strings
-    if (typeof campaignAccess === 'string') {
-      campaignAccess = [campaignAccess];
-    }
-    if (!Array.isArray(campaignAccess)) {
+    let campaignAccess: string[];
+    const rawAccess = parsed.data.campaignAccess;
+    if (typeof rawAccess === 'string') {
+      campaignAccess = [rawAccess];
+    } else if (Array.isArray(rawAccess)) {
+      campaignAccess = rawAccess;
+    } else {
       campaignAccess = [];
     }
 
@@ -81,14 +92,18 @@ export async function POST(req: NextRequest) {
     }
     interface PrismaWithTeamInvitation {
       teamInvitation?: {
-        create: (args: { data: Record<string, unknown> }) => Promise<TeamInvitation>;
+        create: (args: {
+          data: Record<string, unknown>;
+        }) => Promise<TeamInvitation>;
       };
     }
     let persisted: TeamInvitation | null = null;
     const canUseDb = !!process.env.DATABASE_URL;
     if (canUseDb) {
       try {
-        const teamInvitationModel = (prisma as unknown as PrismaWithTeamInvitation).teamInvitation;
+        const teamInvitationModel = (
+          prisma as unknown as PrismaWithTeamInvitation
+        ).teamInvitation;
         if (teamInvitationModel) {
           persisted = await teamInvitationModel.create({
             data: {
@@ -102,7 +117,10 @@ export async function POST(req: NextRequest) {
           });
         }
       } catch (e) {
-        logger.error('Prisma invitation create failed, falling back to non-persistent response:', e);
+        logger.error(
+          'Prisma invitation create failed, falling back to non-persistent response:',
+          e
+        );
       }
     }
 

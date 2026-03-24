@@ -9,13 +9,34 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
   RevenueService,
+  RevenueSource,
   REVENUE_SOURCES,
 } from '@/lib/revenue/revenue-service';
 
+// =============================================================================
+// VALIDATION SCHEMAS
+// =============================================================================
+
+const UpdateRevenueSchema = z.object({
+  source: z
+    .enum(REVENUE_SOURCES as [RevenueSource, ...RevenueSource[]])
+    .optional(),
+  amount: z.number().nonnegative().optional(),
+  currency: z.string().max(10).optional(),
+  description: z.string().max(2000).nullable().optional(),
+  platform: z.string().max(100).nullable().optional(),
+  postId: z.string().nullable().optional(),
+  brandName: z.string().max(200).nullable().optional(),
+  paidAt: z.string().optional(),
+  periodStart: z.string().nullable().optional(),
+  periodEnd: z.string().nullable().optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
 
 // =============================================================================
 // GET - Single Entry
@@ -28,7 +49,10 @@ export async function GET(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { id } = await params;
@@ -47,7 +71,9 @@ export async function GET(
       data: entry,
     });
   } catch (error) {
-    logger.error('Revenue API GET [id] error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Revenue API GET [id] error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to fetch revenue entry' },
       { status: 500 }
@@ -66,24 +92,23 @@ export async function PUT(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { id } = await params;
     const body = await request.json();
 
-    // Validate source if provided
-    if (body.source && !REVENUE_SOURCES.includes(body.source)) {
+    const parsed = UpdateRevenueSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Invalid source' },
-        { status: 400 }
-      );
-    }
-
-    // Validate amount if provided
-    if (body.amount !== undefined && (typeof body.amount !== 'number' || body.amount < 0)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid amount' },
+        {
+          success: false,
+          error: 'Invalid request',
+          details: parsed.error.flatten(),
+        },
         { status: 400 }
       );
     }
@@ -92,21 +117,27 @@ export async function PUT(
 
     try {
       const entry = await revenueService.updateEntry(id, userId, {
-        source: body.source,
-        amount: body.amount,
-        currency: body.currency,
-        description: body.description,
-        platform: body.platform,
-        postId: body.postId,
-        brandName: body.brandName,
-        paidAt: body.paidAt ? new Date(body.paidAt) : undefined,
-        periodStart: body.periodStart !== undefined
-          ? body.periodStart ? new Date(body.periodStart) : null
-          : undefined,
-        periodEnd: body.periodEnd !== undefined
-          ? body.periodEnd ? new Date(body.periodEnd) : null
-          : undefined,
-        metadata: body.metadata,
+        source: parsed.data.source,
+        amount: parsed.data.amount,
+        currency: parsed.data.currency,
+        description: parsed.data.description,
+        platform: parsed.data.platform,
+        postId: parsed.data.postId,
+        brandName: parsed.data.brandName,
+        paidAt: parsed.data.paidAt ? new Date(parsed.data.paidAt) : undefined,
+        periodStart:
+          parsed.data.periodStart !== undefined
+            ? parsed.data.periodStart
+              ? new Date(parsed.data.periodStart)
+              : null
+            : undefined,
+        periodEnd:
+          parsed.data.periodEnd !== undefined
+            ? parsed.data.periodEnd
+              ? new Date(parsed.data.periodEnd)
+              : null
+            : undefined,
+        metadata: parsed.data.metadata,
       });
 
       return NextResponse.json({
@@ -123,7 +154,9 @@ export async function PUT(
       throw err;
     }
   } catch (error) {
-    logger.error('Revenue API PUT error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Revenue API PUT error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to update revenue entry' },
       { status: 500 }
@@ -142,7 +175,10 @@ export async function DELETE(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { id } = await params;
@@ -165,7 +201,9 @@ export async function DELETE(
       throw err;
     }
   } catch (error) {
-    logger.error('Revenue API DELETE error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Revenue API DELETE error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to delete revenue entry' },
       { status: 500 }

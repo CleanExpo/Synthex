@@ -7,12 +7,26 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { ClientBrandedContentService } from '@/lib/services/client-branded-content';
 import {
   getUserIdFromRequestOrCookies,
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+
+const BrandedContentSchema = z.object({
+  platform: z.string().min(1).max(100),
+  prompt: z.string().min(1).max(2000),
+  contentType: z
+    .enum(['post', 'caption', 'thread', 'article', 'story'])
+    .optional(),
+  tone: z.string().max(100).optional(),
+  targetLength: z.enum(['short', 'medium', 'long']).optional(),
+  includeHashtags: z.boolean().optional(),
+  includeEmojis: z.boolean().optional(),
+  customInstructions: z.string().max(2000).optional(),
+});
 
 export async function POST(request: NextRequest) {
   const authenticatedUserId = await getUserIdFromRequestOrCookies(request);
@@ -29,6 +43,15 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
+
+    const parsed = BrandedContentSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
     const {
       platform,
       prompt,
@@ -38,14 +61,7 @@ export async function POST(request: NextRequest) {
       includeHashtags,
       includeEmojis,
       customInstructions,
-    } = body;
-
-    if (!platform || !prompt) {
-      return NextResponse.json(
-        { error: 'Missing required fields: platform, prompt' },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     const result = await ClientBrandedContentService.generate({
       orgId: authenticatedOrgId,

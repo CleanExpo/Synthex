@@ -8,13 +8,29 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
   SponsorService,
+  DealStage,
   DEAL_STAGES,
 } from '@/lib/sponsors/sponsor-service';
 
+// =============================================================================
+// VALIDATION SCHEMAS
+// =============================================================================
+
+const CreateDealSchema = z.object({
+  title: z.string().min(1).max(200),
+  value: z.number().nonnegative(),
+  description: z.string().max(2000).optional(),
+  currency: z.string().max(10).optional(),
+  stage: z.enum(DEAL_STAGES as [DealStage, ...DealStage[]]).optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
 
 // =============================================================================
 // GET - List Deals for Sponsor
@@ -27,7 +43,10 @@ export async function GET(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { id: sponsorId } = await params;
@@ -39,7 +58,9 @@ export async function GET(
       data: deals,
     });
   } catch (error) {
-    logger.error('Deals GET error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Deals GET error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to fetch deals' },
       { status: 500 }
@@ -58,44 +79,39 @@ export async function POST(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { id: sponsorId } = await params;
     const body = await request.json();
 
-    // Validate required fields
-    if (!body.title || typeof body.title !== 'string') {
+    const parsed = CreateDealSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Missing or invalid title' },
-        { status: 400 }
-      );
-    }
-
-    if (typeof body.value !== 'number' || body.value < 0) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid value' },
-        { status: 400 }
-      );
-    }
-
-    if (body.stage && !DEAL_STAGES.includes(body.stage)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid stage' },
+        {
+          success: false,
+          error: 'Invalid request',
+          details: parsed.error.flatten(),
+        },
         { status: 400 }
       );
     }
 
     const sponsorService = new SponsorService();
     const deal = await sponsorService.createDeal(userId, sponsorId, {
-      title: body.title,
-      description: body.description,
-      value: body.value,
-      currency: body.currency,
-      stage: body.stage,
-      startDate: body.startDate ? new Date(body.startDate) : undefined,
-      endDate: body.endDate ? new Date(body.endDate) : undefined,
-      metadata: body.metadata,
+      title: parsed.data.title,
+      description: parsed.data.description,
+      value: parsed.data.value,
+      currency: parsed.data.currency,
+      stage: parsed.data.stage,
+      startDate: parsed.data.startDate
+        ? new Date(parsed.data.startDate)
+        : undefined,
+      endDate: parsed.data.endDate ? new Date(parsed.data.endDate) : undefined,
+      metadata: parsed.data.metadata,
     });
 
     return NextResponse.json({

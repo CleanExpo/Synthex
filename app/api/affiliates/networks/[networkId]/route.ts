@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
@@ -16,6 +17,17 @@ import {
   type UpdateNetworkInput,
 } from '@/lib/affiliates/affiliate-link-service';
 
+// =============================================================================
+// VALIDATION SCHEMAS
+// =============================================================================
+
+const UpdateNetworkSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  apiKey: z.string().nullable().optional(),
+  trackingId: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+  commissionRate: z.number().nonnegative().nullable().optional(),
+});
 
 // =============================================================================
 // GET - Get Network
@@ -28,7 +40,10 @@ export async function GET(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { networkId } = await params;
@@ -46,7 +61,9 @@ export async function GET(
       data: network,
     });
   } catch (error) {
-    logger.error('Affiliate Network GET error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Affiliate Network GET error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to fetch network' },
       { status: 500 }
@@ -65,11 +82,26 @@ export async function PUT(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { networkId } = await params;
     const body = await request.json();
+
+    const parsed = UpdateNetworkSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid request',
+          details: parsed.error.flatten(),
+        },
+        { status: 400 }
+      );
+    }
 
     // Verify ownership
     const existing = await AffiliateLinkService.getNetwork(userId, networkId);
@@ -81,21 +113,27 @@ export async function PUT(
     }
 
     const input: UpdateNetworkInput = {
-      name: body.name,
-      apiKey: body.apiKey,
-      trackingId: body.trackingId,
-      isActive: body.isActive,
-      commissionRate: body.commissionRate,
+      name: parsed.data.name,
+      apiKey: parsed.data.apiKey,
+      trackingId: parsed.data.trackingId,
+      isActive: parsed.data.isActive,
+      commissionRate: parsed.data.commissionRate,
     };
 
-    const network = await AffiliateLinkService.updateNetwork(userId, networkId, input);
+    const network = await AffiliateLinkService.updateNetwork(
+      userId,
+      networkId,
+      input
+    );
 
     return NextResponse.json({
       success: true,
       data: network,
     });
   } catch (error) {
-    logger.error('Affiliate Network PUT error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Affiliate Network PUT error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to update network' },
       { status: 500 }
@@ -114,7 +152,10 @@ export async function DELETE(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { networkId } = await params;
@@ -135,7 +176,9 @@ export async function DELETE(
       message: 'Network deleted successfully',
     });
   } catch (error) {
-    logger.error('Affiliate Network DELETE error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Affiliate Network DELETE error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to delete network' },
       { status: 500 }

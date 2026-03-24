@@ -5,7 +5,20 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+
+const BioPatchSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  bio: z.string().max(2000).optional(),
+  jobRole: z.string().max(200).optional(),
+  company: z.string().max(200).optional(),
+  website: z.string().max(500).optional(),
+  location: z.string().max(200).optional(),
+  twitter: z.string().max(200).optional(),
+  linkedin: z.string().max(200).optional(),
+  instagram: z.string().max(200).optional(),
+});
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -113,21 +126,19 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = (await request.json()) as Record<string, unknown>;
-    const allowed = [
-      'name',
-      'bio',
-      'jobRole',
-      'company',
-      'website',
-      'location',
-      'twitter',
-      'linkedin',
-      'instagram',
-    ];
+    const body = await request.json();
+
+    const parsed = BioPatchSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
     const updates: Record<string, unknown> = {};
-    for (const key of allowed) {
-      if (key in body) updates[key] = body[key];
+    for (const [key, value] of Object.entries(parsed.data)) {
+      if (value !== undefined) updates[key] = value;
     }
 
     const { prisma } = await import('@/lib/prisma');

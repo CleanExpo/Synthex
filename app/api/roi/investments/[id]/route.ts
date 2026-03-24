@@ -9,14 +9,38 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
   ROIService,
+  InvestmentType,
+  InvestmentCategory,
   INVESTMENT_TYPES,
   INVESTMENT_CATEGORIES,
 } from '@/lib/roi/roi-service';
 
+// =============================================================================
+// VALIDATION SCHEMAS
+// =============================================================================
+
+const UpdateInvestmentSchema = z.object({
+  type: z
+    .enum(INVESTMENT_TYPES as [InvestmentType, ...InvestmentType[]])
+    .optional(),
+  category: z
+    .enum(
+      INVESTMENT_CATEGORIES as [InvestmentCategory, ...InvestmentCategory[]]
+    )
+    .optional(),
+  amount: z.number().nonnegative().optional(),
+  currency: z.string().max(10).nullable().optional(),
+  description: z.string().max(2000).nullable().optional(),
+  platform: z.string().max(100).nullable().optional(),
+  postId: z.string().nullable().optional(),
+  investedAt: z.string().optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
 
 // =============================================================================
 // GET - Single Investment
@@ -29,7 +53,10 @@ export async function GET(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { id } = await params;
@@ -48,7 +75,9 @@ export async function GET(
       data: investment,
     });
   } catch (error) {
-    logger.error('Investment API GET [id] error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Investment API GET [id] error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to fetch investment' },
       { status: 500 }
@@ -67,32 +96,23 @@ export async function PUT(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { id } = await params;
     const body = await request.json();
 
-    // Validate type if provided
-    if (body.type && !INVESTMENT_TYPES.includes(body.type)) {
+    const parsed = UpdateInvestmentSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Invalid type' },
-        { status: 400 }
-      );
-    }
-
-    // Validate category if provided
-    if (body.category && !INVESTMENT_CATEGORIES.includes(body.category)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid category' },
-        { status: 400 }
-      );
-    }
-
-    // Validate amount if provided
-    if (body.amount !== undefined && (typeof body.amount !== 'number' || body.amount < 0)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid amount' },
+        {
+          success: false,
+          error: 'Invalid request',
+          details: parsed.error.flatten(),
+        },
         { status: 400 }
       );
     }
@@ -101,15 +121,17 @@ export async function PUT(
 
     try {
       const investment = await roiService.updateInvestment(id, userId, {
-        type: body.type,
-        category: body.category,
-        amount: body.amount,
-        currency: body.currency,
-        description: body.description,
-        platform: body.platform,
-        postId: body.postId,
-        investedAt: body.investedAt ? new Date(body.investedAt) : undefined,
-        metadata: body.metadata,
+        type: parsed.data.type,
+        category: parsed.data.category,
+        amount: parsed.data.amount,
+        currency: parsed.data.currency,
+        description: parsed.data.description,
+        platform: parsed.data.platform,
+        postId: parsed.data.postId,
+        investedAt: parsed.data.investedAt
+          ? new Date(parsed.data.investedAt)
+          : undefined,
+        metadata: parsed.data.metadata,
       });
 
       return NextResponse.json({
@@ -126,7 +148,9 @@ export async function PUT(
       throw err;
     }
   } catch (error) {
-    logger.error('Investment API PUT error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Investment API PUT error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to update investment' },
       { status: 500 }
@@ -145,7 +169,10 @@ export async function DELETE(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { id } = await params;
@@ -168,7 +195,9 @@ export async function DELETE(
       throw err;
     }
   } catch (error) {
-    logger.error('Investment API DELETE error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Investment API DELETE error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to delete investment' },
       { status: 500 }

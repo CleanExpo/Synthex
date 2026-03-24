@@ -9,13 +9,31 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
   SponsorService,
+  DealStage,
   DEAL_STAGES,
 } from '@/lib/sponsors/sponsor-service';
 
+// =============================================================================
+// VALIDATION SCHEMAS
+// =============================================================================
+
+const UpdateDealSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).nullable().optional(),
+  value: z.number().nonnegative().optional(),
+  currency: z.string().max(10).optional(),
+  stage: z.enum(DEAL_STAGES as [DealStage, ...DealStage[]]).optional(),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
+  paidAt: z.string().nullable().optional(),
+  revenueEntryId: z.string().nullable().optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
 
 // =============================================================================
 // GET - Single Deal with Deliverables
@@ -28,7 +46,10 @@ export async function GET(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { dealId } = await params;
@@ -47,7 +68,9 @@ export async function GET(
       data: deal,
     });
   } catch (error) {
-    logger.error('Deal GET error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Deal GET error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to fetch deal' },
       { status: 500 }
@@ -66,32 +89,54 @@ export async function PUT(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { dealId } = await params;
     const body = await request.json();
 
-    // Validate stage if provided
-    if (body.stage && !DEAL_STAGES.includes(body.stage)) {
+    const parsed = UpdateDealSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Invalid stage' },
+        {
+          success: false,
+          error: 'Invalid request',
+          details: parsed.error.flatten(),
+        },
         { status: 400 }
       );
     }
 
     const sponsorService = new SponsorService();
     const deal = await sponsorService.updateDeal(dealId, userId, {
-      title: body.title,
-      description: body.description,
-      value: body.value,
-      currency: body.currency,
-      stage: body.stage,
-      startDate: body.startDate ? new Date(body.startDate) : body.startDate,
-      endDate: body.endDate ? new Date(body.endDate) : body.endDate,
-      paidAt: body.paidAt ? new Date(body.paidAt) : body.paidAt,
-      revenueEntryId: body.revenueEntryId,
-      metadata: body.metadata,
+      title: parsed.data.title,
+      description: parsed.data.description,
+      value: parsed.data.value,
+      currency: parsed.data.currency,
+      stage: parsed.data.stage,
+      startDate:
+        parsed.data.startDate === undefined
+          ? undefined
+          : parsed.data.startDate === null
+            ? null
+            : new Date(parsed.data.startDate),
+      endDate:
+        parsed.data.endDate === undefined
+          ? undefined
+          : parsed.data.endDate === null
+            ? null
+            : new Date(parsed.data.endDate),
+      paidAt:
+        parsed.data.paidAt === undefined
+          ? undefined
+          : parsed.data.paidAt === null
+            ? null
+            : new Date(parsed.data.paidAt),
+      revenueEntryId: parsed.data.revenueEntryId,
+      metadata: parsed.data.metadata,
     });
 
     return NextResponse.json({
@@ -125,7 +170,10 @@ export async function DELETE(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { dealId } = await params;

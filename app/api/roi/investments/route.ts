@@ -8,6 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
@@ -18,6 +19,23 @@ import {
   INVESTMENT_CATEGORIES,
 } from '@/lib/roi/roi-service';
 
+// =============================================================================
+// VALIDATION SCHEMAS
+// =============================================================================
+
+const CreateInvestmentSchema = z.object({
+  type: z.enum(INVESTMENT_TYPES as [InvestmentType, ...InvestmentType[]]),
+  category: z.enum(
+    INVESTMENT_CATEGORIES as [InvestmentCategory, ...InvestmentCategory[]]
+  ),
+  amount: z.number().nonnegative(),
+  investedAt: z.string().min(1),
+  currency: z.string().max(10).optional(),
+  description: z.string().max(2000).optional(),
+  platform: z.string().max(100).optional(),
+  postId: z.string().optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
 
 // =============================================================================
 // GET - List Investments
@@ -27,7 +45,10 @@ export async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     // Parse query params
@@ -70,7 +91,9 @@ export async function GET(request: NextRequest) {
       data: investments,
     });
   } catch (error) {
-    logger.error('Investments API GET error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Investments API GET error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to fetch investments' },
       { status: 500 }
@@ -86,48 +109,37 @@ export async function POST(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const body = await request.json();
 
-    // Validate required fields
-    if (!body.type || !INVESTMENT_TYPES.includes(body.type)) {
+    const parsed = CreateInvestmentSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Invalid or missing type' },
-        { status: 400 }
-      );
-    }
-    if (!body.category || !INVESTMENT_CATEGORIES.includes(body.category)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid or missing category' },
-        { status: 400 }
-      );
-    }
-    if (typeof body.amount !== 'number' || body.amount < 0) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid amount' },
-        { status: 400 }
-      );
-    }
-    if (!body.investedAt) {
-      return NextResponse.json(
-        { success: false, error: 'Missing investedAt date' },
+        {
+          success: false,
+          error: 'Invalid request',
+          details: parsed.error.flatten(),
+        },
         { status: 400 }
       );
     }
 
     const roiService = new ROIService();
     const investment = await roiService.createInvestment(userId, {
-      type: body.type,
-      category: body.category,
-      amount: body.amount,
-      currency: body.currency || 'USD',
-      description: body.description,
-      platform: body.platform,
-      postId: body.postId,
-      investedAt: new Date(body.investedAt),
-      metadata: body.metadata,
+      type: parsed.data.type,
+      category: parsed.data.category,
+      amount: parsed.data.amount,
+      currency: parsed.data.currency || 'USD',
+      description: parsed.data.description,
+      platform: parsed.data.platform,
+      postId: parsed.data.postId,
+      investedAt: new Date(parsed.data.investedAt),
+      metadata: parsed.data.metadata,
     });
 
     return NextResponse.json({
@@ -135,7 +147,9 @@ export async function POST(request: NextRequest) {
       data: investment,
     });
   } catch (error) {
-    logger.error('Investments API POST error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Investments API POST error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to create investment' },
       { status: 500 }

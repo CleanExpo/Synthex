@@ -9,13 +9,32 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
   SponsorService,
+  SponsorStatus,
   SPONSOR_STATUSES,
 } from '@/lib/sponsors/sponsor-service';
 
+// =============================================================================
+// VALIDATION SCHEMAS
+// =============================================================================
+
+const UpdateSponsorSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  company: z.string().max(200).nullable().optional(),
+  email: z.string().email().nullable().optional(),
+  phone: z.string().max(50).nullable().optional(),
+  website: z.string().url().nullable().optional(),
+  logo: z.string().url().nullable().optional(),
+  status: z
+    .enum(SPONSOR_STATUSES as [SponsorStatus, ...SponsorStatus[]])
+    .optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
 
 // =============================================================================
 // GET - Single Sponsor with Deals
@@ -28,7 +47,10 @@ export async function GET(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { id } = await params;
@@ -47,7 +69,9 @@ export async function GET(
       data: sponsor,
     });
   } catch (error) {
-    logger.error('Sponsor GET error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Sponsor GET error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to fetch sponsor' },
       { status: 500 }
@@ -66,31 +90,38 @@ export async function PUT(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { id } = await params;
     const body = await request.json();
 
-    // Validate status if provided
-    if (body.status && !SPONSOR_STATUSES.includes(body.status)) {
+    const parsed = UpdateSponsorSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Invalid status' },
+        {
+          success: false,
+          error: 'Invalid request',
+          details: parsed.error.flatten(),
+        },
         { status: 400 }
       );
     }
 
     const sponsorService = new SponsorService();
     const sponsor = await sponsorService.updateSponsor(id, userId, {
-      name: body.name,
-      company: body.company,
-      email: body.email,
-      phone: body.phone,
-      website: body.website,
-      logo: body.logo,
-      status: body.status,
-      notes: body.notes,
-      metadata: body.metadata,
+      name: parsed.data.name,
+      company: parsed.data.company,
+      email: parsed.data.email,
+      phone: parsed.data.phone,
+      website: parsed.data.website,
+      logo: parsed.data.logo,
+      status: parsed.data.status,
+      notes: parsed.data.notes,
+      metadata: parsed.data.metadata,
     });
 
     return NextResponse.json({
@@ -124,7 +155,10 @@ export async function DELETE(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { id } = await params;
