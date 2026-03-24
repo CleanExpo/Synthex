@@ -33,37 +33,30 @@ export async function GET(request: NextRequest) {
 
     const { prisma } = await import('@/lib/prisma');
 
-    let eeatRow: {
+    type EeatRow = {
       overallScore?: number;
       experienceScore?: number;
       expertiseScore?: number;
       authorityScore?: number;
       trustScore?: number;
       updatedAt?: Date | string;
-    } | null = null;
+    } | null;
+
+    let eeatRow: EeatRow = null;
 
     try {
+      type EeatModel = { findFirst: (args: unknown) => Promise<EeatRow> };
+      type PrismaWithEeat = Record<string, unknown> & {
+        eEATScore?: EeatModel;
+        eeatScore?: EeatModel;
+      };
+      const p = prisma as unknown as PrismaWithEeat;
       eeatRow =
-        (await (
-          prisma as unknown as Record<string, unknown> & {
-            eEATScore?: {
-              findFirst: (args: unknown) => Promise<typeof eeatRow>;
-            };
-            eeatScore?: {
-              findFirst: (args: unknown) => Promise<typeof eeatRow>;
-            };
-          }
-        ).eEATScore?.findFirst({
+        (await p.eEATScore?.findFirst({
           where: { userId },
           orderBy: { updatedAt: 'desc' },
         })) ??
-        (await (
-          prisma as unknown as Record<string, unknown> & {
-            eeatScore?: {
-              findFirst: (args: unknown) => Promise<typeof eeatRow>;
-            };
-          }
-        ).eeatScore?.findFirst({
+        (await p.eeatScore?.findFirst({
           where: { userId },
           orderBy: { updatedAt: 'desc' },
         })) ??
