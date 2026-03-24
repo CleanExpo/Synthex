@@ -7,14 +7,12 @@ import {
   Home,
   BarChart3,
   Calendar,
-  Settings,
   LogOut,
   User,
   Sparkles,
   DollarSign,
   Brain,
   Search,
-  Megaphone,
   Database,
   GitBranch as GitPullRequest,
   Users,
@@ -25,17 +23,24 @@ import { Button } from '@/components/ui/button';
 
 const menuItems = [
   { href: '/dashboard', label: 'Home', icon: Home },
+  // Sidebar group: CONTENT
   { href: '/dashboard/creative-suite', label: 'Content', icon: Sparkles },
+  // Sidebar group: PLANNING
   { href: '/dashboard/calendar', label: 'Planning', icon: Calendar },
+  // Sidebar group: ANALYTICS
   { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
+  // Sidebar group: MONETIZATION
   { href: '/dashboard/revenue', label: 'Monetization', icon: DollarSign },
+  // Sidebar group: BUSINESS INTEL
   { href: '/dashboard/audience', label: 'Business Intel', icon: Brain },
-  { href: '/dashboard/seo', label: 'SEO', icon: Search },
-  { href: '/dashboard/brand', label: 'Authority & PR', icon: Megaphone },
+  // Sidebar group: SEO & AUTHORITY
+  { href: '/dashboard/seo', label: 'SEO & Authority', icon: Search },
+  // Sidebar group: RESEARCH & MEDIA
   { href: '/dashboard/research', label: 'Research & Media', icon: Database },
+  // Sidebar group: AI AGENTS
   { href: '/dashboard/autonomous', label: 'AI Agents', icon: GitPullRequest },
+  // Sidebar group: TEAM & ADMIN
   { href: '/dashboard/team', label: 'Team & Admin', icon: Users },
-  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function MobileMenu() {
