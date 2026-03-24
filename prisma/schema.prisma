@@ -195,6 +195,18 @@ model User {
   // Vault — secrets created by this user
   createdVaultSecrets VaultSecret[] @relation("VaultSecretCreator")
 
+  // UNI-1592/1594 — founder-scoped models
+  generatedContents GeneratedContent[]
+  videoAssets       VideoAsset[]
+  socialEngagements SocialEngagement[]
+  emailCampaigns    EmailCampaign[]
+  platformAnalytics PlatformAnalytic[]
+  advisoryCases     AdvisoryCase[]
+  experiments       Experiment[]
+  credentialsVaults CredentialsVault[]
+  nexusDatabases    NexusDatabase[]
+  connectedProjects ConnectedProject[]
+
   // Onboarding state (UNI-920)
   onboardingComplete      Boolean   @default(false) @map("onboarding_complete")
   onboardingStep          Int       @default(0) @map("onboarding_step") // 0=not started, 1=business, 2=api-key, 3=socials, 4=goals
@@ -1793,6 +1805,9 @@ model ApprovalRequest {
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Advisory cases that reference this approval queue entry
+  advisoryCases AdvisoryCase[]
 
   @@index([submittedBy])
   @@index([organizationId])
@@ -3521,7 +3536,7 @@ model BrandIdentity {
   updatedAt           DateTime          @updatedAt
   credentials         BrandCredential[]
   mentions            BrandMention[]
-  user                User              @relation(fields: [userId], references: [id])
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([orgId])
@@ -4659,4 +4674,248 @@ model Testimonial {
   @@index([requestId])
   @@index([status])
   @@map("testimonials")
+}
+
+// ==========================================
+// UNI-1592 — ON DELETE CASCADE + UNI-1594 — Performance indexes
+// New founder-scoped models
+// ==========================================
+
+/// AI-generated content items owned by a user (founder).
+/// onDelete: Cascade — deleting the user removes all their generated content.
+model GeneratedContent {
+  id          String   @id @default(cuid())
+  founderId   String   @map("founder_id")
+  title       String
+  contentType String   @map("content_type") // 'post' | 'email' | 'script' | 'ad' | 'caption'
+  body        String   @db.Text
+  metadata    Json? // platform, tone, model used, etc.
+  status      String   @default("draft") // draft | published | archived
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  founder User @relation(fields: [founderId], references: [id], onDelete: Cascade)
+
+  @@index([founderId])
+  @@index([founderId, status, createdAt])
+  @@map("generated_content")
+}
+
+/// Video assets generated or uploaded by a user (founder).
+/// onDelete: Cascade — deleting the user removes all their video assets.
+model VideoAsset {
+  id        String   @id @default(cuid())
+  founderId String   @map("founder_id")
+  title     String
+  url       String // Storage URL
+  thumbnail String? // Thumbnail URL
+  duration  Int? // seconds
+  status    String   @default("pending") // pending | processing | ready | failed
+  metadata  Json? // resolution, codec, size, etc.
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  founder User @relation(fields: [founderId], references: [id], onDelete: Cascade)
+
+  @@index([founderId])
+  @@index([founderId, status])
+  @@map("video_assets")
+}
+
+/// Social media engagement records for a user's (founder's) content.
+/// onDelete: Cascade — deleting the user removes all their engagement records.
+model SocialEngagement {
+  id         String   @id @default(cuid())
+  founderId  String   @map("founder_id")
+  platform   String // twitter | linkedin | instagram | facebook | tiktok | youtube
+  postId     String?  @map("post_id") // External platform post ID
+  likes      Int      @default(0)
+  comments   Int      @default(0)
+  shares     Int      @default(0)
+  reach      Int      @default(0)
+  impressions Int     @default(0)
+  engagementRate Float? @map("engagement_rate")
+  recordedAt DateTime @default(now()) @map("recorded_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  founder User @relation(fields: [founderId], references: [id], onDelete: Cascade)
+
+  @@index([founderId])
+  @@index([founderId, platform, recordedAt])
+  @@map("social_engagements")
+}
+
+/// Email marketing campaigns owned by a user (founder).
+/// onDelete: Cascade — deleting the user removes all their email campaigns.
+model EmailCampaign {
+  id          String    @id @default(cuid())
+  founderId   String    @map("founder_id")
+  name        String
+  subject     String
+  body        String    @db.Text
+  status      String    @default("draft") // draft | scheduled | sending | sent | failed
+  scheduledAt DateTime? @map("scheduled_at")
+  sentAt      DateTime? @map("sent_at")
+  recipients  Int       @default(0)
+  opens       Int       @default(0)
+  clicks      Int       @default(0)
+  bounces     Int       @default(0)
+  metadata    Json?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  founder User @relation(fields: [founderId], references: [id], onDelete: Cascade)
+
+  @@index([founderId])
+  @@index([founderId, status, createdAt])
+  @@map("email_campaigns")
+}
+
+/// Platform-level analytics snapshots for a user (founder).
+/// onDelete: Cascade — deleting the user removes all their analytics records.
+model PlatformAnalytic {
+  id         String   @id @default(cuid())
+  founderId  String   @map("founder_id")
+  platform   String // twitter | linkedin | instagram | facebook | tiktok | youtube
+  metricType String   @map("metric_type") // followers | reach | impressions | engagement
+  value      Float
+  periodDate DateTime @map("period_date") // Date the metric was recorded for
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  founder User @relation(fields: [founderId], references: [id], onDelete: Cascade)
+
+  @@index([founderId])
+  @@index([founderId, platform, periodDate])
+  @@map("platform_analytics")
+}
+
+/// Advisory (consulting/support) cases linked to a user (founder).
+/// approvalQueueId is nullable — references ApprovalRequest and uses SET NULL
+/// so the case persists if the approval queue entry is deleted.
+/// onDelete for founder: Cascade — deleting the user removes all their cases.
+model AdvisoryCase {
+  id              String   @id @default(cuid())
+  founderId       String   @map("founder_id")
+  approvalQueueId String?  @map("approval_queue_id") // nullable — SET NULL on delete
+  title           String
+  description     String?  @db.Text
+  status          String   @default("open") // open | in_review | resolved | closed
+  priority        String   @default("normal") // low | normal | high | urgent
+  resolvedAt      DateTime? @map("resolved_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  founder       User            @relation(fields: [founderId], references: [id], onDelete: Cascade)
+  approvalQueue ApprovalRequest? @relation(fields: [approvalQueueId], references: [id], onDelete: SetNull)
+
+  @@index([founderId])
+  @@index([approvalQueueId])
+  @@index([founderId, status])
+  @@map("advisory_cases")
+}
+
+// ─── UNI-1594 — Performance-indexed models ─────────────────────────────────
+
+/// A/B or multivariate experiments run by a user (founder).
+/// Indexes: (founder_id, status, created_at) for dashboard queries.
+model Experiment {
+  id          String             @id @default(cuid())
+  founderId   String             @map("founder_id")
+  name        String
+  description String?            @db.Text
+  status      String             @default("draft") // draft | running | paused | completed | cancelled
+  hypothesis  String?            @db.Text
+  metricToTrack String?          @map("metric_to_track")
+  startedAt   DateTime?          @map("started_at")
+  completedAt DateTime?          @map("completed_at")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  founder User             @relation(fields: [founderId], references: [id], onDelete: Cascade)
+  results ExperimentResult[]
+
+  @@index([founderId, status, createdAt])
+  @@map("experiments")
+}
+
+/// Periodic metric results for an experiment.
+/// Indexes: (experiment_id, period_date) for time-series analytics queries.
+model ExperimentResult {
+  id           String     @id @default(cuid())
+  experimentId String     @map("experiment_id")
+  periodDate   DateTime   @map("period_date")
+  variant      String // control | variant_a | variant_b | ...
+  metricValue  Float      @map("metric_value")
+  sampleSize   Int        @default(0) @map("sample_size")
+  metadata     Json?
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  experiment Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+
+  @@index([experimentId, periodDate])
+  @@map("experiment_results")
+}
+
+/// Encrypted service credentials stored per user (founder) and service name.
+/// Indexes: (founder_id, service) for fast lookup by service type.
+model CredentialsVault {
+  id               String    @id @default(cuid())
+  founderId        String    @map("founder_id")
+  service          String // e.g., 'openai' | 'stripe' | 'sendgrid' | 'twilio'
+  encryptedValue   String    @map("encrypted_value") @db.Text
+  maskedValue      String    @map("masked_value") // display-safe masked credential
+  label            String? // optional human-readable label
+  expiresAt        DateTime? @map("expires_at")
+  lastUsedAt       DateTime? @map("last_used_at")
+  isActive         Boolean   @default(true) @map("is_active")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  founder User @relation(fields: [founderId], references: [id], onDelete: Cascade)
+
+  @@unique([founderId, service])
+  @@index([founderId, service])
+  @@map("credentials_vault")
+}
+
+/// Nexus (knowledge/research) database entries linked to a user and page.
+/// Indexes: (founder_id, page_id) for page-scoped lookup queries.
+model NexusDatabase {
+  id        String   @id @default(cuid())
+  founderId String   @map("founder_id")
+  pageId    String   @map("page_id") // ID of associated page / content node
+  title     String
+  content   String   @db.Text
+  source    String? // URL or document reference
+  tags      Json     @default("[]") // string[]
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  founder User @relation(fields: [founderId], references: [id], onDelete: Cascade)
+
+  @@index([founderId, pageId])
+  @@map("nexus_databases")
+}
+
+/// External projects connected to a user's (founder's) Synthex account.
+/// Indexes: (founder_id) for fast listing of all connected projects per user.
+model ConnectedProject {
+  id           String   @id @default(cuid())
+  founderId    String   @map("founder_id")
+  name         String
+  platform     String // github | notion | jira | trello | asana | ...
+  externalId   String   @map("external_id") // ID on the external platform
+  externalUrl  String?  @map("external_url")
+  status       String   @default("active") // active | disconnected | error
+  metadata     Json?
+  connectedAt  DateTime @default(now()) @map("connected_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  founder User @relation(fields: [founderId], references: [id], onDelete: Cascade)
+
+  @@index([founderId])
+  @@map("connected_projects")
 }
