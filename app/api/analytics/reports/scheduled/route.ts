@@ -20,13 +20,22 @@ import prisma from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 
 // Type for the JSON filters blob stored in the report
 interface ReportFiltersJson {
   isActive?: boolean;
-  schedule?: { frequency?: string; time?: string; timezone?: string; dayOfWeek?: number; dayOfMonth?: number };
+  schedule?: {
+    frequency?: string;
+    time?: string;
+    timezone?: string;
+    dayOfWeek?: number;
+    dayOfMonth?: number;
+  };
   nextRun?: string | null;
   lastRun?: string | null;
   recipients?: unknown[];
@@ -44,9 +53,21 @@ const ScheduleSchema = z.object({
 });
 
 const ReportConfigSchema = z.object({
-  type: z.enum(['overview', 'engagement', 'content', 'audience', 'campaigns', 'growth', 'custom']).default('overview'),
+  type: z
+    .enum([
+      'overview',
+      'engagement',
+      'content',
+      'audience',
+      'campaigns',
+      'growth',
+      'custom',
+    ])
+    .default('overview'),
   name: z.string().min(1).max(200),
-  metrics: z.array(z.string()).default(['impressions', 'engagements', 'clicks']),
+  metrics: z
+    .array(z.string())
+    .default(['impressions', 'engagements', 'clicks']),
   dimensions: z.array(z.string()).default(['date']),
   granularity: z.enum(['hour', 'day', 'week', 'month']).default('day'),
   platforms: z.array(z.string()).optional(),
@@ -56,7 +77,9 @@ const ReportConfigSchema = z.object({
 const CreateScheduledReportSchema = z.object({
   config: ReportConfigSchema,
   schedule: ScheduleSchema,
-  recipients: z.array(z.string().email()).min(1, 'At least one recipient is required'),
+  recipients: z
+    .array(z.string().email())
+    .min(1, 'At least one recipient is required'),
   format: z.enum(['csv', 'pdf', 'json']).default('csv'),
 });
 
@@ -93,10 +116,7 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json(
-        { error: 'Invalid JSON body' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
     const parseResult = CreateScheduledReportSchema.safeParse(body);
@@ -176,7 +196,10 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     logger.error('Failed to create scheduled report', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to create scheduled report', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to create scheduled report',
+      500
+    );
   }
 }
 
@@ -211,7 +234,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get('active') === 'true';
     const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || '20', 10),
+      100
+    );
     const offset = (page - 1) * limit;
 
     // Build where clause
@@ -223,29 +249,29 @@ export async function GET(request: NextRequest) {
       type: 'scheduled',
     };
 
-    // Get total count
-    const total = await prisma.report.count({ where: whereClause });
-
-    // Get scheduled reports from database
-    const reports = await prisma.report.findMany({
-      where: whereClause,
-      select: {
-        id: true,
-        name: true,
-        format: true,
-        status: true,
-        filters: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-      skip: offset,
-      take: limit,
-    });
+    // count and findMany are independent — run in parallel
+    const [total, reports] = await Promise.all([
+      prisma.report.count({ where: whereClause }),
+      prisma.report.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          name: true,
+          format: true,
+          status: true,
+          filters: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: offset,
+        take: limit,
+      }),
+    ]);
 
     // Transform reports to scheduled report format
     const scheduledReports = reports
-      .map((report) => {
+      .map(report => {
         const filters = (report.filters as ReportFiltersJson) || {};
         const isActive = filters.isActive !== false;
 
@@ -293,7 +319,10 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     logger.error('Failed to list scheduled reports', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to list scheduled reports', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to list scheduled reports',
+      500
+    );
   }
 }
 
@@ -387,7 +416,10 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Failed to cancel scheduled report', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to cancel scheduled report', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to cancel scheduled report',
+      500
+    );
   }
 }
 

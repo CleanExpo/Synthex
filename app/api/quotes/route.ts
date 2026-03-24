@@ -41,7 +41,10 @@ const VALID_CATEGORIES = [
 type QuoteCategory = (typeof VALID_CATEGORIES)[number];
 
 const createQuoteSchema = z.object({
-  text: z.string().min(1, 'Quote text is required').max(1000, 'Quote text exceeds maximum length of 1000 characters'),
+  text: z
+    .string()
+    .min(1, 'Quote text is required')
+    .max(1000, 'Quote text exceeds maximum length of 1000 characters'),
   author: z.string().optional(),
   source: z.string().optional(),
   category: z.enum(VALID_CATEGORIES),
@@ -57,7 +60,10 @@ const createQuoteSchema = z.object({
 });
 
 const deleteQuotesSchema = z.object({
-  ids: z.array(z.string()).min(1, 'Quote IDs array is required').max(100, 'Cannot delete more than 100 quotes at once'),
+  ids: z
+    .array(z.string())
+    .min(1, 'Quote IDs array is required')
+    .max(100, 'Cannot delete more than 100 quotes at once'),
 });
 
 interface CreateQuoteRequest {
@@ -151,16 +157,16 @@ export async function GET(request: NextRequest) {
       },
     ];
 
-    // Get total count
-    const total = await prisma.quote.count({ where });
-
-    // Get quotes
-    const quotes = await prisma.quote.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      take: filters.limit,
-      skip: filters.offset,
-    });
+    // count and findMany are independent — run in parallel
+    const [total, quotes] = await Promise.all([
+      prisma.quote.count({ where }),
+      prisma.quote.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: filters.limit,
+        skip: filters.offset,
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,
@@ -206,7 +212,11 @@ export async function POST(request: NextRequest) {
     const validation = createQuoteSchema.safeParse(rawBody);
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Invalid request data', details: validation.error.issues },
+        {
+          success: false,
+          error: 'Invalid request data',
+          details: validation.error.issues,
+        },
         { status: 400 }
       );
     }
@@ -292,7 +302,11 @@ export async function DELETE(request: NextRequest) {
     const deleteValidation = deleteQuotesSchema.safeParse(rawDeleteBody);
     if (!deleteValidation.success) {
       return NextResponse.json(
-        { success: false, error: 'Invalid request data', details: deleteValidation.error.issues },
+        {
+          success: false,
+          error: 'Invalid request data',
+          details: deleteValidation.error.issues,
+        },
         { status: 400 }
       );
     }

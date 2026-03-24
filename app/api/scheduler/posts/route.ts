@@ -196,24 +196,24 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get total count
-    const total = await prisma.post.count({ where });
-
-    // Get posts
-    const posts = await prisma.post.findMany({
-      where,
-      orderBy: { [sortBy]: sortOrder },
-      skip,
-      take: limit,
-      include: {
-        campaign: {
-          select: {
-            id: true,
-            name: true,
+    // count and findMany are independent — run in parallel
+    const [total, posts] = await Promise.all([
+      prisma.post.count({ where }),
+      prisma.post.findMany({
+        where,
+        orderBy: { [sortBy]: sortOrder },
+        skip,
+        take: limit,
+        include: {
+          campaign: {
+            select: {
+              id: true,
+              name: true,
+            },
           },
         },
-      },
-    });
+      }),
+    ]);
 
     // Calculate stats
     const stats = {

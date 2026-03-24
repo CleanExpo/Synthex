@@ -16,7 +16,10 @@ import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 
 // Action type to human-readable description mapping
 const actionDescriptions: Record<string, { action: string; icon: string }> = {
@@ -27,12 +30,18 @@ const actionDescriptions: Record<string, { action: string; icon: string }> = {
   'post.created': { action: 'created new content', icon: 'file-plus' },
   'post.published': { action: 'published content to', icon: 'share' },
   'post.scheduled': { action: 'scheduled content for', icon: 'calendar' },
-  'ai.content_generated': { action: 'generated AI content for', icon: 'sparkles' },
+  'ai.content_generated': {
+    action: 'generated AI content for',
+    icon: 'sparkles',
+  },
   'teams.member_added': { action: 'added new team member', icon: 'user-plus' },
   'teams.member_removed': { action: 'removed team member', icon: 'user-minus' },
   'teams.role_changed': { action: 'changed role for', icon: 'shield' },
   'teams.invitation_sent': { action: 'sent invitation to', icon: 'mail' },
-  'analytics.report_generated': { action: 'generated analytics report', icon: 'bar-chart' },
+  'analytics.report_generated': {
+    action: 'generated analytics report',
+    icon: 'bar-chart',
+  },
   'analytics.export': { action: 'exported analytics data', icon: 'download' },
 };
 
@@ -80,7 +89,10 @@ export async function GET(request: NextRequest) {
     // Parse query parameters
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || '20', 10),
+      100
+    );
     const offset = (page - 1) * limit;
     const category = searchParams.get('category'); // 'campaign', 'post', 'ai', 'teams', 'analytics'
 
@@ -95,8 +107,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const memberMap = new Map(orgMembers.map((m) => [m.id, m]));
-    const memberIds = orgMembers.map((m) => m.id);
+    const memberMap = new Map(orgMembers.map(m => [m.id, m]));
+    const memberIds = orgMembers.map(m => m.id);
 
     // Build where clause for audit logs
     const whereClause: {
@@ -110,29 +122,29 @@ export async function GET(request: NextRequest) {
       whereClause.category = category;
     }
 
-    // Get total count
-    const total = await prisma.auditLog.count({ where: whereClause });
-
-    // Fetch audit logs for organization members
-    const auditLogs = await prisma.auditLog.findMany({
-      where: whereClause,
-      select: {
-        id: true,
-        userId: true,
-        action: true,
-        resource: true,
-        resourceId: true,
-        category: true,
-        details: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-      skip: offset,
-      take: limit,
-    });
+    // count and findMany are independent — run in parallel
+    const [total, auditLogs] = await Promise.all([
+      prisma.auditLog.count({ where: whereClause }),
+      prisma.auditLog.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          userId: true,
+          action: true,
+          resource: true,
+          resourceId: true,
+          category: true,
+          details: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: offset,
+        take: limit,
+      }),
+    ]);
 
     // Transform audit logs to activity feed format
-    const activities = auditLogs.map((log) => {
+    const activities = auditLogs.map(log => {
       const member = log.userId ? memberMap.get(log.userId) : undefined;
       const actionInfo = actionDescriptions[log.action] || {
         action: log.action.replace(/\./g, ' ').replace(/_/g, ' '),
@@ -141,7 +153,12 @@ export async function GET(request: NextRequest) {
 
       // Extract target from details if available
       const details = (log.details as Record<string, unknown>) || {};
-      let target = details.name || details.email || details.campaignName || log.resourceId || '';
+      let target =
+        details.name ||
+        details.email ||
+        details.campaignName ||
+        log.resourceId ||
+        '';
 
       // For platform-related actions
       if (log.action.includes('published') && details.platform) {
@@ -151,7 +168,8 @@ export async function GET(request: NextRequest) {
       return {
         id: log.id,
         memberId: log.userId,
-        memberName: member?.name || member?.email?.split('@')[0] || 'Unknown User',
+        memberName:
+          member?.name || member?.email?.split('@')[0] || 'Unknown User',
         memberAvatar: member?.avatar || null,
         action: actionInfo.action,
         icon: actionInfo.icon,
@@ -177,7 +195,10 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     logger.error('Failed to fetch team activity', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to fetch team activity', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to fetch team activity',
+      500
+    );
   }
 }
 

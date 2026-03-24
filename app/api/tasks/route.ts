@@ -138,16 +138,16 @@ export async function GET(request: NextRequest) {
       where.category = category;
     }
 
-    // Get total count
-    const total = await prisma.task.count({ where });
-
-    // Get tasks
-    const tasks = await prisma.task.findMany({
-      where,
-      orderBy: { [sortBy]: sortOrder },
-      skip,
-      take: limit,
-    });
+    // count and findMany are independent — run in parallel
+    const [total, tasks] = await Promise.all([
+      prisma.task.count({ where }),
+      prisma.task.findMany({
+        where,
+        orderBy: { [sortBy]: sortOrder },
+        skip,
+        take: limit,
+      }),
+    ]);
 
     return NextResponse.json({
       data: tasks,
