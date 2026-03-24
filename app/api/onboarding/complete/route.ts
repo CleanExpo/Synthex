@@ -37,9 +37,12 @@ import { runLaunchPipeline } from '@/lib/autopilot/launch-pipeline';
 // Validation — body is optional (endpoint is auth-gated, no required fields)
 // ============================================================================
 
-const completeOnboardingSchema = z.object({
-  skipWelcomeEmail: z.boolean().optional(),
-}).strict().optional();
+const completeOnboardingSchema = z
+  .object({
+    skipWelcomeEmail: z.boolean().optional(),
+  })
+  .strict()
+  .optional();
 
 // ============================================================================
 // POST — Complete Onboarding
@@ -152,6 +155,31 @@ export async function POST(request: NextRequest) {
           status: 'active',
           userId: user.id,
         },
+      });
+
+      // 3.5. Upsert BrandDNA from pipeline audit data
+      const brandColours = (pipelineData?.brandColours as string[]) || [];
+      const targetAudience = (pipelineData?.targetAudience as string) || '';
+      const industry = (pipelineData?.industry as string) || '';
+      const sourceUrl = (pipelineData?.websiteUrl as string) || '';
+
+      const brandDnaData = {
+        businessName: org.name,
+        industry,
+        primaryColour: brandColours[0] ?? null,
+        secondaryColour: brandColours[1] ?? null,
+        brandVoice: { tone: personaTone },
+        persona: {
+          description: targetAudience || null,
+          values: keyTopics,
+        },
+        sourceUrl,
+      };
+
+      await tx.brandDNA.upsert({
+        where: { organizationId: org.id },
+        create: { organizationId: org.id, ...brandDnaData },
+        update: brandDnaData,
       });
 
       // 4. Update OnboardingProgress

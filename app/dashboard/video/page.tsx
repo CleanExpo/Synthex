@@ -22,6 +22,7 @@ import {
   Zap,
   RefreshCw,
 } from '@/components/icons';
+import { ApiKeyGate } from '@/components/api-key-gate/ApiKeyGate';
 
 interface WorkflowInfo {
   id: string;
@@ -222,63 +223,67 @@ export default function VideoProductionPage() {
         <h2 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">
           Available Workflows
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {workflows.map(workflow => {
-            const IconComponent = WORKFLOW_ICONS[workflow.id] || Video;
-            const isProducing = producing === workflow.id;
+        <ApiKeyGate provider="elevenlabs" featureName="Video Production">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {workflows.map(workflow => {
+              const IconComponent = WORKFLOW_ICONS[workflow.id] || Video;
+              const isProducing = producing === workflow.id;
 
-            return (
-              <div
-                key={workflow.id}
-                className="p-5 rounded-sm border-[0.5px] border-white/[0.06] bg-white/[0.02] hover:border-orange-500/30 transition-all group"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="w-10 h-10 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20 flex items-center justify-center">
-                    <IconComponent className="w-5 h-5 text-orange-400" />
+              return (
+                <div
+                  key={workflow.id}
+                  className="p-5 rounded-sm border-[0.5px] border-white/[0.06] bg-white/[0.02] hover:border-orange-500/30 transition-all group"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="w-10 h-10 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20 flex items-center justify-center">
+                      <IconComponent className="w-5 h-5 text-orange-400" />
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-white/50">
+                      <Clock className="w-3 h-3" />~{workflow.duration}s
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-white/50">
-                    <Clock className="w-3 h-3" />~{workflow.duration}s
-                  </div>
-                </div>
 
-                <h3 className="text-white font-medium mb-1">{workflow.name}</h3>
-                <p className="text-white/40 text-sm mb-4 line-clamp-2">
-                  {workflow.description}
-                </p>
+                  <h3 className="text-white font-medium mb-1">
+                    {workflow.name}
+                  </h3>
+                  <p className="text-white/40 text-sm mb-4 line-clamp-2">
+                    {workflow.description}
+                  </p>
 
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => startProduction(workflow.id, false)}
-                    disabled={isProducing || !!producing}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-sm bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                  >
-                    {isProducing ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Producing...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-4 h-4" />
-                        Produce
-                      </>
-                    )}
-                  </button>
-                  {readiness && !readiness.ready && (
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => startProduction(workflow.id, true)}
+                      onClick={() => startProduction(workflow.id, false)}
                       disabled={isProducing || !!producing}
-                      className="flex items-center justify-center gap-1 px-3 py-2 rounded-sm bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/40 hover:bg-white/[0.04] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                      title="Produce locally without uploading to YouTube"
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-sm bg-orange-500/20 border-[0.5px] border-orange-500/30 text-orange-400 hover:bg-orange-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
                     >
-                      Local Only
+                      {isProducing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Producing...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4" />
+                          Produce
+                        </>
+                      )}
                     </button>
-                  )}
+                    {readiness && !readiness.ready && (
+                      <button
+                        onClick={() => startProduction(workflow.id, true)}
+                        disabled={isProducing || !!producing}
+                        className="flex items-center justify-center gap-1 px-3 py-2 rounded-sm bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/40 hover:bg-white/[0.04] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                        title="Produce locally without uploading to YouTube"
+                      >
+                        Local Only
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </ApiKeyGate>
       </div>
 
       {/* Production Results */}
