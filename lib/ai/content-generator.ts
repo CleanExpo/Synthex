@@ -17,6 +17,14 @@ export interface UserProviderCredentials {
   provider: string;
 }
 
+// Business context used to personalise the AI system prompt
+interface OrgContext {
+  businessName: string;
+  industry: string | null;
+  location: string | null;
+  brandVoice: string | null;
+}
+
 // Persona type from database
 interface PersonaData {
   id: string;
@@ -60,6 +68,14 @@ export interface ContentRequest {
   orgId?: string;
   /** Enable extended thinking (Anthropic direct only). Defaults to false. */
   thinkingEnabled?: boolean;
+  /** SEO content type — drives structure-aware article prompts (SYN-472). */
+  seoContentType?:
+    | 'blog_local_authority'
+    | 'how_to'
+    | 'listicle'
+    | 'news_item'
+    | 'comparison'
+    | 'case_study';
 }
 
 export interface GeneratedContent {
@@ -146,6 +162,30 @@ export class AIContentGenerator {
       }
     }
 
+    // Auto-pick topic from GSC suggestions when no topic supplied (SYN-472)
+    if (!request.topic && request.orgId) {
+      try {
+        const suggestion = await prisma.contentTopicSuggestion.findFirst({
+          where: { organizationId: request.orgId, usedAt: null },
+          orderBy: { opportunityScore: 'desc' },
+        });
+        if (suggestion) {
+          request.topic = suggestion.keyword;
+          await prisma.contentTopicSuggestion.update({
+            where: { id: suggestion.id },
+            data: { usedAt: new Date() },
+          });
+        }
+      } catch {
+        // Non-fatal — proceed without suggestion
+      }
+    }
+
+    // Build org context for business-aware system prompt (SYN-472)
+    const orgContext = request.orgId
+      ? await this.buildOrgContext(request.orgId)
+      : null;
+
     // Build Obsidian context for this client (no-op when disabled or orgId absent)
     const obsidianContext = request.orgId
       ? await buildContextForGeneration(request.orgId)
@@ -189,7 +229,8 @@ export class AIContentGenerator {
         prompt,
         model,
         aiClient,
-        thinkingEffort
+        thinkingEffort,
+        orgContext
       );
 
       // Generate variations for A/B testing
@@ -364,27 +405,63 @@ Generate content that will maximize engagement and shares.
   }
 
   /**
+   * Fetch business context for system prompt personalisation (SYN-472).
+   */
+  private async buildOrgContext(orgId: string): Promise<OrgContext | null> {
+    try {
+      const org = await prisma.organization.findUnique({
+        where: { id: orgId },
+        select: { name: true, industry: true, aiGeneratedData: true },
+      });
+      if (!org) return null;
+
+      const aiData = org.aiGeneratedData as Record<string, unknown> | null;
+      const location =
+        (aiData?.suburb as string) ??
+        (aiData?.city as string) ??
+        (aiData?.location as string) ??
+        null;
+      const brandVoice =
+        (aiData?.brandVoice as string) ?? (aiData?.tone as string) ?? null;
+
+      return {
+        businessName: org.name,
+        industry: org.industry,
+        location,
+        brandVoice,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Call the AI provider with the given prompt.
    *
    * @param prompt - Fully-built prompt string
    * @param model - Model identifier to use
    * @param client - Resolved AIProvider instance (platform or user key)
    * @param thinking - Adaptive thinking effort level (undefined = disabled; Anthropic only)
+   * @param orgContext - Optional org context for business-aware system prompt
    */
   private async callAI(
     prompt: string,
     model: string,
     client: AIProvider,
-    thinking?: 'low' | 'medium' | 'high' | 'max'
+    thinking?: 'low' | 'medium' | 'high' | 'max',
+    orgContext?: OrgContext | null
   ): Promise<string> {
+    const systemPrompt = orgContext
+      ? `You are a content expert for ${orgContext.businessName}${orgContext.industry ? `, a ${orgContext.industry} business` : ''}${orgContext.location ? ` in ${orgContext.location}` : ''}. ${orgContext.brandVoice ?? 'Generate unique, creative content optimized for maximum engagement.'}`
+      : 'You are a viral content expert specializing in creating highly engaging social media content. Generate unique, creative content optimized for maximum engagement.';
+
     try {
       const response = await client.complete({
         model,
         messages: [
           {
             role: 'system',
-            content:
-              'You are a viral content expert specializing in creating highly engaging social media content. Generate unique, creative content optimized for maximum engagement.',
+            content: systemPrompt,
           },
           {
             role: 'user',
@@ -392,7 +469,7 @@ Generate content that will maximize engagement and shares.
           },
         ],
         temperature: 0.8,
-        max_tokens: 1000,
+        max_tokens: prompt.includes('article') ? 3000 : 1000,
         ...(thinking
           ? { thinking, thinkingDisplay: 'omitted' as const, cache: true }
           : {}),

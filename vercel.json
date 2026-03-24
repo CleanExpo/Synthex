@@ -180,6 +180,10 @@
     {
       "path": "/api/cron/review-follow-up",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/gsc-topic-sync",
+      "schedule": "0 20 * * 0"
     }
   ]
 }

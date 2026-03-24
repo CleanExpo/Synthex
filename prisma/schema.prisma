@@ -582,6 +582,9 @@ model Organization {
   // Review requests (SYN-474)
   reviewRequests ReviewRequest[]
 
+  // GSC content topic suggestions (SYN-472)
+  contentTopicSuggestions ContentTopicSuggestion[]
+
   // Indices for multi-tenant queries
   @@index([slug])
   @@index([status])
@@ -609,6 +612,27 @@ model ReviewRequest {
   @@index([organizationId])
   @@index([organizationId, status])
   @@map("review_requests")
+}
+
+/// GSC-derived keyword opportunities surfaced as content topic suggestions.
+/// Populated weekly by gsc-topic-sync cron. Consumed by content generator
+/// when no explicit topic is provided.
+model ContentTopicSuggestion {
+  id               String    @id @default(cuid())
+  organizationId   String    @map("organization_id")
+  keyword          String
+  impressions      Int       @default(0)
+  currentRank      Float     @default(0) @map("current_rank")
+  opportunityScore Float     @default(0) @map("opportunity_score")
+  usedAt           DateTime? @map("used_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, keyword])
+  @@index([organizationId])
+  @@index([organizationId, usedAt])
+  @@map("content_topic_suggestions")
 }
 
 // Platform Integration Models
