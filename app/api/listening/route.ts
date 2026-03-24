@@ -12,7 +12,6 @@ import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
-
 // =============================================================================
 // GET - Dashboard overview stats
 // =============================================================================
@@ -21,7 +20,10 @@ export async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const now = new Date();
@@ -42,16 +44,67 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
-    // Sentiment breakdown (last 7 days)
-    const sentimentCounts = await prisma.socialMention.groupBy({
-      by: ['sentiment'],
-      where: {
-        userId: userId,
-        postedAt: { gte: sevenDaysAgo },
-        sentiment: { not: null },
-      },
-      _count: true,
-    });
+    // Batch 2: all remaining independent queries — run in parallel
+    const [
+      sentimentCounts,
+      topKeywordMentions,
+      platformCounts,
+      unreadCount,
+      recentMentions,
+      activeKeywordsCount,
+    ] = await Promise.all([
+      // Sentiment breakdown (last 7 days)
+      prisma.socialMention.groupBy({
+        by: ['sentiment'],
+        where: {
+          userId: userId,
+          postedAt: { gte: sevenDaysAgo },
+          sentiment: { not: null },
+        },
+        _count: true,
+      }),
+      // Top keywords by mention volume (last 7 days)
+      prisma.socialMention.groupBy({
+        by: ['keywordId'],
+        where: {
+          userId: userId,
+          postedAt: { gte: sevenDaysAgo },
+        },
+        _count: true,
+        orderBy: { _count: { keywordId: 'desc' } },
+        take: 5,
+      }),
+      // Top platforms (last 7 days)
+      prisma.socialMention.groupBy({
+        by: ['platform'],
+        where: {
+          userId: userId,
+          postedAt: { gte: sevenDaysAgo },
+        },
+        _count: true,
+        orderBy: { _count: { platform: 'desc' } },
+        take: 5,
+      }),
+      // Unread count
+      prisma.socialMention.count({
+        where: { userId: userId, isRead: false, isArchived: false },
+      }),
+      // Recent mentions (last 10)
+      prisma.socialMention.findMany({
+        where: { userId: userId, isArchived: false },
+        include: {
+          keyword: {
+            select: { id: true, keyword: true, type: true },
+          },
+        },
+        orderBy: { postedAt: 'desc' },
+        take: 10,
+      }),
+      // Active keywords count
+      prisma.trackedKeyword.count({
+        where: { userId: userId, isActive: true },
+      }),
+    ]);
 
     const sentimentBreakdown = {
       positive: 0,
@@ -60,22 +113,12 @@ export async function GET(request: NextRequest) {
     };
     sentimentCounts.forEach(s => {
       if (s.sentiment && s.sentiment in sentimentBreakdown) {
-        sentimentBreakdown[s.sentiment as keyof typeof sentimentBreakdown] = s._count;
+        sentimentBreakdown[s.sentiment as keyof typeof sentimentBreakdown] =
+          s._count;
       }
     });
 
-    // Top keywords by mention volume (last 7 days)
-    const topKeywordMentions = await prisma.socialMention.groupBy({
-      by: ['keywordId'],
-      where: {
-        userId: userId,
-        postedAt: { gte: sevenDaysAgo },
-      },
-      _count: true,
-      orderBy: { _count: { keywordId: 'desc' } },
-      take: 5,
-    });
-
+    // keywords lookup depends on topKeywordMentions result
     const keywordIds = topKeywordMentions.map(k => k.keywordId);
     const keywords = await prisma.trackedKeyword.findMany({
       where: { id: { in: keywordIds } },
@@ -88,44 +131,10 @@ export async function GET(request: NextRequest) {
       mentionCount: k._count,
     }));
 
-    // Top platforms (last 7 days)
-    const platformCounts = await prisma.socialMention.groupBy({
-      by: ['platform'],
-      where: {
-        userId: userId,
-        postedAt: { gte: sevenDaysAgo },
-      },
-      _count: true,
-      orderBy: { _count: { platform: 'desc' } },
-      take: 5,
-    });
-
     const topPlatforms = platformCounts.map(p => ({
       platform: p.platform,
       count: p._count,
     }));
-
-    // Unread count
-    const unreadCount = await prisma.socialMention.count({
-      where: { userId: userId, isRead: false, isArchived: false },
-    });
-
-    // Recent mentions (last 10)
-    const recentMentions = await prisma.socialMention.findMany({
-      where: { userId: userId, isArchived: false },
-      include: {
-        keyword: {
-          select: { id: true, keyword: true, type: true },
-        },
-      },
-      orderBy: { postedAt: 'desc' },
-      take: 10,
-    });
-
-    // Active keywords count
-    const activeKeywordsCount = await prisma.trackedKeyword.count({
-      where: { userId: userId, isActive: true },
-    });
 
     return NextResponse.json({
       success: true,
@@ -143,7 +152,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Failed to fetch listening stats', { error });
-    return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch stats' },
+      { status: 500 }
+    );
   }
 }
 
