@@ -184,6 +184,7 @@ export async function POST(request: NextRequest) {
     prisma.businessOwnership.findMany({
       where: { ownerId: auth.userId, isActive: true },
       select: { organizationId: true },
+      take: 200, // superadmin admin import — reasonable org ownership cap
     }),
     prisma.user.findUnique({
       where: { id: auth.userId },

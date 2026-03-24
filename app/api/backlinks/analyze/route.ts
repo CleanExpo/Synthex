@@ -109,6 +109,7 @@ export async function POST(request: NextRequest) {
       const existing = await prisma.backlinkProspect.findMany({
         where: { userId },
         select: { targetUrl: true },
+        take: 5000, // dedup cap — unlikely to exceed 5k prospects per user
       });
       const existingUrls = new Set(existing.map(e => e.targetUrl));
 
