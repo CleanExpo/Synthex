@@ -1,6 +1,6 @@
 /**
  * API SECURITY CHECKER
- * 
+ *
  * ⚠️ CRITICAL SECURITY MODULE
  * This module MUST be used for EVERY API endpoint to ensure:
  * 1. Proper authentication and authorization
@@ -8,7 +8,7 @@
  * 3. Rate limiting and abuse prevention
  * 4. Secure headers and CORS
  * 5. Audit logging
- * 
+ *
  * FAILURE TO USE THIS MODULE WILL RESULT IN SECURITY VULNERABILITIES
  */
 
@@ -84,14 +84,14 @@ export const DEFAULT_POLICIES = {
     requireAuth: false,
     rateLimit: { maxRequests: 100, windowMs: 60000 },
     auditLog: false,
-    requireHTTPS: true
+    requireHTTPS: true,
   } as SecurityPolicy,
 
   AUTHENTICATED_READ: {
     requireAuth: true,
     rateLimit: { maxRequests: 200, windowMs: 60000 },
     auditLog: true,
-    requireHTTPS: true
+    requireHTTPS: true,
   } as SecurityPolicy,
 
   AUTHENTICATED_WRITE: {
@@ -100,7 +100,7 @@ export const DEFAULT_POLICIES = {
     auditLog: true,
     preventCSRF: true,
     requireHTTPS: true,
-    maxBodySize: 1048576 // 1MB
+    maxBodySize: 1048576, // 1MB
   } as SecurityPolicy,
 
   ADMIN_ONLY: {
@@ -109,7 +109,7 @@ export const DEFAULT_POLICIES = {
     rateLimit: { maxRequests: 100, windowMs: 60000 },
     auditLog: true,
     preventCSRF: true,
-    requireHTTPS: true
+    requireHTTPS: true,
   } as SecurityPolicy,
 
   WEBHOOK: {
@@ -117,15 +117,15 @@ export const DEFAULT_POLICIES = {
     rateLimit: { maxRequests: 1000, windowMs: 60000 },
     auditLog: true,
     requireHTTPS: true,
-    maxBodySize: 5242880 // 5MB
+    maxBodySize: 5242880, // 5MB
   } as SecurityPolicy,
 
   INTERNAL_ONLY: {
     requireAuth: false,
     allowedIPs: ['127.0.0.1', '::1'], // localhost only
     auditLog: true,
-    requireHTTPS: false
-  } as SecurityPolicy
+    requireHTTPS: false,
+  } as SecurityPolicy,
 };
 
 // ============================================
@@ -165,9 +165,8 @@ class RateLimiter {
 
     // Clean old attempts outside the window
     const validAttempts = attempts.filter(time => now - time < windowMs);
-    const resetAt = validAttempts.length > 0
-      ? validAttempts[0] + windowMs
-      : now + windowMs;
+    const resetAt =
+      validAttempts.length > 0 ? validAttempts[0] + windowMs : now + windowMs;
 
     if (validAttempts.length >= maxRequests) {
       return { allowed: false, remaining: 0, resetAt };
@@ -218,7 +217,11 @@ export class APISecurityChecker {
 
     try {
       // 1. HTTPS Check (skip in development — localhost doesn't use HTTPS)
-      if (policy.requireHTTPS && process.env.NODE_ENV === 'production' && !this.isHTTPS(request)) {
+      if (
+        policy.requireHTTPS &&
+        process.env.NODE_ENV === 'production' &&
+        !this.isHTTPS(request)
+      ) {
         throw new SecurityError('HTTPS required', 'HTTPS_REQUIRED');
       }
 
@@ -231,7 +234,11 @@ export class APISecurityChecker {
       if (policy.rateLimit) {
         const rateLimitResult = this.checkRateLimit(context, policy.rateLimit);
         // Attach rate limit info to context for response headers
-        (context as SecurityContext & { rateLimit?: { remaining: number; resetAt: number; limit: number } }).rateLimit = {
+        (
+          context as SecurityContext & {
+            rateLimit?: { remaining: number; resetAt: number; limit: number };
+          }
+        ).rateLimit = {
           remaining: rateLimitResult.remaining,
           resetAt: rateLimitResult.resetAt,
           limit: policy.rateLimit.maxRequests,
@@ -245,7 +252,10 @@ export class APISecurityChecker {
       if (policy.requireAuth) {
         const authResult = await this.checkAuthentication(request, context);
         if (!authResult.isValid) {
-          throw new SecurityError(authResult.error || 'Authentication required', 'AUTH_REQUIRED');
+          throw new SecurityError(
+            authResult.error || 'Authentication required',
+            'AUTH_REQUIRED'
+          );
         }
         context.userId = authResult.userId;
         context.userRole = authResult.userRole;
@@ -253,7 +263,10 @@ export class APISecurityChecker {
       }
 
       // 5. Authorization
-      if (policy.allowedRoles && !this.checkAuthorization(context.userRole, policy.allowedRoles)) {
+      if (
+        policy.allowedRoles &&
+        !this.checkAuthorization(context.userRole, policy.allowedRoles)
+      ) {
         throw new SecurityError('Insufficient permissions', 'FORBIDDEN');
       }
 
@@ -276,7 +289,6 @@ export class APISecurityChecker {
       }
 
       return { allowed: true, context };
-
     } catch (error) {
       // Log security violations
       if (policy.auditLog) {
@@ -286,7 +298,10 @@ export class APISecurityChecker {
       return {
         allowed: false,
         context,
-        error: error instanceof SecurityError ? error.message : 'Security check failed'
+        error:
+          error instanceof SecurityError
+            ? error.message
+            : 'Security check failed',
       };
     }
   }
@@ -311,7 +326,7 @@ export class APISecurityChecker {
   static sanitizeOutput<T>(data: T, schema?: z.ZodSchema<T>): T {
     // Remove any sensitive fields
     const sanitized = this.removeSensitiveFields(data);
-    
+
     // Validate against schema if provided
     if (schema) {
       try {
@@ -320,7 +335,7 @@ export class APISecurityChecker {
         throw new ValidationError('Invalid output format', []);
       }
     }
-    
+
     return sanitized as T;
   }
 
@@ -339,23 +354,36 @@ export class APISecurityChecker {
     response.headers.set('X-Frame-Options', 'DENY');
     response.headers.set('X-XSS-Protection', '1; mode=block');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    response.headers.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-    
+    response.headers.set(
+      'Permissions-Policy',
+      'geolocation=(), microphone=(), camera=()'
+    );
+
     if (context) {
       response.headers.set('X-Request-ID', context.requestId);
 
       // Rate limit headers (standard draft RFC 6585 / RateLimit fields)
-      const rl = (context as SecurityContext & { rateLimit?: { remaining: number; resetAt: number; limit: number } }).rateLimit;
+      const rl = (
+        context as SecurityContext & {
+          rateLimit?: { remaining: number; resetAt: number; limit: number };
+        }
+      ).rateLimit;
       if (rl) {
         response.headers.set('X-RateLimit-Limit', String(rl.limit));
         response.headers.set('X-RateLimit-Remaining', String(rl.remaining));
-        response.headers.set('X-RateLimit-Reset', String(Math.ceil(rl.resetAt / 1000)));
+        response.headers.set(
+          'X-RateLimit-Reset',
+          String(Math.ceil(rl.resetAt / 1000))
+        );
       }
     }
 
     // Cache control for sensitive data
     if (status === 200) {
-      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      response.headers.set(
+        'Cache-Control',
+        'no-store, no-cache, must-revalidate, private'
+      );
     }
 
     return response;
@@ -373,14 +401,18 @@ export class APISecurityChecker {
       userAgent: request.headers.get('user-agent') || 'unknown',
       method: request.method,
       path: request.nextUrl.pathname,
-      isAuthenticated: false
+      isAuthenticated: false,
     };
   }
 
   private static getClientIP(request: NextRequest): string {
-    return request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-           request.headers.get('x-real-ip') ||
-           'unknown';
+    return (
+      request.headers.get('x-vercel-forwarded-for') ||
+      request.headers.get('cf-connecting-ip') ||
+      request.headers.get('x-real-ip') ||
+      request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      'unknown'
+    );
   }
 
   private static isHTTPS(request: NextRequest): boolean {
@@ -403,13 +435,22 @@ export class APISecurityChecker {
     rateLimit: { maxRequests: number; windowMs: number }
   ): { allowed: boolean; remaining: number; resetAt: number } {
     const identifier = context.userId || context.ip;
-    return RateLimiter.check(identifier, rateLimit.maxRequests, rateLimit.windowMs);
+    return RateLimiter.check(
+      identifier,
+      rateLimit.maxRequests,
+      rateLimit.windowMs
+    );
   }
 
   private static async checkAuthentication(
     request: NextRequest,
     context: SecurityContext
-  ): Promise<{ isValid: boolean; userId?: string; userRole?: string; error?: string }> {
+  ): Promise<{
+    isValid: boolean;
+    userId?: string;
+    userRole?: string;
+    error?: string;
+  }> {
     try {
       // Check Authorization header OR auth-token cookie
       const authHeader = request.headers.get('authorization');
@@ -440,15 +481,17 @@ export class APISecurityChecker {
       return {
         isValid: true,
         userId: decoded.userId || decoded.sub,
-        userRole: decoded.role || 'user'
+        userRole: decoded.role || 'user',
       };
-
     } catch (error) {
       return { isValid: false, error: 'Invalid token' };
     }
   }
 
-  private static checkAuthorization(userRole?: string, allowedRoles?: string[]): boolean {
+  private static checkAuthorization(
+    userRole?: string,
+    allowedRoles?: string[]
+  ): boolean {
     if (!allowedRoles || allowedRoles.length === 0) {
       return true;
     }
@@ -463,7 +506,10 @@ export class APISecurityChecker {
    * Strips `www.` prefix and optional port number.
    */
   private static normalizeHost(host: string): string {
-    return host.replace(/^www\./, '').split(':')[0].toLowerCase();
+    return host
+      .replace(/^www\./, '')
+      .split(':')[0]
+      .toLowerCase();
   }
 
   private static checkCSRF(request: NextRequest): boolean {
@@ -490,9 +536,10 @@ export class APISecurityChecker {
     // the actual domain the client connected to, even behind proxies/CDNs.
     const origin = request.headers.get('origin');
     const referer = request.headers.get('referer');
-    const hostHeader = request.headers.get('host')
-      || request.headers.get('x-forwarded-host')
-      || request.nextUrl.host;
+    const hostHeader =
+      request.headers.get('host') ||
+      request.headers.get('x-forwarded-host') ||
+      request.nextUrl.host;
     const appHost = this.normalizeHost(hostHeader);
 
     if (origin) {
@@ -549,7 +596,7 @@ export class APISecurityChecker {
     if (contentLength) {
       return parseInt(contentLength, 10);
     }
-    
+
     // Estimate from body if content-length not available
     try {
       const body = await request.text();
@@ -565,9 +612,20 @@ export class APISecurityChecker {
     }
 
     const sensitiveFields = [
-      'password', 'token', 'secret', 'apiKey', 'api_key',
-      'authorization', 'cookie', 'session', 'salt', 'hash',
-      'creditCard', 'credit_card', 'cvv', 'ssn'
+      'password',
+      'token',
+      'secret',
+      'apiKey',
+      'api_key',
+      'authorization',
+      'cookie',
+      'session',
+      'salt',
+      'hash',
+      'creditCard',
+      'credit_card',
+      'cvv',
+      'ssn',
     ];
 
     const cleaned = Array.isArray(data) ? [...data] : { ...data };
@@ -579,20 +637,29 @@ export class APISecurityChecker {
         } else {
           (cleaned as Record<string, unknown>)[key] = '[REDACTED]';
         }
-      } else if (typeof (cleaned as Record<string, unknown>)[key] === 'object') {
-        (cleaned as Record<string, unknown>)[key] = this.removeSensitiveFields((cleaned as Record<string, unknown>)[key]);
+      } else if (
+        typeof (cleaned as Record<string, unknown>)[key] === 'object'
+      ) {
+        (cleaned as Record<string, unknown>)[key] = this.removeSensitiveFields(
+          (cleaned as Record<string, unknown>)[key]
+        );
       }
     }
 
     return cleaned as T;
   }
 
-  private static logAudit(context: SecurityContext, result: string, error: unknown) {
+  private static logAudit(
+    context: SecurityContext,
+    result: string,
+    error: unknown
+  ) {
     const entry: AuditLogEntry = {
       ...context,
       result,
-      error: error instanceof Error ? error.message : error ? String(error) : null,
-      timestamp: new Date().toISOString()
+      error:
+        error instanceof Error ? error.message : error ? String(error) : null,
+      timestamp: new Date().toISOString(),
     };
 
     this.auditLog.push(entry);
@@ -608,7 +675,10 @@ export class APISecurityChecker {
   /**
    * Get audit log entries
    */
-  static getAuditLog(filter?: { userId?: string; result?: string }): AuditLogEntry[] {
+  static getAuditLog(filter?: {
+    userId?: string;
+    result?: string;
+  }): AuditLogEntry[] {
     if (!filter) {
       return [...this.auditLog];
     }
@@ -626,7 +696,7 @@ export class APISecurityChecker {
 // ============================================
 class SecurityError extends Error {
   code: string;
-  
+
   constructor(message: string, code: string) {
     super(message);
     this.name = 'SecurityError';
@@ -691,10 +761,9 @@ export class WebhookValidator {
     secret: string
   ): boolean {
     try {
-      const expectedSignature = 'sha256=' + crypto
-        .createHmac('sha256', secret)
-        .update(payload)
-        .digest('hex');
+      const expectedSignature =
+        'sha256=' +
+        crypto.createHmac('sha256', secret).update(payload).digest('hex');
 
       return crypto.timingSafeEqual(
         Buffer.from(signature),

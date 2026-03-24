@@ -27,8 +27,7 @@ import type {
 // Redis storage layer (Upstash REST API — no extra dependency needed)
 // ---------------------------------------------------------------------------
 
-const UPSTASH_URL =
-  process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL;
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL;
 const UPSTASH_TOKEN =
   process.env.UPSTASH_REDIS_REST_TOKEN || process.env.REDIS_TOKEN;
 
@@ -180,8 +179,10 @@ export class RateLimiter {
     }
 
     const ip =
-      req.headers.get('x-forwarded-for') ||
+      req.headers.get('x-vercel-forwarded-for') ||
+      req.headers.get('cf-connecting-ip') ||
       req.headers.get('x-real-ip') ||
+      req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
       'unknown';
     return `ip:${ip}`;
   }
@@ -347,9 +348,33 @@ export class UsageTracker {
     tier: SubscriptionTier = 'free'
   ): Promise<boolean> {
     const limits: Record<string, Record<SubscriptionTier, number>> = {
-      ai_posts: { free: 5, pro: 100, growth: -1, scale: -1, professional: 100, business: -1, custom: -1 },
-      social_posts: { free: 10, pro: 100, growth: -1, scale: -1, professional: 100, business: -1, custom: -1 },
-      api_calls: { free: 1000, pro: 10000, growth: 100000, scale: -1, professional: 10000, business: 100000, custom: -1 },
+      ai_posts: {
+        free: 5,
+        pro: 100,
+        growth: -1,
+        scale: -1,
+        professional: 100,
+        business: -1,
+        custom: -1,
+      },
+      social_posts: {
+        free: 10,
+        pro: 100,
+        growth: -1,
+        scale: -1,
+        professional: 100,
+        business: -1,
+        custom: -1,
+      },
+      api_calls: {
+        free: 1000,
+        pro: 10000,
+        growth: 100000,
+        scale: -1,
+        professional: 10000,
+        business: 100000,
+        custom: -1,
+      },
     };
 
     const limit = limits[feature]?.[tier] ?? 0;

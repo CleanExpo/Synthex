@@ -34,8 +34,10 @@ function createCategoryLimiter(
       identifier: (r: NextRequest) => {
         // Use IP + category as key so limits are per-category
         const ip =
-          r.headers.get('x-forwarded-for') ||
+          r.headers.get('x-vercel-forwarded-for') ||
+          r.headers.get('cf-connecting-ip') ||
           r.headers.get('x-real-ip') ||
+          r.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
           'unknown';
         return `${category}:${ip}`;
       },
