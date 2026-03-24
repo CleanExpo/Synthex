@@ -20,6 +20,7 @@ import {
 } from '@/lib/google/business-profile';
 import { findOAuthConnection } from '@/lib/google/google-auth';
 import { markReviewReceived } from '@/lib/reviews/review-request-service';
+import { calculateVisibilityScore } from '@/lib/scoring/visibility-score';
 import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
@@ -176,6 +177,8 @@ export async function GET(request: NextRequest) {
                 error: err instanceof Error ? err.message : String(err),
               })
           );
+          // Recalculate visibility score after new reviews
+          calculateVisibilityScore(location.organizationId).catch(() => {});
         }
       } catch (reviewError) {
         logger.warn('cron:gbp-monitor:reviews-error', {

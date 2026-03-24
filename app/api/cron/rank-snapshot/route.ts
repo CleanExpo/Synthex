@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { takeRankSnapshot } from '@/lib/seo/rank-tracker';
+import { calculateVisibilityScore } from '@/lib/scoring/visibility-score';
 import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
@@ -40,6 +41,8 @@ export async function GET(request: NextRequest) {
         const snapshotCount = await takeRankSnapshot(organizationId);
         totalSnapshots += snapshotCount;
         processed++;
+        // Recalculate visibility score after rank update
+        calculateVisibilityScore(organizationId).catch(() => {});
       } catch (err) {
         errors++;
         logger.error('rank-snapshot:org-failed', {

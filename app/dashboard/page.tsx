@@ -40,6 +40,14 @@ const HealthScoreWidget = dynamic(
   { ssr: false }
 );
 
+const VisibilityScoreWidget = dynamic(
+  () =>
+    import('@/components/dashboard/VisibilityScoreWidget').then(m => ({
+      default: m.VisibilityScoreWidget,
+    })),
+  { ssr: false }
+);
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -352,7 +360,10 @@ export default function DashboardPage() {
         ) : (
           /* ── Returning user flow — AI Command Centre ─────────────────── */
           <>
-            <HealthScoreWidget />
+            <div className="grid gap-4 lg:grid-cols-2">
+              <HealthScoreWidget />
+              <VisibilityScoreWidget />
+            </div>
             <AICommandCentre />
           </>
         )}
