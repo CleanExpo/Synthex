@@ -4616,9 +4616,9 @@ model AutopilotRun {
 /// Shareable link that lets a business collect customer testimonials.
 /// One organisation can have multiple active request links.
 model TestimonialRequest {
-  id             String    @id @default(cuid())
-  organizationId String    @map("organization_id")
-  token          String    @unique @default(cuid()) // URL token
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  token          String    @unique @default(dbgenerated("gen_random_uuid()::text")) // URL token
   title          String    @default("Share Your Experience")
   subtitle       String    @default("We'd love to hear what you think!")
   isActive       Boolean   @default(true) @map("is_active")
@@ -4636,9 +4636,9 @@ model TestimonialRequest {
 
 /// A single customer testimonial submitted via a TestimonialRequest link.
 model Testimonial {
-  id             String    @id @default(cuid())
-  organizationId String    @map("organization_id")
-  requestId      String    @map("request_id")
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  requestId      String    @map("request_id") @db.Uuid
   submitterName  String    @map("submitter_name")
   submitterEmail String?   @map("submitter_email")
   rating         Int       // 1–5 stars
