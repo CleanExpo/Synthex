@@ -381,6 +381,9 @@ IMPORTANT: Match this persona's unique voice exactly. The content should sound l
     // Determine effective tone (persona overrides request if available)
     const effectiveTone = persona?.tone || request.tone;
 
+    // Build SEO content type structure directive (SYN-475)
+    const seoStructure = buildSeoContentTypeDirective(request.seoContentType);
+
     return `
 ${personaInstructions}
 Generate a ${request.type} for ${request.platform}.
@@ -399,6 +402,7 @@ Requirements:
 - Make it highly engaging
 ${request.keywords?.length ? `- Include keywords: ${request.keywords.join(', ')}` : ''}
 ${persona ? '- CRITICAL: Match the persona voice profile exactly' : ''}
+${seoStructure}
 
 Generate content that will maximize engagement and shares.
     `.trim();
@@ -775,3 +779,71 @@ Keep the same message but change the style and tone.
 
 // Export singleton instance
 export const aiContentGenerator = new AIContentGenerator();
+
+// ============================================================================
+// SEO CONTENT TYPE PROMPTS (SYN-475)
+// ============================================================================
+
+/**
+ * Returns a content structure directive for the given SEO content type.
+ * Appended to the main buildPrompt output when seoContentType is set.
+ */
+function buildSeoContentTypeDirective(
+  seoContentType: ContentRequest['seoContentType']
+): string {
+  if (!seoContentType) return '';
+
+  switch (seoContentType) {
+    case 'blog_local_authority':
+      return `
+CONTENT STRUCTURE — LOCAL AUTHORITY ARTICLE:
+- H1: "[Service] in [Suburb] — [Year] Guide"
+- Open with an author credential statement (who you are, how long in the trade)
+- Include at least 2 H2s referencing the suburb or location
+- Include a quote from the business owner's perspective
+- CTA: "Call [Business Name] in [Suburb] on [phone]"`;
+
+    case 'how_to':
+      return `
+CONTENT STRUCTURE — HOW-TO GUIDE:
+- H1: "How to [Action] in [Suburb/State]"
+- Numbered steps (minimum 5), each as H2
+- Include an "Expert Tip" callout after step 2
+- End with FAQ section (5 questions, formatted as Q: / A:)`;
+
+    case 'listicle':
+      return `
+CONTENT STRUCTURE — LISTICLE:
+- H1: "[Number] Best [Thing] in [Suburb/Area] ([Year])"
+- Each item as a numbered H2
+- Include the business as one of the items (not first)
+- End with a comparison summary table (3 columns: Provider | Specialty | Contact)`;
+
+    case 'news_item':
+      return `
+CONTENT STRUCTURE — NEWS ITEM:
+- H1: Newsy headline with location and date
+- Lead paragraph: who, what, when, where, why (inverted pyramid)
+- Include 1 quote from a named source
+- End with "About [Business Name]" boilerplate paragraph`;
+
+    case 'comparison':
+      return `
+CONTENT STRUCTURE — COMPARISON:
+- H1: "[Option A] vs [Option B]: Which is Right for You?"
+- Summary table at the top (at least 5 comparison rows)
+- H2 for each option with pros and cons
+- Conclusion recommending based on use case`;
+
+    case 'case_study':
+      return `
+CONTENT STRUCTURE — CASE STUDY:
+- H1: "How [Business] Helped [Client Type] [Achieve Result]"
+- Sections: The Challenge | Our Approach | The Results | Client Testimonial
+- Include specific metrics (numbers, percentages, timeframes)
+- End with CTA to book a consultation`;
+
+    default:
+      return '';
+  }
+}

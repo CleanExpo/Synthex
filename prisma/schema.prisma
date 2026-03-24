@@ -4799,18 +4799,31 @@ model Testimonial {
 // New founder-scoped models
 // ==========================================
 
+/// SEO-specific content type variants (SYN-475).
+/// Drives structure-aware article prompts and layout rendering.
+enum SeoContentType {
+  blog_local_authority
+  how_to
+  listicle
+  news_item
+  comparison
+  case_study
+}
+
 /// AI-generated content items owned by a user (founder).
 /// onDelete: Cascade — deleting the user removes all their generated content.
 model GeneratedContent {
-  id          String   @id @default(cuid())
-  founderId   String   @map("founder_id")
-  title       String
-  contentType String   @map("content_type") // 'post' | 'email' | 'script' | 'ad' | 'caption'
-  body        String   @db.Text
-  metadata    Json? // platform, tone, model used, etc.
-  status      String   @default("draft") // draft | published | archived
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id             String          @id @default(cuid())
+  founderId      String          @map("founder_id")
+  title          String
+  contentType    String          @map("content_type") // 'post' | 'email' | 'script' | 'ad' | 'caption'
+  seoContentType SeoContentType? @map("seo_content_type") // SYN-475
+  body           String          @db.Text
+  layoutData     Json?           @map("layout_data") // Structured sections (SYN-475)
+  metadata       Json? // platform, tone, model used, etc.
+  status         String          @default("draft") // draft | published | archived
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
 
   founder User @relation(fields: [founderId], references: [id], onDelete: Cascade)
 
