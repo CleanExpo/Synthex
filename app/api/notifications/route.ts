@@ -283,4 +283,102 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * PATCH /api/notifications
+ * Mark one or all notifications as read.
+ * Body: { notificationId: string | 'all', action: 'markRead' }
+ */
+export async function PATCH(request: NextRequest) {
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_WRITE
+  );
+
+  if (!security.allowed) {
+    return APISecurityChecker.createSecureResponse(
+      { error: security.error },
+      401,
+      security.context
+    );
+  }
+
+  try {
+    const body = await request.json();
+    const { notificationId } = z
+      .object({
+        notificationId: z.union([z.string().cuid(), z.literal('all')]),
+      })
+      .parse(body);
+
+    const userId = security.context.userId!;
+
+    if (notificationId === 'all') {
+      await prisma.notification.updateMany({
+        where: { userId, read: false },
+        data: { read: true },
+      });
+    } else {
+      // Verify ownership before marking read
+      const existing = await prisma.notification.findUnique({
+        where: { id: notificationId },
+        select: { userId: true },
+      });
+
+      if (!existing) {
+        return APISecurityChecker.createSecureResponse(
+          { error: 'Notification not found' },
+          404,
+          security.context
+        );
+      }
+
+      if (existing.userId !== userId) {
+        return APISecurityChecker.createSecureResponse(
+          { error: 'Not authorised' },
+          403,
+          security.context
+        );
+      }
+
+      await prisma.notification.update({
+        where: { id: notificationId },
+        data: { read: true },
+      });
+    }
+
+    // Invalidate notifications cache
+    try {
+      const redis = getRedisClient();
+      const cacheKeys = await redis.keys(
+        `synthex:cache:notifications:${userId}:*`
+      );
+      if (cacheKeys.length > 0) await redis.del(cacheKeys);
+    } catch {
+      // Non-fatal
+    }
+
+    return APISecurityChecker.createSecureResponse(
+      { success: true },
+      200,
+      security.context
+    );
+  } catch (error) {
+    logger.error('Notification mark-read error:', error);
+
+    if (error instanceof z.ZodError) {
+      return APISecurityChecker.createSecureResponse(
+        { error: 'Invalid request body', details: error.errors },
+        400,
+        security.context
+      );
+    }
+
+    return APISecurityChecker.createSecureResponse(
+      { error: 'Failed to update notification' },
+      500,
+      security.context
+    );
+  }
+}
+
 export const runtime = 'nodejs';
