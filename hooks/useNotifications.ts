@@ -1,10 +1,10 @@
 /**
  * Unified Notifications Hook
  *
- * @description Real-time notifications with automatic fallback
- * - Tries WebSocket first (best for dedicated servers)
- * - Falls back to SSE (works on serverless like Vercel)
- * - Gracefully degrades to polling if both fail
+ * @description Notifications with SWR-style polling.
+ * Polls /api/notifications at a configurable interval (default 5s).
+ * This is reliable on Vercel Lambda — the previous SSE+in-memory approach
+ * was silently broken because each Lambda invocation has isolated memory.
  *
  * Usage:
  * ```tsx
@@ -80,8 +80,8 @@ export interface UseNotificationsOptions {
   browserNotifications?: boolean;
 
   /**
-   * Polling interval when falling back to polling (ms)
-   * @default 30000
+   * Polling interval for notification refresh (ms)
+   * @default 5000
    */
   pollingInterval?: number;
 
@@ -134,7 +134,7 @@ export function useNotifications(
     minPriority,
     showToasts = true,
     browserNotifications = false,
-    pollingInterval = 30000,
+    pollingInterval = 5000,
     onNotification,
     onConnectionChange,
     onError,
@@ -150,20 +150,9 @@ export function useNotifications(
   const [error, setError] = useState<Error | null>(null);
 
   // Refs
-  const eventSourceRef = useRef<EventSource | null>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isConnectingRef = useRef(false);
   const mountedRef = useRef(true);
-
-  // Build SSE URL with query params
-  const buildSSEUrl = useCallback(() => {
-    const params = new URLSearchParams();
-    if (types?.length) params.set('types', types.join(','));
-    if (minPriority) params.set('minPriority', minPriority);
-
-    const queryString = params.toString();
-    return `/api/notifications/stream${queryString ? `?${queryString}` : ''}`;
-  }, [types, minPriority]);
 
   // Handle incoming notification
   const handleNotification = useCallback(
@@ -217,68 +206,6 @@ export function useNotifications(
     [showToasts, browserNotifications, onNotification]
   );
 
-  // Connect via SSE
-  const connectSSE = useCallback(() => {
-    if (eventSourceRef.current) return;
-    if (typeof window === 'undefined') return;
-
-    try {
-      const url = buildSSEUrl();
-      const eventSource = new EventSource(url, { withCredentials: true });
-      eventSourceRef.current = eventSource;
-
-      eventSource.onopen = () => {
-        if (!mountedRef.current) return;
-        setIsConnected(true);
-        setConnectionMethod('sse');
-        setError(null);
-        onConnectionChange?.('sse', true);
-      };
-
-      eventSource.onmessage = event => {
-        if (!mountedRef.current) return;
-        try {
-          const notification = JSON.parse(event.data) as Notification;
-          // Parse date strings to Date objects
-          notification.createdAt = new Date(notification.createdAt);
-          if (notification.expiresAt) {
-            notification.expiresAt = new Date(notification.expiresAt);
-          }
-          handleNotification(notification);
-        } catch (err) {
-          console.error('Failed to parse SSE notification:', err);
-        }
-      };
-
-      eventSource.onerror = err => {
-        if (!mountedRef.current) return;
-        console.error('SSE error:', err);
-        eventSource.close();
-        eventSourceRef.current = null;
-        setIsConnected(false);
-        onConnectionChange?.('sse', false);
-
-        // Fall back to polling
-        startPolling();
-      };
-
-      // Handle connected event
-      eventSource.addEventListener('connected', () => {
-        // Connection established — no action needed
-      });
-    } catch (err) {
-      console.error('Failed to create SSE connection:', err);
-      setError(err as Error);
-      onError?.(err as Error);
-
-      // Fall back to polling
-      startPolling();
-    }
-    // `startPolling` is defined after this callback (const hoisting limitation) yet has a stable
-    // reference because its own deps are stable — safe to omit to avoid a circular dependency chain.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [buildSSEUrl, handleNotification, onConnectionChange, onError]);
-
   // Fetch notifications via polling
   const fetchNotifications = useCallback(async () => {
     if (!mountedRef.current) return;
@@ -296,9 +223,9 @@ export function useNotifications(
 
       if (!mountedRef.current) return;
 
-      if (data.notifications) {
+      if (data.data) {
         setNotifications(
-          data.notifications.map((n: any) => ({
+          data.data.map((n: any) => ({
             ...n,
             createdAt: new Date(n.createdAt),
             expiresAt: n.expiresAt ? new Date(n.expiresAt) : undefined,
@@ -315,10 +242,11 @@ export function useNotifications(
     }
   }, []);
 
-  // Start polling fallback
+  // Start polling
   const startPolling = useCallback(() => {
     if (pollingIntervalRef.current) return;
 
+    setIsConnected(true);
     setConnectionMethod('polling');
     onConnectionChange?.('polling', true);
 
@@ -337,9 +265,10 @@ export function useNotifications(
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
     }
+    setIsConnected(false);
   }, []);
 
-  // Connect (tries SSE, falls back to polling)
+  // Connect via polling
   const connect = useCallback(() => {
     if (isConnectingRef.current || isConnected) return;
     isConnectingRef.current = true;
@@ -353,24 +282,14 @@ export function useNotifications(
       Notification.requestPermission();
     }
 
-    // Try SSE (WebSocket would be used via useWebSocket hook separately)
-    connectSSE();
+    startPolling();
 
     isConnectingRef.current = false;
-  }, [isConnected, browserNotifications, connectSSE]);
+  }, [isConnected, browserNotifications, startPolling]);
 
   // Disconnect
   const disconnect = useCallback(() => {
-    // Close SSE
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
-    }
-
-    // Stop polling
     stopPolling();
-
-    setIsConnected(false);
     setConnectionMethod('none');
     onConnectionChange?.('none', false);
   }, [stopPolling, onConnectionChange]);

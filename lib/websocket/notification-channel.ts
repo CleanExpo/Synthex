@@ -1,16 +1,16 @@
 /**
  * Notification Channel
  *
- * @description Manages real-time notification delivery:
- * - WebSocket connections for instant delivery
- * - Server-Sent Events (SSE) fallback
- * - Guaranteed delivery with storage backup
- * - Connection pooling and heartbeats
+ * @description Manages notification delivery via Redis-backed storage.
+ * Clients poll /api/notifications at regular intervals to receive notifications.
+ * This is reliable in serverless environments (Vercel Lambda) — the previous
+ * in-memory connection Map was silently broken because each Lambda invocation
+ * has its own isolated memory.
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - REDIS_URL: For pub/sub and storage (SECRET)
+ * - REDIS_URL: For notification storage (SECRET)
  *
- * FAILURE MODE: Falls back to stored notifications
+ * FAILURE MODE: Falls back to graceful no-op with error logging
  */
 
 import { logger } from '@/lib/logger';
@@ -22,7 +22,14 @@ import { getRedisClient } from '@/lib/redis-client';
 
 export interface Notification {
   id: string;
-  type: 'info' | 'success' | 'warning' | 'error' | 'mention' | 'engagement' | 'system';
+  type:
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'error'
+    | 'mention'
+    | 'engagement'
+    | 'system';
   title: string;
   message: string;
   data?: Record<string, unknown>;
@@ -45,119 +52,14 @@ export interface SubscriptionOptions {
   minPriority?: Notification['priority'];
 }
 
-type NotificationHandler = (notification: Notification) => void;
-
-// ============================================================================
-// CONNECTION MANAGER
-// ============================================================================
-
-interface Connection {
-  userId: string;
-  type: 'websocket' | 'sse';
-  handler: NotificationHandler;
-  options: SubscriptionOptions;
-  lastHeartbeat: Date;
-}
-
 // ============================================================================
 // NOTIFICATION CHANNEL
 // ============================================================================
 
 export class NotificationChannel {
-  private static connections: Map<string, Connection[]> = new Map();
-  private static heartbeatInterval: NodeJS.Timeout | null = null;
-  private static readonly HEARTBEAT_INTERVAL = 30000; // 30 seconds
-  private static readonly CONNECTION_TIMEOUT = 60000; // 60 seconds
-
   /**
-   * Subscribe to notifications for a user
-   */
-  static subscribe(
-    userId: string,
-    handler: NotificationHandler,
-    options: SubscriptionOptions = {}
-  ): () => void {
-    const connection: Connection = {
-      userId,
-      type: 'websocket',
-      handler,
-      options,
-      lastHeartbeat: new Date(),
-    };
-
-    // Add to connections
-    const userConnections = this.connections.get(userId) || [];
-    userConnections.push(connection);
-    this.connections.set(userId, userConnections);
-
-    // Start heartbeat if not running
-    this.startHeartbeat();
-
-    logger.debug('Notification subscription added', { userId, options });
-
-    // Return unsubscribe function
-    return () => {
-      const connections = this.connections.get(userId);
-      if (connections) {
-        const index = connections.indexOf(connection);
-        if (index > -1) {
-          connections.splice(index, 1);
-          if (connections.length === 0) {
-            this.connections.delete(userId);
-          }
-        }
-      }
-      logger.debug('Notification subscription removed', { userId });
-    };
-  }
-
-  /**
-   * Create SSE stream for notifications
-   */
-  static createSSEStream(
-    userId: string,
-    options: SubscriptionOptions = {}
-  ): ReadableStream {
-    return new ReadableStream({
-      start: (controller) => {
-        const handler: NotificationHandler = (notification) => {
-          try {
-            const data = `data: ${JSON.stringify(notification)}\n\n`;
-            controller.enqueue(new TextEncoder().encode(data));
-          } catch (error) {
-            logger.warn('SSE send failed', { userId, error });
-          }
-        };
-
-        // Subscribe
-        const unsubscribe = this.subscribe(userId, handler, options);
-
-        // Send initial connection event
-        controller.enqueue(
-          new TextEncoder().encode(`event: connected\ndata: {"userId":"${userId}"}\n\n`)
-        );
-
-        // Set up heartbeat
-        const heartbeat = setInterval(() => {
-          try {
-            controller.enqueue(new TextEncoder().encode(`:heartbeat\n\n`));
-          } catch {
-            clearInterval(heartbeat);
-            unsubscribe();
-          }
-        }, 15000);
-
-        // Cleanup on close
-        return () => {
-          clearInterval(heartbeat);
-          unsubscribe();
-        };
-      },
-    });
-  }
-
-  /**
-   * Send a notification to a user
+   * Send a notification to a user.
+   * Always stores in Redis for client polling — no in-memory delivery attempt.
    */
   static async notify(
     userId: string,
@@ -170,29 +72,6 @@ export class NotificationChannel {
       read: false,
     };
 
-    // Try WebSocket/SSE first
-    const connections = this.connections.get(userId);
-    if (connections && connections.length > 0) {
-      for (const conn of connections) {
-        // Check if notification matches subscription options
-        if (!this.matchesOptions(fullNotification, conn.options)) {
-          continue;
-        }
-
-        try {
-          conn.handler(fullNotification);
-          return {
-            delivered: true,
-            method: conn.type,
-            timestamp: new Date(),
-          };
-        } catch (error) {
-          logger.warn('Direct delivery failed', { userId, error });
-        }
-      }
-    }
-
-    // Store for later retrieval
     await this.storeNotification(userId, fullNotification);
 
     return {
@@ -212,7 +91,7 @@ export class NotificationChannel {
     const results = new Map<string, DeliveryStatus>();
 
     await Promise.all(
-      userIds.map(async (userId) => {
+      userIds.map(async userId => {
         const status = await this.notify(userId, notification);
         results.set(userId, status);
       })
@@ -222,7 +101,7 @@ export class NotificationChannel {
   }
 
   /**
-   * Store notification for later retrieval
+   * Store notification in Redis for client polling retrieval
    */
   private static async storeNotification(
     userId: string,
@@ -234,7 +113,9 @@ export class NotificationChannel {
 
       // Add to list
       const existing = await redis.get(key);
-      const notifications: Notification[] = existing ? JSON.parse(existing) : [];
+      const notifications: Notification[] = existing
+        ? JSON.parse(existing)
+        : [];
 
       notifications.unshift(notification);
 
@@ -245,7 +126,10 @@ export class NotificationChannel {
 
       await redis.set(key, JSON.stringify(notifications), 86400 * 7); // 7 days TTL
 
-      logger.debug('Notification stored', { userId, notificationId: notification.id });
+      logger.debug('Notification stored', {
+        userId,
+        notificationId: notification.id,
+      });
     } catch (error) {
       logger.error('Failed to store notification', { userId, error });
     }
@@ -267,12 +151,10 @@ export class NotificationChannel {
 
       let notifications: Notification[] = JSON.parse(data);
 
-      // Filter unread only
       if (options.unreadOnly) {
         notifications = notifications.filter(n => !n.read);
       }
 
-      // Apply limit
       if (options.limit) {
         notifications = notifications.slice(0, options.limit);
       }
@@ -313,7 +195,11 @@ export class NotificationChannel {
 
       await redis.set(key, JSON.stringify(notifications), 86400 * 7);
     } catch (error) {
-      logger.error('Failed to mark notification as read', { userId, notificationId, error });
+      logger.error('Failed to mark notification as read', {
+        userId,
+        notificationId,
+        error,
+      });
     }
   }
 
@@ -321,110 +207,10 @@ export class NotificationChannel {
    * Get unread count for a user
    */
   static async getUnreadCount(userId: string): Promise<number> {
-    const notifications = await this.getNotifications(userId, { unreadOnly: true });
+    const notifications = await this.getNotifications(userId, {
+      unreadOnly: true,
+    });
     return notifications.length;
-  }
-
-  /**
-   * Check if notification matches subscription options
-   */
-  private static matchesOptions(
-    notification: Notification,
-    options: SubscriptionOptions
-  ): boolean {
-    // Check type filter
-    if (options.types && options.types.length > 0) {
-      if (!options.types.includes(notification.type)) {
-        return false;
-      }
-    }
-
-    // Check priority filter
-    if (options.minPriority) {
-      const priorityOrder: Notification['priority'][] = ['low', 'normal', 'high', 'urgent'];
-      const minIndex = priorityOrder.indexOf(options.minPriority);
-      const notifIndex = priorityOrder.indexOf(notification.priority);
-      if (notifIndex < minIndex) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Start heartbeat check
-   */
-  private static startHeartbeat(): void {
-    if (this.heartbeatInterval) return;
-
-    this.heartbeatInterval = setInterval(() => {
-      const now = Date.now();
-
-      for (const [userId, connections] of this.connections) {
-        // Filter out stale connections
-        const activeConnections = connections.filter(conn => {
-          const age = now - conn.lastHeartbeat.getTime();
-          return age < this.CONNECTION_TIMEOUT;
-        });
-
-        if (activeConnections.length === 0) {
-          this.connections.delete(userId);
-        } else if (activeConnections.length !== connections.length) {
-          this.connections.set(userId, activeConnections);
-        }
-      }
-
-      // Stop heartbeat if no connections
-      if (this.connections.size === 0) {
-        this.stopHeartbeat();
-      }
-    }, this.HEARTBEAT_INTERVAL);
-  }
-
-  /**
-   * Stop heartbeat check
-   */
-  private static stopHeartbeat(): void {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-      this.heartbeatInterval = null;
-    }
-  }
-
-  /**
-   * Update connection heartbeat
-   */
-  static heartbeat(userId: string): void {
-    const connections = this.connections.get(userId);
-    if (connections) {
-      for (const conn of connections) {
-        conn.lastHeartbeat = new Date();
-      }
-    }
-  }
-
-  /**
-   * Get connection count for a user
-   */
-  static getConnectionCount(userId?: string): number {
-    if (userId) {
-      return this.connections.get(userId)?.length || 0;
-    }
-
-    let total = 0;
-    for (const connections of this.connections.values()) {
-      total += connections.length;
-    }
-    return total;
-  }
-
-  /**
-   * Clear all connections (for cleanup/testing)
-   */
-  static clearAll(): void {
-    this.connections.clear();
-    this.stopHeartbeat();
   }
 }
 
@@ -439,7 +225,9 @@ export async function sendNotification(
   userId: string,
   title: string,
   message: string,
-  options?: Partial<Omit<Notification, 'id' | 'createdAt' | 'read' | 'title' | 'message'>>
+  options?: Partial<
+    Omit<Notification, 'id' | 'createdAt' | 'read' | 'title' | 'message'>
+  >
 ): Promise<DeliveryStatus> {
   return NotificationChannel.notify(userId, {
     type: options?.type || 'info',
