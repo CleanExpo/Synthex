@@ -126,7 +126,14 @@ export function RewriteModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-centre justify-centre z-50 p-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      onKeyDown={e => {
+        if (e.key === 'Escape') onReject();
+      }}
+      className="fixed inset-0 bg-black/60 flex items-centre justify-centre z-50 p-4"
+    >
       <div className="bg-[#111111] border border-orange-500/10 rounded-xl p-6 w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl">
         {/* Header */}
         <div className="flex items-centre justify-between mb-4 flex-shrink-0">

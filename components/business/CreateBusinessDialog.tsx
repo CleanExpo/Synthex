@@ -73,7 +73,14 @@ export function CreateBusinessDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div
+      role="dialog"
+      aria-modal="true"
+      onKeyDown={e => {
+        if (e.key === 'Escape') handleClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+    >
       <Card className="w-full max-w-md bg-gray-950 border border-orange-500/10">
         <CardHeader className="border-b border-orange-500/10">
           <div className="flex items-center justify-between">

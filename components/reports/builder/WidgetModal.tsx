@@ -4,7 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { ReportWidget } from './types';
 import { METRIC_DATA_SOURCES } from './types';
 
@@ -26,26 +32,41 @@ interface WidgetModalProps {
 }
 
 export function WidgetModal({
-  open, onClose, editingWidget,
-  widgetType, setWidgetType, widgetTitle, setWidgetTitle,
-  widgetDataSource, setWidgetDataSource, widgetSize, setWidgetSize,
-  onAdd, onUpdate, onResetForm,
+  open,
+  onClose,
+  editingWidget,
+  widgetType,
+  setWidgetType,
+  widgetTitle,
+  setWidgetTitle,
+  widgetDataSource,
+  setWidgetDataSource,
+  widgetSize,
+  setWidgetSize,
+  onAdd,
+  onUpdate,
+  onResetForm,
 }: WidgetModalProps) {
   return (
     <AnimatePresence>
       {open && (
         <motion.div
+          role="dialog"
+          aria-modal="true"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
           onClick={onClose}
+          onKeyDown={e => {
+            if (e.key === 'Escape') onClose();
+          }}
         >
           <motion.div
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.9 }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4"
           >
             <h3 className="text-lg font-semibold text-white mb-4">
@@ -73,7 +94,7 @@ export function WidgetModal({
                 <Label>Title</Label>
                 <Input
                   value={widgetTitle}
-                  onChange={(e) => setWidgetTitle(e.target.value)}
+                  onChange={e => setWidgetTitle(e.target.value)}
                   placeholder="Widget title..."
                   className="mt-1 bg-white/5 border-white/10"
                 />
@@ -81,7 +102,10 @@ export function WidgetModal({
 
               <div>
                 <Label>Data Source</Label>
-                <Select value={widgetDataSource} onValueChange={setWidgetDataSource}>
+                <Select
+                  value={widgetDataSource}
+                  onValueChange={setWidgetDataSource}
+                >
                   <SelectTrigger className="mt-1 bg-white/5 border-white/10">
                     <SelectValue placeholder="Select data source" />
                   </SelectTrigger>

@@ -4,7 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Clock } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -22,35 +28,50 @@ interface ScheduleModalProps {
 }
 
 export function ScheduleModal({
-  open, onClose,
-  scheduleFrequency, setScheduleFrequency,
-  scheduleTime, setScheduleTime,
-  scheduleRecipients, setScheduleRecipients,
-  scheduleFormat, setScheduleFormat,
+  open,
+  onClose,
+  scheduleFrequency,
+  setScheduleFrequency,
+  scheduleTime,
+  setScheduleTime,
+  scheduleRecipients,
+  setScheduleRecipients,
+  scheduleFormat,
+  setScheduleFormat,
 }: ScheduleModalProps) {
   return (
     <AnimatePresence>
       {open && (
         <motion.div
+          role="dialog"
+          aria-modal="true"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
           onClick={onClose}
+          onKeyDown={e => {
+            if (e.key === 'Escape') onClose();
+          }}
         >
           <motion.div
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.9 }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4"
           >
-            <h3 className="text-lg font-semibold text-white mb-4">Schedule Report</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Schedule Report
+            </h3>
 
             <div className="space-y-4">
               <div>
                 <Label>Frequency</Label>
-                <Select value={scheduleFrequency} onValueChange={setScheduleFrequency}>
+                <Select
+                  value={scheduleFrequency}
+                  onValueChange={setScheduleFrequency}
+                >
                   <SelectTrigger className="mt-1 bg-white/5 border-white/10">
                     <SelectValue />
                   </SelectTrigger>
@@ -67,7 +88,7 @@ export function ScheduleModal({
                 <Input
                   type="time"
                   value={scheduleTime}
-                  onChange={(e) => setScheduleTime(e.target.value)}
+                  onChange={e => setScheduleTime(e.target.value)}
                   className="mt-1 bg-white/5 border-white/10"
                 />
               </div>
@@ -76,7 +97,7 @@ export function ScheduleModal({
                 <Label>Recipients (comma-separated emails)</Label>
                 <Input
                   value={scheduleRecipients}
-                  onChange={(e) => setScheduleRecipients(e.target.value)}
+                  onChange={e => setScheduleRecipients(e.target.value)}
                   placeholder="email1@example.com, email2@example.com"
                   className="mt-1 bg-white/5 border-white/10"
                 />
@@ -84,7 +105,10 @@ export function ScheduleModal({
 
               <div>
                 <Label>Format</Label>
-                <Select value={scheduleFormat} onValueChange={setScheduleFormat}>
+                <Select
+                  value={scheduleFormat}
+                  onValueChange={setScheduleFormat}
+                >
                   <SelectTrigger className="mt-1 bg-white/5 border-white/10">
                     <SelectValue />
                   </SelectTrigger>

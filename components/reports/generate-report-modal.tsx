@@ -44,7 +44,14 @@ export function GenerateReportModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div
+      role="dialog"
+      aria-modal="true"
+      onKeyDown={e => {
+        if (e.key === 'Escape') onClose();
+      }}
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    >
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Generate New Report</CardTitle>
