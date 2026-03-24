@@ -107,95 +107,90 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    // Get member statistics
-    const totalMembers = await prisma.user.count({
-      where: { organizationId },
-    });
-
-    const membersJoinedThisPeriod = await prisma.user.count({
-      where: {
-        organizationId,
-        createdAt: { gte: startDate },
-      },
-    });
-
-    const activeMembers = await prisma.user.count({
-      where: {
-        organizationId,
-        lastLogin: { gte: startDate },
-      },
-    });
-
-    const pendingInvitations = await prisma.teamInvitation.count({
-      where: {
-        organizationId,
-        status: 'sent',
-      },
-    });
-
-    // Get campaign statistics
-    const memberIds = await prisma.user
-      .findMany({
+    // Batch 1: all member-level queries are independent — run in parallel
+    const [
+      totalMembers,
+      membersJoinedThisPeriod,
+      activeMembers,
+      pendingInvitations,
+      memberIdsRaw,
+    ] = await Promise.all([
+      prisma.user.count({ where: { organizationId } }),
+      prisma.user.count({
+        where: { organizationId, createdAt: { gte: startDate } },
+      }),
+      prisma.user.count({
+        where: { organizationId, lastLogin: { gte: startDate } },
+      }),
+      prisma.teamInvitation.count({
+        where: { organizationId, status: 'sent' },
+      }),
+      prisma.user.findMany({
         where: { organizationId },
         select: { id: true },
-      })
-      .then(users => users.map(u => u.id));
+      }),
+    ]);
+    const memberIds = memberIdsRaw.map(u => u.id);
 
-    const totalCampaigns = await prisma.campaign.count({
-      where: { userId: { in: memberIds } },
-    });
-
-    const activeCampaigns = await prisma.campaign.count({
-      where: {
-        userId: { in: memberIds },
-        status: 'active',
-      },
-    });
-
-    const campaignsThisPeriod = await prisma.campaign.count({
-      where: {
-        userId: { in: memberIds },
-        createdAt: { gte: startDate },
-      },
-    });
-
-    // Get content statistics
-    const campaignIds = await prisma.campaign
-      .findMany({
+    // Batch 2: campaign-level queries depend on memberIds — run in parallel
+    const [
+      totalCampaigns,
+      activeCampaigns,
+      campaignsThisPeriod,
+      campaignIdsRaw,
+    ] = await Promise.all([
+      prisma.campaign.count({ where: { userId: { in: memberIds } } }),
+      prisma.campaign.count({
+        where: { userId: { in: memberIds }, status: 'active' },
+      }),
+      prisma.campaign.count({
+        where: { userId: { in: memberIds }, createdAt: { gte: startDate } },
+      }),
+      prisma.campaign.findMany({
         where: { userId: { in: memberIds } },
         select: { id: true },
-      })
-      .then(campaigns => campaigns.map(c => c.id));
+      }),
+    ]);
+    const campaignIds = campaignIdsRaw.map(c => c.id);
 
-    const totalContent = await prisma.post.count({
-      where: { campaignId: { in: campaignIds } },
-    });
-
-    const contentThisPeriod = await prisma.post.count({
-      where: {
-        campaignId: { in: campaignIds },
-        createdAt: { gte: startDate },
-      },
-    });
-
-    const publishedContent = await prisma.post.count({
-      where: {
-        campaignId: { in: campaignIds },
-        status: 'published',
-      },
-    });
-
-    // Get reach/engagement metrics from published posts
-    const postsWithAnalytics = await prisma.post.findMany({
-      where: {
-        campaignId: { in: campaignIds },
-        status: 'published',
-        publishedAt: { gte: startDate },
-      },
-      select: {
-        analytics: true,
-      },
-    });
+    // Batch 3: post-level queries depend on campaignIds — run in parallel
+    const [
+      totalContent,
+      contentThisPeriod,
+      publishedContent,
+      postsWithAnalytics,
+      contentByPlatform,
+      memberContributions,
+    ] = await Promise.all([
+      prisma.post.count({ where: { campaignId: { in: campaignIds } } }),
+      prisma.post.count({
+        where: {
+          campaignId: { in: campaignIds },
+          createdAt: { gte: startDate },
+        },
+      }),
+      prisma.post.count({
+        where: { campaignId: { in: campaignIds }, status: 'published' },
+      }),
+      prisma.post.findMany({
+        where: {
+          campaignId: { in: campaignIds },
+          status: 'published',
+          publishedAt: { gte: startDate },
+        },
+        select: { analytics: true },
+      }),
+      prisma.post.groupBy({
+        by: ['platform'],
+        where: { campaignId: { in: campaignIds } },
+        _count: { id: true },
+      }),
+      prisma.campaign.groupBy({
+        by: ['userId'],
+        where: { userId: { in: memberIds }, createdAt: { gte: startDate } },
+        _count: { id: true },
+      }),
+    ]);
 
     let totalReach = 0;
     let totalEngagement = 0;
@@ -211,27 +206,10 @@ export async function GET(request: NextRequest) {
         (analytics.shares || 0);
     }
 
-    // Get content by platform
-    const contentByPlatform = await prisma.post.groupBy({
-      by: ['platform'],
-      where: { campaignId: { in: campaignIds } },
-      _count: { id: true },
-    });
-
     const platformBreakdown = contentByPlatform.map(p => ({
       platform: p.platform,
       count: p._count.id,
     }));
-
-    // Calculate member contribution stats
-    const memberContributions = await prisma.campaign.groupBy({
-      by: ['userId'],
-      where: {
-        userId: { in: memberIds },
-        createdAt: { gte: startDate },
-      },
-      _count: { id: true },
-    });
 
     const topContributors = await Promise.all(
       memberContributions

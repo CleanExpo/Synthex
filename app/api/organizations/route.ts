@@ -217,33 +217,33 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // Get total count
-    const total = await prisma.organization.count({ where });
-
-    // Get organizations
-    const organizations = await prisma.organization.findMany({
-      where,
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        plan: true,
-        status: true,
-        domain: true,
-        customDomain: true,
-        createdAt: true,
-        updatedAt: true,
-        _count: {
-          select: {
-            users: true,
-            campaigns: true,
+    // count and findMany are independent — run in parallel
+    const [total, organizations] = await Promise.all([
+      prisma.organization.count({ where }),
+      prisma.organization.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          plan: true,
+          status: true,
+          domain: true,
+          customDomain: true,
+          createdAt: true,
+          updatedAt: true,
+          _count: {
+            select: {
+              users: true,
+              campaigns: true,
+            },
           },
         },
-      },
-    });
+      }),
+    ]);
 
     return ResponseOptimizer.createResponse(
       {

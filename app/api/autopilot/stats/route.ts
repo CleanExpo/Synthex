@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Aggregate run stats
-  const [runAgg, lastRun, config] = await Promise.all([
+  // Aggregate run stats — all four queries are independent, run in parallel
+  const [runAgg, lastRun, config, completedRuns] = await Promise.all([
     prisma.autopilotRun.aggregate({
       where: { organizationId },
       _count: true,
@@ -75,12 +75,12 @@ export async function GET(request: NextRequest) {
         enabledPlatforms: true,
       },
     }),
+    prisma.autopilotRun.count({
+      where: { organizationId, status: 'completed' },
+    }),
   ]);
 
   const totalRuns = runAgg._count;
-  const completedRuns = await prisma.autopilotRun.count({
-    where: { organizationId, status: 'completed' },
-  });
 
   return NextResponse.json({
     totalRuns,
