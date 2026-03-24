@@ -34,6 +34,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { StepProgressV2 } from '@/components/onboarding';
+import { HelpVideo } from '@/components/ui/HelpVideo';
 import {
   useExtensionHelper,
   ExtensionStatusBanner,
@@ -354,6 +355,7 @@ function ConnectPageInner() {
             {connectedCount} platform{connectedCount !== 1 ? 's' : ''} connected
           </p>
         )}
+        <HelpVideo videoId="onboarding-connect-social" />
       </div>
 
       {/* Chrome Extension — active sessions banner */}

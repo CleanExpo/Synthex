@@ -36,6 +36,7 @@ import {
 import type { ComponentType, SVGProps } from 'react';
 import { useActivationChecklist } from '@/hooks/useActivationChecklist';
 import type { ChecklistStatus } from '@/app/api/onboarding/checklist/route';
+import { HelpVideo } from '@/components/ui/HelpVideo';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -52,6 +53,7 @@ interface ChecklistStep {
   href: string;
   icon: IconComponent;
   completed: boolean;
+  videoId?: string;
   toastOnComplete?: {
     message: string;
     description: string;
@@ -176,6 +178,7 @@ export function GetStartedChecklist({ className }: { className?: string }) {
         href: '/dashboard/platforms',
         icon: Link2,
         completed: status.social_connection,
+        videoId: 'onboarding-connect-social',
       },
       {
         id: 'gmb_connection',
@@ -185,6 +188,7 @@ export function GetStartedChecklist({ className }: { className?: string }) {
         href: '/dashboard/platforms',
         icon: MapPin,
         completed: status.gmb_connection,
+        videoId: 'onboarding-connect-gmb',
       },
       {
         id: 'llm_integration',
@@ -194,6 +198,7 @@ export function GetStartedChecklist({ className }: { className?: string }) {
         href: '/dashboard/settings/integrations',
         icon: BrainCircuit,
         completed: status.llm_integration,
+        videoId: 'onboarding-setup-ai',
       },
       {
         id: 'first_post',
@@ -312,6 +317,11 @@ export function GetStartedChecklist({ className }: { className?: string }) {
               <p className="text-[10px] text-white/50 mt-0.5 hidden sm:block">
                 {step.description}
               </p>
+              {!step.completed && step.videoId && (
+                <div className="mt-1.5" onClick={e => e.preventDefault()}>
+                  <HelpVideo videoId={step.videoId} />
+                </div>
+              )}
             </div>
 
             {!step.completed && (

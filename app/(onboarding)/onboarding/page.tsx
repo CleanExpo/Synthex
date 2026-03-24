@@ -30,6 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { StepProgressV2 } from '@/components/onboarding';
+import { HelpVideo } from '@/components/ui/HelpVideo';
 
 // ============================================================================
 // CONSTANTS
@@ -273,6 +274,12 @@ export default function OnboardingPage() {
           Enter your website URL and we&apos;ll set up everything automatically.
           Our AI analyses your business in about 20 seconds.
         </p>
+        {/* Tutorial shortcuts — preview the upcoming setup steps */}
+        <div className="flex items-center justify-center gap-3 flex-wrap pt-1">
+          <HelpVideo videoId="onboarding-connect-social" />
+          <HelpVideo videoId="onboarding-connect-gmb" />
+          <HelpVideo videoId="onboarding-setup-ai" />
+        </div>
       </div>
 
       {/* Form or Pipeline Progress */}

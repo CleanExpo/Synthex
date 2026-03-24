@@ -20,6 +20,7 @@ import {
 import { SynthexLogo } from '@/components/landing/synthex-logo';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { HelpVideo } from '@/components/ui/HelpVideo';
 
 /** Shape of per-field validation details returned by the signup API */
 interface ValidationDetail {
@@ -364,9 +365,12 @@ export default function SignupPage() {
         </div>
 
         <div className="bg-[#0a0a12] border-[0.5px] border-white/[0.06] rounded-sm p-8">
-          <h1 className="text-lg font-light text-white mb-1">
-            Create your account
-          </h1>
+          <div className="flex items-center justify-between mb-1">
+            <h1 className="text-lg font-light text-white">
+              Create your account
+            </h1>
+            <HelpVideo videoId="how-to-sign-up" />
+          </div>
           <p className="text-xs text-white/40 mb-6">
             {inviteOnly
               ? 'Enter your invite code to get started'

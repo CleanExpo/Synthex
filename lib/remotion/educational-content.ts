@@ -3100,4 +3100,195 @@ Claim now: https://synthex.social
     width: 1920,
     height: 1080,
   },
+
+  // ── Auth + Onboarding how-tos (UNI-1639) ────────────────────────────────
+
+  {
+    id: 'how-to-sign-up',
+    title: 'How to Create Your Synthex Account',
+    description:
+      'Learn how to create your Synthex account in under two minutes — from the sign-up form to the activation checklist.\n\n#Synthex #GettingStarted #AccountCreation',
+    tags: ['signup', 'getting started', 'account creation', 'Synthex'],
+    compositionId: 'HowToVideo',
+    voiceoverScript:
+      'Creating your Synthex account takes under two minutes. Head to synthex dot social ' +
+      'and click Get Started Free. Enter your business name, email address, and a strong ' +
+      "password — then click Create Account. You'll receive a verification email immediately. " +
+      "Open it and click Verify Email Address. Once verified, you'll be taken straight into " +
+      'the five-step activation checklist. This checklist connects your platforms and unlocks ' +
+      'the full automation engine. Complete each step in order — starting with your URL health ' +
+      'check, then connecting your social media accounts. Welcome to Synthex.',
+    durationInFrames: 1200,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
+
+  {
+    id: 'how-to-sign-in',
+    title: 'How to Sign In to Synthex',
+    description:
+      'Signing in to Synthex is simple — email and password, or one-click Google login.\n\n#Synthex #SignIn #GettingStarted',
+    tags: ['login', 'sign in', 'getting started', 'Synthex'],
+    compositionId: 'HowToVideo',
+    voiceoverScript:
+      'Signing in to Synthex is simple. Visit synthex dot social and click Sign In. ' +
+      'Enter your email address and password, then click Sign In. You can also sign in ' +
+      "with Google for one-click access. If you've forgotten your password, click Forgot " +
+      "Password and we'll email you a reset link. Once signed in, you'll land directly " +
+      'on your dashboard where all your campaigns, analytics, and tools are waiting.',
+    durationInFrames: 600,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
+
+  {
+    id: 'onboarding-connect-social',
+    title: 'Connecting Your Social Media Accounts',
+    description:
+      'Step 2 of activation: connect Instagram, Facebook, LinkedIn, and your other platforms to unlock AI-powered publishing.\n\n#SocialMedia #Onboarding #Synthex',
+    tags: [
+      'social media',
+      'connect accounts',
+      'onboarding',
+      'Instagram',
+      'LinkedIn',
+      'Facebook',
+    ],
+    compositionId: 'HowToVideo',
+    voiceoverScript:
+      'Connecting your social media accounts is Step 2 of your activation checklist. ' +
+      'From the dashboard, navigate to Integrations and select the platform you want to connect. ' +
+      'Synthex supports Instagram, Facebook, LinkedIn, X, TikTok, YouTube, Pinterest, and Google ' +
+      "Business Profile. Click Connect, authorise Synthex in the popup, and you're done. " +
+      'Each connected platform unlocks direct posting, engagement tracking, and AI-powered ' +
+      'scheduling. Connect all your active platforms for maximum automation impact. ' +
+      'Once connected, your accounts will appear in the Integrations panel with a green status indicator.',
+    durationInFrames: 1200,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
+
+  {
+    id: 'onboarding-connect-gmb',
+    title: 'Connecting Google Business Profile',
+    description:
+      'Step 3 of activation: connect your Google Business Profile to sync reviews, insights, and local search data.\n\n#GoogleBusiness #LocalSEO #Onboarding #Synthex',
+    tags: ['Google Business Profile', 'GMB', 'local SEO', 'onboarding'],
+    compositionId: 'HowToVideo',
+    voiceoverScript:
+      'Your Google Business Profile is Step 3 of activation. Navigate to Google Business ' +
+      'in your dashboard sidebar. Click Connect Google Business Profile and sign in with ' +
+      'the Google account that manages your listing. Once connected, Synthex automatically ' +
+      'syncs your reviews, insights, and location data. You can respond to reviews with ' +
+      'AI-generated replies, post directly to your listing, and track how customers find ' +
+      'you in local search. The NAP consistency audit also runs automatically, alerting you ' +
+      'if your name, address, or phone number differs across platforms. This is essential ' +
+      'for local search ranking.',
+    durationInFrames: 1200,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
+
+  {
+    id: 'onboarding-setup-ai',
+    title: 'Setting Up Your AI Integration',
+    description:
+      'Step 4 of activation: connect your AI provider (OpenAI, Anthropic, Gemini, or OpenRouter) to unlock the full Content Studio.\n\n#AI #ContentGeneration #Onboarding #Synthex',
+    tags: ['AI', 'LLM', 'API key', 'onboarding', 'content generation'],
+    compositionId: 'HowToVideo',
+    voiceoverScript:
+      'Step 4 of activation is connecting your AI provider. Navigate to Settings, then ' +
+      'API Keys, and select your preferred AI provider — Synthex supports OpenAI, Anthropic ' +
+      'Claude, Google Gemini, and OpenRouter. Enter your API key and click Save. ' +
+      "If you prefer not to use your own key, Synthex's built-in AI engine activates " +
+      'automatically on any paid plan. Once your AI is connected, the Content Studio ' +
+      'unlocks the full generation toolkit — long-form posts, short reels, campaign briefs, ' +
+      'and competitor analysis all become available. This is the engine that powers ' +
+      'autonomous content creation.',
+    durationInFrames: 1200,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
+
+  {
+    id: 'use-case-content-creation',
+    title: 'Creating AI-Powered Social Media Content | Synthex',
+    description:
+      'See how Synthex turns a single prompt into a full week of platform-tailored social media content in seconds.\n\n#ContentCreation #AIWriting #SocialMedia #Synthex',
+    tags: ['content creation', 'AI writing', 'social media posts', 'use case'],
+    compositionId: 'ExplainerVideo',
+    voiceoverScript:
+      "Synthex's Content Studio turns a simple prompt into a full week of social media " +
+      'content in seconds. Navigate to Content, then click Generate. Describe your topic ' +
+      'or paste a URL, choose your platforms, and select your tone. Synthex generates ' +
+      "multiple variations tailored to each platform's format — a LinkedIn article, " +
+      'an Instagram caption with hashtags, a punchy X post, and a Facebook update — ' +
+      'all from one brief. Review, edit, and either schedule or publish immediately. ' +
+      'The AI learns your brand voice over time, getting sharper with every piece of ' +
+      'content you approve.',
+    durationInFrames: 900,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
+
+  {
+    id: 'use-case-review-management',
+    title: 'Managing Google Reviews with AI | Synthex',
+    description:
+      'Learn how Synthex automates Google review responses with AI-generated, on-brand replies — and helps you collect new testimonials.\n\n#Reviews #ReputationManagement #GoogleReviews #Synthex',
+    tags: [
+      'reviews',
+      'Google reviews',
+      'reputation management',
+      'AI replies',
+      'use case',
+    ],
+    compositionId: 'ExplainerVideo',
+    voiceoverScript:
+      'Responding to every Google review builds trust and improves your local search ' +
+      "ranking — but it's time-consuming. Synthex automates this with AI-generated reply " +
+      "suggestions tailored to each review's tone. Navigate to Google Business, then " +
+      'Reviews. For each unanswered review, click AI Suggest and Synthex drafts a ' +
+      'personalised, on-brand response in seconds. Review it, adjust if needed, and ' +
+      'click Send. You can also collect new testimonials by generating a shareable link ' +
+      '— customers submit text, photos, or video, and approved testimonials post directly ' +
+      'to your Google listing as a Google Post.',
+    durationInFrames: 900,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
+
+  {
+    id: 'use-case-campaign-scheduling',
+    title: 'Scheduling a Month of Content in Minutes | Synthex',
+    description:
+      'Discover how the Synthex Campaign Planner generates a 30-day content calendar across all your platforms — then schedules everything automatically.\n\n#Scheduling #ContentCalendar #Automation #Synthex',
+    tags: [
+      'scheduling',
+      'content calendar',
+      'campaign',
+      'automation',
+      'use case',
+    ],
+    compositionId: 'ExplainerVideo',
+    voiceoverScript:
+      'Planning a month of content used to take days. With Synthex, it takes minutes. ' +
+      'Open Campaign Planner, enter your campaign goal and target audience, and Synthex ' +
+      'generates a 30-day content calendar — one post per day, across all your connected ' +
+      'platforms, with themes, hooks, and calls to action pre-planned. Review the calendar, ' +
+      'tweak any posts you want to customise, then click Schedule All. Every post queues ' +
+      'automatically at the optimal posting time for each platform. Your content runs ' +
+      'on autopilot while you focus on the work that actually needs you.',
+    durationInFrames: 900,
+    fps: 30,
+    width: 1920,
+    height: 1080,
+  },
 ];

@@ -16,6 +16,7 @@ import {
 import { SynthexLogo } from '@/components/landing/synthex-logo';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { HelpVideo } from '@/components/ui/HelpVideo';
 
 /** Map provider keys to human-readable display names */
 const PROVIDER_DISPLAY_NAMES: Record<string, string> = {
@@ -236,7 +237,10 @@ function LoginContent() {
         </div>
 
         <div className="bg-[#0a0a12] border-[0.5px] border-white/[0.06] rounded-sm p-8">
-          <h1 className="text-lg font-light text-white mb-1">Welcome back</h1>
+          <div className="flex items-center justify-between mb-1">
+            <h1 className="text-lg font-light text-white">Welcome back</h1>
+            <HelpVideo videoId="how-to-sign-in" />
+          </div>
           <p className="text-xs text-white/40 mb-6">
             Sign in to your account to continue
           </p>
