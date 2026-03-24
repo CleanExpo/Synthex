@@ -83,13 +83,20 @@ export async function GET(request: NextRequest) {
 const CreatePostSchema = z.object({
   locationId: z.string().min(1),
   summary: z.string().min(1).max(1500),
+  topicType: z
+    .enum(['STANDARD', 'EVENT', 'OFFER'])
+    .optional()
+    .default('STANDARD'),
   callToAction: z
     .object({
       actionType: z.string(),
       url: z.string().url().optional(),
     })
     .optional(),
-  topicType: z.string().optional(),
+  // EVENT fields
+  eventTitle: z.string().max(58).optional(),
+  eventStartDate: z.string().optional(), // ISO date string
+  eventEndDate: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -143,10 +150,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const {
+      summary,
+      topicType,
+      callToAction,
+      eventTitle,
+      eventStartDate,
+      eventEndDate,
+    } = parsed.data;
+
+    // Build event object for EVENT type
+    let event:
+      | {
+          title: string;
+          schedule: {
+            startDate: { year: number; month: number; day: number };
+            endDate: { year: number; month: number; day: number };
+          };
+        }
+      | undefined;
+    if (topicType === 'EVENT' && eventTitle && eventStartDate && eventEndDate) {
+      const parseDate = (iso: string) => {
+        const d = new Date(iso);
+        return {
+          year: d.getUTCFullYear(),
+          month: d.getUTCMonth() + 1,
+          day: d.getUTCDate(),
+        };
+      };
+      event = {
+        title: eventTitle,
+        schedule: {
+          startDate: parseDate(eventStartDate),
+          endDate: parseDate(eventEndDate),
+        },
+      };
+    }
+
     const post = await createPost(connectionId, location.locationId, {
-      summary: parsed.data.summary,
-      callToAction: parsed.data.callToAction,
-      topicType: parsed.data.topicType || 'STANDARD',
+      summary,
+      callToAction,
+      topicType: topicType || 'STANDARD',
+      ...(event ? { event } : {}),
     });
 
     return NextResponse.json({ success: true, post }, { status: 201 });

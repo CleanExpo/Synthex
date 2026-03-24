@@ -609,6 +609,43 @@ export async function listPhotos(
   }));
 }
 
+/**
+ * Upload a photo to a GBP location via a public source URL (SYN-481).
+ * The image must already be hosted at a publicly accessible HTTPS URL.
+ */
+export async function uploadPhoto(
+  connectionId: string,
+  locationName: string,
+  sourceUrl: string,
+  category: string = 'ADDITIONAL'
+): Promise<{ name: string; mediaFormat: string; sourceUrl: string }> {
+  const accessToken = await getOAuthAccessToken(connectionId);
+
+  const response = await fetch(
+    `https://mybusiness.googleapis.com/v4/${locationName}/media`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        mediaFormat: 'PHOTO',
+        sourceUrl,
+        category,
+      }),
+      signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`GBP uploadPhoto failed (${response.status}): ${error}`);
+  }
+
+  return response.json();
+}
+
 // ============================================================================
 // Categories
 // ============================================================================
