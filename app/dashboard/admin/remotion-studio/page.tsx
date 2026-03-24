@@ -35,7 +35,7 @@ import {
 import { Video, Play, Plus, Trash2 } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
-import { COMPOSITION_REGISTRY } from '@/lib/remotion/Root';
+import { COMPOSITION_REGISTRY } from '@/lib/remotion/registry';
 import { SocialReel } from '@/lib/remotion/compositions/SocialReel';
 import { ExplainerVideo } from '@/lib/remotion/compositions/ExplainerVideo';
 import type { BaseCompositionProps, SceneProps } from '@/lib/remotion/types';

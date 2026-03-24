@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdmin } from '@/lib/admin/verify-admin';
-import { COMPOSITION_REGISTRY } from '@/lib/remotion/Root';
+import { COMPOSITION_REGISTRY } from '@/lib/remotion/registry';
 
 export const runtime = 'nodejs';
 
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({
-    compositions: COMPOSITION_REGISTRY.map((comp) => ({
+    compositions: COMPOSITION_REGISTRY.map(comp => ({
       id: comp.id,
       name: comp.name,
       description: comp.description,
@@ -61,7 +61,8 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(
     {
       status: 'preview-only',
-      message: 'Server-side rendering is not yet configured. Use the Remotion Studio page (/dashboard/admin/remotion-studio) for client-side preview.',
+      message:
+        'Server-side rendering is not yet configured. Use the Remotion Studio page (/dashboard/admin/remotion-studio) for client-side preview.',
       supportedActions: ['preview'],
       futureActions: ['render-mp4', 'render-gif', 'lambda-render'],
     },
