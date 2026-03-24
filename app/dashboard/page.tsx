@@ -56,6 +56,14 @@ const ContentOpportunitiesWidget = dynamic(
   { ssr: false }
 );
 
+const RevenueProjectionWidget = dynamic(
+  () =>
+    import('@/components/dashboard/RevenueProjectionWidget').then(m => ({
+      default: m.RevenueProjectionWidget,
+    })),
+  { ssr: false }
+);
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -371,8 +379,9 @@ export default function DashboardPage() {
             <div className="grid gap-4 lg:grid-cols-2">
               <HealthScoreWidget />
               <VisibilityScoreWidget />
+              <ContentOpportunitiesWidget />
+              <RevenueProjectionWidget />
             </div>
-            <ContentOpportunitiesWidget />
             <AICommandCentre />
           </>
         )}
