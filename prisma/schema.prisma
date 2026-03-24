@@ -480,10 +480,11 @@ model Organization {
   customDomain String? @unique @map("custom_domain") // Custom domain (e.g., marketing.acme.com)
 
   // Business identity
-  website  String?
-  industry String?
-  abn      String? // Australian Business Number
-  teamSize String? @map("team_size")
+  website     String?
+  industry    String?
+  abn         String? // Australian Business Number
+  teamSize    String? @map("team_size")
+  phoneNumber String? @map("phone_number")
 
   // AI-generated metadata
   aiGeneratedData Json? @map("ai_generated_data") // Full AI analysis snapshot
@@ -578,11 +579,36 @@ model Organization {
   testimonialRequests TestimonialRequest[]
   testimonials        Testimonial[]
 
+  // Review requests (SYN-474)
+  reviewRequests ReviewRequest[]
+
   // Indices for multi-tenant queries
   @@index([slug])
   @@index([status])
   @@index([plan])
   @@map("organizations")
+}
+
+/// Tracks review requests sent to clients post-job.
+/// Used to automate review generation loop and follow-up cadence.
+model ReviewRequest {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  locationId     String    @map("location_id")
+  recipientName  String    @map("recipient_name")
+  recipientEmail String    @map("recipient_email")
+  reviewLink     String    @map("review_link")
+  status         String    @default("pending") @map("status") // pending | followed_up | completed
+  sentAt         DateTime  @default(now()) @map("sent_at")
+  followUpSentAt DateTime? @map("follow_up_sent_at")
+  reviewReceivedAt DateTime? @map("review_received_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@map("review_requests")
 }
 
 // Platform Integration Models
@@ -4473,14 +4499,15 @@ model GBPLocation {
   website         String?
   categories      Json?     // { primaryCategory, additionalCategories }
   hours           Json?     // regularHours and specialHours
+  newReviewUri    String?   @map("new_review_uri") // Direct Google review link for this location
   verified        Boolean   @default(false)
   isPrimary       Boolean   @default(false) @map("is_primary")
   lastSyncedAt    DateTime? @map("last_synced_at")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  reviews      GBPReview[]
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  reviews        GBPReview[]
 
   @@unique([organizationId, locationId])
   @@index([organizationId])

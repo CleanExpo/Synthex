@@ -176,6 +176,10 @@
     {
       "path": "/api/cron/autopilot-learn",
       "schedule": "0 8 * * 1"
+    },
+    {
+      "path": "/api/cron/review-follow-up",
+      "schedule": "0 9 * * *"
     }
   ]
 }

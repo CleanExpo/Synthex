@@ -19,6 +19,7 @@ import {
   starRatingToNumber,
 } from '@/lib/google/business-profile';
 import { findOAuthConnection } from '@/lib/google/google-auth';
+import { markReviewReceived } from '@/lib/reviews/review-request-service';
 import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
@@ -164,6 +165,17 @@ export async function GET(request: NextRequest) {
             },
           });
           reviewsSynced++;
+        }
+
+        // Mark any pending review requests as completed if new reviews arrived
+        if (reviewData.reviews.length > 0) {
+          await markReviewReceived(location.organizationId, location.id).catch(
+            (err: unknown) =>
+              logger.warn('cron:gbp-monitor:mark-review-received-error', {
+                locationId: location.id,
+                error: err instanceof Error ? err.message : String(err),
+              })
+          );
         }
       } catch (reviewError) {
         logger.warn('cron:gbp-monitor:reviews-error', {

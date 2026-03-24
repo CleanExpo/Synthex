@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
             additionalCategories: loc.additionalCategories,
           },
           hours: loc.regularHours ?? undefined,
+          newReviewUri: loc.metadata?.newReviewUri ?? undefined,
           lastSyncedAt: new Date(),
         },
         create: {
@@ -128,6 +129,7 @@ export async function POST(request: NextRequest) {
             additionalCategories: loc.additionalCategories,
           },
           hours: loc.regularHours ?? undefined,
+          newReviewUri: loc.metadata?.newReviewUri ?? undefined,
           isPrimary: false,
           lastSyncedAt: new Date(),
         },

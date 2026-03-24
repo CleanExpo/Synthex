@@ -27,7 +27,17 @@ import {
   CheckCircle,
   Code,
   Copy,
+  Mail,
+  Send,
 } from '@/components/icons';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const FIELD_LABELS: Record<'name' | 'phone' | 'website', string> = {
   name: 'Name',
@@ -230,6 +240,47 @@ export default function GoogleBusinessPage() {
   // Derive org slug from the active business for the embed widget
   const orgSlug = activeBusiness?.organizationSlug ?? null;
 
+  // Review request modal state
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewForm, setReviewForm] = useState({
+    recipientName: '',
+    recipientEmail: '',
+    locationId: primaryLocation?.id ?? '',
+  });
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+
+  const handleRequestReview = async () => {
+    if (
+      !reviewForm.recipientName ||
+      !reviewForm.recipientEmail ||
+      !reviewForm.locationId
+    )
+      return;
+    setReviewSubmitting(true);
+    setReviewError(null);
+    try {
+      const res = await fetch('/api/reviews/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(reviewForm),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? 'Failed to send review request');
+      }
+      setReviewSuccess(true);
+    } catch (err) {
+      setReviewError(
+        err instanceof Error ? err.message : 'Something went wrong'
+      );
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -406,7 +457,7 @@ export default function GoogleBusinessPage() {
           </div>
 
           {/* Quick Links */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <Link href="/dashboard/google-business/reviews">
               <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 hover:border-orange-500/30 transition-colors cursor-pointer">
                 <CardContent className="p-4 flex items-center gap-3">
@@ -447,7 +498,163 @@ export default function GoogleBusinessPage() {
                 </CardContent>
               </Card>
             </Link>
+            <button
+              onClick={() => {
+                setReviewSuccess(false);
+                setReviewError(null);
+                setReviewForm(f => ({
+                  ...f,
+                  locationId: primaryLocation?.id ?? '',
+                }));
+                setShowReviewModal(true);
+              }}
+              className="w-full text-left"
+            >
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 hover:border-orange-500/30 transition-colors cursor-pointer h-full">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Mail className="w-5 h-5 text-orange-400" />
+                  <span className="text-white font-medium">
+                    Request a Review
+                  </span>
+                  <Send className="w-4 h-4 text-gray-500 ml-auto" />
+                </CardContent>
+              </Card>
+            </button>
           </div>
+
+          {/* Request a Review Modal */}
+          <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
+            <DialogContent className="bg-surface-base border border-orange-500/10 text-white max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-white flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-orange-400" />
+                  Request a Google Review
+                </DialogTitle>
+              </DialogHeader>
+              {reviewSuccess ? (
+                <div className="py-4 text-center space-y-2">
+                  <CheckCircle className="w-10 h-10 text-green-400 mx-auto" />
+                  <p className="text-white font-medium">Review request sent!</p>
+                  <p className="text-gray-400 text-sm">
+                    A follow-up reminder will be sent automatically in 3 days if
+                    no review is received.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="mt-4 border-orange-500/30 text-orange-400"
+                    onClick={() => {
+                      setReviewSuccess(false);
+                      setReviewForm({
+                        recipientName: '',
+                        recipientEmail: '',
+                        locationId: primaryLocation?.id ?? '',
+                      });
+                    }}
+                  >
+                    Send Another
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4 py-2">
+                  {locations.length > 1 && (
+                    <div className="space-y-1.5">
+                      <Label className="text-gray-300 text-sm">Location</Label>
+                      <select
+                        value={reviewForm.locationId}
+                        onChange={e =>
+                          setReviewForm(f => ({
+                            ...f,
+                            locationId: e.target.value,
+                          }))
+                        }
+                        className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-white text-sm"
+                      >
+                        {locations.map(loc => (
+                          <option
+                            key={loc.id}
+                            value={loc.id}
+                            className="bg-gray-900"
+                          >
+                            {loc.locationName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="rr-name" className="text-gray-300 text-sm">
+                      Client name
+                    </Label>
+                    <Input
+                      id="rr-name"
+                      placeholder="e.g. Sarah Johnson"
+                      value={reviewForm.recipientName}
+                      onChange={e =>
+                        setReviewForm(f => ({
+                          ...f,
+                          recipientName: e.target.value,
+                        }))
+                      }
+                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="rr-email" className="text-gray-300 text-sm">
+                      Client email
+                    </Label>
+                    <Input
+                      id="rr-email"
+                      type="email"
+                      placeholder="e.g. sarah@example.com"
+                      value={reviewForm.recipientEmail}
+                      onChange={e =>
+                        setReviewForm(f => ({
+                          ...f,
+                          recipientEmail: e.target.value,
+                        }))
+                      }
+                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+                  {reviewError && (
+                    <p className="text-red-400 text-sm flex items-center gap-1">
+                      <AlertTriangle className="w-4 h-4" />
+                      {reviewError}
+                    </p>
+                  )}
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-white/10 text-gray-400"
+                      onClick={() => setShowReviewModal(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                      disabled={
+                        reviewSubmitting ||
+                        !reviewForm.recipientName ||
+                        !reviewForm.recipientEmail ||
+                        !reviewForm.locationId
+                      }
+                      onClick={handleRequestReview}
+                    >
+                      {reviewSubmitting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-1" />
+                          Send Request
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
           {/* Review Embed Snippet — after quick links */}
           <ReviewEmbedWidget show={hasLocations} orgSlug={orgSlug} />
         </>
