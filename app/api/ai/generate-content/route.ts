@@ -14,6 +14,7 @@ import { requireApiKey } from '@/lib/middleware/require-api-key';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit, UsageTracker } from '@/lib/middleware/rate-limiter';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { calculateVisibilityScore } from '@/lib/scoring/visibility-score';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Prevent 504s on long-running LLM calls
@@ -147,6 +148,7 @@ export async function POST(request: NextRequest) {
 
         // Try to use ClientBrandedContentService (new service that uses client's API keys)
         let generatedContent;
+        let organizationId: string | undefined;
         try {
           const userRecord = userId
             ? await prisma.user.findUnique({
@@ -154,7 +156,7 @@ export async function POST(request: NextRequest) {
                 select: { organizationId: true },
               })
             : null;
-          const organizationId = userRecord?.organizationId;
+          organizationId = userRecord?.organizationId ?? undefined;
 
           if (organizationId && topic) {
             // Use new branded content service
@@ -250,6 +252,11 @@ export async function POST(request: NextRequest) {
 
         // Track usage for subscription limits
         await UsageTracker.track(userId, 'ai_posts', 1);
+
+        // Trigger visibility score recalculation after successful content generation
+        if (organizationId) {
+          calculateVisibilityScore(organizationId).catch(() => {});
+        }
 
         return NextResponse.json({
           success: true,

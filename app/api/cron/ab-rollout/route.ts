@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { Resend } from 'resend';
 import { logger } from '@/lib/logger';
+import { calculateVisibilityScore } from '@/lib/scoring/visibility-score';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -102,6 +103,11 @@ export async function GET(req: NextRequest) {
         ],
       },
     });
+
+    // Recalculate visibility score after winner promotion
+    if (test.organizationId) {
+      calculateVisibilityScore(test.organizationId).catch(() => {});
+    }
 
     // Audit log
     await prisma.auditLog

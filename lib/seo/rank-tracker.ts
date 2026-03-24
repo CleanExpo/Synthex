@@ -251,6 +251,58 @@ export async function getRankScoreForVisibility(
 }
 
 // ============================================================================
+// CONTENT TOPIC OPPORTUNITIES
+// ============================================================================
+
+/**
+ * Upsert ContentTopicSuggestion records for keywords that are in positions
+ * 6–20 with ≥50 impressions in today's snapshot.
+ *
+ * Called after takeRankSnapshot succeeds (fire-and-forget).
+ */
+export async function upsertRankOpportunities(orgId: string): Promise<void> {
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  // Get latest snapshots for active targets in positions 6–20 with ≥50 impressions
+  const snapshots = await prisma.keywordRankSnapshot.findMany({
+    where: {
+      organizationId: orgId,
+      snapshotDate: { gte: today },
+      position: { gte: 6, lte: 20 },
+      impressions: { gte: 50 },
+    },
+    include: { keywordTarget: true },
+  });
+
+  for (const snap of snapshots) {
+    const opportunityScore =
+      (snap.impressions ?? 0) * (20 - (snap.position ?? 20));
+    await prisma.contentTopicSuggestion.upsert({
+      where: {
+        organizationId_keyword: {
+          organizationId: orgId,
+          keyword: snap.keywordTarget.keyword,
+        },
+      },
+      update: {
+        impressions: snap.impressions ?? 0,
+        currentRank: snap.position ?? 0,
+        opportunityScore,
+        usedAt: null,
+      },
+      create: {
+        organizationId: orgId,
+        keyword: snap.keywordTarget.keyword,
+        impressions: snap.impressions ?? 0,
+        currentRank: snap.position ?? 0,
+        opportunityScore,
+      },
+    });
+  }
+}
+
+// ============================================================================
 // HELPERS
 // ============================================================================
 

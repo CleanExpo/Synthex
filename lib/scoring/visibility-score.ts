@@ -165,7 +165,38 @@ async function triggerReengagementIfNeeded(
       currentScore,
       drop: previous.score - currentScore,
     });
-    // Re-engagement email would be queued here — using welcome-sequence pattern
-    // Deferred to Phase 2 implementation
+
+    // Send re-engagement email to org owner
+    const owner = await prisma.user.findFirst({
+      where: { organizationId: orgId },
+      select: { email: true, name: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (!owner?.email) return;
+
+    const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
+    const FROM = process.env.EMAIL_FROM ?? 'Synthex <noreply@synthex.social>';
+
+    const { Resend } = await import('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
+    await resend.emails
+      .send({
+        from: FROM,
+        to: owner.email,
+        subject: `Your Visibility Score dropped — here's how to recover`,
+        html: `
+        <div style="font-family:-apple-system,sans-serif;background:#0f0f0f;padding:40px;border-radius:12px;max-width:560px;margin:0 auto;">
+          <p style="color:#9ca3af;font-size:13px;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.06em;">Visibility Alert</p>
+          <h2 style="color:#ffffff;font-size:22px;margin:0 0 16px;">Your score dropped ${previous.score - currentScore} points</h2>
+          <p style="color:#d1d5db;line-height:1.6;margin:0 0 24px;">
+            Your Visibility Score is now <strong style="color:#fff;">${currentScore}</strong> (was ${previous.score} last week).
+            The fastest way to recover is to publish 2–3 new articles targeting your top keyword opportunities.
+          </p>
+          <a href="${APP_URL}/dashboard/seo/rankings" style="display:inline-block;background:#7c3aed;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">View Opportunities →</a>
+        </div>
+      `,
+      })
+      .catch(() => {});
   }
 }

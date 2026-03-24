@@ -48,6 +48,14 @@ const VisibilityScoreWidget = dynamic(
   { ssr: false }
 );
 
+const ContentOpportunitiesWidget = dynamic(
+  () =>
+    import('@/components/dashboard/ContentOpportunitiesWidget').then(m => ({
+      default: m.ContentOpportunitiesWidget,
+    })),
+  { ssr: false }
+);
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -364,6 +372,7 @@ export default function DashboardPage() {
               <HealthScoreWidget />
               <VisibilityScoreWidget />
             </div>
+            <ContentOpportunitiesWidget />
             <AICommandCentre />
           </>
         )}
