@@ -47,7 +47,7 @@ jobs:
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
+        uses: snyk/actions/node@v1.0.0
         continue-on-error: true # Change to false once SNYK_TOKEN is in repo secrets
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -62,7 +62,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run Trivy vulnerability scanner (filesystem)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
