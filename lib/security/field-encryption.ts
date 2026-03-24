@@ -32,7 +32,7 @@ function getEncryptionKey(): Buffer {
   if (!keyHex) {
     throw new Error(
       'FIELD_ENCRYPTION_KEY environment variable is required for field encryption. ' +
-      'Generate with: openssl rand -hex 32'
+        'Generate with: openssl rand -hex 32'
     );
   }
 
@@ -62,7 +62,9 @@ function getEncryptionKey(): Buffer {
  * const encrypted = encryptField('my-secret-token');
  * // Returns: "enc:v1:abc123...:def456...:xyz789..."
  */
-export function encryptField(plaintext: string | null | undefined): string | null {
+export function encryptField(
+  plaintext: string | null | undefined
+): string | null {
   if (plaintext === null || plaintext === undefined || plaintext === '') {
     return null;
   }
@@ -101,14 +103,18 @@ export function encryptField(plaintext: string | null | undefined): string | nul
  * const plaintext = decryptField(encryptedValue);
  * // Returns: "my-secret-token"
  */
-export function decryptField(encrypted: string | null | undefined): string | null {
+export function decryptField(
+  encrypted: string | null | undefined
+): string | null {
   if (encrypted === null || encrypted === undefined || encrypted === '') {
     return null;
   }
 
   // Return unencrypted values as-is (for backwards compatibility during migration)
   if (!encrypted.startsWith(ENCRYPTED_PREFIX)) {
-    console.warn('[FieldEncryption] Detected unencrypted value, returning as-is. Run migration to encrypt.');
+    console.warn(
+      '[FieldEncryption] Detected unencrypted value, returning as-is. Run migration to encrypt.'
+    );
     return encrypted;
   }
 
@@ -119,7 +125,9 @@ export function decryptField(encrypted: string | null | undefined): string | nul
   const parts = withoutPrefix.split(':');
 
   if (parts.length !== 3) {
-    throw new Error('Invalid encrypted value format. Expected enc:v1:<iv>:<authTag>:<ciphertext>');
+    throw new Error(
+      'Invalid encrypted value format. Expected enc:v1:<iv>:<authTag>:<ciphertext>'
+    );
   }
 
   const [ivBase64, authTagBase64, ciphertextBase64] = parts;
@@ -134,7 +142,9 @@ export function decryptField(encrypted: string | null | undefined): string | nul
   }
 
   if (authTag.length !== AUTH_TAG_LENGTH) {
-    throw new Error(`Invalid auth tag length: ${authTag.length}, expected ${AUTH_TAG_LENGTH}`);
+    throw new Error(
+      `Invalid auth tag length: ${authTag.length}, expected ${AUTH_TAG_LENGTH}`
+    );
   }
 
   const decipher = createDecipheriv(ALGORITHM, key, iv, {
@@ -151,8 +161,14 @@ export function decryptField(encrypted: string | null | undefined): string | nul
 
     return plaintext.toString('utf8');
   } catch (error) {
-    if (error instanceof Error && error instanceof Error ? error.message : String(error).includes('Unsupported state')) {
-      throw new Error('Decryption failed: Invalid authentication tag. Data may be corrupted or tampered.');
+    if (
+      error instanceof Error && error instanceof Error
+        ? error.message
+        : String(error).includes('Unsupported state')
+    ) {
+      throw new Error(
+        'Decryption failed: Invalid authentication tag. Data may be corrupted or tampered.'
+      );
     }
     throw error;
   }
@@ -169,7 +185,9 @@ export function isEncrypted(value: string | null | undefined): boolean {
  * Safely encrypt a field, handling errors gracefully
  * Returns null on error instead of throwing
  */
-export function encryptFieldSafe(plaintext: string | null | undefined): string | null {
+export function encryptFieldSafe(
+  plaintext: string | null | undefined
+): string | null {
   try {
     return encryptField(plaintext);
   } catch (error) {
@@ -182,7 +200,9 @@ export function encryptFieldSafe(plaintext: string | null | undefined): string |
  * Safely decrypt a field, handling errors gracefully
  * Returns the original value on error instead of throwing
  */
-export function decryptFieldSafe(encrypted: string | null | undefined): string | null {
+export function decryptFieldSafe(
+  encrypted: string | null | undefined
+): string | null {
   try {
     return decryptField(encrypted);
   } catch (error) {
@@ -213,7 +233,10 @@ export function validateEncryptionConfig(): { valid: boolean; error?: string } {
   } catch (error) {
     return {
       valid: false,
-      error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown encryption config error'
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Unknown encryption config error',
     };
   }
 }

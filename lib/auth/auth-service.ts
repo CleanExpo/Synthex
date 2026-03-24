@@ -4,6 +4,7 @@
  */
 
 import type { AuthUser, AuthResponse } from '@/types/auth';
+import { logger } from '@/lib/logger';
 
 // Re-export for backward compatibility
 export type { AuthUser, AuthResponse } from '@/types/auth';
@@ -36,7 +37,7 @@ class AuthService {
       if (data.success && data.user) {
         this.currentUser = data.user;
         this.notifyListeners(data.user);
-        
+
         // Store in localStorage for persistence
         if (typeof window !== 'undefined') {
           localStorage.setItem('synthex-user', JSON.stringify(data.user));
@@ -45,10 +46,10 @@ class AuthService {
 
       return data;
     } catch (error) {
-      console.error('Sign in error:', error);
+      logger.error('Sign in error', error);
       return {
         success: false,
-        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to sign in',
+        error: error instanceof Error ? error.message : 'Failed to sign in',
       };
     }
   }
@@ -56,7 +57,11 @@ class AuthService {
   /**
    * Sign up with email and password
    */
-  async signUp(email: string, password: string, name?: string): Promise<AuthResponse> {
+  async signUp(
+    email: string,
+    password: string,
+    name?: string
+  ): Promise<AuthResponse> {
     try {
       const response = await fetch(`${this.baseUrl}/signup`, {
         method: 'POST',
@@ -83,10 +88,11 @@ class AuthService {
 
       return data;
     } catch (error) {
-      console.error('Sign up error:', error);
+      logger.error('Sign up error', error);
       return {
         success: false,
-        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to create account',
+        error:
+          error instanceof Error ? error.message : 'Failed to create account',
       };
     }
   }
@@ -101,7 +107,7 @@ class AuthService {
         credentials: 'include',
       });
     } catch (error) {
-      console.error('Sign out error:', error);
+      logger.error('Sign out error', error);
     } finally {
       // Clear local state regardless of API response
       this.currentUser = null;
@@ -185,7 +191,7 @@ class AuthService {
 
       return null;
     } catch (error) {
-      console.error('Get current user error:', error);
+      logger.error('Get current user error', error);
       return null;
     }
   }
@@ -248,7 +254,10 @@ class AuthService {
   /**
    * Update user profile
    */
-  async updateProfile(updates: { name?: string; avatar?: string }): Promise<AuthResponse> {
+  async updateProfile(updates: {
+    name?: string;
+    avatar?: string;
+  }): Promise<AuthResponse> {
     try {
       const response = await fetch(`${this.baseUrl}/user`, {
         method: 'PUT',
@@ -264,7 +273,7 @@ class AuthService {
       if (data.success && data.user) {
         this.currentUser = data.user;
         this.notifyListeners(data.user);
-        
+
         if (typeof window !== 'undefined') {
           localStorage.setItem('synthex-user', JSON.stringify(data.user));
         }
@@ -272,10 +281,11 @@ class AuthService {
 
       return data;
     } catch (error) {
-      console.error('Update profile error:', error);
+      logger.error('Update profile error', error);
       return {
         success: false,
-        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to update profile',
+        error:
+          error instanceof Error ? error.message : 'Failed to update profile',
       };
     }
   }
@@ -295,10 +305,11 @@ class AuthService {
 
       return await response.json();
     } catch (error) {
-      console.error('Reset password error:', error);
+      logger.error('Reset password error', error);
       return {
         success: false,
-        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to reset password',
+        error:
+          error instanceof Error ? error.message : 'Failed to reset password',
       };
     }
   }
@@ -308,10 +319,10 @@ class AuthService {
    */
   onAuthStateChange(callback: (user: AuthUser | null) => void): () => void {
     this.listeners.add(callback);
-    
+
     // Call immediately with current state
     callback(this.currentUser);
-    
+
     // Return unsubscribe function
     return () => {
       this.listeners.delete(callback);
@@ -324,7 +335,6 @@ class AuthService {
   private notifyListeners(user: AuthUser | null) {
     this.listeners.forEach(callback => callback(user));
   }
-
 }
 
 // Export singleton instance

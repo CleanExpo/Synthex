@@ -107,11 +107,13 @@ export class MigrationTracker {
             action: 'migration_started',
             resource: 'migration',
             resourceId: id,
-            details: JSON.parse(JSON.stringify({
-              name,
-              description: description || null,
-              metadata: metadata || null,
-            })),
+            details: JSON.parse(
+              JSON.stringify({
+                name,
+                description: description || null,
+                metadata: metadata || null,
+              })
+            ),
           },
         });
       } catch (error) {
@@ -172,7 +174,7 @@ export class MigrationTracker {
       throw new Error(`Migration ${migrationId} not found`);
     }
 
-    const step = migration.steps.find((s) => s.id === stepId);
+    const step = migration.steps.find(s => s.id === stepId);
     if (!step) {
       throw new Error(`Step ${stepId} not found in migration ${migrationId}`);
     }
@@ -200,11 +202,13 @@ export class MigrationTracker {
 
     migration.status = status;
     migration.completedAt = new Date();
-    migration.duration = migration.completedAt.getTime() - migration.startedAt.getTime();
+    migration.duration =
+      migration.completedAt.getTime() - migration.startedAt.getTime();
     migration.errorMessage = errorMessage;
 
     // Log completion
-    const icon = status === 'success' ? '✅' : status === 'rolled_back' ? '⏪' : '❌';
+    const icon =
+      status === 'success' ? '✅' : status === 'rolled_back' ? '⏪' : '❌';
     // Migration tracking: ${icon} ${migrationId} - ${status}
 
     // Persist to audit log
@@ -218,7 +222,9 @@ export class MigrationTracker {
             details: {
               name: migration.name,
               duration: migration.duration,
-              stepsCompleted: migration.steps.filter((s) => s.status === 'completed').length,
+              stepsCompleted: migration.steps.filter(
+                s => s.status === 'completed'
+              ).length,
               totalSteps: migration.steps.length,
               errorMessage,
             },
@@ -253,9 +259,10 @@ export class MigrationTracker {
     const all = this.getAllMigrations();
     return {
       total: all.length,
-      successful: all.filter((m) => m.status === 'success').length,
-      failed: all.filter((m) => m.status === 'failed').length,
-      pending: all.filter((m) => m.status === 'pending' || m.status === 'running').length,
+      successful: all.filter(m => m.status === 'success').length,
+      failed: all.filter(m => m.status === 'failed').length,
+      pending: all.filter(m => m.status === 'pending' || m.status === 'running')
+        .length,
       recent: all.slice(-10).reverse(),
     };
   }
@@ -326,7 +333,6 @@ export async function executeRollback(
       if (prisma) {
         await prisma.$executeRawUnsafe(step.sql);
       }
-
     }
 
     await tracker.completeMigration(migration.id, 'success');
@@ -334,7 +340,7 @@ export async function executeRollback(
     await tracker.completeMigration(
       migration.id,
       'failed',
-      error instanceof Error ? error instanceof Error ? error.message : String(error) : String(error)
+      error instanceof Error ? error.message : String(error)
     );
     throw error;
   }
@@ -380,7 +386,11 @@ export async function createDataSnapshot(): Promise<DataSnapshot> {
   // Type for dynamic prisma table access
   type DynamicPrismaTable = {
     count: () => Promise<number>;
-    findMany: (args: { take: number; orderBy: Record<string, string>; select: Record<string, boolean> }) => Promise<Array<{ id: string }>>;
+    findMany: (args: {
+      take: number;
+      orderBy: Record<string, string>;
+      select: Record<string, boolean>;
+    }) => Promise<Array<{ id: string }>>;
   };
   const dynamicPrisma = prisma as unknown as Record<string, DynamicPrismaTable>;
 
@@ -395,7 +405,10 @@ export async function createDataSnapshot(): Promise<DataSnapshot> {
         orderBy: { createdAt: 'desc' },
         select: { id: true },
       });
-      snapshot.checksums[table] = recent.map((r) => r.id).join(',').slice(0, 100);
+      snapshot.checksums[table] = recent
+        .map(r => r.id)
+        .join(',')
+        .slice(0, 100);
     } catch {
       snapshot.tables[table] = -1;
     }
@@ -411,10 +424,20 @@ export function compareSnapshots(
   before: DataSnapshot,
   after: DataSnapshot
 ): {
-  changes: Array<{ table: string; before: number; after: number; diff: number }>;
+  changes: Array<{
+    table: string;
+    before: number;
+    after: number;
+    diff: number;
+  }>;
   modified: string[];
 } {
-  const changes: Array<{ table: string; before: number; after: number; diff: number }> = [];
+  const changes: Array<{
+    table: string;
+    before: number;
+    after: number;
+    diff: number;
+  }> = [];
   const modified: string[] = [];
 
   for (const table of Object.keys(before.tables)) {

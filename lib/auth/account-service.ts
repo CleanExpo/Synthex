@@ -259,11 +259,7 @@ export class AccountService {
       return {
         success: false,
         error:
-          error instanceof Error
-            ? error instanceof Error
-              ? error.message
-              : String(error)
-            : 'Failed to link account',
+          error instanceof Error ? error.message : 'Failed to link account',
       };
     }
   }
@@ -569,11 +565,7 @@ export class AccountService {
       return {
         success: false,
         error:
-          error instanceof Error
-            ? error instanceof Error
-              ? error.message
-              : String(error)
-            : 'Failed to unlink account',
+          error instanceof Error ? error.message : 'Failed to unlink account',
       };
     }
   }
