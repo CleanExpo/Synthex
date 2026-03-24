@@ -19,14 +19,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
-import { CalendarService, type ScheduleOptions } from '@/lib/content/calendar-service';
+import {
+  CalendarService,
+  type ScheduleOptions,
+} from '@/lib/content/calendar-service';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 
 // =============================================================================
 // Auth Helpers - Verify user and organization membership
 // =============================================================================
-
 
 /**
  * Check if user is a member of the organization
@@ -50,7 +52,10 @@ export async function GET(request: NextRequest) {
     // Authenticate user
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+      return ResponseOptimizer.createErrorResponse(
+        'Authentication required',
+        401
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -60,13 +65,19 @@ export async function GET(request: NextRequest) {
 
     // Validate required fields
     if (!organizationId) {
-      return ResponseOptimizer.createErrorResponse('Organization ID is required', 400);
+      return ResponseOptimizer.createErrorResponse(
+        'Organization ID is required',
+        400
+      );
     }
 
     // Verify user is a member of the organization
     const isMember = await isOrgMember(userId, organizationId);
     if (!isMember) {
-      return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
+      return ResponseOptimizer.createErrorResponse(
+        'Organization not found or access denied',
+        404
+      );
     }
 
     // Default to current week if no dates provided
@@ -80,7 +91,10 @@ export async function GET(request: NextRequest) {
     // Validate date range (max 31 days)
     const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
     if (diffDays > 31) {
-      return ResponseOptimizer.createErrorResponse('Date range cannot exceed 31 days', 400);
+      return ResponseOptimizer.createErrorResponse(
+        'Date range cannot exceed 31 days',
+        400
+      );
     }
 
     const calendar = new CalendarService(organizationId);
@@ -88,23 +102,28 @@ export async function GET(request: NextRequest) {
 
     // Fetch approval requests for all posts in the view
     const postIds = view.posts.map(p => p.id);
-    const approvalRequests = postIds.length > 0
-      ? await prisma.approvalRequest.findMany({
-          where: {
-            contentId: { in: postIds },
-            contentType: 'post',
-          },
-          select: {
-            id: true,
-            contentId: true,
-            status: true,
-          },
-        })
-      : [];
+    const approvalRequests =
+      postIds.length > 0
+        ? await prisma.approvalRequest.findMany({
+            where: {
+              contentId: { in: postIds },
+              contentType: 'post',
+            },
+            select: {
+              id: true,
+              contentId: true,
+              status: true,
+            },
+            take: 500,
+          })
+        : [];
 
     // Create a map of post ID to approval info
     const approvalMap = new Map(
-      approvalRequests.map(ar => [ar.contentId, { id: ar.id, status: ar.status }])
+      approvalRequests.map(ar => [
+        ar.contentId,
+        { id: ar.id, status: ar.status },
+      ])
     );
 
     // Enhance posts with approval status
@@ -130,8 +149,10 @@ export async function GET(request: NextRequest) {
           suggestions: view.suggestions.slice(0, 5), // Top 5 suggestions
           stats: {
             totalPosts: view.posts.length,
-            scheduledPosts: view.posts.filter(p => p.status === 'scheduled').length,
-            publishedPosts: view.posts.filter(p => p.status === 'published').length,
+            scheduledPosts: view.posts.filter(p => p.status === 'scheduled')
+              .length,
+            publishedPosts: view.posts.filter(p => p.status === 'published')
+              .length,
             conflictCount: view.conflicts.length,
             pendingApprovals,
           },
@@ -141,7 +162,10 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     logger.error('Failed to get calendar view', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to get calendar view', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to get calendar view',
+      500
+    );
   }
 }
 
@@ -169,7 +193,10 @@ export async function POST(request: NextRequest) {
     // Authenticate user
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+      return ResponseOptimizer.createErrorResponse(
+        'Authentication required',
+        401
+      );
     }
 
     const body = await request.json();
@@ -198,7 +225,10 @@ export async function POST(request: NextRequest) {
     // Verify user is a member of the organization
     const isMember = await isOrgMember(userId, organizationId);
     if (!isMember) {
-      return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
+      return ResponseOptimizer.createErrorResponse(
+        'Organization not found or access denied',
+        404
+      );
     }
 
     const calendar = new CalendarService(organizationId);
@@ -241,10 +271,16 @@ export async function POST(request: NextRequest) {
 
     // Return generic error message for conflicts
     if (error instanceof Error && error.message.includes('conflict')) {
-      return ResponseOptimizer.createErrorResponse('Scheduling conflict detected', 409);
+      return ResponseOptimizer.createErrorResponse(
+        'Scheduling conflict detected',
+        409
+      );
     }
 
-    return ResponseOptimizer.createErrorResponse('Failed to schedule post', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to schedule post',
+      500
+    );
   }
 }
 
@@ -264,7 +300,10 @@ export async function PATCH(request: NextRequest) {
     // Authenticate user
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+      return ResponseOptimizer.createErrorResponse(
+        'Authentication required',
+        401
+      );
     }
 
     const body = await request.json();
@@ -275,12 +314,16 @@ export async function PATCH(request: NextRequest) {
         400
       );
     }
-    const { organizationId, postId, newTime, updateRecurrences } = patchValidation.data;
+    const { organizationId, postId, newTime, updateRecurrences } =
+      patchValidation.data;
 
     // Verify user is a member of the organization
     const isMember = await isOrgMember(userId, organizationId);
     if (!isMember) {
-      return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
+      return ResponseOptimizer.createErrorResponse(
+        'Organization not found or access denied',
+        404
+      );
     }
 
     const calendar = new CalendarService(organizationId);
@@ -309,10 +352,16 @@ export async function PATCH(request: NextRequest) {
     logger.error('Failed to reschedule post', { error });
 
     if (error instanceof Error && error.message.includes('conflict')) {
-      return ResponseOptimizer.createErrorResponse('Scheduling conflict detected', 409);
+      return ResponseOptimizer.createErrorResponse(
+        'Scheduling conflict detected',
+        409
+      );
     }
 
-    return ResponseOptimizer.createErrorResponse('Failed to reschedule post', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to reschedule post',
+      500
+    );
   }
 }
 

@@ -145,6 +145,7 @@ async function fetchAnalyticsData(
       },
     },
     orderBy: { createdAt: 'desc' },
+    take: 200,
   });
 
   // Calculate aggregates from analytics JSON field

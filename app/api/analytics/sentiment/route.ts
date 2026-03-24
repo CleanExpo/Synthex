@@ -13,7 +13,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
 /** Sentiment analysis record from database */
@@ -44,7 +47,9 @@ interface SentimentWhereClause {
 /** Extended prisma client with sentimentAnalysis table */
 interface PrismaWithSentiment {
   sentimentAnalysis?: {
-    findMany: (args: Record<string, unknown>) => Promise<SentimentAnalysisRecord[]>;
+    findMany: (
+      args: Record<string, unknown>
+    ) => Promise<SentimentAnalysisRecord[]>;
   };
 }
 
@@ -89,46 +94,62 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all analyses for the period
-    const analyses: SentimentAnalysisRecord[] = await (prisma as unknown as PrismaWithSentiment).sentimentAnalysis?.findMany({
-      where,
-      select: {
-        sentiment: true,
-        score: true,
-        confidence: true,
-        emotions: true,
-        platform: true,
-        analyzedAt: true,
-        predictedEngagement: true,
-        actualEngagement: true,
-      },
-      orderBy: { analyzedAt: 'asc' },
-    }) || [];
+    const analyses: SentimentAnalysisRecord[] =
+      (await (
+        prisma as unknown as PrismaWithSentiment
+      ).sentimentAnalysis?.findMany({
+        where,
+        select: {
+          sentiment: true,
+          score: true,
+          confidence: true,
+          emotions: true,
+          platform: true,
+          analyzedAt: true,
+          predictedEngagement: true,
+          actualEngagement: true,
+        },
+        orderBy: { analyzedAt: 'asc' },
+        take: 1000,
+      })) || [];
 
     // Calculate overall statistics
     const overall = {
       total: analyses.length,
-      positive: analyses.filter((a) => a.sentiment === 'positive').length,
-      neutral: analyses.filter((a) => a.sentiment === 'neutral').length,
-      negative: analyses.filter((a) => a.sentiment === 'negative').length,
-      mixed: analyses.filter((a) => a.sentiment === 'mixed').length,
-      avgScore: analyses.length > 0
-        ? Math.round(analyses.reduce((sum, a) => sum + (a.score || 0), 0) / analyses.length)
-        : 0,
-      avgConfidence: analyses.length > 0
-        ? Math.round((analyses.reduce((sum, a) => sum + (a.confidence || 0), 0) / analyses.length) * 100) / 100
-        : 0,
+      positive: analyses.filter(a => a.sentiment === 'positive').length,
+      neutral: analyses.filter(a => a.sentiment === 'neutral').length,
+      negative: analyses.filter(a => a.sentiment === 'negative').length,
+      mixed: analyses.filter(a => a.sentiment === 'mixed').length,
+      avgScore:
+        analyses.length > 0
+          ? Math.round(
+              analyses.reduce((sum, a) => sum + (a.score || 0), 0) /
+                analyses.length
+            )
+          : 0,
+      avgConfidence:
+        analyses.length > 0
+          ? Math.round(
+              (analyses.reduce((sum, a) => sum + (a.confidence || 0), 0) /
+                analyses.length) *
+                100
+            ) / 100
+          : 0,
     };
 
     // Group by time period
-    const trendMap = new Map<string, {
-      date: string;
-      count: number;
-      positive: number;
-      neutral: number;
-      negative: number;
-      mixed: number;
-      totalScore: number;
-    }>();
+    const trendMap = new Map<
+      string,
+      {
+        date: string;
+        count: number;
+        positive: number;
+        neutral: number;
+        negative: number;
+        mixed: number;
+        totalScore: number;
+      }
+    >();
 
     for (const analysis of analyses) {
       let key: string;
@@ -177,9 +198,10 @@ export async function GET(request: NextRequest) {
     }
 
     const trends = Array.from(trendMap.values())
-      .map((entry) => ({
+      .map(entry => ({
         ...entry,
-        avgScore: entry.count > 0 ? Math.round(entry.totalScore / entry.count) : 0,
+        avgScore:
+          entry.count > 0 ? Math.round(entry.totalScore / entry.count) : 0,
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
@@ -189,7 +211,8 @@ export async function GET(request: NextRequest) {
       const emotions: EmotionRecord[] = analysis.emotions || [];
       for (const emotion of emotions) {
         if (emotion?.emotion) {
-          emotionCounts[emotion.emotion] = (emotionCounts[emotion.emotion] || 0) + 1;
+          emotionCounts[emotion.emotion] =
+            (emotionCounts[emotion.emotion] || 0) + 1;
         }
       }
     }
@@ -204,11 +227,19 @@ export async function GET(request: NextRequest) {
       }));
 
     // Platform breakdown
-    const platformBreakdown: Record<string, { count: number; avgScore: number; positive: number; negative: number }> = {};
+    const platformBreakdown: Record<
+      string,
+      { count: number; avgScore: number; positive: number; negative: number }
+    > = {};
     for (const analysis of analyses) {
       const plat = analysis.platform || 'unknown';
       if (!platformBreakdown[plat]) {
-        platformBreakdown[plat] = { count: 0, avgScore: 0, positive: 0, negative: 0 };
+        platformBreakdown[plat] = {
+          count: 0,
+          avgScore: 0,
+          positive: 0,
+          negative: 0,
+        };
       }
       platformBreakdown[plat].count++;
       platformBreakdown[plat].avgScore += analysis.score || 0;
@@ -218,28 +249,37 @@ export async function GET(request: NextRequest) {
 
     for (const plat of Object.keys(platformBreakdown)) {
       const data = platformBreakdown[plat];
-      data.avgScore = data.count > 0 ? Math.round(data.avgScore / data.count) : 0;
+      data.avgScore =
+        data.count > 0 ? Math.round(data.avgScore / data.count) : 0;
     }
 
     // Engagement correlation (if we have actual engagement data)
-    const withEngagement = analyses.filter((a) => a.actualEngagement);
+    const withEngagement = analyses.filter(a => a.actualEngagement);
     let engagementCorrelation = null;
 
     if (withEngagement.length >= 10) {
       const positiveEng = withEngagement
-        .filter((a) => a.sentiment === 'positive')
-        .map((a) => a.actualEngagement?.engagementRate || 0);
+        .filter(a => a.sentiment === 'positive')
+        .map(a => a.actualEngagement?.engagementRate || 0);
       const negativeEng = withEngagement
-        .filter((a) => a.sentiment === 'negative')
-        .map((a) => a.actualEngagement?.engagementRate || 0);
+        .filter(a => a.sentiment === 'negative')
+        .map(a => a.actualEngagement?.engagementRate || 0);
 
       engagementCorrelation = {
-        positiveAvgEngagement: positiveEng.length > 0
-          ? Math.round((positiveEng.reduce((a, b) => a + b, 0) / positiveEng.length) * 100) / 100
-          : null,
-        negativeAvgEngagement: negativeEng.length > 0
-          ? Math.round((negativeEng.reduce((a, b) => a + b, 0) / negativeEng.length) * 100) / 100
-          : null,
+        positiveAvgEngagement:
+          positiveEng.length > 0
+            ? Math.round(
+                (positiveEng.reduce((a, b) => a + b, 0) / positiveEng.length) *
+                  100
+              ) / 100
+            : null,
+        negativeAvgEngagement:
+          negativeEng.length > 0
+            ? Math.round(
+                (negativeEng.reduce((a, b) => a + b, 0) / negativeEng.length) *
+                  100
+              ) / 100
+            : null,
         sampleSize: withEngagement.length,
       };
     }
@@ -248,24 +288,36 @@ export async function GET(request: NextRequest) {
     const insights: string[] = [];
 
     if (overall.positive > overall.negative * 2) {
-      insights.push('Your content has predominantly positive sentiment. This typically correlates with higher engagement.');
+      insights.push(
+        'Your content has predominantly positive sentiment. This typically correlates with higher engagement.'
+      );
     } else if (overall.negative > overall.positive) {
-      insights.push('Your content has more negative sentiment than positive. Consider adjusting tone for better audience reception.');
+      insights.push(
+        'Your content has more negative sentiment than positive. Consider adjusting tone for better audience reception.'
+      );
     }
 
     const recentAnalyses = analyses.slice(-10);
-    const recentAvgScore = recentAnalyses.length > 0
-      ? recentAnalyses.reduce((sum, a) => sum + (a.score || 0), 0) / recentAnalyses.length
-      : 0;
+    const recentAvgScore =
+      recentAnalyses.length > 0
+        ? recentAnalyses.reduce((sum, a) => sum + (a.score || 0), 0) /
+          recentAnalyses.length
+        : 0;
 
     if (recentAvgScore > overall.avgScore + 10) {
-      insights.push('Recent content shows improving sentiment. Keep up the positive momentum!');
+      insights.push(
+        'Recent content shows improving sentiment. Keep up the positive momentum!'
+      );
     } else if (recentAvgScore < overall.avgScore - 10) {
-      insights.push('Recent content shows declining sentiment. Review your recent posts for potential issues.');
+      insights.push(
+        'Recent content shows declining sentiment. Review your recent posts for potential issues.'
+      );
     }
 
     if (topEmotions.length > 0 && topEmotions[0].emotion === 'joy') {
-      insights.push(`Joy is your most common emotion (${topEmotions[0].percentage}% of content). This typically drives shares and saves.`);
+      insights.push(
+        `Joy is your most common emotion (${topEmotions[0].percentage}% of content). This typically drives shares and saves.`
+      );
     }
 
     return NextResponse.json({

@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
         metadata: true,
         lastSync: true,
       },
+      take: 50,
     });
 
     if (connections.length === 0) {
@@ -167,6 +168,7 @@ export async function GET(request: NextRequest) {
           },
         },
       },
+      take: 500,
     });
 
     // Build best posting times heatmap (day 0-6 × hour 0-23)

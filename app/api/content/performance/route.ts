@@ -19,7 +19,6 @@ import {
   ContentPerformanceAnalysis,
 } from '@/lib/ai/content-performance-analyzer';
 
-
 // =============================================================================
 // GET - Content Performance Analysis
 // =============================================================================
@@ -28,7 +27,10 @@ export async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     // Parse query params
@@ -63,7 +65,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const connectionIds = connections.map((c) => c.id);
+    const connectionIds = connections.map(c => c.id);
 
     // Fetch posts with metrics
     const posts = await prisma.platformPost.findMany({
@@ -94,6 +96,7 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { publishedAt: 'desc' },
+      take: 500,
     });
 
     if (posts.length === 0) {
@@ -106,8 +109,8 @@ export async function GET(request: NextRequest) {
 
     // Transform to PostPerformance format
     const postPerformances: PostPerformance[] = posts
-      .filter((post) => post.metrics.length > 0)
-      .map((post) => {
+      .filter(post => post.metrics.length > 0)
+      .map(post => {
         const metrics = post.metrics[0];
         return {
           postId: post.id,
@@ -140,7 +143,9 @@ export async function GET(request: NextRequest) {
     try {
       analysis = await analyzer.analyze(postPerformances);
     } catch (error) {
-      logger.error('Failed to analyze performance:', { error: error instanceof Error ? error.message : String(error) });
+      logger.error('Failed to analyze performance:', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return NextResponse.json({
         success: true,
         data: emptyAnalysis(),
@@ -154,16 +159,24 @@ export async function GET(request: NextRequest) {
         const aiInsights = await analyzer.generateAIInsights(analysis);
         if (aiInsights.length > 0) {
           // Merge AI insights with basic insights, avoiding duplicates
-          const existingTypes = new Set(analysis.insights.map((i) => `${i.type}-${i.title}`));
-          const newInsights = aiInsights.filter(
-            (i) => !existingTypes.has(`${i.type}-${i.title}`)
+          const existingTypes = new Set(
+            analysis.insights.map(i => `${i.type}-${i.title}`)
           );
-          analysis.insights = [...analysis.insights, ...newInsights].slice(0, 8);
+          const newInsights = aiInsights.filter(
+            i => !existingTypes.has(`${i.type}-${i.title}`)
+          );
+          analysis.insights = [...analysis.insights, ...newInsights].slice(
+            0,
+            8
+          );
         }
       } catch (error) {
-        logger.warn('AI insights generation failed, returning basic insights:', {
-          error: error instanceof Error ? error.message : String(error),
-        });
+        logger.warn(
+          'AI insights generation failed, returning basic insights:',
+          {
+            error: error instanceof Error ? error.message : String(error),
+          }
+        );
         // Continue with basic insights
       }
     }
@@ -179,7 +192,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    logger.error('Content performance API error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Content performance API error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to analyze content performance' },
       { status: 500 }

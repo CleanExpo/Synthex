@@ -19,7 +19,6 @@ import {
   BenchmarkReport,
 } from '@/lib/analytics/benchmark-service';
 
-
 // =============================================================================
 // GET - Benchmark Report
 // =============================================================================
@@ -28,7 +27,10 @@ export async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     // Parse query params
@@ -52,6 +54,7 @@ export async function GET(request: NextRequest) {
         ...(platformFilter !== 'all' && { platform: platformFilter }),
       },
       select: { id: true, platform: true },
+      take: 50,
     });
 
     if (connections.length === 0) {
@@ -62,7 +65,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const connectionIds = connections.map((c) => c.id);
+    const connectionIds = connections.map(c => c.id);
 
     // Fetch posts and metrics for the period
     const posts = await prisma.platformPost.findMany({
@@ -90,15 +93,19 @@ export async function GET(request: NextRequest) {
           },
         },
       },
+      take: 500,
     });
 
     // Calculate user metrics per platform
-    const platformMetrics: Record<string, {
-      posts: number;
-      totalEngagement: number;
-      totalImpressions: number;
-      engagementRates: number[];
-    }> = {};
+    const platformMetrics: Record<
+      string,
+      {
+        posts: number;
+        totalEngagement: number;
+        totalImpressions: number;
+        engagementRates: number[];
+      }
+    > = {};
 
     for (const post of posts) {
       const platform = post.connection.platform.toLowerCase();
@@ -119,13 +126,16 @@ export async function GET(request: NextRequest) {
         platformMetrics[platform].totalEngagement += engagement;
         platformMetrics[platform].totalImpressions += metrics.impressions;
         if (metrics.engagementRate) {
-          platformMetrics[platform].engagementRates.push(metrics.engagementRate);
+          platformMetrics[platform].engagementRates.push(
+            metrics.engagementRate
+          );
         }
       }
     }
 
     // Get follower counts and calculate growth
-    const followerData: Record<string, { current: number; previous: number }> = {};
+    const followerData: Record<string, { current: number; previous: number }> =
+      {};
 
     for (const conn of connections) {
       const platform = conn.platform.toLowerCase();
@@ -147,15 +157,17 @@ export async function GET(request: NextRequest) {
     for (const [platform, data] of Object.entries(platformMetrics)) {
       const avgEngagementRate =
         data.engagementRates.length > 0
-          ? data.engagementRates.reduce((a, b) => a + b, 0) / data.engagementRates.length
+          ? data.engagementRates.reduce((a, b) => a + b, 0) /
+            data.engagementRates.length
           : data.totalImpressions > 0
-          ? (data.totalEngagement / data.totalImpressions) * 100
-          : 0;
+            ? (data.totalEngagement / data.totalImpressions) * 100
+            : 0;
 
       const followers = followerData[platform] || { current: 0, previous: 0 };
       const followerGrowth =
         followers.previous > 0
-          ? ((followers.current - followers.previous) / followers.previous) * 100
+          ? ((followers.current - followers.previous) / followers.previous) *
+            100
           : 0;
 
       const weeksInPeriod = days / 7;
@@ -163,7 +175,8 @@ export async function GET(request: NextRequest) {
 
       const reachRate =
         followers.current > 0
-          ? (data.totalImpressions / (data.posts || 1) / followers.current) * 100
+          ? (data.totalImpressions / (data.posts || 1) / followers.current) *
+            100
           : 0;
 
       userMetricsList.push({
@@ -198,7 +211,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    logger.error('Benchmark API error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Benchmark API error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to generate benchmark report' },
       { status: 500 }
@@ -218,7 +233,9 @@ function emptyReport(): BenchmarkReport {
       percentile: 0,
     },
     byPlatform: [],
-    insights: ['Connect platforms and create posts to see benchmark comparisons'],
+    insights: [
+      'Connect platforms and create posts to see benchmark comparisons',
+    ],
     recommendations: [],
     generatedAt: new Date().toISOString(),
   };
