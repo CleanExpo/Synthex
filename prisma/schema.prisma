@@ -590,6 +590,9 @@ model Organization {
   rankSnapshots    KeywordRankSnapshot[]
   visibilityScores VisibilityScore[]
 
+  // Competitor displacement (SYN-484)
+  competitorKeywordGaps CompetitorKeywordGap[]
+
   // Indices for multi-tenant queries
   @@index([slug])
   @@index([status])
@@ -2159,14 +2162,36 @@ model TrackedCompetitor {
   lastTrackedAt DateTime? @map("last_tracked_at")
 
   // Relations
-  snapshots CompetitorSnapshot[]
-  posts     CompetitorPost[]
-  alerts    CompetitorAlert[]
+  snapshots   CompetitorSnapshot[]
+  posts       CompetitorPost[]
+  alerts      CompetitorAlert[]
+  keywordGaps CompetitorKeywordGap[]
 
   @@unique([userId, domain])
   @@index([userId])
   @@index([isActive])
   @@map("tracked_competitors")
+}
+
+model CompetitorKeywordGap {
+  id                 String    @id @default(cuid())
+  organizationId     String    @map("organization_id")
+  competitorId       String    @map("competitor_id")
+  keyword            String
+  ourPosition        Float?    @map("our_position")
+  competitorPosition Float?    @map("competitor_position")
+  impressions        Int?
+  displacementScore  Float?    @map("displacement_score")
+  snapshotDate       DateTime  @map("snapshot_date") @db.Date
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  competitor   TrackedCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+
+  @@unique([competitorId, keyword, snapshotDate])
+  @@index([organizationId, snapshotDate])
+  @@index([competitorId])
+  @@map("competitor_keyword_gaps")
 }
 
 model CompetitorSnapshot {
