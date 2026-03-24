@@ -54,23 +54,23 @@ export class OpenRouterClient {
 
   // Available models for different use cases
   public models = {
-    // Fast and cheap for simple tasks
-    fast: 'openai/gpt-3.5-turbo',
+    // High-volume: Gemini 2.5 Flash — fast, cheap, capable
+    fast: 'google/gemini-2.5-flash',
 
-    // Balanced performance and cost
-    balanced: 'anthropic/claude-3-haiku',
+    // Default for most tasks: Gemini 2.5 Flash
+    balanced: 'google/gemini-2.5-flash',
 
-    // High quality for complex tasks
-    creative: 'anthropic/claude-3-sonnet',
+    // Brand-sensitive creative work: Claude Sonnet
+    creative: 'anthropic/claude-sonnet-4-6',
 
-    // Best quality but expensive
-    premium: 'openai/gpt-4-turbo',
+    // Best quality for complex multi-step tasks
+    premium: 'anthropic/claude-opus-4-6',
 
-    // Specialized for code
-    code: 'deepseek/deepseek-coder',
+    // Code and structured tasks: Gemini 2.5 Flash
+    code: 'google/gemini-2.5-flash',
 
-    // Free tier option
-    free: 'google/gemini-flash-1.5-8b',
+    // Free tier
+    free: 'google/gemini-2.5-flash',
   };
 
   constructor() {

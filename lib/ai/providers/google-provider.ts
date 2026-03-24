@@ -49,12 +49,12 @@ export class GoogleProvider implements AIProvider {
   readonly name = 'Google';
 
   readonly models: ModelPresets = {
-    fast: 'gemini-1.5-flash',
-    balanced: 'gemini-1.5-flash',
-    creative: 'gemini-1.5-pro',
-    premium: 'gemini-1.5-pro',
-    code: 'gemini-1.5-flash',
-    free: 'gemini-1.5-flash',
+    fast: 'gemini-2.5-flash',
+    balanced: 'gemini-2.5-flash',
+    creative: 'gemini-2.5-flash',
+    premium: 'gemini-2.5-flash',
+    code: 'gemini-2.5-flash',
+    free: 'gemini-2.5-flash',
   };
 
   private apiKey: string;

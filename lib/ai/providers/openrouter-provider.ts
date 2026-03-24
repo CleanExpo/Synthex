@@ -23,12 +23,15 @@ export class OpenRouterProvider implements AIProvider {
   readonly name = 'OpenRouter';
 
   readonly models: ModelPresets = {
-    fast: 'anthropic/claude-haiku-4-5',
-    balanced: 'anthropic/claude-sonnet-4-6',
+    // High-volume tiers: Gemini 2.5 Flash — ~40× cheaper than Sonnet for
+    // routine content generation, analysis, chat, and tutorials.
+    fast: 'google/gemini-2.5-flash',
+    balanced: 'google/gemini-2.5-flash',
+    // Brand-sensitive and creative work stays on Claude for quality.
     creative: 'anthropic/claude-sonnet-4-6',
     premium: 'anthropic/claude-opus-4-6',
-    code: 'anthropic/claude-sonnet-4-6',
-    free: 'google/gemini-flash-1.5-8b',
+    code: 'google/gemini-2.5-flash',
+    free: 'google/gemini-2.5-flash',
   };
 
   private apiKey: string;
