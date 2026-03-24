@@ -186,6 +186,7 @@ async function generateReportData(
       ...(filters?.platforms && { platform: { in: filters.platforms } }),
     },
     orderBy: { timestamp: 'asc' },
+    take: 50000, // Safety cap — prevents unbounded scan on wide date ranges
   });
 
   // Aggregate data from events

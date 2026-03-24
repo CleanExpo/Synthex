@@ -13,7 +13,10 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
@@ -23,7 +26,9 @@ const createTargetSchema = z.object({
   url: z.string().url('Invalid URL provided'),
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
   frequency: z.enum(['daily', 'weekly', 'monthly'], {
-    errorMap: () => ({ message: 'Frequency must be daily, weekly, or monthly' }),
+    errorMap: () => ({
+      message: 'Frequency must be daily, weekly, or monthly',
+    }),
   }),
   alertThreshold: z.number().min(1).max(100).optional().default(10),
 });
@@ -56,13 +61,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Get subscription - require professional+ plan
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
+    const subscription =
+      await subscriptionService.getOrCreateSubscription(userId);
 
     if (subscription.plan === 'free' || subscription.plan === 'starter') {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
-          error: 'Scheduled audits require a Professional or higher subscription',
+          error:
+            'Scheduled audits require a Professional or higher subscription',
           upgradeRequired: true,
           requiredPlan: 'professional',
         },
@@ -159,13 +166,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Get subscription - require professional+ plan
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
+    const subscription =
+      await subscriptionService.getOrCreateSubscription(userId);
 
     if (subscription.plan === 'free' || subscription.plan === 'starter') {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
-          error: 'Scheduled audits require a Professional or higher subscription',
+          error:
+            'Scheduled audits require a Professional or higher subscription',
           upgradeRequired: true,
           requiredPlan: 'professional',
         },
@@ -177,11 +186,12 @@ export async function GET(request: NextRequest) {
     const targets = await prisma.scheduledAuditTarget.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+      take: 100, // reasonable cap — users rarely have > 10 audit targets
     });
 
     // Get latest audit for each target (for score display)
     const targetsWithLatestAudit = await Promise.all(
-      targets.map(async (target) => {
+      targets.map(async target => {
         const latestAudit = await prisma.sEOAudit.findFirst({
           where: {
             userId,
