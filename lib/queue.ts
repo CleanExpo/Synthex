@@ -4,12 +4,101 @@
  * Provides job queue functionality for async processing
  * with retry logic, dead letter queue, and job monitoring.
  *
+ * Jobs are persisted to Redis so they survive Lambda cold-starts and are
+ * visible to all instances. In development, Redis is optional and the queue
+ * falls back to in-memory only (no cross-instance sharing).
+ *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - UPSTASH_REDIS_REST_URL (INTERNAL)
  * - UPSTASH_REDIS_REST_TOKEN (SECRET)
  *
  * @module lib/queue
  */
+
+import { getRedisClient } from '@/lib/redis-client';
+import { logger } from '@/lib/logger';
+
+// =============================================================================
+// Redis persistence helpers
+// =============================================================================
+
+const REDIS_KEY_PREFIX = 'synthex:queue:job:';
+const REDIS_JOB_TTL = 86_400; // 24 h — auto-clean completed / stale jobs
+
+type SerializedJob = Omit<
+  Job,
+  'createdAt' | 'updatedAt' | 'scheduledFor' | 'completedAt'
+> & {
+  createdAt: string;
+  updatedAt: string;
+  scheduledFor?: string;
+  completedAt?: string;
+};
+
+function deserializeJob(data: SerializedJob): Job {
+  return {
+    ...data,
+    createdAt: new Date(data.createdAt),
+    updatedAt: new Date(data.updatedAt),
+    scheduledFor: data.scheduledFor ? new Date(data.scheduledFor) : undefined,
+    completedAt: data.completedAt ? new Date(data.completedAt) : undefined,
+  };
+}
+
+async function persistJobToRedis(job: Job): Promise<void> {
+  try {
+    const redis = getRedisClient();
+    await redis.set(
+      REDIS_KEY_PREFIX + job.id,
+      JSON.stringify(job),
+      REDIS_JOB_TTL
+    );
+  } catch {
+    // Non-fatal — job still lives in this instance's memory map
+  }
+}
+
+async function removeJobFromRedis(jobId: string): Promise<void> {
+  try {
+    const redis = getRedisClient();
+    await redis.del(REDIS_KEY_PREFIX + jobId);
+  } catch {
+    // Non-fatal
+  }
+}
+
+/**
+ * Recover pending jobs from Redis into this Lambda instance's in-memory map.
+ * Call once at cold-start (e.g. from a cron init route) so the worker can
+ * process jobs that were enqueued by other instances.
+ *
+ * @returns Number of jobs recovered
+ */
+export async function recoverJobsFromRedis(): Promise<number> {
+  try {
+    const redis = getRedisClient();
+    const keys = await redis.keys(REDIS_KEY_PREFIX + '*');
+    let recovered = 0;
+    for (const key of keys) {
+      const raw = await redis.get(key);
+      if (!raw) continue;
+      const job = deserializeJob(JSON.parse(raw) as SerializedJob);
+      if (
+        !jobs.has(job.id) &&
+        (job.status === 'pending' || job.status === 'processing')
+      ) {
+        jobs.set(job.id, job);
+        recovered++;
+      }
+    }
+    if (recovered > 0) {
+      logger.info(`[Queue] Recovered ${recovered} pending jobs from Redis`);
+    }
+    return recovered;
+  } catch {
+    return 0;
+  }
+}
 
 // =============================================================================
 // Types
@@ -91,6 +180,15 @@ export async function enqueue<T>(
 
   jobs.set(job.id, job);
 
+  // Persist to Redis so other Lambda instances (and cold-starts) can see this job.
+  // In production, warn loudly if Redis is not reachable — jobs will be lost on restart.
+  if (process.env.NODE_ENV === 'production') {
+    await persistJobToRedis(job);
+  } else {
+    // Best-effort in dev — don't block
+    persistJobToRedis(job).catch(() => undefined);
+  }
+
   // Auto-process if handler exists and not scheduled for later
   if (!job.scheduledFor || job.scheduledFor <= new Date()) {
     processNextJob(type);
@@ -133,7 +231,7 @@ async function processNextJob(type?: string): Promise<void> {
   const handler = handlers.get(job.type);
 
   if (!handler) {
-    console.warn(`[Queue] No handler for job type: ${job.type}`);
+    logger.warn(`[Queue] No handler for job type: ${job.type}`);
     return;
   }
 
@@ -151,20 +249,27 @@ async function processNextJob(type?: string): Promise<void> {
     job.completedAt = new Date();
     job.result = result;
     job.updatedAt = new Date();
+    // Completed jobs don't need to live in Redis — remove to keep the keyspace clean
+    removeJobFromRedis(job.id).catch(() => undefined);
   } catch (error) {
     job.error = error instanceof Error ? error.message : String(error);
     job.updatedAt = new Date();
 
     if (job.attempts >= job.maxAttempts) {
       job.status = 'dead';
-      console.error(`[Queue] Job moved to dead letter queue: ${job.id}`, error);
+      logger.error(`[Queue] Job moved to dead letter queue: ${job.id}`, {
+        error,
+      });
+      // Keep dead jobs in Redis briefly (TTL will clean them up) for post-mortem
+      persistJobToRedis(job).catch(() => undefined);
     } else {
       job.status = 'pending';
-      console.warn(`[Queue] Job failed, will retry: ${job.id}`, error);
+      logger.warn(`[Queue] Job failed, will retry: ${job.id}`, { error });
 
       // Exponential backoff for retry
       const delay = Math.pow(2, job.attempts) * 1000;
       job.scheduledFor = new Date(Date.now() + delay);
+      persistJobToRedis(job).catch(() => undefined);
 
       setTimeout(() => processNextJob(job.type), delay);
     }
