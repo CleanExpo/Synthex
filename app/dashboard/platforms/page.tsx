@@ -159,7 +159,7 @@ function MiniStat({
   value: string;
 }) {
   return (
-    <div className="flex items-center gap-1.5 text-[10px] text-white/35">
+    <div className="flex items-center gap-1.5 text-[10px] text-white/60">
       <Icon className="h-3 w-3 flex-shrink-0" />
       <span className="truncate">
         <span className="font-mono text-white/60 tabular-nums">{value}</span>{' '}
@@ -242,7 +242,7 @@ function PlatformCard({
                 {platform.name}
               </p>
               {status.connected && status.profileName ? (
-                <p className="text-[10px] text-white/35 truncate mt-0.5">
+                <p className="text-[10px] text-white/60 truncate mt-0.5">
                   @{status.profileName}
                 </p>
               ) : (

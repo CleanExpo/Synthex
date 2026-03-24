@@ -310,7 +310,7 @@ function LoginContent() {
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60 pointer-events-none" />
                 <input
                   id="email"
                   type="email"
@@ -350,7 +350,7 @@ function LoginContent() {
                 </Link>
               </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60 pointer-events-none" />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -371,7 +371,7 @@ function LoginContent() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/60 transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
@@ -494,7 +494,7 @@ function LoginContent() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-[10px] text-white/30 mt-5">
+        <p className="text-center text-[10px] text-white/60 mt-5">
           Don&apos;t have an account?{' '}
           <Link
             href="/signup"

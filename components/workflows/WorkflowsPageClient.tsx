@@ -99,9 +99,9 @@ function WorkflowTemplatesGrid({
       {!isLoading && !error && templates.length === 0 && (
         <Card className="bg-white/[0.02] border-white/10">
           <CardContent className="flex flex-col items-center py-8 gap-2">
-            <Layers className="h-7 w-7 text-white/30" />
+            <Layers className="h-7 w-7 text-white/60" />
             <p className="text-sm text-white/50">No templates available yet</p>
-            <p className="text-xs text-white/30 text-center max-w-xs">
+            <p className="text-xs text-white/60 text-center max-w-xs">
               Create a template to streamline your workflow automation.
             </p>
           </CardContent>
@@ -132,7 +132,7 @@ function WorkflowTemplatesGrid({
                 )}
                 <div className="flex items-center justify-between mt-auto pt-2">
                   {stepCount > 0 && (
-                    <span className="text-[10px] text-white/30">
+                    <span className="text-[10px] text-white/60">
                       {stepCount} {stepCount === 1 ? 'step' : 'steps'}
                     </span>
                   )}

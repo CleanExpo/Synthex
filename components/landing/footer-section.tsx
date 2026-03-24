@@ -46,7 +46,7 @@ export function FooterSection() {
             <p className="text-[11px] text-white/50">
               © 2026 Synthex. AI-native social media.
             </p>
-            <p className="text-[11px] text-white/30 mt-1">
+            <p className="text-[11px] text-white/60 mt-1">
               Synthex Pty Ltd · ABN: 62 580 077 456 · Brisbane, QLD, Australia
             </p>
           </div>

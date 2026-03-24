@@ -125,12 +125,12 @@ function ScoreSummary({ result }: { result: AnalyzeResult }) {
         <p className="text-amber-400/80 text-xs font-semibold">
           ⚠&nbsp; Couldn&apos;t read this site
         </p>
-        <p className="text-white/35 text-[11px] leading-relaxed">
+        <p className="text-white/60 text-[11px] leading-relaxed">
           This site appears to block automated access (common with Cloudflare,
           etc.). The AI post above was generated from the domain name only —
           scores unavailable.
         </p>
-        <p className="text-white/25 text-[10px]">
+        <p className="text-white/60 text-[10px]">
           Try{' '}
           <button
             className="text-amber-400/60 hover:text-amber-400/80 transition-colors underline-offset-2 underline"
@@ -165,7 +165,7 @@ function ScoreSummary({ result }: { result: AnalyzeResult }) {
               <p className={`text-lg font-bold leading-none ${col(score)}`}>
                 {score}
               </p>
-              <p className="text-white/30 text-[9px] mt-0.5">{label}</p>
+              <p className="text-white/60 text-[9px] mt-0.5">{label}</p>
             </div>
             {i < items.length - 1 && (
               <div className="w-px h-7 bg-white/[0.06]" />
@@ -175,7 +175,7 @@ function ScoreSummary({ result }: { result: AnalyzeResult }) {
       </div>
       <a
         href="#health-check"
-        className="block text-center text-white/25 hover:text-amber-400/60 text-[10px] mt-2 transition-colors"
+        className="block text-center text-white/60 hover:text-amber-400/60 text-[10px] mt-2 transition-colors"
       >
         See full health report with tips &darr;
       </a>
@@ -291,7 +291,7 @@ export function LiveDemoWidget() {
           Free demo
         </p>
         <h3 className="text-white font-bold text-sm">Paste your website URL</h3>
-        <p className="text-white/30 text-[11px] mt-0.5">
+        <p className="text-white/60 text-[11px] mt-0.5">
           AI reads your site &amp; generates a branded post + health check
         </p>
       </div>
@@ -340,7 +340,7 @@ export function LiveDemoWidget() {
 
       {/* ── States ── */}
       {state === 'idle' && (
-        <div className="text-center py-6 text-white/25 text-xs">
+        <div className="text-center py-6 text-white/60 text-xs">
           Paste any website URL, or try a quick demo above
         </div>
       )}
@@ -348,7 +348,7 @@ export function LiveDemoWidget() {
       {state === 'loading' && (
         <div>
           <InstagramSkeleton />
-          <p className="text-center text-white/35 text-[11px] mt-2 animate-pulse">
+          <p className="text-center text-white/60 text-[11px] mt-2 animate-pulse">
             Reading your website&hellip;
           </p>
         </div>
@@ -359,7 +359,7 @@ export function LiveDemoWidget() {
           <p className="text-red-400/70 text-sm mb-1.5">
             Couldn&apos;t reach that URL
           </p>
-          <p className="text-white/30 text-xs">
+          <p className="text-white/60 text-xs">
             Check the address, or try a quick demo above.
           </p>
           <button
@@ -391,7 +391,7 @@ export function LiveDemoWidget() {
             </button>
           </div>
           <DemoBadge model={result.model} />
-          <p className="text-[10px] text-white/35 mt-1 leading-relaxed">
+          <p className="text-[10px] text-white/60 mt-1 leading-relaxed">
             Sign up to unlock Claude, GPT-4 &amp; Gemini Pro with your brand
             voice.
           </p>

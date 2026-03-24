@@ -61,7 +61,7 @@ function ScoreCard({
           >
             {score}
           </p>
-          <p className="text-[9px] text-white/30 mt-0.5">/100</p>
+          <p className="text-[9px] text-white/60 mt-0.5">/100</p>
         </div>
       </div>
 
@@ -85,7 +85,7 @@ function ScoreCard({
             key={i}
             className="flex items-start gap-2 text-[11px] text-white/40 leading-relaxed"
           >
-            <span className="mt-0.5 flex-shrink-0 text-white/20">›</span>
+            <span className="mt-0.5 flex-shrink-0 text-white/60">›</span>
             <span>{tip}</span>
           </li>
         ))}
@@ -119,7 +119,7 @@ function OverallScore({
     <div className="text-center space-y-2">
       <div className="inline-flex flex-col items-center justify-center w-28 h-28 rounded-full border-2 border-white/[0.08] bg-[#0a0a12]">
         <span className={`text-4xl font-bold ${color}`}>{score}</span>
-        <span className="text-white/30 text-[10px] mt-0.5">/ 100</span>
+        <span className="text-white/60 text-[10px] mt-0.5">/ 100</span>
       </div>
       <div>
         <p className="text-white font-semibold text-sm">{businessName}</p>
@@ -164,7 +164,7 @@ function UnreachablePanel({
           Sign up for premium scan →
         </a>
       </div>
-      <p className="text-white/20 text-xs">
+      <p className="text-white/60 text-xs">
         Synthex premium uses a headless browser to scan protected sites &mdash;
         no bots blocked.
       </p>
@@ -237,7 +237,7 @@ function ResultPanel({ result }: { result: AnalyzeResult }) {
               {result.description}
             </p>
           )}
-          <p className="text-white/25 text-[11px]">
+          <p className="text-white/60 text-[11px]">
             Analysed by Synthex — sign up free for your full report with fixes.
           </p>
         </div>
@@ -432,7 +432,7 @@ export function UrlHealthCheck() {
                 </div>
               ))}
             </div>
-            <p className="text-white/20 text-xs">Results in under 10 seconds</p>
+            <p className="text-white/60 text-xs">Results in under 10 seconds</p>
           </div>
         )}
 
@@ -443,7 +443,7 @@ export function UrlHealthCheck() {
             <p className="text-red-400/80 text-base font-semibold mb-2">
               Couldn&apos;t reach that URL
             </p>
-            <p className="text-white/30 text-sm mb-6">
+            <p className="text-white/60 text-sm mb-6">
               The site may be blocking external requests, or the URL may be
               incorrect.
             </p>

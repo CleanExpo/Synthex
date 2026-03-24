@@ -97,7 +97,7 @@ export function AutopilotBanner({
                   'inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold border',
                   isPlatformStep
                     ? 'border-amber-500 bg-amber-500/20 text-amber-400'
-                    : 'border-white/10 text-white/20'
+                    : 'border-white/10 text-white/60'
                 )}
               >
                 1
@@ -116,7 +116,7 @@ export function AutopilotBanner({
                   'inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold border',
                   !isPlatformStep
                     ? 'border-amber-500 bg-amber-500/20 text-amber-400'
-                    : 'border-white/10 text-white/20'
+                    : 'border-white/10 text-white/60'
                 )}
               >
                 2
@@ -144,7 +144,7 @@ export function AutopilotBanner({
           <button
             onClick={handleDismiss}
             aria-label="Dismiss banner"
-            className="p-1.5 rounded-sm text-white/20 hover:text-white/50 hover:bg-white/[0.04] transition-colors"
+            className="p-1.5 rounded-sm text-white/60 hover:text-white/50 hover:bg-white/[0.04] transition-colors"
           >
             <X className="h-3.5 w-3.5" />
           </button>

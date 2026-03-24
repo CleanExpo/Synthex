@@ -138,7 +138,7 @@ function Field({
           {error}
         </p>
       )}
-      {hint && !error && <p className="text-[10px] text-white/25">{hint}</p>}
+      {hint && !error && <p className="text-[10px] text-white/60">{hint}</p>}
     </div>
   );
 }
@@ -180,7 +180,7 @@ function StepBusiness({
         hint="Used for AI brand analysis — include https://"
       >
         <div className="relative">
-          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/25 pointer-events-none" />
+          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60 pointer-events-none" />
           <input
             type="url"
             value={data.website}
@@ -322,7 +322,7 @@ function StepIdentity({
             <button
               type="button"
               onClick={() => onChange({ logo: '' })}
-              className="p-2.5 text-white/30 hover:text-white/60 bg-white/[0.02] border-[0.5px] border-white/[0.06] rounded-sm transition-colors"
+              className="p-2.5 text-white/60 hover:text-white/60 bg-white/[0.02] border-[0.5px] border-white/[0.06] rounded-sm transition-colors"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -401,7 +401,7 @@ function StepIdentity({
             'resize-none leading-relaxed'
           )}
         />
-        <p className="text-[10px] text-white/25 text-right -mt-1">
+        <p className="text-[10px] text-white/60 text-right -mt-1">
           {data.description.length} / 500
         </p>
       </Field>
@@ -525,13 +525,13 @@ function StepReview({
             )}
             <div className="flex flex-wrap gap-3 items-center">
               {data.website && (
-                <span className="text-[10px] text-white/30 flex items-center gap-1">
+                <span className="text-[10px] text-white/60 flex items-center gap-1">
                   <Globe className="w-3 h-3" />
                   {data.website.replace(/^https?:\/\//, '')}
                 </span>
               )}
               {data.teamSize && (
-                <span className="text-[10px] text-white/30 flex items-center gap-1">
+                <span className="text-[10px] text-white/60 flex items-center gap-1">
                   <Users className="w-3 h-3" />
                   {data.teamSize} people
                 </span>
@@ -579,7 +579,7 @@ function StepReview({
             <p className="text-xs text-white/60 leading-relaxed">
               {extractPreview.firstPost}
             </p>
-            <p className="text-[10px] text-white/30 flex items-center gap-1">
+            <p className="text-[10px] text-white/60 flex items-center gap-1">
               <CheckCircle className="w-3 h-3 text-emerald-500/60" />
               Full brand extraction running in background
             </p>
@@ -593,7 +593,7 @@ function StepReview({
               'flex items-center gap-2 px-4 py-2.5 text-xs rounded-sm border-[0.5px] transition-all',
               data.website
                 ? 'border-amber-500/30 bg-amber-500/[0.06] text-amber-400/90 hover:bg-amber-500/[0.1] hover:text-amber-300'
-                : 'border-white/[0.06] bg-white/[0.02] text-white/25 cursor-not-allowed',
+                : 'border-white/[0.06] bg-white/[0.02] text-white/60 cursor-not-allowed',
               extracting && 'opacity-70 cursor-not-allowed'
             )}
           >
@@ -642,7 +642,7 @@ function StepReview({
                 {value.length > 40 ? value.slice(0, 37) + '…' : value}
               </span>
             ) : (
-              <span className="text-[10px] text-white/20">—</span>
+              <span className="text-[10px] text-white/60">—</span>
             )}
           </div>
         ))}
@@ -813,7 +813,7 @@ export function BrandSetupWizard() {
                       ? 'border-amber-500/40 bg-amber-500/[0.08] text-amber-400'
                       : isDone
                         ? 'border-emerald-500/30 bg-emerald-500/[0.06] text-emerald-400'
-                        : 'border-white/[0.06] bg-white/[0.02] text-white/25'
+                        : 'border-white/[0.06] bg-white/[0.02] text-white/60'
                   )}
                 >
                   {isDone ? (
@@ -829,7 +829,7 @@ export function BrandSetupWizard() {
                       ? 'text-amber-400/80'
                       : isDone
                         ? 'text-emerald-400/60'
-                        : 'text-white/25'
+                        : 'text-white/60'
                   )}
                 >
                   {s.label}
@@ -852,7 +852,7 @@ export function BrandSetupWizard() {
       <div className="bg-[#0a0a12] border-[0.5px] border-white/[0.06] rounded-sm p-6 sm:p-8">
         {/* Step header */}
         <div className="mb-6">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-white/30">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-white/60">
             Step {step} of {STEPS.length}
           </p>
           <h2 className="text-xl font-light text-white mt-1">

@@ -171,7 +171,7 @@ function SettingsPageContent() {
                       </p>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-white/30 flex-shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-white/60 flex-shrink-0" />
                 </div>
               </Link>
               <Link href="/dashboard/settings/brand-setup">
@@ -187,7 +187,7 @@ function SettingsPageContent() {
                       </p>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-white/30 flex-shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-white/60 flex-shrink-0" />
                 </div>
               </Link>
             </div>

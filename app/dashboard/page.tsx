@@ -327,7 +327,7 @@ export default function DashboardPage() {
                   Create First Post
                   <span aria-hidden="true">→</span>
                 </a>
-                <p className="mt-3 text-xs text-white/30">
+                <p className="mt-3 text-xs text-white/60">
                   or{' '}
                   <a
                     href="/dashboard/integrations"

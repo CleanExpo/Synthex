@@ -223,11 +223,11 @@ function BusinessDNAViewer({ data, isLoading }: BusinessDNAViewerProps) {
           </div>
         ) : !hasAnyData ? (
           <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-4 py-6 text-center">
-            <Sparkles className="w-8 h-8 text-white/20 mx-auto mb-3" />
+            <Sparkles className="w-8 h-8 text-white/60 mx-auto mb-3" />
             <p className="text-sm text-white/40">
               Your brand profile will populate after onboarding completes.
             </p>
-            <p className="text-xs text-white/25 mt-1">
+            <p className="text-xs text-white/60 mt-1">
               We&apos;ll automatically extract your brand DNA from your website.
             </p>
           </div>
@@ -280,7 +280,7 @@ function BusinessDNAViewer({ data, isLoading }: BusinessDNAViewerProps) {
               </div>
             )}
 
-            <p className="text-xs text-white/25 pt-1">
+            <p className="text-xs text-white/60 pt-1">
               Read-only — updated automatically when your brand profile is
               refreshed.
             </p>

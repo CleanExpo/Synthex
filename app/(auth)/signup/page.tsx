@@ -280,7 +280,7 @@ export default function SignupPage() {
             <p className="text-xs text-amber-500/80 text-center font-medium mb-6">
               {verificationEmail}
             </p>
-            <p className="text-[10px] text-white/30 text-center mb-6 leading-relaxed">
+            <p className="text-[10px] text-white/60 text-center mb-6 leading-relaxed">
               Click the link in the email to verify your account. Check your
               spam folder if you don&apos;t see it.
             </p>
@@ -326,7 +326,7 @@ export default function SignupPage() {
             </div>
           </div>
 
-          <p className="text-center text-[10px] text-white/30 mt-5">
+          <p className="text-center text-[10px] text-white/60 mt-5">
             Wrong email?{' '}
             <button
               type="button"
@@ -405,7 +405,7 @@ export default function SignupPage() {
                   Invite Code
                 </label>
                 <div className="relative">
-                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60 pointer-events-none" />
                   <input
                     id="inviteCode"
                     type="text"
@@ -435,7 +435,7 @@ export default function SignupPage() {
                     {fieldErrors.inviteCode}
                   </p>
                 )}
-                <p className="text-[10px] text-white/30">
+                <p className="text-[10px] text-white/60">
                   No invite?{' '}
                   <Link
                     href="/"
@@ -456,7 +456,7 @@ export default function SignupPage() {
                 Full Name
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60 pointer-events-none" />
                 <input
                   id="name"
                   type="text"
@@ -492,7 +492,7 @@ export default function SignupPage() {
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60 pointer-events-none" />
                 <input
                   id="email"
                   type="email"
@@ -528,7 +528,7 @@ export default function SignupPage() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60 pointer-events-none" />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -551,7 +551,7 @@ export default function SignupPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/60 transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
@@ -578,7 +578,7 @@ export default function SignupPage() {
                     ))}
                   </div>
                   {getStrengthLabel() && (
-                    <p className="text-[10px] text-white/30">
+                    <p className="text-[10px] text-white/60">
                       Strength:{' '}
                       <span
                         className={
@@ -609,7 +609,7 @@ export default function SignupPage() {
                 Confirm Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60 pointer-events-none" />
                 <input
                   id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
@@ -638,7 +638,7 @@ export default function SignupPage() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/60 transition-colors"
                     aria-label={
                       showConfirmPassword ? 'Hide password' : 'Show password'
                     }
@@ -742,7 +742,7 @@ export default function SignupPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-[10px] text-white/30 mt-5">
+        <p className="text-center text-[10px] text-white/60 mt-5">
           Already have an account?{' '}
           <Link
             href="/login"

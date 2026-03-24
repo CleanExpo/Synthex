@@ -104,7 +104,7 @@ export function EmailCaptureSection() {
                 className="
                   flex-1 min-w-0 max-w-sm px-4 py-3 rounded-xl
                   bg-white/[0.05] border border-white/10
-                  text-white placeholder:text-white/30 text-sm
+                  text-white placeholder:text-white/60 text-sm
                   focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30
                   disabled:opacity-50 disabled:cursor-not-allowed
                   transition-colors
