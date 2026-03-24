@@ -577,7 +577,7 @@ export async function sendWelcomeSequenceDay14(
   await getResend().emails.send({
     from: FROM,
     to: email,
-    subject: 'Two weeks with Synthex — here\'s what\'s possible',
+    subject: "Two weeks with Synthex — here's what's possible",
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -663,4 +663,85 @@ export async function sendWelcomeSequenceDay14(
 </body>
 </html>`,
   });
+}
+
+// ============================================================================
+// NEWSLETTER WELCOME
+// ============================================================================
+
+/**
+ * Send an immediate welcome email when someone subscribes to the newsletter.
+ * Fire-and-forget — does not throw.
+ */
+export function sendNewsletterWelcome(email: string): void {
+  getResend()
+    .emails.send({
+      from: FROM,
+      to: email,
+      subject: "You're on the Synthex list — here's what's coming",
+      html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to the Synthex newsletter</title>
+</head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#0a0a0a;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0a;">
+    <tr>
+      <td align="center" style="padding:40px 20px;">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#1a1a2e 0%,#0a0a0a 100%);border-radius:16px;overflow:hidden;">
+          <tr>
+            <td style="background:linear-gradient(135deg,#f59e0b 0%,#3b82f6 100%);padding:40px 20px;text-align:center;">
+              <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:700;">You're in.</h1>
+              <p style="margin:10px 0 0;color:rgba(255,255,255,0.9);font-size:16px;">Thanks for joining the Synthex newsletter</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:40px;">
+              <p style="margin:0 0 20px;color:#ffffff;font-size:17px;line-height:1.6;">
+                We'll send you practical AI marketing tips, product updates, and early access to new features — no fluff, no spam.
+              </p>
+              <p style="margin:0 0 32px;color:#a3a3a3;font-size:15px;line-height:1.6;">
+                In the meantime, here's what Synthex actually does:
+              </p>
+              <!-- Feature list -->
+              <div style="background:#1a1a1a;border-radius:12px;padding:20px;margin:0 0 12px;">
+                <p style="margin:0 0 6px;color:#f59e0b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">01 — AI Content</p>
+                <p style="margin:0;color:#e5e5e5;font-size:15px;line-height:1.5;">Generate on-brand social posts, captions, and campaigns in seconds — adapted for every platform automatically.</p>
+              </div>
+              <div style="background:#1a1a1a;border-radius:12px;padding:20px;margin:0 0 12px;">
+                <p style="margin:0 0 6px;color:#3b82f6;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">02 — Scheduling &amp; Autopilot</p>
+                <p style="margin:0;color:#e5e5e5;font-size:15px;line-height:1.5;">Schedule posts to 9 platforms from one dashboard. Let the AI suggest the best times and auto-publish for you.</p>
+              </div>
+              <div style="background:#1a1a1a;border-radius:12px;padding:20px;margin:0 0 32px;">
+                <p style="margin:0 0 6px;color:#10b981;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">03 — Analytics</p>
+                <p style="margin:0;color:#e5e5e5;font-size:15px;line-height:1.5;">Track engagement, reach, and conversions across every platform. Know exactly what's working and double down on it.</p>
+              </div>
+              <div style="text-align:center;">
+                <a href="${APP_URL}/signup" style="display:inline-block;background:linear-gradient(135deg,#f59e0b 0%,#3b82f6 100%);color:#ffffff;padding:14px 35px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">
+                  Try Synthex Free &#8594;
+                </a>
+              </div>
+              <p style="margin:28px 0 0;color:#555555;font-size:12px;text-align:center;line-height:1.5;">
+                You're receiving this because you subscribed at synthex.social.<br>
+                <a href="${APP_URL}/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}" style="color:#666666;">Unsubscribe</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#000000;padding:25px;text-align:center;">
+              <p style="margin:0;color:#666666;font-size:12px;">© 2026 Synthex. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+    })
+    .catch((err: unknown) =>
+      console.error('[newsletter-welcome] send failed:', err)
+    );
 }

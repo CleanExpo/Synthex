@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { Resend } from 'resend';
 import { authStrict } from '@/lib/rate-limit';
+import { sendNewsletterWelcome } from '@/lib/email/billing-emails';
 
 const SubscribeSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -83,6 +84,9 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Fire-and-forget welcome email — never block the response
+    sendNewsletterWelcome(email);
 
     return NextResponse.json(
       { message: 'Subscribed successfully' },
