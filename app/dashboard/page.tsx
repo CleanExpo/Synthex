@@ -344,11 +344,7 @@ export default function DashboardPage() {
               scheduledPosts={stats.scheduledPosts}
             />
             <AnimatedCard delay={0.1}>
-              <GetStartedChecklist
-                hasConnections={stats.connectedPlatforms > 0}
-                hasCampaigns={stats.scheduledPosts > 0}
-                hasContent={stats.totalPosts > 0}
-              />
+              <GetStartedChecklist />
             </AnimatedCard>
             <FirstWeekWidget />
             <ContentSuggestionsWidget />

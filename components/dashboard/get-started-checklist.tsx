@@ -1,28 +1,41 @@
 'use client';
 
 /**
- * Get Started Checklist Component
- * Guides new users through essential onboarding steps.
- * Non-dismissible until at least one task is completed.
+ * Activation Checklist Component
  *
- * @see UNI-628 Dashboard has no empty state for new users
- * @see UNI-681 New user empty state — build "Get Started" onboarding flow
+ * 5-step onboarding sequence that gates the automation flywheel.
+ * Once all 5 steps are complete, Synthex can run fully autonomous
+ * campaigns for the client.
+ *
+ * Steps:
+ *   1. URL Health Check     → business website audited, BrandDNA created
+ *   2. Social Connection    → at least one social platform connected
+ *   3. GMB Connection       → Google Business Profile connected
+ *   4. LLM Integration      → AI provider key configured
+ *   5. Generate First Post  → first piece of content created
+ *
+ * @see UNI-1615 First-time user activation checklist
  */
 
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
   Rocket,
-  Link2,
-  Sparkles,
   CheckCircle,
   X,
   ChevronRight,
+  Globe,
+  Link2,
+  MapPin,
+  BrainCircuit,
+  Sparkles,
 } from '@/components/icons';
 import type { ComponentType, SVGProps } from 'react';
+import { useActivationChecklist } from '@/hooks/useActivationChecklist';
+import type { ChecklistStatus } from '@/app/api/onboarding/checklist/route';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,43 +46,38 @@ type IconComponent = ComponentType<
 >;
 
 interface ChecklistStep {
-  id: string;
+  id: keyof ChecklistStatus;
   title: string;
   description: string;
   href: string;
   icon: IconComponent;
   completed: boolean;
-}
-
-interface GetStartedChecklistProps {
-  hasConnections: boolean;
-  hasCampaigns: boolean;
-  hasContent: boolean;
-  className?: string;
+  toastOnComplete?: {
+    message: string;
+    description: string;
+    actionLabel: string;
+    actionHref: string;
+  };
 }
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const STORAGE_KEY = 'synthex_get_started_dismissed';
+const STORAGE_KEY = 'synthex_activation_dismissed';
+const TOTAL_STEPS = 5;
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export function GetStartedChecklist({
-  hasConnections,
-  hasCampaigns,
-  hasContent,
-  className,
-}: GetStartedChecklistProps) {
+export function GetStartedChecklist({ className }: { className?: string }) {
+  const { status, completedCount, allComplete, isLoading } =
+    useActivationChecklist();
   const [dismissed, setDismissed] = useState<boolean>(true);
   const router = useRouter();
 
-  const prevConnections = useRef(hasConnections);
-  const prevCampaigns = useRef(hasCampaigns);
-  const prevContent = useRef(hasContent);
+  const prevStatus = useRef<ChecklistStatus | null>(null);
   const hasMounted = useRef(false);
 
   useEffect(() => {
@@ -82,49 +90,61 @@ export function GetStartedChecklist({
     hasMounted.current = true;
   }, []);
 
+  // Fire toasts when individual steps flip to complete
   useEffect(() => {
-    if (!hasMounted.current) return;
+    if (!hasMounted.current || !prevStatus.current) {
+      prevStatus.current = status;
+      return;
+    }
 
-    if (hasConnections && !prevConnections.current) {
-      toast.success("Platform connected! Now let's create your first post.", {
-        description: 'Use our AI Studio to generate content in seconds.',
+    const prev = prevStatus.current;
+
+    if (!prev.social_connection && status.social_connection) {
+      toast.success('Social platform connected!', {
+        description: "Now let's connect your Google Business Profile.",
         action: {
-          label: 'Generate Post',
+          label: 'Connect GMB',
+          onClick: () => router.push('/dashboard/platforms'),
+        },
+        duration: 6000,
+      });
+    }
+    if (!prev.gmb_connection && status.gmb_connection) {
+      toast.success('Google Business Profile connected!', {
+        description: 'Configure your AI integration next.',
+        action: {
+          label: 'Set up AI',
+          onClick: () => router.push('/dashboard/settings/integrations'),
+        },
+        duration: 6000,
+      });
+    }
+    if (!prev.llm_integration && status.llm_integration) {
+      toast.success('AI integration ready!', {
+        description: 'Time to generate your first post.',
+        action: {
+          label: 'Create Post',
           onClick: () => router.push('/dashboard/content'),
         },
         duration: 6000,
       });
     }
-    if (hasContent && !prevContent.current) {
-      toast.success('First post created! Schedule it for the perfect time.', {
-        description: 'Pick the optimal time to reach your audience.',
-        action: {
-          label: 'Schedule Post',
-          onClick: () => router.push('/dashboard/schedule'),
-        },
-        duration: 6000,
-      });
-    }
-    if (hasCampaigns && !prevCampaigns.current) {
-      toast.success("You're all set! Your first post is scheduled.", {
-        description: 'It will publish automatically at the scheduled time.',
+    if (!prev.first_post && status.first_post) {
+      toast.success('First post created! The automation flywheel is ready.', {
+        description:
+          'Synthex can now run autonomous campaigns for your client.',
         duration: 8000,
         icon: <Sparkles className="h-5 w-5 text-orange-400" />,
       });
     }
 
-    prevConnections.current = hasConnections;
-    prevCampaigns.current = hasCampaigns;
-    prevContent.current = hasContent;
-  }, [hasConnections, hasCampaigns, hasContent, router]);
+    prevStatus.current = status;
+  }, [status, router]);
 
   const handleDismiss = useCallback(() => {
-    const currentCompleted = [hasConnections, hasCampaigns, hasContent].filter(
-      Boolean
-    ).length;
-    if (currentCompleted === 0) {
+    if (completedCount === 0) {
       toast.info('Complete at least one step before dismissing.', {
-        description: 'These steps help you get the most out of Synthex.',
+        description: 'These steps unlock the full Synthex automation flywheel.',
         duration: 3000,
       });
       return;
@@ -135,45 +155,62 @@ export function GetStartedChecklist({
     } catch {
       // Silently fail
     }
-  }, [hasConnections, hasCampaigns, hasContent]);
+  }, [completedCount]);
 
   const steps: ChecklistStep[] = useMemo(
     () => [
       {
-        id: 'connect',
-        title: 'Connect your first social account',
+        id: 'url_health_check',
+        title: 'URL Health Check',
         description:
-          'Link a platform like Instagram, YouTube, or TikTok to start publishing.',
+          'Run a brand audit on your website to extract colours, tone, and audience insights.',
+        href: '/dashboard/onboarding',
+        icon: Globe,
+        completed: status.url_health_check,
+      },
+      {
+        id: 'social_connection',
+        title: 'Connect a Social Media Account',
+        description:
+          'Link Instagram, LinkedIn, Facebook, TikTok, or another platform to start publishing.',
         href: '/dashboard/platforms',
         icon: Link2,
-        completed: hasConnections,
+        completed: status.social_connection,
       },
       {
-        id: 'content',
-        title: 'Create your first post',
+        id: 'gmb_connection',
+        title: 'Connect Google Business Profile',
         description:
-          'Write a quick post right here — choose a platform, write, and schedule.',
+          'Link your GMB listing to manage reviews, posts, and local search presence.',
+        href: '/dashboard/platforms',
+        icon: MapPin,
+        completed: status.gmb_connection,
+      },
+      {
+        id: 'llm_integration',
+        title: 'Configure AI Integration',
+        description:
+          'Add an API key for OpenRouter, Google, Anthropic, or OpenAI to power content generation.',
+        href: '/dashboard/settings/integrations',
+        icon: BrainCircuit,
+        completed: status.llm_integration,
+      },
+      {
+        id: 'first_post',
+        title: 'Generate Your First Post',
+        description:
+          'Create a piece of AI-generated content — this unlocks the full automation flywheel.',
         href: '/dashboard/content',
         icon: Sparkles,
-        completed: hasContent,
-      },
-      {
-        id: 'campaign',
-        title: 'Schedule your first post',
-        description:
-          'Plan and schedule content so it publishes at the perfect time.',
-        href: '/dashboard/schedule',
-        icon: Rocket,
-        completed: hasCampaigns,
+        completed: status.first_post,
       },
     ],
-    [hasConnections, hasCampaigns, hasContent]
+    [status]
   );
 
-  const completedCount = steps.filter(s => s.completed).length;
-  const progressPercent = Math.round((completedCount / steps.length) * 100);
-  const allComplete = completedCount === steps.length;
+  const progressPercent = Math.round((completedCount / TOTAL_STEPS) * 100);
 
+  if (isLoading) return null;
   if (allComplete) return null;
   if (dismissed && completedCount >= 1) return null;
 
@@ -193,10 +230,10 @@ export function GetStartedChecklist({
             </div>
             <div>
               <h3 className="text-base font-light text-white tracking-tight">
-                Get Started with Synthex
+                Activate the Automation Flywheel
               </h3>
               <p className="text-xs text-white/40 mt-0.5">
-                Complete these steps to unlock the full platform
+                Complete these 5 steps to unlock fully autonomous campaigns
               </p>
             </div>
           </div>
@@ -204,7 +241,7 @@ export function GetStartedChecklist({
             <button
               type="button"
               onClick={handleDismiss}
-              aria-label="Dismiss get started checklist"
+              aria-label="Dismiss activation checklist"
               className="p-1 rounded-sm text-white/50 hover:text-white/50 hover:bg-white/[0.05] transition-colors flex-shrink-0"
             >
               <X className="h-4 w-4" />
@@ -216,7 +253,7 @@ export function GetStartedChecklist({
         <div className="mt-4 space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-[10px] text-white/50">
-              {completedCount} of {steps.length} complete
+              {completedCount} of {TOTAL_STEPS} complete
             </span>
             <span className="font-mono text-[10px] text-orange-400 tabular-nums">
               {progressPercent}%
