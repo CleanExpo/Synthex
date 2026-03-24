@@ -196,6 +196,10 @@
     {
       "path": "/api/cron/ab-rollout",
       "schedule": "0 22 * * 0"
+    },
+    {
+      "path": "/api/cron/model-scout",
+      "schedule": "0 23 * * 0"
     }
   ]
 }

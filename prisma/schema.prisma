@@ -436,6 +436,26 @@ model WebhookEndpoint {
   @@map("webhook_endpoints")
 }
 
+// AI model performance metrics — SYN-486
+model ModelMetric {
+  id           String   @id @default(cuid())
+  modelId      String   @map("model_id")
+  provider     String
+  contentType  String   @map("content_type")
+  requestCount Int      @default(0) @map("request_count")
+  totalTokens  Int      @default(0) @map("total_tokens")
+  totalCostUsd Float    @default(0) @map("total_cost_usd")
+  avgLatencyMs Int?     @map("avg_latency_ms")
+  errorCount   Int      @default(0) @map("error_count")
+  qualityScore Float?   @map("quality_score")
+  weekStart    DateTime @map("week_start") @db.Date
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@unique([modelId, contentType, weekStart])
+  @@index([provider, weekStart])
+  @@map("model_metrics")
+}
+
 model AuditLog {
   id         String   @id @default(cuid())
   action     String // 'user_login', 'post_publish', 'password_change', etc.

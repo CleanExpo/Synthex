@@ -300,6 +300,17 @@ export class AIContentGenerator {
       // Estimate engagement
       const estimatedEngagement = this.estimateEngagement(mainContent, request);
 
+      const processingTime = Date.now() - startTime;
+      const estimatedTokens = Math.round(mainContent.split(' ').length * 1.3);
+
+      // Instrument model metrics (SYN-486) — fire-and-forget
+      recordModelMetric({
+        modelId: model,
+        contentType: request.type,
+        tokens: estimatedTokens,
+        latencyMs: processingTime,
+      }).catch(() => {});
+
       return {
         id: `content-${Date.now()}`,
         content: mainContent,
@@ -315,8 +326,8 @@ export class AIContentGenerator {
         metadata: {
           generatedAt: new Date(),
           model,
-          tokens: mainContent.split(' ').length * 1.3,
-          processingTime: Date.now() - startTime,
+          tokens: estimatedTokens,
+          processingTime,
         },
       };
     } catch (error) {
@@ -1015,4 +1026,86 @@ GEO MODE — LOCAL SEARCH OPTIMISATION:
   }
 
   return '';
+}
+
+// ============================================================================
+// MODEL METRICS INSTRUMENTATION (SYN-486)
+// ============================================================================
+
+/**
+ * Derive the provider from a model ID string.
+ */
+function inferProvider(modelId: string): string {
+  if (modelId.startsWith('claude')) return 'anthropic';
+  if (
+    modelId.startsWith('gpt') ||
+    modelId.startsWith('o1') ||
+    modelId.startsWith('o3')
+  )
+    return 'openai';
+  if (modelId.startsWith('gemini')) return 'google';
+  return 'openrouter';
+}
+
+/**
+ * Upsert weekly model usage metrics. Called fire-and-forget after each generation.
+ */
+async function recordModelMetric(params: {
+  modelId: string;
+  contentType: string;
+  tokens: number;
+  latencyMs: number;
+}): Promise<void> {
+  const weekStart = new Date();
+  weekStart.setUTCHours(0, 0, 0, 0);
+  // Round back to Monday
+  const day = weekStart.getUTCDay();
+  weekStart.setUTCDate(weekStart.getUTCDate() - (day === 0 ? 6 : day - 1));
+
+  const provider = inferProvider(params.modelId);
+
+  // Fetch cost from registry if available
+  let costUsd = 0;
+  try {
+    const { getModel } = await import('@/lib/ai/model-registry');
+    const config = getModel(
+      provider as import('@/lib/ai/model-registry').AIProvider,
+      params.modelId
+    );
+    if (config) {
+      const inputTokens = Math.round(params.tokens * 0.4);
+      const outputTokens = Math.round(params.tokens * 0.6);
+      costUsd =
+        (inputTokens / 1000) * config.costPer1kTokens.input +
+        (outputTokens / 1000) * config.costPer1kTokens.output;
+    }
+  } catch {
+    // Non-fatal — proceed without cost data
+  }
+
+  await prisma.modelMetric.upsert({
+    where: {
+      modelId_contentType_weekStart: {
+        modelId: params.modelId,
+        contentType: params.contentType,
+        weekStart,
+      },
+    },
+    update: {
+      requestCount: { increment: 1 },
+      totalTokens: { increment: params.tokens },
+      totalCostUsd: { increment: costUsd },
+      avgLatencyMs: params.latencyMs,
+    },
+    create: {
+      modelId: params.modelId,
+      provider,
+      contentType: params.contentType,
+      requestCount: 1,
+      totalTokens: params.tokens,
+      totalCostUsd: costUsd,
+      avgLatencyMs: params.latencyMs,
+      weekStart,
+    },
+  });
 }
