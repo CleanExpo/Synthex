@@ -14,7 +14,10 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // Platform colors and display names
-const PLATFORM_CONFIG: Record<string, { name: string; color: string; icon: string }> = {
+const PLATFORM_CONFIG: Record<
+  string,
+  { name: string; color: string; icon: string }
+> = {
   twitter: { name: 'Twitter', color: '#1DA1F2', icon: 'twitter' },
   instagram: { name: 'Instagram', color: '#E4405F', icon: 'instagram' },
   youtube: { name: 'YouTube', color: '#FF0000', icon: 'youtube' },
@@ -37,7 +40,10 @@ export async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     // Parse query params
@@ -70,7 +76,9 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const connectedPlatforms = new Set(connections.map((c) => c.platform.toLowerCase()));
+    const connectedPlatforms = new Set(
+      connections.map(c => c.platform.toLowerCase())
+    );
 
     // Fetch posts with metrics
     const posts = await prisma.post.findMany({
@@ -85,11 +93,14 @@ export async function GET(request: NextRequest) {
         createdAt: true,
         analytics: true,
       },
+      take: 1000,
     });
 
     // Fetch previous period for growth calculation
     const prevStartDate = new Date(startDate);
-    const periodDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const periodDays = Math.ceil(
+      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
     prevStartDate.setDate(prevStartDate.getDate() - periodDays);
 
     const prevPosts = await prisma.post.findMany({
@@ -102,64 +113,90 @@ export async function GET(request: NextRequest) {
         platform: true,
         analytics: true,
       },
+      take: 1000,
     });
 
     // Aggregate per-platform metrics
-    const platformMetrics: Record<string, {
-      posts: number;
-      engagement: number;
-      followers: number;
-      reach: number;
-      prevEngagement: number;
-    }> = {};
+    const platformMetrics: Record<
+      string,
+      {
+        posts: number;
+        engagement: number;
+        followers: number;
+        reach: number;
+        prevEngagement: number;
+      }
+    > = {};
 
     // Initialize all platforms
-    ALL_PLATFORMS.forEach((p) => {
-      platformMetrics[p] = { posts: 0, engagement: 0, followers: 0, reach: 0, prevEngagement: 0 };
+    ALL_PLATFORMS.forEach(p => {
+      platformMetrics[p] = {
+        posts: 0,
+        engagement: 0,
+        followers: 0,
+        reach: 0,
+        prevEngagement: 0,
+      };
     });
 
     // Current period
-    posts.forEach((post) => {
+    posts.forEach(post => {
       const platform = post.platform?.toLowerCase();
       if (!platform || !platformMetrics[platform]) return;
 
       const analytics = post.analytics as Record<string, number> | null;
       platformMetrics[platform].posts += 1;
-      platformMetrics[platform].engagement += (analytics?.likes ?? 0) + (analytics?.comments ?? 0) + (analytics?.shares ?? 0);
-      platformMetrics[platform].reach += analytics?.impressions ?? analytics?.views ?? 0;
+      platformMetrics[platform].engagement +=
+        (analytics?.likes ?? 0) +
+        (analytics?.comments ?? 0) +
+        (analytics?.shares ?? 0);
+      platformMetrics[platform].reach +=
+        analytics?.impressions ?? analytics?.views ?? 0;
     });
 
     // Previous period for growth
-    prevPosts.forEach((post) => {
+    prevPosts.forEach(post => {
       const platform = post.platform?.toLowerCase();
       if (!platform || !platformMetrics[platform]) return;
 
       const analytics = post.analytics as Record<string, number> | null;
-      platformMetrics[platform].prevEngagement += (analytics?.likes ?? 0) + (analytics?.comments ?? 0) + (analytics?.shares ?? 0);
+      platformMetrics[platform].prevEngagement +=
+        (analytics?.likes ?? 0) +
+        (analytics?.comments ?? 0) +
+        (analytics?.shares ?? 0);
     });
 
     // Add follower counts from connections metadata
-    connections.forEach((conn) => {
+    connections.forEach(conn => {
       const platform = conn.platform.toLowerCase();
       if (platformMetrics[platform]) {
         const meta = conn.metadata as Record<string, number> | null;
-        platformMetrics[platform].followers = meta?.followers ?? meta?.subscriberCount ?? 0;
+        platformMetrics[platform].followers =
+          meta?.followers ?? meta?.subscriberCount ?? 0;
       }
     });
 
     // Build platforms array
-    const platforms = ALL_PLATFORMS.map((platformId) => {
+    const platforms = ALL_PLATFORMS.map(platformId => {
       const config = PLATFORM_CONFIG[platformId];
       const metrics = platformMetrics[platformId];
-      const connection = connections.find((c) => c.platform.toLowerCase() === platformId);
+      const connection = connections.find(
+        c => c.platform.toLowerCase() === platformId
+      );
 
-      const engagementRate = metrics.followers > 0
-        ? (metrics.engagement / metrics.followers) * 100
-        : 0;
+      const engagementRate =
+        metrics.followers > 0
+          ? (metrics.engagement / metrics.followers) * 100
+          : 0;
 
-      const growth = metrics.prevEngagement > 0
-        ? ((metrics.engagement - metrics.prevEngagement) / metrics.prevEngagement) * 100
-        : metrics.engagement > 0 ? 100 : 0;
+      const growth =
+        metrics.prevEngagement > 0
+          ? ((metrics.engagement - metrics.prevEngagement) /
+              metrics.prevEngagement) *
+            100
+          : metrics.engagement > 0
+            ? 100
+            : 0;
 
       return {
         id: platformId,
@@ -180,17 +217,22 @@ export async function GET(request: NextRequest) {
     const totals = {
       followers: platforms.reduce((sum, p) => sum + p.followers, 0),
       engagement: platforms.reduce((sum, p) => sum + p.engagement, 0),
-      reach: Object.values(platformMetrics).reduce((sum, p) => sum + p.reach, 0),
+      reach: Object.values(platformMetrics).reduce(
+        (sum, p) => sum + p.reach,
+        0
+      ),
       posts: platforms.reduce((sum, p) => sum + p.posts, 0),
       averageEngagementRate: 0,
     };
 
     if (totals.followers > 0) {
-      totals.averageEngagementRate = Math.round((totals.engagement / totals.followers) * 100 * 100) / 100;
+      totals.averageEngagementRate =
+        Math.round((totals.engagement / totals.followers) * 100 * 100) / 100;
     }
 
     // Build timeline (last N days)
-    const timeline: Array<{ date: string; [key: string]: number | string }> = [];
+    const timeline: Array<{ date: string; [key: string]: number | string }> =
+      [];
     const days = Math.min(periodDays, 30);
 
     for (let i = days - 1; i >= 0; i--) {
@@ -198,23 +240,28 @@ export async function GET(request: NextRequest) {
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
 
-      const dayData: { date: string; [key: string]: number | string } = { date: dateStr };
+      const dayData: { date: string; [key: string]: number | string } = {
+        date: dateStr,
+      };
 
       // Get engagement for each platform on this day
       posts
-        .filter((p) => p.createdAt.toISOString().split('T')[0] === dateStr)
-        .forEach((post) => {
+        .filter(p => p.createdAt.toISOString().split('T')[0] === dateStr)
+        .forEach(post => {
           const platform = post.platform?.toLowerCase();
           if (!platform) return;
 
           const analytics = post.analytics as Record<string, number> | null;
-          const engagement = (analytics?.likes ?? 0) + (analytics?.comments ?? 0) + (analytics?.shares ?? 0);
+          const engagement =
+            (analytics?.likes ?? 0) +
+            (analytics?.comments ?? 0) +
+            (analytics?.shares ?? 0);
 
           dayData[platform] = ((dayData[platform] as number) || 0) + engagement;
         });
 
       // Ensure all connected platforms have a value
-      connectedPlatforms.forEach((p) => {
+      connectedPlatforms.forEach(p => {
         if (dayData[p] === undefined) {
           dayData[p] = 0;
         }
@@ -224,19 +271,28 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate insights
-    const connectedPlatformsList = platforms.filter((p) => p.connected);
+    const connectedPlatformsList = platforms.filter(p => p.connected);
 
-    const topPlatform = connectedPlatformsList.length > 0
-      ? connectedPlatformsList.reduce((best, p) => p.engagement > best.engagement ? p : best).id
-      : null;
+    const topPlatform =
+      connectedPlatformsList.length > 0
+        ? connectedPlatformsList.reduce((best, p) =>
+            p.engagement > best.engagement ? p : best
+          ).id
+        : null;
 
-    const fastestGrowing = connectedPlatformsList.length > 0
-      ? connectedPlatformsList.reduce((best, p) => p.growth > best.growth ? p : best).id
-      : null;
+    const fastestGrowing =
+      connectedPlatformsList.length > 0
+        ? connectedPlatformsList.reduce((best, p) =>
+            p.growth > best.growth ? p : best
+          ).id
+        : null;
 
-    const bestEngagementRate = connectedPlatformsList.length > 0
-      ? connectedPlatformsList.reduce((best, p) => p.engagementRate > best.engagementRate ? p : best).id
-      : null;
+    const bestEngagementRate =
+      connectedPlatformsList.length > 0
+        ? connectedPlatformsList.reduce((best, p) =>
+            p.engagementRate > best.engagementRate ? p : best
+          ).id
+        : null;
 
     return NextResponse.json({
       success: true,
@@ -255,7 +311,10 @@ export async function GET(request: NextRequest) {
     logger.error('Failed to fetch unified metrics', {
       error: error instanceof Error ? error.message : String(error),
     });
-    return NextResponse.json({ error: 'Failed to fetch metrics' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch metrics' },
+      { status: 500 }
+    );
   }
 }
 

@@ -10,7 +10,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
 // Platform colors
@@ -28,7 +31,10 @@ const PLATFORM_COLORS: Record<string, string> = {
 export async function GET(request: NextRequest) {
   try {
     // Security check
-    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.PUBLIC_READ);
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.PUBLIC_READ
+    );
     const userId = security.context.userId;
 
     // Get time range
@@ -63,31 +69,41 @@ export async function GET(request: NextRequest) {
         analytics: true,
         status: true,
       },
+      take: 1000,
     });
 
     // Supported platforms
-    const platforms = ['Twitter', 'LinkedIn', 'Instagram', 'Facebook', 'TikTok'];
+    const platforms = [
+      'Twitter',
+      'LinkedIn',
+      'Instagram',
+      'Facebook',
+      'TikTok',
+    ];
 
     // Aggregate metrics per platform
-    const metrics = platforms.map((platform) => {
+    const metrics = platforms.map(platform => {
       const platformLower = platform.toLowerCase();
 
       // Get connection info
       const connection = connections.find(
-        (c) => c.platform.toLowerCase() === platformLower
+        c => c.platform.toLowerCase() === platformLower
       );
-      const connectionMeta = connection?.metadata as Record<string, number> | null;
+      const connectionMeta = connection?.metadata as Record<
+        string,
+        number
+      > | null;
 
       // Filter posts for this platform
       const platformPosts = posts.filter(
-        (p) => p.platform.toLowerCase() === platformLower
+        p => p.platform.toLowerCase() === platformLower
       );
 
       // Calculate engagement and impressions
       let totalEngagement = 0;
       let totalImpressions = 0;
 
-      platformPosts.forEach((post) => {
+      platformPosts.forEach(post => {
         const analytics = post.analytics as Record<string, number> | null;
         if (analytics) {
           totalEngagement += analytics.engagement || analytics.likes || 0;

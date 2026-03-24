@@ -24,10 +24,15 @@ const bulkDeleteSchema = z.object({
 });
 
 const bulkScheduleSchema = z.object({
-  posts: z.array(z.object({
-    id: z.string().uuid(),
-    scheduledAt: z.string().datetime(),
-  })).min(1).max(100),
+  posts: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        scheduledAt: z.string().datetime(),
+      })
+    )
+    .min(1)
+    .max(100),
   timezone: z.string().optional().default('UTC'),
 });
 
@@ -37,13 +42,18 @@ const bulkStatusUpdateSchema = z.object({
 });
 
 const bulkCreateSchema = z.object({
-  posts: z.array(z.object({
-    content: z.string().min(1).max(10000),
-    campaignId: z.string().uuid(),
-    scheduledAt: z.string().datetime().optional(),
-    mediaUrls: z.array(z.string().url()).optional(),
-    hashtags: z.array(z.string()).optional(),
-  })).min(1).max(50),
+  posts: z
+    .array(
+      z.object({
+        content: z.string().min(1).max(10000),
+        campaignId: z.string().uuid(),
+        scheduledAt: z.string().datetime().optional(),
+        mediaUrls: z.array(z.string().url()).optional(),
+        hashtags: z.array(z.string()).optional(),
+      })
+    )
+    .min(1)
+    .max(50),
 });
 
 // =============================================================================
@@ -52,7 +62,6 @@ const bulkCreateSchema = z.object({
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
-
 
 // =============================================================================
 // POST - Bulk Operations
@@ -87,15 +96,19 @@ export async function POST(request: NextRequest) {
         const posts = await prisma.post.findMany({
           where: { id: { in: ids } },
           include: { campaign: { select: { userId: true } } },
+          take: 500,
         });
 
         const unauthorized = posts.filter(
-          (p) => p.campaign?.userId && p.campaign.userId !== userId
+          p => p.campaign?.userId && p.campaign.userId !== userId
         );
 
         if (unauthorized.length > 0) {
           return NextResponse.json(
-            { error: 'Forbidden', message: 'You do not have access to some content items' },
+            {
+              error: 'Forbidden',
+              message: 'You do not have access to some content items',
+            },
             { status: 403 }
           );
         }
@@ -129,7 +142,7 @@ export async function POST(request: NextRequest) {
 
         const { posts } = validation.data;
         const results = await Promise.all(
-          posts.map(async (post) => {
+          posts.map(async post => {
             try {
               await prisma.post.update({
                 where: { id: post.id },
@@ -146,8 +159,8 @@ export async function POST(request: NextRequest) {
           })
         );
 
-        const successful = results.filter((r) => r.success).length;
-        const failed = results.filter((r) => !r.success).length;
+        const successful = results.filter(r => r.success).length;
+        const failed = results.filter(r => !r.success).length;
 
         return NextResponse.json({
           success: true,
@@ -191,25 +204,29 @@ export async function POST(request: NextRequest) {
         const { posts } = validation.data;
 
         // Verify user owns all campaigns
-        const campaignIds = [...new Set(posts.map((p) => p.campaignId))];
+        const campaignIds = [...new Set(posts.map(p => p.campaignId))];
         const campaigns = await prisma.campaign.findMany({
           where: { id: { in: campaignIds }, userId: userId },
+          take: 500,
         });
 
         if (campaigns.length !== campaignIds.length) {
           return NextResponse.json(
-            { error: 'Forbidden', message: 'You do not have access to some campaigns' },
+            {
+              error: 'Forbidden',
+              message: 'You do not have access to some campaigns',
+            },
             { status: 403 }
           );
         }
 
         // Get platform from campaigns for posts
         const campaignPlatforms = new Map(
-          campaigns.map((c) => [c.id, c.platform])
+          campaigns.map(c => [c.id, c.platform])
         );
 
         const createdPosts = await prisma.post.createMany({
-          data: posts.map((post) => ({
+          data: posts.map(post => ({
             content: post.content,
             campaignId: post.campaignId,
             platform: campaignPlatforms.get(post.campaignId) || 'unknown',
@@ -231,14 +248,20 @@ export async function POST(request: NextRequest) {
 
       default:
         return NextResponse.json(
-          { error: 'Bad Request', message: 'Invalid operation. Use: delete, schedule, status, create' },
+          {
+            error: 'Bad Request',
+            message: 'Invalid operation. Use: delete, schedule, status, create',
+          },
           { status: 400 }
         );
     }
   } catch (error: unknown) {
     logger.error('Bulk operation error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'An unexpected error occurred. Please try again.' },
+      {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred. Please try again.',
+      },
       { status: 500 }
     );
   }

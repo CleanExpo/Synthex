@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
         campaign: { select: { name: true } },
       },
       orderBy: { scheduledAt: 'asc' },
+      take: 200,
     });
 
     const platforms = [...new Set(kickstartPosts.map(p => p.platform))];

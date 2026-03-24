@@ -157,6 +157,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           updatedAt: true,
         },
         orderBy: { createdAt: 'desc' },
+        take: 10000,
       }),
 
       prisma.platformConnection.findMany({
@@ -194,6 +195,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
               createdAt: true,
             },
             orderBy: { createdAt: 'desc' },
+            take: 10000,
           })
         : [];
 

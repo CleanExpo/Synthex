@@ -36,7 +36,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const cached = await cache.get<DashboardStatsData>(cacheKey);
   if (cached) {
     return NextResponse.json(cached, {
-      headers: { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=60' },
+      headers: {
+        'Cache-Control': 'private, max-age=300, stale-while-revalidate=60',
+      },
     });
   }
 
@@ -45,8 +47,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const campaigns = await prisma.campaign.findMany({
       where: { userId },
       select: { id: true },
+      take: 1000,
     });
-    const campaignIds = campaigns.map((c) => c.id);
+    const campaignIds = campaigns.map(c => c.id);
 
     // Midnight boundary for "today" in UTC
     const today = new Date();
@@ -91,14 +94,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     await cache.set(cacheKey, data, { ttl: 300, tags: [`user:${userId}`] });
 
     return NextResponse.json(data, {
-      headers: { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=60' },
+      headers: {
+        'Cache-Control': 'private, max-age=300, stale-while-revalidate=60',
+      },
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     logger.error('[analytics/dashboard-stats] Error:', msg);
     return NextResponse.json(
       { error: 'Failed to fetch dashboard stats' },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

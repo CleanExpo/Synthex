@@ -149,6 +149,7 @@ export async function GET(request: NextRequest) {
       prisma.campaign.findMany({
         where: { userId: { in: memberIds } },
         select: { id: true },
+        take: 1000,
       }),
     ]);
     const campaignIds = campaignIdsRaw.map(c => c.id);
@@ -179,6 +180,7 @@ export async function GET(request: NextRequest) {
           publishedAt: { gte: startDate },
         },
         select: { analytics: true },
+        take: 1000,
       }),
       prisma.post.groupBy({
         by: ['platform'],

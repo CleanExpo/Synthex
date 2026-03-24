@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { action, postIds, scheduledAt, offsetHours, status } = validation.data;
+    const { action, postIds, scheduledAt, offsetHours, status } =
+      validation.data;
 
     // -------------------------------------------------------------------------
     // Verify ownership of every post via its campaign's userId
@@ -67,26 +68,34 @@ export async function POST(request: NextRequest) {
       include: {
         campaign: { select: { userId: true } },
       },
+      take: 500,
     });
 
-    const ownedPosts = posts.filter((p) => p.campaign.userId === userId);
+    const ownedPosts = posts.filter(p => p.campaign.userId === userId);
     const unauthorisedIds = postIds.filter(
-      (id) => !ownedPosts.find((p) => p.id === id)
+      id => !ownedPosts.find(p => p.id === id)
     );
 
     if (unauthorisedIds.length === postIds.length) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'None of the specified posts belong to you' },
+        {
+          error: 'Forbidden',
+          message: 'None of the specified posts belong to you',
+        },
         { status: 403 }
       );
     }
 
-    const ownedIds = ownedPosts.map((p) => p.id);
+    const ownedIds = ownedPosts.map(p => p.id);
 
     // -------------------------------------------------------------------------
     // Execute action
     // -------------------------------------------------------------------------
-    type BulkResult = { id: string; status: 'updated' | 'deleted' | 'skipped'; error?: string };
+    type BulkResult = {
+      id: string;
+      status: 'updated' | 'deleted' | 'skipped';
+      error?: string;
+    };
     const results: BulkResult[] = [];
     let processed = 0;
     let failed = 0;
@@ -98,7 +107,8 @@ export async function POST(request: NextRequest) {
           return NextResponse.json(
             {
               error: 'Validation Error',
-              message: 'Provide either scheduledAt or offsetHours for reschedule',
+              message:
+                'Provide either scheduledAt or offsetHours for reschedule',
             },
             { status: 400 }
           );
@@ -143,7 +153,7 @@ export async function POST(request: NextRequest) {
 
       // -- DELETE --------------------------------------------------------------
       case 'delete': {
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async tx => {
           await tx.post.deleteMany({
             where: { id: { in: ownedIds } },
           });
@@ -167,7 +177,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async tx => {
           await tx.post.updateMany({
             where: { id: { in: ownedIds } },
             data: { status },
@@ -182,7 +192,7 @@ export async function POST(request: NextRequest) {
 
       // -- RETRY ---------------------------------------------------------------
       case 'retry': {
-        const failedPosts = ownedPosts.filter((p) => p.status === 'failed');
+        const failedPosts = ownedPosts.filter(p => p.status === 'failed');
 
         if (failedPosts.length === 0) {
           return NextResponse.json(
@@ -201,14 +211,21 @@ export async function POST(request: NextRequest) {
             // Clear error metadata and reschedule
             const currentMeta =
               (post.metadata as Record<string, unknown>) ?? {};
-            const { publishError: _pe, failedAt: _fa, ...cleanMeta } = currentMeta;
+            const {
+              publishError: _pe,
+              failedAt: _fa,
+              ...cleanMeta
+            } = currentMeta;
 
             await prisma.post.update({
               where: { id: post.id },
               data: {
                 status: 'scheduled',
                 scheduledAt: retryDate,
-                metadata: cleanMeta as Record<string, string | number | boolean | null>,
+                metadata: cleanMeta as Record<
+                  string,
+                  string | number | boolean | null
+                >,
               },
             });
             results.push({ id: post.id, status: 'updated' });
@@ -224,7 +241,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Mark non-failed posts as skipped
-        for (const post of ownedPosts.filter((p) => p.status !== 'failed')) {
+        for (const post of ownedPosts.filter(p => p.status !== 'failed')) {
           results.push({
             id: post.id,
             status: 'skipped',
@@ -243,7 +260,11 @@ export async function POST(request: NextRequest) {
 
     // Add skipped entries for unauthorised posts
     for (const id of unauthorisedIds) {
-      results.push({ id, status: 'skipped', error: 'Post not found or not owned' });
+      results.push({
+        id,
+        status: 'skipped',
+        error: 'Post not found or not owned',
+      });
       failed++;
     }
 
@@ -256,7 +277,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('Error in bulk scheduler operation:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to process bulk operation' },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to process bulk operation',
+      },
       { status: 500 }
     );
   }

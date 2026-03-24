@@ -13,7 +13,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
@@ -49,7 +52,10 @@ export async function GET(
     const { id: personaId } = await params;
 
     // Security check
-    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_READ
+    );
 
     if (!security.allowed || !security.context.userId) {
       return NextResponse.json(
@@ -66,21 +72,19 @@ export async function GET(
     });
 
     if (!persona) {
-      return NextResponse.json(
-        { error: 'Persona not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Persona not found' }, { status: 404 });
     }
 
     // Get posts using this persona (via campaigns)
     const campaigns = await prisma.campaign.findMany({
       where: { userId },
       select: { id: true },
+      take: 200,
     });
 
     const posts = await prisma.post.findMany({
       where: {
-        campaignId: { in: campaigns.map((c) => c.id) },
+        campaignId: { in: campaigns.map(c => c.id) },
         status: 'published',
         createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }, // Last 30 days
       },
@@ -122,8 +126,8 @@ export async function GET(
       },
       suggestions,
       recommendedActions: suggestions
-        .filter((s) => s.impact === 'high')
-        .map((s) => ({
+        .filter(s => s.impact === 'high')
+        .map(s => ({
           action: `Change ${s.category} from "${s.current}" to "${s.suggested}"`,
           reason: s.reason,
         })),
@@ -142,10 +146,14 @@ export async function GET(
 // ============================================================================
 
 const applyOptimizationsSchema = z.object({
-  optimizations: z.array(z.object({
-    category: z.string().min(1),
-    value: z.string().min(1),
-  })).min(1, 'No optimizations provided'),
+  optimizations: z
+    .array(
+      z.object({
+        category: z.string().min(1),
+        value: z.string().min(1),
+      })
+    )
+    .min(1, 'No optimizations provided'),
 });
 
 export async function POST(
@@ -156,7 +164,10 @@ export async function POST(
     const { id: personaId } = await params;
 
     // Security check
-    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_WRITE);
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
+    );
 
     if (!security.allowed || !security.context.userId) {
       return NextResponse.json(
@@ -173,10 +184,7 @@ export async function POST(
     });
 
     if (!persona) {
-      return NextResponse.json(
-        { error: 'Persona not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Persona not found' }, { status: 404 });
     }
 
     // Parse request body
@@ -254,20 +262,22 @@ function analyzePerformance(posts: PostAnalytics[]): PerformanceInsight[] {
   const insights: PerformanceInsight[] = [];
 
   if (posts.length === 0) {
-    return [{
-      metric: 'data_availability',
-      value: 0,
-      benchmark: 10,
-      trend: 'stable',
-      recommendation: 'Publish more content to enable performance analysis',
-    }];
+    return [
+      {
+        metric: 'data_availability',
+        value: 0,
+        benchmark: 10,
+        trend: 'stable',
+        recommendation: 'Publish more content to enable performance analysis',
+      },
+    ];
   }
 
   // Calculate average engagement
   let totalEngagement = 0;
   let totalImpressions = 0;
 
-  posts.forEach((post) => {
+  posts.forEach(post => {
     const analytics = post.analytics as Record<string, number> | null;
     if (analytics) {
       totalEngagement += analytics.engagement || analytics.likes || 0;
@@ -277,9 +287,8 @@ function analyzePerformance(posts: PostAnalytics[]): PerformanceInsight[] {
 
   const avgEngagement = totalEngagement / posts.length;
   const avgImpressions = totalImpressions / posts.length;
-  const engagementRate = totalImpressions > 0
-    ? (totalEngagement / totalImpressions) * 100
-    : 0;
+  const engagementRate =
+    totalImpressions > 0 ? (totalEngagement / totalImpressions) * 100 : 0;
 
   // Engagement rate insight
   insights.push({
@@ -287,15 +296,17 @@ function analyzePerformance(posts: PostAnalytics[]): PerformanceInsight[] {
     value: Math.round(engagementRate * 100) / 100,
     benchmark: 3.5, // Industry average
     trend: engagementRate > 3.5 ? 'up' : engagementRate < 2 ? 'down' : 'stable',
-    recommendation: engagementRate < 2
-      ? 'Consider adjusting tone to be more engaging or using questions'
-      : 'Engagement rate is healthy',
+    recommendation:
+      engagementRate < 2
+        ? 'Consider adjusting tone to be more engaging or using questions'
+        : 'Engagement rate is healthy',
   });
 
   // Posts per week
   const oldestPost = posts[posts.length - 1];
   const dayRange = Math.ceil(
-    (Date.now() - new Date(oldestPost.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+    (Date.now() - new Date(oldestPost.createdAt).getTime()) /
+      (1000 * 60 * 60 * 24)
   );
   const postsPerWeek = (posts.length / dayRange) * 7;
 
@@ -304,34 +315,42 @@ function analyzePerformance(posts: PostAnalytics[]): PerformanceInsight[] {
     value: Math.round(postsPerWeek * 10) / 10,
     benchmark: 5, // 5 posts per week
     trend: postsPerWeek > 5 ? 'up' : postsPerWeek < 3 ? 'down' : 'stable',
-    recommendation: postsPerWeek < 3
-      ? 'Increase posting frequency for better visibility'
-      : 'Posting frequency is optimal',
+    recommendation:
+      postsPerWeek < 3
+        ? 'Increase posting frequency for better visibility'
+        : 'Posting frequency is optimal',
   });
 
   // Platform diversity
-  const platforms = new Set(posts.map((p) => p.platform));
+  const platforms = new Set(posts.map(p => p.platform));
   insights.push({
     metric: 'platform_diversity',
     value: platforms.size,
     benchmark: 3,
     trend: platforms.size >= 3 ? 'up' : 'stable',
-    recommendation: platforms.size < 2
-      ? 'Consider expanding to more platforms'
-      : 'Good platform coverage',
+    recommendation:
+      platforms.size < 2
+        ? 'Consider expanding to more platforms'
+        : 'Good platform coverage',
   });
 
   return insights;
 }
 
 function generateSuggestions(
-  persona: { tone: string; style: string; vocabulary: string; emotion: string; accuracy: number },
+  persona: {
+    tone: string;
+    style: string;
+    vocabulary: string;
+    emotion: string;
+    accuracy: number;
+  },
   insights: PerformanceInsight[]
 ): OptimizationSuggestion[] {
   const suggestions: OptimizationSuggestion[] = [];
 
   // Check engagement rate
-  const engagementInsight = insights.find((i) => i.metric === 'engagement_rate');
+  const engagementInsight = insights.find(i => i.metric === 'engagement_rate');
   if (engagementInsight && engagementInsight.value < 2) {
     // Low engagement - suggest tone changes
     if (persona.tone === 'professional') {
@@ -370,7 +389,11 @@ function generateSuggestions(
   }
 
   // Vocabulary suggestions
-  if (persona.vocabulary === 'technical' && engagementInsight && engagementInsight.value < 3) {
+  if (
+    persona.vocabulary === 'technical' &&
+    engagementInsight &&
+    engagementInsight.value < 3
+  ) {
     suggestions.push({
       category: 'vocabulary',
       current: 'technical',
@@ -387,7 +410,8 @@ function generateSuggestions(
       category: 'style',
       current: persona.style,
       suggested: persona.style,
-      reason: 'Current configuration is performing well - no changes recommended',
+      reason:
+        'Current configuration is performing well - no changes recommended',
       confidence: 0.8,
       impact: 'low',
     });
@@ -406,7 +430,7 @@ function calculateOptimizationScore(
   score += (persona.accuracy / 100) * 25;
 
   // Add insights contribution
-  insights.forEach((insight) => {
+  insights.forEach(insight => {
     if (insight.trend === 'up') score += 5;
     if (insight.trend === 'down') score -= 5;
     if (insight.value >= insight.benchmark) score += 3;
@@ -416,11 +440,23 @@ function calculateOptimizationScore(
 }
 
 function isValidTone(value: string): boolean {
-  return ['professional', 'casual', 'authoritative', 'friendly', 'humorous'].includes(value);
+  return [
+    'professional',
+    'casual',
+    'authoritative',
+    'friendly',
+    'humorous',
+  ].includes(value);
 }
 
 function isValidStyle(value: string): boolean {
-  return ['formal', 'conversational', 'thought-provoking', 'educational', 'inspirational'].includes(value);
+  return [
+    'formal',
+    'conversational',
+    'thought-provoking',
+    'educational',
+    'inspirational',
+  ].includes(value);
 }
 
 function isValidVocabulary(value: string): boolean {
@@ -428,7 +464,13 @@ function isValidVocabulary(value: string): boolean {
 }
 
 function isValidEmotion(value: string): boolean {
-  return ['neutral', 'friendly', 'confident', 'inspiring', 'empathetic'].includes(value);
+  return [
+    'neutral',
+    'friendly',
+    'confident',
+    'inspiring',
+    'empathetic',
+  ].includes(value);
 }
 
 // Node.js runtime required for Prisma

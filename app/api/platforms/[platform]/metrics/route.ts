@@ -10,7 +10,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
 // Platform colors
@@ -34,7 +37,10 @@ export async function GET(
     const platformLower = platform.toLowerCase();
 
     // Security check
-    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.PUBLIC_READ);
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.PUBLIC_READ
+    );
     const userId = security.context.userId;
 
     // Get time range
@@ -68,6 +74,7 @@ export async function GET(
         status: true,
         createdAt: true,
       },
+      take: 1000,
     });
 
     // Calculate aggregates
@@ -77,7 +84,7 @@ export async function GET(
     let totalComments = 0;
     let totalShares = 0;
 
-    posts.forEach((post) => {
+    posts.forEach(post => {
       const analytics = post.analytics as Record<string, number> | null;
       if (analytics) {
         totalEngagement += analytics.engagement || 0;
@@ -88,10 +95,14 @@ export async function GET(
       }
     });
 
-    const connectionMeta = connection?.metadata as Record<string, number> | null;
+    const connectionMeta = connection?.metadata as Record<
+      string,
+      number
+    > | null;
 
     return NextResponse.json({
-      platform: platform.charAt(0).toUpperCase() + platform.slice(1).toLowerCase(),
+      platform:
+        platform.charAt(0).toUpperCase() + platform.slice(1).toLowerCase(),
       engagement: totalEngagement,
       followers: connectionMeta?.followers || 0,
       posts: posts.length,

@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
         scheduledAt: true,
         campaignId: true,
       },
+      take: 500,
       orderBy: { scheduledAt: 'asc' },
     });
 
@@ -81,7 +82,11 @@ export async function GET(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
-    logger.info('cron:daily-post:end', { published, failed, durationMs: duration });
+    logger.info('cron:daily-post:end', {
+      published,
+      failed,
+      durationMs: duration,
+    });
 
     return NextResponse.json({
       success: true,
@@ -92,6 +97,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('cron:daily-post:fatal', { error });
-    return NextResponse.json({ error: 'Daily post cron failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Daily post cron failed' },
+      { status: 500 }
+    );
   }
 }

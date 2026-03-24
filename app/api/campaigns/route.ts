@@ -119,6 +119,13 @@ export async function GET(request: NextRequest) {
       // Redis unavailable — fall through to DB
     }
 
+    const { searchParams } = new URL(request.url);
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || '100', 10),
+      200
+    );
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
+
     const campaigns = await prisma.campaign.findMany({
       where: queryFilter,
       include: {
@@ -133,6 +140,8 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset,
     });
 
     // ── Cache write ─────────────────────────────────────────────────────────

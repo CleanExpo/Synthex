@@ -55,8 +55,9 @@ async function getUserCampaignIds(userId: string): Promise<string[]> {
   const campaigns = await prisma.campaign.findMany({
     where: { userId },
     select: { id: true },
+    take: 1000,
   });
-  return campaigns.map((c) => c.id);
+  return campaigns.map(c => c.id);
 }
 
 // =============================================================================
@@ -74,7 +75,13 @@ export async function GET(request: NextRequest) {
     if (campaignIds.length === 0) {
       // Return empty stats for users with no campaigns
       const emptyStats: ScheduleHealthStats = {
-        last7Days: { total: 0, published: 0, failed: 0, retrying: 0, successRate: 100 },
+        last7Days: {
+          total: 0,
+          published: 0,
+          failed: 0,
+          retrying: 0,
+          successRate: 100,
+        },
         averageDelayMinutes: 0,
         failureReasons: [],
         nextScheduled: { count: 0, nextAt: null },
@@ -88,74 +95,81 @@ export async function GET(request: NextRequest) {
     const baseCampaignFilter = { campaignId: { in: campaignIds } };
 
     // -- Parallel queries for 7-day stats ------------------------------------
-    const [total, publishedCount, failedCount, scheduledCount, nextScheduledPost, publishedPosts, failedPosts] =
-      await Promise.all([
-        // Total posts created in last 7 days
-        prisma.post.count({
-          where: { ...baseCampaignFilter, createdAt: { gte: sevenDaysAgo } },
-        }),
+    const [
+      total,
+      publishedCount,
+      failedCount,
+      scheduledCount,
+      nextScheduledPost,
+      publishedPosts,
+      failedPosts,
+    ] = await Promise.all([
+      // Total posts created in last 7 days
+      prisma.post.count({
+        where: { ...baseCampaignFilter, createdAt: { gte: sevenDaysAgo } },
+      }),
 
-        // Published posts in last 7 days
-        prisma.post.count({
-          where: {
-            ...baseCampaignFilter,
-            status: 'published',
-            publishedAt: { gte: sevenDaysAgo },
-          },
-        }),
+      // Published posts in last 7 days
+      prisma.post.count({
+        where: {
+          ...baseCampaignFilter,
+          status: 'published',
+          publishedAt: { gte: sevenDaysAgo },
+        },
+      }),
 
-        // Failed posts in last 7 days
-        prisma.post.count({
-          where: {
-            ...baseCampaignFilter,
-            status: 'failed',
-            updatedAt: { gte: sevenDaysAgo },
-          },
-        }),
+      // Failed posts in last 7 days
+      prisma.post.count({
+        where: {
+          ...baseCampaignFilter,
+          status: 'failed',
+          updatedAt: { gte: sevenDaysAgo },
+        },
+      }),
 
-        // Currently scheduled posts (future)
-        prisma.post.count({
-          where: {
-            ...baseCampaignFilter,
-            status: 'scheduled',
-            scheduledAt: { gte: now },
-          },
-        }),
+      // Currently scheduled posts (future)
+      prisma.post.count({
+        where: {
+          ...baseCampaignFilter,
+          status: 'scheduled',
+          scheduledAt: { gte: now },
+        },
+      }),
 
-        // Next scheduled post
-        prisma.post.findFirst({
-          where: {
-            ...baseCampaignFilter,
-            status: 'scheduled',
-            scheduledAt: { gte: now },
-          },
-          orderBy: { scheduledAt: 'asc' },
-          select: { scheduledAt: true },
-        }),
+      // Next scheduled post
+      prisma.post.findFirst({
+        where: {
+          ...baseCampaignFilter,
+          status: 'scheduled',
+          scheduledAt: { gte: now },
+        },
+        orderBy: { scheduledAt: 'asc' },
+        select: { scheduledAt: true },
+      }),
 
-        // Published posts for delay calculation (limit 100 for perf)
-        prisma.post.findMany({
-          where: {
-            ...baseCampaignFilter,
-            status: 'published',
-            publishedAt: { gte: sevenDaysAgo },
-            scheduledAt: { not: null },
-          },
-          select: { scheduledAt: true, publishedAt: true },
-          take: 100,
-        }),
+      // Published posts for delay calculation (limit 100 for perf)
+      prisma.post.findMany({
+        where: {
+          ...baseCampaignFilter,
+          status: 'published',
+          publishedAt: { gte: sevenDaysAgo },
+          scheduledAt: { not: null },
+        },
+        select: { scheduledAt: true, publishedAt: true },
+        take: 100,
+      }),
 
-        // Failed posts for reason breakdown
-        prisma.post.findMany({
-          where: {
-            ...baseCampaignFilter,
-            status: 'failed',
-            updatedAt: { gte: sevenDaysAgo },
-          },
-          select: { metadata: true },
-          take: 50,
-        }),
-      ]);
+      // Failed posts for reason breakdown
+      prisma.post.findMany({
+        where: {
+          ...baseCampaignFilter,
+          status: 'failed',
+          updatedAt: { gte: sevenDaysAgo },
+        },
+        select: { metadata: true },
+        take: 50,
+      }),
+    ]);
 
     // -- Retry queue count ---------------------------------------------------
     // Posts that are scheduled but have retryCount > 0 in metadata
@@ -170,7 +184,7 @@ export async function GET(request: NextRequest) {
       take: 200,
     });
 
-    const retryingCount = scheduledPostsWithMeta.filter((p) => {
+    const retryingCount = scheduledPostsWithMeta.filter(p => {
       const meta = p.metadata as Record<string, unknown> | null;
       return meta && typeof meta.retryCount === 'number' && meta.retryCount > 0;
     }).length;
@@ -187,9 +201,10 @@ export async function GET(request: NextRequest) {
         }
       }
     }
-    const avgDelayMinutes = delayCount > 0
-      ? Math.round((totalDelayMs / delayCount / 60000) * 10) / 10
-      : 0;
+    const avgDelayMinutes =
+      delayCount > 0
+        ? Math.round((totalDelayMs / delayCount / 60000) * 10) / 10
+        : 0;
 
     // -- Failure reasons breakdown -------------------------------------------
     const reasonCounts: Record<string, number> = {};
@@ -197,8 +212,10 @@ export async function GET(request: NextRequest) {
       const meta = fp.metadata as Record<string, unknown> | null;
       const reason = (meta?.publishError as string) ?? 'Unknown error';
       // Normalise long error messages to first 80 chars
-      const normalisedReason = reason.length > 80 ? reason.slice(0, 80) + '...' : reason;
-      reasonCounts[normalisedReason] = (reasonCounts[normalisedReason] || 0) + 1;
+      const normalisedReason =
+        reason.length > 80 ? reason.slice(0, 80) + '...' : reason;
+      reasonCounts[normalisedReason] =
+        (reasonCounts[normalisedReason] || 0) + 1;
     }
     const failureReasons = Object.entries(reasonCounts)
       .map(([reason, count]) => ({ reason, count }))
@@ -207,9 +224,10 @@ export async function GET(request: NextRequest) {
 
     // -- Calculate success rate (published / (published + failed)) -----------
     const completedTotal = publishedCount + failedCount;
-    const successRate = completedTotal > 0
-      ? Math.round((publishedCount / completedTotal) * 1000) / 10
-      : 100;
+    const successRate =
+      completedTotal > 0
+        ? Math.round((publishedCount / completedTotal) * 1000) / 10
+        : 100;
 
     // -- Build response ------------------------------------------------------
     const stats: ScheduleHealthStats = {

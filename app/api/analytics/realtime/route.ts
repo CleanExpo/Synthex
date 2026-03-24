@@ -9,7 +9,10 @@
 
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
 /**
@@ -41,7 +44,8 @@ export async function GET(request: NextRequest) {
     // Get user's campaigns for filtering
     const userCampaigns = await prisma.campaign.findMany({
       where: { userId: security.context.userId },
-      select: { id: true }
+      select: { id: true },
+      take: 200,
     });
     const campaignIds = userCampaigns.map(c => c.id);
 
@@ -54,9 +58,9 @@ export async function GET(request: NextRequest) {
             lastHour: { events: 0, engagements: 0, posts: 0 },
             last24Hours: { events: 0, engagements: 0, posts: 0 },
             liveActivity: [],
-            platformStatus: []
+            platformStatus: [],
           },
-          timestamp: now.toISOString()
+          timestamp: now.toISOString(),
         },
         200,
         security.context
@@ -70,34 +74,34 @@ export async function GET(request: NextRequest) {
       eventsLast24Hours,
       recentEvents,
       postsLastHour,
-      postsLast24Hours
+      postsLast24Hours,
     ] = await Promise.all([
       // Events in last 5 minutes
       prisma.analyticsEvent.count({
         where: {
           userId: security.context.userId,
-          timestamp: { gte: fiveMinutesAgo }
-        }
+          timestamp: { gte: fiveMinutesAgo },
+        },
       }),
       // Events in last hour
       prisma.analyticsEvent.count({
         where: {
           userId: security.context.userId,
-          timestamp: { gte: oneHourAgo }
-        }
+          timestamp: { gte: oneHourAgo },
+        },
       }),
       // Events in last 24 hours
       prisma.analyticsEvent.count({
         where: {
           userId: security.context.userId,
-          timestamp: { gte: twentyFourHoursAgo }
-        }
+          timestamp: { gte: twentyFourHoursAgo },
+        },
       }),
       // Recent events for live activity feed
       prisma.analyticsEvent.findMany({
         where: {
           userId: security.context.userId,
-          timestamp: { gte: fiveMinutesAgo }
+          timestamp: { gte: fiveMinutesAgo },
         },
         orderBy: { timestamp: 'desc' },
         take: 20,
@@ -106,67 +110,69 @@ export async function GET(request: NextRequest) {
           type: true,
           platform: true,
           timestamp: true,
-          metadata: true
-        }
+          metadata: true,
+        },
       }),
       // Posts published in last hour
       prisma.post.count({
         where: {
           campaignId: { in: campaignIds },
           status: 'published',
-          publishedAt: { gte: oneHourAgo }
-        }
+          publishedAt: { gte: oneHourAgo },
+        },
       }),
       // Posts published in last 24 hours
       prisma.post.count({
         where: {
           campaignId: { in: campaignIds },
           status: 'published',
-          publishedAt: { gte: twentyFourHoursAgo }
-        }
-      })
+          publishedAt: { gte: twentyFourHoursAgo },
+        },
+      }),
     ]);
 
     // Get engagement events (likes, comments, shares, clicks)
     const engagementTypes = ['like', 'comment', 'share', 'click'];
-    const [engagementsLast5Min, engagementsLastHour, engagementsLast24Hours] = await Promise.all([
-      prisma.analyticsEvent.count({
-        where: {
-          userId: security.context.userId,
-          timestamp: { gte: fiveMinutesAgo },
-          type: { in: engagementTypes }
-        }
-      }),
-      prisma.analyticsEvent.count({
-        where: {
-          userId: security.context.userId,
-          timestamp: { gte: oneHourAgo },
-          type: { in: engagementTypes }
-        }
-      }),
-      prisma.analyticsEvent.count({
-        where: {
-          userId: security.context.userId,
-          timestamp: { gte: twentyFourHoursAgo },
-          type: { in: engagementTypes }
-        }
-      })
-    ]);
+    const [engagementsLast5Min, engagementsLastHour, engagementsLast24Hours] =
+      await Promise.all([
+        prisma.analyticsEvent.count({
+          where: {
+            userId: security.context.userId,
+            timestamp: { gte: fiveMinutesAgo },
+            type: { in: engagementTypes },
+          },
+        }),
+        prisma.analyticsEvent.count({
+          where: {
+            userId: security.context.userId,
+            timestamp: { gte: oneHourAgo },
+            type: { in: engagementTypes },
+          },
+        }),
+        prisma.analyticsEvent.count({
+          where: {
+            userId: security.context.userId,
+            timestamp: { gte: twentyFourHoursAgo },
+            type: { in: engagementTypes },
+          },
+        }),
+      ]);
 
     // Get platform status (activity by platform)
     const platformActivity = await prisma.analyticsEvent.groupBy({
       by: ['platform'],
       where: {
         userId: security.context.userId,
-        timestamp: { gte: oneHourAgo }
+        timestamp: { gte: oneHourAgo },
       },
-      _count: { id: true }
+      _count: { id: true },
     });
 
     const platformStatus = platformActivity.map(p => ({
       platform: p.platform,
       eventsLastHour: p._count.id,
-      status: p._count.id > 10 ? 'active' : p._count.id > 0 ? 'low' : 'inactive'
+      status:
+        p._count.id > 10 ? 'active' : p._count.id > 0 ? 'low' : 'inactive',
     }));
 
     // Estimate "active now" based on view events in last 5 minutes
@@ -174,8 +180,8 @@ export async function GET(request: NextRequest) {
       where: {
         userId: security.context.userId,
         timestamp: { gte: fiveMinutesAgo },
-        type: 'view'
-      }
+        type: 'view',
+      },
     });
 
     // Rough estimate: assume each view represents ~1 unique visitor
@@ -188,7 +194,7 @@ export async function GET(request: NextRequest) {
       type: event.type,
       platform: event.platform,
       timestamp: event.timestamp.toISOString(),
-      description: formatEventDescription(event.type, event.platform)
+      description: formatEventDescription(event.type, event.platform),
     }));
 
     return APISecurityChecker.createSecureResponse(
@@ -197,27 +203,26 @@ export async function GET(request: NextRequest) {
           activeNow,
           last5Minutes: {
             events: eventsLast5Min,
-            engagements: engagementsLast5Min
+            engagements: engagementsLast5Min,
           },
           lastHour: {
             events: eventsLastHour,
             engagements: engagementsLastHour,
-            posts: postsLastHour
+            posts: postsLastHour,
           },
           last24Hours: {
             events: eventsLast24Hours,
             engagements: engagementsLast24Hours,
-            posts: postsLast24Hours
+            posts: postsLast24Hours,
           },
           liveActivity,
-          platformStatus
+          platformStatus,
         },
-        timestamp: now.toISOString()
+        timestamp: now.toISOString(),
       },
       200,
       security.context
     );
-
   } catch (error) {
     logger.error('Analytics realtime error:', error);
 

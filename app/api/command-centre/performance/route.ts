@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
       analytics: true,
       metadata: true,
     },
+    take: 1000,
   });
 
   const autopilotPosts = posts.filter(p => {

@@ -64,6 +64,7 @@ export async function GET(
         status: true,
         scheduledAt: true,
       },
+      take: 500,
     });
   }
 

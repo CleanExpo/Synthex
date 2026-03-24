@@ -17,7 +17,9 @@ export async function GET(request: NextRequest) {
     const cached = await cache.get<Record<string, unknown>>(cacheKey);
     if (cached) {
       return NextResponse.json(cached, {
-        headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=30' },
+        headers: {
+          'Cache-Control': 'private, max-age=60, stale-while-revalidate=30',
+        },
       });
     }
 
@@ -30,14 +32,18 @@ export async function GET(request: NextRequest) {
     // For multi-business owners: scope to their active organization
     // For regular users: scope by userId (existing behavior)
     let userFilter: Record<string, string> = userId ? { userId } : {};
-    let campaignFilter: Record<string, unknown> = userId ? { campaign: { userId } } : {};
+    let campaignFilter: Record<string, unknown> = userId
+      ? { campaign: { userId } }
+      : {};
 
     if (userId) {
       try {
         const effectiveOrgId = await getEffectiveOrganizationId(userId);
         if (effectiveOrgId) {
           // Multi-business owner with active business: scope by organization
-          campaignFilter = { campaign: { userId, organizationId: effectiveOrgId } };
+          campaignFilter = {
+            campaign: { userId, organizationId: effectiveOrgId },
+          };
           userFilter = { userId };
         }
       } catch {
@@ -80,6 +86,7 @@ export async function GET(request: NextRequest) {
           analytics: true,
           createdAt: true,
         },
+        take: 1000,
       }),
 
       // Get connected platforms for follower count
@@ -129,7 +136,7 @@ export async function GET(request: NextRequest) {
       date.setDate(date.getDate() - i);
       const dayName = date.toLocaleDateString('en', { weekday: 'short' });
 
-      const dayPosts = publishedPosts.filter((p) => {
+      const dayPosts = publishedPosts.filter(p => {
         const postDate = new Date(p.createdAt);
         return postDate.toDateString() === date.toDateString();
       });
@@ -146,9 +153,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate platform stats
-    const platformStats = ['Twitter', 'LinkedIn', 'Instagram', 'TikTok', 'Facebook'].map((platform) => {
-      const platformPosts = publishedPosts.filter((p) =>
-        p.platform.toLowerCase() === platform.toLowerCase()
+    const platformStats = [
+      'Twitter',
+      'LinkedIn',
+      'Instagram',
+      'TikTok',
+      'Facebook',
+    ].map(platform => {
+      const platformPosts = publishedPosts.filter(
+        p => p.platform.toLowerCase() === platform.toLowerCase()
       );
       return {
         platform,
@@ -171,9 +184,10 @@ export async function GET(request: NextRequest) {
       return sum + (analytics?.impressions || 0);
     }, 0);
 
-    const avgEngagementRate = totalImpressions > 0
-      ? ((totalEngagement / totalImpressions) * 100).toFixed(2)
-      : '0.00';
+    const avgEngagementRate =
+      totalImpressions > 0
+        ? ((totalEngagement / totalImpressions) * 100).toFixed(2)
+        : '0.00';
 
     // Calculate total followers from platform connections metadata
     const totalFollowers = platformConnections.reduce((sum, conn) => {
@@ -185,16 +199,27 @@ export async function GET(request: NextRequest) {
     const totalReach = platformMetrics._sum?.reach ?? 0;
 
     // Format recent activity
-    const recentActivity = recentPostsData.map((post) => ({
+    const recentActivity = recentPostsData.map(post => ({
       platform: post.platform,
-      action: post.status === 'published' ? 'Published content' :
-              post.status === 'scheduled' ? 'Scheduled post' : 'Created draft',
+      action:
+        post.status === 'published'
+          ? 'Published content'
+          : post.status === 'scheduled'
+            ? 'Scheduled post'
+            : 'Created draft',
       time: (post.publishedAt || post.createdAt).toISOString(),
-      engagement: (post.analytics as Record<string, number> | null)?.engagement || 0,
+      engagement:
+        (post.analytics as Record<string, number> | null)?.engagement || 0,
     }));
 
     // Trending topics (could be calculated from post content/tags)
-    const trendingTopics = ['#AI', '#SocialMedia', '#Marketing', '#Growth', '#Automation'];
+    const trendingTopics = [
+      '#AI',
+      '#SocialMedia',
+      '#Marketing',
+      '#Growth',
+      '#Automation',
+    ];
 
     const data = {
       stats: {
@@ -216,15 +241,23 @@ export async function GET(request: NextRequest) {
     await cache.set(cacheKey, data, { ttl: 60, tags: [`user:${userId}`] });
 
     return NextResponse.json(data, {
-      headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=30' },
+      headers: {
+        'Cache-Control': 'private, max-age=60, stale-while-revalidate=30',
+      },
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     logger.error('Dashboard stats error:', msg);
 
     // Surface actionable error for database auth failures
-    if (msg.includes('SCRAM') || msg.includes('password') || msg.includes('authentication')) {
-      logger.error('[dashboard] DATABASE_URL password is stale — update in Vercel env vars');
+    if (
+      msg.includes('SCRAM') ||
+      msg.includes('password') ||
+      msg.includes('authentication')
+    ) {
+      logger.error(
+        '[dashboard] DATABASE_URL password is stale — update in Vercel env vars'
+      );
       return NextResponse.json(
         { error: 'Database authentication failed', code: 'DB_AUTH_FAILED' },
         { status: 503 }

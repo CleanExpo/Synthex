@@ -129,6 +129,7 @@ export async function GET(request: NextRequest) {
     const campaigns = await prisma.campaign.findMany({
       where: campaignFilter,
       select: { id: true },
+      take: 1000,
     });
     const campaignIds = campaigns.map(c => c.id);
 
@@ -155,6 +156,7 @@ export async function GET(request: NextRequest) {
           publishedAt: true,
           createdAt: true,
         },
+        take: 1000,
       }),
       prisma.apiUsage.findMany({
         where: {

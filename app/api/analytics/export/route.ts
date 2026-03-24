@@ -121,6 +121,7 @@ async function fetchAnalyticsData(
       },
     },
     orderBy: { createdAt: 'desc' },
+    take: 10000,
   });
 
   // Fetch campaign summaries
