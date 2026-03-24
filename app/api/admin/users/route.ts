@@ -29,7 +29,10 @@ const listUsersQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(100).optional().default(20),
   search: z.string().max(200).optional(),
   verified: z.enum(['true', 'false', 'all']).optional().default('all'),
-  sortBy: z.enum(['createdAt', 'email', 'name', 'lastLogin']).optional().default('createdAt'),
+  sortBy: z
+    .enum(['createdAt', 'email', 'name', 'lastLogin'])
+    .optional()
+    .default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
@@ -52,92 +55,101 @@ const updateUserSchema = z.object({
 export async function GET(request: NextRequest) {
   // Distributed rate limiting via Upstash Redis
   return adminRateLimit(request, async () => {
-  try {
-    const auth = await verifyAdmin(request);
-    if (!auth.isAdmin) {
-      return NextResponse.json(
-        { error: 'Forbidden', message: auth.error || 'Admin access required' },
-        { status: 403 }
-      );
-    }
-
-    const { searchParams } = new URL(request.url);
-    const query: Record<string, string> = {};
-    searchParams.forEach((value, key) => {
-      query[key] = value;
-    });
-
-    const validation = listUsersQuerySchema.safeParse(query);
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation Error', details: validation.error.issues },
-        { status: 400 }
-      );
-    }
-
-    const { page, limit, search, verified, sortBy, sortOrder } = validation.data;
-    const skip = (page - 1) * limit;
-
-    // Build where clause
-    const where: Record<string, unknown> = {};
-
-    if (search) {
-      where.OR = [
-        { email: { contains: search, mode: 'insensitive' } },
-        { name: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    if (verified !== 'all') {
-      where.emailVerified = verified === 'true';
-    }
-
-    // Get total count
-    const total = await prisma.user.count({ where });
-
-    // Get users
-    const users = await prisma.user.findMany({
-      where,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        avatar: true,
-        emailVerified: true,
-        authProvider: true,
-        preferences: true,
-        createdAt: true,
-        updatedAt: true,
-        lastLogin: true,
-        _count: {
-          select: {
-            campaigns: true,
+    try {
+      const auth = await verifyAdmin(request);
+      if (!auth.isAdmin) {
+        return NextResponse.json(
+          {
+            error: 'Forbidden',
+            message: auth.error || 'Admin access required',
           },
-        },
-      },
-      orderBy: { [sortBy === 'lastLogin' ? 'lastLogin' : sortBy]: sortOrder },
-      skip,
-      take: limit,
-    });
+          { status: 403 }
+        );
+      }
 
-    return NextResponse.json({
-      success: true,
-      data: users,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasMore: skip + users.length < total,
-      },
-    });
-  } catch (error: unknown) {
-    logger.error('Admin list users error:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process request') },
-      { status: 500 }
-    );
-  }
+      const { searchParams } = new URL(request.url);
+      const query: Record<string, string> = {};
+      searchParams.forEach((value, key) => {
+        query[key] = value;
+      });
+
+      const validation = listUsersQuerySchema.safeParse(query);
+      if (!validation.success) {
+        return NextResponse.json(
+          { error: 'Validation Error', details: validation.error.issues },
+          { status: 400 }
+        );
+      }
+
+      const { page, limit, search, verified, sortBy, sortOrder } =
+        validation.data;
+      const skip = (page - 1) * limit;
+
+      // Build where clause
+      const where: Record<string, unknown> = {};
+
+      if (search) {
+        where.OR = [
+          { email: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search, mode: 'insensitive' } },
+        ];
+      }
+
+      if (verified !== 'all') {
+        where.emailVerified = verified === 'true';
+      }
+
+      // count and findMany are independent — run in parallel
+      const [total, users] = await Promise.all([
+        prisma.user.count({ where }),
+        prisma.user.findMany({
+          where,
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            avatar: true,
+            emailVerified: true,
+            authProvider: true,
+            preferences: true,
+            createdAt: true,
+            updatedAt: true,
+            lastLogin: true,
+            _count: {
+              select: {
+                campaigns: true,
+              },
+            },
+          },
+          orderBy: {
+            [sortBy === 'lastLogin' ? 'lastLogin' : sortBy]: sortOrder,
+          },
+          skip,
+          take: limit,
+        }),
+      ]);
+
+      return NextResponse.json({
+        success: true,
+        data: users,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+          hasMore: skip + users.length < total,
+        },
+      });
+    } catch (error: unknown) {
+      logger.error('Admin list users error:', error);
+      return NextResponse.json(
+        {
+          error: 'Internal Server Error',
+          message: sanitizeErrorForResponse(error, 'Failed to process request'),
+        },
+        { status: 500 }
+      );
+    }
   });
 }
 
@@ -148,205 +160,209 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   // Distributed rate limiting via Upstash Redis
   return adminRateLimit(request, async () => {
-  try {
-    const auth = await verifyAdmin(request);
-    if (!auth.isAdmin) {
-      return NextResponse.json(
-        { error: 'Forbidden', message: auth.error || 'Admin access required' },
-        { status: 403 }
-      );
-    }
+    try {
+      const auth = await verifyAdmin(request);
+      if (!auth.isAdmin) {
+        return NextResponse.json(
+          {
+            error: 'Forbidden',
+            message: auth.error || 'Admin access required',
+          },
+          { status: 403 }
+        );
+      }
 
-    const body = await request.json();
-    const validation = updateUserStatusSchema.safeParse(body);
+      const body = await request.json();
+      const validation = updateUserStatusSchema.safeParse(body);
 
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation Error', details: validation.error.issues },
-        { status: 400 }
-      );
-    }
+      if (!validation.success) {
+        return NextResponse.json(
+          { error: 'Validation Error', details: validation.error.issues },
+          { status: 400 }
+        );
+      }
 
-    const { userId, action, reason } = validation.data;
+      const { userId, action, reason } = validation.data;
 
-    // Get target user
-    const targetUser = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, email: true, preferences: true, organizationId: true },
-    });
+      // Fetch target user and admin's org (for scope check) in parallel
+      const [targetUser, adminUser] = await Promise.all([
+        prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            id: true,
+            email: true,
+            preferences: true,
+            organizationId: true,
+          },
+        }),
+        auth.userId
+          ? prisma.user.findUnique({
+              where: { id: auth.userId },
+              select: { organizationId: true },
+            })
+          : Promise.resolve(null),
+      ]);
 
-    if (!targetUser) {
-      return NextResponse.json(
-        { error: 'Not Found', message: 'User not found' },
-        { status: 404 }
-      );
-    }
+      if (!targetUser) {
+        return NextResponse.json(
+          { error: 'Not Found', message: 'User not found' },
+          { status: 404 }
+        );
+      }
 
-    // Enforce org scope: JWT-authenticated admins cannot mutate users from other orgs
-    if (auth.userId) {
-      const adminUser = await prisma.user.findUnique({
-        where: { id: auth.userId },
-        select: { organizationId: true },
-      });
-      if (adminUser?.organizationId && targetUser.organizationId !== adminUser.organizationId) {
+      // Enforce org scope: JWT-authenticated admins cannot mutate users from other orgs
+      if (
+        adminUser?.organizationId &&
+        targetUser.organizationId !== adminUser.organizationId
+      ) {
         return NextResponse.json(
           { error: 'Forbidden', message: 'User not in your organisation' },
           { status: 403 }
         );
       }
-    }
 
-    // Prevent modifying superadmins
-    const targetPrefs = targetUser.preferences as { role?: string } | null;
-    if (targetPrefs?.role === 'superadmin') {
+      // Prevent modifying superadmins
+      const targetPrefs = targetUser.preferences as { role?: string } | null;
+      if (targetPrefs?.role === 'superadmin') {
+        return NextResponse.json(
+          { error: 'Forbidden', message: 'Cannot modify superadmin users' },
+          { status: 403 }
+        );
+      }
+
+      switch (action) {
+        case 'suspend': {
+          const currentPrefs =
+            (targetUser.preferences as Record<string, unknown>) || {};
+
+          // Suspend user, invalidate sessions, and log in a transaction
+          await prisma.$transaction(async tx => {
+            await tx.user.update({
+              where: { id: userId },
+              data: {
+                preferences: {
+                  ...currentPrefs,
+                  status: 'suspended',
+                },
+                updatedAt: new Date(),
+              },
+            });
+
+            await tx.session.deleteMany({
+              where: { userId },
+            });
+
+            await tx.auditLog.create({
+              data: {
+                userId: auth.userId || 'system',
+                action: 'user_suspended',
+                resource: 'user',
+                resourceId: userId,
+                details: { reason, targetEmail: targetUser.email },
+                severity: 'high',
+                category: 'admin',
+                outcome: 'success',
+              },
+            });
+          });
+
+          return NextResponse.json({
+            success: true,
+            message: 'User suspended successfully',
+          });
+        }
+
+        case 'activate': {
+          const currentPrefs =
+            (targetUser.preferences as Record<string, unknown>) || {};
+
+          // Activate user and log in a transaction
+          await prisma.$transaction(async tx => {
+            await tx.user.update({
+              where: { id: userId },
+              data: {
+                preferences: {
+                  ...currentPrefs,
+                  status: 'active',
+                },
+                updatedAt: new Date(),
+              },
+            });
+
+            await tx.auditLog.create({
+              data: {
+                userId: auth.userId || 'system',
+                action: 'user_activated',
+                resource: 'user',
+                resourceId: userId,
+                details: { targetEmail: targetUser.email },
+                severity: 'medium',
+                category: 'admin',
+                outcome: 'success',
+              },
+            });
+          });
+
+          return NextResponse.json({
+            success: true,
+            message: 'User activated successfully',
+          });
+        }
+
+        case 'delete': {
+          const currentPrefs =
+            (targetUser.preferences as Record<string, unknown>) || {};
+
+          // Soft delete user and log in a transaction
+          await prisma.$transaction(async tx => {
+            await tx.user.update({
+              where: { id: userId },
+              data: {
+                preferences: {
+                  ...currentPrefs,
+                  status: 'deleted',
+                },
+                email: `deleted_${Date.now()}_${targetUser.email}`,
+                updatedAt: new Date(),
+              },
+            });
+
+            await tx.auditLog.create({
+              data: {
+                userId: auth.userId || 'system',
+                action: 'user_deleted',
+                resource: 'user',
+                resourceId: userId,
+                details: { reason, targetEmail: targetUser.email },
+                severity: 'critical',
+                category: 'admin',
+                outcome: 'success',
+              },
+            });
+          });
+
+          return NextResponse.json({
+            success: true,
+            message: 'User deleted successfully',
+          });
+        }
+
+        default:
+          return NextResponse.json(
+            { error: 'Bad Request', message: 'Invalid action' },
+            { status: 400 }
+          );
+      }
+    } catch (error: unknown) {
+      logger.error('Admin update user error:', error);
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Cannot modify superadmin users' },
-        { status: 403 }
+        {
+          error: 'Internal Server Error',
+          message: sanitizeErrorForResponse(error, 'Failed to process request'),
+        },
+        { status: 500 }
       );
     }
-
-    switch (action) {
-      case 'suspend': {
-        // Get current preferences and update status
-        const currentUser = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { preferences: true },
-        });
-        const currentPrefs = (currentUser?.preferences as Record<string, unknown>) || {};
-
-        // Suspend user, invalidate sessions, and log in a transaction
-        await prisma.$transaction(async (tx) => {
-          await tx.user.update({
-            where: { id: userId },
-            data: {
-              preferences: {
-                ...currentPrefs,
-                status: 'suspended',
-              },
-              updatedAt: new Date(),
-            },
-          });
-
-          await tx.session.deleteMany({
-            where: { userId },
-          });
-
-          await tx.auditLog.create({
-            data: {
-              userId: auth.userId || 'system',
-              action: 'user_suspended',
-              resource: 'user',
-              resourceId: userId,
-              details: { reason, targetEmail: targetUser.email },
-              severity: 'high',
-              category: 'admin',
-              outcome: 'success',
-            },
-          });
-        });
-
-        return NextResponse.json({
-          success: true,
-          message: 'User suspended successfully',
-        });
-      }
-
-      case 'activate': {
-        // Get current preferences and update status
-        const currentUser = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { preferences: true },
-        });
-        const currentPrefs = (currentUser?.preferences as Record<string, unknown>) || {};
-
-        // Activate user and log in a transaction
-        await prisma.$transaction(async (tx) => {
-          await tx.user.update({
-            where: { id: userId },
-            data: {
-              preferences: {
-                ...currentPrefs,
-                status: 'active',
-              },
-              updatedAt: new Date(),
-            },
-          });
-
-          await tx.auditLog.create({
-            data: {
-              userId: auth.userId || 'system',
-              action: 'user_activated',
-              resource: 'user',
-              resourceId: userId,
-              details: { targetEmail: targetUser.email },
-              severity: 'medium',
-              category: 'admin',
-              outcome: 'success',
-            },
-          });
-        });
-
-        return NextResponse.json({
-          success: true,
-          message: 'User activated successfully',
-        });
-      }
-
-      case 'delete': {
-        // Get current preferences and update status
-        const currentUser = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { preferences: true },
-        });
-        const currentPrefs = (currentUser?.preferences as Record<string, unknown>) || {};
-
-        // Soft delete user and log in a transaction
-        await prisma.$transaction(async (tx) => {
-          await tx.user.update({
-            where: { id: userId },
-            data: {
-              preferences: {
-                ...currentPrefs,
-                status: 'deleted',
-              },
-              email: `deleted_${Date.now()}_${targetUser.email}`,
-              updatedAt: new Date(),
-            },
-          });
-
-          await tx.auditLog.create({
-            data: {
-              userId: auth.userId || 'system',
-              action: 'user_deleted',
-              resource: 'user',
-              resourceId: userId,
-              details: { reason, targetEmail: targetUser.email },
-              severity: 'critical',
-              category: 'admin',
-              outcome: 'success',
-            },
-          });
-        });
-
-        return NextResponse.json({
-          success: true,
-          message: 'User deleted successfully',
-        });
-      }
-
-      default:
-        return NextResponse.json(
-          { error: 'Bad Request', message: 'Invalid action' },
-          { status: 400 }
-        );
-    }
-  } catch (error: unknown) {
-    logger.error('Admin update user error:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process request') },
-      { status: 500 }
-    );
-  }
   });
 }
 
@@ -357,128 +373,153 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   // Distributed rate limiting via Upstash Redis
   return adminRateLimit(request, async () => {
-  try {
-    const auth = await verifyAdmin(request);
-    if (!auth.isAdmin) {
-      return NextResponse.json(
-        { error: 'Forbidden', message: auth.error || 'Admin access required' },
-        { status: 403 }
-      );
-    }
+    try {
+      const auth = await verifyAdmin(request);
+      if (!auth.isAdmin) {
+        return NextResponse.json(
+          {
+            error: 'Forbidden',
+            message: auth.error || 'Admin access required',
+          },
+          { status: 403 }
+        );
+      }
 
-    const body = await request.json();
-    const validation = updateUserSchema.safeParse(body);
+      const body = await request.json();
+      const validation = updateUserSchema.safeParse(body);
 
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation Error', details: validation.error.issues },
-        { status: 400 }
-      );
-    }
+      if (!validation.success) {
+        return NextResponse.json(
+          { error: 'Validation Error', details: validation.error.issues },
+          { status: 400 }
+        );
+      }
 
-    const { userId, role, status } = validation.data;
+      const { userId, role, status } = validation.data;
 
-    // At least one field must be provided
-    if (!role && !status) {
-      return NextResponse.json(
-        { error: 'Bad Request', message: 'At least one of role or status must be provided' },
-        { status: 400 }
-      );
-    }
+      // At least one field must be provided
+      if (!role && !status) {
+        return NextResponse.json(
+          {
+            error: 'Bad Request',
+            message: 'At least one of role or status must be provided',
+          },
+          { status: 400 }
+        );
+      }
 
-    // Get target user
-    const targetUser = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, email: true, preferences: true, organizationId: true },
-    });
+      // Fetch target user and admin's org (for scope check) in parallel
+      const [targetUser, adminUser] = await Promise.all([
+        prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            id: true,
+            email: true,
+            preferences: true,
+            organizationId: true,
+          },
+        }),
+        auth.userId
+          ? prisma.user.findUnique({
+              where: { id: auth.userId },
+              select: { organizationId: true },
+            })
+          : Promise.resolve(null),
+      ]);
 
-    if (!targetUser) {
-      return NextResponse.json(
-        { error: 'Not Found', message: 'User not found' },
-        { status: 404 }
-      );
-    }
+      if (!targetUser) {
+        return NextResponse.json(
+          { error: 'Not Found', message: 'User not found' },
+          { status: 404 }
+        );
+      }
 
-    // Enforce org scope: JWT-authenticated admins cannot mutate users from other orgs
-    if (auth.userId) {
-      const adminUser = await prisma.user.findUnique({
-        where: { id: auth.userId },
-        select: { organizationId: true },
-      });
-      if (adminUser?.organizationId && targetUser.organizationId !== adminUser.organizationId) {
+      // Enforce org scope: JWT-authenticated admins cannot mutate users from other orgs
+      if (
+        adminUser?.organizationId &&
+        targetUser.organizationId !== adminUser.organizationId
+      ) {
         return NextResponse.json(
           { error: 'Forbidden', message: 'User not in your organisation' },
           { status: 403 }
         );
       }
-    }
 
-    // Prevent modifying superadmins
-    const targetPrefs = targetUser.preferences as { role?: string } | null;
-    if (targetPrefs?.role === 'superadmin') {
-      return NextResponse.json(
-        { error: 'Forbidden', message: 'Cannot modify superadmin users' },
-        { status: 403 }
-      );
-    }
-
-    // Build updated preferences
-    const currentPrefs = (targetUser.preferences as Record<string, string | number | boolean | null>) || {};
-    const updatedPrefs: Record<string, string | number | boolean | null> = { ...currentPrefs };
-    if (role) updatedPrefs.role = role;
-    if (status) updatedPrefs.status = status;
-
-    // Determine if sessions should be invalidated (status changed to suspended or banned)
-    const shouldDeleteSessions =
-      status && (status === 'suspended' || status === 'banned');
-
-    // Update user in a transaction with audit log
-    await prisma.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id: userId },
-        data: {
-          preferences: updatedPrefs,
-          updatedAt: new Date(),
-        },
-      });
-
-      // Delete sessions if status changed to suspended or banned
-      if (shouldDeleteSessions) {
-        await tx.session.deleteMany({
-          where: { userId },
-        });
+      // Prevent modifying superadmins
+      const targetPrefs = targetUser.preferences as { role?: string } | null;
+      if (targetPrefs?.role === 'superadmin') {
+        return NextResponse.json(
+          { error: 'Forbidden', message: 'Cannot modify superadmin users' },
+          { status: 403 }
+        );
       }
 
-      await tx.auditLog.create({
-        data: {
-          userId: auth.userId || 'system',
-          action: 'user_role_updated',
-          resource: 'user',
-          resourceId: targetUser.id,
-          details: {
-            targetEmail: targetUser.email,
-            changes: { role: role ?? null, status: status ?? null },
-            previousRole: (currentPrefs.role as string) ?? null,
-            previousStatus: (currentPrefs.status as string) ?? null,
-          },
-          severity: role === 'admin' ? 'high' : 'medium',
-          category: 'admin',
-          outcome: 'success',
-        },
-      });
-    });
+      // Build updated preferences
+      const currentPrefs =
+        (targetUser.preferences as Record<
+          string,
+          string | number | boolean | null
+        >) || {};
+      const updatedPrefs: Record<string, string | number | boolean | null> = {
+        ...currentPrefs,
+      };
+      if (role) updatedPrefs.role = role;
+      if (status) updatedPrefs.status = status;
 
-    return NextResponse.json({
-      success: true,
-      message: 'User updated',
-    });
-  } catch (error: unknown) {
-    logger.error('Admin update user error:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process request') },
-      { status: 500 }
-    );
-  }
+      // Determine if sessions should be invalidated (status changed to suspended or banned)
+      const shouldDeleteSessions =
+        status && (status === 'suspended' || status === 'banned');
+
+      // Update user in a transaction with audit log
+      await prisma.$transaction(async tx => {
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            preferences: updatedPrefs,
+            updatedAt: new Date(),
+          },
+        });
+
+        // Delete sessions if status changed to suspended or banned
+        if (shouldDeleteSessions) {
+          await tx.session.deleteMany({
+            where: { userId },
+          });
+        }
+
+        await tx.auditLog.create({
+          data: {
+            userId: auth.userId || 'system',
+            action: 'user_role_updated',
+            resource: 'user',
+            resourceId: targetUser.id,
+            details: {
+              targetEmail: targetUser.email,
+              changes: { role: role ?? null, status: status ?? null },
+              previousRole: (currentPrefs.role as string) ?? null,
+              previousStatus: (currentPrefs.status as string) ?? null,
+            },
+            severity: role === 'admin' ? 'high' : 'medium',
+            category: 'admin',
+            outcome: 'success',
+          },
+        });
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'User updated',
+      });
+    } catch (error: unknown) {
+      logger.error('Admin update user error:', error);
+      return NextResponse.json(
+        {
+          error: 'Internal Server Error',
+          message: sanitizeErrorForResponse(error, 'Failed to process request'),
+        },
+        { status: 500 }
+      );
+    }
   });
 }
 
