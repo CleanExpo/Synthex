@@ -1,9 +1,9 @@
 # Synthex Route Reference
 
-> Auto-generated 2026-03-23. Read before implementing. Update the "Known issues" and "Last audited" fields after each task.
+> Auto-generated 2026-03-24. Read before implementing. Update the "Known issues" and "Last audited" fields after each task.
 >
-> **496 API routes · 100 dashboard pages · 105 Prisma models in use**
-> Auth: 398 user-authed · 22 admin-only · 24 cron · 52 public
+> **527 API routes · 100 dashboard pages · 110 Prisma models in use**
+> Auth: 420 user-authed · 23 admin-only · 27 cron · 57 public
 
 ---
 
@@ -82,7 +82,7 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### ai-content
 
-- `GET,POST /api/ai-content/sentiment` — user
+- `GET,POST /api/ai-content/sentiment` — user — _contentComment,sentimentAnalysis_
 - `GET,POST /api/ai-content/translate` — user
 - `POST /api/ai-content/hashtags` — user
 - `POST /api/ai-content/optimize` — user
@@ -104,6 +104,10 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET /api/analytics/sentiment` — user
 - `GET /api/analytics` — user — _apiUsage,campaign,post_
 - `POST /api/analytics/engagement` — user
+
+### api-keys
+
+- `GET /api/api-keys/status` — user — _aPICredential_
 
 ### approvals
 
@@ -215,6 +219,7 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 - `GET,POST /api/brand/generate` — user — _brandGeneration,psychologyPrinciple,userPsychologyPreference_
 - `GET,POST /api/brand/identity` — user — _brandIdentity_
+- `GET /api/brand/dna` — user — _brandDNA_
 - `GET /api/brand/kg-check` — user — _brandIdentity_
 - `GET /api/brand/mentions` — user — _brandIdentity,brandMention_
 - `GET /api/brand/profile` — user — _brandDNA_
@@ -285,6 +290,10 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET,POST /api/competitors` — user — _brandGeneration,competitiveAnalysis_
 - `POST /api/competitors/track/execute` — cron
 
+### contact
+
+- `POST /api/contact` — public
+
 ### content
 
 - `DELETE,GET,PATCH,POST /api/content/comments` — user — _auditLog,campaign,post,user_
@@ -299,6 +308,8 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `POST /api/content/branded` — user
 - `POST /api/content/bulk` — user — _campaign,post_
 - `POST /api/content/cross-post` — user
+- `POST /api/content/import-obsidian/confirm` — user
+- `POST /api/content/import-obsidian` — user
 - `POST /api/content/multi-format` — user
 - `POST /api/content/repurpose` — user
 - `POST /api/content/score` — user — _promptTemplate,user_
@@ -322,6 +333,9 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET /api/cron/autopilot` — cron — _autopilotConfig,autopilotRun,campaign,post_
 - `GET /api/cron/autopilot-learn` — cron — _autopilotConfig_
 - `GET /api/cron/daily-post` — cron — _post_
+- `GET /api/cron/drip-day14` — cron — _user_
+- `GET /api/cron/drip-day3` — cron — _user_
+- `GET /api/cron/drip-day7` — cron — _user_
 - `GET /api/cron/fetch-mentions` — cron — _platformConnection,socialMention,trackedKeyword_
 - `GET /api/cron/forecast-training` — cron — _forecastModel_
 - `GET /api/cron/gbp-monitor` — cron — _gBPLocation,gBPReview,gBPSnapshot_
@@ -339,8 +353,19 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### dashboard
 
+- `GET,PATCH /api/dashboard/bio` — user
+- `GET /api/dashboard/awards` — user
+- `GET /api/dashboard/citation` — user
+- `GET /api/dashboard/eeat` — user
+- `GET /api/dashboard/experiments` — user
+- `GET /api/dashboard/geo` — user
 - `GET /api/dashboard/onboarding-summary` — user — _onboardingProgress,organization,user_
+- `GET /api/dashboard/referrals` — user
+- `GET /api/dashboard/roi` — user
+- `GET /api/dashboard/sponsors` — user
 - `GET /api/dashboard/stats` — user — _campaign,platformConnection,platformMetrics,post_
+- `GET /api/dashboard/visuals` — user
+- `GET /api/dashboard/voice` — user
 
 ### demo
 
@@ -384,6 +409,10 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET /api/forecast/[modelId]` — user — _forecastModel,user_
 - `POST /api/forecast/predict` — user — _forecast,forecastModel,user_
 
+### founder
+
+- `POST /api/founder/delete-account` — user
+
 ### gamification
 
 - `GET,POST /api/gamification/streak` — user — _userStreak_
@@ -409,6 +438,7 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET,POST /api/google-business/locations` — user — _gBPLocation_
 - `GET,POST /api/google-business/posts` — user — _gBPLocation_
 - `GET /api/google-business/insights` — user — _gBPLocation,gBPSnapshot_
+- `GET /api/google-business/nap-audit` — user — _brandDNA,gBPLocation,organization_
 - `GET /api/google-business/photos` — user — _gBPLocation_
 - `GET /api/google-business/reviews` — user — _gBPReview_
 - `POST /api/google-business/reviews/[reviewId]/auto-reply` — user — _gBPReview,organization_
@@ -455,7 +485,9 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### invoices
 
-- `GET /api/invoices` — user — _subscription_
+- `DELETE,GET,PATCH /api/invoices/[id]` — user — _invoice_
+- `GET,POST /api/invoices` — user — _invoice,subscription_
+- `GET /api/invoices/list` — user — _invoice_
 
 ### library
 
@@ -475,6 +507,10 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 ### loyalty
 
 - `GET /api/loyalty` — user — _userLoyaltyTier_
+
+### marketplace
+
+- `GET,POST /api/marketplace/products` — user — _marketplaceProduct_
 
 ### media
 
@@ -497,17 +533,21 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 - `GET,POST /api/monitoring/alerts` — user
 - `GET,POST /api/monitoring/errors` — user
-- `GET,POST /api/monitoring/events` — user
+- `GET,POST /api/monitoring/events` — admin — _auditLog,user_
 - `GET,POST /api/monitoring/performance` — public
 - `GET /api/monitoring/business-metrics` — user
 - `GET /api/monitoring/health-dashboard` — public
 - `GET /api/monitoring/metrics` — public
 
+### newsletter
+
+- `GET,POST /api/newsletter/unsubscribe` — public
+- `POST /api/newsletter/subscribe` — public
+
 ### notifications
 
-- `GET,POST /api/notifications` — user — _notification_
+- `GET,PATCH,POST /api/notifications` — user — _notification_
 - `GET,PUT /api/notifications/settings` — user — _user_
-- `GET /api/notifications/stream` — user
 - `PATCH /api/notifications/[notificationId]/read` — user — _notification_
 
 ### onboarding
@@ -515,6 +555,7 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET,POST /api/onboarding/api-credentials` — user — _aPICredential_
 - `GET,POST /api/onboarding/kickstart` — user — _onboardingProgress,platformConnection,post,user_
 - `GET,POST /api/onboarding/progress` — user — _onboardingProgress,organization_
+- `GET /api/onboarding/checklist` — user — _aPICredential,brandDNA,platformConnection,post_
 - `POST /api/onboarding/complete` — user — _onboardingProgress,organization,user_
 - `POST /api/onboarding/pipeline` — user — _onboardingProgress,organization_
 - `POST /api/onboarding/review` — user — _onboardingProgress,organization_
@@ -588,6 +629,11 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 - `GET,POST /api/psychology/analyze` — public — _user_
 - `GET,POST /api/psychology/principles` — user — _userPsychologyPreference_
+
+### public
+
+- `GET,POST /api/public/testimonials/[token]` — public — _testimonial,testimonialRequest_
+- `GET /api/public/reviews/[orgSlug]` — public — _gBPReview,organization_
 
 ### quality
 
@@ -772,7 +818,7 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET,POST /api/teams/members` — user — _teamInvitation,user,userRole_
 - `GET /api/teams/activity` — user — _auditLog,user_
 - `GET /api/teams/members/search` — user — _user_
-- `GET /api/teams/stats` — user — _campaign,post,user_
+- `GET /api/teams/stats` — user — _campaign,post,teamInvitation,user_
 - `POST /api/teams/invite` — user
 
 ### templates
@@ -780,6 +826,13 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `DELETE,GET,PUT /api/templates/[id]` — user — _promptTemplate,user_
 - `GET,POST /api/templates` — user — _promptTemplate,user_
 - `POST /api/templates/[id]/use` — user — _promptTemplate,user_
+
+### testimonials
+
+- `GET,POST /api/testimonials/requests` — user — _testimonialRequest_
+- `GET /api/testimonials` — user — _testimonial_
+- `PATCH /api/testimonials/[id]` — user — _testimonial_
+- `POST /api/testimonials/[id]/post-to-gmb` — user — _gBPLocation,testimonial_
 
 ### trending
 
@@ -796,8 +849,8 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 ### user
 
+- `DELETE,GET,PATCH,PUT /api/user/profile` — user — _user_
 - `DELETE,GET,POST /api/user/api-keys` — user — _user_
-- `DELETE,GET,PUT /api/user/profile` — user — _user_
 - `DELETE,GET /api/user/account` — public
 - `DELETE,POST /api/user/avatar` — user — _user_
 - `GET,PUT /api/user/settings` — user — _user_
@@ -858,10 +911,6 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET /api/workflows/executions/[id]` — user — _user,workflowExecution_
 - `POST /api/workflows/executions/[id]/approve` — user — _stepExecution,user,workflowExecution_
 - `POST /api/workflows/executions/[id]/cancel` — user — _user,workflowExecution_
-
-### ws
-
-- `GET,POST /api/ws` — user
 
 ---
 
@@ -1035,5 +1084,6 @@ Reverse lookup: which routes touch each model. Top 30 most-used models.
 | 2026-03-23 | /api/contact            | Created — public POST, Resend SDK, rate-limited (writeDefault) | —      |
 
 ### 2026-03-23 — UNI-1633: Obsidian content import
+
 - POST /api/content/import-obsidian — user-auth, writeDefault rate-limit — previews Obsidian note parse (no DB write)
 - POST /api/content/import-obsidian/confirm — user-auth, writeDefault rate-limit — creates ContentDraft from parsed note
