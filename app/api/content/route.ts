@@ -21,7 +21,10 @@ export async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -29,7 +32,9 @@ export async function GET(request: NextRequest) {
     const platform = searchParams.get('platform') || undefined;
     const limitParam = searchParams.get('limit');
     const pageParam = searchParams.get('page');
-    const limit = limitParam ? Math.min(parseInt(limitParam, 10) || 50, 100) : 50;
+    const limit = limitParam
+      ? Math.min(parseInt(limitParam, 10) || 50, 200)
+      : 50;
     const page = pageParam ? Math.max(parseInt(pageParam, 10) || 1, 1) : 1;
     const skip = (page - 1) * limit;
 
@@ -77,7 +82,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('[Content] Error:', error);
-    return NextResponse.json({ error: 'Failed to fetch content' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch content' },
+      { status: 500 }
+    );
   }
 }
 

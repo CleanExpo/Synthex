@@ -55,7 +55,7 @@ async function getUserCampaignIds(userId: string): Promise<string[]> {
   const campaigns = await prisma.campaign.findMany({
     where: { userId },
     select: { id: true },
-    take: 1000,
+    take: 200,
   });
   return campaigns.map(c => c.id);
 }

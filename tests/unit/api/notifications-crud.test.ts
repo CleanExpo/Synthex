@@ -215,7 +215,7 @@ describe('Notifications API - /api/notifications', () => {
 
       expect(mockPrisma.notification.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          take: 100, // capped
+          take: 50, // capped at 50 (LIFO — recent notifications only)
         })
       );
     });

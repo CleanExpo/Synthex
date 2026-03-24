@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
       prisma.notification.findMany({
         where: whereClause,
         orderBy: { createdAt: 'desc' },
-        take: Math.min(limit, 100), // Cap at 100
+        take: Math.min(limit, 50), // Cap at 50 (LIFO — recent notifications only)
         skip: offset,
         select: {
           id: true,
