@@ -25,8 +25,12 @@ export const runtime = 'nodejs';
 
 const listQuerySchema = z.object({
   platform: z.string().optional(),
-  status: z.enum(['active', 'archived', 'deleted']).optional().default('active'),
+  status: z
+    .enum(['active', 'archived', 'deleted'])
+    .optional()
+    .default('active'),
   contentType: z.string().optional(),
+  seoContentType: z.string().optional(),
   limit: z.coerce.number().min(1).max(200).optional().default(50),
   offset: z.coerce.number().min(0).optional().default(0),
 });
@@ -34,7 +38,14 @@ const listQuerySchema = z.object({
 const createSchema = z.object({
   title: z.string().min(1).max(500),
   content: z.string().min(1),
-  contentType: z.enum(['post', 'caption', 'story', 'thread', 'template', 'snippet']),
+  contentType: z.enum([
+    'post',
+    'caption',
+    'story',
+    'thread',
+    'template',
+    'snippet',
+  ]),
   platform: z.string().optional(),
   category: z.string().optional(),
   tags: z.array(z.string()).optional().default([]),
@@ -69,7 +80,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { platform, status, contentType, limit, offset } = validation.data;
+    const { platform, status, contentType, seoContentType, limit, offset } =
+      validation.data;
 
     const where: Record<string, unknown> = {
       userId,
@@ -82,6 +94,11 @@ export async function GET(request: NextRequest) {
 
     if (contentType) {
       where.contentType = contentType;
+    }
+
+    // Filter by seoContentType stored in the metadata JSON field
+    if (seoContentType) {
+      where.metadata = { path: ['seoContentType'], equals: seoContentType };
     }
 
     const [items, total] = await Promise.all([
@@ -121,7 +138,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('[content-library] GET error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to fetch content library' },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to fetch content library',
+      },
       { status: 500 }
     );
   }
@@ -150,7 +170,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { title, content, contentType, platform, category, tags, metadata } = validation.data;
+    const { title, content, contentType, platform, category, tags, metadata } =
+      validation.data;
 
     const item = await prisma.contentLibrary.create({
       data: {

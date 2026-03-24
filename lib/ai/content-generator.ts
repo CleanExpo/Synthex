@@ -168,6 +168,15 @@ export class AIContentGenerator {
       }
     }
 
+    // Auto-classify seoContentType for articles when not explicitly provided (SYN-479)
+    if (
+      request.type === 'article' &&
+      !request.seoContentType &&
+      request.topic
+    ) {
+      request.seoContentType = inferSeoContentType(request.topic);
+    }
+
     // Auto-pick topic from GSC suggestions when no topic supplied (SYN-472)
     if (!request.topic && request.orgId) {
       try {
@@ -862,6 +871,33 @@ Keep the same message but change the style and tone.
 
 // Export singleton instance
 export const aiContentGenerator = new AIContentGenerator();
+
+// ============================================================================
+// SEO CONTENT TYPE CLASSIFICATION (SYN-479)
+// ============================================================================
+
+/**
+ * Infer the best-fit SeoContentType from a plain-language topic string.
+ * Used when seoContentType is not explicitly provided by the caller.
+ * Falls back to 'blog_local_authority' for local-business content.
+ */
+export function inferSeoContentType(
+  topic: string
+): ContentRequest['seoContentType'] {
+  const t = topic.toLowerCase();
+  if (/\bhow[\s-]to\b/.test(t)) return 'how_to';
+  if (/\b(news|update|announcement|launch|release)\b/.test(t))
+    return 'news_item';
+  if (/\b(vs\.?|versus|compare|comparison)\b/.test(t)) return 'comparison';
+  if (/\b(case[\s-]study|success story|results)\b/.test(t)) return 'case_study';
+  if (
+    /\b(\d+|best|top|worst|most)\b.{0,20}\b(tips?|ways?|things?|reasons?|ideas?)\b/.test(
+      t
+    )
+  )
+    return 'listicle';
+  return 'blog_local_authority';
+}
 
 // ============================================================================
 // SEO CONTENT TYPE PROMPTS (SYN-475)

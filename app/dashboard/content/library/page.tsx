@@ -44,6 +44,37 @@ interface ContentLibraryItem {
   updatedAt: string;
 }
 
+// SEO content types (SYN-479)
+const SEO_CONTENT_TYPE_BADGES: Record<
+  string,
+  { class: string; label: string }
+> = {
+  blog_local_authority: {
+    class: 'bg-violet-500/15 text-violet-300 border-violet-500/20',
+    label: 'Local Authority',
+  },
+  how_to: {
+    class: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/20',
+    label: 'How-To',
+  },
+  listicle: {
+    class: 'bg-amber-500/15 text-amber-300 border-amber-500/20',
+    label: 'Listicle',
+  },
+  news_item: {
+    class: 'bg-rose-500/15 text-rose-300 border-rose-500/20',
+    label: 'News',
+  },
+  comparison: {
+    class: 'bg-teal-500/15 text-teal-300 border-teal-500/20',
+    label: 'Comparison',
+  },
+  case_study: {
+    class: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20',
+    label: 'Case Study',
+  },
+};
+
 // =============================================================================
 // Platform display helpers
 // =============================================================================
@@ -160,6 +191,11 @@ function ContentCard({ item, onCopy, onDelete, isDeleting }: ContentCardProps) {
   const platform = getPlatformMeta(item.platform);
   const badgeClass =
     CONTENT_TYPE_BADGES[item.contentType] ?? CONTENT_TYPE_BADGES.snippet;
+  const seoBadge =
+    item.metadata?.seoContentType &&
+    typeof item.metadata.seoContentType === 'string'
+      ? SEO_CONTENT_TYPE_BADGES[item.metadata.seoContentType]
+      : null;
   const preview =
     item.content.length > 150
       ? item.content.slice(0, 150) + '...'
@@ -183,11 +219,20 @@ function ContentCard({ item, onCopy, onDelete, isDeleting }: ContentCardProps) {
             {platform.label}
           </span>
         </div>
-        <span
-          className={`flex-shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border ${badgeClass}`}
-        >
-          {item.contentType}
-        </span>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <span
+            className={`text-xs font-medium px-2 py-0.5 rounded-full border ${badgeClass}`}
+          >
+            {item.contentType}
+          </span>
+          {seoBadge && (
+            <span
+              className={`text-xs font-medium px-2 py-0.5 rounded-full border ${seoBadge.class}`}
+            >
+              {seoBadge.label}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Title */}
@@ -262,18 +307,26 @@ const ALL_CONTENT_TYPES = [
   'snippet',
 ];
 
+const ALL_SEO_TYPES = Object.entries(SEO_CONTENT_TYPE_BADGES).map(
+  ([value, { label }]) => ({ value, label })
+);
+
 interface FilterBarProps {
   platform: string;
   contentType: string;
+  seoContentType: string;
   onPlatformChange: (v: string) => void;
   onContentTypeChange: (v: string) => void;
+  onSeoContentTypeChange: (v: string) => void;
 }
 
 function FilterBar({
   platform,
   contentType,
+  seoContentType,
   onPlatformChange,
   onContentTypeChange,
+  onSeoContentTypeChange,
 }: FilterBarProps) {
   return (
     <div className="flex flex-wrap gap-3 items-center">
@@ -309,6 +362,20 @@ function FilterBar({
           </option>
         ))}
       </select>
+
+      {/* SEO content type selector */}
+      <select
+        value={seoContentType}
+        onChange={e => onSeoContentTypeChange(e.target.value)}
+        className="text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+      >
+        <option value="">All SEO types</option>
+        {ALL_SEO_TYPES.map(t => (
+          <option key={t.value} value={t.value}>
+            {t.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
@@ -323,6 +390,7 @@ export default function ContentLibraryPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [platformFilter, setPlatformFilter] = useState('');
   const [contentTypeFilter, setContentTypeFilter] = useState('');
+  const [seoContentTypeFilter, setSeoContentTypeFilter] = useState('');
 
   // ---------------------------------------------------------------------------
   // Fetch
@@ -334,6 +402,8 @@ export default function ContentLibraryPage() {
       const params = new URLSearchParams({ status: 'active', limit: '100' });
       if (platformFilter) params.set('platform', platformFilter);
       if (contentTypeFilter) params.set('contentType', contentTypeFilter);
+      if (seoContentTypeFilter)
+        params.set('seoContentType', seoContentTypeFilter);
 
       const response = await fetch(
         `/api/content-library?${params.toString()}`,
@@ -353,7 +423,7 @@ export default function ContentLibraryPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [platformFilter, contentTypeFilter]);
+  }, [platformFilter, contentTypeFilter, seoContentTypeFilter]);
 
   useEffect(() => {
     fetchItems();
@@ -397,7 +467,9 @@ export default function ContentLibraryPage() {
   // Render
   // ---------------------------------------------------------------------------
 
-  const isFiltered = Boolean(platformFilter || contentTypeFilter);
+  const isFiltered = Boolean(
+    platformFilter || contentTypeFilter || seoContentTypeFilter
+  );
 
   return (
     <div className="space-y-6">
@@ -421,8 +493,10 @@ export default function ContentLibraryPage() {
           <FilterBar
             platform={platformFilter}
             contentType={contentTypeFilter}
+            seoContentType={seoContentTypeFilter}
             onPlatformChange={setPlatformFilter}
             onContentTypeChange={setContentTypeFilter}
+            onSeoContentTypeChange={setSeoContentTypeFilter}
           />
         </CardContent>
       </Card>
