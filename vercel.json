@@ -184,6 +184,10 @@
     {
       "path": "/api/cron/gsc-topic-sync",
       "schedule": "0 20 * * 0"
+    },
+    {
+      "path": "/api/cron/rank-snapshot",
+      "schedule": "0 19 * * 0"
     }
   ]
 }

@@ -585,6 +585,11 @@ model Organization {
   // GSC content topic suggestions (SYN-472)
   contentTopicSuggestions ContentTopicSuggestion[]
 
+  // Keyword rank tracking (SYN-476)
+  keywordTargets   KeywordTarget[]
+  rankSnapshots    KeywordRankSnapshot[]
+  visibilityScores VisibilityScore[]
+
   // Indices for multi-tenant queries
   @@index([slug])
   @@index([status])
@@ -633,6 +638,68 @@ model ContentTopicSuggestion {
   @@index([organizationId])
   @@index([organizationId, usedAt])
   @@map("content_topic_suggestions")
+}
+
+// ============================================================================
+// SEO Rank Tracking + Visibility Score (SYN-476 + SYN-473)
+// ============================================================================
+
+/// User-defined keyword targets for rank tracking.
+/// Max 20 per org. Each keyword gets snapshotted weekly from GSC.
+model KeywordTarget {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  keyword        String
+  location       String? // suburb/city modifier (e.g. "Parramatta NSW")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  snapshots    KeywordRankSnapshot[]
+
+  @@unique([organizationId, keyword])
+  @@index([organizationId])
+  @@map("keyword_targets")
+}
+
+/// Weekly GSC rank snapshot per keyword target.
+/// position null = not found in top 100 (query not matching GSC data).
+model KeywordRankSnapshot {
+  id              String   @id @default(cuid())
+  organizationId  String   @map("organization_id")
+  keywordTargetId String   @map("keyword_target_id")
+  position        Float? // null = not in top 100
+  impressions     Int?
+  clicks          Int?
+  ctr             Float?
+  snapshotDate    DateTime @map("snapshot_date") @db.Date
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  keywordTarget KeywordTarget @relation(fields: [keywordTargetId], references: [id], onDelete: Cascade)
+
+  @@unique([keywordTargetId, snapshotDate])
+  @@index([organizationId, snapshotDate])
+  @@index([keywordTargetId])
+  @@map("keyword_rank_snapshots")
+}
+
+/// Composite visibility score (0–100) for an organisation.
+/// Recalculated on: new review, content publish, rank snapshot, GBP update.
+model VisibilityScore {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  score          Int // 0–100
+  reviewScore    Int      @map("review_score") // 0–40
+  gbpScore       Int      @map("gbp_score") // 0–20
+  contentScore   Int      @map("content_score") // 0–20
+  rankScore      Int      @map("rank_score") // 0–20
+  calculatedAt   DateTime @default(now()) @map("calculated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, calculatedAt])
+  @@map("visibility_scores")
 }
 
 // Platform Integration Models
