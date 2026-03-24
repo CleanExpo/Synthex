@@ -13,35 +13,35 @@
  * - Creates a WorkflowExecution audit record for every run
  */
 
-import { prisma } from '@/lib/prisma'
-import { logger } from '@/lib/logger'
+import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
-const AUTO_DRAFT_THRESHOLD = 0.85
-const CIRCUIT_BREAKER_MIN_INTERVAL_MS = 60 * 60 * 1000   // 1 hour
-const CIRCUIT_BREAKER_DAILY_MAX = 6
+const AUTO_DRAFT_THRESHOLD = 0.85;
+const CIRCUIT_BREAKER_MIN_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+const CIRCUIT_BREAKER_DAILY_MAX = 6;
 
 export interface ContentOpportunity {
-  title: string
-  description: string
-  confidenceScore: number
-  suggestedPlatforms: string[]
-  urgency: 'low' | 'medium' | 'high'
+  title: string;
+  description: string;
+  confidenceScore: number;
+  suggestedPlatforms: string[];
+  urgency: 'low' | 'medium' | 'high';
 }
 
 export interface InsightsDraft {
-  content: string
-  platform: string
-  opportunityTitle: string
-  confidenceScore: number
+  content: string;
+  platform: string;
+  opportunityTitle: string;
+  confidenceScore: number;
 }
 
 export interface InsightsResult {
-  opportunities: ContentOpportunity[]
-  generatedDrafts: InsightsDraft[]
-  autoDraftedCount: number
-  queuedForReviewCount: number
-  executionId: string
-  circuitBreakerTripped: boolean
+  opportunities: ContentOpportunity[];
+  generatedDrafts: InsightsDraft[];
+  autoDraftedCount: number;
+  queuedForReviewCount: number;
+  executionId: string;
+  circuitBreakerTripped: boolean;
 }
 
 /**
@@ -59,14 +59,17 @@ export async function runInsightsAgent(
     queuedForReviewCount: 0,
     executionId: '',
     circuitBreakerTripped: false,
-  }
+  };
 
   try {
     // Circuit breaker check
-    const circuitBreakerResult = await checkCircuitBreaker(orgId)
+    const circuitBreakerResult = await checkCircuitBreaker(orgId);
     if (circuitBreakerResult.tripped) {
-      logger.warn('insights-agent: circuit breaker active', { orgId, reason: circuitBreakerResult.reason })
-      return { ...empty, circuitBreakerTripped: true }
+      logger.warn('insights-agent: circuit breaker active', {
+        orgId,
+        reason: circuitBreakerResult.reason,
+      });
+      return { ...empty, circuitBreakerTripped: true };
     }
 
     // Create audit WorkflowExecution record
@@ -81,35 +84,35 @@ export async function runInsightsAgent(
         totalSteps: 3,
         startedAt: new Date(),
       },
-    })
+    });
 
     // Step 1: Gather performance data
-    const performanceData = await gatherPerformanceData(orgId)
+    const performanceData = await gatherPerformanceData(orgId);
 
     // Step 2: Generate opportunities via OpenRouter
-    const opportunities = await generateOpportunities(performanceData, orgId)
+    const opportunities = await generateOpportunities(performanceData, orgId);
 
     // Step 3: Generate draft content for each opportunity
-    const drafts = await generateDrafts(opportunities)
+    const drafts = await generateDrafts(opportunities);
 
     // Process results: high confidence → auto-draft; low confidence → queue for review
-    let autoDraftedCount = 0
-    let queuedForReviewCount = 0
+    let autoDraftedCount = 0;
+    let queuedForReviewCount = 0;
 
     // Get the org's first user to use as campaign userId (agent acts on behalf of org)
     const orgUser = await prisma.user.findFirst({
       where: { organizationId: orgId },
       select: { id: true },
-    })
+    });
 
     if (orgUser) {
       for (const draft of drafts) {
         if (draft.confidenceScore >= AUTO_DRAFT_THRESHOLD) {
-          await createAutoDraft(draft, orgId, orgUser.id)
-          autoDraftedCount++
+          await createAutoDraft(draft, orgId, orgUser.id);
+          autoDraftedCount++;
         } else {
-          await createReviewQueueItem(draft, execution.id, orgId, orgUser.id)
-          queuedForReviewCount++
+          await createReviewQueueItem(draft, execution.id, orgId, orgUser.id);
+          queuedForReviewCount++;
         }
       }
     }
@@ -128,7 +131,7 @@ export async function runInsightsAgent(
           queued: queuedForReviewCount,
         } as never,
       },
-    })
+    });
 
     logger.info('insights-agent: run complete', {
       orgId,
@@ -136,7 +139,7 @@ export async function runInsightsAgent(
       opportunities: opportunities.length,
       autoDrafted: autoDraftedCount,
       queued: queuedForReviewCount,
-    })
+    });
 
     return {
       opportunities,
@@ -145,10 +148,10 @@ export async function runInsightsAgent(
       queuedForReviewCount,
       executionId: execution.id,
       circuitBreakerTripped: false,
-    }
+    };
   } catch (err) {
-    logger.error('insights-agent: run failed', { orgId, error: err })
-    return empty
+    logger.error('insights-agent: run failed', { orgId, error: err });
+    return empty;
   }
 }
 
@@ -156,41 +159,50 @@ export async function runInsightsAgent(
 // Circuit breaker
 // ---------------------------------------------------------------------------
 
-async function checkCircuitBreaker(orgId: string): Promise<{ tripped: boolean; reason: string }> {
-  const now = new Date()
-  const oneHourAgo = new Date(now.getTime() - CIRCUIT_BREAKER_MIN_INTERVAL_MS)
-  const midnightToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+async function checkCircuitBreaker(
+  orgId: string
+): Promise<{ tripped: boolean; reason: string }> {
+  const now = new Date();
+  const oneHourAgo = new Date(now.getTime() - CIRCUIT_BREAKER_MIN_INTERVAL_MS);
+  const midnightToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  );
 
-  // Check for run in the last hour
-  const recentRun = await prisma.workflowExecution.findFirst({
-    where: {
-      organizationId: orgId,
-      triggerType: 'cron',
-      title: 'AI Insights Agent Run',
-      startedAt: { gte: oneHourAgo },
-    },
-    select: { id: true, startedAt: true },
-  })
+  // Both checks are independent — run in parallel
+  const [recentRun, todayCount] = await Promise.all([
+    prisma.workflowExecution.findFirst({
+      where: {
+        organizationId: orgId,
+        triggerType: 'cron',
+        title: 'AI Insights Agent Run',
+        startedAt: { gte: oneHourAgo },
+      },
+      select: { id: true, startedAt: true },
+    }),
+    prisma.workflowExecution.count({
+      where: {
+        organizationId: orgId,
+        triggerType: 'cron',
+        title: 'AI Insights Agent Run',
+        startedAt: { gte: midnightToday },
+      },
+    }),
+  ]);
 
   if (recentRun) {
-    return { tripped: true, reason: 'Ran within the last hour' }
+    return { tripped: true, reason: 'Ran within the last hour' };
   }
-
-  // Check daily cap
-  const todayCount = await prisma.workflowExecution.count({
-    where: {
-      organizationId: orgId,
-      triggerType: 'cron',
-      title: 'AI Insights Agent Run',
-      startedAt: { gte: midnightToday },
-    },
-  })
 
   if (todayCount >= CIRCUIT_BREAKER_DAILY_MAX) {
-    return { tripped: true, reason: `Daily limit of ${CIRCUIT_BREAKER_DAILY_MAX} runs reached` }
+    return {
+      tripped: true,
+      reason: `Daily limit of ${CIRCUIT_BREAKER_DAILY_MAX} runs reached`,
+    };
   }
 
-  return { tripped: false, reason: '' }
+  return { tripped: false, reason: '' };
 }
 
 // ---------------------------------------------------------------------------
@@ -198,34 +210,51 @@ async function checkCircuitBreaker(orgId: string): Promise<{ tripped: boolean; r
 // ---------------------------------------------------------------------------
 
 interface PerformanceData {
-  topPerformingPlatforms: string[]
-  avgEngagementRate: number
-  recentMentionTopics: string[]
-  postCount7d: number
+  topPerformingPlatforms: string[];
+  avgEngagementRate: number;
+  recentMentionTopics: string[];
+  postCount7d: number;
 }
 
 async function gatherPerformanceData(orgId: string): Promise<PerformanceData> {
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  // Get org users to look up their connections
+  // Get org users first (needed to extract userIds for downstream queries)
   const orgUsers = await prisma.user.findMany({
     where: { organizationId: orgId },
     select: { id: true },
     take: 10,
-  })
-  const userIds = orgUsers.map((u) => u.id)
+  });
+  const userIds = orgUsers.map(u => u.id);
 
-  // Get platform connections for org users
-  const connections = await prisma.platformConnection.findMany({
-    where: { userId: { in: userIds }, isActive: true },
-    select: { id: true, platform: true },
-    take: 20,
-  })
-  const connectionIds = connections.map((c) => c.id)
-  const platforms = [...new Set(connections.map((c) => c.platform))]
+  // connections, mentions, and postCount7d are independent — run in parallel
+  const [connections, mentions, postCount7d] = await Promise.all([
+    prisma.platformConnection.findMany({
+      where: { userId: { in: userIds }, isActive: true },
+      select: { id: true, platform: true },
+      take: 20,
+    }),
+    prisma.socialMention.findMany({
+      where: {
+        userId: { in: userIds },
+        createdAt: { gte: sevenDaysAgo },
+      },
+      select: { content: true, sentiment: true },
+      take: 20,
+    }),
+    prisma.post.count({
+      where: {
+        campaign: { organizationId: orgId },
+        createdAt: { gte: sevenDaysAgo },
+      },
+    }),
+  ]);
 
-  // Get recent platform metrics
-  let avgEngagementRate = 0
+  const connectionIds = connections.map(c => c.id);
+  const platforms = [...new Set(connections.map(c => c.platform))];
+
+  // Get recent platform metrics (depends on connectionIds)
+  let avgEngagementRate = 0;
   if (connectionIds.length > 0) {
     const metrics = await prisma.platformMetrics.findMany({
       where: {
@@ -234,43 +263,28 @@ async function gatherPerformanceData(orgId: string): Promise<PerformanceData> {
       },
       select: { engagementRate: true },
       take: 100,
-    })
-    const rates = metrics.map((m) => m.engagementRate).filter((r): r is number => r !== null)
-    avgEngagementRate = rates.length > 0 ? rates.reduce((a, b) => a + b, 0) / rates.length : 0
+    });
+    const rates = metrics
+      .map(m => m.engagementRate)
+      .filter((r): r is number => r !== null);
+    avgEngagementRate =
+      rates.length > 0 ? rates.reduce((a, b) => a + b, 0) / rates.length : 0;
   }
-
-  // Get recent social mentions
-  const mentions = await prisma.socialMention.findMany({
-    where: {
-      userId: { in: userIds },
-      createdAt: { gte: sevenDaysAgo },
-    },
-    select: { content: true, sentiment: true },
-    take: 20,
-  })
 
   const mentionTopics = mentions
     .slice(0, 5)
-    .map((m) => {
-      const words = (m.content ?? '').split(' ').slice(0, 5).join(' ')
-      return words
+    .map(m => {
+      const words = (m.content ?? '').split(' ').slice(0, 5).join(' ');
+      return words;
     })
-    .filter(Boolean)
-
-  // Count recent posts
-  const postCount7d = await prisma.post.count({
-    where: {
-      campaign: { organizationId: orgId },
-      createdAt: { gte: sevenDaysAgo },
-    },
-  })
+    .filter(Boolean);
 
   return {
     topPerformingPlatforms: platforms.slice(0, 3),
     avgEngagementRate: Math.round(avgEngagementRate * 100) / 100,
     recentMentionTopics: mentionTopics,
     postCount7d,
-  }
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -281,18 +295,19 @@ async function generateOpportunities(
   data: PerformanceData,
   _orgId: string
 ): Promise<ContentOpportunity[]> {
-  const apiKey = process.env.OPENROUTER_API_KEY
+  const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     // Return sample opportunities when no API key configured
     return [
       {
         title: 'Engagement Boost Opportunity',
-        description: 'Recent engagement data suggests short-form video content would perform well.',
+        description:
+          'Recent engagement data suggests short-form video content would perform well.',
         confidenceScore: 0.78,
         suggestedPlatforms: data.topPerformingPlatforms.slice(0, 2),
         urgency: 'medium',
       },
-    ]
+    ];
   }
 
   const systemPrompt = `You are a content strategy AI for a marketing platform.
@@ -309,7 +324,7 @@ Return ONLY valid JSON matching this schema:
   ]
 }
 
-Identify exactly 3 content opportunities based on the data. Be specific and actionable.`
+Identify exactly 3 content opportunities based on the data. Be specific and actionable.`;
 
   const userPrompt = `Performance data for the last 7 days:
 - Active platforms: ${data.topPerformingPlatforms.join(', ') || 'none yet'}
@@ -317,15 +332,16 @@ Identify exactly 3 content opportunities based on the data. Be specific and acti
 - Posts published: ${data.postCount7d}
 - Recent mention topics: ${data.recentMentionTopics.join('; ') || 'none detected'}
 
-Identify the top 3 content opportunities.`
+Identify the top 3 content opportunities.`;
 
   try {
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.OPENROUTER_SITE_URL ?? 'https://synthex.social',
+        'HTTP-Referer':
+          process.env.OPENROUTER_SITE_URL ?? 'https://synthex.social',
         'X-Title': process.env.OPENROUTER_SITE_NAME ?? 'Synthex',
       },
       body: JSON.stringify({
@@ -337,23 +353,25 @@ Identify the top 3 content opportunities.`
         max_tokens: 1024,
         temperature: 0.5,
       }),
-    })
+    });
 
-    if (!res.ok) throw new Error(`OpenRouter error: ${res.status}`)
+    if (!res.ok) throw new Error(`OpenRouter error: ${res.status}`);
 
-    const responseData = await res.json()
-    const raw = responseData.choices?.[0]?.message?.content ?? ''
-    const jsonMatch = raw.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('No JSON in opportunities response')
+    const responseData = await res.json();
+    const raw = responseData.choices?.[0]?.message?.content ?? '';
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON in opportunities response');
 
     const parsed = JSON.parse(jsonMatch[0]) as {
-      opportunities?: ContentOpportunity[]
-    }
+      opportunities?: ContentOpportunity[];
+    };
 
-    return (parsed.opportunities ?? []).slice(0, 3)
+    return (parsed.opportunities ?? []).slice(0, 3);
   } catch (err) {
-    logger.error('insights-agent: opportunity generation failed', { error: err })
-    return []
+    logger.error('insights-agent: opportunity generation failed', {
+      error: err,
+    });
+    return [];
   }
 }
 
@@ -361,14 +379,16 @@ Identify the top 3 content opportunities.`
 // Draft content generation
 // ---------------------------------------------------------------------------
 
-async function generateDrafts(opportunities: ContentOpportunity[]): Promise<InsightsDraft[]> {
-  const apiKey = process.env.OPENROUTER_API_KEY
-  if (!apiKey || opportunities.length === 0) return []
+async function generateDrafts(
+  opportunities: ContentOpportunity[]
+): Promise<InsightsDraft[]> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey || opportunities.length === 0) return [];
 
-  const drafts: InsightsDraft[] = []
+  const drafts: InsightsDraft[] = [];
 
   for (const opp of opportunities) {
-    const platform = opp.suggestedPlatforms[0] ?? 'general'
+    const platform = opp.suggestedPlatforms[0] ?? 'general';
     const prompt = `Write a compelling ${platform} post for this content opportunity:
 Title: ${opp.title}
 Description: ${opp.description}
@@ -378,13 +398,13 @@ Requirements:
 - Tone: professional but engaging
 - Include relevant hashtags
 - Keep it under 280 characters for Twitter, longer for LinkedIn/Instagram
-- Do not include any preamble, just the post content itself`
+- Do not include any preamble, just the post content itself`;
 
     try {
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -393,12 +413,12 @@ Requirements:
           max_tokens: 512,
           temperature: 0.7,
         }),
-      })
+      });
 
-      if (!res.ok) continue
+      if (!res.ok) continue;
 
-      const data = await res.json()
-      const content = data.choices?.[0]?.message?.content ?? ''
+      const data = await res.json();
+      const content = data.choices?.[0]?.message?.content ?? '';
 
       if (content) {
         drafts.push({
@@ -406,17 +426,17 @@ Requirements:
           platform,
           opportunityTitle: opp.title,
           confidenceScore: opp.confidenceScore,
-        })
+        });
       }
     } catch (err) {
       logger.warn('insights-agent: draft generation failed for opportunity', {
         title: opp.title,
         error: err,
-      })
+      });
     }
   }
 
-  return drafts
+  return drafts;
 }
 
 // ---------------------------------------------------------------------------
@@ -436,9 +456,12 @@ async function createAutoDraft(
       status: 'draft',
       userId,
       organizationId: orgId,
-      content: { aiGenerated: true, opportunityTitle: draft.opportunityTitle } as never,
+      content: {
+        aiGenerated: true,
+        opportunityTitle: draft.opportunityTitle,
+      } as never,
     },
-  })
+  });
 
   await prisma.post.create({
     data: {
@@ -452,7 +475,7 @@ async function createAutoDraft(
         confidenceScore: draft.confidenceScore,
       } as never,
     },
-  })
+  });
 }
 
 async function createReviewQueueItem(
@@ -477,5 +500,5 @@ async function createReviewQueueItem(
       confidenceScore: draft.confidenceScore,
       startedAt: new Date(),
     },
-  })
+  });
 }
