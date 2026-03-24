@@ -1,5 +1,4 @@
-'use client';
-
+import { generateMetadata } from '@/lib/seo/metadata';
 import MarketingLayout from '@/components/marketing/MarketingLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,6 +57,19 @@ const sections = [
     ],
   },
 ];
+
+export const metadata = generateMetadata({
+  title: 'Privacy Policy',
+  description:
+    'How Synthex collects, uses, and protects your personal information. Read our full privacy policy.',
+  path: '/privacy',
+  keywords: [
+    'privacy policy',
+    'data protection',
+    'GDPR',
+    'Australian privacy law',
+  ],
+});
 
 export default function PrivacyPage() {
   return (

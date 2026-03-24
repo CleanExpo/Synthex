@@ -1,5 +1,4 @@
-'use client';
-
+import { generateMetadata } from '@/lib/seo/metadata';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -107,6 +106,18 @@ const milestones = [
       'Launched Agency white-label and API access. Expanded to 9 platforms.',
   },
 ];
+
+export const metadata = generateMetadata({
+  title: 'About Synthex',
+  description:
+    'Meet the team behind Synthex — the AI-powered marketing automation platform built for creators, agencies, and Australian businesses ready to scale.',
+  path: '/about',
+  keywords: [
+    'about Synthex',
+    'AI marketing team',
+    'marketing automation company',
+  ],
+});
 
 export default function AboutPage() {
   return (

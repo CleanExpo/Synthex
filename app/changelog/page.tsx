@@ -1,5 +1,4 @@
-'use client';
-
+import { generateMetadata } from '@/lib/seo/metadata';
 import MarketingLayout from '@/components/marketing/MarketingLayout';
 import { Card } from '@/components/ui/card';
 import { Clock, Sparkles, Zap, Shield, TrendingUp } from '@/components/icons';
@@ -84,6 +83,14 @@ const getTypeBadge = (type: string) => {
       return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
   }
 };
+
+export const metadata = generateMetadata({
+  title: 'Changelog',
+  description:
+    'Latest updates, new features, and improvements to the Synthex platform.',
+  path: '/changelog',
+  keywords: ['changelog', 'product updates', 'new features', 'release notes'],
+});
 
 export default function ChangelogPage() {
   return (

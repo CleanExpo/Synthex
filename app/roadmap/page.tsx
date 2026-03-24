@@ -1,5 +1,4 @@
-'use client';
-
+import { generateMetadata } from '@/lib/seo/metadata';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -79,6 +78,14 @@ const quarters = [
     ],
   },
 ];
+
+export const metadata = generateMetadata({
+  title: 'Product Roadmap',
+  description:
+    "See what's coming next on the Synthex roadmap. Upcoming features, planned improvements, and the future of AI marketing automation.",
+  path: '/roadmap',
+  keywords: ['product roadmap', 'upcoming features', 'AI marketing roadmap'],
+});
 
 export default function RoadmapPage() {
   return (

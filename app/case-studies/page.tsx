@@ -1,5 +1,4 @@
-'use client';
-
+import { generateMetadata } from '@/lib/seo/metadata';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -147,6 +146,19 @@ const stats = [
   { value: '2.2x', label: 'Avg. Engagement Boost' },
   { value: '97%', label: 'Customer Satisfaction' },
 ];
+
+export const metadata = generateMetadata({
+  title: 'Case Studies',
+  description:
+    'Real results from businesses using Synthex AI marketing automation. See how our customers grow with AI-powered content and scheduling.',
+  path: '/case-studies',
+  keywords: [
+    'case studies',
+    'customer success',
+    'AI marketing results',
+    'marketing ROI',
+  ],
+});
 
 export default function CaseStudiesPage() {
   const featuredStudies = caseStudies.filter(study => study.featured);

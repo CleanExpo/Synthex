@@ -1,5 +1,4 @@
-'use client';
-
+import { generateMetadata } from '@/lib/seo/metadata';
 import MarketingLayout from '@/components/marketing/MarketingLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,6 +58,14 @@ const sections = [
     ],
   },
 ];
+
+export const metadata = generateMetadata({
+  title: 'Terms of Service',
+  description:
+    'The terms and conditions governing your use of Synthex. Read before signing up.',
+  path: '/terms',
+  keywords: ['terms of service', 'terms and conditions', 'user agreement'],
+});
 
 export default function TermsPage() {
   return (

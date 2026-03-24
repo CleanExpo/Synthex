@@ -1,5 +1,4 @@
-'use client';
-
+import { generateMetadata } from '@/lib/seo/metadata';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -144,6 +143,14 @@ const certifications = [
     icon: Award,
   },
 ];
+
+export const metadata = generateMetadata({
+  title: 'Security',
+  description:
+    'How Synthex protects your data — encryption, access controls, compliance, and security practices.',
+  path: '/security',
+  keywords: ['security', 'data security', 'encryption', 'compliance', 'SOC 2'],
+});
 
 export default function SecurityPage() {
   return (

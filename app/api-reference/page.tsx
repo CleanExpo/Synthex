@@ -1,5 +1,4 @@
-'use client';
-
+import { generateMetadata } from '@/lib/seo/metadata';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -148,6 +147,20 @@ const features = [
       'Real-time event notifications for post status and analytics updates.',
   },
 ];
+
+export const metadata = generateMetadata({
+  title: 'API Reference',
+  description:
+    'Integrate Synthex into your workflow with our REST API. Full documentation, authentication, endpoints, and code examples.',
+  path: '/api-reference',
+  keywords: [
+    'API',
+    'REST API',
+    'developer docs',
+    'API reference',
+    'integration',
+  ],
+});
 
 export default function ApiReferencePage() {
   return (
