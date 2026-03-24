@@ -10,7 +10,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // Validation schemas
@@ -20,13 +23,17 @@ const CreateTestSchema = z.object({
   duration: z.number().min(1).max(90).default(7),
   platform: z.string().optional(),
   targetAudience: z.string().optional(),
-  variants: z.array(z.object({
-    name: z.string(),
-    content: z.string(),
-    image: z.string().optional(),
-    cta: z.string().optional(),
-    hashtags: z.array(z.string()).optional(),
-  })).min(2, 'At least 2 variants required'),
+  variants: z
+    .array(
+      z.object({
+        name: z.string(),
+        content: z.string(),
+        image: z.string().optional(),
+        cta: z.string().optional(),
+        hashtags: z.array(z.string()).optional(),
+      })
+    )
+    .min(2, 'At least 2 variants required'),
   campaignId: z.string().optional(),
 });
 
@@ -43,7 +50,7 @@ const UpdateTestSchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -79,16 +86,20 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Calculate metrics for each test
-    const testsWithMetrics = tests.map((test) => {
-      const variants = test.variants.map((variant) => ({
+    const testsWithMetrics = tests.map(test => {
+      const variants = test.variants.map(variant => ({
         ...variant,
-        conversionRate: variant.impressions > 0
-          ? (variant.conversions / variant.impressions) * 100
-          : 0,
+        conversionRate:
+          variant.impressions > 0
+            ? (variant.conversions / variant.impressions) * 100
+            : 0,
       }));
 
       // Calculate sample size and significance
-      const totalImpressions = variants.reduce((sum, v) => sum + v.impressions, 0);
+      const totalImpressions = variants.reduce(
+        (sum, v) => sum + v.impressions,
+        0
+      );
       const latestResult = test.results[0];
 
       return {
@@ -128,7 +139,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -168,10 +179,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      data: test,
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        data: test,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     logger.error('A/B Testing POST error:', error);
     return NextResponse.json(

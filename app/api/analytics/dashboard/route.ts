@@ -5,13 +5,16 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { analyticsTracker } from '@/lib/analytics/analytics-tracker';
-import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
     // Check authentication and get user ID
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return unauthorizedResponse();
     }

@@ -11,18 +11,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { psychologyAnalyzer } from '@/lib/ai/psychology-analyzer';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 const UpdatePreferencesSchema = z.object({
   preferredPrinciples: z.array(z.string()).optional(),
   avoidedPrinciples: z.array(z.string()).optional(),
   industryFocus: z.string().optional(),
-  targetDemographic: z.object({
-    ageRange: z.string().optional(),
-    interests: z.array(z.string()).optional(),
-    location: z.string().optional(),
-  }).optional(),
+  targetDemographic: z
+    .object({
+      ageRange: z.string().optional(),
+      interests: z.array(z.string()).optional(),
+      location: z.string().optional(),
+    })
+    .optional(),
 });
 
 /**
@@ -31,7 +33,7 @@ const UpdatePreferencesSchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -48,12 +50,16 @@ export async function GET(request: NextRequest) {
 
     // Filter by category if specified
     let filtered = category
-      ? principles.filter(p => p.category.toLowerCase() === category.toLowerCase())
+      ? principles.filter(
+          p => p.category.toLowerCase() === category.toLowerCase()
+        )
       : principles;
 
     // Sort based on parameter
     if (sortBy === 'effectiveness') {
-      filtered = filtered.sort((a, b) => b.effectivenessScore - a.effectivenessScore);
+      filtered = filtered.sort(
+        (a, b) => b.effectivenessScore - a.effectivenessScore
+      );
     } else if (sortBy === 'name') {
       filtered = filtered.sort((a, b) => a.name.localeCompare(b.name));
     }
@@ -69,26 +75,32 @@ export async function GET(request: NextRequest) {
     }
 
     // Get categories with counts
-    const categories = [...new Set(principles.map(p => p.category))].map(cat => ({
-      name: cat,
-      count: principles.filter(p => p.category === cat).length,
-    }));
+    const categories = [...new Set(principles.map(p => p.category))].map(
+      cat => ({
+        name: cat,
+        count: principles.filter(p => p.category === cat).length,
+      })
+    );
 
     return NextResponse.json({
       success: true,
       data: {
         principles: filtered.map(p => ({
           ...p,
-          isPreferred: userPreferences?.preferredPrinciples?.includes(p.id) || false,
-          isAvoided: userPreferences?.avoidedPrinciples?.includes(p.id) || false,
+          isPreferred:
+            userPreferences?.preferredPrinciples?.includes(p.id) || false,
+          isAvoided:
+            userPreferences?.avoidedPrinciples?.includes(p.id) || false,
         })),
         categories,
-        userPreferences: userPreferences ? {
-          preferredPrinciples: userPreferences.preferredPrinciples,
-          avoidedPrinciples: userPreferences.avoidedPrinciples,
-          industryFocus: userPreferences.industryFocus,
-          targetDemographic: userPreferences.targetDemographic,
-        } : null,
+        userPreferences: userPreferences
+          ? {
+              preferredPrinciples: userPreferences.preferredPrinciples,
+              avoidedPrinciples: userPreferences.avoidedPrinciples,
+              industryFocus: userPreferences.industryFocus,
+              targetDemographic: userPreferences.targetDemographic,
+            }
+          : null,
       },
     });
   } catch (error) {
@@ -106,7 +118,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -124,7 +136,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { preferredPrinciples, avoidedPrinciples, industryFocus, targetDemographic } = validation.data;
+    const {
+      preferredPrinciples,
+      avoidedPrinciples,
+      industryFocus,
+      targetDemographic,
+    } = validation.data;
 
     // Upsert user preferences
     const preferences = await prisma.userPsychologyPreference.upsert({

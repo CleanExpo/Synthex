@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import {
-  getUserIdFromCookies,
+  getUserIdFromRequestOrCookies,
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
 import { decryptField } from '@/lib/security/field-encryption';
@@ -38,7 +38,7 @@ const socialPostSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // Check authentication and get user ID
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return unauthorizedResponse();
     }
@@ -262,7 +262,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Check authentication and get user ID
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return unauthorizedResponse();
     }

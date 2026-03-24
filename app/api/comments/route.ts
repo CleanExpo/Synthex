@@ -15,14 +15,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // =============================================================================
 // Schemas
 // =============================================================================
 
-const contentTypeEnum = z.enum(['campaign', 'post', 'calendar_post', 'project']);
+const contentTypeEnum = z.enum([
+  'campaign',
+  'post',
+  'calendar_post',
+  'project',
+]);
 
 const createCommentSchema = z.object({
   contentType: contentTypeEnum,
@@ -89,7 +94,7 @@ function transformCommentForResponse(comment: {
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -104,7 +109,10 @@ export async function GET(request: NextRequest) {
 
     if (!contentType || !contentId) {
       return NextResponse.json(
-        { error: 'Bad Request', message: 'contentType and contentId are required' },
+        {
+          error: 'Bad Request',
+          message: 'contentType and contentId are required',
+        },
         { status: 400 }
       );
     }
@@ -113,7 +121,11 @@ export async function GET(request: NextRequest) {
     const contentTypeResult = contentTypeEnum.safeParse(contentType);
     if (!contentTypeResult.success) {
       return NextResponse.json(
-        { error: 'Bad Request', message: 'Invalid contentType. Must be one of: campaign, post, calendar_post, project' },
+        {
+          error: 'Bad Request',
+          message:
+            'Invalid contentType. Must be one of: campaign, post, calendar_post, project',
+        },
         { status: 400 }
       );
     }
@@ -148,7 +160,10 @@ export async function GET(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('List comments error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to list comments') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to list comments'),
+      },
       { status: 500 }
     );
   }
@@ -159,7 +174,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -177,7 +192,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { contentType, contentId, content, parentId, mentions } = validation.data;
+    const { contentType, contentId, content, parentId, mentions } =
+      validation.data;
 
     // If parentId is provided, verify it exists
     if (parentId) {
@@ -193,9 +209,15 @@ export async function POST(request: NextRequest) {
       }
 
       // Verify parent is for the same content
-      if (parentComment.contentType !== contentType || parentComment.contentId !== contentId) {
+      if (
+        parentComment.contentType !== contentType ||
+        parentComment.contentId !== contentId
+      ) {
         return NextResponse.json(
-          { error: 'Bad Request', message: 'Parent comment must be on the same content' },
+          {
+            error: 'Bad Request',
+            message: 'Parent comment must be on the same content',
+          },
           { status: 400 }
         );
       }
@@ -220,7 +242,10 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Create comment error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to create comment') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to create comment'),
+      },
       { status: 500 }
     );
   }

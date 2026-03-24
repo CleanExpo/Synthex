@@ -60,15 +60,24 @@ jest.mock('@/lib/prisma', () => {
   };
 });
 
-jest.mock('@/lib/auth/jwt-utils', () => ({
-  __esModule: true,
-  getUserIdFromCookies: jest.fn(),
-  getUserIdFromRequestOrCookies: jest.fn(),
-  unauthorizedResponse: () =>
-    NextResponse.json({ error: 'Unauthorized', message: 'Authentication required' }, { status: 401 }),
-  forbiddenResponse: (msg?: string) =>
-    NextResponse.json({ error: 'Forbidden', message: msg ?? 'Access denied' }, { status: 403 }),
-}));
+jest.mock('@/lib/auth/jwt-utils', () => {
+  const getUserIdMock = jest.fn();
+  return {
+    __esModule: true,
+    getUserIdFromCookies: getUserIdMock,
+    getUserIdFromRequestOrCookies: getUserIdMock,
+    unauthorizedResponse: () =>
+      NextResponse.json(
+        { error: 'Unauthorized', message: 'Authentication required' },
+        { status: 401 }
+      ),
+    forbiddenResponse: (msg?: string) =>
+      NextResponse.json(
+        { error: 'Forbidden', message: msg ?? 'Access denied' },
+        { status: 403 }
+      ),
+  };
+});
 
 jest.mock('@/lib/utils/error-utils', () => ({
   __esModule: true,
@@ -88,7 +97,12 @@ jest.mock('@/lib/auth/rbac/permission-engine', () => ({
   PermissionEngine: {
     check: jest.fn(),
   },
-  ALL_PERMISSIONS: ['roles:manage', 'posts:read', 'posts:create', 'campaigns:read'],
+  ALL_PERMISSIONS: [
+    'roles:manage',
+    'posts:read',
+    'posts:create',
+    'campaigns:read',
+  ],
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -103,24 +117,21 @@ jest.mock('@/lib/logger', () => ({
 // Use jest.requireMock to access the mocked instances directly
 // This avoids the issue of static import references becoming stale after clearAllMocks
 function getMockedPrisma() {
-   
   const mod = jest.requireMock('@/lib/prisma') as any;
   return mod.default || mod.prisma;
 }
 
 function getMockedJwt() {
-   
   return jest.requireMock('@/lib/auth/jwt-utils') as any;
 }
 
 function getMockedRoleManager() {
-   
   return (jest.requireMock('@/lib/auth/rbac/role-manager') as any).RoleManager;
 }
 
 function getMockedPermEngine() {
-   
-  return (jest.requireMock('@/lib/auth/rbac/permission-engine') as any).PermissionEngine;
+  return (jest.requireMock('@/lib/auth/rbac/permission-engine') as any)
+    .PermissionEngine;
 }
 
 // =============================================================================
@@ -182,11 +193,13 @@ const roleCreateResponseSchema = z.object({
 // Test helpers
 // =============================================================================
 
-function createMockRequest(opts: {
-  method?: string;
-  body?: object;
-  url?: string;
-} = {}) {
+function createMockRequest(
+  opts: {
+    method?: string;
+    body?: object;
+    url?: string;
+  } = {}
+) {
   const { method = 'GET', body, url = 'http://localhost:3000/api/test' } = opts;
   const parsedUrl = new URL(url);
   const bodyString = body ? JSON.stringify(body) : undefined;
@@ -194,7 +207,8 @@ function createMockRequest(opts: {
     url,
     method,
     headers: {
-      get: (name: string) => name === 'content-type' ? 'application/json' : null,
+      get: (name: string) =>
+        name === 'content-type' ? 'application/json' : null,
       has: () => false,
     },
     nextUrl: parsedUrl,
@@ -267,7 +281,7 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
   const mockParams = { params: Promise.resolve({ id: 'approval-001' }) };
 
   // Import route handlers once; mocks are in place before this module loads
-   
+
   const approvalRoute = require('@/app/api/approvals/[id]/route');
 
   beforeEach(() => {
@@ -294,7 +308,9 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
 
     it('should return 404 when approval request not found', async () => {
       getMockedJwt().getUserIdFromCookies.mockResolvedValue('user-456');
-      getMockedPrisma().user.findUnique.mockResolvedValue({ organizationId: 'org-123' });
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        organizationId: 'org-123',
+      });
       getMockedPrisma().approvalRequest.findUnique.mockResolvedValue(null);
 
       const req = createMockRequest({ method: 'GET' });
@@ -307,16 +323,25 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
 
     it('should return 403 when user cannot access another user approval', async () => {
       getMockedJwt().getUserIdFromCookies.mockResolvedValue('other-user-789');
-      getMockedPrisma().user.findUnique.mockResolvedValue({ organizationId: 'different-org' });
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        organizationId: 'different-org',
+      });
       getMockedPrisma().approvalRequest.findUnique.mockResolvedValue(
         makeMockApproval({
           submittedBy: 'user-submitter',
           organizationId: 'org-123',
           steps: [
             {
-              id: 'step-1', order: 0, type: 'review', name: 'Review',
-              status: 'pending', assignedTo: ['user-reviewer'], comments: [],
-              requiredApprovals: 1, currentApprovals: 0, isOptional: false,
+              id: 'step-1',
+              order: 0,
+              type: 'review',
+              name: 'Review',
+              status: 'pending',
+              assignedTo: ['user-reviewer'],
+              comments: [],
+              requiredApprovals: 1,
+              currentApprovals: 0,
+              isOptional: false,
               createdAt: new Date().toISOString(),
             },
           ],
@@ -333,8 +358,12 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
 
     it('should return 200 with correct approval shape when user is submitter', async () => {
       getMockedJwt().getUserIdFromCookies.mockResolvedValue('user-submitter');
-      getMockedPrisma().user.findUnique.mockResolvedValue({ organizationId: 'org-123' });
-      getMockedPrisma().approvalRequest.findUnique.mockResolvedValue(makeMockApproval());
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        organizationId: 'org-123',
+      });
+      getMockedPrisma().approvalRequest.findUnique.mockResolvedValue(
+        makeMockApproval()
+      );
 
       const req = createMockRequest({ method: 'GET' });
       const response = await approvalRoute.GET(req, mockParams);
@@ -361,7 +390,10 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
     it('should return 401 when unauthenticated', async () => {
       getMockedJwt().getUserIdFromCookies.mockResolvedValue(null);
 
-      const req = createMockRequest({ method: 'PATCH', body: { action: 'approve' } });
+      const req = createMockRequest({
+        method: 'PATCH',
+        body: { action: 'approve' },
+      });
       const response = await approvalRoute.PATCH(req, mockParams);
 
       expect(response.status).toBe(401);
@@ -370,7 +402,10 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
     it('should return 400 when action is invalid (Zod validation)', async () => {
       getMockedJwt().getUserIdFromCookies.mockResolvedValue('user-reviewer');
 
-      const req = createMockRequest({ method: 'PATCH', body: { action: 'invalid_action' } });
+      const req = createMockRequest({
+        method: 'PATCH',
+        body: { action: 'invalid_action' },
+      });
       const response = await approvalRoute.PATCH(req, mockParams);
 
       expect(response.status).toBe(400);
@@ -389,16 +424,26 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
         makeMockApproval({
           steps: [
             {
-              id: 'step-1', order: 0, type: 'review', name: 'Review',
-              status: 'pending', assignedTo: ['user-reviewer', '*'], comments: [],
-              requiredApprovals: 1, currentApprovals: 0, isOptional: false,
+              id: 'step-1',
+              order: 0,
+              type: 'review',
+              name: 'Review',
+              status: 'pending',
+              assignedTo: ['user-reviewer', '*'],
+              comments: [],
+              requiredApprovals: 1,
+              currentApprovals: 0,
+              isOptional: false,
               createdAt: new Date().toISOString(),
             },
           ],
         })
       );
 
-      const req = createMockRequest({ method: 'PATCH', body: { action: 'reject' } }); // no comment
+      const req = createMockRequest({
+        method: 'PATCH',
+        body: { action: 'reject' },
+      }); // no comment
       const response = await approvalRoute.PATCH(req, mockParams);
 
       expect(response.status).toBe(400);
@@ -417,9 +462,16 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
       const approval = makeMockApproval({
         steps: [
           {
-            id: 'step-1', order: 0, type: 'review', name: 'Review',
-            status: 'pending', assignedTo: ['user-reviewer'], comments: [],
-            requiredApprovals: 1, currentApprovals: 0, isOptional: false,
+            id: 'step-1',
+            order: 0,
+            type: 'review',
+            name: 'Review',
+            status: 'pending',
+            assignedTo: ['user-reviewer'],
+            comments: [],
+            requiredApprovals: 1,
+            currentApprovals: 0,
+            isOptional: false,
             createdAt: new Date().toISOString(),
           },
         ],
@@ -428,18 +480,20 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
       getMockedPrisma().teamNotification.create.mockResolvedValue({});
 
       const updatedApproval = makeMockApproval({ status: 'approved' });
-      getMockedPrisma().$transaction.mockImplementation(async (fn: (tx: any) => Promise<any>) => {
-        const tx = {
-          approvalRequest: {
-            update: jest.fn().mockResolvedValue({
-              ...updatedApproval,
-              submitter: { name: 'Test User', email: 'test@example.com' },
-            }),
-          },
-          auditLog: { create: jest.fn().mockResolvedValue({}) },
-        };
-        return fn(tx);
-      });
+      getMockedPrisma().$transaction.mockImplementation(
+        async (fn: (tx: any) => Promise<any>) => {
+          const tx = {
+            approvalRequest: {
+              update: jest.fn().mockResolvedValue({
+                ...updatedApproval,
+                submitter: { name: 'Test User', email: 'test@example.com' },
+              }),
+            },
+            auditLog: { create: jest.fn().mockResolvedValue({}) },
+          };
+          return fn(tx);
+        }
+      );
 
       const req = createMockRequest({
         method: 'PATCH',
@@ -494,13 +548,15 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
         makeMockApproval({ submittedBy: 'user-submitter' })
       );
 
-      getMockedPrisma().$transaction.mockImplementation(async (fn: (tx: any) => Promise<any>) => {
-        const tx = {
-          approvalRequest: { delete: jest.fn().mockResolvedValue({}) },
-          auditLog: { create: jest.fn().mockResolvedValue({}) },
-        };
-        return fn(tx);
-      });
+      getMockedPrisma().$transaction.mockImplementation(
+        async (fn: (tx: any) => Promise<any>) => {
+          const tx = {
+            approvalRequest: { delete: jest.fn().mockResolvedValue({}) },
+            auditLog: { create: jest.fn().mockResolvedValue({}) },
+          };
+          return fn(tx);
+        }
+      );
 
       const req = createMockRequest({ method: 'DELETE' });
       const response = await approvalRoute.DELETE(req, mockParams);
@@ -523,7 +579,6 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
 // =============================================================================
 
 describe('Roles API Contract Tests (/api/roles)', () => {
-   
   const rolesRoute = require('@/app/api/roles/route');
 
   beforeEach(() => {
@@ -539,11 +594,15 @@ describe('Roles API Contract Tests (/api/roles)', () => {
     it('should reject missing name via createRoleSchema', () => {
       const createRoleSchema = z.object({
         name: z.string().min(1, 'Name is required').max(100),
-        permissions: z.array(z.string()).min(1, 'At least one permission required'),
+        permissions: z
+          .array(z.string())
+          .min(1, 'At least one permission required'),
         description: z.string().max(500).optional(),
         isDefault: z.boolean().optional(),
       });
-      const result = createRoleSchema.safeParse({ permissions: ['posts:read'] });
+      const result = createRoleSchema.safeParse({
+        permissions: ['posts:read'],
+      });
       expect(result.success).toBe(false);
       if (!result.success) {
         const nameError = result.error.issues.find(i => i.path[0] === 'name');
@@ -554,21 +613,31 @@ describe('Roles API Contract Tests (/api/roles)', () => {
     it('should reject empty permissions array via createRoleSchema', () => {
       const createRoleSchema = z.object({
         name: z.string().min(1, 'Name is required').max(100),
-        permissions: z.array(z.string()).min(1, 'At least one permission required'),
+        permissions: z
+          .array(z.string())
+          .min(1, 'At least one permission required'),
         description: z.string().max(500).optional(),
         isDefault: z.boolean().optional(),
       });
-      const result = createRoleSchema.safeParse({ name: 'My Role', permissions: [] });
+      const result = createRoleSchema.safeParse({
+        name: 'My Role',
+        permissions: [],
+      });
       expect(result.success).toBe(false);
       if (!result.success) {
-        const permError = result.error.issues.find(i => i.path[0] === 'permissions');
+        const permError = result.error.issues.find(
+          i => i.path[0] === 'permissions'
+        );
         expect(permError).toBeDefined();
       }
     });
 
     it('should return 401 when unauthenticated', async () => {
       getMockedJwt().getUserIdFromCookies.mockResolvedValue(null);
-      const req = createMockRequest({ method: 'POST', body: { name: 'Editor', permissions: ['posts:read'] } });
+      const req = createMockRequest({
+        method: 'POST',
+        body: { name: 'Editor', permissions: ['posts:read'] },
+      });
       const response = await rolesRoute.POST(req);
       expect(response.status).toBe(401);
       const body = await response.json();
@@ -577,10 +646,16 @@ describe('Roles API Contract Tests (/api/roles)', () => {
 
     it('should return 400 when Zod validation fails via route handler', async () => {
       getMockedJwt().getUserIdFromCookies.mockResolvedValue('user-456');
-      getMockedPrisma().user.findUnique.mockResolvedValue({ id: 'user-456', organizationId: 'org-123' });
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        id: 'user-456',
+        organizationId: 'org-123',
+      });
       getMockedPermEngine().check.mockResolvedValue({ allowed: true });
 
-      const req = createMockRequest({ method: 'POST', body: { permissions: ['posts:read'] } });
+      const req = createMockRequest({
+        method: 'POST',
+        body: { permissions: ['posts:read'] },
+      });
       const response = await rolesRoute.POST(req);
       expect(response.status).toBe(400);
       const body = await response.json();
@@ -589,7 +664,10 @@ describe('Roles API Contract Tests (/api/roles)', () => {
 
     it('should return 200 with created role shape on success', async () => {
       getMockedJwt().getUserIdFromCookies.mockResolvedValue('user-456');
-      getMockedPrisma().user.findUnique.mockResolvedValue({ id: 'user-456', organizationId: 'org-123' });
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        id: 'user-456',
+        organizationId: 'org-123',
+      });
       getMockedPermEngine().check.mockResolvedValue({ allowed: true });
       getMockedRoleManager().createRole.mockResolvedValue(
         makeMockRole({ name: 'Custom Role', permissions: ['posts:read'] })
@@ -597,7 +675,11 @@ describe('Roles API Contract Tests (/api/roles)', () => {
 
       const req = createMockRequest({
         method: 'POST',
-        body: { name: 'Custom Role', permissions: ['posts:read'], description: 'A custom role' },
+        body: {
+          name: 'Custom Role',
+          permissions: ['posts:read'],
+          description: 'A custom role',
+        },
       });
       const response = await rolesRoute.POST(req);
 
@@ -629,7 +711,10 @@ describe('Roles API Contract Tests (/api/roles)', () => {
 
     it('should return 403 when user lacks roles:manage permission', async () => {
       getMockedJwt().getUserIdFromCookies.mockResolvedValue('user-456');
-      getMockedPrisma().user.findUnique.mockResolvedValue({ id: 'user-456', organizationId: 'org-123' });
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        id: 'user-456',
+        organizationId: 'org-123',
+      });
       getMockedPermEngine().check.mockResolvedValue({ allowed: false });
       const response = await rolesRoute.GET();
       expect(response.status).toBe(403);
@@ -639,14 +724,25 @@ describe('Roles API Contract Tests (/api/roles)', () => {
 
     it('should return 200 with roles list and availablePermissions', async () => {
       getMockedJwt().getUserIdFromCookies.mockResolvedValue('user-456');
-      getMockedPrisma().user.findUnique.mockResolvedValue({ id: 'user-456', organizationId: 'org-123' });
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        id: 'user-456',
+        organizationId: 'org-123',
+      });
       getMockedPermEngine().check.mockResolvedValue({ allowed: true });
       getMockedPrisma().userRole.count.mockResolvedValue(2);
 
       const roles = [
         makeMockRole({ id: 'role-001', name: 'Admin', permissions: ['*'] }),
-        makeMockRole({ id: 'role-002', name: 'Editor', permissions: ['posts:create', 'posts:read'] }),
-        makeMockRole({ id: 'role-003', name: 'Viewer', permissions: ['posts:read'] }),
+        makeMockRole({
+          id: 'role-002',
+          name: 'Editor',
+          permissions: ['posts:create', 'posts:read'],
+        }),
+        makeMockRole({
+          id: 'role-003',
+          name: 'Viewer',
+          permissions: ['posts:read'],
+        }),
       ];
       getMockedRoleManager().getRoles.mockResolvedValue(roles);
 
@@ -671,7 +767,9 @@ describe('Roles API Contract Tests (/api/roles)', () => {
   describe('createRoleSchema — Zod contract', () => {
     const createRoleSchema = z.object({
       name: z.string().min(1, 'Name is required').max(100),
-      permissions: z.array(z.string()).min(1, 'At least one permission required'),
+      permissions: z
+        .array(z.string())
+        .min(1, 'At least one permission required'),
       description: z.string().max(500).optional(),
       isDefault: z.boolean().optional(),
     });
@@ -695,7 +793,10 @@ describe('Roles API Contract Tests (/api/roles)', () => {
     });
 
     it('should reject name exceeding max length (101 chars)', () => {
-      const result = createRoleSchema.safeParse({ name: 'A'.repeat(101), permissions: ['posts:read'] });
+      const result = createRoleSchema.safeParse({
+        name: 'A'.repeat(101),
+        permissions: ['posts:read'],
+      });
       expect(result.success).toBe(false);
     });
   });
@@ -706,13 +807,25 @@ describe('Roles API Contract Tests (/api/roles)', () => {
 
   describe('patchApprovalSchema — Zod contract', () => {
     const patchApprovalSchema = z.object({
-      action: z.enum(['approve', 'reject', 'request_revision', 'resubmit', 'add_comment']),
+      action: z.enum([
+        'approve',
+        'reject',
+        'request_revision',
+        'resubmit',
+        'add_comment',
+      ]),
       comment: z.string().max(2000).optional(),
       attachments: z.array(z.string()).optional(),
     });
 
     it('should accept all 5 valid action values', () => {
-      const actions = ['approve', 'reject', 'request_revision', 'resubmit', 'add_comment'];
+      const actions = [
+        'approve',
+        'reject',
+        'request_revision',
+        'resubmit',
+        'add_comment',
+      ];
       actions.forEach(action => {
         const result = patchApprovalSchema.safeParse({ action });
         expect(result.success).toBe(true);
@@ -725,7 +838,10 @@ describe('Roles API Contract Tests (/api/roles)', () => {
     });
 
     it('should reject comment exceeding 2000 chars', () => {
-      const result = patchApprovalSchema.safeParse({ action: 'approve', comment: 'X'.repeat(2001) });
+      const result = patchApprovalSchema.safeParse({
+        action: 'approve',
+        comment: 'X'.repeat(2001),
+      });
       expect(result.success).toBe(false);
     });
 

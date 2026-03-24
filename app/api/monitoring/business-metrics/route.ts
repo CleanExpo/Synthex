@@ -16,7 +16,7 @@ import {
   getQuickMetrics,
   BusinessMetricsPeriod,
 } from '@/lib/metrics';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -34,7 +34,7 @@ const VALID_PERIODS = [
  * GET /api/monitoring/business-metrics
  */
 export async function GET(request: NextRequest) {
-  const userId = await getUserIdFromCookies();
+  const userId = await getUserIdFromRequestOrCookies(request);
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

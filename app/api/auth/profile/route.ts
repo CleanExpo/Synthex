@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 type ProfileBody = {
@@ -17,7 +17,7 @@ type ProfileBody = {
  * Returns the authenticated user's profile data.
  */
 export async function GET(req: NextRequest) {
-  const userId = await getUserIdFromCookies();
+  const userId = await getUserIdFromRequestOrCookies(req);
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
  * If DATABASE_URL is configured, updates the user by email. Otherwise, returns success with echo.
  */
 export async function PUT(req: NextRequest) {
-  const userId = await getUserIdFromCookies();
+  const userId = await getUserIdFromRequestOrCookies(req);
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

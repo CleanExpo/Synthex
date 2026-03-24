@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 
@@ -11,7 +14,7 @@ export async function GET(
     const { integrationId } = await params;
 
     // Get authenticated user ID from JWT in cookie
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return unauthorizedResponse();
     }
@@ -44,7 +47,9 @@ export async function GET(
       connected: true,
       integration: {
         id: integrationId,
-        name: connection.profileName || integrationId.charAt(0).toUpperCase() + integrationId.slice(1),
+        name:
+          connection.profileName ||
+          integrationId.charAt(0).toUpperCase() + integrationId.slice(1),
         profileId: connection.profileId,
         profileName: connection.profileName,
         connectedAt: connection.createdAt,

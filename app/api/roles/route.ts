@@ -13,9 +13,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { RoleManager } from '@/lib/auth/rbac/role-manager';
-import { PermissionEngine, ALL_PERMISSIONS } from '@/lib/auth/rbac/permission-engine';
+import {
+  PermissionEngine,
+  ALL_PERMISSIONS,
+} from '@/lib/auth/rbac/permission-engine';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
 
@@ -50,10 +53,14 @@ async function getUserWithPermission(userId: string): Promise<{
     return null;
   }
 
-  const permissionResult = await PermissionEngine.check(userId, user.organizationId, {
-    resource: 'roles',
-    action: 'manage',
-  });
+  const permissionResult = await PermissionEngine.check(
+    userId,
+    user.organizationId,
+    {
+      resource: 'roles',
+      action: 'manage',
+    }
+  );
 
   return {
     user: user as { id: string; organizationId: string },
@@ -68,9 +75,9 @@ async function getUserWithPermission(userId: string): Promise<{
 /**
  * GET /api/roles - List organization roles
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -97,14 +104,11 @@ export async function GET() {
 
     // Add user count to each role
     const rolesWithCounts = await Promise.all(
-      roles.map(async (role) => {
+      roles.map(async role => {
         const userCount = await prisma.userRole.count({
           where: {
             roleId: role.id,
-            OR: [
-              { expiresAt: null },
-              { expiresAt: { gt: new Date() } },
-            ],
+            OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
           },
         });
 
@@ -123,7 +127,10 @@ export async function GET() {
   } catch (error: unknown) {
     logger.error('List roles error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to list roles') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to list roles'),
+      },
       { status: 500 }
     );
   }
@@ -134,7 +141,7 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -192,7 +199,8 @@ export async function POST(request: NextRequest) {
     logger.error('Create role error:', error);
 
     // Handle known errors
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     if (errorMessage.includes('already exists')) {
       return NextResponse.json(
         { error: 'Conflict', message: errorMessage },
@@ -207,7 +215,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to create role') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to create role'),
+      },
       { status: 500 }
     );
   }

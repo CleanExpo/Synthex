@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // =============================================================================
@@ -81,7 +81,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -111,7 +111,10 @@ export async function GET(
   } catch (error: unknown) {
     logger.error('Get comment error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to get comment') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to get comment'),
+      },
       { status: 500 }
     );
   }
@@ -129,7 +132,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -166,7 +169,10 @@ export async function PATCH(
     // Only author can edit content
     if (content !== undefined && existing.authorId !== userId) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Only the author can edit comment content' },
+        {
+          error: 'Forbidden',
+          message: 'Only the author can edit comment content',
+        },
         { status: 403 }
       );
     }
@@ -207,7 +213,10 @@ export async function PATCH(
   } catch (error: unknown) {
     logger.error('Update comment error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to update comment') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to update comment'),
+      },
       { status: 500 }
     );
   }
@@ -221,7 +230,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -262,7 +271,10 @@ export async function DELETE(
   } catch (error: unknown) {
     logger.error('Delete comment error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to delete comment') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to delete comment'),
+      },
       { status: 500 }
     );
   }

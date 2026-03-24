@@ -18,7 +18,7 @@ import {
   NotificationChannel,
   type Alert,
 } from '@/lib/alerts';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -32,7 +32,7 @@ const VALID_CHANNELS = ['console', 'email', 'slack', 'discord', 'webhook'];
  * Get configured channels and alert history
  */
 export async function GET(request: NextRequest) {
-  const userId = await getUserIdFromCookies();
+  const userId = await getUserIdFromRequestOrCookies(request);
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -130,7 +130,7 @@ const sendAlertSchema = z.object({
  * Send a new alert or test a channel
  */
 export async function POST(request: NextRequest) {
-  const userId = await getUserIdFromCookies();
+  const userId = await getUserIdFromRequestOrCookies(request);
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -146,7 +146,10 @@ export async function POST(request: NextRequest) {
     // Test a specific channel
     if (action === 'test') {
       const testValidation = testChannelSchema.safeParse(body);
-      if (!testValidation.success || !VALID_CHANNELS.includes(testValidation.data.channel)) {
+      if (
+        !testValidation.success ||
+        !VALID_CHANNELS.includes(testValidation.data.channel)
+      ) {
         return NextResponse.json(
           {
             success: false,
@@ -156,7 +159,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const result = await alertManager.testChannel(testValidation.data.channel as NotificationChannel);
+      const result = await alertManager.testChannel(
+        testValidation.data.channel as NotificationChannel
+      );
 
       return NextResponse.json(
         {
@@ -180,7 +185,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { title, message, severity, source, metadata, tags } = alertValidation.data;
+    const { title, message, severity, source, metadata, tags } =
+      alertValidation.data;
 
     const alert: Alert = {
       title,

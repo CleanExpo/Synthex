@@ -32,10 +32,16 @@ jest.mock('@/lib/prisma', () => ({
 // Mock auth
 const mockGetUserIdFromCookies = jest.fn();
 jest.mock('@/lib/auth/jwt-utils', () => ({
-  getUserIdFromCookies: (...args: unknown[]) => mockGetUserIdFromCookies(...args),
+  getUserIdFromCookies: (...args: unknown[]) =>
+    mockGetUserIdFromCookies(...args),
+  getUserIdFromRequestOrCookies: (...args: unknown[]) =>
+    mockGetUserIdFromCookies(...args),
   unauthorizedResponse: () => {
     const { NextResponse } = require('next/server');
-    return NextResponse.json({ error: 'Unauthorized', message: 'Authentication required' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Unauthorized', message: 'Authentication required' },
+      { status: 401 }
+    );
   },
 }));
 
@@ -216,7 +222,11 @@ describe('Social Post API - /api/social/post', () => {
       mockPrisma.post.findMany.mockResolvedValue([]);
       mockPrisma.post.groupBy.mockResolvedValue([]);
 
-      const req = createRequest('GET', undefined, 'http://localhost:3000/api/social/post?platform=twitter');
+      const req = createRequest(
+        'GET',
+        undefined,
+        'http://localhost:3000/api/social/post?platform=twitter'
+      );
       const res = await GET(req);
 
       expect(mockPrisma.post.findMany).toHaveBeenCalledWith(
@@ -233,7 +243,11 @@ describe('Social Post API - /api/social/post', () => {
       mockPrisma.post.findMany.mockResolvedValue([]);
       mockPrisma.post.groupBy.mockResolvedValue([]);
 
-      const req = createRequest('GET', undefined, 'http://localhost:3000/api/social/post?status=published');
+      const req = createRequest(
+        'GET',
+        undefined,
+        'http://localhost:3000/api/social/post?status=published'
+      );
       const res = await GET(req);
 
       expect(mockPrisma.post.findMany).toHaveBeenCalledWith(
@@ -250,7 +264,11 @@ describe('Social Post API - /api/social/post', () => {
       mockPrisma.post.findMany.mockResolvedValue([]);
       mockPrisma.post.groupBy.mockResolvedValue([]);
 
-      const req = createRequest('GET', undefined, 'http://localhost:3000/api/social/post?limit=5');
+      const req = createRequest(
+        'GET',
+        undefined,
+        'http://localhost:3000/api/social/post?limit=5'
+      );
       const res = await GET(req);
 
       expect(mockPrisma.post.findMany).toHaveBeenCalledWith(

@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 const UpdateTestSchema = z.object({
@@ -26,12 +26,9 @@ interface RouteParams {
  * GET /api/ab-testing/tests/[testId]
  * Get a specific A/B test
  */
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -56,27 +53,37 @@ export async function GET(
     });
 
     if (!test) {
-      return NextResponse.json(
-        { error: 'Test not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Test not found' }, { status: 404 });
     }
 
     // Calculate additional metrics
-    const variants = test.variants.map((variant: { impressions: number; conversions: number; engagement: number; clicks: number }) => ({
-      ...variant,
-      conversionRate: variant.impressions > 0
-        ? (variant.conversions / variant.impressions) * 100
-        : 0,
-      engagementRate: variant.impressions > 0
-        ? (variant.engagement / variant.impressions) * 100
-        : 0,
-      clickRate: variant.impressions > 0
-        ? (variant.clicks / variant.impressions) * 100
-        : 0,
-    }));
+    const variants = test.variants.map(
+      (variant: {
+        impressions: number;
+        conversions: number;
+        engagement: number;
+        clicks: number;
+      }) => ({
+        ...variant,
+        conversionRate:
+          variant.impressions > 0
+            ? (variant.conversions / variant.impressions) * 100
+            : 0,
+        engagementRate:
+          variant.impressions > 0
+            ? (variant.engagement / variant.impressions) * 100
+            : 0,
+        clickRate:
+          variant.impressions > 0
+            ? (variant.clicks / variant.impressions) * 100
+            : 0,
+      })
+    );
 
-    const totalImpressions = variants.reduce((sum: number, v: { impressions: number }) => sum + v.impressions, 0);
+    const totalImpressions = variants.reduce(
+      (sum: number, v: { impressions: number }) => sum + v.impressions,
+      0
+    );
     const latestResult = test.results[0];
 
     return NextResponse.json({
@@ -89,9 +96,13 @@ export async function GET(
             ? (1 - latestResult.pValue) * 100
             : 0,
           uplift: latestResult?.uplift || 0,
-          timeToSignificance: test.startDate && latestResult?.pValue && latestResult.pValue < 0.05
-            ? Math.ceil((new Date().getTime() - test.startDate.getTime()) / (1000 * 60 * 60 * 24))
-            : null,
+          timeToSignificance:
+            test.startDate && latestResult?.pValue && latestResult.pValue < 0.05
+              ? Math.ceil(
+                  (new Date().getTime() - test.startDate.getTime()) /
+                    (1000 * 60 * 60 * 24)
+                )
+              : null,
         },
       },
     });
@@ -108,12 +119,9 @@ export async function GET(
  * PUT /api/ab-testing/tests/[testId]
  * Update a specific A/B test
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -138,20 +146,23 @@ export async function PUT(
     });
 
     if (!existingTest) {
-      return NextResponse.json(
-        { error: 'Test not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Test not found' }, { status: 404 });
     }
 
     // Handle status changes
     const updateData: Record<string, unknown> = { ...validation.data };
 
-    if (validation.data.status === 'running' && existingTest.status !== 'running') {
+    if (
+      validation.data.status === 'running' &&
+      existingTest.status !== 'running'
+    ) {
       updateData.startDate = new Date();
     }
 
-    if (validation.data.status === 'completed' && existingTest.status !== 'completed') {
+    if (
+      validation.data.status === 'completed' &&
+      existingTest.status !== 'completed'
+    ) {
       updateData.endDate = new Date();
     }
 
@@ -180,12 +191,9 @@ export async function PUT(
  * DELETE /api/ab-testing/tests/[testId]
  * Delete a specific A/B test
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -201,10 +209,7 @@ export async function DELETE(
     });
 
     if (!existingTest) {
-      return NextResponse.json(
-        { error: 'Test not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Test not found' }, { status: 404 });
     }
 
     // Delete test (cascades to variants and results)

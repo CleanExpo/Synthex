@@ -5,13 +5,16 @@
  * GET: Return provider-specific configuration + user overrides
  * PUT: Update provider-specific settings in PlatformConnection.metadata
  *
- * Auth: getUserIdFromCookies() from lib/auth/jwt-utils
+ * Auth: getUserIdFromRequestOrCookies(request) from lib/auth/jwt-utils
  * Data: Prisma PlatformConnection model (metadata JSON field)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import {
@@ -65,12 +68,15 @@ export async function GET(
 
     if (!isValidProvider(provider)) {
       return NextResponse.json(
-        { error: 'Invalid provider', message: `'${provider}' is not a supported integration provider` },
+        {
+          error: 'Invalid provider',
+          message: `'${provider}' is not a supported integration provider`,
+        },
         { status: 400 }
       );
     }
 
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(_request);
     if (!userId) {
       return unauthorizedResponse();
     }
@@ -97,7 +103,10 @@ export async function GET(
   } catch (error) {
     logger.error('Failed to get integration config:', error);
     return NextResponse.json(
-      { error: 'Failed to get configuration', message: 'An unexpected error occurred' },
+      {
+        error: 'Failed to get configuration',
+        message: 'An unexpected error occurred',
+      },
       { status: 500 }
     );
   }
@@ -116,12 +125,15 @@ export async function PUT(
 
     if (!isValidProvider(provider)) {
       return NextResponse.json(
-        { error: 'Invalid provider', message: `'${provider}' is not a supported integration provider` },
+        {
+          error: 'Invalid provider',
+          message: `'${provider}' is not a supported integration provider`,
+        },
         { status: 400 }
       );
     }
 
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return unauthorizedResponse();
     }
@@ -150,14 +162,19 @@ export async function PUT(
 
     if (!connection) {
       return NextResponse.json(
-        { error: 'Not connected', message: `No connection found for ${provider}. Connect first before updating config.` },
+        {
+          error: 'Not connected',
+          message: `No connection found for ${provider}. Connect first before updating config.`,
+        },
         { status: 404 }
       );
     }
 
     // Merge new config into existing metadata
-    const existingMetadata = (connection.metadata as Record<string, unknown>) || {};
-    const existingUserConfig = (existingMetadata.userConfig as Record<string, unknown>) || {};
+    const existingMetadata =
+      (connection.metadata as Record<string, unknown>) || {};
+    const existingUserConfig =
+      (existingMetadata.userConfig as Record<string, unknown>) || {};
 
     const updatedMetadata = {
       ...existingMetadata,
@@ -183,7 +200,10 @@ export async function PUT(
   } catch (error) {
     logger.error('Failed to update integration config:', error);
     return NextResponse.json(
-      { error: 'Failed to update configuration', message: 'An unexpected error occurred' },
+      {
+        error: 'Failed to update configuration',
+        message: 'An unexpected error occurred',
+      },
       { status: 500 }
     );
   }

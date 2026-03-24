@@ -16,7 +16,7 @@ import prisma from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // =============================================================================
@@ -26,9 +26,19 @@ import { logger } from '@/lib/logger';
 interface ApprovalStep {
   id: string;
   order: number;
-  type: 'review' | 'approval' | 'legal_check' | 'brand_check' | 'final_approval';
+  type:
+    | 'review'
+    | 'approval'
+    | 'legal_check'
+    | 'brand_check'
+    | 'final_approval';
   name: string;
-  status: 'pending' | 'in_review' | 'approved' | 'rejected' | 'revision_requested';
+  status:
+    | 'pending'
+    | 'in_review'
+    | 'approved'
+    | 'rejected'
+    | 'revision_requested';
   assignedTo: string[];
   comments: ApprovalComment[];
   requiredApprovals: number;
@@ -59,7 +69,10 @@ const createApprovalSchema = z.object({
   title: z.string().min(1, 'Title required').max(200),
   description: z.string().max(2000).optional(),
   workflowId: z.string().optional(),
-  priority: z.enum(['low', 'normal', 'high', 'urgent']).optional().default('normal'),
+  priority: z
+    .enum(['low', 'normal', 'high', 'urgent'])
+    .optional()
+    .default('normal'),
   dueDate: z.string().datetime().optional(),
   metadata: z.record(z.unknown()).optional(),
 });
@@ -181,9 +194,12 @@ function transformApprovalForResponse(approval: {
 /**
  * Check if user is assigned to any step (for filtering)
  */
-function isUserAssignedToAnyStep(steps: ApprovalStep[], userId: string): boolean {
-  return steps.some(step =>
-    step.assignedTo.includes(userId) || step.assignedTo.includes('*')
+function isUserAssignedToAnyStep(
+  steps: ApprovalStep[],
+  userId: string
+): boolean {
+  return steps.some(
+    step => step.assignedTo.includes(userId) || step.assignedTo.includes('*')
   );
 }
 
@@ -205,7 +221,7 @@ function isUserAssignedToAnyStep(steps: ApprovalStep[], userId: string): boolean
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -275,7 +291,10 @@ export async function GET(request: NextRequest) {
     let filteredApprovals = approvals;
     if (assignedToMe) {
       filteredApprovals = approvals.filter(approval =>
-        isUserAssignedToAnyStep(approval.steps as unknown as ApprovalStep[], userId)
+        isUserAssignedToAnyStep(
+          approval.steps as unknown as ApprovalStep[],
+          userId
+        )
       );
     }
 
@@ -287,7 +306,13 @@ export async function GET(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('List approvals error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to list approval requests') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(
+          error,
+          'Failed to list approval requests'
+        ),
+      },
       { status: 500 }
     );
   }
@@ -298,7 +323,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -316,7 +341,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { contentId, contentType, title, description, workflowId, priority, dueDate, metadata } = validation.data;
+    const {
+      contentId,
+      contentType,
+      title,
+      description,
+      workflowId,
+      priority,
+      dueDate,
+      metadata,
+    } = validation.data;
 
     // Get user's organization
     const user = await prisma.user.findUnique({
@@ -333,14 +367,16 @@ export async function POST(request: NextRequest) {
       });
 
       if (template && Array.isArray(template.steps)) {
-        steps = createStepsFromTemplate(template.steps as Array<{
-          order: number;
-          type: string;
-          name: string;
-          assigneeRole?: string;
-          requiredApprovals?: number;
-          isOptional?: boolean;
-        }>);
+        steps = createStepsFromTemplate(
+          template.steps as Array<{
+            order: number;
+            type: string;
+            name: string;
+            assigneeRole?: string;
+            requiredApprovals?: number;
+            isOptional?: boolean;
+          }>
+        );
       } else {
         steps = createDefaultSteps();
       }
@@ -349,7 +385,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create approval request and audit log atomically
-    const approval = await prisma.$transaction(async (tx) => {
+    const approval = await prisma.$transaction(async tx => {
       const created = await tx.approvalRequest.create({
         data: {
           contentId,
@@ -381,7 +417,13 @@ export async function POST(request: NextRequest) {
           resource: 'approval_request',
           resourceId: created.id,
           userId,
-          details: { contentId, contentType, title, priority, totalSteps: steps.length },
+          details: {
+            contentId,
+            contentType,
+            title,
+            priority,
+            totalSteps: steps.length,
+          },
           severity: 'low',
           category: 'content',
           outcome: 'success',
@@ -399,7 +441,13 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Create approval error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to create approval request') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(
+          error,
+          'Failed to create approval request'
+        ),
+      },
       { status: 500 }
     );
   }

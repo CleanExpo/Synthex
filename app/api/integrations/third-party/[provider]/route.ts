@@ -6,13 +6,16 @@
  * GET:    Check connection status and validate credentials
  * DELETE: Disconnect a third-party integration (soft-delete)
  *
- * Auth: getUserIdFromCookies() from lib/auth/jwt-utils
+ * Auth: getUserIdFromRequestOrCookies(request) from lib/auth/jwt-utils
  * Data: Prisma PlatformConnection model
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import {
@@ -67,13 +70,16 @@ export async function POST(
     // Validate provider
     if (!isValidProvider(provider)) {
       return NextResponse.json(
-        { error: 'Invalid provider', message: `'${provider}' is not a supported integration provider` },
+        {
+          error: 'Invalid provider',
+          message: `'${provider}' is not a supported integration provider`,
+        },
         { status: 400 }
       );
     }
 
     // Auth
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return unauthorizedResponse();
     }
@@ -94,10 +100,13 @@ export async function POST(
 
     // Build IntegrationCredentials for the service
     const integrationCredentials: IntegrationCredentials = {
-      accessToken: 'accessToken' in credentials ? credentials.accessToken : undefined,
+      accessToken:
+        'accessToken' in credentials ? credentials.accessToken : undefined,
       apiKey: 'apiKey' in credentials ? credentials.apiKey : undefined,
-      webhookUrl: 'webhookUrl' in credentials ? credentials.webhookUrl : undefined,
-      refreshToken: 'refreshToken' in credentials ? credentials.refreshToken : undefined,
+      webhookUrl:
+        'webhookUrl' in credentials ? credentials.webhookUrl : undefined,
+      refreshToken:
+        'refreshToken' in credentials ? credentials.refreshToken : undefined,
     };
 
     // Validate credentials with the service
@@ -106,7 +115,10 @@ export async function POST(
 
     if (!validationResult.valid) {
       return NextResponse.json(
-        { error: 'Credential validation failed', message: validationResult.error },
+        {
+          error: 'Credential validation failed',
+          message: validationResult.error,
+        },
         { status: 400 }
       );
     }
@@ -126,12 +138,15 @@ export async function POST(
       connection = await prisma.platformConnection.update({
         where: { id: existing.id },
         data: {
-          accessToken: integrationCredentials.accessToken || integrationCredentials.apiKey || '',
+          accessToken:
+            integrationCredentials.accessToken ||
+            integrationCredentials.apiKey ||
+            '',
           refreshToken: integrationCredentials.refreshToken || null,
           isActive: true,
           lastSync: new Date(),
           metadata: {
-            ...(existing.metadata as Record<string, unknown> || {}),
+            ...((existing.metadata as Record<string, unknown>) || {}),
             webhookUrl: integrationCredentials.webhookUrl || null,
             category: INTEGRATION_REGISTRY[provider].category,
           },
@@ -143,7 +158,10 @@ export async function POST(
         data: {
           userId,
           platform: provider,
-          accessToken: integrationCredentials.accessToken || integrationCredentials.apiKey || '',
+          accessToken:
+            integrationCredentials.accessToken ||
+            integrationCredentials.apiKey ||
+            '',
           refreshToken: integrationCredentials.refreshToken || null,
           isActive: true,
           lastSync: new Date(),
@@ -168,7 +186,10 @@ export async function POST(
   } catch (error) {
     logger.error('Failed to connect integration:', error);
     return NextResponse.json(
-      { error: 'Failed to connect integration', message: 'An unexpected error occurred' },
+      {
+        error: 'Failed to connect integration',
+        message: 'An unexpected error occurred',
+      },
       { status: 500 }
     );
   }
@@ -187,12 +208,15 @@ export async function GET(
 
     if (!isValidProvider(provider)) {
       return NextResponse.json(
-        { error: 'Invalid provider', message: `'${provider}' is not a supported integration provider` },
+        {
+          error: 'Invalid provider',
+          message: `'${provider}' is not a supported integration provider`,
+        },
         { status: 400 }
       );
     }
 
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(_request);
     if (!userId) {
       return unauthorizedResponse();
     }
@@ -235,7 +259,10 @@ export async function GET(
   } catch (error) {
     logger.error('Failed to check integration status:', error);
     return NextResponse.json(
-      { error: 'Failed to check integration status', message: 'An unexpected error occurred' },
+      {
+        error: 'Failed to check integration status',
+        message: 'An unexpected error occurred',
+      },
       { status: 500 }
     );
   }
@@ -254,12 +281,15 @@ export async function DELETE(
 
     if (!isValidProvider(provider)) {
       return NextResponse.json(
-        { error: 'Invalid provider', message: `'${provider}' is not a supported integration provider` },
+        {
+          error: 'Invalid provider',
+          message: `'${provider}' is not a supported integration provider`,
+        },
         { status: 400 }
       );
     }
 
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(_request);
     if (!userId) {
       return unauthorizedResponse();
     }
@@ -274,7 +304,10 @@ export async function DELETE(
 
     if (!connection) {
       return NextResponse.json(
-        { error: 'Not connected', message: `No active connection found for ${provider}` },
+        {
+          error: 'Not connected',
+          message: `No active connection found for ${provider}`,
+        },
         { status: 404 }
       );
     }
@@ -296,7 +329,10 @@ export async function DELETE(
   } catch (error) {
     logger.error('Failed to disconnect integration:', error);
     return NextResponse.json(
-      { error: 'Failed to disconnect integration', message: 'An unexpected error occurred' },
+      {
+        error: 'Failed to disconnect integration',
+        message: 'An unexpected error occurred',
+      },
       { status: 500 }
     );
   }

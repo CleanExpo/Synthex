@@ -16,7 +16,7 @@ import prisma from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // =============================================================================
@@ -26,9 +26,19 @@ import { logger } from '@/lib/logger';
 interface ApprovalStep {
   id: string;
   order: number;
-  type: 'review' | 'approval' | 'legal_check' | 'brand_check' | 'final_approval';
+  type:
+    | 'review'
+    | 'approval'
+    | 'legal_check'
+    | 'brand_check'
+    | 'final_approval';
   name: string;
-  status: 'pending' | 'in_review' | 'approved' | 'rejected' | 'revision_requested';
+  status:
+    | 'pending'
+    | 'in_review'
+    | 'approved'
+    | 'rejected'
+    | 'revision_requested';
   assignedTo: string[];
   comments: ApprovalComment[];
   requiredApprovals: number;
@@ -54,7 +64,13 @@ interface ApprovalComment {
 // =============================================================================
 
 const patchApprovalSchema = z.object({
-  action: z.enum(['approve', 'reject', 'request_revision', 'resubmit', 'add_comment']),
+  action: z.enum([
+    'approve',
+    'reject',
+    'request_revision',
+    'resubmit',
+    'add_comment',
+  ]),
   comment: z.string().max(2000).optional(),
   attachments: z.array(z.string()).optional(),
 });
@@ -148,7 +164,11 @@ async function createApprovalNotification(
  * Check if user can access approval request
  */
 function canAccessApproval(
-  approval: { submittedBy: string; organizationId: string | null; steps: unknown },
+  approval: {
+    submittedBy: string;
+    organizationId: string | null;
+    steps: unknown;
+  },
   userId: string,
   userOrgId: string | null
 ): boolean {
@@ -156,11 +176,16 @@ function canAccessApproval(
   if (approval.submittedBy === userId) return true;
 
   // Same organization
-  if (approval.organizationId && approval.organizationId === userOrgId) return true;
+  if (approval.organizationId && approval.organizationId === userOrgId)
+    return true;
 
   // Assigned to a step
   const steps = approval.steps as ApprovalStep[];
-  if (steps.some(step => step.assignedTo.includes(userId) || step.assignedTo.includes('*'))) {
+  if (
+    steps.some(
+      step => step.assignedTo.includes(userId) || step.assignedTo.includes('*')
+    )
+  ) {
     return true;
   }
 
@@ -186,7 +211,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -221,7 +246,10 @@ export async function GET(
     // Check access
     if (!canAccessApproval(approval, userId, user?.organizationId ?? null)) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Access denied to this approval request' },
+        {
+          error: 'Forbidden',
+          message: 'Access denied to this approval request',
+        },
         { status: 403 }
       );
     }
@@ -233,7 +261,13 @@ export async function GET(
   } catch (error: unknown) {
     logger.error('Get approval error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to get approval request') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(
+          error,
+          'Failed to get approval request'
+        ),
+      },
       { status: 500 }
     );
   }
@@ -254,7 +288,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -303,7 +337,10 @@ export async function PATCH(
     // Check access
     if (!canAccessApproval(approval, userId, user?.organizationId ?? null)) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Access denied to this approval request' },
+        {
+          error: 'Forbidden',
+          message: 'Access denied to this approval request',
+        },
         { status: 403 }
       );
     }
@@ -319,7 +356,10 @@ export async function PATCH(
         // Verify user can approve
         if (!canApproveStep(currentStep, userId)) {
           return NextResponse.json(
-            { error: 'Forbidden', message: 'You are not assigned to approve this step' },
+            {
+              error: 'Forbidden',
+              message: 'You are not assigned to approve this step',
+            },
             { status: 403 }
           );
         }
@@ -367,7 +407,10 @@ export async function PATCH(
         );
 
         // Notify next step assignees if advancing
-        if (newCurrentStep > approval.currentStep && newCurrentStep < steps.length) {
+        if (
+          newCurrentStep > approval.currentStep &&
+          newCurrentStep < steps.length
+        ) {
           const nextStep = steps[newCurrentStep];
           for (const assigneeId of nextStep.assignedTo) {
             if (assigneeId !== '*' && assigneeId !== userId) {
@@ -389,7 +432,10 @@ export async function PATCH(
       case 'reject': {
         if (!comment) {
           return NextResponse.json(
-            { error: 'Validation Error', message: 'Comment required for rejection' },
+            {
+              error: 'Validation Error',
+              message: 'Comment required for rejection',
+            },
             { status: 400 }
           );
         }
@@ -423,7 +469,10 @@ export async function PATCH(
       case 'request_revision': {
         if (!comment) {
           return NextResponse.json(
-            { error: 'Validation Error', message: 'Feedback required for revision request' },
+            {
+              error: 'Validation Error',
+              message: 'Feedback required for revision request',
+            },
             { status: 400 }
           );
         }
@@ -533,7 +582,7 @@ export async function PATCH(
     }
 
     // Update approval request and log in a transaction
-    const updated = await prisma.$transaction(async (tx) => {
+    const updated = await prisma.$transaction(async tx => {
       const result = await tx.approvalRequest.update({
         where: { id },
         data: {
@@ -554,7 +603,12 @@ export async function PATCH(
           resource: 'approval_request',
           resourceId: id,
           userId,
-          details: { action, previousStatus: approval.status, newStatus, comment: comment?.substring(0, 100) },
+          details: {
+            action,
+            previousStatus: approval.status,
+            newStatus,
+            comment: comment?.substring(0, 100),
+          },
           severity: action === 'reject' ? 'medium' : 'low',
           category: 'content',
           outcome: 'success',
@@ -572,7 +626,13 @@ export async function PATCH(
   } catch (error: unknown) {
     logger.error('Update approval error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to update approval request') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(
+          error,
+          'Failed to update approval request'
+        ),
+      },
       { status: 500 }
     );
   }
@@ -586,7 +646,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -610,13 +670,16 @@ export async function DELETE(
     // Only submitter can delete
     if (approval.submittedBy !== userId) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Only the submitter can delete this approval request' },
+        {
+          error: 'Forbidden',
+          message: 'Only the submitter can delete this approval request',
+        },
         { status: 403 }
       );
     }
 
     // Delete approval and log in a transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
       await tx.approvalRequest.delete({
         where: { id },
       });
@@ -642,7 +705,13 @@ export async function DELETE(
   } catch (error: unknown) {
     logger.error('Delete approval error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to delete approval request') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(
+          error,
+          'Failed to delete approval request'
+        ),
+      },
       { status: 500 }
     );
   }

@@ -6,7 +6,6 @@ import BrandPsychologyOrchestrator, {
   BrandGenerationInput,
 } from '@/lib/ai/agents/strategic-marketing/brand-orchestrator';
 import {
-  getUserIdFromCookies,
   getUserIdFromRequestOrCookies,
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
@@ -29,7 +28,7 @@ export async function POST(request: NextRequest) {
   try {
     // Get authenticated user ID from cookie or Authorization header
     const userId =
-      (await getUserIdFromCookies()) ||
+      (await getUserIdFromRequestOrCookies(request)) ||
       (await getUserIdFromRequestOrCookies(request));
     if (!userId) {
       return unauthorizedResponse();
@@ -137,7 +136,7 @@ export async function GET(request: NextRequest) {
   try {
     // Get authenticated user ID from cookie or Authorization header
     const userId =
-      (await getUserIdFromCookies()) ||
+      (await getUserIdFromRequestOrCookies(request)) ||
       (await getUserIdFromRequestOrCookies(request));
     if (!userId) {
       return unauthorizedResponse();

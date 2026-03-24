@@ -13,7 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { RoleManager } from '@/lib/auth/rbac/role-manager';
 import { PermissionEngine } from '@/lib/auth/rbac/permission-engine';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
@@ -48,10 +48,14 @@ async function getUserWithPermission(userId: string): Promise<{
     return null;
   }
 
-  const permissionResult = await PermissionEngine.check(userId, user.organizationId, {
-    resource: 'roles',
-    action: 'manage',
-  });
+  const permissionResult = await PermissionEngine.check(
+    userId,
+    user.organizationId,
+    {
+      resource: 'roles',
+      action: 'manage',
+    }
+  );
 
   return {
     user: user as { id: string; organizationId: string },
@@ -73,7 +77,7 @@ export async function GET(
   try {
     const { id: roleId } = await params;
 
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -110,7 +114,10 @@ export async function GET(
 
     if (role.organizationId !== userResult.user.organizationId) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Role does not belong to your organization' },
+        {
+          error: 'Forbidden',
+          message: 'Role does not belong to your organization',
+        },
         { status: 403 }
       );
     }
@@ -119,7 +126,7 @@ export async function GET(
     const userRoles = await RoleManager.getUsersWithRole(roleId);
 
     // Fetch user details
-    const userIds = userRoles.map((ur) => ur.userId);
+    const userIds = userRoles.map(ur => ur.userId);
     const users = await prisma.user.findMany({
       where: { id: { in: userIds } },
       select: {
@@ -131,8 +138,8 @@ export async function GET(
     });
 
     // Combine user details with role assignment info
-    const usersWithRoleInfo = userRoles.map((ur) => {
-      const user = users.find((u) => u.id === ur.userId);
+    const usersWithRoleInfo = userRoles.map(ur => {
+      const user = users.find(u => u.id === ur.userId);
       return {
         id: user?.id || ur.userId,
         name: user?.name || 'Unknown',
@@ -150,7 +157,10 @@ export async function GET(
   } catch (error: unknown) {
     logger.error('Get role users error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to get role users') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to get role users'),
+      },
       { status: 500 }
     );
   }
@@ -166,7 +176,7 @@ export async function POST(
   try {
     const { id: roleId } = await params;
 
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -203,7 +213,10 @@ export async function POST(
 
     if (role.organizationId !== userResult.user.organizationId) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Role does not belong to your organization' },
+        {
+          error: 'Forbidden',
+          message: 'Role does not belong to your organization',
+        },
         { status: 403 }
       );
     }
@@ -235,7 +248,10 @@ export async function POST(
 
     if (targetUser.organizationId !== userResult.user.organizationId) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Target user is not in your organization' },
+        {
+          error: 'Forbidden',
+          message: 'Target user is not in your organization',
+        },
         { status: 403 }
       );
     }
@@ -257,7 +273,10 @@ export async function POST(
   } catch (error: unknown) {
     logger.error('Grant role error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to grant role') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to grant role'),
+      },
       { status: 500 }
     );
   }
@@ -273,7 +292,7 @@ export async function DELETE(
   try {
     const { id: roleId } = await params;
 
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -320,7 +339,10 @@ export async function DELETE(
 
     if (role.organizationId !== userResult.user.organizationId) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Role does not belong to your organization' },
+        {
+          error: 'Forbidden',
+          message: 'Role does not belong to your organization',
+        },
         { status: 403 }
       );
     }
@@ -334,7 +356,10 @@ export async function DELETE(
   } catch (error: unknown) {
     logger.error('Revoke role error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to revoke role') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to revoke role'),
+      },
       { status: 500 }
     );
   }

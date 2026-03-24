@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { reportGenerator } from '@/lib/reports/report-generator';
 import { generatePDF } from '@/lib/reports/pdf-generator';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 /**
@@ -22,7 +22,7 @@ export async function GET(
   { params }: { params: Promise<{ reportId: string }> }
 ) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },

@@ -16,33 +16,44 @@ import prisma from '@/lib/prisma';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // =============================================================================
 // Schemas
 // =============================================================================
 
-const contentTypeEnum = z.enum(['campaign', 'post', 'calendar_post', 'project']);
+const contentTypeEnum = z.enum([
+  'campaign',
+  'post',
+  'calendar_post',
+  'project',
+]);
 const permissionEnum = z.enum(['view', 'comment', 'edit', 'admin']);
 
-const createShareSchema = z.object({
-  contentType: contentTypeEnum,
-  contentId: z.string().min(1, 'Content ID required'),
-  // One of these must be provided
-  sharedWithUserId: z.string().optional(),
-  sharedWithTeamId: z.string().optional(),
-  sharedWithEmail: z.string().email().optional(),
-  // Optional fields
-  permission: permissionEnum.optional().default('view'),
-  canDownload: z.boolean().optional().default(true),
-  canReshare: z.boolean().optional().default(false),
-  expiresAt: z.string().datetime().optional(),
-  message: z.string().max(1000).optional(),
-}).refine(
-  (data) => data.sharedWithUserId || data.sharedWithTeamId || data.sharedWithEmail,
-  { message: 'One of sharedWithUserId, sharedWithTeamId, or sharedWithEmail is required' }
-);
+const createShareSchema = z
+  .object({
+    contentType: contentTypeEnum,
+    contentId: z.string().min(1, 'Content ID required'),
+    // One of these must be provided
+    sharedWithUserId: z.string().optional(),
+    sharedWithTeamId: z.string().optional(),
+    sharedWithEmail: z.string().email().optional(),
+    // Optional fields
+    permission: permissionEnum.optional().default('view'),
+    canDownload: z.boolean().optional().default(true),
+    canReshare: z.boolean().optional().default(false),
+    expiresAt: z.string().datetime().optional(),
+    message: z.string().max(1000).optional(),
+  })
+  .refine(
+    data =>
+      data.sharedWithUserId || data.sharedWithTeamId || data.sharedWithEmail,
+    {
+      message:
+        'One of sharedWithUserId, sharedWithTeamId, or sharedWithEmail is required',
+    }
+  );
 
 // =============================================================================
 // Helper Functions
@@ -116,7 +127,7 @@ function transformShareForResponse(share: {
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -137,7 +148,11 @@ export async function GET(request: NextRequest) {
       const contentTypeResult = contentTypeEnum.safeParse(contentType);
       if (!contentTypeResult.success) {
         return NextResponse.json(
-          { error: 'Bad Request', message: 'Invalid contentType. Must be one of: campaign, post, calendar_post, project' },
+          {
+            error: 'Bad Request',
+            message:
+              'Invalid contentType. Must be one of: campaign, post, calendar_post, project',
+          },
           { status: 400 }
         );
       }
@@ -168,7 +183,11 @@ export async function GET(request: NextRequest) {
       });
     } else {
       return NextResponse.json(
-        { error: 'Bad Request', message: 'Provide contentType+contentId, sharedWithMe=true, or sharedByMe=true' },
+        {
+          error: 'Bad Request',
+          message:
+            'Provide contentType+contentId, sharedWithMe=true, or sharedByMe=true',
+        },
         { status: 400 }
       );
     }
@@ -180,7 +199,10 @@ export async function GET(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('List shares error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to list shares') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to list shares'),
+      },
       { status: 500 }
     );
   }
@@ -191,7 +213,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -250,7 +272,10 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Create share error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to create share') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to create share'),
+      },
       { status: 500 }
     );
   }

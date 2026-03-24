@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 const RecordResultSchema = z.object({
@@ -19,14 +19,23 @@ const RecordResultSchema = z.object({
 });
 
 // Statistical functions
-function calculatePValue(controlConversions: number, controlTotal: number, treatmentConversions: number, treatmentTotal: number): number {
+function calculatePValue(
+  controlConversions: number,
+  controlTotal: number,
+  treatmentConversions: number,
+  treatmentTotal: number
+): number {
   if (controlTotal === 0 || treatmentTotal === 0) return 1;
 
   const p1 = controlConversions / controlTotal;
   const p2 = treatmentConversions / treatmentTotal;
-  const pooledP = (controlConversions + treatmentConversions) / (controlTotal + treatmentTotal);
+  const pooledP =
+    (controlConversions + treatmentConversions) /
+    (controlTotal + treatmentTotal);
 
-  const se = Math.sqrt(pooledP * (1 - pooledP) * (1 / controlTotal + 1 / treatmentTotal));
+  const se = Math.sqrt(
+    pooledP * (1 - pooledP) * (1 / controlTotal + 1 / treatmentTotal)
+  );
   if (se === 0) return 1;
 
   const z = Math.abs(p2 - p1) / se;
@@ -48,7 +57,8 @@ function normalCDF(x: number): number {
   x = Math.abs(x) / Math.sqrt(2);
 
   const t = 1.0 / (1.0 + p * x);
-  const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  const y =
+    1.0 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
 
   return 0.5 * (1.0 + sign * y);
 }
@@ -61,12 +71,9 @@ interface RouteParams {
  * GET /api/ab-testing/tests/[testId]/results
  * Get results for a specific A/B test
  */
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -87,10 +94,7 @@ export async function GET(
     });
 
     if (!test) {
-      return NextResponse.json(
-        { error: 'Test not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Test not found' }, { status: 404 });
     }
 
     // Get results history
@@ -101,17 +105,20 @@ export async function GET(
     });
 
     // Calculate current statistics
-    const variants = test.variants.map((variant: typeof test.variants[number]) => ({
-      id: variant.id,
-      name: variant.name,
-      impressions: variant.impressions,
-      engagement: variant.engagement,
-      clicks: variant.clicks,
-      conversions: variant.conversions,
-      conversionRate: variant.impressions > 0
-        ? (variant.conversions / variant.impressions) * 100
-        : 0,
-    }));
+    const variants = test.variants.map(
+      (variant: (typeof test.variants)[number]) => ({
+        id: variant.id,
+        name: variant.name,
+        impressions: variant.impressions,
+        engagement: variant.engagement,
+        clicks: variant.clicks,
+        conversions: variant.conversions,
+        conversionRate:
+          variant.impressions > 0
+            ? (variant.conversions / variant.impressions) * 100
+            : 0,
+      })
+    );
 
     // Calculate statistical significance (A vs B comparison)
     let pValue = 1;
@@ -130,7 +137,10 @@ export async function GET(
       );
 
       if (control.conversionRate > 0) {
-        uplift = ((treatment.conversionRate - control.conversionRate) / control.conversionRate) * 100;
+        uplift =
+          ((treatment.conversionRate - control.conversionRate) /
+            control.conversionRate) *
+          100;
       }
 
       if (pValue < 0.05) {
@@ -139,12 +149,14 @@ export async function GET(
     }
 
     // Generate time series data for charts
-    const timeSeriesData = results.map((r: typeof results[number]) => ({
-      timestamp: r.timestamp,
-      conversionRate: r.conversionRate,
-      impressions: r.impressions,
-      conversions: r.conversions,
-    })).reverse();
+    const timeSeriesData = results
+      .map((r: (typeof results)[number]) => ({
+        timestamp: r.timestamp,
+        conversionRate: r.conversionRate,
+        impressions: r.impressions,
+        conversions: r.conversions,
+      }))
+      .reverse();
 
     return NextResponse.json({
       data: {
@@ -155,7 +167,10 @@ export async function GET(
           uplift,
           winner,
           isSignificant: pValue < 0.05,
-          sampleSize: variants.reduce((sum: number, v: typeof variants[number]) => sum + v.impressions, 0),
+          sampleSize: variants.reduce(
+            (sum: number, v: (typeof variants)[number]) => sum + v.impressions,
+            0
+          ),
         },
         timeSeries: timeSeriesData,
         recommendations: generateRecommendations(variants, pValue, uplift),
@@ -174,12 +189,9 @@ export async function GET(
  * POST /api/ab-testing/tests/[testId]/results
  * Record new metrics for a test variant
  */
-export async function POST(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -205,10 +217,7 @@ export async function POST(
     });
 
     if (!test) {
-      return NextResponse.json(
-        { error: 'Test not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Test not found' }, { status: 404 });
     }
 
     if (test.status !== 'running') {
@@ -229,10 +238,7 @@ export async function POST(
     );
 
     if (!variantBelongsToTest) {
-      return NextResponse.json(
-        { error: 'Variant not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Variant not found' }, { status: 404 });
     }
 
     // Update variant metrics
@@ -266,12 +272,12 @@ export async function POST(
         treatment.impressions
       );
 
-      const controlRate = control.impressions > 0
-        ? control.conversions / control.impressions
-        : 0;
-      const treatmentRate = treatment.impressions > 0
-        ? treatment.conversions / treatment.impressions
-        : 0;
+      const controlRate =
+        control.impressions > 0 ? control.conversions / control.impressions : 0;
+      const treatmentRate =
+        treatment.impressions > 0
+          ? treatment.conversions / treatment.impressions
+          : 0;
 
       if (controlRate > 0) {
         uplift = ((treatmentRate - controlRate) / controlRate) * 100;
@@ -287,9 +293,10 @@ export async function POST(
         engagement: variant.engagement,
         clicks: variant.clicks,
         conversions: variant.conversions,
-        conversionRate: variant.impressions > 0
-          ? (variant.conversions / variant.impressions) * 100
-          : 0,
+        conversionRate:
+          variant.impressions > 0
+            ? (variant.conversions / variant.impressions) * 100
+            : 0,
         uplift,
         pValue,
       },
@@ -297,17 +304,21 @@ export async function POST(
 
     // Auto-complete test if statistically significant
     if (pValue < 0.05) {
-      const winner = allVariants[1].conversions / allVariants[1].impressions >
-                     allVariants[0].conversions / allVariants[0].impressions ? 'B' : 'A';
+      const winner =
+        allVariants[1].conversions / allVariants[1].impressions >
+        allVariants[0].conversions / allVariants[0].impressions
+          ? 'B'
+          : 'A';
 
       await prisma.aBTest.update({
         where: { id: testId },
         data: {
           confidence: (1 - pValue) * 100,
           recommendations: generateRecommendations(
-            allVariants.map((v: typeof allVariants[number]) => ({
+            allVariants.map((v: (typeof allVariants)[number]) => ({
               ...v,
-              conversionRate: v.impressions > 0 ? (v.conversions / v.impressions) * 100 : 0,
+              conversionRate:
+                v.impressions > 0 ? (v.conversions / v.impressions) * 100 : 0,
             })),
             pValue,
             uplift
@@ -339,7 +350,11 @@ export async function POST(
 }
 
 function generateRecommendations(
-  variants: Array<{ name: string; conversionRate: number; impressions: number }>,
+  variants: Array<{
+    name: string;
+    conversionRate: number;
+    impressions: number;
+  }>,
   pValue: number,
   uplift: number
 ): string[] {
@@ -352,23 +367,34 @@ function generateRecommendations(
   const totalImpressions = variants.reduce((sum, v) => sum + v.impressions, 0);
 
   if (totalImpressions < 100) {
-    recommendations.push('Collect more data - minimum 100 impressions recommended per variant');
+    recommendations.push(
+      'Collect more data - minimum 100 impressions recommended per variant'
+    );
   }
 
   if (pValue >= 0.05) {
-    recommendations.push('Results are not yet statistically significant - continue the test');
+    recommendations.push(
+      'Results are not yet statistically significant - continue the test'
+    );
 
     if (totalImpressions > 1000) {
-      recommendations.push('Consider larger content differences between variants');
+      recommendations.push(
+        'Consider larger content differences between variants'
+      );
     }
   } else {
-    const winner = variants[0].conversionRate > variants[1].conversionRate ? 'A' : 'B';
-    recommendations.push(`Variant ${winner} is the winner with ${Math.abs(uplift).toFixed(1)}% ${uplift > 0 ? 'improvement' : 'decrease'}`);
+    const winner =
+      variants[0].conversionRate > variants[1].conversionRate ? 'A' : 'B';
+    recommendations.push(
+      `Variant ${winner} is the winner with ${Math.abs(uplift).toFixed(1)}% ${uplift > 0 ? 'improvement' : 'decrease'}`
+    );
     recommendations.push('Consider implementing the winning variant');
   }
 
   if (Math.abs(uplift) < 5 && pValue < 0.05) {
-    recommendations.push('Improvement is small - consider if the effort is worth the gain');
+    recommendations.push(
+      'Improvement is small - consider if the effort is worth the gain'
+    );
   }
 
   return recommendations;

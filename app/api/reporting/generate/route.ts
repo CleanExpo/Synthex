@@ -10,22 +10,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { reportGenerator } from '@/lib/reports/report-generator';
 import { z } from 'zod';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 const GenerateRequestSchema = z.object({
   name: z.string().min(1, 'Report name is required').max(200),
-  type: z.enum(['campaign', 'analytics', 'ab-test', 'psychology', 'comprehensive']),
+  type: z.enum([
+    'campaign',
+    'analytics',
+    'ab-test',
+    'psychology',
+    'comprehensive',
+  ]),
   format: z.enum(['pdf', 'csv', 'json']).default('pdf'),
-  dateRange: z.object({
-    start: z.string(),
-    end: z.string(),
-  }).optional(),
-  filters: z.object({
-    campaignIds: z.array(z.string()).optional(),
-    platforms: z.array(z.string()).optional(),
-    metrics: z.array(z.string()).optional(),
-  }).optional(),
+  dateRange: z
+    .object({
+      start: z.string(),
+      end: z.string(),
+    })
+    .optional(),
+  filters: z
+    .object({
+      campaignIds: z.array(z.string()).optional(),
+      platforms: z.array(z.string()).optional(),
+      metrics: z.array(z.string()).optional(),
+    })
+    .optional(),
 });
 
 /**
@@ -34,7 +44,7 @@ const GenerateRequestSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -52,16 +62,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await reportGenerator.generateReport(userId, validation.data);
+    const result = await reportGenerator.generateReport(
+      userId,
+      validation.data
+    );
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        reportId: result.reportId,
-        status: result.status,
-        message: 'Report generation started. Check status at /api/reporting/reports/{reportId}',
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          reportId: result.reportId,
+          status: result.status,
+          message:
+            'Report generation started. Check status at /api/reporting/reports/{reportId}',
+        },
       },
-    }, { status: 202 });
+      { status: 202 }
+    );
   } catch (error) {
     logger.error('Report generation error:', error);
     return NextResponse.json(

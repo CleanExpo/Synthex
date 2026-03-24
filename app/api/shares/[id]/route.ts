@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // =============================================================================
@@ -93,7 +93,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -129,7 +129,10 @@ export async function GET(
   } catch (error: unknown) {
     logger.error('Get share error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to get share') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to get share'),
+      },
       { status: 500 }
     );
   }
@@ -149,7 +152,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -185,7 +188,10 @@ export async function PATCH(
 
     if (existing.sharedById !== userId) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Only the share owner can modify share settings' },
+        {
+          error: 'Forbidden',
+          message: 'Only the share owner can modify share settings',
+        },
         { status: 403 }
       );
     }
@@ -218,7 +224,10 @@ export async function PATCH(
   } catch (error: unknown) {
     logger.error('Update share error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to update share') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to update share'),
+      },
       { status: 500 }
     );
   }
@@ -239,7 +248,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -265,7 +274,10 @@ export async function DELETE(
 
     if (existing.sharedById !== userId) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Only the share owner can revoke a share' },
+        {
+          error: 'Forbidden',
+          message: 'Only the share owner can revoke a share',
+        },
         { status: 403 }
       );
     }
@@ -282,7 +294,10 @@ export async function DELETE(
   } catch (error: unknown) {
     logger.error('Revoke share error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to revoke share') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(error, 'Failed to revoke share'),
+      },
       { status: 500 }
     );
   }

@@ -4,12 +4,15 @@
  * @description GET: List all third-party integrations for the current user.
  * Returns connected integrations with status and disconnected providers with config-only entries.
  *
- * Auth: getUserIdFromCookies() from lib/auth/jwt-utils
+ * Auth: getUserIdFromRequestOrCookies(request) from lib/auth/jwt-utils
  * Data: Prisma PlatformConnection model
  */
 
-import { NextResponse } from 'next/server';
-import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import {
@@ -23,9 +26,9 @@ import {
 // GET — List all third-party integrations
 // ============================================================================
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return unauthorizedResponse();
     }
@@ -42,7 +45,7 @@ export async function GET() {
     const integrations: IntegrationStatus[] = SUPPORTED_PROVIDERS.map(
       (provider: IntegrationProvider) => {
         const connection = connections.find(
-          (c) => c.platform === provider && c.isActive
+          c => c.platform === provider && c.isActive
         );
 
         const config = INTEGRATION_REGISTRY[provider];
@@ -71,7 +74,10 @@ export async function GET() {
   } catch (error) {
     logger.error('Failed to list third-party integrations:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch integrations', message: 'An unexpected error occurred' },
+      {
+        error: 'Failed to fetch integrations',
+        message: 'An unexpected error occurred',
+      },
       { status: 500 }
     );
   }

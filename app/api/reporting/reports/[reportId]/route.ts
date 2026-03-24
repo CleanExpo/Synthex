@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { reportGenerator } from '@/lib/reports/report-generator';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 /**
@@ -21,7 +21,7 @@ export async function GET(
   { params }: { params: Promise<{ reportId: string }> }
 ) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -33,10 +33,7 @@ export async function GET(
     const report = await reportGenerator.getReport(reportId, userId);
 
     if (!report) {
-      return NextResponse.json(
-        { error: 'Report not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Report not found' }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -50,7 +47,10 @@ export async function GET(
         data: report.status === 'completed' ? report.data : null,
         generatedAt: report.generatedAt?.toISOString() || null,
         createdAt: report.createdAt.toISOString(),
-        downloadUrl: report.status === 'completed' ? `/api/reporting/reports/${report.id}/download` : null,
+        downloadUrl:
+          report.status === 'completed'
+            ? `/api/reporting/reports/${report.id}/download`
+            : null,
       },
     });
   } catch (error) {
@@ -71,7 +71,7 @@ export async function DELETE(
   { params }: { params: Promise<{ reportId: string }> }
 ) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -83,10 +83,7 @@ export async function DELETE(
     const deleted = await reportGenerator.deleteReport(reportId, userId);
 
     if (!deleted) {
-      return NextResponse.json(
-        { error: 'Report not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Report not found' }, { status: 404 });
     }
 
     return NextResponse.json({

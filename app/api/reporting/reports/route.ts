@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { reportGenerator } from '@/lib/reports/report-generator';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 /**
@@ -18,7 +18,7 @@ import { logger } from '@/lib/logger';
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromCookies();
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -27,7 +27,10 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(100, parseInt(searchParams.get('limit') || '20', 10));
+    const limit = Math.min(
+      100,
+      parseInt(searchParams.get('limit') || '20', 10)
+    );
     const offset = parseInt(searchParams.get('offset') || '0', 10);
     const type = searchParams.get('type') || undefined;
 
@@ -48,7 +51,10 @@ export async function GET(request: NextRequest) {
           format: r.format,
           generatedAt: r.generatedAt?.toISOString() || null,
           createdAt: r.createdAt.toISOString(),
-          downloadUrl: r.status === 'completed' ? `/api/reporting/reports/${r.id}/download` : null,
+          downloadUrl:
+            r.status === 'completed'
+              ? `/api/reporting/reports/${r.id}/download`
+              : null,
         })),
         pagination: {
           total,
