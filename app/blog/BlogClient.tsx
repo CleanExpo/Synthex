@@ -265,58 +265,66 @@ export default function BlogPage() {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPosts.map(post => (
-                <Card
-                  key={post.id}
-                  className="bg-surface-base/80 backdrop-blur-md border border-orange-500/20 p-6 hover:border-orange-400/40 hover:shadow-xl hover:shadow-orange-500/10 hover:transform hover:scale-[1.02] transition-all"
-                >
-                  <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 rounded-lg h-48 mb-4 flex items-center justify-center border border-orange-500/10">
-                    {post.category === 'Developer Tools' && (
-                      <Code className="w-16 h-16 text-orange-400/50" />
-                    )}
-                    {post.category === 'AI Trends' && (
-                      <Brain className="w-16 h-16 text-orange-400/50" />
-                    )}
-                    {post.category === 'Strategy' && (
-                      <TrendingUp className="w-16 h-16 text-orange-300/50" />
-                    )}
-                    {post.category === 'Optimization' && (
-                      <Zap className="w-16 h-16 text-orange-500/50" />
-                    )}
-                    {post.category === 'Psychology' && (
-                      <User className="w-16 h-16 text-orange-400/50" />
-                    )}
-                    {post.category === 'Case Study' && (
-                      <Calendar className="w-16 h-16 text-orange-300/50" />
-                    )}
-                    {post.category === 'Planning' && (
-                      <Clock className="w-16 h-16 text-orange-500/50" />
-                    )}
-                  </div>
-                  <span className="text-orange-400 text-sm">
-                    {post.category}
-                  </span>
-                  <h3 className="text-xl font-bold text-white mt-2 mb-3">
-                    {post.title}
-                  </h3>
-                  <p className="text-gray-500 mb-4 line-clamp-3">
-                    {post.excerpt}
-                  </p>
-                  <div className="flex items-center justify-between text-gray-600 text-sm mb-4">
-                    <span>{post.author}</span>
-                    <span>{post.readTime}</span>
-                  </div>
-                  <Link href={`/blog/${post.id}`}>
-                    <Button
-                      variant="ghost"
-                      className="w-full text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 border border-orange-500/20 hover:border-orange-400/40"
-                    >
-                      Read More
-                      <ArrowRight className="ml-2 w-4 h-4" />
-                    </Button>
-                  </Link>
-                </Card>
-              ))}
+              {filteredPosts
+                .filter(
+                  post =>
+                    !featuredPost ||
+                    post.id !== featuredPost.id ||
+                    selectedCategory !== 'All' ||
+                    searchTerm
+                )
+                .map(post => (
+                  <Card
+                    key={post.id}
+                    className="bg-surface-base/80 backdrop-blur-md border border-orange-500/20 p-6 hover:border-orange-400/40 hover:shadow-xl hover:shadow-orange-500/10 hover:transform hover:scale-[1.02] transition-all"
+                  >
+                    <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 rounded-lg h-48 mb-4 flex items-center justify-center border border-orange-500/10">
+                      {post.category === 'Developer Tools' && (
+                        <Code className="w-16 h-16 text-orange-400/50" />
+                      )}
+                      {post.category === 'AI Trends' && (
+                        <Brain className="w-16 h-16 text-orange-400/50" />
+                      )}
+                      {post.category === 'Strategy' && (
+                        <TrendingUp className="w-16 h-16 text-orange-300/50" />
+                      )}
+                      {post.category === 'Optimization' && (
+                        <Zap className="w-16 h-16 text-orange-500/50" />
+                      )}
+                      {post.category === 'Psychology' && (
+                        <User className="w-16 h-16 text-orange-400/50" />
+                      )}
+                      {post.category === 'Case Study' && (
+                        <Calendar className="w-16 h-16 text-orange-300/50" />
+                      )}
+                      {post.category === 'Planning' && (
+                        <Clock className="w-16 h-16 text-orange-500/50" />
+                      )}
+                    </div>
+                    <span className="text-orange-400 text-sm">
+                      {post.category}
+                    </span>
+                    <h3 className="text-xl font-bold text-white mt-2 mb-3">
+                      {post.title}
+                    </h3>
+                    <p className="text-gray-500 mb-4 line-clamp-3">
+                      {post.excerpt}
+                    </p>
+                    <div className="flex items-center justify-between text-gray-600 text-sm mb-4">
+                      <span>{post.author}</span>
+                      <span>{post.readTime}</span>
+                    </div>
+                    <Link href={`/blog/${post.id}`}>
+                      <Button
+                        variant="ghost"
+                        className="w-full text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 border border-orange-500/20 hover:border-orange-400/40"
+                      >
+                        Read More
+                        <ArrowRight className="ml-2 w-4 h-4" />
+                      </Button>
+                    </Link>
+                  </Card>
+                ))}
             </div>
           )}
         </div>

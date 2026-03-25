@@ -211,7 +211,7 @@ export function MarketingFooter() {
               </li>
               <li>
                 <Link
-                  href="/support"
+                  href="/contact"
                   className="text-gray-500 hover:text-orange-400 transition-colors text-sm"
                 >
                   Contact
