@@ -98,15 +98,23 @@ const milestones = [
   },
   {
     period: 'Q4 2024',
-    event: 'Reached 10,000 active businesses. Expanded to 9 social platforms.',
+    event:
+      'Expanded to 9 social platforms. Launched Agency white-label and API access.',
   },
   {
-    period: 'Q1 2025',
-    event: 'Launched Agency white-label, API access, and AI Autonomous Mode.',
+    period: 'Q2 2025',
+    event:
+      'Shipped SEO Ranking Engine — Google Search Console integration, keyword tracking, and local visibility scoring.',
+  },
+  {
+    period: 'Q3 2025',
+    event:
+      'Launched Campaign Intelligence and AI Autonomous Mode — hands-free content generation and multi-platform scheduling.',
   },
   {
     period: 'Q1 2026',
-    event: 'Full autonomous content engine live. Production-ready for scale.',
+    event:
+      'Full autonomous engine live — competitor displacement tracking, GBP integration, and AI-driven content at scale.',
   },
 ];
 
