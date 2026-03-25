@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
+import useSWR from 'swr';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import { toast } from 'sonner';
@@ -9,6 +10,7 @@ import Link from 'next/link';
 import { Brain, Building, ChevronDown, Layers } from '@/components/icons';
 import { fetchWithCSRF } from '@/lib/csrf';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { EngagementBadge } from '@/components/content/EngagementBadge';
 
 import {
   type GeneratedContentData,
@@ -121,6 +123,41 @@ export default function ContentPage() {
 
   // Bulk schedule wizard
   const [bulkWizardOpen, setBulkWizardOpen] = useState(false);
+
+  // Industry Mode state
+  const [industryModeOpen, setIndustryModeOpen] = useState(false);
+  const [selectedIndustry, setSelectedIndustry] = useState('');
+  const [selectedScenarioId, setSelectedScenarioId] = useState('');
+  const [industryScore, setIndustryScore] = useState<{
+    score: number;
+    grade: 'A' | 'B' | 'C' | 'D' | 'F';
+    suggestions: string[];
+  } | null>(null);
+  const [isGeneratingIndustry, setIsGeneratingIndustry] = useState(false);
+
+  // SWR fetcher (credentials included per project convention)
+  const fetchJson = useCallback(
+    (url: string) => fetch(url, { credentials: 'include' }).then(r => r.json()),
+    []
+  );
+
+  // Fetch templates for the selected industry
+  const { data: templatesData } = useSWR<{
+    templates: Array<{
+      id: string;
+      scenarioName: string;
+      exampleOutput: string | null;
+    }>;
+  }>(
+    selectedIndustry
+      ? `/api/content/industry/templates?industry=${encodeURIComponent(selectedIndustry)}`
+      : null,
+    fetchJson
+  );
+  const industryTemplates = useMemo(
+    () => templatesData?.templates ?? [],
+    [templatesData]
+  );
 
   // Auto-save drafts every 30s when content exists
   useAutoSave({
@@ -571,6 +608,82 @@ export default function ContentPage() {
     ]
   );
 
+  const handleIndustryGenerate = useCallback(async () => {
+    if (!selectedIndustry || !selectedScenarioId) {
+      toast.error('Please select an industry and scenario');
+      return;
+    }
+
+    const selectedTemplate = industryTemplates.find(
+      t => t.id === selectedScenarioId
+    );
+    if (!selectedTemplate) {
+      toast.error('Selected template not found');
+      return;
+    }
+
+    setIsGeneratingIndustry(true);
+    setIndustryScore(null);
+
+    try {
+      const res = await fetch('/api/content/industry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          industry: selectedIndustry,
+          scenarioName: selectedTemplate.scenarioName,
+          variables: {},
+        }),
+      });
+
+      if (!res.ok) {
+        const errData: { error?: string } = await res.json().catch(() => ({}));
+        throw new Error(errData.error ?? `Request failed (${res.status})`);
+      }
+
+      const data: {
+        content: string;
+        score: {
+          score: number;
+          grade: 'A' | 'B' | 'C' | 'D' | 'F';
+          suggestions: string[];
+        };
+      } = await res.json();
+
+      const transformed = {
+        primary: data.content,
+        variations: [],
+        metadata: {
+          platform,
+          hookType,
+          length: data.content.length,
+          estimatedEngagement: data.score.score,
+          hashtags: [],
+        },
+      };
+
+      setGeneratedContent(transformed);
+      setEditedContent(transformed.primary);
+      setIndustryScore(data.score);
+      toast.success('Industry content generated!');
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Failed to generate industry content'
+      );
+    } finally {
+      setIsGeneratingIndustry(false);
+    }
+  }, [
+    selectedIndustry,
+    selectedScenarioId,
+    industryTemplates,
+    platform,
+    hookType,
+  ]);
+
   const handleViewAnalytics = useCallback(() => {
     window.location.href = '/dashboard/analytics';
   }, []);
@@ -631,6 +744,118 @@ export default function ContentPage() {
       )}
 
       <ContentStats />
+
+      {/* Industry Mode */}
+      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setIndustryModeOpen(prev => !prev)}
+          className="w-full flex items-center justify-between px-4 py-3 text-sm text-white/70 hover:text-white transition-colors"
+        >
+          <span className="flex items-center gap-2">
+            <ChevronDown
+              className={`h-4 w-4 text-orange-400 transition-transform ${industryModeOpen ? 'rotate-180' : ''}`}
+            />
+            Industry Mode
+          </span>
+          <span className="text-xs text-white/30">
+            Generate content from industry-specific templates
+          </span>
+        </button>
+
+        {industryModeOpen && (
+          <div className="px-4 pb-4 space-y-4 border-t border-white/[0.05]">
+            <div className="grid gap-4 sm:grid-cols-2 pt-4">
+              {/* Industry selector */}
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="industry-select"
+                  className="text-xs text-white/50 font-medium"
+                >
+                  Industry
+                </label>
+                <select
+                  id="industry-select"
+                  value={selectedIndustry}
+                  onChange={e => {
+                    setSelectedIndustry(e.target.value);
+                    setSelectedScenarioId('');
+                    setIndustryScore(null);
+                  }}
+                  className="w-full bg-white/[0.03] border border-white/10 rounded-sm px-3 py-2 text-sm text-white focus:ring-1 focus:ring-orange-500/30 focus:outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">Select industry…</option>
+                  <option value="trades">Trades</option>
+                  <option value="cafe">Café / Restaurant</option>
+                  <option value="salon">Salon / Beauty</option>
+                  <option value="gym">Gym / Fitness</option>
+                  <option value="clinic">Medical / Dental Clinic</option>
+                  <option value="retail">Retail Shop</option>
+                </select>
+              </div>
+
+              {/* Scenario selector */}
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="scenario-select"
+                  className="text-xs text-white/50 font-medium"
+                >
+                  Scenario
+                </label>
+                <select
+                  id="scenario-select"
+                  value={selectedScenarioId}
+                  onChange={e => {
+                    setSelectedScenarioId(e.target.value);
+                    setIndustryScore(null);
+                  }}
+                  disabled={!selectedIndustry || industryTemplates.length === 0}
+                  className="w-full bg-white/[0.03] border border-white/10 rounded-sm px-3 py-2 text-sm text-white focus:ring-1 focus:ring-orange-500/30 focus:outline-none appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <option value="">
+                    {!selectedIndustry
+                      ? 'Select industry first…'
+                      : industryTemplates.length === 0
+                        ? 'No templates available'
+                        : 'Select scenario…'}
+                  </option>
+                  {industryTemplates.map(t => (
+                    <option key={t.id} value={t.id}>
+                      {t.scenarioName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Generate button + score badge */}
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={handleIndustryGenerate}
+                disabled={
+                  !selectedIndustry ||
+                  !selectedScenarioId ||
+                  isGeneratingIndustry
+                }
+                className="px-4 py-2 rounded-sm text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                {isGeneratingIndustry
+                  ? 'Generating…'
+                  : 'Generate from template'}
+              </button>
+
+              {industryScore && (
+                <EngagementBadge
+                  score={industryScore.score}
+                  grade={industryScore.grade}
+                  suggestions={industryScore.suggestions}
+                />
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Video generation entry point */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
