@@ -626,6 +626,8 @@ model ReviewRequest {
   recipientName  String    @map("recipient_name")
   recipientEmail String    @map("recipient_email")
   reviewLink     String    @map("review_link")
+  recipientPhone  String?   @map("recipient_phone")
+  channel         String    @default("email") @map("channel") // email | sms
   status         String    @default("pending") @map("status") // pending | followed_up | completed
   sentAt         DateTime  @default(now()) @map("sent_at")
   followUpSentAt DateTime? @map("follow_up_sent_at")
@@ -4664,6 +4666,17 @@ model GBPReview {
   replyTime       DateTime? @map("reply_time")
   aiSuggestion    String?   @map("ai_suggestion") @db.Text // AI-generated reply suggestion
   aiSuggestionAt  DateTime? @map("ai_suggestion_at")
+
+  // Moderation + widget (UNI-1642)
+  status              String    @default("approved") @map("status") // approved | pending | rejected | hidden
+  isFeatured          Boolean   @default(false) @map("is_featured")
+  displayOnWidget     Boolean   @default(true) @map("display_on_widget")
+  widgetOrder         Int?      @map("widget_order")
+  sentiment           String?   // positive | neutral | negative
+  sentimentScore      Float?    @map("sentiment_score") // -1.0 to 1.0
+  moderatedBy         String?   @map("moderated_by")
+  moderatedAt         DateTime? @map("moderated_at")
+
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
@@ -4675,6 +4688,8 @@ model GBPReview {
   @@index([locationId])
   @@index([rating])
   @@index([reviewTime])
+  @@index([organizationId, status, reviewTime(sort: Desc)])
+  @@index([organizationId, displayOnWidget, isFeatured])
   @@map("gbp_reviews")
 }
 
@@ -5353,4 +5368,58 @@ model WaitlistEntry {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("waitlist_entries")
+}
+
+// ============================================================================
+// Blog (UNI-1643)
+// Platform-level blog posts — not org-scoped (Synthex's own blog at /blog)
+// ============================================================================
+
+/// AI-generated and editorial blog posts published at /blog.
+/// Platform-level — not org-scoped.
+model BlogPost {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  excerpt     String   @db.Text
+  content     String   @db.Text
+  status      String   @default("draft") // draft | scheduled | published | archived
+  publishedAt DateTime? @map("published_at")
+  scheduledAt DateTime? @map("scheduled_at")
+
+  // Authoring
+  author      String   @default("Synthex Team")
+
+  // Taxonomy
+  tags        String[] @default([])
+  category    String?
+
+  // SEO
+  seoTitle       String?  @map("seo_title")
+  seoDescription String?  @map("seo_description")
+  ogImage        String?  @map("og_image")
+  ogImageAlt     String?  @map("og_image_alt")
+
+  // Content metadata
+  wordCount       Int?    @map("word_count")
+  readTime        Int?    @map("read_time") // minutes
+
+  // AI generation metadata
+  aiGenerated     Boolean  @default(false) @map("ai_generated")
+  aiModel         String?  @map("ai_model")
+  generationCost  Float?   @map("generation_cost")
+
+  // Quality
+  qualityScore    Int?    @map("quality_score") // 0–100
+
+  // Engagement counters (updated by cron)
+  views           Int     @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status, publishedAt(sort: Desc)])
+  @@index([status, category, publishedAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("blog_posts")
 }
