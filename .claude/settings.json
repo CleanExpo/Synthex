@@ -4,7 +4,7 @@
   "description": "AI-powered marketing automation platform — Next.js 15 + Supabase + Prisma + Vercel",
 
   "model": "claude-sonnet-4-6",
-  "maxTokens": 64000,
+  "maxTokens": 164000,
 
   "permissions": {
     "allow": [
