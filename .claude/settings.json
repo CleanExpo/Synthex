@@ -8,9 +8,19 @@
 
   "permissions": {
     "allow": [
-      "Read", "Write", "Edit", "Bash(npm *)", "Bash(npx *)", "Bash(mkdir *)",
-      "Bash(cat *)", "Bash(echo *)", "Bash(chmod *)", "Bash(touch *)",
-      "Bash(git *)", "Bash(gh *)", "Bash(supabase *)"
+      "Read",
+      "Write",
+      "Edit",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(mkdir *)",
+      "Bash(cat *)",
+      "Bash(echo *)",
+      "Bash(chmod *)",
+      "Bash(touch *)",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(supabase *)"
     ],
     "deny": ["Bash(rm -rf /)", "Bash(sudo *)"]
   },
@@ -70,7 +80,12 @@
               },
               "skipLibCheck": true
             },
-            "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+            "include": [
+              "next-env.d.ts",
+              "**/*.ts",
+              "**/*.tsx",
+              ".next/types/**/*.ts"
+            ],
             "exclude": ["node_modules", ".next", "out", "dist"]
           }
         },
@@ -142,7 +157,14 @@
 
   "rules": {
     "architecture": {
-      "layers": ["components", "hooks", "api", "services", "repositories", "database"],
+      "layers": [
+        "components",
+        "hooks",
+        "api",
+        "services",
+        "repositories",
+        "database"
+      ],
       "prohibited": [
         "components/ cannot import from server/",
         "app/api/ cannot import from repositories/ (must use services)",
@@ -167,7 +189,11 @@
   "templates": {
     "api-route": {
       "pattern": "try/catch + Zod validation + service call + handleApiError",
-      "required": ["handleApiError import", "validator import", "service import"]
+      "required": [
+        "handleApiError import",
+        "validator import",
+        "service import"
+      ]
     },
     "service": {
       "pattern": "async methods calling repository + business logic",
@@ -179,7 +205,12 @@
     },
     "component": {
       "pattern": "hook for data + conditional rendering for states",
-      "required": ["loading state", "error state", "empty state", "success state"]
+      "required": [
+        "loading state",
+        "error state",
+        "empty state",
+        "success state"
+      ]
     }
   },
 
@@ -197,6 +228,10 @@
     "linear": {
       "transport": "http",
       "url": "https://mcp.linear.app/mcp"
+    },
+    "betterstack": {
+      "type": "http",
+      "url": "https://mcp.betterstack.com"
     }
   },
 
