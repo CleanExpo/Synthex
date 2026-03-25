@@ -21,6 +21,7 @@ import {
 import { findOAuthConnection } from '@/lib/google/google-auth';
 import { markReviewReceived } from '@/lib/reviews/review-request-service';
 import { calculateVisibilityScore } from '@/lib/scoring/visibility-score';
+import { seedAllOrgsWithoutKeywords } from '@/lib/seo/keyword-seeder';
 import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
@@ -197,6 +198,14 @@ export async function GET(request: NextRequest) {
       failed++;
     }
   }
+
+  // SYN-487: Auto-seed keyword targets for any org that now has a primary GBP
+  // location but no keyword targets. Fire-and-forget — never blocks the cron.
+  seedAllOrgsWithoutKeywords().catch(err => {
+    logger.warn('cron:gbp-monitor:keyword-seed-error', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  });
 
   const duration = Date.now() - startTime;
 

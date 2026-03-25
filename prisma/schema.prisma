@@ -672,6 +672,7 @@ model KeywordTarget {
   keyword        String
   location       String? // suburb/city modifier (e.g. "Parramatta NSW")
   isActive       Boolean  @default(true) @map("is_active")
+  autoSeeded     Boolean  @default(false) @map("auto_seeded") // true = created by GBP keyword seeder
   createdAt      DateTime @default(now()) @map("created_at")
 
   organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
