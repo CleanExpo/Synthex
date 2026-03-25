@@ -59,8 +59,7 @@ const nextConfig = {
           },
           {
             key: 'Link',
-            value:
-              '<https://fonts.googleapis.com>; rel=preconnect, <https://fonts.gstatic.com>; rel=preconnect; crossorigin',
+            value: '<https://api.fontshare.com>; rel=preconnect; crossorigin',
           },
         ],
       },

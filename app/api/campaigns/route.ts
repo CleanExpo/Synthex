@@ -21,6 +21,7 @@ import { z } from 'zod';
 import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
 import { logger } from '@/lib/logger';
 import { getRedisClient } from '@/lib/redis-client';
+import { writeDefault } from '@/lib/rate-limit';
 
 const CAMPAIGNS_CACHE_TTL = 60; // seconds
 
@@ -170,245 +171,251 @@ export async function GET(request: NextRequest) {
 
 // POST /api/campaigns - Create new campaign
 export async function POST(request: NextRequest) {
-  try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) return unauthorizedResponse();
+  return writeDefault(request, async () => {
+    try {
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) return unauthorizedResponse();
 
-    const body = await request.json();
+      const body = await request.json();
 
-    // Validate input
-    const validationResult = campaignCreateSchema.safeParse(body);
-    if (!validationResult.success) {
+      // Validate input
+      const validationResult = campaignCreateSchema.safeParse(body);
+      if (!validationResult.success) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: validationResult.error.flatten().fieldErrors,
+          },
+          { status: 400 }
+        );
+      }
+
+      const { name, description, platform, content, settings } =
+        validationResult.data;
+
+      // Resolve org ID for scoping (null = no active org context)
+      const organizationId = await getEffectiveOrganizationId(userId);
+
+      // Create campaign and audit log in a transaction
+      const campaign = await prisma.$transaction(async tx => {
+        const created = await tx.campaign.create({
+          data: {
+            name,
+            description,
+            platform,
+            content,
+            settings: settings as object | undefined,
+            userId,
+            organizationId: organizationId ?? undefined,
+            status: 'draft',
+          },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            action: 'campaign_created',
+            resource: 'campaign',
+            resourceId: created.id,
+            category: 'data',
+            outcome: 'success',
+            userId,
+            details: { campaignName: name, platform },
+          },
+        });
+
+        return created;
+      });
+
+      // ── Cache invalidation ──────────────────────────────────────────────────
+      // organizationId already resolved above — no second DB call needed.
+      try {
+        const redis = getRedisClient();
+        const pattern = organizationId
+          ? `synthex:cache:campaigns:${organizationId}:*`
+          : `synthex:cache:campaigns:${userId}:*`;
+        const cacheKeys = await redis.keys(pattern);
+        if (cacheKeys.length > 0) await redis.del(cacheKeys);
+      } catch {
+        /* non-fatal */
+      }
+
+      return NextResponse.json({
+        success: true,
+        campaign,
+      });
+    } catch (error: unknown) {
+      logger.error('Create campaign error:', error);
       return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validationResult.error.flatten().fieldErrors,
-        },
-        { status: 400 }
+        { error: 'Failed to create campaign' },
+        { status: 500 }
       );
     }
-
-    const { name, description, platform, content, settings } =
-      validationResult.data;
-
-    // Resolve org ID for scoping (null = no active org context)
-    const organizationId = await getEffectiveOrganizationId(userId);
-
-    // Create campaign and audit log in a transaction
-    const campaign = await prisma.$transaction(async tx => {
-      const created = await tx.campaign.create({
-        data: {
-          name,
-          description,
-          platform,
-          content,
-          settings: settings as object | undefined,
-          userId,
-          organizationId: organizationId ?? undefined,
-          status: 'draft',
-        },
-      });
-
-      await tx.auditLog.create({
-        data: {
-          action: 'campaign_created',
-          resource: 'campaign',
-          resourceId: created.id,
-          category: 'data',
-          outcome: 'success',
-          userId,
-          details: { campaignName: name, platform },
-        },
-      });
-
-      return created;
-    });
-
-    // ── Cache invalidation ──────────────────────────────────────────────────
-    // organizationId already resolved above — no second DB call needed.
-    try {
-      const redis = getRedisClient();
-      const pattern = organizationId
-        ? `synthex:cache:campaigns:${organizationId}:*`
-        : `synthex:cache:campaigns:${userId}:*`;
-      const cacheKeys = await redis.keys(pattern);
-      if (cacheKeys.length > 0) await redis.del(cacheKeys);
-    } catch {
-      /* non-fatal */
-    }
-
-    return NextResponse.json({
-      success: true,
-      campaign,
-    });
-  } catch (error: unknown) {
-    logger.error('Create campaign error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create campaign' },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 // PUT /api/campaigns - Update campaign
 export async function PUT(request: NextRequest) {
-  try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) return unauthorizedResponse();
-
-    const body = await request.json();
-
-    // Validate input
-    const validationResult = campaignUpdateSchema.safeParse(body);
-    if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validationResult.error.flatten().fieldErrors,
-        },
-        { status: 400 }
-      );
-    }
-
-    const { id, settings, ...restUpdateData } = validationResult.data;
-
-    // Verify ownership
-    const existingCampaign = await prisma.campaign.findFirst({
-      where: { id, userId },
-    });
-
-    if (!existingCampaign) {
-      return NextResponse.json(
-        { error: 'Campaign not found' },
-        { status: 404 }
-      );
-    }
-
-    const campaign = await prisma.campaign.update({
-      where: { id },
-      data: {
-        ...restUpdateData,
-        ...(settings !== undefined && { settings: settings as object }),
-      },
-    });
-
-    // Push campaign lifecycle events to Unite-Hub (fire-and-forget)
-    if (
-      restUpdateData.status &&
-      existingCampaign.status !== restUpdateData.status
-    ) {
-      if (restUpdateData.status === 'active') {
-        void pushUniteHubEvent({
-          type: 'campaign.started',
-          userId,
-          campaignId: id,
-        });
-      } else if (restUpdateData.status === 'completed') {
-        void pushUniteHubEvent({
-          type: 'campaign.completed',
-          userId,
-          campaignId: id,
-        });
-      }
-    }
-
-    // ── Cache invalidation ──────────────────────────────────────────────────
-    // existingCampaign already has organizationId — no extra DB call needed.
+  return writeDefault(request, async () => {
     try {
-      const redis = getRedisClient();
-      const bustOrgId = existingCampaign.organizationId;
-      const pattern = bustOrgId
-        ? `synthex:cache:campaigns:${bustOrgId}:*`
-        : `synthex:cache:campaigns:${userId}:*`;
-      const cacheKeys = await redis.keys(pattern);
-      if (cacheKeys.length > 0) await redis.del(cacheKeys);
-    } catch {
-      /* non-fatal */
-    }
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) return unauthorizedResponse();
 
-    return NextResponse.json({
-      success: true,
-      campaign,
-    });
-  } catch (error: unknown) {
-    logger.error('Update campaign error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update campaign' },
-      { status: 500 }
-    );
-  }
+      const body = await request.json();
+
+      // Validate input
+      const validationResult = campaignUpdateSchema.safeParse(body);
+      if (!validationResult.success) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: validationResult.error.flatten().fieldErrors,
+          },
+          { status: 400 }
+        );
+      }
+
+      const { id, settings, ...restUpdateData } = validationResult.data;
+
+      // Verify ownership
+      const existingCampaign = await prisma.campaign.findFirst({
+        where: { id, userId },
+      });
+
+      if (!existingCampaign) {
+        return NextResponse.json(
+          { error: 'Campaign not found' },
+          { status: 404 }
+        );
+      }
+
+      const campaign = await prisma.campaign.update({
+        where: { id },
+        data: {
+          ...restUpdateData,
+          ...(settings !== undefined && { settings: settings as object }),
+        },
+      });
+
+      // Push campaign lifecycle events to Unite-Hub (fire-and-forget)
+      if (
+        restUpdateData.status &&
+        existingCampaign.status !== restUpdateData.status
+      ) {
+        if (restUpdateData.status === 'active') {
+          void pushUniteHubEvent({
+            type: 'campaign.started',
+            userId,
+            campaignId: id,
+          });
+        } else if (restUpdateData.status === 'completed') {
+          void pushUniteHubEvent({
+            type: 'campaign.completed',
+            userId,
+            campaignId: id,
+          });
+        }
+      }
+
+      // ── Cache invalidation ──────────────────────────────────────────────────
+      // existingCampaign already has organizationId — no extra DB call needed.
+      try {
+        const redis = getRedisClient();
+        const bustOrgId = existingCampaign.organizationId;
+        const pattern = bustOrgId
+          ? `synthex:cache:campaigns:${bustOrgId}:*`
+          : `synthex:cache:campaigns:${userId}:*`;
+        const cacheKeys = await redis.keys(pattern);
+        if (cacheKeys.length > 0) await redis.del(cacheKeys);
+      } catch {
+        /* non-fatal */
+      }
+
+      return NextResponse.json({
+        success: true,
+        campaign,
+      });
+    } catch (error: unknown) {
+      logger.error('Update campaign error:', error);
+      return NextResponse.json(
+        { error: 'Failed to update campaign' },
+        { status: 500 }
+      );
+    }
+  });
 }
 
 // DELETE /api/campaigns - Delete campaign
 export async function DELETE(request: NextRequest) {
-  try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) return unauthorizedResponse();
-
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Campaign ID is required' },
-        { status: 400 }
-      );
-    }
-
-    // Verify ownership
-    const campaign = await prisma.campaign.findFirst({
-      where: { id, userId },
-    });
-
-    if (!campaign) {
-      return NextResponse.json(
-        { error: 'Campaign not found' },
-        { status: 404 }
-      );
-    }
-
-    // Delete campaign and log in a transaction
-    await prisma.$transaction(async tx => {
-      await tx.campaign.delete({
-        where: { id },
-      });
-
-      await tx.auditLog.create({
-        data: {
-          action: 'campaign_deleted',
-          resource: 'campaign',
-          resourceId: id,
-          category: 'data',
-          outcome: 'success',
-          userId,
-          details: { campaignName: campaign.name },
-        },
-      });
-    });
-
-    // ── Cache invalidation ──────────────────────────────────────────────────
-    // campaign.organizationId is already resolved from the ownership check above.
+  return writeDefault(request, async () => {
     try {
-      const redis = getRedisClient();
-      const bustOrgId = campaign.organizationId;
-      const pattern = bustOrgId
-        ? `synthex:cache:campaigns:${bustOrgId}:*`
-        : `synthex:cache:campaigns:${userId}:*`;
-      const cacheKeys = await redis.keys(pattern);
-      if (cacheKeys.length > 0) await redis.del(cacheKeys);
-    } catch {
-      /* non-fatal */
-    }
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) return unauthorizedResponse();
 
-    return NextResponse.json({
-      success: true,
-      message: 'Campaign deleted successfully',
-    });
-  } catch (error: unknown) {
-    logger.error('Delete campaign error:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete campaign' },
-      { status: 500 }
-    );
-  }
+      const { searchParams } = new URL(request.url);
+      const id = searchParams.get('id');
+
+      if (!id) {
+        return NextResponse.json(
+          { error: 'Campaign ID is required' },
+          { status: 400 }
+        );
+      }
+
+      // Verify ownership
+      const campaign = await prisma.campaign.findFirst({
+        where: { id, userId },
+      });
+
+      if (!campaign) {
+        return NextResponse.json(
+          { error: 'Campaign not found' },
+          { status: 404 }
+        );
+      }
+
+      // Delete campaign and log in a transaction
+      await prisma.$transaction(async tx => {
+        await tx.campaign.delete({
+          where: { id },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            action: 'campaign_deleted',
+            resource: 'campaign',
+            resourceId: id,
+            category: 'data',
+            outcome: 'success',
+            userId,
+            details: { campaignName: campaign.name },
+          },
+        });
+      });
+
+      // ── Cache invalidation ──────────────────────────────────────────────────
+      // campaign.organizationId is already resolved from the ownership check above.
+      try {
+        const redis = getRedisClient();
+        const bustOrgId = campaign.organizationId;
+        const pattern = bustOrgId
+          ? `synthex:cache:campaigns:${bustOrgId}:*`
+          : `synthex:cache:campaigns:${userId}:*`;
+        const cacheKeys = await redis.keys(pattern);
+        if (cacheKeys.length > 0) await redis.del(cacheKeys);
+      } catch {
+        /* non-fatal */
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Campaign deleted successfully',
+      });
+    } catch (error: unknown) {
+      logger.error('Delete campaign error:', error);
+      return NextResponse.json(
+        { error: 'Failed to delete campaign' },
+        { status: 500 }
+      );
+    }
+  });
 }

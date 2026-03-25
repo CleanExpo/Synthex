@@ -14,6 +14,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import useSWR from 'swr';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -195,8 +196,10 @@ export function PublishConfirmModal({
         platform,
       });
       onOpenChange(false);
-    } catch {
-      // Error handling left to the parent (toast, etc.)
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to schedule post'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -222,8 +225,10 @@ export function PublishConfirmModal({
         // All succeeded — close after brief delay to show results
         setTimeout(() => onOpenChange(false), 1500);
       }
-    } catch {
-      // Error handling left to the parent
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to schedule posts'
+      );
     } finally {
       setIsSubmitting(false);
     }

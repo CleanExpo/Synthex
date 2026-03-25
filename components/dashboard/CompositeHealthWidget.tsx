@@ -108,8 +108,18 @@ export function CompositeHealthWidget() {
     );
   }
 
-  if (error || !score) {
-    return null; // Silently hide when no data
+  if (error) {
+    return (
+      <Card className="bg-surface-base/80 border border-orange-500/10">
+        <CardContent className="p-6 text-center text-sm text-white/40">
+          Unable to load health score — please refresh
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!score) {
+    return null; // No data yet — silently omit the widget
   }
 
   const { pillars, checklist, nextActions } = score;
