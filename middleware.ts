@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { checkApiKeyGate } from '@/lib/middleware/api-key-gate.edge';
-import { jwtVerify } from 'jose';
+import { jwtVerify } from 'jose/jwt/verify';
 
 // Note: Using console directly instead of logger for Edge Function compatibility
 
