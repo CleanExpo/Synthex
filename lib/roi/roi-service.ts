@@ -9,7 +9,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { RevenueService } from '@/lib/revenue/revenue-service';
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@prisma/client/runtime/client';
 import type { CampaignROIWeights } from '@/lib/bayesian/surfaces/campaign-roi';
 
 // =============================================================================
@@ -17,7 +17,12 @@ import type { CampaignROIWeights } from '@/lib/bayesian/surfaces/campaign-roi';
 // =============================================================================
 
 export type InvestmentType = 'time' | 'money';
-export type InvestmentCategory = 'creation' | 'equipment' | 'software' | 'promotion' | 'other';
+export type InvestmentCategory =
+  | 'creation'
+  | 'equipment'
+  | 'software'
+  | 'promotion'
+  | 'other';
 
 export const INVESTMENT_TYPES: InvestmentType[] = ['time', 'money'];
 export const INVESTMENT_CATEGORIES: InvestmentCategory[] = [
@@ -165,7 +170,10 @@ export class ROIService {
   /**
    * Get investments for a user with optional filters
    */
-  async getInvestments(userId: string, filters?: InvestmentFilters): Promise<ContentInvestment[]> {
+  async getInvestments(
+    userId: string,
+    filters?: InvestmentFilters
+  ): Promise<ContentInvestment[]> {
     const where: Record<string, unknown> = { userId };
 
     if (filters?.type) {
@@ -198,7 +206,10 @@ export class ROIService {
   /**
    * Get a single investment by ID
    */
-  async getInvestment(id: string, userId: string): Promise<ContentInvestment | null> {
+  async getInvestment(
+    id: string,
+    userId: string
+  ): Promise<ContentInvestment | null> {
     const investment = await prisma.contentInvestment.findFirst({
       where: { id, userId },
     });
@@ -209,14 +220,17 @@ export class ROIService {
   /**
    * Create a new investment
    */
-  async createInvestment(userId: string, data: CreateInvestmentInput): Promise<ContentInvestment> {
+  async createInvestment(
+    userId: string,
+    data: CreateInvestmentInput
+  ): Promise<ContentInvestment> {
     const investment = await prisma.contentInvestment.create({
       data: {
         userId,
         type: data.type,
         category: data.category,
         amount: data.amount,
-        currency: data.type === 'money' ? (data.currency || 'USD') : null,
+        currency: data.type === 'money' ? data.currency || 'USD' : null,
         description: data.description || null,
         platform: data.platform || null,
         postId: data.postId || null,
@@ -250,11 +264,13 @@ export class ROIService {
     if (data.category !== undefined) updateData.category = data.category;
     if (data.amount !== undefined) updateData.amount = data.amount;
     if (data.currency !== undefined) updateData.currency = data.currency;
-    if (data.description !== undefined) updateData.description = data.description;
+    if (data.description !== undefined)
+      updateData.description = data.description;
     if (data.platform !== undefined) updateData.platform = data.platform;
     if (data.postId !== undefined) updateData.postId = data.postId;
     if (data.investedAt !== undefined) updateData.investedAt = data.investedAt;
-    if (data.metadata !== undefined) updateData.metadata = data.metadata as object;
+    if (data.metadata !== undefined)
+      updateData.metadata = data.metadata as object;
 
     const investment = await prisma.contentInvestment.update({
       where: { id },
@@ -282,15 +298,18 @@ export class ROIService {
   }
 
   // Mapping from platform name (lowercase) to CampaignROIWeights key
-  private static readonly PLATFORM_TO_WEIGHT: Record<string, keyof CampaignROIWeights> = {
-    youtube:   'youtubeAllocation',
+  private static readonly PLATFORM_TO_WEIGHT: Record<
+    string,
+    keyof CampaignROIWeights
+  > = {
+    youtube: 'youtubeAllocation',
     instagram: 'instagramAllocation',
-    tiktok:    'tiktokAllocation',
-    twitter:   'twitterAllocation',
-    facebook:  'facebookAllocation',
-    linkedin:  'linkedinAllocation',
+    tiktok: 'tiktokAllocation',
+    twitter: 'twitterAllocation',
+    facebook: 'facebookAllocation',
+    linkedin: 'linkedinAllocation',
     pinterest: 'pinterestAllocation',
-    reddit:    'redditAllocation',
+    reddit: 'redditAllocation',
   };
 
   /**
@@ -302,7 +321,7 @@ export class ROIService {
   async calculateROI(
     userId: string,
     filters?: InvestmentFilters,
-    allocationWeights?: CampaignROIWeights,
+    allocationWeights?: CampaignROIWeights
   ): Promise<ROIReport> {
     // Get investments
     const investments = await this.getInvestments(userId, filters);
@@ -324,7 +343,10 @@ export class ROIService {
       promotion: 0,
       other: 0,
     };
-    const platformInvestments: Record<string, { money: number; hours: number }> = {};
+    const platformInvestments: Record<
+      string,
+      { money: number; hours: number }
+    > = {};
 
     for (const inv of investments) {
       if (inv.type === 'time') {
@@ -350,12 +372,14 @@ export class ROIService {
     // Calculate overall metrics
     const totalRevenue = revenueSummary.total;
     const netProfit = totalRevenue - totalMoneyInvested;
-    const overallROI = totalMoneyInvested > 0
-      ? ((totalRevenue - totalMoneyInvested) / totalMoneyInvested) * 100
-      : totalRevenue > 0 ? 100 : 0;
-    const roiPerHour = totalHoursInvested > 0
-      ? totalRevenue / totalHoursInvested
-      : 0;
+    const overallROI =
+      totalMoneyInvested > 0
+        ? ((totalRevenue - totalMoneyInvested) / totalMoneyInvested) * 100
+        : totalRevenue > 0
+          ? 100
+          : 0;
+    const roiPerHour =
+      totalHoursInvested > 0 ? totalRevenue / totalHoursInvested : 0;
 
     // Calculate platform ROI
     const byPlatform: PlatformROI[] = [];
@@ -369,14 +393,19 @@ export class ROIService {
 
     for (const platform of allPlatforms) {
       const revenue = platformRevenue[platform] || 0;
-      const investment = platformInvestments[platform] || { money: 0, hours: 0 };
+      const investment = platformInvestments[platform] || {
+        money: 0,
+        hours: 0,
+      };
 
-      const platformROI = investment.money > 0
-        ? ((revenue - investment.money) / investment.money) * 100
-        : revenue > 0 ? 100 : 0;
-      const platformRoiPerHour = investment.hours > 0
-        ? revenue / investment.hours
-        : 0;
+      const platformROI =
+        investment.money > 0
+          ? ((revenue - investment.money) / investment.money) * 100
+          : revenue > 0
+            ? 100
+            : 0;
+      const platformRoiPerHour =
+        investment.hours > 0 ? revenue / investment.hours : 0;
 
       byPlatform.push({
         platform,
@@ -392,9 +421,11 @@ export class ROIService {
     byPlatform.sort((a, b) => {
       const wKeyA = ROIService.PLATFORM_TO_WEIGHT[a.platform.toLowerCase()];
       const wKeyB = ROIService.PLATFORM_TO_WEIGHT[b.platform.toLowerCase()];
-      const wA = (wKeyA && allocationWeights) ? (allocationWeights[wKeyA] ?? 1.0) : 1.0;
-      const wB = (wKeyB && allocationWeights) ? (allocationWeights[wKeyB] ?? 1.0) : 1.0;
-      return (b.roi * wB) - (a.roi * wA);
+      const wA =
+        wKeyA && allocationWeights ? (allocationWeights[wKeyA] ?? 1.0) : 1.0;
+      const wB =
+        wKeyB && allocationWeights ? (allocationWeights[wKeyB] ?? 1.0) : 1.0;
+      return b.roi * wB - a.roi * wA;
     });
 
     return {

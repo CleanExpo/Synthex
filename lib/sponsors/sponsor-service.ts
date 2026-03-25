@@ -8,21 +8,60 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@prisma/client/runtime/client';
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
 export type SponsorStatus = 'lead' | 'active' | 'past';
-export type DealStage = 'negotiation' | 'contracted' | 'in_progress' | 'delivered' | 'paid' | 'cancelled';
-export type DeliverableType = 'post' | 'story' | 'reel' | 'video' | 'mention' | 'review' | 'other';
-export type DeliverableStatus = 'pending' | 'in_progress' | 'submitted' | 'approved' | 'rejected';
+export type DealStage =
+  | 'negotiation'
+  | 'contracted'
+  | 'in_progress'
+  | 'delivered'
+  | 'paid'
+  | 'cancelled';
+export type DeliverableType =
+  | 'post'
+  | 'story'
+  | 'reel'
+  | 'video'
+  | 'mention'
+  | 'review'
+  | 'other';
+export type DeliverableStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'submitted'
+  | 'approved'
+  | 'rejected';
 
 export const SPONSOR_STATUSES: SponsorStatus[] = ['lead', 'active', 'past'];
-export const DEAL_STAGES: DealStage[] = ['negotiation', 'contracted', 'in_progress', 'delivered', 'paid', 'cancelled'];
-export const DELIVERABLE_TYPES: DeliverableType[] = ['post', 'story', 'reel', 'video', 'mention', 'review', 'other'];
-export const DELIVERABLE_STATUSES: DeliverableStatus[] = ['pending', 'in_progress', 'submitted', 'approved', 'rejected'];
+export const DEAL_STAGES: DealStage[] = [
+  'negotiation',
+  'contracted',
+  'in_progress',
+  'delivered',
+  'paid',
+  'cancelled',
+];
+export const DELIVERABLE_TYPES: DeliverableType[] = [
+  'post',
+  'story',
+  'reel',
+  'video',
+  'mention',
+  'review',
+  'other',
+];
+export const DELIVERABLE_STATUSES: DeliverableStatus[] = [
+  'pending',
+  'in_progress',
+  'submitted',
+  'approved',
+  'rejected',
+];
 
 export const STATUS_LABELS: Record<SponsorStatus, string> = {
   lead: 'Lead',
@@ -246,7 +285,9 @@ function toSponsor(dbSponsor: {
     metadata: dbSponsor.metadata as Record<string, unknown> | null,
     createdAt: dbSponsor.createdAt,
     updatedAt: dbSponsor.updatedAt,
-    deals: dbSponsor.deals ? (dbSponsor.deals as unknown[]).map((d) => toDeal(d as DealDbRecord)) : undefined,
+    deals: dbSponsor.deals
+      ? (dbSponsor.deals as unknown[]).map(d => toDeal(d as DealDbRecord))
+      : undefined,
   };
 }
 
@@ -285,7 +326,9 @@ function toDeal(dbDeal: DealDbRecord): SponsorDeal {
     createdAt: dbDeal.createdAt,
     updatedAt: dbDeal.updatedAt,
     deliverables: dbDeal.deliverables
-      ? (dbDeal.deliverables as unknown[]).map((d) => toDeliverable(d as DeliverableDbRecord))
+      ? (dbDeal.deliverables as unknown[]).map(d =>
+          toDeliverable(d as DeliverableDbRecord)
+        )
       : undefined,
   };
 }
@@ -338,7 +381,10 @@ export class SponsorService {
   /**
    * Get sponsors for a user with optional filters
    */
-  async getSponsors(userId: string, filters?: SponsorFilters): Promise<Sponsor[]> {
+  async getSponsors(
+    userId: string,
+    filters?: SponsorFilters
+  ): Promise<Sponsor[]> {
     const where: Record<string, unknown> = { userId };
 
     if (filters?.status) {
@@ -357,7 +403,9 @@ export class SponsorService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return sponsors.map((s) => toSponsor(s as unknown as Parameters<typeof toSponsor>[0]));
+    return sponsors.map(s =>
+      toSponsor(s as unknown as Parameters<typeof toSponsor>[0])
+    );
   }
 
   /**
@@ -375,13 +423,18 @@ export class SponsorService {
       },
     });
 
-    return sponsor ? toSponsor(sponsor as unknown as Parameters<typeof toSponsor>[0]) : null;
+    return sponsor
+      ? toSponsor(sponsor as unknown as Parameters<typeof toSponsor>[0])
+      : null;
   }
 
   /**
    * Create a new sponsor
    */
-  async createSponsor(userId: string, data: CreateSponsorInput): Promise<Sponsor> {
+  async createSponsor(
+    userId: string,
+    data: CreateSponsorInput
+  ): Promise<Sponsor> {
     const sponsor = await prisma.sponsor.create({
       data: {
         userId,
@@ -403,7 +456,11 @@ export class SponsorService {
   /**
    * Update an existing sponsor
    */
-  async updateSponsor(id: string, userId: string, data: UpdateSponsorInput): Promise<Sponsor> {
+  async updateSponsor(
+    id: string,
+    userId: string,
+    data: UpdateSponsorInput
+  ): Promise<Sponsor> {
     // Verify ownership
     const existing = await prisma.sponsor.findFirst({
       where: { id, userId },
@@ -422,7 +479,8 @@ export class SponsorService {
     if (data.logo !== undefined) updateData.logo = data.logo;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.notes !== undefined) updateData.notes = data.notes;
-    if (data.metadata !== undefined) updateData.metadata = data.metadata as object;
+    if (data.metadata !== undefined)
+      updateData.metadata = data.metadata as object;
 
     const sponsor = await prisma.sponsor.update({
       where: { id },
@@ -457,7 +515,10 @@ export class SponsorService {
   /**
    * Get deals for a user with optional filters
    */
-  async getDeals(userId: string, filters?: DealFilters): Promise<SponsorDeal[]> {
+  async getDeals(
+    userId: string,
+    filters?: DealFilters
+  ): Promise<SponsorDeal[]> {
     const where: Record<string, unknown> = {
       sponsor: { userId },
     };
@@ -478,7 +539,7 @@ export class SponsorService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return deals.map((d) => toDeal(d as unknown as DealDbRecord));
+    return deals.map(d => toDeal(d as unknown as DealDbRecord));
   }
 
   /**
@@ -502,7 +563,11 @@ export class SponsorService {
   /**
    * Create a new deal for a sponsor
    */
-  async createDeal(userId: string, sponsorId: string, data: CreateDealInput): Promise<SponsorDeal> {
+  async createDeal(
+    userId: string,
+    sponsorId: string,
+    data: CreateDealInput
+  ): Promise<SponsorDeal> {
     // Verify sponsor ownership
     const sponsor = await prisma.sponsor.findFirst({
       where: { id: sponsorId, userId },
@@ -532,7 +597,11 @@ export class SponsorService {
   /**
    * Update an existing deal
    */
-  async updateDeal(id: string, userId: string, data: UpdateDealInput): Promise<SponsorDeal> {
+  async updateDeal(
+    id: string,
+    userId: string,
+    data: UpdateDealInput
+  ): Promise<SponsorDeal> {
     // Verify ownership through sponsor
     const existing = await prisma.sponsorDeal.findFirst({
       where: {
@@ -547,15 +616,18 @@ export class SponsorService {
 
     const updateData: Record<string, unknown> = {};
     if (data.title !== undefined) updateData.title = data.title;
-    if (data.description !== undefined) updateData.description = data.description;
+    if (data.description !== undefined)
+      updateData.description = data.description;
     if (data.value !== undefined) updateData.value = data.value;
     if (data.currency !== undefined) updateData.currency = data.currency;
     if (data.stage !== undefined) updateData.stage = data.stage;
     if (data.startDate !== undefined) updateData.startDate = data.startDate;
     if (data.endDate !== undefined) updateData.endDate = data.endDate;
     if (data.paidAt !== undefined) updateData.paidAt = data.paidAt;
-    if (data.revenueEntryId !== undefined) updateData.revenueEntryId = data.revenueEntryId;
-    if (data.metadata !== undefined) updateData.metadata = data.metadata as object;
+    if (data.revenueEntryId !== undefined)
+      updateData.revenueEntryId = data.revenueEntryId;
+    if (data.metadata !== undefined)
+      updateData.metadata = data.metadata as object;
 
     const deal = await prisma.sponsorDeal.update({
       where: { id },
@@ -593,7 +665,10 @@ export class SponsorService {
   /**
    * Get deliverables for a deal
    */
-  async getDeliverables(dealId: string, userId: string): Promise<DealDeliverable[]> {
+  async getDeliverables(
+    dealId: string,
+    userId: string
+  ): Promise<DealDeliverable[]> {
     // Verify deal ownership
     const deal = await prisma.sponsorDeal.findFirst({
       where: {
@@ -611,13 +686,19 @@ export class SponsorService {
       orderBy: { dueDate: 'asc' },
     });
 
-    return deliverables.map((d) => toDeliverable(d as unknown as DeliverableDbRecord));
+    return deliverables.map(d =>
+      toDeliverable(d as unknown as DeliverableDbRecord)
+    );
   }
 
   /**
    * Create a new deliverable for a deal
    */
-  async createDeliverable(dealId: string, userId: string, data: CreateDeliverableInput): Promise<DealDeliverable> {
+  async createDeliverable(
+    dealId: string,
+    userId: string,
+    data: CreateDeliverableInput
+  ): Promise<DealDeliverable> {
     // Verify deal ownership
     const deal = await prisma.sponsorDeal.findFirst({
       where: {
@@ -651,7 +732,11 @@ export class SponsorService {
   /**
    * Update an existing deliverable
    */
-  async updateDeliverable(id: string, userId: string, data: UpdateDeliverableInput): Promise<DealDeliverable> {
+  async updateDeliverable(
+    id: string,
+    userId: string,
+    data: UpdateDeliverableInput
+  ): Promise<DealDeliverable> {
     // Verify ownership through deal and sponsor
     const existing = await prisma.dealDeliverable.findFirst({
       where: {
@@ -668,15 +753,18 @@ export class SponsorService {
 
     const updateData: Record<string, unknown> = {};
     if (data.title !== undefined) updateData.title = data.title;
-    if (data.description !== undefined) updateData.description = data.description;
+    if (data.description !== undefined)
+      updateData.description = data.description;
     if (data.type !== undefined) updateData.type = data.type;
     if (data.platform !== undefined) updateData.platform = data.platform;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.dueDate !== undefined) updateData.dueDate = data.dueDate;
-    if (data.completedAt !== undefined) updateData.completedAt = data.completedAt;
+    if (data.completedAt !== undefined)
+      updateData.completedAt = data.completedAt;
     if (data.contentUrl !== undefined) updateData.contentUrl = data.contentUrl;
     if (data.postId !== undefined) updateData.postId = data.postId;
-    if (data.metadata !== undefined) updateData.metadata = data.metadata as object;
+    if (data.metadata !== undefined)
+      updateData.metadata = data.metadata as object;
 
     const deliverable = await prisma.dealDeliverable.update({
       where: { id },
@@ -780,8 +868,10 @@ export class SponsorService {
     return {
       dealsByStage,
       totalValue: Math.round(totalValue * 100) / 100,
-      upcomingDeliverables: upcomingDeliverables.map((d) => toDeliverable(d as unknown as DeliverableDbRecord)),
-      recentDeals: recentDeals.map((d) => toDeal(d as unknown as DealDbRecord)),
+      upcomingDeliverables: upcomingDeliverables.map(d =>
+        toDeliverable(d as unknown as DeliverableDbRecord)
+      ),
+      recentDeals: recentDeals.map(d => toDeal(d as unknown as DealDbRecord)),
     };
   }
 }

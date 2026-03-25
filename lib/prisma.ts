@@ -125,11 +125,12 @@ const createPrismaClient = (): PrismaClient => {
     globalForPrisma.prismaMetrics.errors++;
   });
 
-  // TODO(type-safety): PrismaPg adapter type doesn't perfectly match SqlDriverAdapterFactory in
-  // Prisma 6 — the @prisma/adapter-pg package exports mismatched types for this version.
-  // Track upstream fix: https://github.com/prisma/prisma/issues
+  // TODO(type-safety): @prisma/adapter-pg@7 bundles its own @types/pg which conflicts with the
+  // project-level @types/pg, causing a structural type mismatch on Pool. Cast pool to any to
+  // bypass the duplicate-package type collision. Runtime behaviour is unaffected.
+  // Track upstream: https://github.com/prisma/prisma/issues
 
-  const adapter: any = new PrismaPg(pool);
+  const adapter: any = new PrismaPg(pool as any);
 
   const client = new PrismaClient({
     adapter,

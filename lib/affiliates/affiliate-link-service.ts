@@ -8,16 +8,31 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@prisma/client/runtime/client';
 import crypto from 'crypto';
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
-export type NetworkSlug = 'amazon' | 'shareasale' | 'cj' | 'impact' | 'rakuten' | 'awin' | 'custom';
+export type NetworkSlug =
+  | 'amazon'
+  | 'shareasale'
+  | 'cj'
+  | 'impact'
+  | 'rakuten'
+  | 'awin'
+  | 'custom';
 
-export const NETWORK_SLUGS: NetworkSlug[] = ['amazon', 'shareasale', 'cj', 'impact', 'rakuten', 'awin', 'custom'];
+export const NETWORK_SLUGS: NetworkSlug[] = [
+  'amazon',
+  'shareasale',
+  'cj',
+  'impact',
+  'rakuten',
+  'awin',
+  'custom',
+];
 
 export const NETWORK_LABELS: Record<NetworkSlug, string> = {
   amazon: 'Amazon Associates',
@@ -194,7 +209,9 @@ export interface DateRange {
 // HELPERS
 // =============================================================================
 
-function convertDecimalToNumber(value: Decimal | null | undefined): number | null {
+function convertDecimalToNumber(
+  value: Decimal | null | undefined
+): number | null {
   if (value === null || value === undefined) return null;
   return Number(value);
 }
@@ -249,7 +266,10 @@ export class AffiliateLinkService {
   /**
    * Get a single network by ID
    */
-  static async getNetwork(userId: string, networkId: string): Promise<AffiliateNetwork | null> {
+  static async getNetwork(
+    userId: string,
+    networkId: string
+  ): Promise<AffiliateNetwork | null> {
     const network = await prisma.affiliateNetwork.findFirst({
       where: { id: networkId, userId },
       include: {
@@ -263,7 +283,10 @@ export class AffiliateLinkService {
   /**
    * Create a new affiliate network
    */
-  static async createNetwork(userId: string, data: CreateNetworkInput): Promise<AffiliateNetwork> {
+  static async createNetwork(
+    userId: string,
+    data: CreateNetworkInput
+  ): Promise<AffiliateNetwork> {
     const network = await prisma.affiliateNetwork.create({
       data: {
         userId,
@@ -323,7 +346,10 @@ export class AffiliateLinkService {
   /**
    * List all affiliate links for a user
    */
-  static async listLinks(userId: string, filters?: LinkFilters): Promise<AffiliateLink[]> {
+  static async listLinks(
+    userId: string,
+    filters?: LinkFilters
+  ): Promise<AffiliateLink[]> {
     const where: any = { userId };
 
     if (filters?.networkId) {
@@ -351,7 +377,10 @@ export class AffiliateLinkService {
   /**
    * Get a single link by ID
    */
-  static async getLink(userId: string, linkId: string): Promise<AffiliateLink | null> {
+  static async getLink(
+    userId: string,
+    linkId: string
+  ): Promise<AffiliateLink | null> {
     const link = await prisma.affiliateLink.findFirst({
       where: { id: linkId, userId },
       include: { network: true },
@@ -363,7 +392,9 @@ export class AffiliateLinkService {
   /**
    * Get a link by short code (for redirect)
    */
-  static async getLinkByShortCode(shortCode: string): Promise<AffiliateLink | null> {
+  static async getLinkByShortCode(
+    shortCode: string
+  ): Promise<AffiliateLink | null> {
     const link = await prisma.affiliateLink.findUnique({
       where: { shortCode },
       include: { network: true },
@@ -376,7 +407,8 @@ export class AffiliateLinkService {
    * Generate a unique short code
    */
   static async generateShortCode(): Promise<string> {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const chars =
+      'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let attempts = 0;
     const maxAttempts = 10;
 
@@ -403,7 +435,10 @@ export class AffiliateLinkService {
   /**
    * Create a new affiliate link
    */
-  static async createLink(userId: string, data: CreateLinkInput): Promise<AffiliateLink> {
+  static async createLink(
+    userId: string,
+    data: CreateLinkInput
+  ): Promise<AffiliateLink> {
     const shortCode = data.shortCode || (await this.generateShortCode());
 
     const link = await prisma.affiliateLink.create({
@@ -431,7 +466,11 @@ export class AffiliateLinkService {
   /**
    * Update an affiliate link
    */
-  static async updateLink(userId: string, linkId: string, data: UpdateLinkInput): Promise<AffiliateLink> {
+  static async updateLink(
+    userId: string,
+    linkId: string,
+    data: UpdateLinkInput
+  ): Promise<AffiliateLink> {
     const link = await prisma.affiliateLink.update({
       where: { id: linkId, userId },
       data: {
@@ -470,7 +509,10 @@ export class AffiliateLinkService {
   /**
    * Track a click on an affiliate link
    */
-  static async trackClick(linkId: string, data: TrackClickInput): Promise<AffiliateLinkClick> {
+  static async trackClick(
+    linkId: string,
+    data: TrackClickInput
+  ): Promise<AffiliateLinkClick> {
     // Create click record and increment counter in transaction
     const [click] = await prisma.$transaction([
       prisma.affiliateLinkClick.create({
@@ -494,7 +536,10 @@ export class AffiliateLinkService {
   /**
    * Record a conversion for an affiliate link
    */
-  static async recordConversion(linkId: string, data: RecordConversionInput): Promise<void> {
+  static async recordConversion(
+    linkId: string,
+    data: RecordConversionInput
+  ): Promise<void> {
     await prisma.$transaction([
       prisma.affiliateLinkClick.updateMany({
         where: {
@@ -560,7 +605,10 @@ export class AffiliateLinkService {
   /**
    * Find links that match keywords in content
    */
-  static async findMatchingLinks(userId: string, content: string): Promise<AffiliateLink[]> {
+  static async findMatchingLinks(
+    userId: string,
+    content: string
+  ): Promise<AffiliateLink[]> {
     const links = await prisma.affiliateLink.findMany({
       where: {
         userId,
@@ -572,8 +620,10 @@ export class AffiliateLinkService {
     });
 
     const contentLower = content.toLowerCase();
-    const matchingLinks = links.filter((link) =>
-      link.keywords.some((keyword) => contentLower.includes(keyword.toLowerCase()))
+    const matchingLinks = links.filter(link =>
+      link.keywords.some(keyword =>
+        contentLower.includes(keyword.toLowerCase())
+      )
     );
 
     return matchingLinks.map(convertLink);
@@ -598,9 +648,10 @@ export class AffiliateLinkService {
       for (const keyword of link.keywords) {
         const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
         if (regex.test(modifiedContent)) {
-          const url = useShortCodes && link.shortCode
-            ? `/go/${link.shortCode}`
-            : link.affiliateUrl;
+          const url =
+            useShortCodes && link.shortCode
+              ? `/go/${link.shortCode}`
+              : link.affiliateUrl;
 
           modifiedContent = modifiedContent.replace(
             regex,
@@ -612,7 +663,10 @@ export class AffiliateLinkService {
       }
     }
 
-    return { content: modifiedContent, insertedLinks: [...new Set(insertedLinks)] };
+    return {
+      content: modifiedContent,
+      insertedLinks: [...new Set(insertedLinks)],
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -622,7 +676,10 @@ export class AffiliateLinkService {
   /**
    * Get aggregate affiliate stats
    */
-  static async getAffiliateStats(userId: string, dateRange?: DateRange): Promise<AffiliateStats> {
+  static async getAffiliateStats(
+    userId: string,
+    dateRange?: DateRange
+  ): Promise<AffiliateStats> {
     const links = await prisma.affiliateLink.findMany({
       where: { userId },
       include: { network: true },
@@ -630,18 +687,28 @@ export class AffiliateLinkService {
 
     // Calculate totals
     const totalClicks = links.reduce((sum, link) => sum + link.clickCount, 0);
-    const totalConversions = links.reduce((sum, link) => sum + link.conversionCount, 0);
-    const totalRevenue = links.reduce((sum, link) => sum + Number(link.totalRevenue || 0), 0);
-    const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0;
+    const totalConversions = links.reduce(
+      (sum, link) => sum + link.conversionCount,
+      0
+    );
+    const totalRevenue = links.reduce(
+      (sum, link) => sum + Number(link.totalRevenue || 0),
+      0
+    );
+    const conversionRate =
+      totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0;
 
     // Group by network
-    const networkMap = new Map<string | null, {
-      networkId: string | null;
-      networkName: string;
-      clicks: number;
-      conversions: number;
-      revenue: number;
-    }>();
+    const networkMap = new Map<
+      string | null,
+      {
+        networkId: string | null;
+        networkName: string;
+        clicks: number;
+        conversions: number;
+        revenue: number;
+      }
+    >();
 
     for (const link of links) {
       const key = link.networkId;
@@ -663,7 +730,7 @@ export class AffiliateLinkService {
     const topLinks = [...links]
       .sort((a, b) => b.clickCount - a.clickCount)
       .slice(0, 10)
-      .map((link) => ({
+      .map(link => ({
         id: link.id,
         name: link.name,
         clicks: link.clickCount,

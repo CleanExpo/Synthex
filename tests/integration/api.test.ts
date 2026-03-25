@@ -1,13 +1,23 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from '@jest/globals';
 import request from 'supertest';
-import { PrismaClient } from '@prisma/client';
 
 const API_URL = process.env.API_URL || 'http://localhost:3000';
-const prisma = new PrismaClient();
 const runIntegration = process.env.RUN_INTEGRATION_TESTS === 'true';
 const describeIntegration = runIntegration ? describe : describe.skip;
 
 describeIntegration('API Integration Tests', () => {
+  // Prisma 7 requires a driver adapter — use the project singleton which provides one.
+  // Import lazily inside the integration suite so Jest can collect tests without a live DB.
+
+  const prisma = require('@/lib/prisma').prisma;
+
   let authToken: string;
   let refreshToken: string;
   let userId: string;
@@ -25,7 +35,7 @@ describeIntegration('API Integration Tests', () => {
     const testUser = {
       email: `test-${Date.now()}@example.com`,
       password: 'Test123!@#',
-      name: 'Test User'
+      name: 'Test User',
     };
 
     describe('POST /api/v1/auth/register', () => {
@@ -61,7 +71,7 @@ describeIntegration('API Integration Tests', () => {
           .post('/api/v1/auth/register')
           .send({
             ...testUser,
-            email: 'invalid-email'
+            email: 'invalid-email',
           })
           .expect(400);
 
@@ -74,7 +84,7 @@ describeIntegration('API Integration Tests', () => {
           .send({
             ...testUser,
             email: 'another@example.com',
-            password: 'weak'
+            password: 'weak',
           })
           .expect(400);
 
@@ -88,7 +98,7 @@ describeIntegration('API Integration Tests', () => {
           .post('/api/v1/auth/login')
           .send({
             email: testUser.email,
-            password: testUser.password
+            password: testUser.password,
           })
           .expect(200);
 
@@ -102,7 +112,7 @@ describeIntegration('API Integration Tests', () => {
           .post('/api/v1/auth/login')
           .send({
             email: testUser.email,
-            password: 'WrongPassword123!'
+            password: 'WrongPassword123!',
           })
           .expect(401);
 
@@ -114,7 +124,7 @@ describeIntegration('API Integration Tests', () => {
           .post('/api/v1/auth/login')
           .send({
             email: 'nonexistent@example.com',
-            password: 'Password123!'
+            password: 'Password123!',
           })
           .expect(401);
 
@@ -163,9 +173,9 @@ describeIntegration('API Integration Tests', () => {
         .post('/api/v1/auth/login')
         .send({
           email: `test-${Date.now()}@example.com`,
-          password: 'Test123!@#'
+          password: 'Test123!@#',
         });
-      
+
       if (response.body.success) {
         authToken = response.body.data.token;
         userId = response.body.data.user.id;
@@ -197,7 +207,7 @@ describeIntegration('API Integration Tests', () => {
       it('should update user profile', async () => {
         const updates = {
           name: 'Updated Name',
-          bio: 'Test bio'
+          bio: 'Test bio',
         };
 
         const response = await request(API_URL)
@@ -230,7 +240,7 @@ describeIntegration('API Integration Tests', () => {
           .send({
             email: `delete-${Date.now()}@example.com`,
             password: 'Delete123!@#',
-            name: 'Delete User'
+            name: 'Delete User',
           });
 
         const tempToken = tempUser.body.data.token;
@@ -248,7 +258,7 @@ describeIntegration('API Integration Tests', () => {
           .post('/api/v1/auth/login')
           .send({
             email: tempUser.body.data.user.email,
-            password: 'Delete123!@#'
+            password: 'Delete123!@#',
           })
           .expect(401);
       });
@@ -264,7 +274,7 @@ describeIntegration('API Integration Tests', () => {
           title: 'Test Post',
           content: 'This is a test post content',
           platforms: ['twitter', 'facebook'],
-          scheduledAt: new Date(Date.now() + 86400000).toISOString()
+          scheduledAt: new Date(Date.now() + 86400000).toISOString(),
         };
 
         const response = await request(API_URL)
@@ -332,7 +342,7 @@ describeIntegration('API Integration Tests', () => {
       it('should update a post', async () => {
         const updates = {
           title: 'Updated Post Title',
-          content: 'Updated content'
+          content: 'Updated content',
         };
 
         const response = await request(API_URL)
@@ -373,7 +383,7 @@ describeIntegration('API Integration Tests', () => {
           .send({
             title: 'Post to Delete',
             content: 'Will be deleted',
-            platforms: ['twitter']
+            platforms: ['twitter'],
           });
 
         const deleteId = newPost.body.data.id;
@@ -410,7 +420,7 @@ describeIntegration('API Integration Tests', () => {
 
       it('should support different time ranges', async () => {
         const ranges = ['day', 'week', 'month'];
-        
+
         for (const range of ranges) {
           const response = await request(API_URL)
             .get(`/api/v1/analytics/overview?range=${range}`)
@@ -425,7 +435,7 @@ describeIntegration('API Integration Tests', () => {
     describe('GET /api/v1/analytics/platforms/:platform', () => {
       it('should get platform-specific analytics', async () => {
         const platforms = ['instagram', 'facebook', 'twitter', 'linkedin'];
-        
+
         for (const platform of platforms) {
           const response = await request(API_URL)
             .get(`/api/v1/analytics/platforms/${platform}`)
@@ -490,7 +500,7 @@ describeIntegration('API Integration Tests', () => {
       it('should create a new team', async () => {
         const teamData = {
           name: 'Test Team',
-          description: 'A test team for integration testing'
+          description: 'A test team for integration testing',
         };
 
         const response = await request(API_URL)
@@ -514,7 +524,7 @@ describeIntegration('API Integration Tests', () => {
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             email: 'invite@example.com',
-            role: 'member'
+            role: 'member',
           })
           .expect(200);
 
@@ -533,7 +543,7 @@ describeIntegration('API Integration Tests', () => {
           .send({
             email: `member-${Date.now()}@example.com`,
             password: 'Member123!@#',
-            name: 'Team Member'
+            name: 'Team Member',
           });
 
         const memberToken = newUser.body.data.token;
@@ -553,7 +563,7 @@ describeIntegration('API Integration Tests', () => {
   describe('Rate Limiting', () => {
     it('should enforce rate limits', async () => {
       const requests = [];
-      
+
       // Make many requests quickly
       for (let i = 0; i < 150; i++) {
         requests.push(

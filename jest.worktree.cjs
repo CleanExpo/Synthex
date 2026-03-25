@@ -12,6 +12,14 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
+  // Prisma 7 + jsdom: prevent Jest from activating the `browser` export condition.
+  // jsdom sets customExportConditions = ['browser'] by default, causing module
+  // resolution to pick index-browser.js for @prisma/client sub-paths (e.g. runtime/*),
+  // which crash because objectEnumValues is undefined in the browser build.
+  // The `require` condition only (no `browser`) restores standard Node behaviour.
+  testEnvironmentOptions: {
+    customExportConditions: ['require', 'default'],
+  },
   setupFiles: ['<rootDir>/tests/jest.setup.js'],
   setupFilesAfterEnv: ['@testing-library/jest-dom'],
 
@@ -56,5 +64,11 @@ module.exports = {
     '^@/types/(.*)$': '<rootDir>/types/$1',
     '^@/(.*)$': '<rootDir>/$1',
     '^bullmq$': '<rootDir>/tests/__mocks__/bullmq.js',
+    // Prisma 7 + jsdom: force the Node.js entrypoint for @prisma/client.
+    // jsdom activates the `browser` export condition which resolves to index-browser.js
+    // and crashes (objectEnumValues undefined). Pointing directly to default.js bypasses
+    // the browser field while still allowing sub-path imports (e.g. @prisma/client/runtime/*)
+    // to resolve through the package exports map via testEnvironmentOptions above.
+    '^@prisma/client$': '<rootDir>/node_modules/@prisma/client/default.js',
   },
 };
