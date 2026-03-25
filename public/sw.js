@@ -8,7 +8,7 @@
  *   - Other assets (images, fonts, public/)  → stale-while-revalidate
  */
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const STATIC_CACHE = `synthex-static-${CACHE_VERSION}`;
 const PAGES_CACHE = `synthex-pages-${CACHE_VERSION}`;
 const ASSETS_CACHE = `synthex-assets-${CACHE_VERSION}`;
