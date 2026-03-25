@@ -4,9 +4,9 @@ import { useRef, useEffect, useState } from 'react';
 
 const STATS = [
   {
-    value: '10+',
-    numericValue: 10,
-    suffix: '+',
+    value: '9',
+    numericValue: 9,
+    suffix: '',
     label: 'Platforms supported',
     highlight: true,
   },
