@@ -274,6 +274,12 @@ const sidebarGroups: SidebarNavGroup[] = [
         href: '/dashboard/google-business',
         isNew: true,
       },
+      {
+        icon: BarChart3,
+        label: 'Displacement',
+        href: '/dashboard/seo/displacement',
+        isNew: true,
+      },
       { icon: BadgeCheck, label: 'E-E-A-T Builder', href: '/dashboard/eeat' },
       { icon: Shield, label: 'Quality Gate', href: '/dashboard/quality' },
       { icon: Building2, label: 'Brand Builder', href: '/dashboard/brand' },
