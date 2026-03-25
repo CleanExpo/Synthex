@@ -37,6 +37,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
+      - run: npx prisma generate
       - run: npm run type-check
 
   test:
@@ -50,6 +51,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
+      - run: npx prisma generate
       - run: npm test -- --coverage --coverageThreshold='{"global":{"statements":5}}'
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
