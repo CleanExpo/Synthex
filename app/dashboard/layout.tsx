@@ -259,6 +259,12 @@ const sidebarGroups: SidebarNavGroup[] = [
     label: 'SEO & AUTHORITY',
     items: [
       { icon: Search, label: 'SEO Tools', href: '/dashboard/seo' },
+      {
+        icon: Target,
+        label: 'Rankings',
+        href: '/dashboard/seo/rankings',
+        isNew: true,
+      },
       { icon: Globe, label: 'GEO Analysis', href: '/dashboard/geo' },
       { icon: Zap, label: 'GEO Optimiser', href: '/dashboard/geo/optimiser' },
       { icon: Map, label: 'Local SEO', href: '/dashboard/local', isNew: true },
