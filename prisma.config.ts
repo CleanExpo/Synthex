@@ -1,7 +1,7 @@
-import { defineConfig } from 'prisma/config';
+import { defineConfig, env } from 'prisma/config';
 import { config as loadEnv } from 'dotenv';
 
-// Prisma 6 skips .env auto-loading when this config file is present — load it manually.
+// Prisma 7 does not auto-load .env files when prisma.config.ts is present — load them manually.
 //
 // Load order:
 //   1. .env.local — user-specific overrides (highest priority; already in process.env via dotenvx)
@@ -10,8 +10,17 @@ import { config as loadEnv } from 'dotenv';
 loadEnv({ path: '.env.local' });
 loadEnv({ path: '.env' }); // fills DIRECT_URL and any other vars absent from .env.local
 
+type Env = {
+  DATABASE_URL: string;
+};
+
 export default defineConfig({
   schema: 'prisma/schema.prisma',
+  datasource: {
+    // Used by CLI commands (migrate diff, validate, studio, etc.)
+    // The runtime connection is handled by the PrismaPg adapter in lib/prisma.ts
+    url: env<Env>('DATABASE_URL'),
+  },
   migrations: {
     seed: 'node prisma/seed.js',
   },

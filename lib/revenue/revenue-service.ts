@@ -8,7 +8,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@prisma/client/runtime/client';
 
 // =============================================================================
 // TYPES
@@ -156,7 +156,10 @@ export class RevenueService {
   /**
    * Get revenue entries for a user with optional filters
    */
-  async getEntries(userId: string, filters?: RevenueFilters): Promise<RevenueEntry[]> {
+  async getEntries(
+    userId: string,
+    filters?: RevenueFilters
+  ): Promise<RevenueEntry[]> {
     const where: Record<string, unknown> = { userId };
 
     if (filters?.source) {
@@ -186,7 +189,10 @@ export class RevenueService {
   /**
    * Get revenue summary with aggregations
    */
-  async getSummary(userId: string, filters?: RevenueFilters): Promise<RevenueSummary> {
+  async getSummary(
+    userId: string,
+    filters?: RevenueFilters
+  ): Promise<RevenueSummary> {
     const entries = await this.getEntries(userId, filters);
 
     // Calculate totals
@@ -211,7 +217,8 @@ export class RevenueService {
     const byPlatform: Record<string, number> = {};
     for (const entry of entries) {
       if (entry.platform) {
-        byPlatform[entry.platform] = (byPlatform[entry.platform] || 0) + entry.amount;
+        byPlatform[entry.platform] =
+          (byPlatform[entry.platform] || 0) + entry.amount;
       }
     }
 
@@ -231,7 +238,10 @@ export class RevenueService {
     // Determine currency (use most common or default to USD)
     const currencyCounts = new Map<string, number>();
     for (const entry of entries) {
-      currencyCounts.set(entry.currency, (currencyCounts.get(entry.currency) || 0) + 1);
+      currencyCounts.set(
+        entry.currency,
+        (currencyCounts.get(entry.currency) || 0) + 1
+      );
     }
     let currency = 'USD';
     let maxCount = 0;
@@ -257,10 +267,14 @@ export class RevenueService {
   /**
    * Calculate trend percentage comparing current to previous period
    */
-  private async calculateTrend(userId: string, filters?: RevenueFilters): Promise<number> {
+  private async calculateTrend(
+    userId: string,
+    filters?: RevenueFilters
+  ): Promise<number> {
     const now = new Date();
     const endDate = filters?.endDate || now;
-    const startDate = filters?.startDate || new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const startDate =
+      filters?.startDate || new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
     const periodLength = endDate.getTime() - startDate.getTime();
 
@@ -305,7 +319,10 @@ export class RevenueService {
   /**
    * Create a new revenue entry
    */
-  async createEntry(userId: string, data: CreateRevenueInput): Promise<RevenueEntry> {
+  async createEntry(
+    userId: string,
+    data: CreateRevenueInput
+  ): Promise<RevenueEntry> {
     const entry = await prisma.revenueEntry.create({
       data: {
         userId,
@@ -347,14 +364,17 @@ export class RevenueService {
     if (data.source !== undefined) updateData.source = data.source;
     if (data.amount !== undefined) updateData.amount = data.amount;
     if (data.currency !== undefined) updateData.currency = data.currency;
-    if (data.description !== undefined) updateData.description = data.description;
+    if (data.description !== undefined)
+      updateData.description = data.description;
     if (data.platform !== undefined) updateData.platform = data.platform;
     if (data.postId !== undefined) updateData.postId = data.postId;
     if (data.brandName !== undefined) updateData.brandName = data.brandName;
     if (data.paidAt !== undefined) updateData.paidAt = data.paidAt;
-    if (data.periodStart !== undefined) updateData.periodStart = data.periodStart;
+    if (data.periodStart !== undefined)
+      updateData.periodStart = data.periodStart;
     if (data.periodEnd !== undefined) updateData.periodEnd = data.periodEnd;
-    if (data.metadata !== undefined) updateData.metadata = data.metadata as object;
+    if (data.metadata !== undefined)
+      updateData.metadata = data.metadata as object;
 
     const entry = await prisma.revenueEntry.update({
       where: { id },
