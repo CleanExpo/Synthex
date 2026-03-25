@@ -84,7 +84,7 @@ export default function TermsPage() {
             Clear, fair terms that protect both you and Synthex while fostering
             innovation and growth.
           </p>
-          <p className="text-gray-500 mt-4">Effective Date: January 11, 2025</p>
+          <p className="text-gray-500 mt-4">Effective Date: March 2026</p>
         </div>
       </section>
 

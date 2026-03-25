@@ -181,7 +181,7 @@ export function PricingSection({
             {plan.isPopular && (
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                 <span className="inline-flex items-center gap-1 bg-orange-500/10 text-orange-400 border border-orange-500/30 rounded-full text-xs px-3 py-1 font-semibold whitespace-nowrap">
-                  <Star className="h-3 w-3 fill-current" />
+                  <Star className="h-3 w-3 fill-current" aria-hidden="true" />
                   Most Popular
                 </span>
               </div>

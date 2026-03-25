@@ -137,6 +137,8 @@ export async function GET(request: NextRequest) {
             scheduledAt: true,
             publishedAt: true,
           },
+          take: 100,
+          orderBy: { scheduledAt: 'asc' },
         },
       },
       orderBy: { createdAt: 'desc' },

@@ -10,7 +10,7 @@ const ContactSchema = z.object({
   message: z.string().min(1).max(5000),
 });
 
-const CONTACT_EMAIL = 'phil@carsi.com.au';
+const CONTACT_EMAIL = 'support@synthex.social';
 const FROM = process.env.EMAIL_FROM ?? 'Synthex <noreply@synthex.social>';
 
 let _resend: Resend | null = null;

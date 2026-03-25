@@ -88,7 +88,7 @@ export default function PrivacyPage() {
             Your privacy is fundamental to our mission. We're committed to
             protecting your data and being transparent about how we use it.
           </p>
-          <p className="text-gray-500 mt-4">Last updated: January 11, 2025</p>
+          <p className="text-gray-500 mt-4">Last updated: March 2026</p>
         </div>
       </section>
 
