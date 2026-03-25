@@ -12,14 +12,16 @@ loadEnv({ path: '.env' }); // fills DIRECT_URL and any other vars absent from .e
 
 type Env = {
   DATABASE_URL: string;
+  DIRECT_URL: string;
 };
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   datasource: {
     // Used by CLI commands (migrate diff, validate, studio, etc.)
+    // DIRECT_URL is used when available (bypasses pgBouncer for DDL/migrations)
     // The runtime connection is handled by the PrismaPg adapter in lib/prisma.ts
-    url: env<Env>('DATABASE_URL'),
+    url: env<Env>('DIRECT_URL') || env<Env>('DATABASE_URL'),
   },
   migrations: {
     seed: 'node prisma/seed.js',
