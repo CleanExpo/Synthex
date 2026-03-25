@@ -309,7 +309,13 @@ export default function AnalyticsPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <EngagementChart data={chartEngagementData} />
-        <PlatformChart data={chartPlatformDistribution} />
+        {chartPlatformDistribution.length === 0 ? (
+          <p className="text-white/40 text-sm text-center py-8">
+            No platform data yet
+          </p>
+        ) : (
+          <PlatformChart data={chartPlatformDistribution} />
+        )}
       </div>
 
       <PerformanceChart data={chartPerformanceData} />

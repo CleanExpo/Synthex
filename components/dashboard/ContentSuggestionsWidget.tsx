@@ -7,7 +7,7 @@
  */
 
 import useSWR from 'swr';
-import { Sparkles, Loader2, Copy } from '@/components/icons';
+import { Sparkles, Loader2, Copy, AlertCircle } from '@/components/icons';
 import { toast } from 'sonner';
 
 interface Recommendation {
@@ -37,7 +37,7 @@ export function ContentSuggestionsWidget({
 }: {
   className?: string;
 }) {
-  const { data, isLoading, error } = useSWR<RecommendationsResponse>(
+  const { data, isLoading, error, mutate } = useSWR<RecommendationsResponse>(
     '/api/recommendations?limit=3',
     fetchJson,
     { revalidateOnFocus: false, dedupingInterval: 60000 }
@@ -45,7 +45,22 @@ export function ContentSuggestionsWidget({
 
   const recommendations = data?.recommendations ?? [];
 
-  if (error) return null;
+  if (error) {
+    return (
+      <div
+        className={`border-[0.5px] border-orange-500/20 bg-orange-500/[0.04] rounded-sm p-6 text-center ${className ?? ''}`}
+      >
+        <AlertCircle className="h-5 w-5 text-orange-400 mx-auto mb-2" />
+        <p className="text-white/50 text-sm">Couldn&apos;t load suggestions</p>
+        <button
+          onClick={() => mutate()}
+          className="mt-3 text-xs text-orange-400 hover:text-orange-300 transition-colors"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
 
   if (!isLoading && recommendations.length === 0) {
     return (

@@ -22,6 +22,7 @@ import {
   Zap,
   Users,
   BarChart,
+  AlertCircle,
 } from '@/components/icons';
 import { fetchJson } from '@/lib/fetcher';
 
@@ -82,7 +83,7 @@ export function WelcomeCard({
   const [dismissed, setDismissed] = useState(true);
   const [viewCount, setViewCount] = useState(0);
 
-  const { data, isLoading, error } = useSWR<OnboardingSummary>(
+  const { data, isLoading, error, mutate } = useSWR<OnboardingSummary>(
     '/api/dashboard/onboarding-summary',
     fetchJson,
     { revalidateOnFocus: false, dedupingInterval: 120_000 }
@@ -110,8 +111,30 @@ export function WelcomeCard({
     }
   }, []);
 
-  if (isLoading || dismissed || error) {
+  if (isLoading || dismissed) {
     return null;
+  }
+
+  if (error) {
+    return (
+      <div
+        className={cn(
+          'border-[0.5px] border-orange-500/20 bg-orange-500/[0.04] rounded-sm p-6 text-center',
+          className
+        )}
+      >
+        <AlertCircle className="h-5 w-5 text-orange-400 mx-auto mb-2" />
+        <p className="text-white/50 text-sm">
+          Couldn&apos;t load your progress summary
+        </p>
+        <button
+          onClick={() => mutate()}
+          className="mt-3 text-xs text-orange-400 hover:text-orange-300 transition-colors"
+        >
+          Try again
+        </button>
+      </div>
+    );
   }
 
   if (!data?.exists) {

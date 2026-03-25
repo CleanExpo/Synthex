@@ -38,6 +38,7 @@ import {
   ReviewQueue,
 } from '@/components/schedule';
 import { EmptyState } from '@/components/error-states';
+import { AlertCircle } from '@/components/icons';
 import { BulkScheduleWizard } from '@/components/scheduling';
 
 // Map API post shape → frontend ScheduledPost
@@ -86,7 +87,10 @@ export default function SchedulePage() {
   const [isCreating, setIsCreating] = useState(false);
   const [selectedPost, setSelectedPost] = useState<ScheduledPost | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{
+    type: 'auth' | 'network' | 'unknown';
+    message: string;
+  } | null>(null);
   const [bulkWizardOpen, setBulkWizardOpen] = useState(false);
   const mountedRef = useRef(true);
 
@@ -132,7 +136,11 @@ export default function SchedulePage() {
 
       if (!response.ok) {
         if (response.status === 401) {
-          throw new Error('Your session has expired — please refresh the page');
+          const err = new Error(
+            'Your session has expired. Please refresh the page.'
+          ) as Error & { type: string };
+          err.type = 'auth';
+          throw err;
         }
         if (response.status === 404) {
           return [];
@@ -161,9 +169,22 @@ export default function SchedulePage() {
         if (!cancelled) {
           setPosts(loadedPosts);
         }
-      } catch {
+      } catch (err) {
         if (!cancelled) {
-          setError('Failed to load scheduled posts. Please try again.');
+          if (
+            err instanceof Error &&
+            (err as Error & { type?: string }).type === 'auth'
+          ) {
+            setError({
+              type: 'auth',
+              message: 'Your session has expired. Please refresh the page.',
+            });
+          } else {
+            setError({
+              type: 'network',
+              message: 'Failed to load scheduled posts. Please try again.',
+            });
+          }
         }
       } finally {
         if (!cancelled) {
@@ -478,9 +499,22 @@ export default function SchedulePage() {
       if (mountedRef.current) {
         setPosts(loadedPosts);
       }
-    } catch {
+    } catch (err) {
       if (mountedRef.current) {
-        setError('Failed to load scheduled posts. Please try again.');
+        if (
+          err instanceof Error &&
+          (err as Error & { type?: string }).type === 'auth'
+        ) {
+          setError({
+            type: 'auth',
+            message: 'Your session has expired. Please refresh the page.',
+          });
+        } else {
+          setError({
+            type: 'network',
+            message: 'Failed to load scheduled posts. Please try again.',
+          });
+        }
       }
     } finally {
       if (mountedRef.current) {
@@ -522,10 +556,27 @@ export default function SchedulePage() {
   }
 
   if (error) {
+    if (error.type === 'auth') {
+      return (
+        <div className="rounded-xl border border-orange-500/20 bg-orange-500/[0.04] p-8 text-center">
+          <AlertCircle className="h-6 w-6 text-orange-400 mx-auto mb-3" />
+          <p className="text-white font-medium mb-1">Session expired</p>
+          <p className="text-white/50 text-sm mb-4">
+            Your authentication session has expired.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-sm text-orange-400 hover:text-orange-300 transition-colors"
+          >
+            Refresh page
+          </button>
+        </div>
+      );
+    }
     return (
       <APIErrorCard
         title="Schedule Error"
-        message={error}
+        message={error.message}
         onRetry={handleRetry}
       />
     );

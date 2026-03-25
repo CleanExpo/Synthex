@@ -127,10 +127,11 @@ export function HowItWorks() {
                       {description}
                     </p>
                   </div>
-                  {/* Mobile vertical connector between steps */}
+                  {/* Mobile-only vertical connector */}
                   {idx < STEPS.length - 1 && (
-                    <div className="md:hidden flex justify-center py-1">
-                      <div className="w-px h-6 bg-gradient-to-b from-orange-500/40 to-yellow-400/40" />
+                    <div className="md:hidden flex flex-col items-center py-1">
+                      <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-b from-orange-500 to-yellow-400 ring-2 ring-offset-2 ring-offset-black/20 mb-1" />
+                      <div className="w-px h-8 bg-gradient-to-b from-orange-500/60 via-yellow-400/30 to-transparent" />
                     </div>
                   )}
                 </React.Fragment>

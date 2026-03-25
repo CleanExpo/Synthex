@@ -17,6 +17,7 @@ import {
   FileText,
   ArrowRight,
   Loader2,
+  AlertCircle,
 } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { fetchJson } from '@/lib/fetcher';
@@ -66,7 +67,33 @@ export function FirstWeekWidget() {
   const { mutate } = useSWRConfig();
   const [generating, setGenerating] = useState(false);
 
-  if (isLoading || error) return null;
+  if (isLoading) return null;
+
+  if (error) {
+    return (
+      <div className="border-[0.5px] border-orange-500/20 bg-orange-500/[0.02] rounded-sm p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-9 w-9 border-[0.5px] border-orange-500/30 bg-orange-500/[0.08] rounded-sm flex items-center justify-center flex-shrink-0">
+            <AlertCircle className="h-4 w-4 text-orange-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-light text-white tracking-tight">
+              Couldn&apos;t load your kickstart posts
+            </h3>
+            <p className="text-xs text-white/40 mt-0.5">
+              Something went wrong fetching your first week of content
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => mutate('/api/onboarding/kickstart')}
+          className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-medium tracking-wide rounded-sm transition-colors bg-orange-500/[0.08] hover:bg-orange-500/[0.15] text-orange-300 border-[0.5px] border-orange-500/20"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
 
   // ── Fallback CTA ──────────────────────────────────────────────────────────
   if (!data?.hasKickstart || data.totalCount === 0) {

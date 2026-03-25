@@ -19,14 +19,35 @@ function SocialProofRow() {
     <div className="flex items-center gap-3 mt-8">
       <div className="flex -space-x-2">
         {[
-          { initials: 'JD', bg: 'bg-orange-500' },
-          { initials: 'KM', bg: 'bg-amber-500' },
-          { initials: 'SR', bg: 'bg-yellow-500' },
-          { initials: 'AL', bg: 'bg-orange-400' },
-        ].map(({ initials, bg }) => (
+          {
+            initials: 'JD',
+            bg: 'bg-orange-500',
+            shadow: 'shadow-orange-500/30',
+            title: 'Jane Doe',
+          },
+          {
+            initials: 'KM',
+            bg: 'bg-amber-500',
+            shadow: 'shadow-amber-500/30',
+            title: 'Kyle Morrison',
+          },
+          {
+            initials: 'SR',
+            bg: 'bg-yellow-500',
+            shadow: 'shadow-yellow-500/30',
+            title: 'Sarah Reeves',
+          },
+          {
+            initials: 'AL',
+            bg: 'bg-orange-400',
+            shadow: 'shadow-orange-400/30',
+            title: 'Alex Liu',
+          },
+        ].map(({ initials, bg, shadow, title }) => (
           <div
             key={initials}
-            className={`w-8 h-8 rounded-full border-2 border-charcoal-900 ${bg} flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-charcoal-900`}
+            title={title}
+            className={`w-8 h-8 rounded-full border-2 border-charcoal-900 ${bg} ${shadow} shadow-lg flex-shrink-0 flex items-center justify-center text-[9px] font-black uppercase tracking-tight text-charcoal-900`}
           >
             {initials}
           </div>

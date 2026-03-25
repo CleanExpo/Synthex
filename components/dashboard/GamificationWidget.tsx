@@ -7,7 +7,7 @@
  */
 
 import useSWR from 'swr';
-import { Flame, Trophy, Loader2 } from '@/components/icons';
+import { Flame, Trophy, Loader2, AlertCircle } from '@/components/icons';
 
 interface StreakData {
   currentStreak: number;
@@ -56,6 +56,7 @@ export function GamificationWidget({ className }: { className?: string }) {
     data: streakData,
     isLoading: streakLoading,
     error: streakError,
+    mutate: mutateStreak,
   } = useSWR<StreakResponse>('/api/gamification/streak', fetchJson, {
     revalidateOnFocus: false,
     dedupingInterval: 60000,
@@ -65,6 +66,7 @@ export function GamificationWidget({ className }: { className?: string }) {
     data: achievementsData,
     isLoading: achievementsLoading,
     error: achievementsError,
+    mutate: mutateAchievements,
   } = useSWR<AchievementsResponse>(
     '/api/gamification/achievements',
     fetchJson,
@@ -76,7 +78,25 @@ export function GamificationWidget({ className }: { className?: string }) {
 
   const isLoading = streakLoading || achievementsLoading;
 
-  if (streakError || achievementsError) return null;
+  if (streakError || achievementsError) {
+    return (
+      <div className="rounded-xl border border-orange-500/20 bg-orange-500/[0.04] p-6 text-center">
+        <AlertCircle className="h-5 w-5 text-orange-400 mx-auto mb-2" />
+        <p className="text-white/50 text-sm">
+          Couldn&apos;t load your progress
+        </p>
+        <button
+          onClick={() => {
+            mutateStreak();
+            mutateAchievements();
+          }}
+          className="mt-3 text-xs text-orange-400 hover:text-orange-300 transition-colors"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
 
   const streak = streakData?.streak;
   const recentAchievements =

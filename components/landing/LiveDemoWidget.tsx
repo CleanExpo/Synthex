@@ -318,7 +318,9 @@ export function LiveDemoWidget() {
             aria-label={
               state === 'loading'
                 ? 'Analysing your website…'
-                : 'Analyse website'
+                : state === 'error'
+                  ? 'Retry analysis'
+                  : 'Analyse website'
             }
             className="bg-amber-500 text-charcoal-900 font-bold rounded-xl px-3 py-2 text-xs hover:bg-amber-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
           >
@@ -339,7 +341,8 @@ export function LiveDemoWidget() {
             type="button"
             onClick={() => handleChip(demoUrl)}
             disabled={state === 'loading'}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-charcoal-700/60 border border-white/[0.06] text-white/45 hover:text-white hover:border-white/10 text-[11px] font-medium transition-all disabled:opacity-40"
+            aria-label={`Try quick demo: ${label}`}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-charcoal-700/60 border border-white/[0.06] text-white/45 hover:text-white hover:border-white/10 text-[11px] font-medium transition-all disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2 focus:ring-offset-transparent"
           >
             <span>{emoji}</span>
             <span>{label}</span>
@@ -355,7 +358,7 @@ export function LiveDemoWidget() {
       )}
 
       {state === 'loading' && (
-        <div>
+        <div role="status" aria-busy="true" aria-label="Loading preview…">
           <InstagramSkeleton />
           <p className="text-center text-white/60 text-[11px] mt-2 animate-pulse">
             Reading your website&hellip;
@@ -377,11 +380,30 @@ export function LiveDemoWidget() {
           >
             Try again &rarr;
           </button>
+          {/* Recovery: show demo chips below error */}
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <p className="text-white/40 text-[10px] uppercase tracking-[0.15em] mb-3">
+              Or try a quick demo
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {QUICK_DEMOS.map(({ label, emoji, url: demoUrl }) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => handleChip(demoUrl)}
+                  aria-label={`Try quick demo: ${label}`}
+                  className="px-3 py-1.5 rounded-full text-xs font-medium bg-white/[0.06] border border-white/10 text-white/60 hover:bg-white/10 hover:text-white/80 transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2 focus:ring-offset-transparent"
+                >
+                  {emoji} {label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
       {state === 'result' && result && (
-        <div>
+        <div aria-live="polite" aria-atomic="false">
           <InstagramCard
             businessName={result.businessName}
             imageUrl={result.imageUrl}
