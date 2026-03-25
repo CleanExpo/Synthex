@@ -90,6 +90,12 @@ export function MarketingNav({ currentPage }: { currentPage?: string }) {
               About
             </Link>
             <Link
+              href="/blog"
+              className={`${currentPage === 'blog' ? 'text-orange-400' : 'text-white/50'} hover:text-orange-400 transition-colors text-sm font-medium`}
+            >
+              Blog
+            </Link>
+            <Link
               href="/login"
               className="text-white/50 hover:text-orange-400 transition-colors text-sm font-medium"
             >
@@ -258,7 +264,9 @@ export function MarketingFooter() {
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a
-              href="#"
+              href="https://twitter.com/synthex"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-gray-600 hover:text-orange-400 transition-colors"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -266,7 +274,9 @@ export function MarketingFooter() {
               </svg>
             </a>
             <a
-              href="#"
+              href="https://github.com/CleanExpo"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-gray-600 hover:text-orange-400 transition-colors"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -274,7 +284,9 @@ export function MarketingFooter() {
               </svg>
             </a>
             <a
-              href="#"
+              href="https://linkedin.com/company/synthex"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-gray-600 hover:text-orange-400 transition-colors"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
