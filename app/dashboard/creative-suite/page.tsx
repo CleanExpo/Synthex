@@ -1,7 +1,6 @@
 'use client';
 
 import type { ComponentType } from 'react';
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
   FileText,
@@ -78,11 +77,8 @@ function CISCardGrid() {
       {CIS_CARDS.map((card, i) => {
         const Icon = card.icon;
         return (
-          <motion.div
+          <div
             key={card.href}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1, duration: 0.4, ease: 'easeOut' }}
             className="border border-white/[0.06] bg-white/[0.01] backdrop-blur-sm rounded-xl p-6 flex flex-col gap-4 hover:border-white/[0.12] hover:bg-white/[0.03] transition-colors duration-200"
           >
             {/* Icon */}
@@ -108,7 +104,7 @@ function CISCardGrid() {
             >
               Open →
             </Link>
-          </motion.div>
+          </div>
         );
       })}
     </div>
@@ -123,12 +119,7 @@ export default function CreativeSuitePage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-        className="space-y-1.5"
-      >
+      <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-2xl font-light text-white tracking-wide">
             Creative Intelligence Suite
@@ -139,7 +130,7 @@ export default function CreativeSuitePage() {
           Your complete AI marketing toolkit
         </p>
         <div className="h-px bg-white/[0.06] mt-4" />
-      </motion.div>
+      </div>
 
       {/* Card Grid */}
       <CISCardGrid />

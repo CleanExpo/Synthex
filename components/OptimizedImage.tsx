@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImageOff, ZoomIn } from '@/components/icons';
-import { fadeIn } from '@/lib/animations';
 
 interface OptimizedImageProps {
   src: string;
@@ -156,7 +154,7 @@ export function OptimizedImage({
 
         {/* Main Image */}
         {isInView && (
-          <motion.img
+          <img
             ref={imgRef}
             src={src}
             alt={alt}
@@ -174,9 +172,6 @@ export function OptimizedImage({
             `}
             onLoad={handleLoad}
             onError={handleError}
-            variants={fadeIn}
-            initial="hidden"
-            animate={loaded ? 'visible' : 'hidden'}
           />
         )}
 
@@ -190,22 +185,16 @@ export function OptimizedImage({
 
       {/* Zoomed view modal */}
       {isZoomed && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+        <div
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
           onClick={() => setIsZoomed(false)}
         >
-          <motion.img
+          <img
             src={src}
             alt={alt}
             className="max-w-full max-h-full object-contain"
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.8 }}
           />
-        </motion.div>
+        </div>
       )}
     </>
   );
@@ -245,19 +234,11 @@ export function ImageGallery({
 
       {/* Lightbox */}
       {selectedImage !== null && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+        <div
           className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
           onClick={() => setSelectedImage(null)}
         >
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.8 }}
-            className="relative max-w-7xl max-h-[90vh] p-4"
-          >
+          <div className="relative max-w-7xl max-h-[90vh] p-4">
             <img
               src={images[selectedImage].src}
               alt={images[selectedImage].alt}
@@ -288,8 +269,8 @@ export function ImageGallery({
                 →
               </button>
             )}
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
     </>
   );

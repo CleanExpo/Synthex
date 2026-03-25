@@ -5,7 +5,6 @@
 
 'use client';
 
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -21,7 +20,6 @@ import {
   Search,
 } from '@/components/icons';
 import { useRouter } from 'next/navigation';
-import { fadeInUp, popIn } from '@/lib/animations';
 
 interface ErrorPageProps {
   statusCode?: number;
@@ -111,31 +109,21 @@ export function CustomErrorPage({
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={fadeInUp}
-        className="max-w-md w-full"
-      >
+      <div className="max-w-md w-full">
         <Card variant="glass" className="p-8 text-center">
           {/* Error icon */}
-          <motion.div variants={popIn} className="mb-6 flex justify-center">
+          <div className="mb-6 flex justify-center">
             <div className={`p-4 rounded-full bg-white/5 ${config.color}`}>
               <Icon className="h-16 w-16" />
             </div>
-          </motion.div>
+          </div>
 
           {/* Status code */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="mb-4"
-          >
+          <div className="mb-4">
             <span className="text-6xl font-bold text-white/50">
               {statusCode}
             </span>
-          </motion.div>
+          </div>
 
           {/* Error title */}
           <h1 className="text-2xl font-bold text-white mb-3">
@@ -179,7 +167,7 @@ export function CustomErrorPage({
             </p>
           </div>
         </Card>
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -208,18 +196,13 @@ export function ForbiddenPage() {
 export function MaintenancePage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={fadeInUp}
-        className="max-w-md w-full"
-      >
+      <div className="max-w-md w-full">
         <Card variant="glass" className="p-8 text-center">
-          <motion.div variants={popIn} className="mb-6 flex justify-center">
+          <div className="mb-6 flex justify-center">
             <div className="p-4 rounded-full bg-white/5 text-orange-400">
               <Database className="h-16 w-16" />
             </div>
-          </motion.div>
+          </div>
 
           <h1 className="text-2xl font-bold text-white mb-3">
             Under Maintenance
@@ -244,7 +227,7 @@ export function MaintenancePage() {
             Check Again
           </Button>
         </Card>
-      </motion.div>
+      </div>
     </div>
   );
 }

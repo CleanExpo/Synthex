@@ -1,9 +1,7 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { ReactNode, useEffect, useState, useRef } from 'react';
-import { pageTransition } from '@/lib/animations';
 
 interface PageTransitionProps {
   children: ReactNode;
@@ -15,111 +13,27 @@ export function PageTransition({
   children,
   className = '',
 }: PageTransitionProps) {
-  const pathname = usePathname();
-
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={pathname}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        variants={pageTransition}
-        className={className}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
-  );
+  return <div className={className}>{children}</div>;
 }
 
 // Slide transition
 export function SlideTransition({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={pathname}
-        initial={{ x: 300, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: -300, opacity: 0 }}
-        transition={{
-          type: 'spring',
-          stiffness: 260,
-          damping: 20,
-        }}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
-  );
+  return <div>{children}</div>;
 }
 
 // Fade transition
 export function FadeTransition({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={pathname}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
-  );
+  return <div>{children}</div>;
 }
 
 // Scale transition
 export function ScaleTransition({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={pathname}
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 1.05, opacity: 0 }}
-        transition={{
-          type: 'spring',
-          stiffness: 300,
-          damping: 25,
-        }}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
-  );
+  return <div>{children}</div>;
 }
 
 // Rotate transition
 export function RotateTransition({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={pathname}
-        initial={{ rotateY: 90, opacity: 0 }}
-        animate={{ rotateY: 0, opacity: 1 }}
-        exit={{ rotateY: -90, opacity: 0 }}
-        transition={{
-          type: 'spring',
-          stiffness: 200,
-          damping: 20,
-        }}
-        style={{ transformStyle: 'preserve-3d' }}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
-  );
+  return <div>{children}</div>;
 }
 
 // Loading transition with progress
@@ -151,30 +65,17 @@ export function LoadingTransition({
   return (
     <>
       {/* Progress bar */}
-      <AnimatePresence>
-        {(loading || progress > 0) && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed top-0 left-0 right-0 z-50 h-1 bg-white/10"
-          >
-            <motion.div
-              className="h-full bg-gradient-to-r from-orange-500 to-orange-500"
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.3 }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {(loading || progress > 0) && (
+        <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-white/10">
+          <div
+            className="h-full bg-gradient-to-r from-orange-500 to-orange-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
 
       {/* Content */}
-      <motion.div
-        animate={{ opacity: loading ? 0.5 : 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        {children}
-      </motion.div>
+      <div style={{ opacity: loading ? 0.5 : 1 }}>{children}</div>
     </>
   );
 }
@@ -187,23 +88,7 @@ export function StaggerChildren({
   children: ReactNode;
   delay?: number;
 }) {
-  return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={{
-        hidden: { opacity: 0 },
-        visible: {
-          opacity: 1,
-          transition: {
-            staggerChildren: delay,
-          },
-        },
-      }}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div>{children}</div>;
 }
 
 // Parallax scrolling wrapper
@@ -236,13 +121,13 @@ export function ParallaxSection({
   }, []);
 
   return (
-    <motion.div
+    <div
       style={{
         transform: `translateY(${scrollY * 0.5}px)`,
       }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
@@ -277,16 +162,7 @@ export function RevealOnScroll({
     return () => observer.disconnect();
   }, [threshold]);
 
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 50 }}
-      animate={isVisible ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div ref={ref}>{children}</div>;
 }
 
 // Morphing layout transition
@@ -297,19 +173,7 @@ export function MorphTransition({
   children: ReactNode;
   layoutId: string;
 }) {
-  return (
-    <motion.div
-      layoutId={layoutId}
-      layout
-      transition={{
-        type: 'spring',
-        stiffness: 300,
-        damping: 25,
-      }}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div>{children}</div>;
 }
 
 // Custom cursor follower — uses event delegation + rAF throttle for performance
@@ -362,20 +226,13 @@ export function CursorFollower() {
   }, []);
 
   return (
-    <motion.div
+    <div
       className="fixed pointer-events-none z-50 mix-blend-difference"
-      animate={{
-        x: mousePosition.x - 16,
-        y: mousePosition.y - 16,
-        scale: isHovering ? 1.5 : 1,
-      }}
-      transition={{
-        type: 'spring',
-        stiffness: 500,
-        damping: 28,
+      style={{
+        transform: `translate(${mousePosition.x - 16}px, ${mousePosition.y - 16}px)`,
       }}
     >
       <div className="w-8 h-8 bg-white rounded-full opacity-50" />
-    </motion.div>
+    </div>
   );
 }

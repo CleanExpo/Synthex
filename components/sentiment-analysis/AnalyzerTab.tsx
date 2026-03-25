@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import {
   Card,
   CardContent,
@@ -55,11 +54,7 @@ export function AnalyzerTab({
           </Button>
 
           {testResult && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-4 bg-white/5 rounded-lg space-y-3"
-            >
+            <div className="p-4 bg-white/5 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {getSentimentIcon(testResult.sentiment)}
@@ -113,7 +108,7 @@ export function AnalyzerTab({
                   </div>
                 </div>
               )}
-            </motion.div>
+            </div>
           )}
         </CardContent>
       </Card>

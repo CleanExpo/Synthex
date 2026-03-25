@@ -6,7 +6,6 @@
  */
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   BarChart3,
   Share2,
@@ -170,15 +169,8 @@ export function OverviewTab({ stats }: OverviewTabProps) {
           {stats?.recentActivity && stats.recentActivity.length > 0 ? (
             <div className="divide-y-[0.5px] divide-white/[0.04]">
               {stats.recentActivity.map((activity, index) => (
-                <motion.div
+                <div
                   key={activity.id}
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{
-                    delay: 0.05 * index,
-                    duration: 0.4,
-                    ease: [0.19, 1, 0.22, 1],
-                  }}
                   className="flex items-center justify-between px-5 py-3 hover:bg-white/[0.02] transition-colors gap-3"
                 >
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -197,7 +189,7 @@ export function OverviewTab({ stats }: OverviewTabProps) {
                   <span className="font-mono text-[10px] text-white/50 whitespace-nowrap shrink-0 tabular-nums">
                     {activity.timestamp}
                   </span>
-                </motion.div>
+                </div>
               ))}
             </div>
           ) : (

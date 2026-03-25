@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   useInfiniteScroll,
   useInfiniteScrollTrigger,
@@ -10,7 +9,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, AlertCircle, ChevronUp } from '@/components/icons';
-import { staggerContainer, staggerItem } from '@/lib/animations';
 
 interface FeedItem {
   id: string;
@@ -146,25 +144,11 @@ export function InfiniteScrollFeed<T extends FeedItem>({
   return (
     <div className={`relative ${className}`} ref={containerRef}>
       {/* Items list */}
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-        className={`space-y-${gap}`}
-      >
-        <AnimatePresence mode="popLayout">
-          {items.map((item, index) => (
-            <motion.div
-              key={item.id}
-              variants={staggerItem}
-              layout
-              layoutId={item.id}
-            >
-              {renderItem(item, index)}
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </motion.div>
+      <div className={`space-y-${gap}`}>
+        {items.map((item, index) => (
+          <div key={item.id}>{renderItem(item, index)}</div>
+        ))}
+      </div>
 
       {/* Loading more indicator */}
       {isLoadingMore && (
@@ -194,17 +178,12 @@ export function InfiniteScrollFeed<T extends FeedItem>({
 
       {/* Scroll to top button */}
       {showScrollToTop && showScrollButton && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0 }}
+        <button
           onClick={scrollToTop}
-          className="fixed bottom-20 right-6 z-30 p-3 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-full shadow-lg"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
+          className="fixed bottom-20 right-6 z-30 p-3 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-full shadow-lg hover:scale-105 transition-transform duration-200"
         >
           <ChevronUp className="h-5 w-5 text-white" />
-        </motion.button>
+        </button>
       )}
 
       {/* Initial loading */}

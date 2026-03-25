@@ -1,7 +1,6 @@
 'use client';
 
-import { FC, ReactNode, useRef } from 'react';
-import { motion, MotionValue, useScroll, useTransform } from 'framer-motion';
+import { FC } from 'react';
 import { cn } from '@/lib/utils';
 
 interface TextRevealByWordProps {
@@ -10,16 +9,10 @@ interface TextRevealByWordProps {
 }
 
 const TextRevealByWord: FC<TextRevealByWordProps> = ({ text, className }) => {
-  const targetRef = useRef<HTMLDivElement | null>(null);
-
-  const { scrollYProgress } = useScroll({
-    target: targetRef,
-  });
-
   const words = text.split(' ');
 
   return (
-    <div ref={targetRef} className={cn('relative z-0 h-[200vh]', className)}>
+    <div className={cn('relative z-0 h-[200vh]', className)}>
       <div
         className={cn(
           'sticky top-0 mx-auto flex h-[50%] max-w-4xl items-center',
@@ -33,36 +26,14 @@ const TextRevealByWord: FC<TextRevealByWordProps> = ({ text, className }) => {
             'md:p-8 md:text-3xl lg:p-10 lg:text-4xl xl:text-5xl'
           )}
         >
-          {words.map((word, i) => {
-            const start = i / words.length;
-            const end = start + 1 / words.length;
-            return (
-              <Word key={i} progress={scrollYProgress} range={[start, end]}>
-                {word}
-              </Word>
-            );
-          })}
+          {words.map((word, i) => (
+            <span key={i} className="xl:lg-3 relative mx-1 lg:mx-2.5">
+              <span className="text-white">{word}</span>
+            </span>
+          ))}
         </p>
       </div>
     </div>
-  );
-};
-
-interface WordProps {
-  children: ReactNode;
-  progress: MotionValue<number>;
-  range: [number, number];
-}
-
-const Word: FC<WordProps> = ({ children, progress, range }) => {
-  const opacity = useTransform(progress, range, [0, 1]);
-  return (
-    <span className="xl:lg-3 relative mx-1 lg:mx-2.5">
-      <span className="absolute opacity-30 text-white/50">{children}</span>
-      <motion.span style={{ opacity }} className="text-white">
-        {children}
-      </motion.span>
-    </span>
   );
 };
 

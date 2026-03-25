@@ -1,9 +1,7 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { AlertOctagon, RefreshCw } from '@/components/icons';
-import { fadeInUp } from '@/lib/animations';
 
 export default function GlobalError({
   error,
@@ -16,12 +14,7 @@ export default function GlobalError({
     <html>
       <body>
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-orange-900/20 to-gray-900 flex items-center justify-center p-4">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-            className="max-w-lg w-full"
-          >
+          <div className="max-w-lg w-full">
             <div className="bg-black/50 backdrop-blur-xl rounded-2xl p-8 text-center border border-red-500/30">
               {/* Critical Error Icon */}
               <div className="w-24 h-24 mx-auto mb-6 bg-red-500/20 rounded-full flex items-center justify-center animate-pulse">
@@ -60,7 +53,7 @@ export default function GlobalError({
                 </p>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </body>
     </html>

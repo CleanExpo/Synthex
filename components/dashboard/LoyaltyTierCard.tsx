@@ -8,10 +8,8 @@
  *
  * Data source: GET /api/user/loyalty
  * Pattern:     SWR with credentials: 'include' (per project data-fetching rules)
- * Animations:  framer-motion (spring badge reveal, animated progress bar)
  */
 
-import { motion } from 'framer-motion';
 import useSWR from 'swr';
 import { Trophy, Lock } from '@/components/icons';
 
@@ -117,10 +115,7 @@ async function fetchJson<T>(url: string): Promise<T> {
 function TierBadge({ tier }: { tier: Tier }) {
   const config = TIER_CONFIG[tier];
   return (
-    <motion.div
-      initial={{ scale: 0.6, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }}
+    <div
       className={`
         inline-flex items-center justify-center
         w-14 h-14 rounded-sm shrink-0
@@ -128,7 +123,7 @@ function TierBadge({ tier }: { tier: Tier }) {
       `}
     >
       <Trophy className="h-7 w-7" style={{ color: config.badgeColour }} />
-    </motion.div>
+    </div>
   );
 }
 
@@ -136,12 +131,9 @@ function ProgressBar({ progress, tier }: { progress: number; tier: Tier }) {
   const config = TIER_CONFIG[tier];
   return (
     <div className="h-1.5 w-full bg-white/[0.06] rounded-full overflow-hidden">
-      <motion.div
+      <div
         className="h-full rounded-full"
-        style={{ backgroundColor: config.badgeColour }}
-        initial={{ width: 0 }}
-        animate={{ width: `${progress}%` }}
-        transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
+        style={{ backgroundColor: config.badgeColour, width: `${progress}%` }}
       />
     </div>
   );
@@ -155,15 +147,7 @@ function AchievementBadge({
   index: number;
 }) {
   return (
-    <motion.div
-      initial={{ scale: 0.5, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{
-        type: 'spring',
-        stiffness: 300,
-        damping: 22,
-        delay: 0.4 + index * 0.05,
-      }}
+    <div
       title={`${achievement.name} — ${achievement.description}`}
       className="
         flex items-center justify-center
@@ -174,16 +158,13 @@ function AchievementBadge({
       "
     >
       <span className="text-base leading-none">{achievement.icon}</span>
-    </motion.div>
+    </div>
   );
 }
 
 function LockedBadge({ index }: { index: number }) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.5 + index * 0.03 }}
+    <div
       className="
         flex items-center justify-center
         w-9 h-9 rounded-sm
@@ -191,7 +172,7 @@ function LockedBadge({ index }: { index: number }) {
       "
     >
       <Lock className="h-3.5 w-3.5 text-white/50" />
-    </motion.div>
+    </div>
   );
 }
 
@@ -362,10 +343,7 @@ export function LoyaltyTierCard({ className }: { className?: string }) {
 
             {/* Overflow count */}
             {remainingCount > 0 && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.6 }}
+              <div
                 className="
                   flex items-center justify-center
                   w-9 h-9 rounded-sm
@@ -374,7 +352,7 @@ export function LoyaltyTierCard({ className }: { className?: string }) {
                 "
               >
                 +{remainingCount}
-              </motion.div>
+              </div>
             )}
           </div>
         )}

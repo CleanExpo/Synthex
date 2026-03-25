@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   Card,
   CardContent,
@@ -29,7 +28,6 @@ import {
   RefreshCw,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
-import { fadeInUp, staggerContainer, staggerItem } from '@/lib/animations';
 
 interface Hashtag {
   tag: string;
@@ -217,12 +215,7 @@ export function AIHashtagGenerator({
 
         {/* Generated Hashtags */}
         {filteredHashtags.length > 0 && (
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="space-y-4"
-          >
+          <div className="space-y-4">
             {/* Selected Count */}
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-300">
@@ -247,9 +240,8 @@ export function AIHashtagGenerator({
             {/* Hashtag Grid */}
             <div className="grid gap-3">
               {filteredHashtags.map((tag, index) => (
-                <motion.div
+                <div
                   key={tag.tag}
-                  variants={staggerItem}
                   className={`
                     p-3 rounded-lg border cursor-pointer transition-all
                     ${
@@ -289,7 +281,7 @@ export function AIHashtagGenerator({
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
 
@@ -310,7 +302,7 @@ export function AIHashtagGenerator({
                 <li>• Optimal mix: 10 popular, 10 medium, 10 niche tags</li>
               </ul>
             </div>
-          </motion.div>
+          </div>
         )}
       </CardContent>
     </Card>

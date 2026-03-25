@@ -6,7 +6,6 @@
 'use client';
 
 import { Skeleton } from './skeleton';
-import { motion } from 'framer-motion';
 
 // Dashboard stats skeleton
 export function StatsCardSkeleton() {
@@ -71,9 +70,15 @@ export function TableSkeleton({ rows = 5, columns = 4 }) {
         </div>
         {/* Rows */}
         {Array.from({ length: rows }).map((_, rowIndex) => (
-          <div key={`row-${rowIndex}`} className="grid grid-cols-{columns} gap-4">
+          <div
+            key={`row-${rowIndex}`}
+            className="grid grid-cols-{columns} gap-4"
+          >
             {Array.from({ length: columns }).map((_, colIndex) => (
-              <Skeleton key={`cell-${rowIndex}-${colIndex}`} className="h-4 w-full" />
+              <Skeleton
+                key={`cell-${rowIndex}-${colIndex}`}
+                className="h-4 w-full"
+              />
             ))}
           </div>
         ))}
@@ -220,24 +225,30 @@ export function TimelineSkeleton() {
 }
 
 // Animated skeleton wrapper
-export function AnimatedSkeleton({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay, duration: 0.3 }}
-    >
-      {children}
-    </motion.div>
-  );
+export function AnimatedSkeleton({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
+  return <div>{children}</div>;
 }
 
 // Smart skeleton that adapts to content
-export function SmartSkeleton({ 
-  type, 
-  ...props 
-}: { 
-  type: 'card' | 'table' | 'chart' | 'profile' | 'list' | 'form' | 'gallery' | 'timeline';
+export function SmartSkeleton({
+  type,
+  ...props
+}: {
+  type:
+    | 'card'
+    | 'table'
+    | 'chart'
+    | 'profile'
+    | 'list'
+    | 'form'
+    | 'gallery'
+    | 'timeline';
   [key: string]: any;
 }) {
   const skeletons = {
@@ -248,9 +259,9 @@ export function SmartSkeleton({
     list: ListSkeleton,
     form: FormSkeleton,
     gallery: GallerySkeleton,
-    timeline: TimelineSkeleton
+    timeline: TimelineSkeleton,
   };
-  
+
   const SkeletonComponent = skeletons[type] || ContentCardSkeleton;
   return <SkeletonComponent {...props} />;
 }

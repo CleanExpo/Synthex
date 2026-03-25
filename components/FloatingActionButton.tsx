@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
   X,
@@ -127,61 +126,41 @@ export function FloatingActionButton() {
   return (
     <>
       {/* Backdrop */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
 
       {/* Speed Dial Actions */}
-      <AnimatePresence>
-        {isOpen && (
-          <div className="fixed bottom-24 right-6 z-50 space-y-3">
-            {actions.map((action, index) => (
-              <motion.div
-                key={action.id}
-                initial={{ opacity: 0, scale: 0, y: 20 }}
-                animate={{
-                  opacity: 1,
-                  scale: 1,
-                  y: 0,
-                  transition: { delay: index * 0.05 },
-                }}
-                exit={{
-                  opacity: 0,
-                  scale: 0,
-                  y: 20,
-                  transition: { delay: (actions.length - index) * 0.02 },
-                }}
-                className="flex items-center justify-end gap-3"
+      {isOpen && (
+        <div className="fixed bottom-24 right-6 z-50 space-y-3">
+          {actions.map(action => (
+            <div
+              key={action.id}
+              className="flex items-center justify-end gap-3"
+            >
+              <span className="text-sm font-medium text-white bg-black/70 px-3 py-1 rounded-full">
+                {action.label}
+              </span>
+              <button
+                onClick={action.onClick}
+                className={`
+                  w-12 h-12 rounded-full ${action.color}
+                  flex items-center justify-center shadow-lg
+                  transform transition-transform active:scale-95
+                `}
               >
-                <span className="text-sm font-medium text-white bg-black/70 px-3 py-1 rounded-full">
-                  {action.label}
-                </span>
-                <button
-                  onClick={action.onClick}
-                  className={`
-                    w-12 h-12 rounded-full ${action.color} 
-                    flex items-center justify-center shadow-lg
-                    transform transition-transform active:scale-95
-                  `}
-                >
-                  <action.icon className="h-5 w-5 text-white" />
-                </button>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </AnimatePresence>
+                <action.icon className="h-5 w-5 text-white" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Main FAB Button */}
-      <motion.button
+      <button
         className={`
           fixed bottom-6 right-6 z-50
           w-14 h-14 rounded-full shadow-2xl
@@ -194,27 +173,19 @@ export function FloatingActionButton() {
           }
         `}
         onClick={() => setIsOpen(!isOpen)}
-        whileTap={{ scale: 0.9 }}
       >
-        <motion.div
-          animate={{ rotate: isOpen ? 45 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
+        <div>
           {isOpen ? (
             <X className="h-6 w-6 text-white" />
           ) : (
             <Plus className="h-6 w-6 text-white" />
           )}
-        </motion.div>
-      </motion.button>
+        </div>
+      </button>
 
       {/* Quick Compose Bar (Alternative compact design) */}
       {!isOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: 100 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-6 left-6 right-20 z-40 md:hidden"
-        >
+        <div className="fixed bottom-6 left-6 right-20 z-40 md:hidden">
           <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-full px-4 py-2 flex items-center justify-around">
             {quickActions.map(action => (
               <button
@@ -229,7 +200,7 @@ export function FloatingActionButton() {
               </button>
             ))}
           </div>
-        </motion.div>
+        </div>
       )}
     </>
   );
@@ -246,7 +217,7 @@ export function MiniFAB({
   className?: string;
 }) {
   return (
-    <motion.button
+    <button
       className={`
         fixed bottom-6 right-6 z-40
         w-12 h-12 rounded-full
@@ -256,13 +227,9 @@ export function MiniFAB({
         ${className}
       `}
       onClick={onClick}
-      whileTap={{ scale: 0.9 }}
-      initial={{ scale: 0 }}
-      animate={{ scale: 1 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 20 }}
     >
       <Icon className="h-5 w-5 text-white" />
-    </motion.button>
+    </button>
   );
 }
 
@@ -294,14 +261,10 @@ export function SmartFAB({ context }: { context?: string }) {
 
   return (
     <div className="fixed bottom-20 right-6 z-40 md:hidden">
-      <motion.div
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] px-4 py-2 rounded-full flex items-center gap-2 mb-2"
-      >
+      <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] px-4 py-2 rounded-full flex items-center gap-2 mb-2">
         <Sparkles className="h-4 w-4 text-orange-400" />
         <span className="text-sm text-white">{suggestion}</span>
-      </motion.div>
+      </div>
       <FloatingActionButton />
     </div>
   );
@@ -309,38 +272,18 @@ export function SmartFAB({ context }: { context?: string }) {
 
 // Draggable FAB
 export function DraggableFAB() {
-  const [position, setPosition] = useState({ x: -70, y: -100 });
-  const [isDragging, setIsDragging] = useState(false);
-
   return (
-    <motion.div
-      className="fixed bottom-20 right-20 z-50 md:hidden"
-      drag
-      dragConstraints={{
-        left: -window.innerWidth + 100,
-        right: 0,
-        top: -window.innerHeight + 200,
-        bottom: 0,
-      }}
-      dragElastic={0.2}
-      onDragStart={() => setIsDragging(true)}
-      onDragEnd={(e, info) => {
-        setIsDragging(false);
-        setPosition({ x: info.offset.x, y: info.offset.y });
-      }}
-      animate={position}
-      whileDrag={{ scale: 1.1 }}
-    >
+    <div className="fixed bottom-20 right-20 z-50 md:hidden">
       <div
         className={`
         w-14 h-14 rounded-full
         bg-gradient-to-r from-orange-500 to-orange-500
         shadow-2xl flex items-center justify-center
-        ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
+        cursor-pointer
       `}
       >
         <Plus className="h-6 w-6 text-white" />
       </div>
-    </motion.div>
+    </div>
   );
 }

@@ -3,10 +3,8 @@
  * Smooth, performant animations for enhanced UX
  */
 
-import { Variants } from 'framer-motion';
-
 // Fade animations
-export const fadeIn: Variants = {
+export const fadeIn = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -14,7 +12,7 @@ export const fadeIn: Variants = {
   },
 };
 
-export const fadeInUp: Variants = {
+export const fadeInUp = {
   hidden: {
     opacity: 0,
     y: 20,
@@ -29,7 +27,7 @@ export const fadeInUp: Variants = {
   },
 };
 
-export const fadeInDown: Variants = {
+export const fadeInDown = {
   hidden: {
     opacity: 0,
     y: -20,
@@ -45,7 +43,7 @@ export const fadeInDown: Variants = {
 };
 
 // Scale animations
-export const scaleIn: Variants = {
+export const scaleIn = {
   hidden: {
     opacity: 0,
     scale: 0.8,
@@ -60,7 +58,7 @@ export const scaleIn: Variants = {
   },
 };
 
-export const popIn: Variants = {
+export const popIn = {
   hidden: {
     opacity: 0,
     scale: 0.6,
@@ -77,7 +75,7 @@ export const popIn: Variants = {
 };
 
 // Slide animations
-export const slideInLeft: Variants = {
+export const slideInLeft = {
   hidden: {
     opacity: 0,
     x: -50,
@@ -92,7 +90,7 @@ export const slideInLeft: Variants = {
   },
 };
 
-export const slideInRight: Variants = {
+export const slideInRight = {
   hidden: {
     opacity: 0,
     x: 50,
@@ -108,7 +106,7 @@ export const slideInRight: Variants = {
 };
 
 // Stagger children animations
-export const staggerContainer: Variants = {
+export const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -119,7 +117,7 @@ export const staggerContainer: Variants = {
   },
 };
 
-export const staggerItem: Variants = {
+export const staggerItem = {
   hidden: {
     opacity: 0,
     y: 20,
@@ -135,7 +133,7 @@ export const staggerItem: Variants = {
 };
 
 // List animations
-export const listContainer: Variants = {
+export const listContainer = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -146,7 +144,7 @@ export const listContainer: Variants = {
   },
 };
 
-export const listItem: Variants = {
+export const listItem = {
   hidden: {
     opacity: 0,
     x: -20,
@@ -225,7 +223,7 @@ export const bounce = {
 };
 
 // Page transitions
-export const pageTransition: Variants = {
+export const pageTransition = {
   initial: {
     opacity: 0,
     y: 20,
@@ -248,7 +246,7 @@ export const pageTransition: Variants = {
 };
 
 // Modal animations
-export const modalOverlay: Variants = {
+export const modalOverlay = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -260,7 +258,7 @@ export const modalOverlay: Variants = {
   },
 };
 
-export const modalContent: Variants = {
+export const modalContent = {
   hidden: {
     opacity: 0,
     scale: 0.9,
@@ -306,7 +304,7 @@ export const typewriter = {
   },
 };
 
-export const textReveal: Variants = {
+export const textReveal = {
   hidden: {
     opacity: 0,
     y: '100%',
@@ -322,7 +320,7 @@ export const textReveal: Variants = {
 };
 
 // Notification animations
-export const slideInTop: Variants = {
+export const slideInTop = {
   hidden: {
     opacity: 0,
     y: -50,
@@ -403,7 +401,7 @@ export const createAnimation = (
   from: Record<string, any>,
   to: Record<string, any>,
   options: Record<string, any> = {}
-): Variants => ({
+): Record<string, unknown> => ({
   hidden: from,
   visible: {
     ...to,

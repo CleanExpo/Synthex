@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -189,7 +188,7 @@ function SynthexLogo() {
 
 // ---------------------------------------------------------------------------
 // Orbit ring — a single rotating ring with evenly-spaced icons
-// Each icon counter-rotates so it stays upright during the orbit animation.
+// CSS animation used for rotation; icons counter-rotate to stay upright.
 // ---------------------------------------------------------------------------
 
 interface OrbitRingProps {
@@ -214,90 +213,90 @@ function OrbitRing({
 }: OrbitRingProps) {
   const radius = diameter / 2;
   const count = integrations.length;
+  const animationName = `orbit-spin-${duration}`;
 
   return (
-    /* Rotating container — the ring itself */
-    <motion.div
-      className="absolute inset-0 flex items-center justify-center pointer-events-none"
-      style={{
-        width: diameter,
-        height: diameter,
-        top: '50%',
-        left: '50%',
-        translateX: '-50%',
-        translateY: '-50%',
-      }}
-      animate={{ rotate: 360 + initialRotation }}
-      initial={{ rotate: initialRotation }}
-      transition={{
-        duration,
-        repeat: Infinity,
-        ease: 'linear',
-      }}
-    >
-      {/* Orbit ring visual */}
+    <>
+      <style>{`
+        @keyframes ${animationName} {
+          from { transform: translate(-50%, -50%) rotate(${initialRotation}deg); }
+          to   { transform: translate(-50%, -50%) rotate(${initialRotation + 360}deg); }
+        }
+        @keyframes counter-${animationName} {
+          from { transform: rotate(-${initialRotation}deg); }
+          to   { transform: rotate(-${initialRotation + 360}deg); }
+        }
+      `}</style>
+      {/* Rotating container — the ring itself */}
       <div
-        className="absolute inset-0 rounded-full border-[0.5px] border-white/[0.06]"
-        style={{ borderRadius: '50%' }}
-      />
+        className="absolute pointer-events-none"
+        style={{
+          width: diameter,
+          height: diameter,
+          top: '50%',
+          left: '50%',
+          animation: `${animationName} ${duration}s linear infinite`,
+        }}
+      >
+        {/* Orbit ring visual */}
+        <div
+          className="absolute inset-0 rounded-full border-[0.5px] border-white/[0.06]"
+          style={{ borderRadius: '50%' }}
+        />
 
-      {/* Icons placed at evenly-spaced angles */}
-      {integrations.map((integration, index) => {
-        const angleDeg = (index / count) * 360;
-        const angleRad = (angleDeg * Math.PI) / 180;
-        const x = radius * Math.cos(angleRad);
-        const y = radius * Math.sin(angleRad);
+        {/* Icons placed at evenly-spaced angles */}
+        {integrations.map((integration, index) => {
+          const angleDeg = (index / count) * 360;
+          const angleRad = (angleDeg * Math.PI) / 180;
+          const x = radius * Math.cos(angleRad);
+          const y = radius * Math.sin(angleRad);
 
-        return (
-          <div
-            key={integration.name}
-            className="absolute"
-            style={{
-              width: iconSize,
-              height: iconSize,
-              // Centre the icon at its orbit position
-              left: `calc(50% + ${x}px - ${iconSize / 2}px)`,
-              top: `calc(50% + ${y}px - ${iconSize / 2}px)`,
-            }}
-          >
-            {/* Counter-rotate so the icon faces up regardless of orbit angle */}
-            <motion.div
-              className="w-full h-full pointer-events-auto group relative"
-              animate={{ rotate: -(360 + initialRotation) }}
-              initial={{ rotate: -initialRotation }}
-              transition={{
-                duration,
-                repeat: Infinity,
-                ease: 'linear',
+          return (
+            <div
+              key={integration.name}
+              className="absolute"
+              style={{
+                width: iconSize,
+                height: iconSize,
+                left: `calc(50% + ${x}px - ${iconSize / 2}px)`,
+                top: `calc(50% + ${y}px - ${iconSize / 2}px)`,
               }}
             >
+              {/* Counter-rotate so the icon faces up regardless of orbit angle */}
               <div
-                className={cn(
-                  'w-full h-full rounded-sm border-[0.5px] border-white/[0.06] bg-[#0a1628] overflow-hidden',
-                  'cursor-pointer transition-all duration-200',
-                  'hover:border-orange-500/20 hover:shadow-[0_0_16px_rgba(245,158,11,0.15)]'
-                )}
-                style={{ padding: iconSize * 0.14 }}
+                className="w-full h-full pointer-events-auto group relative"
+                style={{
+                  animation: `counter-${animationName} ${duration}s linear infinite`,
+                }}
               >
-                {integration.icon}
-              </div>
+                <div
+                  className={cn(
+                    'w-full h-full rounded-sm border-[0.5px] border-white/[0.06] bg-[#0a1628] overflow-hidden',
+                    'cursor-pointer transition-all duration-200',
+                    'hover:border-orange-500/20 hover:shadow-[0_0_16px_rgba(245,158,11,0.15)]'
+                  )}
+                  style={{ padding: iconSize * 0.14 }}
+                >
+                  {integration.icon}
+                </div>
 
-              {/* Tooltip */}
-              <div
-                className={cn(
-                  'absolute -top-8 left-1/2 -translate-x-1/2',
-                  'hidden group-hover:block',
-                  'w-max rounded-sm bg-[#080e1a] border-[0.5px] border-white/[0.06]',
-                  'px-2 py-1 text-xs text-white/60 shadow-lg pointer-events-none z-30 whitespace-nowrap'
-                )}
-              >
-                {integration.name}
+                {/* Tooltip */}
+                <div
+                  className={cn(
+                    'absolute -top-8 left-1/2 -translate-x-1/2',
+                    'hidden group-hover:block',
+                    'w-max rounded-sm bg-[#080e1a] border-[0.5px] border-white/[0.06]',
+                    'px-2 py-1 text-xs text-white/60 shadow-lg pointer-events-none z-30 whitespace-nowrap'
+                  )}
+                >
+                  {integration.name}
+                </div>
               </div>
-            </motion.div>
-          </div>
-        );
-      })}
-    </motion.div>
+            </div>
+          );
+        })}
+      </div>
+    </>
   );
 }
 

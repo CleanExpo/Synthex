@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import { Slot } from '@radix-ui/react-slot';
 import { VariantProps, cva } from 'class-variance-authority';
 import { PanelLeft } from 'lucide-react';
@@ -842,8 +842,6 @@ interface MenuBarProps extends React.HTMLAttributes<HTMLDivElement> {
   items: MenuBarItem[];
 }
 
-const menuBarSpring = { duration: 0.2, ease: 'easeInOut' } as const;
-
 function MenuBar({ items, className, ...props }: MenuBarProps) {
   const [activeIndex, setActiveIndex] = React.useState<number | null>(null);
   const menuRef = React.useRef<HTMLDivElement>(null);
@@ -872,34 +870,26 @@ function MenuBar({ items, className, ...props }: MenuBarProps) {
 
   return (
     <div className={cn('relative', className)} {...props}>
-      <AnimatePresence>
-        {activeIndex !== null && (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 5 }}
-            transition={menuBarSpring}
-            className="absolute left-0 right-0 -top-[31px] pointer-events-none z-50"
+      {activeIndex !== null && (
+        <div className="absolute left-0 right-0 -top-[31px] pointer-events-none z-50">
+          <div
+            ref={tooltipRef}
+            className={cn(
+              'h-7 px-3 rounded-sm inline-flex justify-center items-center overflow-hidden',
+              'bg-[#050508] border border-[0.5px] border-white/[0.06]',
+              'shadow-[0_4px_16px_rgba(0,0,0,0.4)]'
+            )}
+            style={{
+              width: 'auto',
+              transform: `translateX(${tooltipPosition.left}px)`,
+            }}
           >
-            <motion.div
-              ref={tooltipRef}
-              className={cn(
-                'h-7 px-3 rounded-sm inline-flex justify-center items-center overflow-hidden',
-                'bg-[#050508] border border-[0.5px] border-white/[0.06]',
-                'shadow-[0_4px_16px_rgba(0,0,0,0.4)]'
-              )}
-              initial={{ x: tooltipPosition.left }}
-              animate={{ x: tooltipPosition.left }}
-              transition={menuBarSpring}
-              style={{ width: 'auto' }}
-            >
-              <p className="text-[13px] font-medium leading-tight whitespace-nowrap text-white/80">
-                {items[activeIndex].label}
-              </p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <p className="text-[13px] font-medium leading-tight whitespace-nowrap text-white/80">
+              {items[activeIndex].label}
+            </p>
+          </div>
+        </div>
+      )}
 
       <div
         ref={menuRef}

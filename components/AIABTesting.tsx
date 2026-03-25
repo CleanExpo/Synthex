@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
 import {
   Card,
   CardContent,
@@ -41,7 +40,6 @@ import {
   ChevronRight,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
-import { fadeInUp, scaleIn } from '@/lib/animations';
 import {
   LineChart,
   Line,
@@ -406,10 +404,7 @@ export function AIABTesting() {
 
       {/* Create Form */}
       {showCreateForm && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <div>
           <Card variant="glass">
             <CardHeader>
               <CardTitle>Create A/B Test</CardTitle>
@@ -489,16 +484,15 @@ export function AIABTesting() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       )}
 
       {/* Active Tests */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {tests.map(test => (
-          <motion.div
+          <div
             key={test.id}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            className="hover:scale-105 transition-transform duration-200"
           >
             <Card
               variant="glass"
@@ -605,7 +599,7 @@ export function AIABTesting() {
                 )}
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         ))}
       </div>
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 
 type FormState = 'idle' | 'loading' | 'success' | 'error';
 
@@ -51,12 +50,7 @@ export function EmailCaptureSection() {
       </div>
 
       <div className="relative max-w-2xl mx-auto px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        >
+        <div>
           {/* Eyebrow pill */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse flex-shrink-0" />
@@ -75,15 +69,10 @@ export function EmailCaptureSection() {
           </p>
 
           {state === 'success' ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.35 }}
-              className="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 font-medium text-sm"
-            >
+            <div className="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 font-medium text-sm">
               <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
               You&apos;re on the list! Check your inbox.
-            </motion.div>
+            </div>
           ) : (
             <form
               onSubmit={handleSubmit}
@@ -127,16 +116,11 @@ export function EmailCaptureSection() {
           )}
 
           {state === 'error' && (
-            <motion.p
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-3 text-sm text-red-400"
-              role="alert"
-            >
+            <p className="mt-3 text-sm text-red-400" role="alert">
               {errorMessage}
-            </motion.p>
+            </p>
           )}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

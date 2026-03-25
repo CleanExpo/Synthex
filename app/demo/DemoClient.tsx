@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import {
   Sparkles,
   Layers,
@@ -96,75 +95,32 @@ export default function DemoIndex() {
         {/* Animated Background */}
         <div className="fixed inset-0 z-0 pointer-events-none">
           {backgroundElements.map(({ icon: Icon, delay, duration }, i) => (
-            <motion.div
+            <div
               key={i}
               className="absolute"
-              initial={{
-                x: seedPos(i, dims.w),
-                y: -100,
-                rotate: 0,
-              }}
-              animate={{
-                y: dims.h + 100,
-                rotate: 360,
-                x: seedPos(i + 5, dims.w),
-              }}
-              transition={{
-                duration,
-                delay,
-                repeat: Infinity,
-                ease: 'linear',
+              style={{
+                left: seedPos(i, dims.w),
+                top: -100,
               }}
             >
               <Icon
                 className={`w-8 h-8 text-orange-500/20 ${!mounted ? 'opacity-0' : ''}`}
               />
-            </motion.div>
+            </div>
           ))}
 
           {/* Gradient Orbs */}
-          <motion.div
-            className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl"
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.3, 0.5, 0.3],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-          />
-          <motion.div
-            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl"
-            animate={{
-              scale: [1.2, 1, 1.2],
-              opacity: [0.5, 0.3, 0.5],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-          />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl" />
         </div>
 
         {/* Content */}
         <div className="relative z-10">
           {/* Header */}
-          <motion.header
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-            className="text-center py-20"
-          >
-            <motion.div
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 4, repeat: Infinity }}
-              className="inline-block mb-6"
-            >
+          <header className="text-center py-20">
+            <div className="inline-block mb-6">
               <Sparkles className="w-16 h-16 text-orange-400 mx-auto" />
-            </motion.div>
+            </div>
 
             <h1 className="text-6xl md:text-7xl font-bold mb-6">
               <span className="bg-gradient-to-r from-orange-400 via-orange-400 to-orange-300 bg-clip-text text-transparent">
@@ -176,7 +132,7 @@ export default function DemoIndex() {
               Explore our collection of cutting-edge UI animations, 3D effects,
               and interactive components
             </p>
-          </motion.header>
+          </header>
 
           {/* Product Demo Video */}
           <div className="container mx-auto px-6 pb-16">
@@ -212,32 +168,18 @@ export default function DemoIndex() {
               {demos.map((demo, index) => {
                 const Icon = demo.icon;
                 return (
-                  <motion.div
-                    key={demo.href}
-                    initial={{ opacity: 0, y: 50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1, duration: 0.5 }}
-                  >
+                  <div key={demo.href}>
                     <Link href={demo.href}>
-                      <motion.div
-                        whileHover={{ scale: 1.02, y: -5 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="relative group h-full"
-                      >
+                      <div className="relative group h-full hover:scale-105 transition-transform duration-200">
                         {/* Card */}
                         <div className="relative bg-surface-base/80 backdrop-blur-xl rounded-2xl border border-orange-500/20 overflow-hidden h-full hover:border-orange-500/40 transition-colors">
                           {/* New Badge */}
                           {demo.new && (
-                            <motion.div
-                              initial={{ x: 100, opacity: 0 }}
-                              animate={{ x: 0, opacity: 1 }}
-                              transition={{ delay: 0.5 + index * 0.1 }}
-                              className="absolute top-4 right-4 z-10"
-                            >
+                            <div className="absolute top-4 right-4 z-10">
                               <span className="px-3 py-1 bg-gradient-to-r from-orange-500 to-orange-500 rounded-full text-xs font-bold text-white">
                                 NEW
                               </span>
-                            </motion.div>
+                            </div>
                           )}
 
                           {/* Gradient Overlay */}
@@ -282,27 +224,10 @@ export default function DemoIndex() {
                               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                             </div>
                           </div>
-
-                          {/* Animated Border */}
-                          <motion.div
-                            className="absolute inset-0 rounded-2xl pointer-events-none"
-                            animate={{
-                              boxShadow: [
-                                '0 0 0 0px rgba(245, 158, 11, 0)',
-                                '0 0 0 2px rgba(245, 158, 11, 0.3)',
-                                '0 0 0 0px rgba(245, 158, 11, 0)',
-                              ],
-                            }}
-                            transition={{
-                              duration: 2,
-                              repeat: Infinity,
-                              delay: index * 0.2,
-                            }}
-                          />
                         </div>
-                      </motion.div>
+                      </div>
                     </Link>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>

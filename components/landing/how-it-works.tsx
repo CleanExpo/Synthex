@@ -1,7 +1,6 @@
 'use client';
 
 import { Network, Sparkles, Rocket } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 const STEPS = [
   {
@@ -71,12 +70,8 @@ export function HowItWorks() {
                 { number, icon: Icon, title, description, borderColor },
                 idx
               ) => (
-                <motion.div
+                <div
                   key={number}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: idx * 0.15 }}
-                  viewport={{ once: true }}
                   className="group relative bg-charcoal-800/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-8 overflow-hidden shadow-2xl shadow-black/30 ring-1 ring-white/[0.04] hover:-translate-y-1 transition-all duration-300 z-10"
                   style={{
                     borderTopColor: borderColor,
@@ -106,14 +101,8 @@ export function HowItWorks() {
                     {number}
                   </div>
 
-                  {/* Icon with gradient circle background and float animation */}
-                  <motion.div
-                    animate={{ y: [0, -8, 0] }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                    }}
+                  {/* Icon with gradient circle background */}
+                  <div
                     className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-5"
                     style={{
                       background:
@@ -124,7 +113,7 @@ export function HowItWorks() {
                     }}
                   >
                     <Icon className="w-6 h-6 text-orange-400" />
-                  </motion.div>
+                  </div>
 
                   {/* Title */}
                   <h3 className="text-lg font-bold tracking-tight text-white mb-3">
@@ -135,7 +124,7 @@ export function HowItWorks() {
                   <p className="text-sm text-white/40 leading-relaxed">
                     {description}
                   </p>
-                </motion.div>
+                </div>
               )
             )}
           </div>

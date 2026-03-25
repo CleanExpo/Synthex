@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { LiveDemoWidget } from './LiveDemoWidget';
 
 function EyebrowPill({ children }: { children: React.ReactNode }) {
@@ -33,19 +32,6 @@ function SocialProofRow() {
   );
 }
 
-const heroTextVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.12,
-      duration: 0.7,
-      ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
-    },
-  }),
-};
-
 export function HeroSection() {
   return (
     <section className="relative min-h-[100dvh] flex items-center pt-24 pb-16 overflow-hidden">
@@ -60,44 +46,22 @@ export function HeroSection() {
         <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-12 items-center">
           {/* Left — copy */}
           <div>
-            <motion.div
-              custom={0}
-              variants={heroTextVariants}
-              initial="hidden"
-              animate="visible"
-            >
+            <div>
               <EyebrowPill>AI-native social media</EyebrowPill>
-            </motion.div>
+            </div>
 
-            <motion.h1
-              custom={1}
-              variants={heroTextVariants}
-              initial="hidden"
-              animate="visible"
-              className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.05] mb-6"
-            >
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.05] mb-6">
               Stop spending{' '}
               <em className="text-orange-500 not-italic">10+ hours a week</em>{' '}
               on social media.
-            </motion.h1>
+            </h1>
 
-            <motion.p
-              custom={2}
-              variants={heroTextVariants}
-              initial="hidden"
-              animate="visible"
-              className="text-lg text-white/50 max-w-lg leading-relaxed mb-10"
-            >
+            <p className="text-lg text-white/50 max-w-lg leading-relaxed mb-10">
               Synthex learns your brand voice, then creates and schedules posts
               across all 9 platforms — automatically.
-            </motion.p>
+            </p>
 
-            <motion.div
-              custom={3}
-              variants={heroTextVariants}
-              initial="hidden"
-              animate="visible"
-            >
+            <div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
                   href="/signup"
@@ -118,30 +82,17 @@ export function HeroSection() {
                 No credit card required · Cancel anytime · 30-day money-back
                 guarantee
               </p>
-            </motion.div>
+            </div>
 
-            <motion.div
-              custom={4}
-              variants={heroTextVariants}
-              initial="hidden"
-              animate="visible"
-            >
+            <div>
               <SocialProofRow />
-            </motion.div>
+            </div>
           </div>
 
           {/* Right — LiveDemoWidget */}
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{
-              delay: 0.5,
-              duration: 0.8,
-              ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
-            }}
-          >
+          <div>
             <LiveDemoWidget />
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

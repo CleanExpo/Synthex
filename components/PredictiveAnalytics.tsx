@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
 import {
   Card,
   CardContent,
@@ -497,10 +496,9 @@ export function PredictiveAnalytics() {
       {/* Key Predictions */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {predictions.map(prediction => (
-          <motion.div
+          <div
             key={prediction.id}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            className="hover:scale-105 transition-transform duration-200"
           >
             <Card variant="glass">
               <CardContent className="p-4">
@@ -544,7 +542,7 @@ export function PredictiveAnalytics() {
                 </p>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         ))}
       </div>
 

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { motion } from 'framer-motion';
 import { Check, Star } from 'lucide-react';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
@@ -164,33 +163,15 @@ export function PricingSection({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {PLANS.map((plan, index) => (
-          <motion.div
+          <div
             key={index}
-            initial={{ y: 50, opacity: 0 }}
-            whileInView={
-              isDesktop
-                ? {
-                    y: plan.isPopular ? -12 : 0,
-                    opacity: 1,
-                    scale: plan.isPopular ? 1.02 : 1.0,
-                  }
-                : { opacity: 1, y: 0 }
-            }
-            viewport={{ once: true }}
-            transition={{
-              duration: 1.6,
-              type: 'spring',
-              stiffness: 100,
-              damping: 30,
-              delay: 0.1 + index * 0.1,
-              opacity: { duration: 0.5 },
-            }}
             className={cn(
               'rounded-2xl border p-6 text-center flex flex-col relative',
               plan.isPopular
                 ? 'border-orange-500/40 bg-orange-500/[0.04] shadow-2xl shadow-orange-500/10 ring-1 ring-orange-500/20'
                 : 'border-white/[0.08] bg-charcoal-800/60 shadow-lg shadow-black/30',
-              !plan.isPopular && 'mt-5'
+              !plan.isPopular && 'mt-5',
+              plan.isPopular && isDesktop && '-translate-y-3 scale-[1.02]'
             )}
           >
             {/* Most Popular badge */}
@@ -289,7 +270,7 @@ export function PricingSection({
                 {plan.description}
               </p>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>

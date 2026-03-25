@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -16,9 +15,7 @@ export interface PricingInteractionProps {
 }
 
 // ---------------------------------------------------------------------------
-// AnimatedPrice — smoothly transitions between two dollar values using
-// framer-motion key-based remount + CSS opacity/translate animation.
-// This replaces @number-flow/react which is not installed.
+// AnimatedPrice — displays the dollar value; transitions handled by CSS.
 // ---------------------------------------------------------------------------
 
 interface AnimatedPriceProps {
@@ -30,18 +27,9 @@ function AnimatedPrice({ value, className }: AnimatedPriceProps) {
   const formatted = value.toFixed(2);
 
   return (
-    <AnimatePresence mode="popLayout" initial={false}>
-      <motion.span
-        key={formatted}
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -6 }}
-        transition={{ duration: 0.22, ease: 'easeOut' }}
-        className={cn('inline-block tabular-nums', className)}
-      >
-        {formatted}
-      </motion.span>
-    </AnimatePresence>
+    <span className={cn('inline-block tabular-nums', className)}>
+      {formatted}
+    </span>
   );
 }
 
@@ -134,18 +122,16 @@ export function PricingInteraction({
       {/* Plan cards */}
       <div className="w-full relative flex flex-col items-center justify-center gap-2">
         {plans.map((plan, index) => (
-          <motion.div
+          <div
             key={plan.name}
-            layout
             className={cn(
               'w-full flex justify-between cursor-pointer border-[0.5px] p-4 rounded-sm',
-              'transition-colors duration-200',
+              'transition-colors duration-200 active:scale-[0.995]',
               active === index
                 ? 'border-orange-500/20 bg-orange-500/[0.04]'
                 : 'border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.02]'
             )}
             onClick={() => handleChangePlan(index)}
-            whileTap={{ scale: 0.995 }}
           >
             <div className="flex flex-col items-start">
               <p className="font-semibold text-base flex items-center gap-2 text-white">
@@ -190,7 +176,7 @@ export function PricingInteraction({
                 }}
               />
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
 

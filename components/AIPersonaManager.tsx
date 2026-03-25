@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
 import {
   Card,
   CardContent,
@@ -42,7 +41,6 @@ import {
   type ContentPreferences,
 } from '@/lib/ai-persona-learning';
 import { notify } from '@/lib/notifications';
-import { fadeInUp, scaleIn } from '@/lib/animations';
 
 export function AIPersonaManager() {
   const [personas, setPersonas] = useState<PersonaProfile[]>([]);
@@ -320,10 +318,7 @@ export function AIPersonaManager() {
 
       {/* Create Form */}
       {showCreateForm && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <div>
           <Card variant="glass">
             <CardHeader>
               <CardTitle>Create New Persona</CardTitle>
@@ -355,17 +350,16 @@ export function AIPersonaManager() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       )}
 
       {/* Persona List */}
       {personas.length > 0 && (
         <div className="grid gap-4 md:grid-cols-3">
           {personas.map(persona => (
-            <motion.div
+            <div
               key={persona.id}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className="hover:scale-105 transition-transform duration-200"
             >
               <Card
                 variant="glass"
@@ -423,7 +417,7 @@ export function AIPersonaManager() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           ))}
         </div>
       )}

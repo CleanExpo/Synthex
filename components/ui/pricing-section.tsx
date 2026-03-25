@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { BadgeCheck, ArrowRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import { cn } from '@/lib/utils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -46,11 +46,7 @@ function Tab({ text, selected, setSelected, discount = false }: TabProps) {
     >
       <span className="relative z-10">{text}</span>
       {selected && (
-        <motion.span
-          layoutId="pricing-tab"
-          transition={{ type: 'spring', duration: 0.4 }}
-          className="absolute inset-0 z-0 rounded-sm bg-white/[0.06] border-[0.5px] border-white/[0.08]"
-        />
+        <span className="absolute inset-0 z-0 rounded-sm bg-white/[0.06] border-[0.5px] border-white/[0.08]" />
       )}
       {discount && (
         <span
@@ -114,40 +110,32 @@ function PricingCard({ tier, paymentFrequency }: PricingCardProps) {
 
       {/* Price */}
       <div className="relative h-10 z-10">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`${tier.id}-${paymentFrequency}`}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2 }}
-          >
-            {typeof price === 'number' ? (
-              <>
-                <span
-                  className={cn(
-                    'text-3xl font-semibold',
-                    isHighlighted ? 'text-white' : 'text-white'
-                  )}
-                >
-                  ${price}
-                </span>
-                <p className="mt-0.5 text-[11px] text-white/40">
-                  AUD / month per user
-                </p>
-              </>
-            ) : (
+        <div key={`${tier.id}-${paymentFrequency}`}>
+          {typeof price === 'number' ? (
+            <>
               <span
                 className={cn(
                   'text-3xl font-semibold',
-                  isHighlighted ? 'text-orange-400' : 'text-white'
+                  isHighlighted ? 'text-white' : 'text-white'
                 )}
               >
-                {price}
+                ${price}
               </span>
-            )}
-          </motion.div>
-        </AnimatePresence>
+              <p className="mt-0.5 text-[11px] text-white/40">
+                AUD / month per user
+              </p>
+            </>
+          ) : (
+            <span
+              className={cn(
+                'text-3xl font-semibold',
+                isHighlighted ? 'text-orange-400' : 'text-white'
+              )}
+            >
+              {price}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Features */}

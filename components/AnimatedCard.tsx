@@ -1,8 +1,6 @@
 'use client';
 
-import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { ReactNode } from 'react';
-import { cardHover, fadeInUp, tapScale } from '@/lib/animations';
 
 interface AnimatedCardProps {
   children: ReactNode;
@@ -23,63 +21,31 @@ export function AnimatedCard({
   tilt = false,
   glow = false,
 }: AnimatedCardProps) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  const rotateX = useSpring(useTransform(y, [-100, 100], [10, -10]));
-  const rotateY = useSpring(useTransform(x, [-100, 100], [-10, 10]));
-
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!tilt) return;
-
-    const rect = event.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    x.set(event.clientX - centerX);
-    y.set(event.clientY - centerY);
+    // tilt functionality removed (framer-motion dependency removed)
   };
 
   const handleMouseLeave = () => {
-    if (!tilt) return;
-    x.set(0);
-    y.set(0);
+    // tilt functionality removed (framer-motion dependency removed)
   };
 
   return (
-    <motion.div
+    <div
       className={`bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg ${className}`}
-      variants={fadeInUp}
-      initial="hidden"
-      animate="visible"
-      whileHover={hover ? cardHover : undefined}
-      whileTap={tap ? tapScale : undefined}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      style={
-        tilt
-          ? {
-              rotateX,
-              rotateY,
-              transformStyle: 'preserve-3d',
-            }
-          : undefined
-      }
-      transition={{ delay }}
     >
       {glow && (
-        <motion.div
-          className="absolute inset-0 rounded-lg opacity-0"
-          whileHover={{
-            opacity: 1,
+        <div
+          className="absolute inset-0 rounded-lg opacity-0 hover:opacity-100 transition-opacity duration-300"
+          style={{
             background:
               'radial-gradient(circle at center, rgba(245, 158, 11, 0.15), transparent)',
           }}
-          transition={{ duration: 0.3 }}
         />
       )}
       {children}
-    </motion.div>
+    </div>
   );
 }
 
@@ -91,38 +57,21 @@ export function AnimatedListItem({
   children: ReactNode;
   index?: number;
 }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
-      transition={{
-        delay: index * 0.05,
-        duration: 0.3,
-      }}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div>{children}</div>;
 }
 
 // Animated counter
 export function AnimatedCounter({ value }: { value: number }) {
-  const count = useSpring(value, { stiffness: 100, damping: 10 });
-  const rounded = useTransform(count, latest => Math.round(latest));
-
-  return <motion.span>{rounded}</motion.span>;
+  return <span>{value}</span>;
 }
 
 // Animated progress bar
 export function AnimatedProgress({ value }: { value: number }) {
   return (
     <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-      <motion.div
+      <div
         className="h-full bg-gradient-to-r from-orange-500 to-orange-500"
-        initial={{ width: '0%' }}
-        animate={{ width: `${value}%` }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
+        style={{ width: `${value}%` }}
       />
     </div>
   );

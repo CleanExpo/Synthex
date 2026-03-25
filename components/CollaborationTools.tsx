@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Card,
   CardContent,
@@ -46,7 +45,6 @@ import {
   type ActiveUser,
 } from '@/lib/collaboration';
 import { notify } from '@/lib/notifications';
-import { fadeInUp, scaleIn } from '@/lib/animations';
 
 // Get current user from localStorage
 const getCurrentUser = (): Participant => {
@@ -248,17 +246,12 @@ export function CollaborationTools({
   return (
     <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-4">
       {/* Online Users */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="flex items-center gap-2"
-      >
+      <div className="flex items-center gap-2">
         <div className="flex -space-x-2">
           {onlineUsers.slice(0, 5).map(user => (
-            <motion.div
+            <div
               key={user.id}
-              whileHover={{ scale: 1.1, zIndex: 10 }}
-              className="relative"
+              className="relative hover:scale-110 transition-transform duration-200"
             >
               <Avatar className="h-8 w-8 border-2 border-background">
                 <AvatarImage src={user.avatar} />
@@ -271,7 +264,7 @@ export function CollaborationTools({
                   <Type className="h-3 w-3 text-gray-600 animate-pulse" />
                 </div>
               )}
-            </motion.div>
+            </div>
           ))}
         </div>
 
@@ -285,7 +278,7 @@ export function CollaborationTools({
           {onlineUsers.length} {onlineUsers.length === 1 ? 'user' : 'users'}{' '}
           online
         </span>
-      </motion.div>
+      </div>
 
       {/* Action Buttons */}
       <div className="flex gap-2">
@@ -317,159 +310,143 @@ export function CollaborationTools({
       </div>
 
       {/* Comments Panel */}
-      <AnimatePresence>
-        {showComments && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="w-96 max-h-[600px] bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg shadow-2xl overflow-hidden"
-          >
-            <div className="p-4 border-b border-white/10">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-white">Comments</h3>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setShowComments(false)}
-                >
-                  <XCircle className="h-4 w-4" />
-                </Button>
+      {showComments && (
+        <div className="w-96 max-h-[600px] bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg shadow-2xl overflow-hidden">
+          <div className="p-4 border-b border-white/10">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Comments</h3>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowComments(false)}
+              >
+                <XCircle className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto max-h-[400px] p-4 space-y-4">
+            {comments.map(comment => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                currentUserId={currentUser.id}
+                onReply={id => setReplyingTo(id)}
+                onReact={addReaction}
+                onResolve={resolveComment}
+                replyingTo={replyingTo === comment.id}
+                replyContent={replyContent}
+                onReplyContentChange={setReplyContent}
+                onSendReply={() => sendReply(comment.id)}
+              />
+            ))}
+
+            {comments.length === 0 && (
+              <div className="text-center py-8 text-gray-300">
+                <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No comments yet</p>
+                <p className="text-sm mt-1">Be the first to comment!</p>
               </div>
-            </div>
+            )}
+          </div>
 
-            <div className="flex-1 overflow-y-auto max-h-[400px] p-4 space-y-4">
-              {comments.map(comment => (
-                <CommentItem
-                  key={comment.id}
-                  comment={comment}
-                  currentUserId={currentUser.id}
-                  onReply={id => setReplyingTo(id)}
-                  onReact={addReaction}
-                  onResolve={resolveComment}
-                  replyingTo={replyingTo === comment.id}
-                  replyContent={replyContent}
-                  onReplyContentChange={setReplyContent}
-                  onSendReply={() => sendReply(comment.id)}
-                />
-              ))}
-
-              {comments.length === 0 && (
-                <div className="text-center py-8 text-gray-300">
-                  <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No comments yet</p>
-                  <p className="text-sm mt-1">Be the first to comment!</p>
-                </div>
-              )}
+          <div className="p-4 border-t border-white/10">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Add a comment... Use @ to mention"
+                value={newComment}
+                onChange={e => setNewComment(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendComment();
+                  }
+                  handleTyping();
+                }}
+                className="flex-1 bg-white/5 border-white/10"
+              />
+              <Button
+                size="sm"
+                onClick={sendComment}
+                disabled={!newComment.trim()}
+                className="gradient-primary"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
             </div>
-
-            <div className="p-4 border-t border-white/10">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add a comment... Use @ to mention"
-                  value={newComment}
-                  onChange={e => setNewComment(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      sendComment();
-                    }
-                    handleTyping();
-                  }}
-                  className="flex-1 bg-white/5 border-white/10"
-                />
-                <Button
-                  size="sm"
-                  onClick={sendComment}
-                  disabled={!newComment.trim()}
-                  className="gradient-primary"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      )}
 
       {/* Notifications Panel */}
-      <AnimatePresence>
-        {showNotifications && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="w-80 max-h-[400px] bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg shadow-2xl overflow-hidden"
-          >
-            <div className="p-4 border-b border-white/10">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-white">Notifications</h3>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setShowNotifications(false)}
-                >
-                  <XCircle className="h-4 w-4" />
-                </Button>
-              </div>
+      {showNotifications && (
+        <div className="w-80 max-h-[400px] bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg shadow-2xl overflow-hidden">
+          <div className="p-4 border-b border-white/10">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-white">Notifications</h3>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowNotifications(false)}
+              >
+                <XCircle className="h-4 w-4" />
+              </Button>
             </div>
+          </div>
 
-            <div className="overflow-y-auto max-h-[320px]">
-              {notifications.map(notification => (
-                <div
-                  key={notification.id}
-                  className={`p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors ${
-                    !notification.read ? 'bg-orange-500/10' : ''
-                  }`}
-                  onClick={() => markNotificationRead(notification.id)}
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`p-1.5 rounded-full ${
-                        notification.type === 'mention'
-                          ? 'bg-orange-500/20'
-                          : notification.type === 'comment'
-                            ? 'bg-blue-500/20'
-                            : notification.type === 'reply'
-                              ? 'bg-green-500/20'
-                              : 'bg-gray-500/20'
-                      }`}
-                    >
-                      {notification.type === 'mention' && (
-                        <AtSign className="h-3 w-3 text-orange-400" />
-                      )}
-                      {notification.type === 'comment' && (
-                        <MessageSquare className="h-3 w-3 text-blue-400" />
-                      )}
-                      {notification.type === 'reply' && (
-                        <Reply className="h-3 w-3 text-green-400" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-white">
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-gray-300 mt-1">
-                        {new Date(notification.timestamp).toLocaleTimeString()}
-                      </p>
-                    </div>
-                    {!notification.read && (
-                      <div className="w-2 h-2 bg-orange-500 rounded-full" />
+          <div className="overflow-y-auto max-h-[320px]">
+            {notifications.map(notification => (
+              <div
+                key={notification.id}
+                className={`p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors ${
+                  !notification.read ? 'bg-orange-500/10' : ''
+                }`}
+                onClick={() => markNotificationRead(notification.id)}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`p-1.5 rounded-full ${
+                      notification.type === 'mention'
+                        ? 'bg-orange-500/20'
+                        : notification.type === 'comment'
+                          ? 'bg-blue-500/20'
+                          : notification.type === 'reply'
+                            ? 'bg-green-500/20'
+                            : 'bg-gray-500/20'
+                    }`}
+                  >
+                    {notification.type === 'mention' && (
+                      <AtSign className="h-3 w-3 text-orange-400" />
+                    )}
+                    {notification.type === 'comment' && (
+                      <MessageSquare className="h-3 w-3 text-blue-400" />
+                    )}
+                    {notification.type === 'reply' && (
+                      <Reply className="h-3 w-3 text-green-400" />
                     )}
                   </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-white">{notification.message}</p>
+                    <p className="text-xs text-gray-300 mt-1">
+                      {new Date(notification.timestamp).toLocaleTimeString()}
+                    </p>
+                  </div>
+                  {!notification.read && (
+                    <div className="w-2 h-2 bg-orange-500 rounded-full" />
+                  )}
                 </div>
-              ))}
+              </div>
+            ))}
 
-              {notifications.length === 0 && (
-                <div className="text-center py-8 text-gray-300">
-                  <Bell className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No notifications</p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {notifications.length === 0 && (
+              <div className="text-center py-8 text-gray-300">
+                <Bell className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No notifications</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

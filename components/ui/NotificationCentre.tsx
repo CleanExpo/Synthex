@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import useSWR from 'swr';
 import {
   X,
@@ -221,16 +220,11 @@ export function NotificationCentre({
   };
 
   return (
-    <AnimatePresence>
+    <>
       {/* Backdrop */}
       {isOpen && (
-        <motion.div
-          key="nc-backdrop"
+        <div
           className="fixed inset-0 z-50 bg-black/40"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
           onClick={onClose}
           aria-hidden="true"
         />
@@ -238,16 +232,11 @@ export function NotificationCentre({
 
       {/* Panel */}
       {isOpen && (
-        <motion.div
-          key="nc-panel"
+        <div
           role="dialog"
           aria-modal="true"
           aria-label="Notification Centre"
           className="fixed right-0 top-0 z-50 h-full w-full sm:w-[420px] bg-black/80 backdrop-blur-2xl border-l border-white/[0.06] flex flex-col"
-          initial={{ x: '100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '100%' }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.08] shrink-0">
@@ -311,8 +300,8 @@ export function NotificationCentre({
               ))
             )}
           </div>
-        </motion.div>
+        </div>
       )}
-    </AnimatePresence>
+    </>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface GlowCardProps {
@@ -12,24 +11,17 @@ interface GlowCardProps {
 const GlowCard = React.forwardRef<HTMLDivElement, GlowCardProps>(
   ({ children, className }, ref) => {
     return (
-      <motion.div
+      <div
         ref={ref}
-        initial={{
-          boxShadow: '0 0 0px rgba(255, 184, 123, 0)',
-        }}
-        whileHover={{
-          boxShadow:
-            '0 0 24px rgba(255, 184, 123, 0.18), 0 0 48px rgba(255, 184, 123, 0.06)',
-        }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
         className={cn(
           'relative rounded-sm border-[0.5px] border-white/[0.06] bg-[#080e1a]',
           'hover:border-orange-500/30 transition-colors duration-300',
+          'hover:shadow-[0_0_24px_rgba(255,184,123,0.18),0_0_48px_rgba(255,184,123,0.06)]',
           className
         )}
       >
         {children}
-      </motion.div>
+      </div>
     );
   }
 );

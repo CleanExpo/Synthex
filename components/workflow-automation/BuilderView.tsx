@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef } from 'react';
-import { motion } from 'framer-motion';
 import {
   Card,
   CardContent,
@@ -217,27 +216,10 @@ export function BuilderView({
                 <>
                   {/* Render Nodes */}
                   {nodes.map(node => (
-                    <motion.div
+                    <div
                       key={node.id}
                       className="absolute"
                       style={{ left: node.position.x, top: node.position.y }}
-                      drag
-                      dragMomentum={false}
-                      onDragEnd={(e, info) => {
-                        setNodes(
-                          nodes.map(n =>
-                            n.id === node.id
-                              ? {
-                                  ...n,
-                                  position: {
-                                    x: info.point.x,
-                                    y: info.point.y,
-                                  },
-                                }
-                              : n
-                          )
-                        );
-                      }}
                     >
                       <Card variant="glass" className="cursor-move">
                         <CardContent className="p-3">
@@ -256,7 +238,7 @@ export function BuilderView({
                           </div>
                         </CardContent>
                       </Card>
-                    </motion.div>
+                    </div>
                   ))}
 
                   {/* Render Connections */}

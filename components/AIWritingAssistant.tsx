@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Card,
   CardContent,
@@ -55,7 +54,6 @@ import {
   type AIWritingResponse,
 } from '@/lib/ai-writing-assistant';
 import { notify } from '@/lib/notifications';
-import { fadeInUp, scaleIn } from '@/lib/animations';
 
 interface AIWritingAssistantProps {
   initialContent?: string;
@@ -232,57 +230,41 @@ export function AIWritingAssistant({
 
       <CardContent className="space-y-6">
         {/* Settings Panel */}
-        <AnimatePresence>
-          {showSettings && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="p-4 bg-white/5 rounded-lg space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-300">Use Emojis</span>
-                    <Switch
-                      checked={useEmojis}
-                      onCheckedChange={setUseEmojis}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-300">Use Hashtags</span>
-                    <Switch
-                      checked={useHashtags}
-                      onCheckedChange={setUseHashtags}
-                    />
-                  </div>
+        {showSettings && (
+          <div className="overflow-hidden">
+            <div className="p-4 bg-white/5 rounded-lg space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-300">Use Emojis</span>
+                  <Switch checked={useEmojis} onCheckedChange={setUseEmojis} />
                 </div>
-
-                <div>
-                  <label className="text-sm text-gray-300">
-                    Target Audience
-                  </label>
-                  <Select value={audience} onValueChange={setAudience}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="general">General</SelectItem>
-                      <SelectItem value="professionals">
-                        Professionals
-                      </SelectItem>
-                      <SelectItem value="students">Students</SelectItem>
-                      <SelectItem value="entrepreneurs">
-                        Entrepreneurs
-                      </SelectItem>
-                      <SelectItem value="developers">Developers</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-300">Use Hashtags</span>
+                  <Switch
+                    checked={useHashtags}
+                    onCheckedChange={setUseHashtags}
+                  />
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+
+              <div>
+                <label className="text-sm text-gray-300">Target Audience</label>
+                <Select value={audience} onValueChange={setAudience}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="professionals">Professionals</SelectItem>
+                    <SelectItem value="students">Students</SelectItem>
+                    <SelectItem value="entrepreneurs">Entrepreneurs</SelectItem>
+                    <SelectItem value="developers">Developers</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Input Section */}
         <div className="space-y-4">
@@ -357,12 +339,7 @@ export function AIWritingAssistant({
 
         {/* Generated Content */}
         {content && (
-          <motion.div
-            variants={fadeInUp}
-            initial="hidden"
-            animate="visible"
-            className="space-y-4"
-          >
+          <div className="space-y-4">
             <div className="p-4 bg-white/5 rounded-lg">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-gray-300">
@@ -496,7 +473,7 @@ export function AIWritingAssistant({
                 ))}
               </div>
             )}
-          </motion.div>
+          </div>
         )}
       </CardContent>
     </Card>

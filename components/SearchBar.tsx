@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, X, Filter, Loader2 } from '@/components/icons';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +15,6 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { useDebounce } from 'react-use';
-import { fadeInUp, staggerItem } from '@/lib/animations';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/hooks/useToast';
 
@@ -245,115 +243,88 @@ export function SearchBar({
       </div>
 
       {/* Filter Panel */}
-      <AnimatePresence>
-        {showFilterPanel && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="mt-2 p-3 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg"
-          >
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs text-gray-300 mb-2">Filter by type:</p>
-                <div className="flex flex-wrap gap-2">
-                  {['content', 'campaign', 'user', 'template', 'analytics'].map(
-                    type => (
-                      <Badge
-                        key={type}
-                        variant={
-                          filters.type?.includes(type) ? 'default' : 'outline'
-                        }
-                        className="cursor-pointer"
-                        onClick={() => toggleFilter(type)}
-                      >
-                        {getTypeIcon(type)} {type}
-                      </Badge>
-                    )
-                  )}
-                </div>
+      {showFilterPanel && (
+        <div className="mt-2 p-3 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg">
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs text-gray-300 mb-2">Filter by type:</p>
+              <div className="flex flex-wrap gap-2">
+                {['content', 'campaign', 'user', 'template', 'analytics'].map(
+                  type => (
+                    <Badge
+                      key={type}
+                      variant={
+                        filters.type?.includes(type) ? 'default' : 'outline'
+                      }
+                      className="cursor-pointer"
+                      onClick={() => toggleFilter(type)}
+                    >
+                      {getTypeIcon(type)} {type}
+                    </Badge>
+                  )
+                )}
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      )}
 
       {/* Search Results */}
-      <AnimatePresence>
-        {showResults && results.length > 0 && (
-          <motion.div
-            variants={fadeInUp}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-            className="absolute top-full mt-2 w-full z-50 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg shadow-xl max-h-96 overflow-y-auto"
-          >
-            <div className="p-2">
-              {results.map((result, index) => (
-                <motion.div
-                  key={result.id}
-                  variants={staggerItem}
-                  custom={index}
-                  onClick={() => handleResultClick(result)}
-                  className="p-3 hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">{getTypeIcon(result.type)}</span>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-white">
-                          {result.title}
-                        </h4>
-                        <Badge
-                          className={`text-xs ${getTypeColor(result.type)}`}
-                        >
-                          {result.type}
-                        </Badge>
-                      </div>
-                      {result.description && (
-                        <p className="text-sm text-gray-300 mb-2">
-                          {result.description}
-                        </p>
-                      )}
-                      {result.tags && (
-                        <div className="flex gap-1">
-                          {result.tags.map(tag => (
-                            <Badge
-                              key={tag}
-                              variant="outline"
-                              className="text-xs"
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
+      {showResults && results.length > 0 && (
+        <div className="absolute top-full mt-2 w-full z-50 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg shadow-xl max-h-96 overflow-y-auto">
+          <div className="p-2">
+            {results.map((result, index) => (
+              <div
+                key={result.id}
+                onClick={() => handleResultClick(result)}
+                className="p-3 hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">{getTypeIcon(result.type)}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-medium text-white">{result.title}</h4>
+                      <Badge className={`text-xs ${getTypeColor(result.type)}`}>
+                        {result.type}
+                      </Badge>
                     </div>
+                    {result.description && (
+                      <p className="text-sm text-gray-300 mb-2">
+                        {result.description}
+                      </p>
+                    )}
+                    {result.tags && (
+                      <div className="flex gap-1">
+                        {result.tags.map(tag => (
+                          <Badge
+                            key={tag}
+                            variant="outline"
+                            className="text-xs"
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-        {showResults &&
-          query.length > 2 &&
-          results.length === 0 &&
-          !isLoading && (
-            <motion.div
-              variants={fadeInUp}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              className="absolute top-full mt-2 w-full z-50 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg shadow-xl p-8 text-center"
-            >
-              <p className="text-gray-300">No results found for "{query}"</p>
-              <p className="text-sm text-gray-500 mt-2">
-                Try adjusting your filters or search terms
-              </p>
-            </motion.div>
-          )}
-      </AnimatePresence>
+      {showResults &&
+        query.length > 2 &&
+        results.length === 0 &&
+        !isLoading && (
+          <div className="absolute top-full mt-2 w-full z-50 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg shadow-xl p-8 text-center">
+            <p className="text-gray-300">No results found for "{query}"</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Try adjusting your filters or search terms
+            </p>
+          </div>
+        )}
     </div>
   );
 }

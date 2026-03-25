@@ -1,7 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
-
 /** Testimonials — premium candy-coloured cards with glass morphism and gradient styling. */
 
 const TESTIMONIALS = [
@@ -56,10 +54,7 @@ export function Testimonials() {
 
           <div className="relative z-10">
             {/* Large decorative quote mark with gradient */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
+            <div
               className="font-black text-[8rem] leading-none mb-4 select-none bg-clip-text text-transparent"
               style={{
                 backgroundImage:
@@ -67,18 +62,12 @@ export function Testimonials() {
               }}
             >
               &ldquo;
-            </motion.div>
+            </div>
 
             {/* Testimonial cards */}
             <div className="space-y-10">
               {TESTIMONIALS.map((t, idx) => (
-                <motion.div
-                  key={t.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  viewport={{ once: true }}
-                >
+                <div key={t.name}>
                   <blockquote className="text-lg md:text-xl lg:text-2xl font-bold tracking-tight text-white leading-snug mb-6 max-w-4xl">
                     {t.quote}
                   </blockquote>
@@ -113,7 +102,7 @@ export function Testimonials() {
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>

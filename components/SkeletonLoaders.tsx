@@ -1,9 +1,7 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
-import { shimmer, skeletonPulse } from '@/lib/animations';
 
 // Dashboard skeleton
 export function DashboardSkeleton() {
@@ -20,7 +18,7 @@ export function DashboardSkeleton() {
           <Skeleton className="h-10 w-32" />
         </div>
       </div>
-      
+
       {/* Stats grid skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
@@ -36,7 +34,7 @@ export function DashboardSkeleton() {
           </Card>
         ))}
       </div>
-      
+
       {/* Charts skeleton */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card variant="glass" className="p-6">
@@ -56,10 +54,7 @@ export function DashboardSkeleton() {
 export function PostCardSkeleton() {
   return (
     <Card variant="glass" className="p-4">
-      <motion.div 
-        className="space-y-3"
-        animate={skeletonPulse}
-      >
+      <div className="space-y-3">
         {/* Header */}
         <div className="flex items-center gap-3">
           <Skeleton className="h-10 w-10 rounded-full" />
@@ -69,24 +64,24 @@ export function PostCardSkeleton() {
           </div>
           <Skeleton className="h-8 w-8 rounded" />
         </div>
-        
+
         {/* Content */}
         <div className="space-y-2">
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-5/6" />
           <Skeleton className="h-4 w-4/6" />
         </div>
-        
+
         {/* Image */}
         <Skeleton className="h-48 w-full rounded-lg" />
-        
+
         {/* Actions */}
         <div className="flex gap-4 pt-2">
           <Skeleton className="h-8 w-16" />
           <Skeleton className="h-8 w-16" />
           <Skeleton className="h-8 w-16" />
         </div>
-      </motion.div>
+      </div>
     </Card>
   );
 }
@@ -96,12 +91,7 @@ export function ContentListSkeleton({ count = 5 }: { count?: number }) {
   return (
     <div className="space-y-4">
       {[...Array(count)].map((_, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: i * 0.1 }}
-        >
+        <div key={i}>
           <Card variant="glass" className="p-4">
             <div className="flex items-center gap-4">
               <Skeleton className="h-16 w-16 rounded-lg" />
@@ -116,7 +106,7 @@ export function ContentListSkeleton({ count = 5 }: { count?: number }) {
               <Skeleton className="h-8 w-20" />
             </div>
           </Card>
-        </motion.div>
+        </div>
       ))}
     </div>
   );
@@ -138,7 +128,7 @@ export function AnalyticsSkeleton() {
           </Card>
         ))}
       </div>
-      
+
       {/* Main chart */}
       <Card variant="glass" className="p-6">
         <div className="space-y-4">
@@ -175,7 +165,7 @@ export function ProfileSkeleton() {
           </div>
         </div>
       </Card>
-      
+
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[...Array(3)].map((_, i) => (
@@ -185,7 +175,7 @@ export function ProfileSkeleton() {
           </Card>
         ))}
       </div>
-      
+
       {/* Content grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {[...Array(6)].map((_, i) => (
@@ -197,7 +187,13 @@ export function ProfileSkeleton() {
 }
 
 // Table skeleton
-export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
+export function TableSkeleton({
+  rows = 5,
+  cols = 4,
+}: {
+  rows?: number;
+  cols?: number;
+}) {
   return (
     <Card variant="glass" className="overflow-hidden">
       {/* Header */}
@@ -208,16 +204,16 @@ export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: nu
           ))}
         </div>
       </div>
-      
+
       {/* Rows */}
       <div className="divide-y divide-white/5">
         {[...Array(rows)].map((_, rowIndex) => (
           <div key={rowIndex} className="p-4">
             <div className="grid grid-cols-4 gap-4">
               {[...Array(cols)].map((_, colIndex) => (
-                <Skeleton 
-                  key={colIndex} 
-                  className={`h-4 ${colIndex === 0 ? 'w-32' : 'w-20'}`} 
+                <Skeleton
+                  key={colIndex}
+                  className={`h-4 ${colIndex === 0 ? 'w-32' : 'w-20'}`}
                 />
               ))}
             </div>
@@ -235,7 +231,7 @@ export function FormSkeleton() {
       <div className="space-y-6">
         {/* Title */}
         <Skeleton className="h-8 w-48" />
-        
+
         {/* Form fields */}
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
@@ -245,7 +241,7 @@ export function FormSkeleton() {
             </div>
           ))}
         </div>
-        
+
         {/* Buttons */}
         <div className="flex gap-3 justify-end">
           <Skeleton className="h-10 w-24" />
@@ -298,7 +294,7 @@ export function SidebarSkeleton() {
     <div className="w-64 p-4 space-y-4">
       {/* Logo */}
       <Skeleton className="h-10 w-32 mb-6" />
-      
+
       {/* Navigation items */}
       <div className="space-y-2">
         {[...Array(6)].map((_, i) => (
@@ -308,7 +304,7 @@ export function SidebarSkeleton() {
           </div>
         ))}
       </div>
-      
+
       {/* User section */}
       <div className="mt-auto pt-4 border-t border-white/10">
         <div className="flex items-center gap-3">
@@ -324,38 +320,31 @@ export function SidebarSkeleton() {
 }
 
 // Generic skeleton wrapper with shimmer effect
-export function ShimmerSkeleton({ 
+export function ShimmerSkeleton({
   className = '',
-  children 
-}: { 
+  children,
+}: {
   className?: string;
   children?: React.ReactNode;
 }) {
   return (
-    <motion.div
-      className={`relative overflow-hidden ${className}`}
-      animate={shimmer}
-      style={{
-        background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%)',
-        backgroundSize: '200% 100%'
-      }}
-    >
+    <div className={`relative overflow-hidden ${className}`}>
       {children || <Skeleton className="h-full w-full" />}
-    </motion.div>
+    </div>
   );
 }
 
 // Skeleton provider for consistent styling
-export function SkeletonProvider({ 
+export function SkeletonProvider({
   children,
-  loading = true
-}: { 
+  loading = true,
+}: {
   children: React.ReactNode;
   loading?: boolean;
 }) {
   if (loading) {
     return <div className="animate-pulse">{children}</div>;
   }
-  
+
   return <>{children}</>;
 }

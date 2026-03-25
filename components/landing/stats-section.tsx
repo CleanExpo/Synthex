@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { motion, useInView } from 'framer-motion';
 
 const STATS = [
   {
@@ -83,42 +82,34 @@ function CountUpValue({
   );
 }
 
-const containerVariants = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.15 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
-  },
-};
-
 /** Stats strip — 4 metrics with count-up animation on scroll */
 export function StatsSection() {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-80px' });
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '-80px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <section className="py-20 border-y border-white/[0.04] bg-charcoal-800/30 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-6">
-        <motion.div
-          ref={ref}
-          className="grid grid-cols-2 lg:grid-cols-4"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-80px' }}
-        >
+        <div ref={ref} className="grid grid-cols-2 lg:grid-cols-4">
           {STATS.map((stat, index) => (
-            <motion.div
+            <div
               key={stat.label}
-              variants={itemVariants}
               className={`flex flex-col items-center justify-center text-center py-10 px-6 ${
                 index < STATS.length - 1 ? 'border-r border-white/[0.04]' : ''
               }`}
@@ -133,9 +124,9 @@ export function StatsSection() {
               <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/50">
                 {stat.label}
               </span>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

@@ -2,7 +2,6 @@
 
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Upload,
   X,
@@ -21,7 +20,6 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/useToast';
-import { fadeInUp, popIn } from '@/lib/animations';
 
 interface FileWithPreview extends File {
   preview?: string;
@@ -213,18 +211,14 @@ export function FileUpload({
         <input {...getInputProps()} />
 
         <div className="p-8 text-center">
-          <motion.div
-            animate={isDragActive ? { scale: 1.1 } : { scale: 1 }}
-            transition={{ duration: 0.2 }}
-            className="mx-auto w-12 h-12 mb-4"
-          >
+          <div className="mx-auto w-12 h-12 mb-4">
             <Upload
               className={cn(
                 'w-full h-full',
                 isDragActive ? 'text-orange-400' : 'text-gray-300'
               )}
             />
-          </motion.div>
+          </div>
 
           <p className="text-white font-medium mb-2">
             {isDragActive
@@ -251,16 +245,9 @@ export function FileUpload({
         </div>
 
         {/* Upload animation overlay */}
-        <AnimatePresence>
-          {isDragActive && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-orange-500/20 pointer-events-none"
-            />
-          )}
-        </AnimatePresence>
+        {isDragActive && (
+          <div className="absolute inset-0 bg-orange-500/20 pointer-events-none" />
+        )}
       </div>
 
       {/* File list */}
@@ -280,77 +267,68 @@ export function FileUpload({
             </Button>
           </div>
 
-          <AnimatePresence>
-            {files.map((file, index) => (
-              <motion.div
-                key={`${file.name}-${index}`}
-                variants={fadeInUp}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-                className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] p-3 rounded-lg"
-              >
-                <div className="flex items-center gap-3">
-                  {/* Preview */}
-                  {showPreview && file.preview ? (
-                    <img
-                      src={file.preview}
-                      alt={file.name}
-                      className="w-12 h-12 rounded object-cover"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded bg-white/10 flex items-center justify-center">
-                      {getFileIcon(file)}
-                    </div>
+          {files.map((file, index) => (
+            <div
+              key={`${file.name}-${index}`}
+              className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] p-3 rounded-lg"
+            >
+              <div className="flex items-center gap-3">
+                {/* Preview */}
+                {showPreview && file.preview ? (
+                  <img
+                    src={file.preview}
+                    alt={file.name}
+                    className="w-12 h-12 rounded object-cover"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded bg-white/10 flex items-center justify-center">
+                    {getFileIcon(file)}
+                  </div>
+                )}
+
+                {/* File info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">
+                    {file.name}
+                  </p>
+                  <p className="text-xs text-gray-300">
+                    {formatBytes(file.size)}
+                  </p>
+
+                  {/* Progress bar */}
+                  {file.status === 'uploading' && (
+                    <Progress value={file.progress || 0} className="mt-1 h-1" />
                   )}
-
-                  {/* File info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">
-                      {file.name}
-                    </p>
-                    <p className="text-xs text-gray-300">
-                      {formatBytes(file.size)}
-                    </p>
-
-                    {/* Progress bar */}
-                    {file.status === 'uploading' && (
-                      <Progress
-                        value={file.progress || 0}
-                        className="mt-1 h-1"
-                      />
-                    )}
-                  </div>
-
-                  {/* Status icon */}
-                  <div className="flex items-center gap-2">
-                    {file.status === 'uploading' && (
-                      <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
-                    )}
-                    {file.status === 'success' && (
-                      <CheckCircle className="h-4 w-4 text-green-400" />
-                    )}
-                    {file.status === 'error' && (
-                      <AlertCircle className="h-4 w-4 text-red-400" />
-                    )}
-
-                    <button
-                      onClick={() => removeFile(index)}
-                      disabled={file.status === 'uploading'}
-                      className="p-1 hover:bg-white/10 rounded transition-colors disabled:opacity-50"
-                    >
-                      <X className="h-4 w-4 text-gray-300" />
-                    </button>
-                  </div>
                 </div>
 
-                {/* Error message */}
-                {file.error && (
-                  <p className="text-xs text-red-400 mt-2">{file.error}</p>
-                )}
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                {/* Status icon */}
+                <div className="flex items-center gap-2">
+                  {file.status === 'uploading' && (
+                    <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
+                  )}
+                  {file.status === 'success' && (
+                    <CheckCircle className="h-4 w-4 text-green-400" />
+                  )}
+                  {file.status === 'error' && (
+                    <AlertCircle className="h-4 w-4 text-red-400" />
+                  )}
+
+                  <button
+                    onClick={() => removeFile(index)}
+                    disabled={file.status === 'uploading'}
+                    className="p-1 hover:bg-white/10 rounded transition-colors disabled:opacity-50"
+                  >
+                    <X className="h-4 w-4 text-gray-300" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Error message */}
+              {file.error && (
+                <p className="text-xs text-red-400 mt-2">{file.error}</p>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>

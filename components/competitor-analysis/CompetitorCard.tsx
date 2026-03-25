@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -56,7 +55,7 @@ export function CompetitorCard({
   onToggleComparison,
 }: CompetitorCardProps) {
   return (
-    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+    <div className="hover:scale-105 transition-transform duration-200">
       <Card
         variant="glass"
         className={`cursor-pointer ${
@@ -161,7 +160,7 @@ export function CompetitorCard({
           </div>
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 

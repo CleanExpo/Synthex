@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Brain, Workflow, TrendingUp } from 'lucide-react';
 
 const FEATURES = [
@@ -18,20 +17,6 @@ const FEATURES = [
   },
 ];
 
-const containerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.2 } },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
-  },
-};
-
 /** Unified Social Intelligence — 2-column section with animated bar chart visual */
 export function IntelligenceSection() {
   return (
@@ -39,50 +24,32 @@ export function IntelligenceSection() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Left — content */}
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-60px' }}
-          >
+          <div>
             {/* Badge */}
-            <motion.div
-              variants={fadeUp}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-sm bg-[#ffb87b]/10 border border-[#ffb87b]/20 mb-8"
-            >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm bg-[#ffb87b]/10 border border-[#ffb87b]/20 mb-8">
               <span className="font-mono text-[10px] font-black tracking-[0.3em] uppercase text-[#ffb87b]">
                 The Neural Core
               </span>
-            </motion.div>
+            </div>
 
             {/* Headline */}
-            <motion.h2
-              variants={fadeUp}
-              className="text-4xl md:text-5xl font-black uppercase tracking-tight text-white leading-[1.05] mb-6"
-            >
+            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-white leading-[1.05] mb-6">
               Unified Social
               <br />
               Intelligence.
-            </motion.h2>
+            </h2>
 
             {/* Description */}
-            <motion.p
-              variants={fadeUp}
-              className="text-white/40 text-sm leading-relaxed mb-10 max-w-md"
-            >
+            <p className="text-white/40 text-sm leading-relaxed mb-10 max-w-md">
               A continuously learning system that reads market signals,
               synthesises audience intelligence, and executes multi-platform
               content strategies with machine precision.
-            </motion.p>
+            </p>
 
             {/* Feature rows */}
             <div className="space-y-6">
               {FEATURES.map(({ icon: Icon, title, description }) => (
-                <motion.div
-                  key={title}
-                  variants={fadeUp}
-                  className="flex items-start gap-4"
-                >
+                <div key={title} className="flex items-start gap-4">
                   <div className="w-9 h-9 rounded-sm bg-[#ffb87b]/10 border border-[#ffb87b]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Icon className="w-4 h-4 text-[#ffb87b]" />
                   </div>
@@ -94,19 +61,13 @@ export function IntelligenceSection() {
                       {description}
                     </p>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Right — abstract animated composition */}
-          <motion.div
-            className="relative"
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
-          >
+          <div className="relative">
             {/* Main glass card with bar chart */}
             <div className="bg-[rgba(28,27,27,0.9)] backdrop-blur-xl border border-[rgba(255,220,194,0.08)] rounded-sm p-8 relative overflow-hidden">
               {/* Ambient glow */}
@@ -193,7 +154,7 @@ export function IntelligenceSection() {
                 </span>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
 
