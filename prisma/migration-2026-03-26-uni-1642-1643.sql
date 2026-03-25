@@ -1,4 +1,3 @@
-Loaded Prisma config from prisma.config.ts.
 
 -- AlterTable
 ALTER TABLE "gbp_reviews" ADD COLUMN     "display_on_widget" BOOLEAN NOT NULL DEFAULT true,
