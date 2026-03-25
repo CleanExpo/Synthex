@@ -15,6 +15,7 @@ import {
   Loader2,
   BarChart3,
   Target,
+  Sparkles,
 } from '@/components/icons';
 
 // ============================================================================
@@ -135,6 +136,8 @@ export default function RankingsPage() {
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState('');
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [seeding, setSeeding] = useState(false);
+  const [seedMessage, setSeedMessage] = useState('');
 
   const targets = data?.targets ?? [];
   const lastUpdated =
@@ -170,6 +173,27 @@ export default function RankingsPage() {
     }
   }
 
+  async function handleSeedFromGBP() {
+    setSeeding(true);
+    setSeedMessage('');
+    try {
+      const res = await fetch('/api/seo/rankings/seed', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'Seed failed');
+      setSeedMessage(json.message ?? 'Keywords seeded successfully.');
+      mutate();
+    } catch (err) {
+      setSeedMessage(
+        err instanceof Error ? err.message : 'Error seeding keywords'
+      );
+    } finally {
+      setSeeding(false);
+    }
+  }
+
   async function handleRemove(id: string) {
     setRemovingId(id);
     try {
@@ -196,12 +220,34 @@ export default function RankingsPage() {
             data
           </p>
         </div>
-        {lastUpdated && (
-          <span className="text-xs text-gray-400">
-            Last updated: {lastUpdated}
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {lastUpdated && (
+            <span className="text-xs text-gray-400">
+              Last updated: {lastUpdated}
+            </span>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSeedFromGBP}
+            disabled={seeding}
+            title="Auto-generate keyword targets from your Google Business Profile"
+          >
+            {seeding ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+            <span className="ml-1">Seed from GBP</span>
+          </Button>
+        </div>
       </div>
+
+      {seedMessage && (
+        <div className="rounded-md bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
+          {seedMessage}
+        </div>
+      )}
 
       {/* Add Target */}
       <Card>

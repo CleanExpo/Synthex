@@ -640,6 +640,43 @@ export interface KeywordOpportunity {
  */
 export async function getTopKeywordOpportunities(
   siteUrl: string,
+  limit?: number
+): Promise<KeywordOpportunity[]>;
+
+/**
+ * Fetch top keyword opportunities from GSC for a given organisation.
+ * Looks up the primary GSCProperty for the org, then delegates to the
+ * siteUrl-based overload. Returns [] when no primary property exists.
+ *
+ * @param orgId  - Organisation ID to look up
+ * @param limit  - Max number of opportunities to return (default 5)
+ */
+export async function getTopKeywordOpportunities(
+  orgId: string,
+  limit: number,
+  byOrg: true
+): Promise<KeywordOpportunity[]>;
+
+export async function getTopKeywordOpportunities(
+  siteUrlOrOrgId: string,
+  limit = 5,
+  byOrg?: true
+): Promise<KeywordOpportunity[]> {
+  if (byOrg) {
+    // Import prisma lazily to avoid pulling it into edge-compatible bundles
+    const { default: prisma } = await import('@/lib/prisma');
+    const property = await prisma.gSCProperty.findFirst({
+      where: { organizationId: siteUrlOrOrgId, isPrimary: true },
+      select: { siteUrl: true },
+    });
+    if (!property) return [];
+    return getTopKeywordOpportunitiesBySiteUrl(property.siteUrl, limit);
+  }
+  return getTopKeywordOpportunitiesBySiteUrl(siteUrlOrOrgId, limit);
+}
+
+async function getTopKeywordOpportunitiesBySiteUrl(
+  siteUrl: string,
   limit = 5
 ): Promise<KeywordOpportunity[]> {
   try {

@@ -259,6 +259,12 @@ const sidebarGroups: SidebarNavGroup[] = [
     label: 'SEO & AUTHORITY',
     items: [
       { icon: Search, label: 'SEO Tools', href: '/dashboard/seo' },
+      {
+        icon: Target,
+        label: 'Rankings',
+        href: '/dashboard/seo/rankings',
+        isNew: true,
+      },
       { icon: Globe, label: 'GEO Analysis', href: '/dashboard/geo' },
       { icon: Zap, label: 'GEO Optimiser', href: '/dashboard/geo/optimiser' },
       { icon: Map, label: 'Local SEO', href: '/dashboard/local', isNew: true },
@@ -266,6 +272,12 @@ const sidebarGroups: SidebarNavGroup[] = [
         icon: Building2,
         label: 'Google Business',
         href: '/dashboard/google-business',
+        isNew: true,
+      },
+      {
+        icon: BarChart3,
+        label: 'Displacement',
+        href: '/dashboard/seo/displacement',
         isNew: true,
       },
       { icon: BadgeCheck, label: 'E-E-A-T Builder', href: '/dashboard/eeat' },
