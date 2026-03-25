@@ -28,7 +28,9 @@ import { logger } from '@/lib/logger';
 
 const predictSchema = z.object({
   modelId: z.string().min(1),
-  points: z.array(z.record(z.union([z.string(), z.number()]))).optional(),
+  points: z
+    .array(z.record(z.string(), z.union([z.string(), z.number()])))
+    .optional(),
   quantiles: z.array(z.number().min(0).max(1)).optional(),
 });
 

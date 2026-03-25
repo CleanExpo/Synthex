@@ -79,8 +79,14 @@ export const createPostSchema = z.object({
     )
     .max(10, 'Maximum 10 media items allowed')
     .optional(),
-  hashtags: z.array(z.string().max(50)).max(30, 'Maximum 30 hashtags allowed').optional(),
-  mentions: z.array(z.string().max(100)).max(50, 'Maximum 50 mentions allowed').optional(),
+  hashtags: z
+    .array(z.string().max(50))
+    .max(30, 'Maximum 30 hashtags allowed')
+    .optional(),
+  mentions: z
+    .array(z.string().max(100))
+    .max(50, 'Maximum 50 mentions allowed')
+    .optional(),
   location: z
     .object({
       name: z.string().max(200),
@@ -89,7 +95,7 @@ export const createPostSchema = z.object({
     })
     .optional(),
   campaignId: uuidSchema.optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type CreatePostInput = z.infer<typeof createPostSchema>;
@@ -126,8 +132,14 @@ export type UpdatePostInput = z.infer<typeof updatePostSchema>;
 // =============================================================================
 
 export const createCampaignSchema = z.object({
-  name: z.string().min(1, 'Campaign name is required').max(200, 'Name must not exceed 200 characters'),
-  description: z.string().max(2000, 'Description must not exceed 2,000 characters').optional(),
+  name: z
+    .string()
+    .min(1, 'Campaign name is required')
+    .max(200, 'Name must not exceed 200 characters'),
+  description: z
+    .string()
+    .max(2000, 'Description must not exceed 2,000 characters')
+    .optional(),
   platforms: z.array(platformSchema).min(1).max(10),
   startDate: z.string().datetime('Invalid start date'),
   endDate: z.string().datetime('Invalid end date').optional(),
@@ -140,7 +152,13 @@ export const createCampaignSchema = z.object({
   goals: z
     .array(
       z.object({
-        type: z.enum(['reach', 'engagement', 'conversions', 'traffic', 'awareness']),
+        type: z.enum([
+          'reach',
+          'engagement',
+          'conversions',
+          'traffic',
+          'awareness',
+        ]),
         target: z.number().positive(),
         metric: z.string(),
       })
@@ -148,17 +166,22 @@ export const createCampaignSchema = z.object({
     .optional(),
   targetAudience: z
     .object({
-      ageRange: z.object({
-        min: z.number().min(13).max(100).optional(),
-        max: z.number().min(13).max(100).optional(),
-      }).optional(),
+      ageRange: z
+        .object({
+          min: z.number().min(13).max(100).optional(),
+          max: z.number().min(13).max(100).optional(),
+        })
+        .optional(),
       locations: z.array(z.string()).optional(),
       interests: z.array(z.string()).optional(),
       languages: z.array(z.string()).optional(),
     })
     .optional(),
   tags: z.array(z.string().max(50)).max(20).optional(),
-  status: z.enum(['draft', 'active', 'paused', 'completed', 'archived']).optional().default('draft'),
+  status: z
+    .enum(['draft', 'active', 'paused', 'completed', 'archived'])
+    .optional()
+    .default('draft'),
 });
 
 export type CreateCampaignInput = z.infer<typeof createCampaignSchema>;
@@ -191,12 +214,15 @@ export const schedulePostSchema = z.object({
 export type SchedulePostInput = z.infer<typeof schedulePostSchema>;
 
 export const bulkScheduleSchema = z.object({
-  posts: z.array(
-    z.object({
-      postId: uuidSchema,
-      scheduledAt: z.string().datetime(),
-    })
-  ).min(1, 'At least one post is required').max(100, 'Maximum 100 posts per bulk operation'),
+  posts: z
+    .array(
+      z.object({
+        postId: uuidSchema,
+        scheduledAt: z.string().datetime(),
+      })
+    )
+    .min(1, 'At least one post is required')
+    .max(100, 'Maximum 100 posts per bulk operation'),
   timezone: z.string().optional().default('UTC'),
 });
 
@@ -207,7 +233,10 @@ export type BulkScheduleInput = z.infer<typeof bulkScheduleSchema>;
 // =============================================================================
 
 export const generateContentSchema = z.object({
-  prompt: z.string().min(1, 'Prompt is required').max(5000, 'Prompt must not exceed 5,000 characters'),
+  prompt: z
+    .string()
+    .min(1, 'Prompt is required')
+    .max(5000, 'Prompt must not exceed 5,000 characters'),
   platform: platformSchema.optional(),
   contentType: contentTypeSchema.optional().default('post'),
   tone: z
@@ -243,7 +272,10 @@ export type GenerateContentInput = z.infer<typeof generateContentSchema>;
 export const optimizeContentSchema = z.object({
   content: z.string().min(1, 'Content is required').max(10000),
   platform: platformSchema,
-  optimizationType: z.enum(['engagement', 'reach', 'conversions', 'seo']).optional().default('engagement'),
+  optimizationType: z
+    .enum(['engagement', 'reach', 'conversions', 'seo'])
+    .optional()
+    .default('engagement'),
   currentMetrics: z
     .object({
       likes: z.number().optional(),
@@ -260,7 +292,10 @@ export const generateHashtagsSchema = z.object({
   content: z.string().min(1, 'Content is required').max(5000),
   platform: platformSchema.optional(),
   count: z.number().min(1).max(30).optional().default(10),
-  style: z.enum(['trending', 'niche', 'branded', 'mixed']).optional().default('mixed'),
+  style: z
+    .enum(['trending', 'niche', 'branded', 'mixed'])
+    .optional()
+    .default('mixed'),
 });
 
 export type GenerateHashtagsInput = z.infer<typeof generateHashtagsSchema>;
@@ -287,7 +322,10 @@ export const listPostsSchema = z.object({
   platform: platformSchema.optional(),
   campaignId: uuidSchema.optional(),
   search: z.string().max(200).optional(),
-  sortBy: z.enum(['createdAt', 'scheduledAt', 'publishedAt', 'engagement']).optional().default('createdAt'),
+  sortBy: z
+    .enum(['createdAt', 'scheduledAt', 'publishedAt', 'engagement'])
+    .optional()
+    .default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
@@ -298,10 +336,15 @@ export type ListPostsInput = z.infer<typeof listPostsSchema>;
 export const listCampaignsSchema = z.object({
   page: z.coerce.number().min(1).optional().default(1),
   limit: z.coerce.number().min(1).max(100).optional().default(20),
-  status: z.enum(['draft', 'active', 'paused', 'completed', 'archived']).optional(),
+  status: z
+    .enum(['draft', 'active', 'paused', 'completed', 'archived'])
+    .optional(),
   platform: platformSchema.optional(),
   search: z.string().max(200).optional(),
-  sortBy: z.enum(['createdAt', 'startDate', 'endDate', 'name']).optional().default('createdAt'),
+  sortBy: z
+    .enum(['createdAt', 'startDate', 'endDate', 'name'])
+    .optional()
+    .default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
@@ -312,7 +355,10 @@ export type ListCampaignsInput = z.infer<typeof listCampaignsSchema>;
 // =============================================================================
 
 export const bulkDeleteSchema = z.object({
-  ids: z.array(uuidSchema).min(1, 'At least one ID is required').max(100, 'Maximum 100 items per operation'),
+  ids: z
+    .array(uuidSchema)
+    .min(1, 'At least one ID is required')
+    .max(100, 'Maximum 100 items per operation'),
 });
 
 export type BulkDeleteInput = z.infer<typeof bulkDeleteSchema>;
@@ -358,7 +404,10 @@ export function validateCreateCampaign(data: unknown): CreateCampaignInput {
 /**
  * Platform-specific content length validation
  */
-export const platformLimits: Record<Platform, { maxLength: number; maxHashtags: number; maxMedia: number }> = {
+export const platformLimits: Record<
+  Platform,
+  { maxLength: number; maxHashtags: number; maxMedia: number }
+> = {
   twitter: { maxLength: 280, maxHashtags: 5, maxMedia: 4 },
   linkedin: { maxLength: 3000, maxHashtags: 10, maxMedia: 20 },
   instagram: { maxLength: 2200, maxHashtags: 30, maxMedia: 10 },
@@ -382,15 +431,21 @@ export function validatePlatformLimits(
   const errors: string[] = [];
 
   if (content.length > limits.maxLength) {
-    errors.push(`Content exceeds ${platform} character limit (${limits.maxLength})`);
+    errors.push(
+      `Content exceeds ${platform} character limit (${limits.maxLength})`
+    );
   }
 
   if (hashtags && hashtags.length > limits.maxHashtags) {
-    errors.push(`Too many hashtags for ${platform} (max: ${limits.maxHashtags})`);
+    errors.push(
+      `Too many hashtags for ${platform} (max: ${limits.maxHashtags})`
+    );
   }
 
   if (media && media.length > limits.maxMedia) {
-    errors.push(`Too many media items for ${platform} (max: ${limits.maxMedia})`);
+    errors.push(
+      `Too many media items for ${platform} (max: ${limits.maxMedia})`
+    );
   }
 
   return {
@@ -417,7 +472,7 @@ export const postResponseSchema = z.object({
   createdAt: z.union([z.date(), z.string().datetime()]),
   updatedAt: z.union([z.date(), z.string().datetime()]),
   campaignId: z.string().uuid().nullable().optional(),
-  metadata: z.record(z.unknown()).nullable().optional(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 export type PostResponse = z.infer<typeof postResponseSchema>;
@@ -439,12 +494,14 @@ export type CreatePostResponse = z.infer<typeof createPostResponseSchema>;
 export const listPostsResponseSchema = z.object({
   success: z.literal(true),
   data: z.array(postResponseSchema),
-  pagination: z.object({
-    page: z.number(),
-    limit: z.number(),
-    total: z.number(),
-    totalPages: z.number(),
-  }).optional(),
+  pagination: z
+    .object({
+      page: z.number(),
+      limit: z.number(),
+      total: z.number(),
+      totalPages: z.number(),
+    })
+    .optional(),
 });
 
 export type ListPostsResponse = z.infer<typeof listPostsResponseSchema>;
@@ -464,9 +521,11 @@ export const campaignResponseSchema = z.object({
   createdAt: z.union([z.date(), z.string().datetime()]),
   updatedAt: z.union([z.date(), z.string().datetime()]),
   userId: z.string().uuid(),
-  _count: z.object({
-    posts: z.number(),
-  }).optional(),
+  _count: z
+    .object({
+      posts: z.number(),
+    })
+    .optional(),
 });
 
 export type CampaignResponse = z.infer<typeof campaignResponseSchema>;
@@ -480,7 +539,9 @@ export const createCampaignResponseSchema = z.object({
   data: campaignResponseSchema,
 });
 
-export type CreateCampaignResponse = z.infer<typeof createCampaignResponseSchema>;
+export type CreateCampaignResponse = z.infer<
+  typeof createCampaignResponseSchema
+>;
 
 /**
  * List campaigns API response
@@ -488,12 +549,14 @@ export type CreateCampaignResponse = z.infer<typeof createCampaignResponseSchema
 export const listCampaignsResponseSchema = z.object({
   success: z.literal(true),
   data: z.array(campaignResponseSchema),
-  pagination: z.object({
-    page: z.number(),
-    limit: z.number(),
-    total: z.number(),
-    totalPages: z.number(),
-  }).optional(),
+  pagination: z
+    .object({
+      page: z.number(),
+      limit: z.number(),
+      total: z.number(),
+      totalPages: z.number(),
+    })
+    .optional(),
 });
 
 export type ListCampaignsResponse = z.infer<typeof listCampaignsResponseSchema>;
@@ -505,10 +568,14 @@ export const contentErrorResponseSchema = z.object({
   success: z.literal(false).optional(),
   error: z.string(),
   message: z.string().optional(),
-  details: z.array(z.object({
-    field: z.string().optional(),
-    message: z.string(),
-  })).optional(),
+  details: z
+    .array(
+      z.object({
+        field: z.string().optional(),
+        message: z.string(),
+      })
+    )
+    .optional(),
 });
 
 export type ContentErrorResponse = z.infer<typeof contentErrorResponseSchema>;
@@ -522,8 +589,10 @@ export const generateContentResponseSchema = z.object({
     content: z.string(),
     hashtags: z.array(z.string()).optional(),
     variations: z.array(z.string()).optional(),
-    metadata: z.record(z.unknown()).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
   }),
 });
 
-export type GenerateContentResponse = z.infer<typeof generateContentResponseSchema>;
+export type GenerateContentResponse = z.infer<
+  typeof generateContentResponseSchema
+>;

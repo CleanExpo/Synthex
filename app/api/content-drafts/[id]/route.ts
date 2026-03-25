@@ -27,7 +27,7 @@ const updateDraftSchema = z.object({
   targetLength: z.string().optional(),
   status: z.enum(['draft', 'scheduled', 'published']).optional(),
   scheduledPostId: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -67,7 +67,10 @@ export async function PATCH(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.flatten().fieldErrors },
+        {
+          error: 'Validation failed',
+          details: validation.error.flatten().fieldErrors,
+        },
         { status: 400 }
       );
     }
@@ -77,7 +80,9 @@ export async function PATCH(
       where: { id },
       data: {
         ...rest,
-        ...(metadata !== undefined && { metadata: metadata as Prisma.InputJsonValue }),
+        ...(metadata !== undefined && {
+          metadata: metadata as Prisma.InputJsonValue,
+        }),
       },
     });
 

@@ -31,7 +31,7 @@ const updateOrganizationSchema = z.object({
   primaryColor: z.string().optional(),
   favicon: z.string().optional(),
   customDomain: z.string().optional(),
-  settings: z.record(z.unknown()).optional(),
+  settings: z.record(z.string(), z.unknown()).optional(),
   billingEmail: z.string().email().optional(),
   slug: z.string().optional(),
   plan: z.string().optional(),

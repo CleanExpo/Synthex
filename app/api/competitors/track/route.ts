@@ -14,7 +14,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -47,19 +50,33 @@ interface TrackedCompetitorRecord {
 /** Extended Prisma client with competitor models */
 interface ExtendedPrismaClient {
   trackedCompetitor?: {
-    findFirst: (args: { where: Record<string, unknown> }) => Promise<TrackedCompetitorRecord | null>;
-    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string>; take?: number; skip?: number; include?: Record<string, unknown> }) => Promise<TrackedCompetitorRecord[]>;
-    create: (args: { data: Record<string, unknown> }) => Promise<TrackedCompetitorRecord>;
+    findFirst: (args: {
+      where: Record<string, unknown>;
+    }) => Promise<TrackedCompetitorRecord | null>;
+    findMany: (args: {
+      where: Record<string, unknown>;
+      orderBy?: Record<string, string>;
+      take?: number;
+      skip?: number;
+      include?: Record<string, unknown>;
+    }) => Promise<TrackedCompetitorRecord[]>;
+    create: (args: {
+      data: Record<string, unknown>;
+    }) => Promise<TrackedCompetitorRecord>;
     count: (args: { where: Record<string, unknown> }) => Promise<number>;
   };
   competitorSnapshot?: {
-    findFirst: (args: { where: Record<string, unknown>; orderBy?: Record<string, string> }) => Promise<unknown>;
+    findFirst: (args: {
+      where: Record<string, unknown>;
+      orderBy?: Record<string, string>;
+    }) => Promise<unknown>;
     create: (args: { data: Record<string, unknown> }) => Promise<unknown>;
   };
 }
 
 /** Get prisma with extended models */
-const extendedPrisma = prisma as unknown as typeof prisma & ExtendedPrismaClient;
+const extendedPrisma = prisma as unknown as typeof prisma &
+  ExtendedPrismaClient;
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -106,7 +123,10 @@ export async function GET(request: NextRequest) {
 
     const isActive = searchParams.get('active');
     const industry = searchParams.get('industry');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || '50', 10),
+      100
+    );
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Build query
@@ -140,10 +160,11 @@ export async function GET(request: NextRequest) {
     // Get latest snapshot for each competitor
     const competitorsWithLatestSnapshot = await Promise.all(
       (competitors || []).map(async (comp: TrackedCompetitorRecord) => {
-        const latestSnapshot = await extendedPrisma.competitorSnapshot?.findFirst({
-          where: { competitorId: comp.id, platform: 'all' },
-          orderBy: { snapshotAt: 'desc' },
-        });
+        const latestSnapshot =
+          await extendedPrisma.competitorSnapshot?.findFirst({
+            where: { competitorId: comp.id, platform: 'all' },
+            orderBy: { snapshotAt: 'desc' },
+          });
 
         return {
           ...comp,
@@ -194,7 +215,7 @@ export async function POST(request: NextRequest) {
     const validation = addCompetitorSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
+        { error: 'Invalid input', details: validation.error.issues },
         { status: 400 }
       );
     }
@@ -208,7 +229,9 @@ export async function POST(request: NextRequest) {
         const url = new URL(normalizedDomain);
         normalizedDomain = url.hostname.replace(/^www\./, '');
       } catch {
-        normalizedDomain = normalizedDomain.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+        normalizedDomain = normalizedDomain
+          .replace(/^(https?:\/\/)?(www\.)?/, '')
+          .split('/')[0];
       }
     }
 
@@ -220,7 +243,10 @@ export async function POST(request: NextRequest) {
 
       if (existing) {
         return NextResponse.json(
-          { error: 'Competitor with this domain already exists', existingId: existing.id },
+          {
+            error: 'Competitor with this domain already exists',
+            existingId: existing.id,
+          },
           { status: 409 }
         );
       }
@@ -260,10 +286,13 @@ export async function POST(request: NextRequest) {
       // Don't block competitor creation response -- cron will create snapshots on next cycle
     }
 
-    return NextResponse.json({
-      competitor,
-      message: 'Competitor added successfully. Tracking will begin shortly.',
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        competitor,
+        message: 'Competitor added successfully. Tracking will begin shortly.',
+      },
+      { status: 201 }
+    );
   } catch (error) {
     logger.error('Add competitor error:', error);
     return NextResponse.json(

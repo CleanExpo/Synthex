@@ -43,7 +43,9 @@ interface ProviderValidationResult {
   error?: string;
 }
 
-async function validateOpenRouterKey(apiKey: string): Promise<ProviderValidationResult> {
+async function validateOpenRouterKey(
+  apiKey: string
+): Promise<ProviderValidationResult> {
   try {
     const response = await fetch('https://openrouter.ai/api/v1/models', {
       headers: {
@@ -71,7 +73,9 @@ async function validateOpenRouterKey(apiKey: string): Promise<ProviderValidation
   }
 }
 
-async function validateAnthropicKey(apiKey: string): Promise<ProviderValidationResult> {
+async function validateAnthropicKey(
+  apiKey: string
+): Promise<ProviderValidationResult> {
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -109,7 +113,9 @@ async function validateAnthropicKey(apiKey: string): Promise<ProviderValidationR
   }
 }
 
-async function validateGoogleKey(apiKey: string): Promise<ProviderValidationResult> {
+async function validateGoogleKey(
+  apiKey: string
+): Promise<ProviderValidationResult> {
   try {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`
@@ -119,7 +125,11 @@ async function validateGoogleKey(apiKey: string): Promise<ProviderValidationResu
       return { valid: true };
     }
 
-    if (response.status === 400 || response.status === 401 || response.status === 403) {
+    if (
+      response.status === 400 ||
+      response.status === 401 ||
+      response.status === 403
+    ) {
       return { valid: false, error: 'Invalid API key' };
     }
 
@@ -135,7 +145,9 @@ async function validateGoogleKey(apiKey: string): Promise<ProviderValidationResu
   }
 }
 
-async function validateOpenAIKey(apiKey: string): Promise<ProviderValidationResult> {
+async function validateOpenAIKey(
+  apiKey: string
+): Promise<ProviderValidationResult> {
   try {
     const response = await fetch('https://api.openai.com/v1/models', {
       headers: {
@@ -214,7 +226,7 @@ export async function POST(request: NextRequest) {
     const parsed = ValidateKeySchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid request', details: parsed.error.errors },
+        { error: 'Invalid request', details: parsed.error.issues },
         { status: 400 }
       );
     }
@@ -242,7 +254,10 @@ export async function POST(request: NextRequest) {
       });
     } catch (dbErr) {
       // Non-fatal: log and continue — validation still succeeded
-      logger.error('[validate-key] Failed to update user.apiKeyConfigured:', dbErr);
+      logger.error(
+        '[validate-key] Failed to update user.apiKeyConfigured:',
+        dbErr
+      );
     }
 
     return NextResponse.json({ valid: true });

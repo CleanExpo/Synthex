@@ -81,7 +81,7 @@ const PLATFORM_BENCHMARKS = {
     peakHours: [6, 10, 19, 22],
   },
   instagram: {
-    avgEngagementRate: 0.10,
+    avgEngagementRate: 0.1,
     viralThreshold: 5000,
     peakHours: [11, 13, 17, 20],
   },
@@ -96,7 +96,8 @@ const PLATFORM_BENCHMARKS = {
 const HOOK_PATTERNS = {
   question: /^(why|what|how|when|where|who|did you know|can you|would you)/i,
   story: /^(just|today|yesterday|last week|remember when|story time)/i,
-  controversy: /^(unpopular opinion|hot take|controversial|nobody talks about)/i,
+  controversy:
+    /^(unpopular opinion|hot take|controversial|nobody talks about)/i,
   data: /^(\d+%|studies show|research reveals|statistics|data shows)/i,
   humor: /^(pov:|imagine|me when|that moment when|mood:)/i,
   achievement: /^(just shipped|launched|proud to|excited to|finally)/i,
@@ -106,9 +107,41 @@ const HOOK_PATTERNS = {
 
 // Sentiment keywords
 const SENTIMENT_KEYWORDS = {
-  positive: ['amazing', 'awesome', 'excellent', 'love', 'great', 'fantastic', 'wonderful', 'best', 'perfect', 'success'],
-  negative: ['terrible', 'awful', 'hate', 'worst', 'fail', 'bad', 'poor', 'horrible', 'disaster', 'problem'],
-  neutral: ['okay', 'fine', 'average', 'normal', 'regular', 'standard', 'typical', 'usual', 'common'],
+  positive: [
+    'amazing',
+    'awesome',
+    'excellent',
+    'love',
+    'great',
+    'fantastic',
+    'wonderful',
+    'best',
+    'perfect',
+    'success',
+  ],
+  negative: [
+    'terrible',
+    'awful',
+    'hate',
+    'worst',
+    'fail',
+    'bad',
+    'poor',
+    'horrible',
+    'disaster',
+    'problem',
+  ],
+  neutral: [
+    'okay',
+    'fine',
+    'average',
+    'normal',
+    'regular',
+    'standard',
+    'typical',
+    'usual',
+    'common',
+  ],
 };
 
 export async function GET(request: NextRequest) {
@@ -123,13 +156,13 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -159,7 +192,7 @@ export async function GET(request: NextRequest) {
 
     // Filter patterns by time range
     const filteredPatterns = (patterns as PatternRecord[]).filter(
-      (p) => new Date(p.discovered_at) >= startDate
+      p => new Date(p.discovered_at) >= startDate
     );
 
     // Analyze patterns for insights
@@ -183,7 +216,7 @@ export async function GET(request: NextRequest) {
 const analyzePatternSchema = z.object({
   platform: z.string().min(1),
   content: z.string().min(1),
-  metrics: z.record(z.unknown()).optional().default({}),
+  metrics: z.record(z.string(), z.unknown()).optional().default({}),
 });
 
 export async function POST(request: NextRequest) {
@@ -198,13 +231,13 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -267,7 +300,11 @@ export async function POST(request: NextRequest) {
 }
 
 // Analyze content characteristics
-function analyzeContent(content: string, platform: string, _metrics: ContentMetrics): ContentAnalysis {
+function analyzeContent(
+  content: string,
+  platform: string,
+  _metrics: ContentMetrics
+): ContentAnalysis {
   const analysis: ContentAnalysis = {
     length: content.length,
     wordCount: content.split(/\s+/).length,
@@ -277,23 +314,29 @@ function analyzeContent(content: string, platform: string, _metrics: ContentMetr
     hasUrls: /https?:\/\/\S+/.test(content),
     hasQuestions: /\?/.test(content),
     hasNumbers: /\d+/.test(content),
-    capitalLettersRatio: (content.match(/[A-Z]/g) || []).length / content.length,
+    capitalLettersRatio:
+      (content.match(/[A-Z]/g) || []).length / content.length,
     exclamationCount: (content.match(/!/g) || []).length,
   };
 
   // Platform-specific analysis
   switch (platform) {
     case 'twitter':
-      analysis['isThread'] = content.includes('🧵') || content.includes('Thread:');
+      analysis['isThread'] =
+        content.includes('🧵') || content.includes('Thread:');
       analysis['isOptimalLength'] = content.length <= 280;
       break;
     case 'linkedin':
-      analysis['hasProfessionalTone'] = /\b(professional|business|career|opportunity|growth)\b/i.test(content);
-      analysis['hasCallToAction'] = /\b(comment|share|thoughts|agree|discuss)\b/i.test(content);
+      analysis['hasProfessionalTone'] =
+        /\b(professional|business|career|opportunity|growth)\b/i.test(content);
+      analysis['hasCallToAction'] =
+        /\b(comment|share|thoughts|agree|discuss)\b/i.test(content);
       break;
     case 'tiktok':
       analysis['hasTrend'] = /\b(pov|storytime|fyp|foryou)\b/i.test(content);
-      analysis['hasHook'] = content.substring(0, 50).includes('?') || /^(wait|stop|look)/i.test(content);
+      analysis['hasHook'] =
+        content.substring(0, 50).includes('?') ||
+        /^(wait|stop|look)/i.test(content);
       break;
   }
 
@@ -301,24 +344,31 @@ function analyzeContent(content: string, platform: string, _metrics: ContentMetr
 }
 
 // Calculate virality score based on metrics
-function calculateViralityScore(metrics: ContentMetrics, platform: string): number {
-  const benchmark = PLATFORM_BENCHMARKS[platform as keyof typeof PLATFORM_BENCHMARKS];
+function calculateViralityScore(
+  metrics: ContentMetrics,
+  platform: string
+): number {
+  const benchmark =
+    PLATFORM_BENCHMARKS[platform as keyof typeof PLATFORM_BENCHMARKS];
   if (!benchmark) return 0;
 
   const { impressions = 0, engagement = 0, shares = 0, saves = 0 } = metrics;
-  
+
   // Calculate engagement rate
   const engagementRate = impressions > 0 ? engagement / impressions : 0;
-  
+
   // Compare to platform benchmark
-  const engagementScore = Math.min((engagementRate / benchmark.avgEngagementRate) * 50, 50);
-  
+  const engagementScore = Math.min(
+    (engagementRate / benchmark.avgEngagementRate) * 50,
+    50
+  );
+
   // Viral threshold score
   const viralScore = Math.min((engagement / benchmark.viralThreshold) * 30, 30);
-  
+
   // Share amplification score
   const shareScore = Math.min((shares / 100) * 20, 20);
-  
+
   return Math.round(engagementScore + viralScore + shareScore);
 }
 
@@ -364,7 +414,9 @@ function analyzePatterns(patterns: PatternRecord[]) {
   }
 
   // Calculate average virality score
-  const avgViralityScore = patterns.reduce((sum, p) => sum + (p.engagement_score || 0), 0) / patterns.length;
+  const avgViralityScore =
+    patterns.reduce((sum, p) => sum + (p.engagement_score || 0), 0) /
+    patterns.length;
 
   // Find top hook types
   const hookTypeCounts: Record<string, number> = {};
@@ -375,7 +427,11 @@ function analyzePatterns(patterns: PatternRecord[]) {
   const topHookTypes = Object.entries(hookTypeCounts)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 3)
-    .map(([type, count]) => ({ type, count, percentage: (count / patterns.length) * 100 }));
+    .map(([type, count]) => ({
+      type,
+      count,
+      percentage: (count / patterns.length) * 100,
+    }));
 
   // Find best posting times
   const hourCounts: Record<number, number> = {};
@@ -389,7 +445,9 @@ function analyzePatterns(patterns: PatternRecord[]) {
     .map(([hour]) => parseInt(hour));
 
   // Calculate average sentiment
-  const avgSentiment = patterns.reduce((sum, p) => sum + (p.pattern_data?.sentiment || 0.5), 0) / patterns.length;
+  const avgSentiment =
+    patterns.reduce((sum, p) => sum + (p.pattern_data?.sentiment || 0.5), 0) /
+    patterns.length;
 
   return {
     avgViralityScore: Math.round(avgViralityScore),
@@ -400,32 +458,48 @@ function analyzePatterns(patterns: PatternRecord[]) {
 }
 
 // Generate recommendations based on analysis
-function generateRecommendations(analysis: ContentAnalysis, platform: string): string[] {
+function generateRecommendations(
+  analysis: ContentAnalysis,
+  platform: string
+): string[] {
   const recommendations: string[] = [];
 
   // Length recommendations
   if (platform === 'twitter' && !analysis.isOptimalLength) {
-    recommendations.push('Keep tweets under 280 characters for better engagement');
+    recommendations.push(
+      'Keep tweets under 280 characters for better engagement'
+    );
   }
   if (platform === 'linkedin' && analysis.wordCount < 50) {
-    recommendations.push('LinkedIn posts with 50-150 words tend to perform better');
+    recommendations.push(
+      'LinkedIn posts with 50-150 words tend to perform better'
+    );
   }
 
   // Content recommendations
   if (!analysis.hasEmojis) {
-    recommendations.push('Add 1-2 relevant emojis to increase engagement by up to 25%');
+    recommendations.push(
+      'Add 1-2 relevant emojis to increase engagement by up to 25%'
+    );
   }
   if (!analysis.hasQuestions && platform !== 'tiktok') {
-    recommendations.push('Include a question to encourage comments and boost engagement');
+    recommendations.push(
+      'Include a question to encourage comments and boost engagement'
+    );
   }
   if (platform === 'linkedin' && !analysis.hasCallToAction) {
-    recommendations.push('Add a clear call-to-action to drive meaningful engagement');
+    recommendations.push(
+      'Add a clear call-to-action to drive meaningful engagement'
+    );
   }
 
   // Timing recommendations
-  const benchmark = PLATFORM_BENCHMARKS[platform as keyof typeof PLATFORM_BENCHMARKS];
+  const benchmark =
+    PLATFORM_BENCHMARKS[platform as keyof typeof PLATFORM_BENCHMARKS];
   if (benchmark) {
-    recommendations.push(`Best posting times for ${platform}: ${benchmark.peakHours.join(':00, ')}:00`);
+    recommendations.push(
+      `Best posting times for ${platform}: ${benchmark.peakHours.join(':00, ')}:00`
+    );
   }
 
   return recommendations;

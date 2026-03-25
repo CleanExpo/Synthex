@@ -32,9 +32,8 @@ const createRevenueSchema = z.object({
   brandName: z.string().optional(),
   periodStart: z.string().optional(),
   periodEnd: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
-
 
 // =============================================================================
 // GET - List Revenue Entries with Summary
@@ -44,7 +43,10 @@ export async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     // Parse query params
@@ -88,7 +90,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    logger.error('Revenue API GET error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Revenue API GET error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to fetch revenue data' },
       { status: 500 }
@@ -104,7 +108,10 @@ export async function POST(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const body = await request.json();
@@ -113,7 +120,10 @@ export async function POST(request: NextRequest) {
     const parsed = createRevenueSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: parsed.error.errors[0]?.message ?? 'Invalid request body' },
+        {
+          success: false,
+          error: parsed.error.issues[0]?.message ?? 'Invalid request body',
+        },
         { status: 400 }
       );
     }
@@ -139,7 +149,9 @@ export async function POST(request: NextRequest) {
       data: entry,
     });
   } catch (error) {
-    logger.error('Revenue API POST error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Revenue API POST error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to create revenue entry' },
       { status: 500 }

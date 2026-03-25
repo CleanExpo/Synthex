@@ -14,7 +14,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -59,7 +62,9 @@ interface AlertWhereClause {
 /** Extended prisma client for alert operations */
 interface PrismaWithAlerts {
   competitorAlert?: {
-    findMany: (args: Record<string, unknown>) => Promise<CompetitorAlertRecord[]>;
+    findMany: (
+      args: Record<string, unknown>
+    ) => Promise<CompetitorAlertRecord[]>;
     count: (args: Record<string, unknown>) => Promise<number>;
     updateMany: (args: Record<string, unknown>) => Promise<{ count: number }>;
   };
@@ -92,7 +97,10 @@ export async function GET(request: NextRequest) {
     const alertType = searchParams.get('type');
     const isRead = searchParams.get('read');
     const severity = searchParams.get('severity');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || '50', 10),
+      100
+    );
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Build query
@@ -122,10 +130,13 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Group alerts by type for summary
-    const alertsByType = (alerts || []).reduce((acc: Record<string, number>, alert: CompetitorAlertRecord) => {
-      acc[alert.alertType] = (acc[alert.alertType] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const alertsByType = (alerts || []).reduce(
+      (acc: Record<string, number>, alert: CompetitorAlertRecord) => {
+        acc[alert.alertType] = (acc[alert.alertType] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     return NextResponse.json({
       alerts,
@@ -170,7 +181,7 @@ export async function PATCH(request: NextRequest) {
     const validation = updateAlertsSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
+        { error: 'Invalid input', details: validation.error.issues },
         { status: 400 }
       );
     }

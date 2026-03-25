@@ -80,7 +80,7 @@ const UpdateSchema = z.object({
   planningHorizonDays: z.number().int().min(1).max(30).optional(),
   minScoreThreshold: z.number().int().min(0).max(100).optional(),
   autoApproveThreshold: z.number().int().min(0).max(100).optional(),
-  contentMix: z.record(z.number()).optional(),
+  contentMix: z.record(z.string(), z.number()).optional(),
   enableABTesting: z.boolean().optional(),
   enableTrendContent: z.boolean().optional(),
   enableRepurposing: z.boolean().optional(),

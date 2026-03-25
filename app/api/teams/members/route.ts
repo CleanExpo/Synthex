@@ -11,7 +11,10 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { email as emailService } from '@/lib/email/index';
 import { logger } from '@/lib/logger';
 
@@ -19,13 +22,13 @@ import { logger } from '@/lib/logger';
 const addMemberSchema = z.object({
   email: z.string().email(),
   role: z.enum(['admin', 'editor', 'viewer']).default('viewer'),
-  message: z.string().max(500).optional()
+  message: z.string().max(500).optional(),
 });
 
 const querySchema = z.object({
   role: z.enum(['admin', 'editor', 'viewer']).optional(),
   limit: z.string().regex(/^\d+$/).optional(),
-  offset: z.string().regex(/^\d+$/).optional()
+  offset: z.string().regex(/^\d+$/).optional(),
 });
 
 /**
@@ -51,7 +54,7 @@ export async function GET(request: NextRequest) {
     // Get user's organization
     const currentUser = await prisma.user.findUnique({
       where: { id: security.context.userId },
-      select: { organizationId: true }
+      select: { organizationId: true },
     });
 
     if (!currentUser?.organizationId) {
@@ -59,7 +62,7 @@ export async function GET(request: NextRequest) {
         {
           data: [],
           pagination: { total: 0, limit: 50, offset: 0, hasMore: false },
-          organizationId: null
+          organizationId: null,
         },
         200,
         security.context
@@ -69,9 +72,14 @@ export async function GET(request: NextRequest) {
     // Parse query parameters
     const url = new URL(request.url);
     const queryParams = {
-      role: url.searchParams.get('role') as 'admin' | 'editor' | 'viewer' | null || undefined,
+      role:
+        (url.searchParams.get('role') as
+          | 'admin'
+          | 'editor'
+          | 'viewer'
+          | null) || undefined,
       limit: url.searchParams.get('limit') || undefined,
-      offset: url.searchParams.get('offset') || undefined
+      offset: url.searchParams.get('offset') || undefined,
     };
 
     const query = querySchema.parse(queryParams);
@@ -82,7 +90,7 @@ export async function GET(request: NextRequest) {
     const whereClause: {
       organizationId: string;
     } = {
-      organizationId: currentUser.organizationId
+      organizationId: currentUser.organizationId,
     };
 
     // Fetch team members
@@ -98,23 +106,23 @@ export async function GET(request: NextRequest) {
           email: true,
           avatar: true,
           createdAt: true,
-          lastLogin: true
-        }
+          lastLogin: true,
+        },
       }),
-      prisma.user.count({ where: whereClause })
+      prisma.user.count({ where: whereClause }),
     ]);
 
     // Get user roles from UserRole table
     const memberIds = members.map(m => m.id);
     const userRoles = await prisma.userRole.findMany({
       where: {
-        userId: { in: memberIds }
+        userId: { in: memberIds },
       },
       include: {
         role: {
-          select: { name: true }
-        }
-      }
+          select: { name: true },
+        },
+      },
     });
 
     // Map roles to members
@@ -131,7 +139,7 @@ export async function GET(request: NextRequest) {
       avatar: member.avatar,
       role: roleMap.get(member.id) || 'viewer',
       joinedAt: member.createdAt.toISOString(),
-      lastActive: member.lastLogin?.toISOString() || null
+      lastActive: member.lastLogin?.toISOString() || null,
     }));
 
     // Filter by role if specified
@@ -146,20 +154,19 @@ export async function GET(request: NextRequest) {
           total: query.role ? filteredMembers.length : total,
           limit,
           offset,
-          hasMore: offset + members.length < total
+          hasMore: offset + members.length < total,
         },
-        organizationId: currentUser.organizationId
+        organizationId: currentUser.organizationId,
       },
       200,
       security.context
     );
-
   } catch (error) {
     logger.error('Team members fetch error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Invalid query parameters', details: error.errors },
+        { error: 'Invalid query parameters', details: error.issues },
         400,
         security.context
       );
@@ -199,16 +206,16 @@ export async function POST(request: NextRequest) {
       select: {
         organizationId: true,
         organization: {
-          select: { id: true, name: true }
-        }
-      }
+          select: { id: true, name: true },
+        },
+      },
     });
 
     if (!currentUser?.organizationId) {
       return APISecurityChecker.createSecureResponse(
         {
           error: 'No organization found',
-          message: 'You must be part of an organization to invite members'
+          message: 'You must be part of an organization to invite members',
         },
         400,
         security.context
@@ -218,15 +225,16 @@ export async function POST(request: NextRequest) {
     // Check if user has admin role (can invite others)
     const userRole = await prisma.userRole.findFirst({
       where: {
-        userId: security.context.userId
+        userId: security.context.userId,
       },
       include: {
-        role: true
-      }
+        role: true,
+      },
     });
 
-    const isAdmin = userRole?.role?.name === 'admin' ||
-                    userRole?.role?.permissions?.includes('invite_members');
+    const isAdmin =
+      userRole?.role?.name === 'admin' ||
+      userRole?.role?.permissions?.includes('invite_members');
 
     if (!isAdmin && security.context.userRole !== 'admin') {
       return APISecurityChecker.createSecureResponse(
@@ -242,7 +250,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email: data.email }
+      where: { email: data.email },
     });
 
     if (existingUser?.organizationId === currentUser.organizationId) {
@@ -258,8 +266,8 @@ export async function POST(request: NextRequest) {
       where: {
         email: data.email,
         organizationId: currentUser.organizationId,
-        status: 'sent'
-      }
+        status: 'sent',
+      },
     });
 
     if (existingInvitation) {
@@ -278,20 +286,24 @@ export async function POST(request: NextRequest) {
         message: data.message || null,
         status: 'sent',
         userId: security.context.userId,
-        organizationId: currentUser.organizationId
-      }
+        organizationId: currentUser.organizationId,
+      },
     });
 
     // Send team invitation email — non-blocking so invitation succeeds even if email fails
     const orgName = currentUser.organization?.name || 'your team';
     const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social'}/accept-invite/${invitation.id}`;
-    emailService.send({
-      to: data.email,
-      subject: `You've been invited to join ${orgName} on SYNTHEX`,
-      html: `<p>Hi there!</p><p>You've been invited to join <strong>${orgName}</strong> on SYNTHEX as a <strong>${data.role}</strong>.</p>${data.message ? `<p>"${data.message}"</p>` : ''}<p><a href="${acceptUrl}">Accept Invitation</a></p>`,
-      text: `You've been invited to join ${orgName} on SYNTHEX as a ${data.role}. Accept here: ${acceptUrl}`,
-      type: 'transactional',
-    }).catch((err: unknown) => logger.error('[teams/members] Failed to send invite email:', err));
+    emailService
+      .send({
+        to: data.email,
+        subject: `You've been invited to join ${orgName} on SYNTHEX`,
+        html: `<p>Hi there!</p><p>You've been invited to join <strong>${orgName}</strong> on SYNTHEX as a <strong>${data.role}</strong>.</p>${data.message ? `<p>"${data.message}"</p>` : ''}<p><a href="${acceptUrl}">Accept Invitation</a></p>`,
+        text: `You've been invited to join ${orgName} on SYNTHEX as a ${data.role}. Accept here: ${acceptUrl}`,
+        type: 'transactional',
+      })
+      .catch((err: unknown) =>
+        logger.error('[teams/members] Failed to send invite email:', err)
+      );
 
     return APISecurityChecker.createSecureResponse(
       {
@@ -302,19 +314,18 @@ export async function POST(request: NextRequest) {
           email: invitation.email,
           role: invitation.role,
           status: invitation.status,
-          sentAt: invitation.sentAt.toISOString()
-        }
+          sentAt: invitation.sentAt.toISOString(),
+        },
       },
       201,
       security.context
     );
-
   } catch (error) {
     logger.error('Team member invitation error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Invalid member data', details: error.errors },
+        { error: 'Invalid member data', details: error.issues },
         400,
         security.context
       );

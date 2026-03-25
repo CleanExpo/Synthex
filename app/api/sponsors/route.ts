@@ -28,11 +28,12 @@ const createSponsorSchema = z.object({
   phone: z.string().optional(),
   website: z.string().optional(),
   logo: z.string().optional(),
-  status: z.enum(SPONSOR_STATUSES as [SponsorStatus, ...SponsorStatus[]]).optional(),
+  status: z
+    .enum(SPONSOR_STATUSES as [SponsorStatus, ...SponsorStatus[]])
+    .optional(),
   notes: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
-
 
 // =============================================================================
 // GET - List Sponsors
@@ -42,7 +43,10 @@ export async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     // Parse query params
@@ -62,7 +66,9 @@ export async function GET(request: NextRequest) {
       data: sponsors,
     });
   } catch (error) {
-    logger.error('Sponsors API GET error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Sponsors API GET error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to fetch sponsors' },
       { status: 500 }
@@ -78,7 +84,10 @@ export async function POST(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const body = await request.json();
@@ -87,7 +96,10 @@ export async function POST(request: NextRequest) {
     const parsed = createSponsorSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: parsed.error.errors[0]?.message ?? 'Invalid request body' },
+        {
+          success: false,
+          error: parsed.error.issues[0]?.message ?? 'Invalid request body',
+        },
         { status: 400 }
       );
     }
@@ -111,7 +123,9 @@ export async function POST(request: NextRequest) {
       data: sponsor,
     });
   } catch (error) {
-    logger.error('Sponsors API POST error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Sponsors API POST error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { success: false, error: 'Failed to create sponsor' },
       { status: 500 }

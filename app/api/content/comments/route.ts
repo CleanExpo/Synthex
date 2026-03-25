@@ -16,7 +16,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -58,7 +61,9 @@ interface PrismaWithComments {
   contentComment?: {
     create: (args: Record<string, unknown>) => Promise<CommentRecord>;
     findMany: (args: Record<string, unknown>) => Promise<CommentRecord[]>;
-    findUnique: (args: Record<string, unknown>) => Promise<CommentRecord | null>;
+    findUnique: (
+      args: Record<string, unknown>
+    ) => Promise<CommentRecord | null>;
     update: (args: Record<string, unknown>) => Promise<CommentRecord>;
     delete: (args: Record<string, unknown>) => Promise<CommentRecord>;
     count: (args: Record<string, unknown>) => Promise<number>;
@@ -106,7 +111,7 @@ async function sendMentionNotifications(
       select: { name: true },
     });
 
-    const notifications = mentions.map((userId) => ({
+    const notifications = mentions.map(userId => ({
       userId,
       organizationId,
       type: 'mention',
@@ -118,7 +123,9 @@ async function sendMentionNotifications(
       relatedContentId: contentId,
     }));
 
-    await (prisma as unknown as PrismaWithComments).teamNotification?.createMany({
+    await (
+      prisma as unknown as PrismaWithComments
+    ).teamNotification?.createMany({
       data: notifications,
     });
   } catch (error) {
@@ -200,7 +207,7 @@ export async function POST(request: NextRequest) {
     const validation = createCommentSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
+        { error: 'Invalid input', details: validation.error.issues },
         { status: 400 }
       );
     }
@@ -224,7 +231,9 @@ export async function POST(request: NextRequest) {
     const mentions = data.mentions || extractedMentions;
 
     // Create the comment
-    const comment = await (prisma as unknown as PrismaWithComments).contentComment?.create({
+    const comment = await (
+      prisma as unknown as PrismaWithComments
+    ).contentComment?.create({
       data: {
         contentType: data.contentType,
         contentId: data.contentId,
@@ -323,10 +332,15 @@ export async function GET(request: NextRequest) {
     const contentId = searchParams.get('contentId');
     const parentId = searchParams.get('parentId');
     const includeReplies = searchParams.get('includeReplies') !== 'false';
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || '50', 10),
+      100
+    );
     const pageParam = searchParams.get('page');
     const page = pageParam ? Math.max(parseInt(pageParam, 10) || 1, 1) : null;
-    const offset = page ? (page - 1) * limit : parseInt(searchParams.get('offset') || '0', 10);
+    const offset = page
+      ? (page - 1) * limit
+      : parseInt(searchParams.get('offset') || '0', 10);
 
     if (!contentType || !contentId) {
       return NextResponse.json(
@@ -346,7 +360,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Get comments
-    const comments = await (prisma as unknown as PrismaWithComments).contentComment?.findMany({
+    const comments = await (
+      prisma as unknown as PrismaWithComments
+    ).contentComment?.findMany({
       where,
       orderBy: { createdAt: 'asc' },
       take: limit,
@@ -363,9 +379,9 @@ export async function GET(request: NextRequest) {
 
     // Get authors
     const authorIds = new Set<string>();
-    (comments || []).forEach((c) => {
+    (comments || []).forEach(c => {
       authorIds.add(c.authorId);
-      (c.replies || []).forEach((r) => authorIds.add(r.authorId));
+      (c.replies || []).forEach(r => authorIds.add(r.authorId));
     });
 
     const authors = await prisma.user.findMany({
@@ -373,19 +389,22 @@ export async function GET(request: NextRequest) {
       select: { id: true, name: true, avatar: true },
     });
 
-    const authorMap = new Map(authors.map((a) => [a.id, a]));
+    const authorMap = new Map(authors.map(a => [a.id, a]));
 
     // Enrich comments with author info
-    const enrichedComments = (comments || []).map((c) => ({
+    const enrichedComments = (comments || []).map(c => ({
       ...c,
       author: authorMap.get(c.authorId) || { id: c.authorId },
-      replies: (c.replies || []).map((r) => ({
+      replies: (c.replies || []).map(r => ({
         ...r,
         author: authorMap.get(r.authorId) || { id: r.authorId },
       })),
     }));
 
-    const total = await (prisma as unknown as PrismaWithComments).contentComment?.count({ where }) || 0;
+    const total =
+      (await (prisma as unknown as PrismaWithComments).contentComment?.count({
+        where,
+      })) || 0;
 
     return NextResponse.json({
       comments: enrichedComments,
@@ -440,7 +459,7 @@ export async function PATCH(request: NextRequest) {
     const validation = updateCommentSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
+        { error: 'Invalid input', details: validation.error.issues },
         { status: 400 }
       );
     }
@@ -448,15 +467,14 @@ export async function PATCH(request: NextRequest) {
     const data = validation.data;
 
     // Find the comment
-    const comment = await (prisma as unknown as PrismaWithComments).contentComment?.findUnique({
+    const comment = await (
+      prisma as unknown as PrismaWithComments
+    ).contentComment?.findUnique({
       where: { id: commentId },
     });
 
     if (!comment) {
-      return NextResponse.json(
-        { error: 'Comment not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Comment not found' }, { status: 404 });
     }
 
     // Check authorization (author can edit, anyone can resolve)
@@ -487,7 +505,9 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    const updated = await (prisma as unknown as PrismaWithComments).contentComment?.update({
+    const updated = await (
+      prisma as unknown as PrismaWithComments
+    ).contentComment?.update({
       where: { id: commentId },
       data: updateData,
     });
@@ -537,15 +557,14 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Find and verify ownership
-    const comment = await (prisma as unknown as PrismaWithComments).contentComment?.findUnique({
+    const comment = await (
+      prisma as unknown as PrismaWithComments
+    ).contentComment?.findUnique({
       where: { id: commentId },
     });
 
     if (!comment) {
-      return NextResponse.json(
-        { error: 'Comment not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Comment not found' }, { status: 404 });
     }
 
     if (comment.authorId !== userId) {

@@ -11,7 +11,10 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';
 
@@ -36,7 +39,7 @@ const SCHEMA_TYPES = [
 // Request validation schema
 const SchemaRequestSchema = z.object({
   type: z.enum(SCHEMA_TYPES),
-  data: z.record(z.unknown()),
+  data: z.record(z.string(), z.unknown()),
   url: z.string().url().optional(),
 });
 
@@ -94,7 +97,11 @@ interface LocationData {
 }
 
 // Generate schema based on type
-function generateSchema(type: string, data: Record<string, unknown>, url?: string): object {
+function generateSchema(
+  type: string,
+  data: Record<string, unknown>,
+  url?: string
+): object {
   const baseSchema = {
     '@context': 'https://schema.org',
     '@type': type,
@@ -110,12 +117,14 @@ function generateSchema(type: string, data: Record<string, unknown>, url?: strin
         logo: data.logo || `${url}/logo.png`,
         description: data.description || '',
         sameAs: data.socialProfiles || [],
-        contactPoint: contactPoint ? {
-          '@type': 'ContactPoint',
-          telephone: contactPoint.phone,
-          email: contactPoint.email,
-          contactType: contactPoint.type || 'customer service',
-        } : undefined,
+        contactPoint: contactPoint
+          ? {
+              '@type': 'ContactPoint',
+              telephone: contactPoint.phone,
+              email: contactPoint.email,
+              contactType: contactPoint.type || 'customer service',
+            }
+          : undefined,
       };
     }
 
@@ -129,19 +138,23 @@ function generateSchema(type: string, data: Record<string, unknown>, url?: strin
         image: data.image,
         telephone: data.phone,
         email: data.email,
-        address: address ? {
-          '@type': 'PostalAddress',
-          streetAddress: address.street,
-          addressLocality: address.city,
-          addressRegion: address.state,
-          postalCode: address.zip,
-          addressCountry: address.country,
-        } : undefined,
-        geo: coordinates ? {
-          '@type': 'GeoCoordinates',
-          latitude: coordinates.lat,
-          longitude: coordinates.lng,
-        } : undefined,
+        address: address
+          ? {
+              '@type': 'PostalAddress',
+              streetAddress: address.street,
+              addressLocality: address.city,
+              addressRegion: address.state,
+              postalCode: address.zip,
+              addressCountry: address.country,
+            }
+          : undefined,
+        geo: coordinates
+          ? {
+              '@type': 'GeoCoordinates',
+              latitude: coordinates.lat,
+              longitude: coordinates.lng,
+            }
+          : undefined,
         openingHoursSpecification: data.hours,
         priceRange: data.priceRange,
       };
@@ -155,10 +168,12 @@ function generateSchema(type: string, data: Record<string, unknown>, url?: strin
         description: data.description,
         image: data.images || [],
         sku: data.sku,
-        brand: data.brand ? {
-          '@type': 'Brand',
-          name: data.brand,
-        } : undefined,
+        brand: data.brand
+          ? {
+              '@type': 'Brand',
+              name: data.brand,
+            }
+          : undefined,
         offers: {
           '@type': 'Offer',
           price: data.price,
@@ -166,11 +181,13 @@ function generateSchema(type: string, data: Record<string, unknown>, url?: strin
           availability: data.availability || 'https://schema.org/InStock',
           url: data.url || url,
         },
-        aggregateRating: rating ? {
-          '@type': 'AggregateRating',
-          ratingValue: rating.value,
-          reviewCount: rating.count,
-        } : undefined,
+        aggregateRating: rating
+          ? {
+              '@type': 'AggregateRating',
+              ratingValue: rating.value,
+              reviewCount: rating.count,
+            }
+          : undefined,
       };
     }
 
@@ -205,29 +222,35 @@ function generateSchema(type: string, data: Record<string, unknown>, url?: strin
     case 'FAQ':
       return {
         ...baseSchema,
-        mainEntity: ((data.questions || []) as FAQQuestion[]).map((q: FAQQuestion) => ({
-          '@type': 'Question',
-          name: q.question,
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: q.answer,
-          },
-        })),
+        mainEntity: ((data.questions || []) as FAQQuestion[]).map(
+          (q: FAQQuestion) => ({
+            '@type': 'Question',
+            name: q.question,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: q.answer,
+            },
+          })
+        ),
       };
 
     case 'HowTo': {
-      const costData = data.cost as { currency?: string; value?: number } | undefined;
+      const costData = data.cost as
+        | { currency?: string; value?: number }
+        | undefined;
       return {
         ...baseSchema,
         name: data.title || 'How To Guide',
         description: data.description,
         image: data.image,
         totalTime: data.totalTime,
-        estimatedCost: costData ? {
-          '@type': 'MonetaryAmount',
-          currency: costData.currency || 'USD',
-          value: costData.value,
-        } : undefined,
+        estimatedCost: costData
+          ? {
+              '@type': 'MonetaryAmount',
+              currency: costData.currency || 'USD',
+              value: costData.value,
+            }
+          : undefined,
         supply: ((data.supplies || []) as string[]).map((s: string) => ({
           '@type': 'HowToSupply',
           name: s,
@@ -236,13 +259,15 @@ function generateSchema(type: string, data: Record<string, unknown>, url?: strin
           '@type': 'HowToTool',
           name: t,
         })),
-        step: ((data.steps || []) as HowToStep[]).map((step: HowToStep, index: number) => ({
-          '@type': 'HowToStep',
-          position: index + 1,
-          name: step.name,
-          text: step.text,
-          image: step.image,
-        })),
+        step: ((data.steps || []) as HowToStep[]).map(
+          (step: HowToStep, index: number) => ({
+            '@type': 'HowToStep',
+            position: index + 1,
+            name: step.name,
+            text: step.text,
+            image: step.image,
+          })
+        ),
       };
     }
 
@@ -254,23 +279,29 @@ function generateSchema(type: string, data: Record<string, unknown>, url?: strin
         description: data.description,
         startDate: data.startDate,
         endDate: data.endDate,
-        location: location ? {
-          '@type': data.locationType || 'Place',
-          name: location.name,
-          address: location.address,
-        } : undefined,
-        organizer: data.organizer ? {
-          '@type': 'Organization',
-          name: data.organizer,
-          url: data.organizerUrl,
-        } : undefined,
-        offers: data.ticketPrice ? {
-          '@type': 'Offer',
-          price: data.ticketPrice,
-          priceCurrency: data.currency || 'USD',
-          url: data.ticketUrl,
-          availability: 'https://schema.org/InStock',
-        } : undefined,
+        location: location
+          ? {
+              '@type': data.locationType || 'Place',
+              name: location.name,
+              address: location.address,
+            }
+          : undefined,
+        organizer: data.organizer
+          ? {
+              '@type': 'Organization',
+              name: data.organizer,
+              url: data.organizerUrl,
+            }
+          : undefined,
+        offers: data.ticketPrice
+          ? {
+              '@type': 'Offer',
+              price: data.ticketPrice,
+              priceCurrency: data.currency || 'USD',
+              url: data.ticketUrl,
+              availability: 'https://schema.org/InStock',
+            }
+          : undefined,
         image: data.image,
         performer: data.performer,
       };
@@ -279,12 +310,14 @@ function generateSchema(type: string, data: Record<string, unknown>, url?: strin
     case 'BreadcrumbList':
       return {
         ...baseSchema,
-        itemListElement: ((data.items || []) as BreadcrumbItem[]).map((item: BreadcrumbItem, index: number) => ({
-          '@type': 'ListItem',
-          position: index + 1,
-          name: item.name,
-          item: item.url,
-        })),
+        itemListElement: ((data.items || []) as BreadcrumbItem[]).map(
+          (item: BreadcrumbItem, index: number) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            name: item.name,
+            item: item.url,
+          })
+        ),
       };
 
     case 'VideoObject':
@@ -343,7 +376,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get subscription
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
+    const subscription =
+      await subscriptionService.getOrCreateSubscription(userId);
 
     // Check if user has SEO access
     if (subscription.plan === 'free') {
@@ -367,7 +401,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: 'Invalid request',
-          details: validationResult.error.errors,
+          details: validationResult.error.issues,
         },
         400
       );
@@ -459,9 +493,7 @@ export async function GET(request: NextRequest) {
         publisher: '',
       },
       FAQ: {
-        questions: [
-          { question: '', answer: '' },
-        ],
+        questions: [{ question: '', answer: '' }],
       },
     },
   });

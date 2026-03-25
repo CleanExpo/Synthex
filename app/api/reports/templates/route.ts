@@ -79,7 +79,7 @@ const createTemplateSchema = z.object({
   reportType: z.enum(['overview', 'engagement', 'content', 'audience', 'campaigns', 'growth', 'custom']),
   metrics: z.array(z.string()).min(1),
   dimensions: z.array(z.string()).optional(),
-  filters: z.record(z.unknown()).optional(),
+  filters: z.record(z.string(), z.unknown()).optional(),
   visualizations: z.array(z.object({
     type: z.enum(['line', 'bar', 'pie', 'area', 'table', 'metric', 'heatmap']),
     title: z.string(),
@@ -296,7 +296,7 @@ export async function POST(request: NextRequest) {
     const validation = createTemplateSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
+        { error: 'Invalid input', details: validation.error.issues },
         { status: 400 }
       );
     }
@@ -398,7 +398,7 @@ export async function PATCH(request: NextRequest) {
     const validation = updateTemplateSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
+        { error: 'Invalid input', details: validation.error.issues },
         { status: 400 }
       );
     }

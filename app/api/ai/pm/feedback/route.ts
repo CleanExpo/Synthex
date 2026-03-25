@@ -12,7 +12,10 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 
@@ -49,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     if (!validation.success) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Invalid request', details: validation.error.errors },
+        { error: 'Invalid request', details: validation.error.issues },
         400
       );
     }

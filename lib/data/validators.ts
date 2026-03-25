@@ -34,7 +34,7 @@ export const userSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   authProvider: z.enum(['local', 'google']).optional().default('local'),
   emailVerified: z.boolean().optional().default(false),
-  preferences: z.record(z.unknown()).optional(),
+  preferences: z.record(z.string(), z.unknown()).optional(),
 });
 
 // Output type with defaults applied
@@ -54,7 +54,7 @@ export const campaignSchema = z
     startDate: z.coerce.date().optional(),
     endDate: z.coerce.date().optional(),
     budget: z.number().min(0).optional(),
-    goals: z.record(z.unknown()).optional(),
+    goals: z.record(z.string(), z.unknown()).optional(),
     userId: z.string().cuid('Invalid user ID'),
   })
   .refine(
@@ -109,7 +109,7 @@ export const projectSchema = z.object({
   status: z
     .enum(['active', 'paused', 'completed', 'archived'])
     .default('active'),
-  settings: z.record(z.unknown()).optional(),
+  settings: z.record(z.string(), z.unknown()).optional(),
   userId: z.string().cuid('Invalid user ID'),
 });
 
@@ -179,7 +179,9 @@ function validate<T>(
   return {
     valid: false,
     errors: result.error.issues.map(issue => ({
-      path: issue.path,
+      path: issue.path.filter(
+        (p): p is string | number => typeof p !== 'symbol'
+      ),
       message: issue.message,
       code: issue.code,
     })),

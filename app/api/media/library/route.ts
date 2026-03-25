@@ -12,21 +12,49 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
-import { mediaLibraryService, MediaFilterOptions } from '@/lib/services/media-library';
+import {
+  mediaLibraryService,
+  MediaFilterOptions,
+} from '@/lib/services/media-library';
 import { logger } from '@/lib/logger';
 
 // Request validation schemas
 const FilterSchema = z.object({
-  type: z.union([
-    z.enum(['image', 'video', 'audio']),
-    z.array(z.enum(['image', 'video', 'audio'])),
-  ]).optional(),
-  provider: z.union([
-    z.enum(['stability', 'dalle', 'gemini', 'runway', 'synthesia', 'd-id', 'elevenlabs']),
-    z.array(z.enum(['stability', 'dalle', 'gemini', 'runway', 'synthesia', 'd-id', 'elevenlabs'])),
-  ]).optional(),
+  type: z
+    .union([
+      z.enum(['image', 'video', 'audio']),
+      z.array(z.enum(['image', 'video', 'audio'])),
+    ])
+    .optional(),
+  provider: z
+    .union([
+      z.enum([
+        'stability',
+        'dalle',
+        'gemini',
+        'runway',
+        'synthesia',
+        'd-id',
+        'elevenlabs',
+      ]),
+      z.array(
+        z.enum([
+          'stability',
+          'dalle',
+          'gemini',
+          'runway',
+          'synthesia',
+          'd-id',
+          'elevenlabs',
+        ])
+      ),
+    ])
+    .optional(),
   status: z.enum(['pending', 'processing', 'completed', 'failed']).optional(),
   tags: z.array(z.string()).optional(),
   folderId: z.string().nullable().optional(),
@@ -43,12 +71,23 @@ const FilterSchema = z.object({
 
 const CreateAssetSchema = z.object({
   type: z.enum(['image', 'video', 'audio']),
-  provider: z.enum(['stability', 'dalle', 'gemini', 'runway', 'synthesia', 'd-id', 'elevenlabs']),
-  base64Data: z.string().max(50 * 1024 * 1024, 'Base64 data exceeds 50MB limit').optional(),
+  provider: z.enum([
+    'stability',
+    'dalle',
+    'gemini',
+    'runway',
+    'synthesia',
+    'd-id',
+    'elevenlabs',
+  ]),
+  base64Data: z
+    .string()
+    .max(50 * 1024 * 1024, 'Base64 data exceeds 50MB limit')
+    .optional(),
   url: z.string().url().optional(),
   externalId: z.string().optional(),
   prompt: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   tags: z.array(z.string()).optional(),
   folderId: z.string().optional(),
 });
@@ -57,7 +96,7 @@ const UpdateAssetSchema = z.object({
   id: z.string(),
   url: z.string().url().optional(),
   status: z.enum(['pending', 'processing', 'completed', 'failed']).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   tags: z.array(z.string()).optional(),
   folderId: z.string().nullable().optional(),
   isFavorite: z.boolean().optional(),
@@ -66,7 +105,14 @@ const UpdateAssetSchema = z.object({
 
 // Type helpers for filter options
 type MediaType = 'image' | 'video' | 'audio';
-type MediaProvider = 'stability' | 'dalle' | 'gemini' | 'runway' | 'synthesia' | 'd-id' | 'elevenlabs';
+type MediaProvider =
+  | 'stability'
+  | 'dalle'
+  | 'gemini'
+  | 'runway'
+  | 'synthesia'
+  | 'd-id'
+  | 'elevenlabs';
 type MediaStatus = 'pending' | 'processing' | 'completed' | 'failed';
 type SortField = 'createdAt' | 'updatedAt' | 'usageCount' | 'name';
 type SortOrder = 'asc' | 'desc';
@@ -195,7 +241,8 @@ export async function GET(request: NextRequest) {
       total: result.total,
       limit: filterOptions.limit || 50,
       offset: filterOptions.offset || 0,
-      hasMore: (filterOptions.offset || 0) + result.assets.length < result.total,
+      hasMore:
+        (filterOptions.offset || 0) + result.assets.length < result.total,
     });
   } catch (error: unknown) {
     logger.error('Media library GET error:', { error });
@@ -258,20 +305,17 @@ export async function POST(request: NextRequest) {
     const validated = CreateAssetSchema.parse(body);
     const asset = await mediaLibraryService.createAsset(userId, validated);
 
-    await auditLogger.logData(
-      'create',
-      'media',
-      asset.id,
-      userId,
-      'success',
-      { action: 'MEDIA_ASSET_CREATE', type: asset.type, provider: asset.provider }
-    );
+    await auditLogger.logData('create', 'media', asset.id, userId, 'success', {
+      action: 'MEDIA_ASSET_CREATE',
+      type: asset.type,
+      provider: asset.provider,
+    });
 
     return APISecurityChecker.createSecureResponse({ asset }, 201);
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }
@@ -320,7 +364,11 @@ export async function PUT(request: NextRequest) {
 
       const validated = folderSchema.parse(body);
       const { id, ...updates } = validated;
-      const folder = await mediaLibraryService.updateFolder(userId, id, updates);
+      const folder = await mediaLibraryService.updateFolder(
+        userId,
+        id,
+        updates
+      );
 
       if (!folder) {
         return APISecurityChecker.createSecureResponse(
@@ -370,20 +418,16 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    await auditLogger.logData(
-      'update',
-      'media',
-      id,
-      userId,
-      'success',
-      { action: 'MEDIA_ASSET_UPDATE', updates: Object.keys(updates) }
-    );
+    await auditLogger.logData('update', 'media', id, userId, 'success', {
+      action: 'MEDIA_ASSET_UPDATE',
+      updates: Object.keys(updates),
+    });
 
     return APISecurityChecker.createSecureResponse({ asset });
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }
@@ -456,7 +500,10 @@ export async function DELETE(request: NextRequest) {
     // Batch delete
     if (searchParams.get('batch') === 'true') {
       const validated = BatchDeleteSchema.parse(body);
-      const result = await mediaLibraryService.batchDelete(userId, validated.assetIds);
+      const result = await mediaLibraryService.batchDelete(
+        userId,
+        validated.assetIds
+      );
 
       await auditLogger.logData(
         'delete',
@@ -500,7 +547,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }

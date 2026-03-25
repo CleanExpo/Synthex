@@ -24,7 +24,7 @@ import type { WebhookEventType } from '@/lib/webhooks/types';
 
 const zapierPayloadSchema = z.object({
   event: z.string().min(1),
-  data: z.record(z.unknown()),
+  data: z.record(z.string(), z.unknown()),
   zapier_hook_id: z.string().optional(),
   timestamp: z.union([z.string(), z.number()]).optional(),
 });
@@ -147,7 +147,11 @@ export async function POST(request: NextRequest) {
         issues: validation.error.issues,
       });
       return NextResponse.json(
-        { error: 'Bad Request', message: 'Invalid payload', details: validation.error.issues },
+        {
+          error: 'Bad Request',
+          message: 'Invalid payload',
+          details: validation.error.issues,
+        },
         { status: 400 }
       );
     }
@@ -160,15 +164,23 @@ export async function POST(request: NextRequest) {
     if (!internalEventType) {
       logger.warn('Unknown Zapier event type', { event: payload.event });
       return NextResponse.json(
-        { error: 'Bad Request', message: `Unknown event type: ${payload.event}` },
+        {
+          error: 'Bad Request',
+          message: `Unknown event type: ${payload.event}`,
+        },
         { status: 400 }
       );
     }
 
     // Enqueue the event for processing
-    const eventId = await eventQueue.enqueue(internalEventType, 'internal', payload.data, {
-      correlationId: payload.zapier_hook_id,
-    });
+    const eventId = await eventQueue.enqueue(
+      internalEventType,
+      'internal',
+      payload.data,
+      {
+        correlationId: payload.zapier_hook_id,
+      }
+    );
 
     logger.info('Zapier webhook received and enqueued', {
       eventId,

@@ -24,16 +24,29 @@ const connectIntegrationSchema = z.object({
   platform: z.string().min(1),
   accessToken: z.string().optional(),
   refreshToken: z.string().optional(),
-  profile: z.record(z.unknown()).optional(),
+  profile: z.record(z.string(), z.unknown()).optional(),
 });
 
 // All supported platforms
-const ALL_PLATFORMS = ['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok', 'youtube', 'pinterest', 'reddit', 'threads'] as const;
+const ALL_PLATFORMS = [
+  'twitter',
+  'linkedin',
+  'instagram',
+  'facebook',
+  'tiktok',
+  'youtube',
+  'pinterest',
+  'reddit',
+  'threads',
+] as const;
 
 // Default empty integrations response
 const emptyIntegrations = {
   integrations: Object.fromEntries(ALL_PLATFORMS.map(p => [p, false])),
-  details: {} as Record<string, { profileName: string | null; profileId: string | null }>,
+  details: {} as Record<
+    string,
+    { profileName: string | null; profileId: string | null }
+  >,
   raw: [],
 };
 
@@ -66,7 +79,10 @@ export async function GET(request: NextRequest) {
       ALL_PLATFORMS.map(p => [p, false])
     );
 
-    const connectionDetails: Record<string, { profileName: string | null; profileId: string | null }> = {};
+    const connectionDetails: Record<
+      string,
+      { profileName: string | null; profileId: string | null }
+    > = {};
 
     connections.forEach(conn => {
       const platform = conn.platform.toLowerCase();
@@ -169,7 +185,10 @@ export async function DELETE(request: NextRequest) {
     const platform = searchParams.get('platform');
 
     if (!platform) {
-      return NextResponse.json({ error: 'Platform is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Platform is required' },
+        { status: 400 }
+      );
     }
 
     // Determine organization scope for multi-business support

@@ -23,7 +23,7 @@ function safeCompare(a: string, b: string): boolean {
 
 const emitEventSchema = z.object({
   type: z.string().min(1),
-  data: z.record(z.unknown()),
+  data: z.record(z.string(), z.unknown()),
   userId: z.string().optional(),
   organizationId: z.string().optional(),
   priority: z.number().optional(),
@@ -61,7 +61,9 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      logger.warn('Internal webhook processing failed', { error: result.error });
+      logger.warn('Internal webhook processing failed', {
+        error: result.error,
+      });
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
@@ -105,16 +107,12 @@ export async function PUT(request: NextRequest) {
     const body = validation.data;
 
     // Emit the event
-    const eventId = await emit(
-      body.type as WebhookEventType,
-      body.data,
-      {
-        userId: body.userId,
-        organizationId: body.organizationId,
-        priority: body.priority,
-        delay: body.delay,
-      }
-    );
+    const eventId = await emit(body.type as WebhookEventType, body.data, {
+      userId: body.userId,
+      organizationId: body.organizationId,
+      priority: body.priority,
+      delay: body.delay,
+    });
 
     logger.info('Internal event emitted', { eventId, type: body.type });
 

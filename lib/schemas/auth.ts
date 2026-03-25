@@ -19,7 +19,7 @@ export const emailSchema = z
   .email('Invalid email address')
   .min(5, 'Email must be at least 5 characters')
   .max(255, 'Email must not exceed 255 characters')
-  .transform((val) => val.toLowerCase().trim());
+  .transform(val => val.toLowerCase().trim());
 
 export const passwordSchema = z
   .string()
@@ -28,13 +28,19 @@ export const passwordSchema = z
   .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
   .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
   .regex(/[0-9]/, 'Password must contain at least one number')
-  .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character');
+  .regex(
+    /[^A-Za-z0-9]/,
+    'Password must contain at least one special character'
+  );
 
 export const usernameSchema = z
   .string()
   .min(3, 'Username must be at least 3 characters')
   .max(30, 'Username must not exceed 30 characters')
-  .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens');
+  .regex(
+    /^[a-zA-Z0-9_-]+$/,
+    'Username can only contain letters, numbers, underscores, and hyphens'
+  );
 
 export const uuidSchema = z.string().uuid('Invalid ID format');
 
@@ -54,18 +60,23 @@ export type LoginInput = z.infer<typeof loginSchema>;
 // Signup Schema
 // =============================================================================
 
-export const signupSchema = z.object({
-  email: emailSchema,
-  password: passwordSchema,
-  confirmPassword: z.string().min(1, 'Please confirm your password'),
-  name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name must not exceed 100 characters'),
-  acceptTerms: z.boolean().refine((val) => val === true, {
-    message: 'You must accept the terms and conditions',
-  }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
+export const signupSchema = z
+  .object({
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+    name: z
+      .string()
+      .min(2, 'Name must be at least 2 characters')
+      .max(100, 'Name must not exceed 100 characters'),
+    acceptTerms: z.boolean().refine(val => val === true, {
+      message: 'You must accept the terms and conditions',
+    }),
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 export type SignupInput = z.infer<typeof signupSchema>;
 
@@ -79,14 +90,16 @@ export const forgotPasswordSchema = z.object({
 
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 
-export const resetPasswordSchema = z.object({
-  token: z.string().min(1, 'Reset token is required'),
-  password: passwordSchema,
-  confirmPassword: z.string().min(1, 'Please confirm your password'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1, 'Reset token is required'),
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 
@@ -95,20 +108,37 @@ export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 // =============================================================================
 
 export const profileUpdateSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').max(100).optional(),
+  name: z
+    .string()
+    .min(2, 'Name must be at least 2 characters')
+    .max(100)
+    .optional(),
   email: emailSchema.optional(),
   avatar: z.string().url('Invalid avatar URL').optional().nullable(),
-  bio: z.string().max(500, 'Bio must not exceed 500 characters').optional().nullable(),
-  company: z.string().max(100, 'Company name must not exceed 100 characters').optional().nullable(),
+  bio: z
+    .string()
+    .max(500, 'Bio must not exceed 500 characters')
+    .optional()
+    .nullable(),
+  company: z
+    .string()
+    .max(100, 'Company name must not exceed 100 characters')
+    .optional()
+    .nullable(),
   website: z.string().url('Invalid website URL').optional().nullable(),
   timezone: z.string().optional(),
-  language: z.enum(['en', 'es', 'fr', 'de', 'pt', 'it', 'ja', 'zh', 'ko']).optional().default('en'),
-  preferences: z.object({
-    emailNotifications: z.boolean().optional(),
-    pushNotifications: z.boolean().optional(),
-    marketingEmails: z.boolean().optional(),
-    theme: z.enum(['light', 'dark', 'system']).optional(),
-  }).optional(),
+  language: z
+    .enum(['en', 'es', 'fr', 'de', 'pt', 'it', 'ja', 'zh', 'ko'])
+    .optional()
+    .default('en'),
+  preferences: z
+    .object({
+      emailNotifications: z.boolean().optional(),
+      pushNotifications: z.boolean().optional(),
+      marketingEmails: z.boolean().optional(),
+      theme: z.enum(['light', 'dark', 'system']).optional(),
+    })
+    .optional(),
 });
 
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
@@ -161,9 +191,15 @@ export type OAuthStateData = z.infer<typeof oauthStateSchema>;
 // =============================================================================
 
 export const createApiKeySchema = z.object({
-  name: z.string().min(1, 'API key name is required').max(50, 'Name must not exceed 50 characters'),
+  name: z
+    .string()
+    .min(1, 'API key name is required')
+    .max(50, 'Name must not exceed 50 characters'),
   expiresAt: z.string().datetime().optional().nullable(),
-  permissions: z.array(z.enum(['read', 'write', 'delete', 'admin'])).optional().default(['read']),
+  permissions: z
+    .array(z.enum(['read', 'write', 'delete', 'admin']))
+    .optional()
+    .default(['read']),
 });
 
 export type CreateApiKeyInput = z.infer<typeof createApiKeySchema>;
@@ -184,7 +220,9 @@ export const sessionSchema = z.object({
   name: z.string().optional(),
   role: z.enum(['user', 'admin', 'superadmin']).default('user'),
   permissions: z.array(z.string()).optional(),
-  tier: z.enum(['free', 'professional', 'business', 'enterprise']).default('free'),
+  tier: z
+    .enum(['free', 'professional', 'business', 'enterprise'])
+    .default('free'),
   expiresAt: z.number(),
   iat: z.number(),
 });
@@ -220,7 +258,10 @@ export const enable2FASchema = z.object({
 export type Enable2FAInput = z.infer<typeof enable2FASchema>;
 
 export const verify2FASchema = z.object({
-  code: z.string().length(6, 'Verification code must be 6 digits').regex(/^\d+$/, 'Code must be numeric'),
+  code: z
+    .string()
+    .length(6, 'Verification code must be 6 digits')
+    .regex(/^\d+$/, 'Code must be numeric'),
   method: z.enum(['totp', 'sms', 'email', 'recovery']).optional(),
 });
 
@@ -301,7 +342,9 @@ export const userResponseSchema = z.object({
   email: z.string().email(),
   name: z.string().nullable().optional(),
   avatar: z.string().url().nullable().optional(),
-  emailVerified: z.union([z.date(), z.string().datetime(), z.null()]).optional(),
+  emailVerified: z
+    .union([z.date(), z.string().datetime(), z.null()])
+    .optional(),
 });
 
 export type UserResponse = z.infer<typeof userResponseSchema>;
@@ -341,16 +384,19 @@ export const getUserResponseSchema = z.object({
   user: userResponseSchema.extend({
     createdAt: z.union([z.date(), z.string().datetime()]).optional(),
     lastLogin: z.union([z.date(), z.string().datetime()]).nullable().optional(),
-    preferences: z.record(z.unknown()).nullable().optional(),
+    preferences: z.record(z.string(), z.unknown()).nullable().optional(),
     organizationId: z.string().uuid().nullable().optional(),
     isMultiBusinessOwner: z.boolean().optional(),
     activeOrganizationId: z.string().uuid().nullable().optional(),
-    organization: z.object({
-      id: z.string().uuid(),
-      name: z.string(),
-      slug: z.string(),
-      plan: z.string().nullable().optional(),
-    }).nullable().optional(),
+    organization: z
+      .object({
+        id: z.string().uuid(),
+        name: z.string(),
+        slug: z.string(),
+        plan: z.string().nullable().optional(),
+      })
+      .nullable()
+      .optional(),
     unreadNotifications: z.number().optional(),
     totalCampaigns: z.number().optional(),
     totalProjects: z.number().optional(),
@@ -368,7 +414,7 @@ export const updateUserResponseSchema = z.object({
   success: z.literal(true),
   message: z.string(),
   user: userResponseSchema.extend({
-    preferences: z.record(z.unknown()).nullable().optional(),
+    preferences: z.record(z.string(), z.unknown()).nullable().optional(),
   }),
 });
 
@@ -380,11 +426,15 @@ export type UpdateUserResponse = z.infer<typeof updateUserResponseSchema>;
 export const authErrorResponseSchema = z.object({
   error: z.string(),
   message: z.string().optional(),
-  details: z.array(z.object({
-    field: z.string().optional(),
-    path: z.array(z.string()).optional(),
-    message: z.string(),
-  })).optional(),
+  details: z
+    .array(
+      z.object({
+        field: z.string().optional(),
+        path: z.array(z.string()).optional(),
+        message: z.string(),
+      })
+    )
+    .optional(),
 });
 
 export type AuthErrorResponse = z.infer<typeof authErrorResponseSchema>;

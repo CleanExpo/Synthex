@@ -11,14 +11,17 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
 // Validation schemas
 const querySchema = z.object({
   period: z.enum(['7d', '30d', '90d', '1y']).optional().default('30d'),
   platform: z.string().optional(),
-  campaignId: z.string().cuid().optional()
+  campaignId: z.string().cuid().optional(),
 });
 
 /**
@@ -45,7 +48,7 @@ export async function GET(request: NextRequest) {
     const queryParams = {
       period: url.searchParams.get('period') || undefined,
       platform: url.searchParams.get('platform') || undefined,
-      campaignId: url.searchParams.get('campaignId') || undefined
+      campaignId: url.searchParams.get('campaignId') || undefined,
     };
 
     const query = querySchema.parse(queryParams);
@@ -85,15 +88,15 @@ export async function GET(request: NextRequest) {
               publishedPosts: 0,
               scheduledPosts: 0,
               failedPosts: 0,
-              engagementRate: 0
+              engagementRate: 0,
             },
             trends: [],
             topPerformingPosts: [],
-            platformBreakdown: []
+            platformBreakdown: [],
           },
           period: query.period,
           startDate: startDate.toISOString(),
-          endDate: now.toISOString()
+          endDate: now.toISOString(),
         },
         200,
         security.context
@@ -107,7 +110,7 @@ export async function GET(request: NextRequest) {
       platform?: string;
     } = {
       campaignId: query.campaignId ? query.campaignId : { in: campaignIds },
-      createdAt: { gte: startDate }
+      createdAt: { gte: startDate },
     };
 
     if (query.platform) {
@@ -115,12 +118,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Get post statistics
-    const [totalPosts, publishedPosts, scheduledPosts, failedPosts] = await Promise.all([
-      prisma.post.count({ where: postWhereClause }),
-      prisma.post.count({ where: { ...postWhereClause, status: 'published' } }),
-      prisma.post.count({ where: { ...postWhereClause, status: 'scheduled' } }),
-      prisma.post.count({ where: { ...postWhereClause, status: 'failed' } })
-    ]);
+    const [totalPosts, publishedPosts, scheduledPosts, failedPosts] =
+      await Promise.all([
+        prisma.post.count({ where: postWhereClause }),
+        prisma.post.count({
+          where: { ...postWhereClause, status: 'published' },
+        }),
+        prisma.post.count({
+          where: { ...postWhereClause, status: 'scheduled' },
+        }),
+        prisma.post.count({ where: { ...postWhereClause, status: 'failed' } }),
+      ]);
 
     // Get analytics events for engagement calculation
     const analyticsEvents = await prisma.analyticsEvent.findMany({
@@ -128,27 +136,29 @@ export async function GET(request: NextRequest) {
         userId: security.context.userId,
         timestamp: { gte: startDate },
         ...(query.platform && { platform: query.platform }),
-        ...(query.campaignId && { campaignId: query.campaignId })
+        ...(query.campaignId && { campaignId: query.campaignId }),
       },
       orderBy: { timestamp: 'desc' },
-      take: 1000
+      take: 1000,
     });
 
     // Calculate engagement metrics from events
     const engagementEvents = analyticsEvents.filter(e =>
       ['like', 'comment', 'share', 'click', 'view'].includes(e.type)
     );
-    const viewEvents = analyticsEvents.filter(e => e.type === 'view').length || 1;
-    const engagementRate = viewEvents > 0
-      ? ((engagementEvents.length / viewEvents) * 100).toFixed(2)
-      : 0;
+    const viewEvents =
+      analyticsEvents.filter(e => e.type === 'view').length || 1;
+    const engagementRate =
+      viewEvents > 0
+        ? ((engagementEvents.length / viewEvents) * 100).toFixed(2)
+        : 0;
 
     // Get top performing posts (by analytics data)
-    const postsWithAnalytics = await prisma.post.findMany({
+    const postsWithAnalytics = (await prisma.post.findMany({
       where: {
         ...postWhereClause,
         status: 'published',
-        analytics: { not: Prisma.DbNull }
+        analytics: { not: Prisma.DbNull },
       },
       orderBy: { publishedAt: 'desc' },
       take: 10,
@@ -160,10 +170,10 @@ export async function GET(request: NextRequest) {
         analytics: true,
         campaignId: true,
         campaign: {
-          select: { id: true, name: true }
-        }
-      }
-    }) as Array<{
+          select: { id: true, name: true },
+        },
+      },
+    })) as Array<{
       id: string;
       content: string;
       platform: string;
@@ -177,17 +187,20 @@ export async function GET(request: NextRequest) {
     const platformCounts = await prisma.post.groupBy({
       by: ['platform'],
       where: postWhereClause,
-      _count: { id: true }
+      _count: { id: true },
     });
 
     const platformBreakdown = platformCounts.map(p => ({
       platform: p.platform,
       count: p._count.id,
-      percentage: totalPosts > 0 ? ((p._count.id / totalPosts) * 100).toFixed(1) : 0
+      percentage:
+        totalPosts > 0 ? ((p._count.id / totalPosts) * 100).toFixed(1) : 0,
     }));
 
     // Generate daily trends — build all day ranges, then count in parallel (avoids N+1)
-    const daysDiff = Math.ceil((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysDiff = Math.ceil(
+      (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
     const dayCount = Math.min(daysDiff, 30);
 
     const dayRanges = Array.from({ length: dayCount }, (_, i) => {
@@ -202,7 +215,10 @@ export async function GET(request: NextRequest) {
     const dayCounts = await Promise.all(
       dayRanges.map(({ dayStart, dayEnd }) =>
         prisma.post.count({
-          where: { ...postWhereClause, createdAt: { gte: dayStart, lte: dayEnd } },
+          where: {
+            ...postWhereClause,
+            createdAt: { gte: dayStart, lte: dayEnd },
+          },
         })
       )
     );
@@ -229,33 +245,34 @@ export async function GET(request: NextRequest) {
             publishedPosts,
             scheduledPosts,
             failedPosts,
-            engagementRate: parseFloat(String(engagementRate))
+            engagementRate: parseFloat(String(engagementRate)),
           },
           trends,
           topPerformingPosts: postsWithAnalytics.map(post => ({
             id: post.id,
-            content: post.content.substring(0, 100) + (post.content.length > 100 ? '...' : ''),
+            content:
+              post.content.substring(0, 100) +
+              (post.content.length > 100 ? '...' : ''),
             platform: post.platform,
             publishedAt: post.publishedAt,
             campaign: post.campaign,
-            analytics: post.analytics
+            analytics: post.analytics,
           })),
-          platformBreakdown
+          platformBreakdown,
         },
         period: query.period,
         startDate: startDate.toISOString(),
-        endDate: now.toISOString()
+        endDate: now.toISOString(),
       },
       200,
       security.context
     );
-
   } catch (error) {
     logger.error('Analytics insights error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Invalid query parameters', details: error.errors },
+        { error: 'Invalid query parameters', details: error.issues },
         400,
         security.context
       );

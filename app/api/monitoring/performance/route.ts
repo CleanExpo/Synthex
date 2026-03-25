@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
 
 const perfConfigSchema = z.object({
   action: z.string().min(1),
-  thresholds: z.record(z.unknown()).optional(),
+  thresholds: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**

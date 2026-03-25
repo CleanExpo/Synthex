@@ -12,7 +12,10 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { competitiveIntel, Platform } from '@/lib/services/competitive-intel';
 import { logger } from '@/lib/logger';
@@ -20,7 +23,7 @@ import { logger } from '@/lib/logger';
 // Request validation schemas
 const AddCompetitorSchema = z.object({
   name: z.string().min(1).max(100),
-  handles: z.record(z.string()).optional(),
+  handles: z.record(z.string(), z.string()).optional(),
   website: z.string().url().optional(),
   industry: z.string().optional(),
   notes: z.string().optional(),
@@ -29,10 +32,12 @@ const AddCompetitorSchema = z.object({
 const BenchmarkSchema = z.object({
   competitorIds: z.array(z.string()).optional(),
   platforms: z.array(z.string()).optional(),
-  period: z.object({
-    start: z.string().datetime(),
-    end: z.string().datetime(),
-  }).optional(),
+  period: z
+    .object({
+      start: z.string().datetime(),
+      end: z.string().datetime(),
+    })
+    .optional(),
 });
 
 const HashtagAnalysisSchema = z.object({
@@ -144,7 +149,9 @@ export async function GET(request: NextRequest) {
 
     // Get strategic insights
     if (action === 'insights') {
-      const platforms = searchParams.get('platforms')?.split(',') as Platform[] | undefined;
+      const platforms = searchParams.get('platforms')?.split(',') as
+        | Platform[]
+        | undefined;
 
       const insights = await competitiveIntel.getStrategicInsights(userId, {
         platforms,
@@ -307,7 +314,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }
@@ -341,7 +348,8 @@ export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
   try {
-    const competitorId = searchParams.get('competitorId') || searchParams.get('id');
+    const competitorId =
+      searchParams.get('competitorId') || searchParams.get('id');
 
     if (!competitorId) {
       return APISecurityChecker.createSecureResponse(

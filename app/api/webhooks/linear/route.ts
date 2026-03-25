@@ -24,15 +24,17 @@ const LinearIssueDataSchema = z.object({
   title: z.string(),
   description: z.string().nullable().optional(),
   state: LinearStateSchema.optional(),
-  labels: z.object({
-    nodes: z.array(LinearIssueLabelSchema),
-  }).optional(),
+  labels: z
+    .object({
+      nodes: z.array(LinearIssueLabelSchema),
+    })
+    .optional(),
 });
 
 const LinearWebhookSchema = z.object({
   type: z.string(),
   action: z.string(),
-  data: z.record(z.unknown()),
+  data: z.record(z.string(), z.unknown()),
   organizationId: z.string().optional(),
 });
 
@@ -85,7 +87,9 @@ export async function POST(request: NextRequest) {
             title: issue.title,
             description: issue.description ?? null,
           });
-          logger.info(`[linear-webhook] Enqueued autonomous task for ${issue.identifier}`);
+          logger.info(
+            `[linear-webhook] Enqueued autonomous task for ${issue.identifier}`
+          );
         }
       }
     }

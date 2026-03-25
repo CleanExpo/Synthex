@@ -42,7 +42,7 @@ const updateContentSchema = z.object({
   category: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
   status: z.enum(['active', 'archived']).optional(),
-  metadata: z.record(z.unknown()).nullable().optional(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
   incrementUsage: z.boolean().optional(), // If true, increment usageCount and set lastUsedAt
 });
 

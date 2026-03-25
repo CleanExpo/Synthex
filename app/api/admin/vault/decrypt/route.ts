@@ -11,7 +11,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isOwnerEmail } from '@/lib/auth/jwt-utils';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
 import { VaultService, DecryptSecretSchema } from '@/lib/vault';
@@ -36,12 +39,20 @@ function isMissingTableError(error: unknown): boolean {
   );
 }
 
-async function requireOwner(request: NextRequest): Promise<
-  { userId: string; ipAddress: string; userAgent: string } | { error: NextResponse }
+async function requireOwner(
+  request: NextRequest
+): Promise<
+  | { userId: string; ipAddress: string; userAgent: string }
+  | { error: NextResponse }
 > {
-  const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_WRITE);
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_WRITE
+  );
   if (!security.allowed) {
-    return { error: NextResponse.json({ error: 'Unauthorised' }, { status: 401 }) };
+    return {
+      error: NextResponse.json({ error: 'Unauthorised' }, { status: 401 }),
+    };
   }
 
   const userId = security.context.userId!;
@@ -51,10 +62,18 @@ async function requireOwner(request: NextRequest): Promise<
   });
 
   if (!user?.email || !isOwnerEmail(user.email)) {
-    return { error: NextResponse.json({ error: 'Forbidden', message: 'Owner access required' }, { status: 403 }) };
+    return {
+      error: NextResponse.json(
+        { error: 'Forbidden', message: 'Owner access required' },
+        { status: 403 }
+      ),
+    };
   }
 
-  const ipAddress = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
+  const ipAddress =
+    request.headers.get('x-forwarded-for') ??
+    request.headers.get('x-real-ip') ??
+    'unknown';
   const userAgent = request.headers.get('user-agent') ?? 'unknown';
 
   return { userId, ipAddress, userAgent };
@@ -72,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid request', details: parsed.error.errors },
+        { error: 'Invalid request', details: parsed.error.issues },
         { status: 400 }
       );
     }
@@ -103,11 +122,17 @@ export async function POST(request: NextRequest) {
     });
 
     try {
-      const decrypted = await VaultService.getSecret(organizationId, slug, actor);
+      const decrypted = await VaultService.getSecret(
+        organizationId,
+        slug,
+        actor
+      );
 
       if (decrypted === null) {
         return NextResponse.json(
-          { error: `Secret "${slug}" not found, inactive, or decryption failed.` },
+          {
+            error: `Secret "${slug}" not found, inactive, or decryption failed.`,
+          },
           { status: 404 }
         );
       }
@@ -125,7 +150,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('[Vault Decrypt API] POST error:', error);
     return NextResponse.json(
-      { error: sanitizeErrorForResponse(error, 'Failed to decrypt vault secret') },
+      {
+        error: sanitizeErrorForResponse(
+          error,
+          'Failed to decrypt vault secret'
+        ),
+      },
       { status: 500 }
     );
   }

@@ -15,7 +15,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { randomBytes } from 'crypto';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
@@ -46,11 +49,25 @@ interface ContentShareCreateData {
 /** Extended Prisma client with optional models */
 interface ExtendedPrismaClient {
   contentShare?: {
-    findFirst: (args: { where: Record<string, unknown> }) => Promise<ContentShareRecord | null>;
-    findUnique: (args: { where: { id: string } }) => Promise<ContentShareRecord | null>;
-    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string>; take?: number; skip?: number }) => Promise<ContentShareRecord[]>;
-    create: (args: { data: ContentShareCreateData }) => Promise<ContentShareRecord>;
-    update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<ContentShareRecord>;
+    findFirst: (args: {
+      where: Record<string, unknown>;
+    }) => Promise<ContentShareRecord | null>;
+    findUnique: (args: {
+      where: { id: string };
+    }) => Promise<ContentShareRecord | null>;
+    findMany: (args: {
+      where: Record<string, unknown>;
+      orderBy?: Record<string, string>;
+      take?: number;
+      skip?: number;
+    }) => Promise<ContentShareRecord[]>;
+    create: (args: {
+      data: ContentShareCreateData;
+    }) => Promise<ContentShareRecord>;
+    update: (args: {
+      where: { id: string };
+      data: Record<string, unknown>;
+    }) => Promise<ContentShareRecord>;
     delete: (args: { where: { id: string } }) => Promise<void>;
     count: (args: { where: Record<string, unknown> }) => Promise<number>;
   };
@@ -75,7 +92,8 @@ interface ContentShareRecord {
 }
 
 /** Get prisma with extended models */
-const extendedPrisma = prisma as unknown as typeof prisma & ExtendedPrismaClient;
+const extendedPrisma = prisma as unknown as typeof prisma &
+  ExtendedPrismaClient;
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -171,7 +189,7 @@ export async function POST(request: NextRequest) {
     const validation = createShareSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
+        { error: 'Invalid input', details: validation.error.issues },
         { status: 400 }
       );
     }
@@ -179,9 +197,17 @@ export async function POST(request: NextRequest) {
     const data = validation.data;
 
     // Ensure at least one target is specified
-    if (!data.sharedWithUserId && !data.sharedWithTeamId && !data.sharedWithEmail && !data.createLink) {
+    if (
+      !data.sharedWithUserId &&
+      !data.sharedWithTeamId &&
+      !data.sharedWithEmail &&
+      !data.createLink
+    ) {
       return NextResponse.json(
-        { error: 'Must specify a share target (user, team, email, or create link)' },
+        {
+          error:
+            'Must specify a share target (user, team, email, or create link)',
+        },
         { status: 400 }
       );
     }
@@ -198,8 +224,12 @@ export async function POST(request: NextRequest) {
         contentType: data.contentType,
         contentId: data.contentId,
         sharedById: userId,
-        ...(data.sharedWithUserId && { sharedWithUserId: data.sharedWithUserId }),
-        ...(data.sharedWithTeamId && { sharedWithTeamId: data.sharedWithTeamId }),
+        ...(data.sharedWithUserId && {
+          sharedWithUserId: data.sharedWithUserId,
+        }),
+        ...(data.sharedWithTeamId && {
+          sharedWithTeamId: data.sharedWithTeamId,
+        }),
         ...(data.sharedWithEmail && { sharedWithEmail: data.sharedWithEmail }),
       },
     });
@@ -262,7 +292,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the share and log the action atomically
-    const share = await prisma.$transaction(async (tx) => {
+    const share = await prisma.$transaction(async tx => {
       const extTx = tx as unknown as typeof tx & ExtendedPrismaClient;
       const created = await extTx.contentShare?.create({
         data: shareData,
@@ -280,7 +310,11 @@ export async function POST(request: NextRequest) {
           details: {
             shareId: created?.id,
             permission: data.permission,
-            sharedWith: data.sharedWithUserId || data.sharedWithTeamId || data.sharedWithEmail || 'link',
+            sharedWith:
+              data.sharedWithUserId ||
+              data.sharedWithTeamId ||
+              data.sharedWithEmail ||
+              'link',
           },
         },
       });
@@ -342,7 +376,10 @@ export async function GET(request: NextRequest) {
     const contentType = searchParams.get('contentType');
     const contentId = searchParams.get('contentId');
     const sharedWithMe = searchParams.get('sharedWithMe') === 'true';
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || '20', 10),
+      100
+    );
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Build query
@@ -362,10 +399,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Filter out expired shares
-    where.OR = [
-      { expiresAt: null },
-      { expiresAt: { gt: new Date() } },
-    ];
+    where.OR = [{ expiresAt: null }, { expiresAt: { gt: new Date() } }];
 
     const [shares, total] = await Promise.all([
       extendedPrisma.contentShare?.findMany({
@@ -428,10 +462,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     if (!share) {
-      return NextResponse.json(
-        { error: 'Share not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Share not found' }, { status: 404 });
     }
 
     if (share.sharedById !== userId) {
@@ -442,7 +473,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete the share and log the revocation atomically
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
       const extTx = tx as unknown as typeof tx & ExtendedPrismaClient;
       await extTx.contentShare?.delete({
         where: { id: shareId },
@@ -458,7 +489,11 @@ export async function DELETE(request: NextRequest) {
           outcome: 'success',
           details: {
             shareId,
-            revokedFrom: share.sharedWithUserId || share.sharedWithTeamId || share.sharedWithEmail || 'link',
+            revokedFrom:
+              share.sharedWithUserId ||
+              share.sharedWithTeamId ||
+              share.sharedWithEmail ||
+              'link',
           },
         },
       });

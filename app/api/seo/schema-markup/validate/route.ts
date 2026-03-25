@@ -14,13 +14,16 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { validateSchema } from '@/lib/seo/schema-markup-service';
 import { logger } from '@/lib/logger';
 
 const validateRequestSchema = z.object({
-  schema: z.record(z.unknown()),
+  schema: z.record(z.string(), z.unknown()),
 });
 
 /**
@@ -51,7 +54,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get subscription
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
+    const subscription =
+      await subscriptionService.getOrCreateSubscription(userId);
 
     // Check if user has SEO access
     if (subscription.plan === 'free') {

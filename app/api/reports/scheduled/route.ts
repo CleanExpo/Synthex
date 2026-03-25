@@ -16,7 +16,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -45,17 +48,31 @@ interface ScheduledReportRecord {
 /** Extended Prisma client with scheduled report model */
 interface ExtendedPrismaClient {
   scheduledReport?: {
-    findFirst: (args: { where: Record<string, unknown> }) => Promise<ScheduledReportRecord | null>;
-    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string>; take?: number; skip?: number; include?: Record<string, unknown> }) => Promise<ScheduledReportRecord[]>;
-    create: (args: { data: Record<string, unknown> }) => Promise<ScheduledReportRecord>;
-    update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<ScheduledReportRecord>;
+    findFirst: (args: {
+      where: Record<string, unknown>;
+    }) => Promise<ScheduledReportRecord | null>;
+    findMany: (args: {
+      where: Record<string, unknown>;
+      orderBy?: Record<string, string>;
+      take?: number;
+      skip?: number;
+      include?: Record<string, unknown>;
+    }) => Promise<ScheduledReportRecord[]>;
+    create: (args: {
+      data: Record<string, unknown>;
+    }) => Promise<ScheduledReportRecord>;
+    update: (args: {
+      where: { id: string };
+      data: Record<string, unknown>;
+    }) => Promise<ScheduledReportRecord>;
     delete: (args: { where: { id: string } }) => Promise<void>;
     count: (args: { where: Record<string, unknown> }) => Promise<number>;
   };
 }
 
 /** Get prisma with extended models */
-const extendedPrisma = prisma as unknown as typeof prisma & ExtendedPrismaClient;
+const extendedPrisma = prisma as unknown as typeof prisma &
+  ExtendedPrismaClient;
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -73,20 +90,32 @@ const createScheduledReportSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
   templateId: z.string().optional(),
-  reportType: z.enum(['overview', 'engagement', 'content', 'audience', 'campaigns', 'growth', 'custom']),
+  reportType: z.enum([
+    'overview',
+    'engagement',
+    'content',
+    'audience',
+    'campaigns',
+    'growth',
+    'custom',
+  ]),
   frequency: z.enum(['daily', 'weekly', 'biweekly', 'monthly', 'quarterly']),
   schedule: scheduleSchema,
   format: z.enum(['pdf', 'csv', 'json']).default('pdf'),
-  dateRangeType: z.enum(['last_period', 'custom', 'rolling_7d', 'rolling_30d', 'rolling_90d']).default('last_period'),
-  filters: z.record(z.unknown()).optional(),
+  dateRangeType: z
+    .enum(['last_period', 'custom', 'rolling_7d', 'rolling_30d', 'rolling_90d'])
+    .default('last_period'),
+  filters: z.record(z.string(), z.unknown()).optional(),
   metrics: z.array(z.string()).min(1),
   recipients: z.array(z.string().email()).min(1),
   webhookUrl: z.string().url().optional(),
 });
 
-const updateScheduledReportSchema = createScheduledReportSchema.partial().extend({
-  isActive: z.boolean().optional(),
-});
+const updateScheduledReportSchema = createScheduledReportSchema
+  .partial()
+  .extend({
+    isActive: z.boolean().optional(),
+  });
 
 // ============================================================================
 // HELPERS
@@ -97,7 +126,13 @@ const updateScheduledReportSchema = createScheduledReportSchema.partial().extend
  */
 function calculateNextRun(
   frequency: string,
-  schedule: { dayOfWeek?: number; dayOfMonth?: number; hour: number; minute: number; timezone: string },
+  schedule: {
+    dayOfWeek?: number;
+    dayOfMonth?: number;
+    hour: number;
+    minute: number;
+    timezone: string;
+  },
   fromDate: Date = new Date()
 ): Date {
   const now = fromDate;
@@ -188,7 +223,10 @@ export async function GET(request: NextRequest) {
 
     const activeOnly = searchParams.get('activeOnly') === 'true';
     const frequency = searchParams.get('frequency');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || '20', 10),
+      100
+    );
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Build query
@@ -258,7 +296,7 @@ export async function POST(request: NextRequest) {
     const validation = createScheduledReportSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
+        { error: 'Invalid input', details: validation.error.issues },
         { status: 400 }
       );
     }
@@ -362,7 +400,7 @@ export async function PATCH(request: NextRequest) {
     const validation = updateScheduledReportSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
+        { error: 'Invalid input', details: validation.error.issues },
         { status: 400 }
       );
     }
@@ -387,7 +425,15 @@ export async function PATCH(request: NextRequest) {
     let nextRunAt = existing.nextRunAt;
     if (data.frequency || data.schedule) {
       const frequency = data.frequency || existing.frequency;
-      const schedule = data.schedule || (existing.schedule as { hour: number; minute: number; timezone: string; dayOfWeek?: number; dayOfMonth?: number });
+      const schedule =
+        data.schedule ||
+        (existing.schedule as {
+          hour: number;
+          minute: number;
+          timezone: string;
+          dayOfWeek?: number;
+          dayOfMonth?: number;
+        });
       nextRunAt = calculateNextRun(frequency, schedule);
     }
 

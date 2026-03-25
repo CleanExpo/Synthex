@@ -20,18 +20,28 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
 // Validation schema for creating content
 const createContentSchema = z.object({
   title: z.string().min(1).max(200),
   content: z.string().min(1).max(50000),
-  contentType: z.enum(['post', 'caption', 'story', 'thread', 'template', 'snippet']),
+  contentType: z.enum([
+    'post',
+    'caption',
+    'story',
+    'thread',
+    'template',
+    'snippet',
+  ]),
   platform: z.string().optional(),
   category: z.string().optional(),
   tags: z.array(z.string()).optional().default([]),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
@@ -65,7 +75,10 @@ export async function GET(request: NextRequest) {
   try {
     // Parse query parameters
     const url = new URL(request.url);
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
+    const limit = Math.min(
+      parseInt(url.searchParams.get('limit') || '50'),
+      100
+    );
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const contentType = url.searchParams.get('contentType');
     const platform = url.searchParams.get('platform');
@@ -79,7 +92,10 @@ export async function GET(request: NextRequest) {
       contentType?: string;
       platform?: string;
       category?: string;
-      OR?: Array<{ title?: { contains: string; mode: 'insensitive' }; content?: { contains: string; mode: 'insensitive' } }>;
+      OR?: Array<{
+        title?: { contains: string; mode: 'insensitive' };
+        content?: { contains: string; mode: 'insensitive' };
+      }>;
     } = {
       userId,
       status: { not: 'deleted' },
@@ -175,7 +191,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { title, content, contentType, platform, category, tags, metadata } = validation.data;
+    const { title, content, contentType, platform, category, tags, metadata } =
+      validation.data;
 
     const item = await prisma.contentLibrary.create({
       data: {

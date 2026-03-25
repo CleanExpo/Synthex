@@ -21,8 +21,14 @@ import { z } from 'zod';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300; // Video production is a long-running operation
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-import { subscriptionService, PLAN_LIMITS } from '@/lib/stripe/subscription-service';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
+import {
+  subscriptionService,
+  PLAN_LIMITS,
+} from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';
 
 // Available workflow names (mirrors SYNTHEX_WORKFLOWS keys)
@@ -34,7 +40,10 @@ const WORKFLOW_NAMES = [
   'viralPatterns',
 ] as const;
 
-const WORKFLOW_INFO: Record<string, { name: string; description: string; duration: number }> = {
+const WORKFLOW_INFO: Record<
+  string,
+  { name: string; description: string; duration: number }
+> = {
   platformOverview: {
     name: 'Platform Overview',
     description: 'Complete tour of Synthex dashboard showing all main features',
@@ -95,7 +104,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Check subscription
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
+    const subscription =
+      await subscriptionService.getOrCreateSubscription(userId);
     if (subscription.plan === 'free') {
       return APISecurityChecker.createSecureResponse(
         {
@@ -114,7 +124,11 @@ export async function GET(request: NextRequest) {
       issues: [] as string[],
     };
 
-    if (!process.env.YOUTUBE_CLIENT_ID || !process.env.YOUTUBE_CLIENT_SECRET || !process.env.YOUTUBE_REFRESH_TOKEN) {
+    if (
+      !process.env.YOUTUBE_CLIENT_ID ||
+      !process.env.YOUTUBE_CLIENT_SECRET ||
+      !process.env.YOUTUBE_REFRESH_TOKEN
+    ) {
       readiness.issues.push('YouTube API credentials not configured');
     }
     if (!process.env.ELEVENLABS_API_KEY) {
@@ -166,7 +180,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check subscription - video production requires business plan
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
+    const subscription =
+      await subscriptionService.getOrCreateSubscription(userId);
     if (subscription.plan === 'free' || subscription.plan === 'professional') {
       return APISecurityChecker.createSecureResponse(
         {
@@ -188,7 +203,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: 'Invalid request',
-          details: validationResult.error.errors,
+          details: validationResult.error.issues,
         },
         400
       );
@@ -205,7 +220,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Dynamically import orchestrator to avoid loading heavy deps on every request
-    const { VideoOrchestrator } = await import('@/lib/video/video-orchestrator');
+    const { VideoOrchestrator } =
+      await import('@/lib/video/video-orchestrator');
     const orchestrator = new VideoOrchestrator();
 
     // Check system readiness

@@ -29,7 +29,7 @@ const CreateDealSchema = z.object({
   stage: z.enum(DEAL_STAGES as [DealStage, ...DealStage[]]).optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // =============================================================================

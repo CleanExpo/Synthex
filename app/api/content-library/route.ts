@@ -49,7 +49,7 @@ const createSchema = z.object({
   platform: z.string().optional(),
   category: z.string().optional(),
   tags: z.array(z.string()).optional().default([]),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // =============================================================================

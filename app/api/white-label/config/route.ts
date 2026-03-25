@@ -144,7 +144,7 @@ export async function PUT(request: NextRequest) {
     const validation = whiteLabelConfigSchema.safeParse(body);
     if (!validation.success) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation failed', details: validation.error.errors },
+        { error: 'Validation failed', details: validation.error.issues },
         400,
         security.context
       );

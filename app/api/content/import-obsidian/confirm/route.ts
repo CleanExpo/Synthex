@@ -12,7 +12,7 @@ const ConfirmSchema = z.object({
   tone: z.string().max(100).optional(),
   topic: z.string().max(200).optional(),
   hashtags: z.array(z.string()).max(30),
-  frontMatter: z.record(z.unknown()),
+  frontMatter: z.record(z.string(), z.unknown()),
 });
 
 export async function POST(req: NextRequest) {
@@ -48,7 +48,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(result, { status: 201 });
     } catch (err) {
       console.error('[import-obsidian/confirm]', err);
-      return NextResponse.json({ error: 'Failed to create draft' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to create draft' },
+        { status: 500 }
+      );
     }
   });
 }

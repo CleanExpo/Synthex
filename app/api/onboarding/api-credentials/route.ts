@@ -15,8 +15,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { encryptApiKey, maskApiKey } from '@/lib/encryption/api-key-encryption';
-import { validateAPIKey, APIProvider } from '@/lib/encryption/api-key-validator';
-import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  validateAPIKey,
+  APIProvider,
+} from '@/lib/encryption/api-key-validator';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { withRateLimit } from '@/lib/middleware/rate-limiter';
 import { logger } from '@/lib/logger';
 import { seedSingleCredential } from '@/lib/vault/onboarding-seeder';
@@ -38,7 +44,7 @@ async function postHandler(request: NextRequest) {
 
   if (!validation.success) {
     return NextResponse.json(
-      { error: 'Invalid request', details: validation.error.errors },
+      { error: 'Invalid request', details: validation.error.issues },
       { status: 400 }
     );
   }
@@ -46,7 +52,10 @@ async function postHandler(request: NextRequest) {
   const { provider, apiKey, organizationId } = validation.data;
 
   // Validate API key with provider
-  const validationResult = await validateAPIKey(provider as APIProvider, apiKey);
+  const validationResult = await validateAPIKey(
+    provider as APIProvider,
+    apiKey
+  );
 
   if (!validationResult.isValid) {
     return NextResponse.json(
@@ -107,7 +116,7 @@ async function postHandler(request: NextRequest) {
       organizationId,
       provider,
       rawApiKey: apiKey,
-    }).catch((err) => {
+    }).catch(err => {
       logger.warn('[API Credentials] Vault mirror failed (non-fatal)', {
         error: err instanceof Error ? err.message : String(err),
       });

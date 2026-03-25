@@ -10,7 +10,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -42,7 +45,7 @@ export async function POST(request: NextRequest) {
     const validation = planRequestSchema.safeParse(body);
     if (!validation.success) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation failed', details: validation.error.errors },
+        { error: 'Validation failed', details: validation.error.issues },
         400,
         security.context
       );
@@ -58,7 +61,7 @@ export async function POST(request: NextRequest) {
         { phase: 1, title: 'Research & Analysis', duration: '1 week' },
         { phase: 2, title: 'Strategy Development', duration: '2 weeks' },
         { phase: 3, title: 'Content Creation', duration: '3 weeks' },
-        { phase: 4, title: 'Launch & Monitor', duration: 'Ongoing' }
+        { phase: 4, title: 'Launch & Monitor', duration: 'Ongoing' },
       ],
       estimatedROI: '250%',
       confidence: 0.85,

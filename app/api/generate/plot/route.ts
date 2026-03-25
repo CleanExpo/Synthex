@@ -26,7 +26,7 @@ import { logger } from '@/lib/logger';
 
 const PlotRequestSchema = z.object({
   prompt: z.string().min(1).max(2000),
-  data: z.record(z.unknown()).optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
   style: z.string().optional().default('academic'),
   width: z.number().int().min(200).max(4096).optional().default(1200),
   height: z.number().int().min(200).max(4096).optional().default(800),
@@ -36,7 +36,10 @@ export async function POST(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const serviceUrl = process.env.PAPER_BANANA_SERVICE_URL;
@@ -82,10 +85,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data, { status: upstream.status });
   } catch (error) {
     if (error instanceof Error && error.name === 'TimeoutError') {
-      return NextResponse.json({ error: 'Plot generation timed out' }, { status: 504 });
+      return NextResponse.json(
+        { error: 'Plot generation timed out' },
+        { status: 504 }
+      );
     }
     logger.error('[Generate Plot] Error:', error);
-    return NextResponse.json({ error: 'Plot generation failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Plot generation failed' },
+      { status: 500 }
+    );
   }
 }
 

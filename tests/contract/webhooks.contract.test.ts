@@ -72,7 +72,7 @@ const webhookEventSchema = z.object({
   timestamp: z.string().datetime().or(z.date()),
   userId: z.string().uuid().optional(),
   organizationId: z.string().uuid().optional(),
-  data: z.record(z.unknown()),
+  data: z.record(z.string(), z.unknown()),
   metadata: z
     .object({
       version: z.string().optional(),
@@ -95,7 +95,7 @@ const webhookDeliverySchema = z.object({
     .object({
       statusCode: z.number().int(),
       body: z.string().optional(),
-      headers: z.record(z.string()).optional(),
+      headers: z.record(z.string(), z.string()).optional(),
     })
     .optional(),
   error: z.string().optional(),
@@ -111,7 +111,7 @@ const webhookEndpointSchema = z.object({
   organizationId: z.string().uuid().optional(),
   createdAt: z.string().datetime().or(z.date()),
   updatedAt: z.string().datetime().or(z.date()),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 const webhookConfigSchema = z.object({
@@ -214,7 +214,7 @@ describe('Webhook Contract Tests', () => {
         'internal',
       ];
 
-      platforms.forEach((platform) => {
+      platforms.forEach(platform => {
         const result = webhookPlatformSchema.safeParse(platform);
         expect(result.success).toBe(true);
       });
@@ -236,7 +236,7 @@ describe('Webhook Contract Tests', () => {
         'post.failed',
       ];
 
-      contentEvents.forEach((event) => {
+      contentEvents.forEach(event => {
         const result = webhookEventTypeSchema.safeParse(event);
         expect(result.success).toBe(true);
       });
@@ -251,7 +251,7 @@ describe('Webhook Contract Tests', () => {
         'engagement.reaction',
       ];
 
-      engagementEvents.forEach((event) => {
+      engagementEvents.forEach(event => {
         const result = webhookEventTypeSchema.safeParse(event);
         expect(result.success).toBe(true);
       });
@@ -266,16 +266,20 @@ describe('Webhook Contract Tests', () => {
         'billing.payment_failed',
       ];
 
-      billingEvents.forEach((event) => {
+      billingEvents.forEach(event => {
         const result = webhookEventTypeSchema.safeParse(event);
         expect(result.success).toBe(true);
       });
     });
 
     it('should validate system event types', () => {
-      const systemEvents = ['system.health_check', 'system.error', 'system.maintenance'];
+      const systemEvents = [
+        'system.health_check',
+        'system.error',
+        'system.maintenance',
+      ];
 
-      systemEvents.forEach((event) => {
+      systemEvents.forEach(event => {
         const result = webhookEventTypeSchema.safeParse(event);
         expect(result.success).toBe(true);
       });

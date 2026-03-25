@@ -67,7 +67,7 @@ export async function PATCH(
     // Validate request body
     const updateBusinessSchema = z.object({
       displayName: z.string().optional(),
-      isActive: z.boolean().optional()
+      isActive: z.boolean().optional(),
     });
 
     let body;
@@ -85,7 +85,8 @@ export async function PATCH(
       return NextResponse.json(
         {
           error: 'Validation Error',
-          message: validationResult.error.errors[0]?.message || 'Invalid request body'
+          message:
+            validationResult.error.issues[0]?.message || 'Invalid request body',
         },
         { status: 400 }
       );
@@ -97,15 +98,15 @@ export async function PATCH(
     const ownership = await prisma.businessOwnership.findFirst({
       where: {
         id,
-        ownerId: userId
-      }
+        ownerId: userId,
+      },
     });
 
     if (!ownership) {
       return NextResponse.json(
         {
           error: 'Not Found',
-          message: 'Business not found or you do not have access'
+          message: 'Business not found or you do not have access',
         },
         { status: 404 }
       );
@@ -116,7 +117,7 @@ export async function PATCH(
       where: { id },
       data: {
         ...updates,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       include: {
         organization: {
@@ -125,10 +126,10 @@ export async function PATCH(
             name: true,
             slug: true,
             plan: true,
-            status: true
-          }
-        }
-      }
+            status: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json({
@@ -141,16 +142,15 @@ export async function PATCH(
         monthlyRate: updatedOwnership.monthlyRate,
         createdAt: updatedOwnership.createdAt.toISOString(),
         updatedAt: updatedOwnership.updatedAt.toISOString(),
-        organization: updatedOwnership.organization
-      }
+        organization: updatedOwnership.organization,
+      },
     });
-
   } catch (error) {
     logger.error('[PATCH /api/businesses/[id]] Error:', error);
     return NextResponse.json(
       {
         error: 'Internal Server Error',
-        message: 'Failed to update business'
+        message: 'Failed to update business',
       },
       { status: 500 }
     );
@@ -203,15 +203,15 @@ export async function DELETE(
     const ownership = await prisma.businessOwnership.findFirst({
       where: {
         id,
-        ownerId: userId
-      }
+        ownerId: userId,
+      },
     });
 
     if (!ownership) {
       return NextResponse.json(
         {
           error: 'Not Found',
-          message: 'Business not found or you do not have access'
+          message: 'Business not found or you do not have access',
         },
         { status: 404 }
       );
@@ -223,31 +223,30 @@ export async function DELETE(
       data: {
         isActive: false,
         billingStatus: 'cancelled',
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
 
     // If this was the active business, clear activeOrganizationId
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { activeOrganizationId: true }
+      select: { activeOrganizationId: true },
     });
 
     if (user?.activeOrganizationId === ownership.organizationId) {
       await prisma.user.update({
         where: { id: userId },
-        data: { activeOrganizationId: null }
+        data: { activeOrganizationId: null },
       });
     }
 
     return NextResponse.json({ success: true });
-
   } catch (error) {
     logger.error('[DELETE /api/businesses/[id]] Error:', error);
     return NextResponse.json(
       {
         error: 'Internal Server Error',
-        message: 'Failed to delete business'
+        message: 'Failed to delete business',
       },
       { status: 500 }
     );

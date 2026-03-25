@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         {
-          error: parsed.error.errors[0]?.message ?? 'Validation failed',
+          error: parsed.error.issues[0]?.message ?? 'Validation failed',
           details: parsed.error.flatten(),
         },
         { status: 400 }

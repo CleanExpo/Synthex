@@ -16,7 +16,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import {
   isMultiBusinessOwner,
   getOwnedBusinesses,
-  createChildBusiness
+  createChildBusiness,
 } from '@/lib/multi-business';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
@@ -66,20 +66,19 @@ export async function GET(request: NextRequest) {
     const { prisma } = await import('@/lib/prisma');
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { activeOrganizationId: true }
+      select: { activeOrganizationId: true },
     });
 
     return NextResponse.json({
       businesses,
-      activeBusiness: user?.activeOrganizationId || null
+      activeBusiness: user?.activeOrganizationId || null,
     });
-
   } catch (error) {
     logger.error('[GET /api/businesses] Error:', error);
     return NextResponse.json(
       {
         error: 'Internal Server Error',
-        message: 'Failed to fetch businesses'
+        message: 'Failed to fetch businesses',
       },
       { status: 500 }
     );
@@ -124,10 +123,11 @@ export async function POST(request: NextRequest) {
 
     // Validate request body
     const createBusinessSchema = z.object({
-      name: z.string()
+      name: z
+        .string()
         .min(2, 'Business name must be at least 2 characters')
         .max(100, 'Business name must not exceed 100 characters'),
-      displayName: z.string().optional()
+      displayName: z.string().optional(),
     });
 
     let body;
@@ -145,7 +145,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Validation Error',
-          message: validationResult.error.errors[0]?.message || 'Invalid request body'
+          message:
+            validationResult.error.issues[0]?.message || 'Invalid request body',
         },
         { status: 400 }
       );
@@ -156,17 +157,13 @@ export async function POST(request: NextRequest) {
     // Create child business
     const business = await createChildBusiness(userId, { name, displayName });
 
-    return NextResponse.json(
-      { business },
-      { status: 201 }
-    );
-
+    return NextResponse.json({ business }, { status: 201 });
   } catch (error) {
     logger.error('[POST /api/businesses] Error:', error);
     return NextResponse.json(
       {
         error: 'Internal Server Error',
-        message: 'Failed to create business'
+        message: 'Failed to create business',
       },
       { status: 500 }
     );

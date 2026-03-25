@@ -24,7 +24,7 @@ import { logger } from '@/lib/logger';
 const generateSchema = z.object({
   type: z.enum(['diagram', 'plot', 'infographic', 'before_after']),
   prompt: z.string().min(10).max(2000),
-  data: z.record(z.unknown()).optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
   style: z.string().optional(),
   reportId: z.number().int().optional(),
   useQualityGate: z.boolean().optional().default(true),

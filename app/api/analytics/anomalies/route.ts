@@ -12,9 +12,16 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
-import { anomalyDetector, MetricType, AnomalySeverity } from '@/lib/analytics/anomaly-detector';
+import {
+  anomalyDetector,
+  MetricType,
+  AnomalySeverity,
+} from '@/lib/analytics/anomaly-detector';
 import { logger } from '@/lib/logger';
 
 // Request validation schemas
@@ -32,12 +39,16 @@ const UpdateConfigSchema = z.object({
   sensitivity: z.enum(['low', 'medium', 'high']).optional(),
   minDataPoints: z.number().min(3).max(100).optional(),
   lookbackWindow: z.number().min(7).max(365).optional(),
-  thresholds: z.object({
-    absoluteMin: z.number().optional(),
-    absoluteMax: z.number().optional(),
-    percentChange: z.number().min(0).max(1000).optional(),
-  }).optional(),
-  alertChannels: z.array(z.enum(['email', 'slack', 'discord', 'in_app'])).optional(),
+  thresholds: z
+    .object({
+      absoluteMin: z.number().optional(),
+      absoluteMax: z.number().optional(),
+      percentChange: z.number().min(0).max(1000).optional(),
+    })
+    .optional(),
+  alertChannels: z
+    .array(z.enum(['email', 'slack', 'discord', 'in_app']))
+    .optional(),
   cooldownMinutes: z.number().min(5).max(1440).optional(),
 });
 
@@ -81,7 +92,9 @@ export async function GET(request: NextRequest) {
 
     // Run detection
     if (searchParams.get('detect') === 'true') {
-      const metrics = searchParams.get('metrics')?.split(',') as MetricType[] | undefined;
+      const metrics = searchParams.get('metrics')?.split(',') as
+        | MetricType[]
+        | undefined;
       const platform = searchParams.get('platform') || undefined;
       const accountId = searchParams.get('accountId') || undefined;
 
@@ -110,8 +123,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Get anomalies list
-    const severity = searchParams.get('severity')?.split(',') as AnomalySeverity[] | undefined;
-    const metricTypes = searchParams.get('metricTypes')?.split(',') as MetricType[] | undefined;
+    const severity = searchParams.get('severity')?.split(',') as
+      | AnomalySeverity[]
+      | undefined;
+    const metricTypes = searchParams.get('metricTypes')?.split(',') as
+      | MetricType[]
+      | undefined;
     const acknowledged = searchParams.get('acknowledged');
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
@@ -175,7 +192,9 @@ export async function POST(request: NextRequest) {
         metrics: validated.metrics as MetricType[],
         platform: validated.platform,
         accountId: validated.accountId,
-        startDate: validated.startDate ? new Date(validated.startDate) : undefined,
+        startDate: validated.startDate
+          ? new Date(validated.startDate)
+          : undefined,
         endDate: validated.endDate ? new Date(validated.endDate) : undefined,
       });
 
@@ -244,7 +263,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }
@@ -352,7 +371,7 @@ export async function PUT(request: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }

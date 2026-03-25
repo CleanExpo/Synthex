@@ -33,7 +33,7 @@ const UpdateSponsorSchema = z.object({
     .enum(SPONSOR_STATUSES as [SponsorStatus, ...SponsorStatus[]])
     .optional(),
   notes: z.string().max(2000).nullable().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // =============================================================================
