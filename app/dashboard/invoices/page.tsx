@@ -387,8 +387,8 @@ function InvoicesTable({
   };
 
   return (
-    <div className="rounded-lg border border-slate-700 overflow-hidden">
-      <table className="w-full text-sm">
+    <div className="rounded-lg border border-slate-700 overflow-hidden overflow-x-auto">
+      <table className="w-full min-w-[640px] text-sm">
         <thead className="bg-slate-800 border-b border-slate-700">
           <tr>
             {[
