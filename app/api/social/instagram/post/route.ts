@@ -24,6 +24,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
+import { writeDefault } from '@/lib/rate-limit';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -62,232 +63,239 @@ type PostRequest = z.infer<typeof PostRequestSchema>;
  * Create a new Instagram post
  */
 export async function POST(request: NextRequest) {
-  try {
-    // Security check
-    const security = await APISecurityChecker.check(
-      request,
-      DEFAULT_POLICIES.AUTHENTICATED_WRITE
-    );
-
-    if (!security.allowed) {
-      return APISecurityChecker.createSecureResponse(
-        { error: security.error },
-        403
+  return writeDefault(request, async () => {
+    try {
+      // Security check
+      const security = await APISecurityChecker.check(
+        request,
+        DEFAULT_POLICIES.AUTHENTICATED_WRITE
       );
-    }
 
-    // Get user from token
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+      if (!security.allowed) {
+        return APISecurityChecker.createSecureResponse(
+          { error: security.error },
+          403
+        );
+      }
 
-    // Parse and validate request body
-    const body = await request.json();
-    const validation = PostRequestSchema.safeParse(body);
+      // Get user from token
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
 
-    if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validation.error.flatten().fieldErrors,
-        },
-        { status: 400 }
-      );
-    }
+      // Parse and validate request body
+      const body = await request.json();
+      const validation = PostRequestSchema.safeParse(body);
 
-    const postData: PostRequest = validation.data;
+      if (!validation.success) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: validation.error.flatten().fieldErrors,
+          },
+          { status: 400 }
+        );
+      }
 
-    // Get user's Instagram connection
-    const { data: connection, error: connectionError } = await getSupabase()
-      .from('platform_connections')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'instagram')
-      .eq('is_active', true)
-      .single();
+      const postData: PostRequest = validation.data;
 
-    if (connectionError || !connection) {
-      return NextResponse.json(
-        {
-          error:
-            'Instagram account not connected. Please connect your Instagram Business account first.',
-        },
-        { status: 400 }
-      );
-    }
+      // Get user's Instagram connection
+      const { data: connection, error: connectionError } = await getSupabase()
+        .from('platform_connections')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('platform', 'instagram')
+        .eq('is_active', true)
+        .single();
 
-    // Check if token is expired
-    if (connection.expires_at && new Date(connection.expires_at) < new Date()) {
-      return NextResponse.json(
-        {
-          error: 'Instagram connection expired. Please reconnect your account.',
-        },
-        { status: 401 }
-      );
-    }
+      if (connectionError || !connection) {
+        return NextResponse.json(
+          {
+            error:
+              'Instagram account not connected. Please connect your Instagram Business account first.',
+          },
+          { status: 400 }
+        );
+      }
 
-    // Initialize Instagram service with user credentials
-    const instagramService = new InstagramService();
-    instagramService.initialize({
-      accessToken: connection.access_token,
-      refreshToken: connection.refresh_token,
-      expiresAt: connection.expires_at
-        ? new Date(connection.expires_at)
-        : undefined,
-      platformUserId: connection.platform_user_id,
-      platformUsername: connection.platform_username,
-    });
+      // Check if token is expired
+      if (
+        connection.expires_at &&
+        new Date(connection.expires_at) < new Date()
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'Instagram connection expired. Please reconnect your account.',
+          },
+          { status: 401 }
+        );
+      }
 
-    // Validate credentials
-    const isValid = await instagramService.validateCredentials();
-    if (!isValid) {
-      return NextResponse.json(
-        {
-          error:
-            'Instagram credentials are invalid. Please reconnect your account.',
-        },
-        { status: 401 }
-      );
-    }
+      // Initialize Instagram service with user credentials
+      const instagramService = new InstagramService();
+      instagramService.initialize({
+        accessToken: connection.access_token,
+        refreshToken: connection.refresh_token,
+        expiresAt: connection.expires_at
+          ? new Date(connection.expires_at)
+          : undefined,
+        platformUserId: connection.platform_user_id,
+        platformUsername: connection.platform_username,
+      });
 
-    // Handle scheduled posts
-    if (postData.scheduledTime) {
-      const scheduleDate = new Date(postData.scheduledTime);
+      // Validate credentials
+      const isValid = await instagramService.validateCredentials();
+      if (!isValid) {
+        return NextResponse.json(
+          {
+            error:
+              'Instagram credentials are invalid. Please reconnect your account.',
+          },
+          { status: 401 }
+        );
+      }
 
-      // Save to database for later processing
-      const { data: scheduledPost, error: scheduleError } = await getSupabase()
-        .from('scheduled_posts')
+      // Handle scheduled posts
+      if (postData.scheduledTime) {
+        const scheduleDate = new Date(postData.scheduledTime);
+
+        // Save to database for later processing
+        const { data: scheduledPost, error: scheduleError } =
+          await getSupabase()
+            .from('scheduled_posts')
+            .insert({
+              user_id: userId,
+              platform: 'instagram',
+              content: postData.caption,
+              media_urls: postData.mediaUrls,
+              media_type: postData.mediaType,
+              scheduled_time: postData.scheduledTime,
+              metadata: {
+                location: postData.location,
+                hashtags: postData.hashtags,
+              },
+              status: 'pending',
+            })
+            .select()
+            .single();
+
+        if (scheduleError) {
+          throw scheduleError;
+        }
+
+        // Log the scheduled action
+        await auditLogger.logData(
+          'create',
+          'scheduled_post',
+          scheduledPost.id,
+          userId,
+          'success',
+          {
+            action: 'instagram_post_scheduled',
+            scheduledTime: postData.scheduledTime,
+            mediaType: postData.mediaType,
+          }
+        );
+
+        return NextResponse.json({
+          success: true,
+          scheduled: true,
+          data: {
+            id: scheduledPost.id,
+            scheduledTime: postData.scheduledTime,
+            status: 'pending',
+          },
+        });
+      }
+
+      // Build caption with hashtags
+      let fullCaption = postData.caption;
+      if (postData.hashtags && postData.hashtags.length > 0) {
+        const hashtagString = postData.hashtags
+          .map(tag => (tag.startsWith('#') ? tag : `#${tag}`))
+          .join(' ');
+        fullCaption = `${postData.caption}\n\n${hashtagString}`;
+      }
+
+      // Create the post
+      const result = await instagramService.createPost({
+        text: fullCaption,
+        mediaUrls: postData.mediaUrls,
+      });
+
+      if (!result.success) {
+        return NextResponse.json(
+          { error: result.error || 'Failed to create Instagram post' },
+          { status: 500 }
+        );
+      }
+
+      // Save post to database
+      const { data: savedPost } = await getSupabase()
+        .from('social_posts')
         .insert({
           user_id: userId,
           platform: 'instagram',
-          content: postData.caption,
+          content: fullCaption,
+          post_id: result.postId,
           media_urls: postData.mediaUrls,
           media_type: postData.mediaType,
-          scheduled_time: postData.scheduledTime,
-          metadata: {
-            location: postData.location,
-            hashtags: postData.hashtags,
-          },
-          status: 'pending',
+          status: 'published',
+          metrics: {},
+          created_at: new Date().toISOString(),
         })
         .select()
         .single();
 
-      if (scheduleError) {
-        throw scheduleError;
-      }
+      // Track usage
+      await getSupabase().from('usage_tracking').insert({
+        user_id: userId,
+        feature: 'instagram_post',
+        count: 1,
+        timestamp: new Date().toISOString(),
+      });
 
-      // Log the scheduled action
+      // Log the action
       await auditLogger.logData(
         'create',
-        'scheduled_post',
-        scheduledPost.id,
+        'social_post',
+        result.postId || savedPost?.id,
         userId,
         'success',
         {
-          action: 'instagram_post_scheduled',
-          scheduledTime: postData.scheduledTime,
+          action: 'instagram_post_created',
           mediaType: postData.mediaType,
+          hasLocation: !!postData.location,
+          hashtagCount: postData.hashtags?.length || 0,
         }
       );
 
       return NextResponse.json({
         success: true,
-        scheduled: true,
         data: {
-          id: scheduledPost.id,
-          scheduledTime: postData.scheduledTime,
-          status: 'pending',
+          id: result.postId,
+          url: result.url,
+          caption: fullCaption,
+          mediaType: postData.mediaType,
         },
       });
-    }
-
-    // Build caption with hashtags
-    let fullCaption = postData.caption;
-    if (postData.hashtags && postData.hashtags.length > 0) {
-      const hashtagString = postData.hashtags
-        .map(tag => (tag.startsWith('#') ? tag : `#${tag}`))
-        .join(' ');
-      fullCaption = `${postData.caption}\n\n${hashtagString}`;
-    }
-
-    // Create the post
-    const result = await instagramService.createPost({
-      text: fullCaption,
-      mediaUrls: postData.mediaUrls,
-    });
-
-    if (!result.success) {
+    } catch (error: unknown) {
+      logger.error('Instagram post error:', error);
+      const errorMessage = 'An unexpected error occurred. Please try again.';
       return NextResponse.json(
-        { error: result.error || 'Failed to create Instagram post' },
+        {
+          error: 'Failed to post to Instagram',
+          message: errorMessage,
+        },
         { status: 500 }
       );
     }
-
-    // Save post to database
-    const { data: savedPost } = await getSupabase()
-      .from('social_posts')
-      .insert({
-        user_id: userId,
-        platform: 'instagram',
-        content: fullCaption,
-        post_id: result.postId,
-        media_urls: postData.mediaUrls,
-        media_type: postData.mediaType,
-        status: 'published',
-        metrics: {},
-        created_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    // Track usage
-    await getSupabase().from('usage_tracking').insert({
-      user_id: userId,
-      feature: 'instagram_post',
-      count: 1,
-      timestamp: new Date().toISOString(),
-    });
-
-    // Log the action
-    await auditLogger.logData(
-      'create',
-      'social_post',
-      result.postId || savedPost?.id,
-      userId,
-      'success',
-      {
-        action: 'instagram_post_created',
-        mediaType: postData.mediaType,
-        hasLocation: !!postData.location,
-        hashtagCount: postData.hashtags?.length || 0,
-      }
-    );
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: result.postId,
-        url: result.url,
-        caption: fullCaption,
-        mediaType: postData.mediaType,
-      },
-    });
-  } catch (error: unknown) {
-    logger.error('Instagram post error:', error);
-    const errorMessage = 'An unexpected error occurred. Please try again.';
-    return NextResponse.json(
-      {
-        error: 'Failed to post to Instagram',
-        message: errorMessage,
-      },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 /**

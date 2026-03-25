@@ -21,6 +21,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
+import { writeDefault } from '@/lib/rate-limit';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -123,318 +124,321 @@ async function makeFacebookRequest<T>(
  * Create a new Facebook Page post
  */
 export async function POST(request: NextRequest) {
-  try {
-    // Security check
-    const security = await APISecurityChecker.check(
-      request,
-      DEFAULT_POLICIES.AUTHENTICATED_WRITE
-    );
-
-    if (!security.allowed) {
-      return APISecurityChecker.createSecureResponse(
-        { error: security.error },
-        403
-      );
-    }
-
-    // Get user from token
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Parse and validate request body
-    const body = await request.json();
-    const validation = PostRequestSchema.safeParse(body);
-
-    if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validation.error.flatten().fieldErrors,
-        },
-        { status: 400 }
-      );
-    }
-
-    const postData: PostRequest = validation.data;
-
-    // Get user's Facebook connection
-    const { data: connection, error: connectionError } = await getSupabase()
-      .from('platform_connections')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'facebook')
-      .eq('is_active', true)
-      .single();
-
-    if (connectionError || !connection) {
-      return NextResponse.json(
-        {
-          error:
-            'Facebook account not connected. Please connect your Facebook account first.',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Get the page to post to
-    let pageId = postData.pageId;
-    let pageAccessToken = connection.access_token;
-
-    if (!pageId) {
-      // Get user's pages and use the first one
-      const pagesResponse = await makeFacebookRequest<FacebookPagesResponse>(
-        '/me/accounts',
-        connection.access_token
+  return writeDefault(request, async () => {
+    try {
+      // Security check
+      const security = await APISecurityChecker.check(
+        request,
+        DEFAULT_POLICIES.AUTHENTICATED_WRITE
       );
 
-      if (!pagesResponse.data || pagesResponse.data.length === 0) {
+      if (!security.allowed) {
+        return APISecurityChecker.createSecureResponse(
+          { error: security.error },
+          403
+        );
+      }
+
+      // Get user from token
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
+
+      // Parse and validate request body
+      const body = await request.json();
+      const validation = PostRequestSchema.safeParse(body);
+
+      if (!validation.success) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: validation.error.flatten().fieldErrors,
+          },
+          { status: 400 }
+        );
+      }
+
+      const postData: PostRequest = validation.data;
+
+      // Get user's Facebook connection
+      const { data: connection, error: connectionError } = await getSupabase()
+        .from('platform_connections')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('platform', 'facebook')
+        .eq('is_active', true)
+        .single();
+
+      if (connectionError || !connection) {
         return NextResponse.json(
           {
             error:
-              'No Facebook Pages found. Please ensure you have admin access to at least one Facebook Page.',
+              'Facebook account not connected. Please connect your Facebook account first.',
           },
           { status: 400 }
         );
       }
 
-      pageId = pagesResponse.data[0].id;
-      pageAccessToken = pagesResponse.data[0].access_token;
-    } else {
-      // Get access token for specific page
-      const pagesResponse = await makeFacebookRequest<FacebookPagesResponse>(
-        '/me/accounts',
-        connection.access_token
-      );
-      const page = pagesResponse.data?.find((p: any) => p.id === pageId);
-      if (!page) {
-        return NextResponse.json(
-          { error: 'You do not have access to this Facebook Page.' },
-          { status: 403 }
+      // Get the page to post to
+      let pageId = postData.pageId;
+      let pageAccessToken = connection.access_token;
+
+      if (!pageId) {
+        // Get user's pages and use the first one
+        const pagesResponse = await makeFacebookRequest<FacebookPagesResponse>(
+          '/me/accounts',
+          connection.access_token
         );
-      }
-      pageAccessToken = page.access_token;
-    }
 
-    // Handle scheduled posts
-    if (postData.scheduledTime) {
-      const scheduledTimestamp = Math.floor(
-        new Date(postData.scheduledTime).getTime() / 1000
-      );
+        if (!pagesResponse.data || pagesResponse.data.length === 0) {
+          return NextResponse.json(
+            {
+              error:
+                'No Facebook Pages found. Please ensure you have admin access to at least one Facebook Page.',
+            },
+            { status: 400 }
+          );
+        }
 
-      // Facebook requires scheduled posts to be at least 10 minutes in future
-      const minScheduleTime = Math.floor(Date.now() / 1000) + 600;
-      if (scheduledTimestamp < minScheduleTime) {
-        return NextResponse.json(
-          {
-            error: 'Scheduled time must be at least 10 minutes in the future.',
-          },
-          { status: 400 }
+        pageId = pagesResponse.data[0].id;
+        pageAccessToken = pagesResponse.data[0].access_token;
+      } else {
+        // Get access token for specific page
+        const pagesResponse = await makeFacebookRequest<FacebookPagesResponse>(
+          '/me/accounts',
+          connection.access_token
         );
+        const page = pagesResponse.data?.find((p: any) => p.id === pageId);
+        if (!page) {
+          return NextResponse.json(
+            { error: 'You do not have access to this Facebook Page.' },
+            { status: 403 }
+          );
+        }
+        pageAccessToken = page.access_token;
       }
 
-      // Create scheduled post directly on Facebook
-      const postPayload: FacebookPostPayload = {
-        message: postData.message,
-        published: false,
-        scheduled_publish_time: scheduledTimestamp,
-      };
+      // Handle scheduled posts
+      if (postData.scheduledTime) {
+        const scheduledTimestamp = Math.floor(
+          new Date(postData.scheduledTime).getTime() / 1000
+        );
 
-      if (postData.link) {
-        postPayload.link = postData.link;
-      }
-
-      const result = await makeFacebookRequest<FacebookPostResult>(
-        `/${pageId}/feed`,
-        pageAccessToken,
-        {
-          method: 'POST',
-          body: JSON.stringify(postPayload),
+        // Facebook requires scheduled posts to be at least 10 minutes in future
+        const minScheduleTime = Math.floor(Date.now() / 1000) + 600;
+        if (scheduledTimestamp < minScheduleTime) {
+          return NextResponse.json(
+            {
+              error:
+                'Scheduled time must be at least 10 minutes in the future.',
+            },
+            { status: 400 }
+          );
         }
-      );
 
-      // Save to database
-      await getSupabase().from('scheduled_posts').insert({
-        user_id: userId,
-        platform: 'facebook',
-        content: postData.message,
-        post_id: result.id,
-        link_url: postData.link,
-        media_urls: postData.mediaUrls,
-        scheduled_time: postData.scheduledTime,
-        metadata: { pageId },
-        status: 'pending',
-      });
+        // Create scheduled post directly on Facebook
+        const postPayload: FacebookPostPayload = {
+          message: postData.message,
+          published: false,
+          scheduled_publish_time: scheduledTimestamp,
+        };
 
-      await auditLogger.logData(
-        'create',
-        'scheduled_post',
-        result.id,
-        userId,
-        'success',
-        {
-          action: 'facebook_post_scheduled',
-          scheduledTime: postData.scheduledTime,
-          pageId,
+        if (postData.link) {
+          postPayload.link = postData.link;
         }
-      );
 
-      return NextResponse.json({
-        success: true,
-        scheduled: true,
-        data: {
-          id: result.id,
-          scheduledTime: postData.scheduledTime,
-          status: 'scheduled',
-        },
-      });
-    }
-
-    // Create immediate post
-    let result: FacebookPostResult;
-
-    if (postData.mediaUrls && postData.mediaUrls.length > 0) {
-      if (
-        postData.mediaType === 'video' ||
-        postData.mediaUrls[0].match(/\.(mp4|mov|avi)$/i)
-      ) {
-        // Video post
-        result = await makeFacebookRequest<FacebookPostResult>(
-          `/${pageId}/videos`,
+        const result = await makeFacebookRequest<FacebookPostResult>(
+          `/${pageId}/feed`,
           pageAccessToken,
           {
             method: 'POST',
-            body: JSON.stringify({
-              file_url: postData.mediaUrls[0],
-              description: postData.message,
-            }),
+            body: JSON.stringify(postPayload),
           }
         );
-      } else if (
-        postData.mediaUrls.length > 1 ||
-        postData.mediaType === 'photos'
-      ) {
-        // Multi-photo post - upload each photo first
-        const photoIds: string[] = [];
-        for (const photoUrl of postData.mediaUrls) {
-          const photoResult = await makeFacebookRequest<FacebookPostResult>(
+
+        // Save to database
+        await getSupabase().from('scheduled_posts').insert({
+          user_id: userId,
+          platform: 'facebook',
+          content: postData.message,
+          post_id: result.id,
+          link_url: postData.link,
+          media_urls: postData.mediaUrls,
+          scheduled_time: postData.scheduledTime,
+          metadata: { pageId },
+          status: 'pending',
+        });
+
+        await auditLogger.logData(
+          'create',
+          'scheduled_post',
+          result.id,
+          userId,
+          'success',
+          {
+            action: 'facebook_post_scheduled',
+            scheduledTime: postData.scheduledTime,
+            pageId,
+          }
+        );
+
+        return NextResponse.json({
+          success: true,
+          scheduled: true,
+          data: {
+            id: result.id,
+            scheduledTime: postData.scheduledTime,
+            status: 'scheduled',
+          },
+        });
+      }
+
+      // Create immediate post
+      let result: FacebookPostResult;
+
+      if (postData.mediaUrls && postData.mediaUrls.length > 0) {
+        if (
+          postData.mediaType === 'video' ||
+          postData.mediaUrls[0].match(/\.(mp4|mov|avi)$/i)
+        ) {
+          // Video post
+          result = await makeFacebookRequest<FacebookPostResult>(
+            `/${pageId}/videos`,
+            pageAccessToken,
+            {
+              method: 'POST',
+              body: JSON.stringify({
+                file_url: postData.mediaUrls[0],
+                description: postData.message,
+              }),
+            }
+          );
+        } else if (
+          postData.mediaUrls.length > 1 ||
+          postData.mediaType === 'photos'
+        ) {
+          // Multi-photo post - upload each photo first
+          const photoIds: string[] = [];
+          for (const photoUrl of postData.mediaUrls) {
+            const photoResult = await makeFacebookRequest<FacebookPostResult>(
+              `/${pageId}/photos`,
+              pageAccessToken,
+              {
+                method: 'POST',
+                body: JSON.stringify({
+                  url: photoUrl,
+                  published: false,
+                }),
+              }
+            );
+            if (photoResult.id) {
+              photoIds.push(photoResult.id);
+            }
+          }
+
+          // Create post with attached photos
+          const attachedMedia = photoIds.map(id => ({ media_fbid: id }));
+          result = await makeFacebookRequest<FacebookPostResult>(
+            `/${pageId}/feed`,
+            pageAccessToken,
+            {
+              method: 'POST',
+              body: JSON.stringify({
+                message: postData.message,
+                attached_media: attachedMedia,
+              }),
+            }
+          );
+        } else {
+          // Single photo post
+          result = await makeFacebookRequest<FacebookPostResult>(
             `/${pageId}/photos`,
             pageAccessToken,
             {
               method: 'POST',
               body: JSON.stringify({
-                url: photoUrl,
-                published: false,
+                url: postData.mediaUrls[0],
+                message: postData.message,
               }),
             }
           );
-          if (photoResult.id) {
-            photoIds.push(photoResult.id);
-          }
+        }
+      } else {
+        // Text/link post
+        const postPayload: FacebookPostPayload = { message: postData.message };
+        if (postData.link) {
+          postPayload.link = postData.link;
         }
 
-        // Create post with attached photos
-        const attachedMedia = photoIds.map(id => ({ media_fbid: id }));
         result = await makeFacebookRequest<FacebookPostResult>(
           `/${pageId}/feed`,
           pageAccessToken,
           {
             method: 'POST',
-            body: JSON.stringify({
-              message: postData.message,
-              attached_media: attachedMedia,
-            }),
-          }
-        );
-      } else {
-        // Single photo post
-        result = await makeFacebookRequest<FacebookPostResult>(
-          `/${pageId}/photos`,
-          pageAccessToken,
-          {
-            method: 'POST',
-            body: JSON.stringify({
-              url: postData.mediaUrls[0],
-              message: postData.message,
-            }),
+            body: JSON.stringify(postPayload),
           }
         );
       }
-    } else {
-      // Text/link post
-      const postPayload: FacebookPostPayload = { message: postData.message };
-      if (postData.link) {
-        postPayload.link = postData.link;
-      }
 
-      result = await makeFacebookRequest<FacebookPostResult>(
-        `/${pageId}/feed`,
-        pageAccessToken,
-        {
-          method: 'POST',
-          body: JSON.stringify(postPayload),
-        }
-      );
-    }
+      // Save post to database
+      await getSupabase()
+        .from('social_posts')
+        .insert({
+          user_id: userId,
+          platform: 'facebook',
+          content: postData.message,
+          post_id: result.id || result.post_id,
+          link_url: postData.link,
+          media_urls: postData.mediaUrls,
+          status: 'published',
+          metrics: {},
+          created_at: new Date().toISOString(),
+        });
 
-    // Save post to database
-    await getSupabase()
-      .from('social_posts')
-      .insert({
+      // Track usage
+      await getSupabase().from('usage_tracking').insert({
         user_id: userId,
-        platform: 'facebook',
-        content: postData.message,
-        post_id: result.id || result.post_id,
-        link_url: postData.link,
-        media_urls: postData.mediaUrls,
-        status: 'published',
-        metrics: {},
-        created_at: new Date().toISOString(),
+        feature: 'facebook_post',
+        count: 1,
+        timestamp: new Date().toISOString(),
       });
 
-    // Track usage
-    await getSupabase().from('usage_tracking').insert({
-      user_id: userId,
-      feature: 'facebook_post',
-      count: 1,
-      timestamp: new Date().toISOString(),
-    });
+      await auditLogger.logData(
+        'create',
+        'social_post',
+        result.id || result.post_id,
+        userId,
+        'success',
+        {
+          action: 'facebook_post_created',
+          pageId,
+          hasMedia: !!postData.mediaUrls?.length,
+        }
+      );
 
-    await auditLogger.logData(
-      'create',
-      'social_post',
-      result.id || result.post_id,
-      userId,
-      'success',
-      {
-        action: 'facebook_post_created',
-        pageId,
-        hasMedia: !!postData.mediaUrls?.length,
-      }
-    );
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: result.id || result.post_id,
-        url: `https://www.facebook.com/${result.id || result.post_id}`,
-        message: postData.message,
-      },
-    });
-  } catch (error: unknown) {
-    logger.error('Facebook post error:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to post to Facebook',
-        message: 'An unexpected error occurred. Please try again.',
-      },
-      { status: 500 }
-    );
-  }
+      return NextResponse.json({
+        success: true,
+        data: {
+          id: result.id || result.post_id,
+          url: `https://www.facebook.com/${result.id || result.post_id}`,
+          message: postData.message,
+        },
+      });
+    } catch (error: unknown) {
+      logger.error('Facebook post error:', error);
+      return NextResponse.json(
+        {
+          error: 'Failed to post to Facebook',
+          message: 'An unexpected error occurred. Please try again.',
+        },
+        { status: 500 }
+      );
+    }
+  });
 }
 
 /**

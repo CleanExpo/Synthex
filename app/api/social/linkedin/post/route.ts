@@ -22,6 +22,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
+import { writeDefault } from '@/lib/rate-limit';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -50,183 +51,186 @@ type PostRequest = z.infer<typeof PostRequestSchema>;
  * Create a new LinkedIn post
  */
 export async function POST(request: NextRequest) {
-  try {
-    // Security check
-    const security = await APISecurityChecker.check(
-      request,
-      DEFAULT_POLICIES.AUTHENTICATED_WRITE
-    );
-
-    if (!security.allowed) {
-      return APISecurityChecker.createSecureResponse(
-        { error: security.error },
-        403
+  return writeDefault(request, async () => {
+    try {
+      // Security check
+      const security = await APISecurityChecker.check(
+        request,
+        DEFAULT_POLICIES.AUTHENTICATED_WRITE
       );
-    }
 
-    // Get user from token
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+      if (!security.allowed) {
+        return APISecurityChecker.createSecureResponse(
+          { error: security.error },
+          403
+        );
+      }
 
-    // Parse and validate request body
-    const body = await request.json();
-    const validation = PostRequestSchema.safeParse(body);
+      // Get user from token
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
 
-    if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validation.error.flatten().fieldErrors,
-        },
-        { status: 400 }
-      );
-    }
+      // Parse and validate request body
+      const body = await request.json();
+      const validation = PostRequestSchema.safeParse(body);
 
-    const postData: PostRequest = validation.data;
+      if (!validation.success) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: validation.error.flatten().fieldErrors,
+          },
+          { status: 400 }
+        );
+      }
 
-    // Get user's LinkedIn connection
-    const { data: connection, error: connectionError } = await getSupabase()
-      .from('platform_connections')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'linkedin')
-      .eq('is_active', true)
-      .single();
+      const postData: PostRequest = validation.data;
 
-    if (connectionError || !connection) {
-      return NextResponse.json(
-        {
-          error:
-            'LinkedIn account not connected. Please connect your LinkedIn account first.',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Initialize LinkedIn service with user credentials
-    const linkedInService = new LinkedInService();
-    linkedInService.initialize({
-      accessToken: connection.access_token,
-      refreshToken: connection.refresh_token,
-      expiresAt: connection.expires_at
-        ? new Date(connection.expires_at)
-        : undefined,
-      platformUserId: connection.platform_user_id,
-      platformUsername: connection.platform_username,
-    });
-
-    // Handle scheduled posts
-    if (postData.scheduledTime) {
-      const { data: scheduledPost, error: scheduleError } = await getSupabase()
-        .from('scheduled_posts')
-        .insert({
-          user_id: userId,
-          platform: 'linkedin',
-          content: postData.text,
-          link_url: postData.linkUrl,
-          media_urls: postData.mediaUrls,
-          scheduled_time: postData.scheduledTime,
-          metadata: { visibility: postData.visibility },
-          status: 'pending',
-        })
-        .select()
+      // Get user's LinkedIn connection
+      const { data: connection, error: connectionError } = await getSupabase()
+        .from('platform_connections')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('platform', 'linkedin')
+        .eq('is_active', true)
         .single();
 
-      if (scheduleError) throw scheduleError;
+      if (connectionError || !connection) {
+        return NextResponse.json(
+          {
+            error:
+              'LinkedIn account not connected. Please connect your LinkedIn account first.',
+          },
+          { status: 400 }
+        );
+      }
+
+      // Initialize LinkedIn service with user credentials
+      const linkedInService = new LinkedInService();
+      linkedInService.initialize({
+        accessToken: connection.access_token,
+        refreshToken: connection.refresh_token,
+        expiresAt: connection.expires_at
+          ? new Date(connection.expires_at)
+          : undefined,
+        platformUserId: connection.platform_user_id,
+        platformUsername: connection.platform_username,
+      });
+
+      // Handle scheduled posts
+      if (postData.scheduledTime) {
+        const { data: scheduledPost, error: scheduleError } =
+          await getSupabase()
+            .from('scheduled_posts')
+            .insert({
+              user_id: userId,
+              platform: 'linkedin',
+              content: postData.text,
+              link_url: postData.linkUrl,
+              media_urls: postData.mediaUrls,
+              scheduled_time: postData.scheduledTime,
+              metadata: { visibility: postData.visibility },
+              status: 'pending',
+            })
+            .select()
+            .single();
+
+        if (scheduleError) throw scheduleError;
+
+        await auditLogger.logData(
+          'create',
+          'scheduled_post',
+          scheduledPost.id,
+          userId,
+          'success',
+          {
+            action: 'linkedin_post_scheduled',
+            scheduledTime: postData.scheduledTime,
+          }
+        );
+
+        return NextResponse.json({
+          success: true,
+          scheduled: true,
+          data: {
+            id: scheduledPost.id,
+            scheduledTime: postData.scheduledTime,
+            status: 'pending',
+          },
+        });
+      }
+
+      // Create the post
+      const result = await linkedInService.createPost({
+        text: postData.text,
+        linkUrl: postData.linkUrl,
+        mediaUrls: postData.mediaUrls,
+        visibility: postData.visibility,
+      });
+
+      if (!result.success) {
+        return NextResponse.json(
+          { error: result.error || 'Failed to create LinkedIn post' },
+          { status: 500 }
+        );
+      }
+
+      // Save post to database
+      await getSupabase().from('social_posts').insert({
+        user_id: userId,
+        platform: 'linkedin',
+        content: postData.text,
+        post_id: result.postId,
+        link_url: postData.linkUrl,
+        media_urls: postData.mediaUrls,
+        status: 'published',
+        metrics: {},
+        created_at: new Date().toISOString(),
+      });
+
+      // Track usage
+      await getSupabase().from('usage_tracking').insert({
+        user_id: userId,
+        feature: 'linkedin_post',
+        count: 1,
+        timestamp: new Date().toISOString(),
+      });
 
       await auditLogger.logData(
         'create',
-        'scheduled_post',
-        scheduledPost.id,
+        'social_post',
+        result.postId,
         userId,
         'success',
         {
-          action: 'linkedin_post_scheduled',
-          scheduledTime: postData.scheduledTime,
+          action: 'linkedin_post_created',
+          visibility: postData.visibility,
+          hasLink: !!postData.linkUrl,
         }
       );
 
       return NextResponse.json({
         success: true,
-        scheduled: true,
         data: {
-          id: scheduledPost.id,
-          scheduledTime: postData.scheduledTime,
-          status: 'pending',
+          id: result.postId,
+          url: result.url,
+          text: postData.text,
         },
       });
-    }
-
-    // Create the post
-    const result = await linkedInService.createPost({
-      text: postData.text,
-      linkUrl: postData.linkUrl,
-      mediaUrls: postData.mediaUrls,
-      visibility: postData.visibility,
-    });
-
-    if (!result.success) {
+    } catch (error: unknown) {
+      logger.error('LinkedIn post error:', error);
+      const errorMessage = 'An unexpected error occurred. Please try again.';
       return NextResponse.json(
-        { error: result.error || 'Failed to create LinkedIn post' },
+        { error: 'Failed to post to LinkedIn', message: errorMessage },
         { status: 500 }
       );
     }
-
-    // Save post to database
-    await getSupabase().from('social_posts').insert({
-      user_id: userId,
-      platform: 'linkedin',
-      content: postData.text,
-      post_id: result.postId,
-      link_url: postData.linkUrl,
-      media_urls: postData.mediaUrls,
-      status: 'published',
-      metrics: {},
-      created_at: new Date().toISOString(),
-    });
-
-    // Track usage
-    await getSupabase().from('usage_tracking').insert({
-      user_id: userId,
-      feature: 'linkedin_post',
-      count: 1,
-      timestamp: new Date().toISOString(),
-    });
-
-    await auditLogger.logData(
-      'create',
-      'social_post',
-      result.postId,
-      userId,
-      'success',
-      {
-        action: 'linkedin_post_created',
-        visibility: postData.visibility,
-        hasLink: !!postData.linkUrl,
-      }
-    );
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: result.postId,
-        url: result.url,
-        text: postData.text,
-      },
-    });
-  } catch (error: unknown) {
-    logger.error('LinkedIn post error:', error);
-    const errorMessage = 'An unexpected error occurred. Please try again.';
-    return NextResponse.json(
-      { error: 'Failed to post to LinkedIn', message: errorMessage },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 /**

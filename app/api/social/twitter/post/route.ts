@@ -22,6 +22,7 @@ import {
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { writeDefault } from '@/lib/rate-limit';
 
 const twitterPostSchema = z.object({
   text: z.string().optional(),
@@ -42,154 +43,156 @@ function getSupabase() {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    // Security check
-    const security = await APISecurityChecker.check(
-      request,
-      DEFAULT_POLICIES.AUTHENTICATED_WRITE
-    );
-
-    if (!security.allowed) {
-      return APISecurityChecker.createSecureResponse(
-        { error: security.error },
-        403
-      );
-    }
-
-    // Get user from token
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) return unauthorizedResponse();
-
-    // Check user's subscription limits
-    const { data: subscription } = await getSupabase()
-      .from('subscriptions')
-      .select('plan, metadata')
-      .eq('user_id', userId)
-      .single();
-
-    // Get and validate request body
-    const rawBody = await request.json();
-    const validation = twitterPostSchema.safeParse(rawBody);
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.issues },
-        { status: 400 }
-      );
-    }
-    const { text, thread, mediaUrls, scheduledTime } = validation.data;
-
-    if (!text && !thread) {
-      return NextResponse.json(
-        { error: 'Tweet text or thread is required' },
-        { status: 400 }
-      );
-    }
-
-    // Handle media uploads if provided
-    const mediaIds: string[] = [];
-    if (mediaUrls && mediaUrls.length > 0) {
-      for (const url of mediaUrls) {
-        try {
-          const mediaId = await twitterService.uploadMedia(url);
-          mediaIds.push(mediaId);
-        } catch (error) {
-          logger.error('Media upload failed:', error);
-        }
-      }
-    }
-
-    let result;
-
-    // Handle scheduled posts
-    if (scheduledTime) {
-      const scheduleDate = new Date(scheduledTime);
-      result = await twitterService.scheduleTweet(
-        { text: text!, mediaIds },
-        scheduleDate
+  return writeDefault(request, async () => {
+    try {
+      // Security check
+      const security = await APISecurityChecker.check(
+        request,
+        DEFAULT_POLICIES.AUTHENTICATED_WRITE
       );
 
-      // Save to database for later processing
-      await getSupabase().from('scheduled_posts').insert({
-        user_id: userId,
-        platform: 'twitter',
-        content: text,
-        media_ids: mediaIds,
-        scheduled_time: scheduledTime,
-        status: 'pending',
-      });
-    }
-    // Handle thread posting
-    else if (thread && Array.isArray(thread)) {
-      // Validate all tweets in thread
-      for (const tweet of thread) {
-        const validation = twitterService.validateTweet(tweet);
-        if (!validation.valid) {
-          return NextResponse.json(
-            { error: validation.error },
-            { status: 400 }
-          );
-        }
+      if (!security.allowed) {
+        return APISecurityChecker.createSecureResponse(
+          { error: security.error },
+          403
+        );
       }
 
-      result = await twitterService.postThread({
-        tweets: thread,
-        mediaIds: mediaIds.length > 0 ? [mediaIds] : undefined,
-      });
-    }
-    // Handle single tweet
-    else {
-      // Validate tweet
-      const tweetValidation = twitterService.validateTweet(text!);
-      if (!tweetValidation.valid) {
+      // Get user from token
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) return unauthorizedResponse();
+
+      // Check user's subscription limits
+      const { data: subscription } = await getSupabase()
+        .from('subscriptions')
+        .select('plan, metadata')
+        .eq('user_id', userId)
+        .single();
+
+      // Get and validate request body
+      const rawBody = await request.json();
+      const validation = twitterPostSchema.safeParse(rawBody);
+      if (!validation.success) {
         return NextResponse.json(
-          { error: tweetValidation.error },
+          { error: 'Invalid request data', details: validation.error.issues },
+          { status: 400 }
+        );
+      }
+      const { text, thread, mediaUrls, scheduledTime } = validation.data;
+
+      if (!text && !thread) {
+        return NextResponse.json(
+          { error: 'Tweet text or thread is required' },
           { status: 400 }
         );
       }
 
-      result = await twitterService.postTweet({
-        text: text!,
-        mediaIds,
+      // Handle media uploads if provided
+      const mediaIds: string[] = [];
+      if (mediaUrls && mediaUrls.length > 0) {
+        for (const url of mediaUrls) {
+          try {
+            const mediaId = await twitterService.uploadMedia(url);
+            mediaIds.push(mediaId);
+          } catch (error) {
+            logger.error('Media upload failed:', error);
+          }
+        }
+      }
+
+      let result;
+
+      // Handle scheduled posts
+      if (scheduledTime) {
+        const scheduleDate = new Date(scheduledTime);
+        result = await twitterService.scheduleTweet(
+          { text: text!, mediaIds },
+          scheduleDate
+        );
+
+        // Save to database for later processing
+        await getSupabase().from('scheduled_posts').insert({
+          user_id: userId,
+          platform: 'twitter',
+          content: text,
+          media_ids: mediaIds,
+          scheduled_time: scheduledTime,
+          status: 'pending',
+        });
+      }
+      // Handle thread posting
+      else if (thread && Array.isArray(thread)) {
+        // Validate all tweets in thread
+        for (const tweet of thread) {
+          const validation = twitterService.validateTweet(tweet);
+          if (!validation.valid) {
+            return NextResponse.json(
+              { error: validation.error },
+              { status: 400 }
+            );
+          }
+        }
+
+        result = await twitterService.postThread({
+          tweets: thread,
+          mediaIds: mediaIds.length > 0 ? [mediaIds] : undefined,
+        });
+      }
+      // Handle single tweet
+      else {
+        // Validate tweet
+        const tweetValidation = twitterService.validateTweet(text!);
+        if (!tweetValidation.valid) {
+          return NextResponse.json(
+            { error: tweetValidation.error },
+            { status: 400 }
+          );
+        }
+
+        result = await twitterService.postTweet({
+          text: text!,
+          mediaIds,
+        });
+      }
+
+      // Log the post
+      await getSupabase()
+        .from('social_posts')
+        .insert({
+          user_id: userId,
+          platform: 'twitter',
+          content: text || thread?.join('\n'),
+          post_id: result.id || null,
+          status: 'published',
+          metrics: {},
+          created_at: new Date().toISOString(),
+        });
+
+      // Track usage
+      await getSupabase()
+        .from('usage_tracking')
+        .insert({
+          user_id: userId,
+          feature: 'twitter_post',
+          count: thread ? thread.length : 1,
+          timestamp: new Date().toISOString(),
+        });
+
+      return NextResponse.json({
+        success: true,
+        data: result,
       });
+    } catch (error: unknown) {
+      logger.error('Twitter post error:', error);
+      return NextResponse.json(
+        {
+          error: 'Failed to post to Twitter',
+          message: 'An unexpected error occurred. Please try again.',
+        },
+        { status: 500 }
+      );
     }
-
-    // Log the post
-    await getSupabase()
-      .from('social_posts')
-      .insert({
-        user_id: userId,
-        platform: 'twitter',
-        content: text || thread?.join('\n'),
-        post_id: result.id || null,
-        status: 'published',
-        metrics: {},
-        created_at: new Date().toISOString(),
-      });
-
-    // Track usage
-    await getSupabase()
-      .from('usage_tracking')
-      .insert({
-        user_id: userId,
-        feature: 'twitter_post',
-        count: thread ? thread.length : 1,
-        timestamp: new Date().toISOString(),
-      });
-
-    return NextResponse.json({
-      success: true,
-      data: result,
-    });
-  } catch (error: unknown) {
-    logger.error('Twitter post error:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to post to Twitter',
-        message: 'An unexpected error occurred. Please try again.',
-      },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 // Get user's Twitter posts

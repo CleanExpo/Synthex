@@ -23,6 +23,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { createPlatformService } from '@/lib/social';
 import { logger } from '@/lib/logger';
+import { writeDefault } from '@/lib/rate-limit';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -70,55 +71,79 @@ type VideoUpload = z.infer<typeof VideoUploadSchema>;
  * Upload a video or create a community post
  */
 export async function POST(request: NextRequest) {
-  try {
-    // Security check
-    const security = await APISecurityChecker.check(
-      request,
-      DEFAULT_POLICIES.AUTHENTICATED_WRITE
-    );
-
-    if (!security.allowed) {
-      return APISecurityChecker.createSecureResponse(
-        { error: security.error },
-        403
+  return writeDefault(request, async () => {
+    try {
+      // Security check
+      const security = await APISecurityChecker.check(
+        request,
+        DEFAULT_POLICIES.AUTHENTICATED_WRITE
       );
-    }
 
-    // Get user from token
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+      if (!security.allowed) {
+        return APISecurityChecker.createSecureResponse(
+          { error: security.error },
+          403
+        );
+      }
 
-    const body = await request.json();
-    const { searchParams } = new URL(request.url);
-    const postType = searchParams.get('type') || 'video';
+      // Get user from token
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
 
-    // Get user's YouTube connection
-    const { data: connection, error: connectionError } = await getSupabase()
-      .from('platform_connections')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'youtube')
-      .eq('is_active', true)
-      .single();
+      const body = await request.json();
+      const { searchParams } = new URL(request.url);
+      const postType = searchParams.get('type') || 'video';
 
-    if (connectionError || !connection) {
-      return NextResponse.json(
-        {
-          error:
-            'YouTube account not connected. Please connect your YouTube channel first.',
-        },
-        { status: 400 }
-      );
-    }
+      // Get user's YouTube connection
+      const { data: connection, error: connectionError } = await getSupabase()
+        .from('platform_connections')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('platform', 'youtube')
+        .eq('is_active', true)
+        .single();
 
-    // Handle community post
-    if (postType === 'community') {
-      const validation = CommunityPostSchema.safeParse(body);
+      if (connectionError || !connection) {
+        return NextResponse.json(
+          {
+            error:
+              'YouTube account not connected. Please connect your YouTube channel first.',
+          },
+          { status: 400 }
+        );
+      }
+
+      // Handle community post
+      if (postType === 'community') {
+        const validation = CommunityPostSchema.safeParse(body);
+        if (!validation.success) {
+          return NextResponse.json(
+            {
+              error: 'Validation failed',
+              details: validation.error.flatten().fieldErrors,
+            },
+            { status: 400 }
+          );
+        }
+
+        // Note: YouTube Community Posts API has limited availability
+        // This is a placeholder for when the API becomes more accessible
+        return NextResponse.json(
+          {
+            error:
+              'Community posts are currently only available through YouTube Studio',
+          },
+          { status: 501 }
+        );
+      }
+
+      // Handle video upload
+      const validation = VideoUploadSchema.safeParse(body);
       if (!validation.success) {
         return NextResponse.json(
           {
@@ -129,227 +154,208 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Note: YouTube Community Posts API has limited availability
-      // This is a placeholder for when the API becomes more accessible
-      return NextResponse.json(
-        {
-          error:
-            'Community posts are currently only available through YouTube Studio',
-        },
-        { status: 501 }
-      );
-    }
+      const videoData: VideoUpload = validation.data;
 
-    // Handle video upload
-    const validation = VideoUploadSchema.safeParse(body);
-    if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validation.error.flatten().fieldErrors,
-        },
-        { status: 400 }
-      );
-    }
+      // Handle scheduled uploads
+      if (videoData.scheduledTime) {
+        // Save to database for processing
+        const { data: scheduledPost, error: scheduleError } =
+          await getSupabase()
+            .from('scheduled_posts')
+            .insert({
+              user_id: userId,
+              platform: 'youtube',
+              content: `${videoData.title}\n\n${videoData.description || ''}`,
+              media_urls: [videoData.videoUrl],
+              scheduled_time: videoData.scheduledTime,
+              metadata: {
+                title: videoData.title,
+                description: videoData.description,
+                tags: videoData.tags,
+                categoryId: videoData.categoryId,
+                privacy: videoData.privacy,
+                madeForKids: videoData.madeForKids,
+                playlistId: videoData.playlistId,
+                thumbnailUrl: videoData.thumbnailUrl,
+              },
+              status: 'pending',
+            })
+            .select()
+            .single();
 
-    const videoData: VideoUpload = validation.data;
+        if (scheduleError) throw scheduleError;
 
-    // Handle scheduled uploads
-    if (videoData.scheduledTime) {
-      // Save to database for processing
-      const { data: scheduledPost, error: scheduleError } = await getSupabase()
-        .from('scheduled_posts')
-        .insert({
-          user_id: userId,
-          platform: 'youtube',
-          content: `${videoData.title}\n\n${videoData.description || ''}`,
-          media_urls: [videoData.videoUrl],
-          scheduled_time: videoData.scheduledTime,
-          metadata: {
-            title: videoData.title,
-            description: videoData.description,
-            tags: videoData.tags,
-            categoryId: videoData.categoryId,
-            privacy: videoData.privacy,
-            madeForKids: videoData.madeForKids,
-            playlistId: videoData.playlistId,
-            thumbnailUrl: videoData.thumbnailUrl,
+        await auditLogger.logData(
+          'create',
+          'scheduled_post',
+          scheduledPost.id,
+          userId,
+          'success',
+          {
+            action: 'youtube_video_scheduled',
+            scheduledTime: videoData.scheduledTime,
+          }
+        );
+
+        return NextResponse.json({
+          success: true,
+          scheduled: true,
+          data: {
+            id: scheduledPost.id,
+            scheduledTime: videoData.scheduledTime,
+            status: 'pending',
           },
-          status: 'pending',
-        })
-        .select()
-        .single();
+        });
+      }
 
-      if (scheduleError) throw scheduleError;
-
-      await auditLogger.logData(
-        'create',
-        'scheduled_post',
-        scheduledPost.id,
-        userId,
-        'success',
-        {
-          action: 'youtube_video_scheduled',
-          scheduledTime: videoData.scheduledTime,
-        }
-      );
-
-      return NextResponse.json({
-        success: true,
-        scheduled: true,
-        data: {
-          id: scheduledPost.id,
-          scheduledTime: videoData.scheduledTime,
-          status: 'pending',
-        },
+      // Use YouTubeService for video upload
+      const service = createPlatformService('youtube', {
+        accessToken: connection.access_token,
+        refreshToken: connection.refresh_token,
+        expiresAt: connection.expires_at
+          ? new Date(connection.expires_at)
+          : undefined,
+        platformUserId: connection.platform_user_id,
       });
-    }
 
-    // Use YouTubeService for video upload
-    const service = createPlatformService('youtube', {
-      accessToken: connection.access_token,
-      refreshToken: connection.refresh_token,
-      expiresAt: connection.expires_at
-        ? new Date(connection.expires_at)
-        : undefined,
-      platformUserId: connection.platform_user_id,
-    });
+      if (!service) {
+        throw new Error('Failed to initialize YouTube service');
+      }
 
-    if (!service) {
-      throw new Error('Failed to initialize YouTube service');
-    }
-
-    // Map privacy for visibility
-    const visibilityMap: Record<string, 'public' | 'private' | 'connections'> =
-      {
+      // Map privacy for visibility
+      const visibilityMap: Record<
+        string,
+        'public' | 'private' | 'connections'
+      > = {
         public: 'public',
         private: 'private',
         unlisted: 'connections',
       };
 
-    const result = await service.createPost({
-      text:
-        videoData.title +
-        (videoData.description ? `\n\n${videoData.description}` : ''),
-      mediaUrls: [videoData.videoUrl],
-      visibility: visibilityMap[videoData.privacy] || 'public',
-    });
-
-    if (!result.success || !result.postId) {
-      throw new Error(result.error || 'Failed to upload video');
-    }
-
-    const videoId = result.postId;
-
-    // Add to playlist if specified (YouTube-specific, not in base service)
-    if (videoData.playlistId && videoId) {
-      try {
-        const playlistResponse = await fetch(
-          `${YOUTUBE_API_BASE}/playlistItems?part=snippet`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${connection.access_token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              snippet: {
-                playlistId: videoData.playlistId,
-                resourceId: {
-                  kind: 'youtube#video',
-                  videoId: videoId,
-                },
-              },
-            }),
-          }
-        );
-
-        if (!playlistResponse.ok) {
-          logger.error(
-            'Failed to add video to playlist:',
-            await playlistResponse.text()
-          );
-        }
-      } catch (playlistError) {
-        logger.error('Failed to add video to playlist:', playlistError);
-      }
-    }
-
-    // Set custom thumbnail if provided (YouTube-specific, not in base service)
-    if (videoData.thumbnailUrl && videoId) {
-      try {
-        const thumbnailResponse = await fetch(videoData.thumbnailUrl);
-        const thumbnailBuffer = await thumbnailResponse.arrayBuffer();
-
-        await fetch(
-          `${YOUTUBE_UPLOAD_BASE}/thumbnails/set?videoId=${videoId}`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${connection.access_token}`,
-              'Content-Type': 'image/jpeg',
-            },
-            body: thumbnailBuffer,
-          }
-        );
-      } catch (thumbnailError) {
-        logger.error('Failed to set thumbnail:', thumbnailError);
-      }
-    }
-
-    // Save to database
-    await getSupabase()
-      .from('social_posts')
-      .insert({
-        user_id: userId,
-        platform: 'youtube',
-        content: `${videoData.title}\n\n${videoData.description || ''}`,
-        post_id: videoId,
-        media_urls: [videoData.videoUrl],
-        media_type: 'VIDEO',
-        status: 'published',
-        metrics: {},
-        created_at: new Date().toISOString(),
+      const result = await service.createPost({
+        text:
+          videoData.title +
+          (videoData.description ? `\n\n${videoData.description}` : ''),
+        mediaUrls: [videoData.videoUrl],
+        visibility: visibilityMap[videoData.privacy] || 'public',
       });
 
-    // Track usage
-    await getSupabase().from('usage_tracking').insert({
-      user_id: userId,
-      feature: 'youtube_upload',
-      count: 1,
-      timestamp: new Date().toISOString(),
-    });
-
-    await auditLogger.logData(
-      'create',
-      'social_post',
-      videoId,
-      userId,
-      'success',
-      {
-        action: 'youtube_video_uploaded',
-        privacy: videoData.privacy,
-        categoryId: videoData.categoryId,
+      if (!result.success || !result.postId) {
+        throw new Error(result.error || 'Failed to upload video');
       }
-    );
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: videoId,
-        url: result.url || `https://www.youtube.com/watch?v=${videoId}`,
-        title: videoData.title,
-        status: 'uploaded',
-      },
-    });
-  } catch (error: unknown) {
-    logger.error('YouTube post error:', error);
-    const errorMessage = 'An unexpected error occurred. Please try again.';
-    return NextResponse.json(
-      { error: 'Failed to post to YouTube', message: errorMessage },
-      { status: 500 }
-    );
-  }
+      const videoId = result.postId;
+
+      // Add to playlist if specified (YouTube-specific, not in base service)
+      if (videoData.playlistId && videoId) {
+        try {
+          const playlistResponse = await fetch(
+            `${YOUTUBE_API_BASE}/playlistItems?part=snippet`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${connection.access_token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                snippet: {
+                  playlistId: videoData.playlistId,
+                  resourceId: {
+                    kind: 'youtube#video',
+                    videoId: videoId,
+                  },
+                },
+              }),
+            }
+          );
+
+          if (!playlistResponse.ok) {
+            logger.error(
+              'Failed to add video to playlist:',
+              await playlistResponse.text()
+            );
+          }
+        } catch (playlistError) {
+          logger.error('Failed to add video to playlist:', playlistError);
+        }
+      }
+
+      // Set custom thumbnail if provided (YouTube-specific, not in base service)
+      if (videoData.thumbnailUrl && videoId) {
+        try {
+          const thumbnailResponse = await fetch(videoData.thumbnailUrl);
+          const thumbnailBuffer = await thumbnailResponse.arrayBuffer();
+
+          await fetch(
+            `${YOUTUBE_UPLOAD_BASE}/thumbnails/set?videoId=${videoId}`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${connection.access_token}`,
+                'Content-Type': 'image/jpeg',
+              },
+              body: thumbnailBuffer,
+            }
+          );
+        } catch (thumbnailError) {
+          logger.error('Failed to set thumbnail:', thumbnailError);
+        }
+      }
+
+      // Save to database
+      await getSupabase()
+        .from('social_posts')
+        .insert({
+          user_id: userId,
+          platform: 'youtube',
+          content: `${videoData.title}\n\n${videoData.description || ''}`,
+          post_id: videoId,
+          media_urls: [videoData.videoUrl],
+          media_type: 'VIDEO',
+          status: 'published',
+          metrics: {},
+          created_at: new Date().toISOString(),
+        });
+
+      // Track usage
+      await getSupabase().from('usage_tracking').insert({
+        user_id: userId,
+        feature: 'youtube_upload',
+        count: 1,
+        timestamp: new Date().toISOString(),
+      });
+
+      await auditLogger.logData(
+        'create',
+        'social_post',
+        videoId,
+        userId,
+        'success',
+        {
+          action: 'youtube_video_uploaded',
+          privacy: videoData.privacy,
+          categoryId: videoData.categoryId,
+        }
+      );
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          id: videoId,
+          url: result.url || `https://www.youtube.com/watch?v=${videoId}`,
+          title: videoData.title,
+          status: 'uploaded',
+        },
+      });
+    } catch (error: unknown) {
+      logger.error('YouTube post error:', error);
+      const errorMessage = 'An unexpected error occurred. Please try again.';
+      return NextResponse.json(
+        { error: 'Failed to post to YouTube', message: errorMessage },
+        { status: 500 }
+      );
+    }
+  });
 }
 
 /**

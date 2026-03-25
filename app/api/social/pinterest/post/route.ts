@@ -24,6 +24,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
+import { writeDefault } from '@/lib/rate-limit';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -54,218 +55,221 @@ type PostRequest = z.infer<typeof PostRequestSchema>;
  * Create a new Pinterest pin
  */
 export async function POST(request: NextRequest) {
-  try {
-    // Security check
-    const security = await APISecurityChecker.check(
-      request,
-      DEFAULT_POLICIES.AUTHENTICATED_WRITE
-    );
-
-    if (!security.allowed) {
-      return APISecurityChecker.createSecureResponse(
-        { error: security.error },
-        403
+  return writeDefault(request, async () => {
+    try {
+      // Security check
+      const security = await APISecurityChecker.check(
+        request,
+        DEFAULT_POLICIES.AUTHENTICATED_WRITE
       );
-    }
 
-    // Get user from token
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+      if (!security.allowed) {
+        return APISecurityChecker.createSecureResponse(
+          { error: security.error },
+          403
+        );
+      }
 
-    // Parse and validate request body
-    const body = await request.json();
-    const validation = PostRequestSchema.safeParse(body);
+      // Get user from token
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
 
-    if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validation.error.flatten().fieldErrors,
+      // Parse and validate request body
+      const body = await request.json();
+      const validation = PostRequestSchema.safeParse(body);
+
+      if (!validation.success) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: validation.error.flatten().fieldErrors,
+          },
+          { status: 400 }
+        );
+      }
+
+      const postData: PostRequest = validation.data;
+
+      // Get user's Pinterest connection
+      const { data: connection, error: connectionError } = await getSupabase()
+        .from('platform_connections')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('platform', 'pinterest')
+        .eq('is_active', true)
+        .single();
+
+      if (connectionError || !connection) {
+        return NextResponse.json(
+          {
+            error:
+              'Pinterest account not connected. Please connect your Pinterest account first.',
+          },
+          { status: 400 }
+        );
+      }
+
+      // Create Pinterest service via factory (handles initialization + token refresh)
+      const service = createPlatformService('pinterest', {
+        accessToken: connection.access_token,
+        refreshToken: connection.refresh_token,
+        expiresAt: connection.expires_at
+          ? new Date(connection.expires_at)
+          : undefined,
+        platformUserId: connection.platform_user_id,
+        platformUsername: connection.platform_username,
+      });
+
+      if (!service) {
+        return NextResponse.json(
+          { error: 'Pinterest service unavailable' },
+          { status: 500 }
+        );
+      }
+
+      // Cast to PinterestService for access to getBoards() method
+      const pinterestService = service as InstanceType<typeof PinterestService>;
+
+      // Handle scheduled posts
+      if (postData.scheduledAt) {
+        const { data: scheduledPost, error: scheduleError } =
+          await getSupabase()
+            .from('scheduled_posts')
+            .insert({
+              user_id: userId,
+              platform: 'pinterest',
+              content: postData.content,
+              media_urls: postData.mediaUrls || [],
+              scheduled_time: postData.scheduledAt,
+              metadata: {
+                boardId: postData.boardId,
+                title: postData.title,
+                link: postData.link,
+                altText: postData.altText,
+              },
+              status: 'pending',
+            })
+            .select()
+            .single();
+
+        if (scheduleError) {
+          throw scheduleError;
+        }
+
+        await auditLogger.logData(
+          'create',
+          'scheduled_post',
+          scheduledPost.id,
+          userId,
+          'success',
+          {
+            action: 'pinterest_post_scheduled',
+            scheduledTime: postData.scheduledAt,
+            boardId: postData.boardId,
+          }
+        );
+
+        return NextResponse.json({
+          success: true,
+          scheduled: true,
+          data: {
+            id: scheduledPost.id,
+            scheduledTime: postData.scheduledAt,
+            status: 'pending',
+          },
+        });
+      }
+
+      // Create the pin
+      const result = await pinterestService.createPost({
+        text: postData.content,
+        mediaUrls: postData.mediaUrls,
+        linkUrl: postData.link,
+        metadata: {
+          boardId: postData.boardId,
+          title: postData.title,
+          link: postData.link,
+          altText: postData.altText,
         },
-        { status: 400 }
-      );
-    }
+      });
 
-    const postData: PostRequest = validation.data;
+      if (!result.success) {
+        return NextResponse.json(
+          { error: result.error || 'Failed to create Pinterest pin' },
+          { status: 500 }
+        );
+      }
 
-    // Get user's Pinterest connection
-    const { data: connection, error: connectionError } = await getSupabase()
-      .from('platform_connections')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'pinterest')
-      .eq('is_active', true)
-      .single();
-
-    if (connectionError || !connection) {
-      return NextResponse.json(
-        {
-          error:
-            'Pinterest account not connected. Please connect your Pinterest account first.',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Create Pinterest service via factory (handles initialization + token refresh)
-    const service = createPlatformService('pinterest', {
-      accessToken: connection.access_token,
-      refreshToken: connection.refresh_token,
-      expiresAt: connection.expires_at
-        ? new Date(connection.expires_at)
-        : undefined,
-      platformUserId: connection.platform_user_id,
-      platformUsername: connection.platform_username,
-    });
-
-    if (!service) {
-      return NextResponse.json(
-        { error: 'Pinterest service unavailable' },
-        { status: 500 }
-      );
-    }
-
-    // Cast to PinterestService for access to getBoards() method
-    const pinterestService = service as InstanceType<typeof PinterestService>;
-
-    // Handle scheduled posts
-    if (postData.scheduledAt) {
-      const { data: scheduledPost, error: scheduleError } = await getSupabase()
-        .from('scheduled_posts')
+      // Save post to database
+      const { data: savedPost } = await getSupabase()
+        .from('social_posts')
         .insert({
           user_id: userId,
           platform: 'pinterest',
           content: postData.content,
+          post_id: result.postId,
           media_urls: postData.mediaUrls || [],
-          scheduled_time: postData.scheduledAt,
+          status: 'published',
+          metrics: {},
           metadata: {
             boardId: postData.boardId,
             title: postData.title,
             link: postData.link,
-            altText: postData.altText,
           },
-          status: 'pending',
+          created_at: new Date().toISOString(),
         })
         .select()
         .single();
 
-      if (scheduleError) {
-        throw scheduleError;
-      }
+      // Track usage
+      await getSupabase().from('usage_tracking').insert({
+        user_id: userId,
+        feature: 'pinterest_post',
+        count: 1,
+        timestamp: new Date().toISOString(),
+      });
 
+      // Log the action
       await auditLogger.logData(
         'create',
-        'scheduled_post',
-        scheduledPost.id,
+        'social_post',
+        result.postId || savedPost?.id,
         userId,
         'success',
         {
-          action: 'pinterest_post_scheduled',
-          scheduledTime: postData.scheduledAt,
+          action: 'pinterest_pin_created',
           boardId: postData.boardId,
+          hasMedia: !!(postData.mediaUrls && postData.mediaUrls.length > 0),
+          hasLink: !!postData.link,
         }
       );
 
       return NextResponse.json({
         success: true,
-        scheduled: true,
         data: {
-          id: scheduledPost.id,
-          scheduledTime: postData.scheduledAt,
-          status: 'pending',
+          id: result.postId,
+          url: result.url,
+          boardId: postData.boardId,
+          title: postData.title,
         },
       });
-    }
-
-    // Create the pin
-    const result = await pinterestService.createPost({
-      text: postData.content,
-      mediaUrls: postData.mediaUrls,
-      linkUrl: postData.link,
-      metadata: {
-        boardId: postData.boardId,
-        title: postData.title,
-        link: postData.link,
-        altText: postData.altText,
-      },
-    });
-
-    if (!result.success) {
+    } catch (error: unknown) {
+      logger.error('Pinterest post error:', error);
+      const errorMessage = 'An unexpected error occurred. Please try again.';
       return NextResponse.json(
-        { error: result.error || 'Failed to create Pinterest pin' },
+        {
+          error: 'Failed to post to Pinterest',
+          message: errorMessage,
+        },
         { status: 500 }
       );
     }
-
-    // Save post to database
-    const { data: savedPost } = await getSupabase()
-      .from('social_posts')
-      .insert({
-        user_id: userId,
-        platform: 'pinterest',
-        content: postData.content,
-        post_id: result.postId,
-        media_urls: postData.mediaUrls || [],
-        status: 'published',
-        metrics: {},
-        metadata: {
-          boardId: postData.boardId,
-          title: postData.title,
-          link: postData.link,
-        },
-        created_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    // Track usage
-    await getSupabase().from('usage_tracking').insert({
-      user_id: userId,
-      feature: 'pinterest_post',
-      count: 1,
-      timestamp: new Date().toISOString(),
-    });
-
-    // Log the action
-    await auditLogger.logData(
-      'create',
-      'social_post',
-      result.postId || savedPost?.id,
-      userId,
-      'success',
-      {
-        action: 'pinterest_pin_created',
-        boardId: postData.boardId,
-        hasMedia: !!(postData.mediaUrls && postData.mediaUrls.length > 0),
-        hasLink: !!postData.link,
-      }
-    );
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: result.postId,
-        url: result.url,
-        boardId: postData.boardId,
-        title: postData.title,
-      },
-    });
-  } catch (error: unknown) {
-    logger.error('Pinterest post error:', error);
-    const errorMessage = 'An unexpected error occurred. Please try again.';
-    return NextResponse.json(
-      {
-        error: 'Failed to post to Pinterest',
-        message: errorMessage,
-      },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 /**

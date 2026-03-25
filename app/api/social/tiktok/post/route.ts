@@ -22,6 +22,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { createPlatformService } from '@/lib/social';
 import { logger } from '@/lib/logger';
+import { writeDefault } from '@/lib/rate-limit';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -73,206 +74,209 @@ function mapPrivacyToVisibility(
  * Create a new TikTok video post
  */
 export async function POST(request: NextRequest) {
-  try {
-    // Security check
-    const security = await APISecurityChecker.check(
-      request,
-      DEFAULT_POLICIES.AUTHENTICATED_WRITE
-    );
-
-    if (!security.allowed) {
-      return APISecurityChecker.createSecureResponse(
-        { error: security.error },
-        403
+  return writeDefault(request, async () => {
+    try {
+      // Security check
+      const security = await APISecurityChecker.check(
+        request,
+        DEFAULT_POLICIES.AUTHENTICATED_WRITE
       );
-    }
 
-    // Get user from token
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+      if (!security.allowed) {
+        return APISecurityChecker.createSecureResponse(
+          { error: security.error },
+          403
+        );
+      }
 
-    // Parse and validate request body
-    const body = await request.json();
-    const validation = PostRequestSchema.safeParse(body);
+      // Get user from token
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
 
-    if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validation.error.flatten().fieldErrors,
-        },
-        { status: 400 }
-      );
-    }
+      // Parse and validate request body
+      const body = await request.json();
+      const validation = PostRequestSchema.safeParse(body);
 
-    const postData: PostRequest = validation.data;
+      if (!validation.success) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: validation.error.flatten().fieldErrors,
+          },
+          { status: 400 }
+        );
+      }
 
-    // Get user's TikTok connection
-    const { data: connection, error: connectionError } = await getSupabase()
-      .from('platform_connections')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'tiktok')
-      .eq('is_active', true)
-      .single();
+      const postData: PostRequest = validation.data;
 
-    if (connectionError || !connection) {
-      return NextResponse.json(
-        {
-          error:
-            'TikTok account not connected. Please connect your TikTok account first.',
-        },
-        { status: 400 }
-      );
-    }
+      // Get user's TikTok connection
+      const { data: connection, error: connectionError } = await getSupabase()
+        .from('platform_connections')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('platform', 'tiktok')
+        .eq('is_active', true)
+        .single();
 
-    // Handle scheduled posts
-    if (postData.scheduledTime) {
-      const { data: scheduledPost, error: scheduleError } = await getSupabase()
-        .from('scheduled_posts')
+      if (connectionError || !connection) {
+        return NextResponse.json(
+          {
+            error:
+              'TikTok account not connected. Please connect your TikTok account first.',
+          },
+          { status: 400 }
+        );
+      }
+
+      // Handle scheduled posts
+      if (postData.scheduledTime) {
+        const { data: scheduledPost, error: scheduleError } =
+          await getSupabase()
+            .from('scheduled_posts')
+            .insert({
+              user_id: userId,
+              platform: 'tiktok',
+              content: postData.caption || '',
+              media_urls: [postData.videoUrl],
+              scheduled_time: postData.scheduledTime,
+              metadata: {
+                privacy: postData.privacy,
+                disableComment: postData.disableComment,
+                disableDuet: postData.disableDuet,
+                disableStitch: postData.disableStitch,
+                hashtags: postData.hashtags,
+              },
+              status: 'pending',
+            })
+            .select()
+            .single();
+
+        if (scheduleError) throw scheduleError;
+
+        await auditLogger.logData(
+          'create',
+          'scheduled_post',
+          scheduledPost.id,
+          userId,
+          'success',
+          {
+            action: 'tiktok_post_scheduled',
+            scheduledTime: postData.scheduledTime,
+          }
+        );
+
+        return NextResponse.json({
+          success: true,
+          scheduled: true,
+          data: {
+            id: scheduledPost.id,
+            scheduledTime: postData.scheduledTime,
+            status: 'pending',
+          },
+        });
+      }
+
+      // Build caption with hashtags
+      let fullCaption = postData.caption || '';
+      if (postData.hashtags && postData.hashtags.length > 0) {
+        const hashtagString = postData.hashtags
+          .map(tag => (tag.startsWith('#') ? tag : `#${tag}`))
+          .join(' ');
+        fullCaption = fullCaption
+          ? `${fullCaption} ${hashtagString}`
+          : hashtagString;
+      }
+
+      // Create TikTok service via factory
+      const service = createPlatformService('tiktok', {
+        accessToken: connection.access_token,
+        refreshToken: connection.refresh_token,
+        expiresAt: connection.expires_at
+          ? new Date(connection.expires_at)
+          : undefined,
+        platformUserId: connection.platform_user_id,
+      });
+
+      if (!service) {
+        return NextResponse.json(
+          { error: 'TikTok service unavailable' },
+          { status: 500 }
+        );
+      }
+
+      // Use service to create the post
+      const result = await service.createPost({
+        text: fullCaption,
+        mediaUrls: [postData.videoUrl],
+        visibility: mapPrivacyToVisibility(postData.privacy),
+      });
+
+      if (!result.success) {
+        return NextResponse.json(
+          { error: result.error || 'Failed to initialize TikTok video upload' },
+          { status: 500 }
+        );
+      }
+
+      const publishId = result.postId;
+
+      // Save post to database (status will be updated via webhook)
+      await getSupabase()
+        .from('social_posts')
         .insert({
           user_id: userId,
           platform: 'tiktok',
-          content: postData.caption || '',
+          content: fullCaption,
+          post_id: publishId,
           media_urls: [postData.videoUrl],
-          scheduled_time: postData.scheduledTime,
-          metadata: {
-            privacy: postData.privacy,
-            disableComment: postData.disableComment,
-            disableDuet: postData.disableDuet,
-            disableStitch: postData.disableStitch,
-            hashtags: postData.hashtags,
-          },
-          status: 'pending',
+          media_type: 'VIDEO',
+          status: 'processing', // TikTok processes async
+          metrics: {},
+          created_at: new Date().toISOString(),
         })
         .select()
         .single();
 
-      if (scheduleError) throw scheduleError;
+      // Track usage
+      await getSupabase().from('usage_tracking').insert({
+        user_id: userId,
+        feature: 'tiktok_post',
+        count: 1,
+        timestamp: new Date().toISOString(),
+      });
 
       await auditLogger.logData(
         'create',
-        'scheduled_post',
-        scheduledPost.id,
+        'social_post',
+        publishId || '',
         userId,
         'success',
-        {
-          action: 'tiktok_post_scheduled',
-          scheduledTime: postData.scheduledTime,
-        }
+        { action: 'tiktok_post_initiated', privacy: postData.privacy }
       );
 
       return NextResponse.json({
         success: true,
-        scheduled: true,
         data: {
-          id: scheduledPost.id,
-          scheduledTime: postData.scheduledTime,
-          status: 'pending',
+          publishId,
+          status: 'processing',
+          message: 'Video upload initiated. TikTok will process the video.',
+          caption: fullCaption,
         },
       });
-    }
-
-    // Build caption with hashtags
-    let fullCaption = postData.caption || '';
-    if (postData.hashtags && postData.hashtags.length > 0) {
-      const hashtagString = postData.hashtags
-        .map(tag => (tag.startsWith('#') ? tag : `#${tag}`))
-        .join(' ');
-      fullCaption = fullCaption
-        ? `${fullCaption} ${hashtagString}`
-        : hashtagString;
-    }
-
-    // Create TikTok service via factory
-    const service = createPlatformService('tiktok', {
-      accessToken: connection.access_token,
-      refreshToken: connection.refresh_token,
-      expiresAt: connection.expires_at
-        ? new Date(connection.expires_at)
-        : undefined,
-      platformUserId: connection.platform_user_id,
-    });
-
-    if (!service) {
+    } catch (error: unknown) {
+      logger.error('TikTok post error:', error);
+      const errorMessage = 'An unexpected error occurred. Please try again.';
       return NextResponse.json(
-        { error: 'TikTok service unavailable' },
+        { error: 'Failed to post to TikTok', message: errorMessage },
         { status: 500 }
       );
     }
-
-    // Use service to create the post
-    const result = await service.createPost({
-      text: fullCaption,
-      mediaUrls: [postData.videoUrl],
-      visibility: mapPrivacyToVisibility(postData.privacy),
-    });
-
-    if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || 'Failed to initialize TikTok video upload' },
-        { status: 500 }
-      );
-    }
-
-    const publishId = result.postId;
-
-    // Save post to database (status will be updated via webhook)
-    await getSupabase()
-      .from('social_posts')
-      .insert({
-        user_id: userId,
-        platform: 'tiktok',
-        content: fullCaption,
-        post_id: publishId,
-        media_urls: [postData.videoUrl],
-        media_type: 'VIDEO',
-        status: 'processing', // TikTok processes async
-        metrics: {},
-        created_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    // Track usage
-    await getSupabase().from('usage_tracking').insert({
-      user_id: userId,
-      feature: 'tiktok_post',
-      count: 1,
-      timestamp: new Date().toISOString(),
-    });
-
-    await auditLogger.logData(
-      'create',
-      'social_post',
-      publishId || '',
-      userId,
-      'success',
-      { action: 'tiktok_post_initiated', privacy: postData.privacy }
-    );
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        publishId,
-        status: 'processing',
-        message: 'Video upload initiated. TikTok will process the video.',
-        caption: fullCaption,
-      },
-    });
-  } catch (error: unknown) {
-    logger.error('TikTok post error:', error);
-    const errorMessage = 'An unexpected error occurred. Please try again.';
-    return NextResponse.json(
-      { error: 'Failed to post to TikTok', message: errorMessage },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 /**

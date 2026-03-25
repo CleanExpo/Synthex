@@ -24,6 +24,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
+import { writeDefault } from '@/lib/rate-limit';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -54,204 +55,207 @@ type PostRequest = z.infer<typeof PostRequestSchema>;
  * Create a new Threads post
  */
 export async function POST(request: NextRequest) {
-  try {
-    // Security check
-    const security = await APISecurityChecker.check(
-      request,
-      DEFAULT_POLICIES.AUTHENTICATED_WRITE
-    );
-
-    if (!security.allowed) {
-      return APISecurityChecker.createSecureResponse(
-        { error: security.error },
-        403
+  return writeDefault(request, async () => {
+    try {
+      // Security check
+      const security = await APISecurityChecker.check(
+        request,
+        DEFAULT_POLICIES.AUTHENTICATED_WRITE
       );
-    }
 
-    // Get user from token
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+      if (!security.allowed) {
+        return APISecurityChecker.createSecureResponse(
+          { error: security.error },
+          403
+        );
+      }
 
-    // Parse and validate request body
-    const body = await request.json();
-    const validation = PostRequestSchema.safeParse(body);
+      // Get user from token
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
 
-    if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validation.error.flatten().fieldErrors,
-        },
-        { status: 400 }
-      );
-    }
+      // Parse and validate request body
+      const body = await request.json();
+      const validation = PostRequestSchema.safeParse(body);
 
-    const postData: PostRequest = validation.data;
+      if (!validation.success) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: validation.error.flatten().fieldErrors,
+          },
+          { status: 400 }
+        );
+      }
 
-    // Get user's Threads connection
-    const { data: connection, error: connectionError } = await getSupabase()
-      .from('platform_connections')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'threads')
-      .eq('is_active', true)
-      .single();
+      const postData: PostRequest = validation.data;
 
-    if (connectionError || !connection) {
-      return NextResponse.json(
-        {
-          error:
-            'Threads account not connected. Please connect your Threads account first.',
-        },
-        { status: 400 }
-      );
-    }
+      // Get user's Threads connection
+      const { data: connection, error: connectionError } = await getSupabase()
+        .from('platform_connections')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('platform', 'threads')
+        .eq('is_active', true)
+        .single();
 
-    // Create Threads service via factory (handles initialization + token refresh)
-    const threadsService = createPlatformService('threads', {
-      accessToken: connection.access_token,
-      refreshToken: connection.refresh_token,
-      expiresAt: connection.expires_at
-        ? new Date(connection.expires_at)
-        : undefined,
-      platformUserId: connection.platform_user_id,
-      platformUsername: connection.platform_username,
-    });
+      if (connectionError || !connection) {
+        return NextResponse.json(
+          {
+            error:
+              'Threads account not connected. Please connect your Threads account first.',
+          },
+          { status: 400 }
+        );
+      }
 
-    if (!threadsService) {
-      return NextResponse.json(
-        { error: 'Threads service unavailable' },
-        { status: 500 }
-      );
-    }
+      // Create Threads service via factory (handles initialization + token refresh)
+      const threadsService = createPlatformService('threads', {
+        accessToken: connection.access_token,
+        refreshToken: connection.refresh_token,
+        expiresAt: connection.expires_at
+          ? new Date(connection.expires_at)
+          : undefined,
+        platformUserId: connection.platform_user_id,
+        platformUsername: connection.platform_username,
+      });
 
-    // Handle scheduled posts
-    if (postData.scheduledAt) {
-      // Save to database for later processing
-      const { data: scheduledPost, error: scheduleError } = await getSupabase()
-        .from('scheduled_posts')
+      if (!threadsService) {
+        return NextResponse.json(
+          { error: 'Threads service unavailable' },
+          { status: 500 }
+        );
+      }
+
+      // Handle scheduled posts
+      if (postData.scheduledAt) {
+        // Save to database for later processing
+        const { data: scheduledPost, error: scheduleError } =
+          await getSupabase()
+            .from('scheduled_posts')
+            .insert({
+              user_id: userId,
+              platform: 'threads',
+              content: postData.content,
+              media_urls: postData.mediaUrls || [],
+              media_type: postData.mediaType,
+              scheduled_time: postData.scheduledAt,
+              metadata: {
+                replyControl: postData.replyControl,
+              },
+              status: 'pending',
+            })
+            .select()
+            .single();
+
+        if (scheduleError) {
+          throw scheduleError;
+        }
+
+        // Log the scheduled action
+        await auditLogger.logData(
+          'create',
+          'scheduled_post',
+          scheduledPost.id,
+          userId,
+          'success',
+          {
+            action: 'threads_post_scheduled',
+            scheduledTime: postData.scheduledAt,
+            mediaType: postData.mediaType,
+          }
+        );
+
+        return NextResponse.json({
+          success: true,
+          scheduled: true,
+          data: {
+            id: scheduledPost.id,
+            scheduledTime: postData.scheduledAt,
+            status: 'pending',
+          },
+        });
+      }
+
+      // Create the post
+      const result = await threadsService.createPost({
+        text: postData.content,
+        mediaUrls: postData.mediaUrls,
+        metadata: { replyControl: postData.replyControl },
+      });
+
+      if (!result.success) {
+        return NextResponse.json(
+          { error: result.error || 'Failed to create Threads post' },
+          { status: 500 }
+        );
+      }
+
+      // Save post to database
+      const { data: savedPost } = await getSupabase()
+        .from('social_posts')
         .insert({
           user_id: userId,
           platform: 'threads',
           content: postData.content,
+          post_id: result.postId,
           media_urls: postData.mediaUrls || [],
           media_type: postData.mediaType,
-          scheduled_time: postData.scheduledAt,
-          metadata: {
-            replyControl: postData.replyControl,
-          },
-          status: 'pending',
+          status: 'published',
+          metrics: {},
+          created_at: new Date().toISOString(),
         })
         .select()
         .single();
 
-      if (scheduleError) {
-        throw scheduleError;
-      }
+      // Track usage
+      await getSupabase().from('usage_tracking').insert({
+        user_id: userId,
+        feature: 'threads_post',
+        count: 1,
+        timestamp: new Date().toISOString(),
+      });
 
-      // Log the scheduled action
+      // Log the action
       await auditLogger.logData(
         'create',
-        'scheduled_post',
-        scheduledPost.id,
+        'social_post',
+        result.postId || savedPost?.id,
         userId,
         'success',
         {
-          action: 'threads_post_scheduled',
-          scheduledTime: postData.scheduledAt,
+          action: 'threads_post_created',
           mediaType: postData.mediaType,
+          replyControl: postData.replyControl || 'everyone',
         }
       );
 
       return NextResponse.json({
         success: true,
-        scheduled: true,
         data: {
-          id: scheduledPost.id,
-          scheduledTime: postData.scheduledAt,
-          status: 'pending',
+          id: result.postId,
+          url: result.url,
+          content: postData.content,
+          mediaType: postData.mediaType,
         },
       });
-    }
-
-    // Create the post
-    const result = await threadsService.createPost({
-      text: postData.content,
-      mediaUrls: postData.mediaUrls,
-      metadata: { replyControl: postData.replyControl },
-    });
-
-    if (!result.success) {
+    } catch (error: unknown) {
+      logger.error('Threads post error:', error);
+      const errorMessage = 'An unexpected error occurred. Please try again.';
       return NextResponse.json(
-        { error: result.error || 'Failed to create Threads post' },
+        {
+          error: 'Failed to post to Threads',
+          message: errorMessage,
+        },
         { status: 500 }
       );
     }
-
-    // Save post to database
-    const { data: savedPost } = await getSupabase()
-      .from('social_posts')
-      .insert({
-        user_id: userId,
-        platform: 'threads',
-        content: postData.content,
-        post_id: result.postId,
-        media_urls: postData.mediaUrls || [],
-        media_type: postData.mediaType,
-        status: 'published',
-        metrics: {},
-        created_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    // Track usage
-    await getSupabase().from('usage_tracking').insert({
-      user_id: userId,
-      feature: 'threads_post',
-      count: 1,
-      timestamp: new Date().toISOString(),
-    });
-
-    // Log the action
-    await auditLogger.logData(
-      'create',
-      'social_post',
-      result.postId || savedPost?.id,
-      userId,
-      'success',
-      {
-        action: 'threads_post_created',
-        mediaType: postData.mediaType,
-        replyControl: postData.replyControl || 'everyone',
-      }
-    );
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: result.postId,
-        url: result.url,
-        content: postData.content,
-        mediaType: postData.mediaType,
-      },
-    });
-  } catch (error: unknown) {
-    logger.error('Threads post error:', error);
-    const errorMessage = 'An unexpected error occurred. Please try again.';
-    return NextResponse.json(
-      {
-        error: 'Failed to post to Threads',
-        message: errorMessage,
-      },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 /**
