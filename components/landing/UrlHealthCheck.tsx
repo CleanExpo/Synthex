@@ -158,7 +158,7 @@ function UnreachablePanel({
           Try a different URL
         </button>
         <a
-          href="/sign-up"
+          href="/signup"
           className="bg-amber-500 hover:bg-amber-400 text-charcoal-900 font-bold text-sm px-5 py-2.5 rounded-xl transition-colors"
         >
           Sign up for premium scan →
@@ -278,7 +278,7 @@ function ResultPanel({ result }: { result: AnalyzeResult }) {
           </p>
         </div>
         <a
-          href="/sign-up"
+          href="/signup"
           className="flex-shrink-0 bg-amber-500 hover:bg-amber-400 text-charcoal-900 font-bold text-sm px-5 py-2.5 rounded-xl transition-colors"
         >
           Get full report →

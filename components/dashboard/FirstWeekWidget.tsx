@@ -58,7 +58,7 @@ const PLATFORM_LABELS: Record<string, string> = {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function FirstWeekWidget() {
-  const { data, isLoading } = useSWR<KickstartStatus>(
+  const { data, isLoading, error } = useSWR<KickstartStatus>(
     '/api/onboarding/kickstart',
     fetchJson,
     { revalidateOnFocus: false, dedupingInterval: 60_000 }
@@ -66,7 +66,7 @@ export function FirstWeekWidget() {
   const { mutate } = useSWRConfig();
   const [generating, setGenerating] = useState(false);
 
-  if (isLoading) return null;
+  if (isLoading || error) return null;
 
   // ── Fallback CTA ──────────────────────────────────────────────────────────
   if (!data?.hasKickstart || data.totalCount === 0) {

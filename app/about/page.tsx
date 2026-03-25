@@ -97,13 +97,16 @@ const milestones = [
     event: 'Raised seed funding. Launched Pro and Agency plans.',
   },
   {
-    period: 'Q1 2025',
-    event: 'Reached 10,000 active users across 50+ countries.',
+    period: 'Q4 2024',
+    event: 'Reached 10,000 active businesses. Expanded to 9 social platforms.',
   },
   {
-    period: 'Q2 2025',
-    event:
-      'Launched Agency white-label and API access. Expanded to 9 platforms.',
+    period: 'Q1 2025',
+    event: 'Launched Agency white-label, API access, and AI Autonomous Mode.',
+  },
+  {
+    period: 'Q1 2026',
+    event: 'Full autonomous content engine live. Production-ready for scale.',
   },
 ];
 

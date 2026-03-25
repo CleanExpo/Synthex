@@ -47,7 +47,7 @@ const pricingFaqs = [
   {
     question: 'Do you offer discounts for non-profits or startups?',
     answer:
-      'Yes. We offer tailored pricing for registered non-profits and early-stage startups. Contact us at support@synthex.com.au to discuss eligibility.',
+      'Yes. We offer tailored pricing for registered non-profits and early-stage startups. Contact us at support@synthex.social to discuss eligibility.',
   },
 ];
 

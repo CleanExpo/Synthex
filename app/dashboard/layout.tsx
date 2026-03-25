@@ -869,7 +869,13 @@ export default function DashboardLayout({
                   <DropdownMenuSeparator className="bg-white/[0.06]" />
                   <DropdownMenuItem>
                     <button
-                      onClick={() => router.push('/api/auth/signout')}
+                      onClick={async () => {
+                        await fetch('/api/auth/logout', {
+                          method: 'POST',
+                          credentials: 'include',
+                        });
+                        router.push('/login');
+                      }}
                       className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-white/40 hover:text-red-400 cursor-pointer rounded-sm"
                     >
                       <LogOut className="h-3.5 w-3.5" />

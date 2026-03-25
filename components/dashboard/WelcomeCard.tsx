@@ -82,7 +82,7 @@ export function WelcomeCard({
   const [dismissed, setDismissed] = useState(true);
   const [viewCount, setViewCount] = useState(0);
 
-  const { data, isLoading } = useSWR<OnboardingSummary>(
+  const { data, isLoading, error } = useSWR<OnboardingSummary>(
     '/api/dashboard/onboarding-summary',
     fetchJson,
     { revalidateOnFocus: false, dedupingInterval: 120_000 }
@@ -110,7 +110,7 @@ export function WelcomeCard({
     }
   }, []);
 
-  if (isLoading || dismissed) {
+  if (isLoading || dismissed || error) {
     return null;
   }
 

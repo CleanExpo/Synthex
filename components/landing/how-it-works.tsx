@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { Network, Sparkles, Rocket } from 'lucide-react';
 
 const STEPS = [
@@ -70,61 +71,69 @@ export function HowItWorks() {
                 { number, icon: Icon, title, description, borderColor },
                 idx
               ) => (
-                <div
-                  key={number}
-                  className="group relative bg-charcoal-800/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-8 overflow-hidden shadow-2xl shadow-black/30 ring-1 ring-white/[0.04] hover:-translate-y-1 transition-all duration-300 z-10"
-                  style={{
-                    borderTopColor: borderColor,
-                    borderTopWidth: '2px',
-                  }}
-                  onMouseEnter={e => {
-                    const el = e.currentTarget as HTMLElement;
-                    el.style.borderColor = borderColor;
-                    el.style.borderTopColor = borderColor;
-                    el.style.boxShadow = `0 0 20px ${borderColor}40, 0 25px 50px rgba(0,0,0,0.3)`;
-                  }}
-                  onMouseLeave={e => {
-                    const el = e.currentTarget as HTMLElement;
-                    el.style.borderColor = 'rgba(255,255,255,0.06)';
-                    el.style.borderTopColor = borderColor;
-                    el.style.boxShadow = '0 25px 50px rgba(0,0,0,0.3)';
-                  }}
-                >
-                  {/* Step number — gradient orange→yellow */}
+                <React.Fragment key={number}>
                   <div
-                    className="font-black text-5xl leading-none mb-6 select-none bg-clip-text text-transparent"
+                    key={number}
+                    className="group relative bg-charcoal-800/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-8 overflow-hidden shadow-2xl shadow-black/30 ring-1 ring-white/[0.04] hover:-translate-y-1 transition-all duration-300 z-10"
                     style={{
-                      backgroundImage:
-                        'linear-gradient(135deg, #FF6B35 0%, #FFD60A 100%)',
+                      borderTopColor: borderColor,
+                      borderTopWidth: '2px',
+                    }}
+                    onMouseEnter={e => {
+                      const el = e.currentTarget as HTMLElement;
+                      el.style.borderColor = borderColor;
+                      el.style.borderTopColor = borderColor;
+                      el.style.boxShadow = `0 0 20px ${borderColor}40, 0 25px 50px rgba(0,0,0,0.3)`;
+                    }}
+                    onMouseLeave={e => {
+                      const el = e.currentTarget as HTMLElement;
+                      el.style.borderColor = 'rgba(255,255,255,0.06)';
+                      el.style.borderTopColor = borderColor;
+                      el.style.boxShadow = '0 25px 50px rgba(0,0,0,0.3)';
                     }}
                   >
-                    {number}
+                    {/* Step number — gradient orange→yellow */}
+                    <div
+                      className="font-black text-5xl leading-none mb-6 select-none bg-clip-text text-transparent"
+                      style={{
+                        backgroundImage:
+                          'linear-gradient(135deg, #FF6B35 0%, #FFD60A 100%)',
+                      }}
+                    >
+                      {number}
+                    </div>
+
+                    {/* Icon with gradient circle background */}
+                    <div
+                      className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-5"
+                      style={{
+                        background:
+                          'linear-gradient(135deg, rgba(255,107,53,0.2) 0%, rgba(255,214,10,0.2) 100%)',
+                        border: '1px solid',
+                        borderColor: borderColor + '50',
+                        boxShadow: `0 0 20px ${borderColor}40`,
+                      }}
+                    >
+                      <Icon className="w-6 h-6 text-orange-400" />
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-lg font-bold tracking-tight text-white mb-3">
+                      {title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-sm text-white/40 leading-relaxed">
+                      {description}
+                    </p>
                   </div>
-
-                  {/* Icon with gradient circle background */}
-                  <div
-                    className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-5"
-                    style={{
-                      background:
-                        'linear-gradient(135deg, rgba(255,107,53,0.2) 0%, rgba(255,214,10,0.2) 100%)',
-                      border: '1px solid',
-                      borderColor: borderColor + '50',
-                      boxShadow: `0 0 20px ${borderColor}40`,
-                    }}
-                  >
-                    <Icon className="w-6 h-6 text-orange-400" />
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="text-lg font-bold tracking-tight text-white mb-3">
-                    {title}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="text-sm text-white/40 leading-relaxed">
-                    {description}
-                  </p>
-                </div>
+                  {/* Mobile vertical connector between steps */}
+                  {idx < STEPS.length - 1 && (
+                    <div className="md:hidden flex justify-center py-1">
+                      <div className="w-px h-6 bg-gradient-to-b from-orange-500/40 to-yellow-400/40" />
+                    </div>
+                  )}
+                </React.Fragment>
               )
             )}
           </div>

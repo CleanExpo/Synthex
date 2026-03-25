@@ -18,6 +18,7 @@ import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { writeDefault } from '@/lib/rate-limit';
 
 // =============================================================================
 // Types
@@ -322,133 +323,135 @@ export async function GET(request: NextRequest) {
  * POST /api/approvals - Create approval request
  */
 export async function POST(request: NextRequest) {
-  try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+  return writeDefault(request, async () => {
+    try {
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Unauthorized', message: 'Authentication required' },
+          { status: 401 }
+        );
+      }
 
-    const body = await request.json();
-    const validation = createApprovalSchema.safeParse(body);
+      const body = await request.json();
+      const validation = createApprovalSchema.safeParse(body);
 
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation Error', details: validation.error.issues },
-        { status: 400 }
-      );
-    }
+      if (!validation.success) {
+        return NextResponse.json(
+          { error: 'Validation Error', details: validation.error.issues },
+          { status: 400 }
+        );
+      }
 
-    const {
-      contentId,
-      contentType,
-      title,
-      description,
-      workflowId,
-      priority,
-      dueDate,
-      metadata,
-    } = validation.data;
+      const {
+        contentId,
+        contentType,
+        title,
+        description,
+        workflowId,
+        priority,
+        dueDate,
+        metadata,
+      } = validation.data;
 
-    // Get user's organization
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { organizationId: true, name: true },
-    });
-
-    // Determine steps - from template or default
-    let steps: ApprovalStep[];
-
-    if (workflowId) {
-      const template = await prisma.workflowTemplate.findUnique({
-        where: { id: workflowId },
+      // Get user's organization
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { organizationId: true, name: true },
       });
 
-      if (template && Array.isArray(template.steps)) {
-        steps = createStepsFromTemplate(
-          template.steps as Array<{
-            order: number;
-            type: string;
-            name: string;
-            assigneeRole?: string;
-            requiredApprovals?: number;
-            isOptional?: boolean;
-          }>
-        );
+      // Determine steps - from template or default
+      let steps: ApprovalStep[];
+
+      if (workflowId) {
+        const template = await prisma.workflowTemplate.findUnique({
+          where: { id: workflowId },
+        });
+
+        if (template && Array.isArray(template.steps)) {
+          steps = createStepsFromTemplate(
+            template.steps as Array<{
+              order: number;
+              type: string;
+              name: string;
+              assigneeRole?: string;
+              requiredApprovals?: number;
+              isOptional?: boolean;
+            }>
+          );
+        } else {
+          steps = createDefaultSteps();
+        }
       } else {
         steps = createDefaultSteps();
       }
-    } else {
-      steps = createDefaultSteps();
-    }
 
-    // Create approval request and audit log atomically
-    const approval = await prisma.$transaction(async tx => {
-      const created = await tx.approvalRequest.create({
-        data: {
-          contentId,
-          contentType,
-          workflowId,
-          submittedBy: userId,
-          status: 'pending',
-          priority,
-          currentStep: 0,
-          totalSteps: steps.length,
-          steps: steps as unknown as Prisma.InputJsonValue,
-          title,
-          description,
-          dueDate: dueDate ? new Date(dueDate) : null,
-          metadata: metadata as Prisma.InputJsonValue,
-          organizationId: user?.organizationId,
-        },
-        include: {
-          submitter: {
-            select: { name: true, email: true },
-          },
-        },
-      });
-
-      // Log creation within the same transaction
-      await tx.auditLog.create({
-        data: {
-          action: 'approval_request_created',
-          resource: 'approval_request',
-          resourceId: created.id,
-          userId,
-          details: {
+      // Create approval request and audit log atomically
+      const approval = await prisma.$transaction(async tx => {
+        const created = await tx.approvalRequest.create({
+          data: {
             contentId,
             contentType,
-            title,
+            workflowId,
+            submittedBy: userId,
+            status: 'pending',
             priority,
+            currentStep: 0,
             totalSteps: steps.length,
+            steps: steps as unknown as Prisma.InputJsonValue,
+            title,
+            description,
+            dueDate: dueDate ? new Date(dueDate) : null,
+            metadata: metadata as Prisma.InputJsonValue,
+            organizationId: user?.organizationId,
           },
-          severity: 'low',
-          category: 'content',
-          outcome: 'success',
-        },
+          include: {
+            submitter: {
+              select: { name: true, email: true },
+            },
+          },
+        });
+
+        // Log creation within the same transaction
+        await tx.auditLog.create({
+          data: {
+            action: 'approval_request_created',
+            resource: 'approval_request',
+            resourceId: created.id,
+            userId,
+            details: {
+              contentId,
+              contentType,
+              title,
+              priority,
+              totalSteps: steps.length,
+            },
+            severity: 'low',
+            category: 'content',
+            outcome: 'success',
+          },
+        });
+
+        return created;
       });
 
-      return created;
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Approval request created',
-      data: transformApprovalForResponse(approval),
-    });
-  } catch (error: unknown) {
-    logger.error('Create approval error:', error);
-    return NextResponse.json(
-      {
-        error: 'Internal Server Error',
-        message: sanitizeErrorForResponse(
-          error,
-          'Failed to create approval request'
-        ),
-      },
-      { status: 500 }
-    );
-  }
+      return NextResponse.json({
+        success: true,
+        message: 'Approval request created',
+        data: transformApprovalForResponse(approval),
+      });
+    } catch (error: unknown) {
+      logger.error('Create approval error:', error);
+      return NextResponse.json(
+        {
+          error: 'Internal Server Error',
+          message: sanitizeErrorForResponse(
+            error,
+            'Failed to create approval request'
+          ),
+        },
+        { status: 500 }
+      );
+    }
+  });
 }

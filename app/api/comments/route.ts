@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { writeDefault } from '@/lib/rate-limit';
 
 // =============================================================================
 // Schemas
@@ -173,82 +174,84 @@ export async function GET(request: NextRequest) {
  * POST /api/comments - Create a new comment
  */
 export async function POST(request: NextRequest) {
-  try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    const body = await request.json();
-    const validation = createCommentSchema.safeParse(body);
-
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation Error', details: validation.error.issues },
-        { status: 400 }
-      );
-    }
-
-    const { contentType, contentId, content, parentId, mentions } =
-      validation.data;
-
-    // If parentId is provided, verify it exists
-    if (parentId) {
-      const parentComment = await prisma.contentComment.findUnique({
-        where: { id: parentId },
-      });
-
-      if (!parentComment) {
+  return writeDefault(request, async () => {
+    try {
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) {
         return NextResponse.json(
-          { error: 'Not Found', message: 'Parent comment not found' },
-          { status: 404 }
+          { error: 'Unauthorized', message: 'Authentication required' },
+          { status: 401 }
         );
       }
 
-      // Verify parent is for the same content
-      if (
-        parentComment.contentType !== contentType ||
-        parentComment.contentId !== contentId
-      ) {
+      const body = await request.json();
+      const validation = createCommentSchema.safeParse(body);
+
+      if (!validation.success) {
         return NextResponse.json(
-          {
-            error: 'Bad Request',
-            message: 'Parent comment must be on the same content',
-          },
+          { error: 'Validation Error', details: validation.error.issues },
           { status: 400 }
         );
       }
+
+      const { contentType, contentId, content, parentId, mentions } =
+        validation.data;
+
+      // If parentId is provided, verify it exists
+      if (parentId) {
+        const parentComment = await prisma.contentComment.findUnique({
+          where: { id: parentId },
+        });
+
+        if (!parentComment) {
+          return NextResponse.json(
+            { error: 'Not Found', message: 'Parent comment not found' },
+            { status: 404 }
+          );
+        }
+
+        // Verify parent is for the same content
+        if (
+          parentComment.contentType !== contentType ||
+          parentComment.contentId !== contentId
+        ) {
+          return NextResponse.json(
+            {
+              error: 'Bad Request',
+              message: 'Parent comment must be on the same content',
+            },
+            { status: 400 }
+          );
+        }
+      }
+
+      const comment = await prisma.contentComment.create({
+        data: {
+          contentType,
+          contentId,
+          content,
+          parentId: parentId || null,
+          authorId: userId,
+          mentions: mentions || [],
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Comment created',
+        data: transformCommentForResponse(comment),
+      });
+    } catch (error: unknown) {
+      logger.error('Create comment error:', error);
+      return NextResponse.json(
+        {
+          error: 'Internal Server Error',
+          message: sanitizeErrorForResponse(error, 'Failed to create comment'),
+        },
+        { status: 500 }
+      );
     }
-
-    const comment = await prisma.contentComment.create({
-      data: {
-        contentType,
-        contentId,
-        content,
-        parentId: parentId || null,
-        authorId: userId,
-        mentions: mentions || [],
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Comment created',
-      data: transformCommentForResponse(comment),
-    });
-  } catch (error: unknown) {
-    logger.error('Create comment error:', error);
-    return NextResponse.json(
-      {
-        error: 'Internal Server Error',
-        message: sanitizeErrorForResponse(error, 'Failed to create comment'),
-      },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 export const runtime = 'nodejs';

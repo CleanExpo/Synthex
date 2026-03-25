@@ -131,8 +131,10 @@ export default function SchedulePage() {
       });
 
       if (!response.ok) {
-        // Non-OK but not a crash — show empty state for 401/404
-        if (response.status === 401 || response.status === 404) {
+        if (response.status === 401) {
+          throw new Error('Your session has expired — please refresh the page');
+        }
+        if (response.status === 404) {
           return [];
         }
         throw new Error(`API returned ${response.status}`);

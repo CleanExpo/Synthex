@@ -85,6 +85,7 @@ const updateTaskSchema = updateTaskFieldsSchema.extend({
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { writeDefault } from '@/lib/rate-limit';
 import {
   getEffectiveQueryFilter,
   getEffectiveOrganizationId,
@@ -172,55 +173,57 @@ export async function GET(request: NextRequest) {
 // =============================================================================
 
 export async function POST(request: NextRequest) {
-  try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
+  return writeDefault(request, async () => {
+    try {
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Unauthorized', message: 'Authentication required' },
+          { status: 401 }
+        );
+      }
+
+      const body = await request.json();
+      const validation = createTaskSchema.safeParse(body);
+
+      if (!validation.success) {
+        return NextResponse.json(
+          { error: 'Validation Error', details: validation.error.issues },
+          { status: 400 }
+        );
+      }
+
+      const data = validation.data;
+
+      // Get org context for new task (SYN-391)
+      const organizationId = await getEffectiveOrganizationId(userId);
+
+      // Get max order for positioning within the same scope
+      const scopeFilter = await getEffectiveQueryFilter(userId);
+      const maxOrder = await prisma.task.aggregate({
+        where: { ...scopeFilter, status: data.status },
+        _max: { order: true },
+      });
+
+      const task = await prisma.task.create({
+        data: {
+          ...data,
+          userId,
+          organizationId: organizationId ?? undefined,
+          dueDate: data.dueDate ? new Date(data.dueDate) : null,
+          order: data.order ?? (maxOrder._max.order ?? 0) + 1,
+        },
+      });
+
+      return NextResponse.json({ data: task }, { status: 201 });
+    } catch (error) {
+      logger.error('Error creating task:', error);
       return NextResponse.json(
-        { error: 'Unauthorized', message: 'Authentication required' },
-        { status: 401 }
+        { error: 'Internal Server Error', message: 'Failed to create task' },
+        { status: 500 }
       );
     }
-
-    const body = await request.json();
-    const validation = createTaskSchema.safeParse(body);
-
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation Error', details: validation.error.issues },
-        { status: 400 }
-      );
-    }
-
-    const data = validation.data;
-
-    // Get org context for new task (SYN-391)
-    const organizationId = await getEffectiveOrganizationId(userId);
-
-    // Get max order for positioning within the same scope
-    const scopeFilter = await getEffectiveQueryFilter(userId);
-    const maxOrder = await prisma.task.aggregate({
-      where: { ...scopeFilter, status: data.status },
-      _max: { order: true },
-    });
-
-    const task = await prisma.task.create({
-      data: {
-        ...data,
-        userId,
-        organizationId: organizationId ?? undefined,
-        dueDate: data.dueDate ? new Date(data.dueDate) : null,
-        order: data.order ?? (maxOrder._max.order ?? 0) + 1,
-      },
-    });
-
-    return NextResponse.json({ data: task }, { status: 201 });
-  } catch (error) {
-    logger.error('Error creating task:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to create task' },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 // =============================================================================
@@ -228,70 +231,72 @@ export async function POST(request: NextRequest) {
 // =============================================================================
 
 export async function PATCH(request: NextRequest) {
-  try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
+  return writeDefault(request, async () => {
+    try {
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Unauthorized', message: 'Authentication required' },
+          { status: 401 }
+        );
+      }
+
+      const body = await request.json();
+
+      const validation = updateTaskSchema.safeParse(body);
+      if (!validation.success) {
+        return NextResponse.json(
+          { error: 'Validation Error', details: validation.error.issues },
+          { status: 400 }
+        );
+      }
+
+      const { id, ...updateData } = validation.data;
+
+      // Verify ownership
+      const existingTask = await prisma.task.findUnique({
+        where: { id },
+        select: { userId: true },
+      });
+
+      if (!existingTask || existingTask.userId !== userId) {
+        return NextResponse.json(
+          { error: 'Not Found', message: 'Task not found' },
+          { status: 404 }
+        );
+      }
+
+      // Handle status change to 'done'
+      const updatePayload: Record<string, unknown> = { ...updateData };
+      if (updateData.dueDate !== undefined) {
+        updatePayload.dueDate = updateData.dueDate
+          ? new Date(updateData.dueDate)
+          : null;
+      }
+      if (updateData.completedAt !== undefined) {
+        updatePayload.completedAt = updateData.completedAt
+          ? new Date(updateData.completedAt)
+          : null;
+      }
+      if (updateData.status === 'done' && !updateData.completedAt) {
+        updatePayload.completedAt = new Date();
+        updatePayload.progress = 100;
+      }
+
+      const task = await prisma.task.update({
+        where: { id },
+        data: updatePayload,
+      });
+
+      return NextResponse.json({ data: task });
+    } catch (error) {
+      logger.error('Error updating task:', error);
       return NextResponse.json(
-        { error: 'Unauthorized', message: 'Authentication required' },
-        { status: 401 }
+        { error: 'Internal Server Error', message: 'Failed to update task' },
+        { status: 500 }
       );
     }
-
-    const body = await request.json();
-
-    const validation = updateTaskSchema.safeParse(body);
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation Error', details: validation.error.issues },
-        { status: 400 }
-      );
-    }
-
-    const { id, ...updateData } = validation.data;
-
-    // Verify ownership
-    const existingTask = await prisma.task.findUnique({
-      where: { id },
-      select: { userId: true },
-    });
-
-    if (!existingTask || existingTask.userId !== userId) {
-      return NextResponse.json(
-        { error: 'Not Found', message: 'Task not found' },
-        { status: 404 }
-      );
-    }
-
-    // Handle status change to 'done'
-    const updatePayload: Record<string, unknown> = { ...updateData };
-    if (updateData.dueDate !== undefined) {
-      updatePayload.dueDate = updateData.dueDate
-        ? new Date(updateData.dueDate)
-        : null;
-    }
-    if (updateData.completedAt !== undefined) {
-      updatePayload.completedAt = updateData.completedAt
-        ? new Date(updateData.completedAt)
-        : null;
-    }
-    if (updateData.status === 'done' && !updateData.completedAt) {
-      updatePayload.completedAt = new Date();
-      updatePayload.progress = 100;
-    }
-
-    const task = await prisma.task.update({
-      where: { id },
-      data: updatePayload,
-    });
-
-    return NextResponse.json({ data: task });
-  } catch (error) {
-    logger.error('Error updating task:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to update task' },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 // =============================================================================
@@ -299,48 +304,50 @@ export async function PATCH(request: NextRequest) {
 // =============================================================================
 
 export async function DELETE(request: NextRequest) {
-  try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
+  return writeDefault(request, async () => {
+    try {
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Unauthorized', message: 'Authentication required' },
+          { status: 401 }
+        );
+      }
+
+      const { searchParams } = new URL(request.url);
+      const id = searchParams.get('id');
+
+      if (!id) {
+        return NextResponse.json(
+          { error: 'Validation Error', message: 'Task ID is required' },
+          { status: 400 }
+        );
+      }
+
+      // Verify ownership
+      const existingTask = await prisma.task.findUnique({
+        where: { id },
+        select: { userId: true },
+      });
+
+      if (!existingTask || existingTask.userId !== userId) {
+        return NextResponse.json(
+          { error: 'Not Found', message: 'Task not found' },
+          { status: 404 }
+        );
+      }
+
+      await prisma.task.delete({ where: { id } });
+
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      logger.error('Error deleting task:', error);
       return NextResponse.json(
-        { error: 'Unauthorized', message: 'Authentication required' },
-        { status: 401 }
+        { error: 'Internal Server Error', message: 'Failed to delete task' },
+        { status: 500 }
       );
     }
-
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Validation Error', message: 'Task ID is required' },
-        { status: 400 }
-      );
-    }
-
-    // Verify ownership
-    const existingTask = await prisma.task.findUnique({
-      where: { id },
-      select: { userId: true },
-    });
-
-    if (!existingTask || existingTask.userId !== userId) {
-      return NextResponse.json(
-        { error: 'Not Found', message: 'Task not found' },
-        { status: 404 }
-      );
-    }
-
-    await prisma.task.delete({ where: { id } });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    logger.error('Error deleting task:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to delete task' },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 export const runtime = 'nodejs';

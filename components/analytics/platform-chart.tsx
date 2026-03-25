@@ -48,31 +48,41 @@ export function PlatformChart({ data }: PlatformChartProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={config} className="h-[300px]">
-          <RechartsPieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={({ name, value }) => `${name}: ${value}%`}
-              outerRadius={90}
-              dataKey="value"
-            >
-              {data.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={entry.color ?? '#D97706'}
-                  stroke="rgba(255,255,255,0.08)"
-                  strokeWidth={1}
-                />
-              ))}
-            </Pie>
-            <ChartTooltip
-              content={<ChartTooltipContent formatter={value => `${value}%`} />}
-            />
-          </RechartsPieChart>
-        </ChartContainer>
+        {data.length === 0 ? (
+          <div className="h-[300px] flex items-center justify-center">
+            <p className="text-sm text-slate-400">
+              No platform data yet — connect a platform to see distribution
+            </p>
+          </div>
+        ) : (
+          <ChartContainer config={config} className="h-[300px]">
+            <RechartsPieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, value }) => `${name}: ${value}%`}
+                outerRadius={90}
+                dataKey="value"
+              >
+                {data.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.color ?? '#D97706'}
+                    stroke="rgba(255,255,255,0.08)"
+                    strokeWidth={1}
+                  />
+                ))}
+              </Pie>
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent formatter={value => `${value}%`} />
+                }
+              />
+            </RechartsPieChart>
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
   );

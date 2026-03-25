@@ -37,13 +37,15 @@ export function ContentSuggestionsWidget({
 }: {
   className?: string;
 }) {
-  const { data, isLoading } = useSWR<RecommendationsResponse>(
+  const { data, isLoading, error } = useSWR<RecommendationsResponse>(
     '/api/recommendations?limit=3',
     fetchJson,
     { revalidateOnFocus: false, dedupingInterval: 60000 }
   );
 
   const recommendations = data?.recommendations ?? [];
+
+  if (error) return null;
 
   if (!isLoading && recommendations.length === 0) {
     return (

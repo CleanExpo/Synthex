@@ -299,7 +299,11 @@ export function LiveDemoWidget() {
       {/* URL input */}
       <form onSubmit={handleSubmit} className="mb-3">
         <div className="flex gap-2">
+          <label htmlFor="live-demo-url" className="sr-only">
+            Website URL
+          </label>
           <input
+            id="live-demo-url"
             ref={inputRef}
             type="url"
             value={url}
@@ -311,6 +315,11 @@ export function LiveDemoWidget() {
           <button
             type="submit"
             disabled={!url.trim() || state === 'loading'}
+            aria-label={
+              state === 'loading'
+                ? 'Analysing your website…'
+                : 'Analyse website'
+            }
             className="bg-amber-500 text-charcoal-900 font-bold rounded-xl px-3 py-2 text-xs hover:bg-amber-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
           >
             {state === 'loading' ? (

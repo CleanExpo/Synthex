@@ -142,6 +142,9 @@ export function PricingSection({
         <p className="text-white/60 text-lg whitespace-pre-line">
           {description}
         </p>
+        <p className="text-white/30 text-xs">
+          All prices in AUD · Cancel anytime
+        </p>
       </div>
 
       {/* Billing toggle */}

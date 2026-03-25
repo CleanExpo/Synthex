@@ -18,11 +18,18 @@ function SocialProofRow() {
   return (
     <div className="flex items-center gap-3 mt-8">
       <div className="flex -space-x-2">
-        {[0, 1, 2, 3].map(i => (
+        {[
+          { initials: 'JD', bg: 'bg-orange-500' },
+          { initials: 'KM', bg: 'bg-amber-500' },
+          { initials: 'SR', bg: 'bg-yellow-500' },
+          { initials: 'AL', bg: 'bg-orange-400' },
+        ].map(({ initials, bg }) => (
           <div
-            key={i}
-            className="w-8 h-8 rounded-full border-2 border-charcoal-900 bg-charcoal-600 flex-shrink-0"
-          />
+            key={initials}
+            className={`w-8 h-8 rounded-full border-2 border-charcoal-900 ${bg} flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-charcoal-900`}
+          >
+            {initials}
+          </div>
         ))}
       </div>
       <p className="text-sm text-white/50">

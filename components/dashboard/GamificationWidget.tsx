@@ -52,19 +52,32 @@ async function fetchJson<T>(url: string): Promise<T> {
 }
 
 export function GamificationWidget({ className }: { className?: string }) {
-  const { data: streakData, isLoading: streakLoading } = useSWR<StreakResponse>(
-    '/api/gamification/streak',
-    fetchJson,
-    { revalidateOnFocus: false, dedupingInterval: 60000 }
-  );
+  const {
+    data: streakData,
+    isLoading: streakLoading,
+    error: streakError,
+  } = useSWR<StreakResponse>('/api/gamification/streak', fetchJson, {
+    revalidateOnFocus: false,
+    dedupingInterval: 60000,
+  });
 
-  const { data: achievementsData, isLoading: achievementsLoading } =
-    useSWR<AchievementsResponse>('/api/gamification/achievements', fetchJson, {
+  const {
+    data: achievementsData,
+    isLoading: achievementsLoading,
+    error: achievementsError,
+  } = useSWR<AchievementsResponse>(
+    '/api/gamification/achievements',
+    fetchJson,
+    {
       revalidateOnFocus: false,
       dedupingInterval: 60000,
-    });
+    }
+  );
 
   const isLoading = streakLoading || achievementsLoading;
+
+  if (streakError || achievementsError) return null;
+
   const streak = streakData?.streak;
   const recentAchievements =
     achievementsData?.achievements
