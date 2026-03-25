@@ -257,7 +257,10 @@ export default function PrivacyPage() {
               <p>Email: privacy@synthex.social</p>
               <p>Data Protection Officer: legal@synthex.social</p>
               <p>Support: support@synthex.social</p>
-              <p>Address: 100 Market St, San Francisco, CA 94105</p>
+              <p>
+                Address: Synthex Pty Ltd · ABN: 62 580 077 456 · Brisbane, QLD,
+                Australia
+              </p>
             </div>
             <Button className="mt-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25">
               Contact Privacy Team

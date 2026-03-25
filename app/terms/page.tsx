@@ -239,10 +239,10 @@ export default function TermsPage() {
                 </h3>
                 <p className="text-gray-300">
                   We prefer to resolve disputes through good-faith negotiation.
-                  If needed, disputes will be resolved through binding
-                  arbitration in San Francisco, CA. Class action waiver applies
-                  where permitted by law. Small claims court remains available
-                  for qualifying disputes.
+                  If needed, disputes will be resolved through binding mediation
+                  in Brisbane, QLD, Australia, under the Australian Consumer
+                  Law. Nothing in these terms limits rights under the Australian
+                  Consumer Law that cannot be excluded by contract.
                 </p>
               </div>
 
@@ -313,7 +313,10 @@ export default function TermsPage() {
             <div className="space-y-2 text-gray-400">
               <p>Email: legal@synthex.social</p>
               <p>Support: support@synthex.social</p>
-              <p>Address: 100 Market St, San Francisco, CA 94105</p>
+              <p>
+                Address: Synthex Pty Ltd · ABN: 62 580 077 456 · Brisbane, QLD,
+                Australia
+              </p>
             </div>
             <Button className="mt-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25">
               Contact Legal Team
