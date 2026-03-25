@@ -358,6 +358,9 @@ export function sendWelcomeSequenceDay0(email: string, name?: string): void {
           <tr>
             <td style="background:#000000;padding:25px;text-align:center;">
               <p style="margin:0;color:#666666;font-size:12px;">© 2026 Synthex. All rights reserved.</p>
+              <p style="margin:8px 0 0;color:#666666;font-size:12px;">
+                <a href="${APP_URL}/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}" style="color:#666666;text-decoration:underline;">Unsubscribe</a>
+              </p>
             </td>
           </tr>
         </table>
@@ -449,6 +452,9 @@ export async function sendWelcomeSequenceDay3(
           <tr>
             <td style="background:#000000;padding:25px;text-align:center;">
               <p style="margin:0;color:#666666;font-size:12px;">© 2026 Synthex. All rights reserved.</p>
+              <p style="margin:8px 0 0;color:#666666;font-size:12px;">
+                <a href="${APP_URL}/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}" style="color:#666666;text-decoration:underline;">Unsubscribe</a>
+              </p>
             </td>
           </tr>
         </table>
@@ -545,6 +551,9 @@ export async function sendWelcomeSequenceDay7(
               </div>
               <p style="margin:0;color:#666666;font-size:13px;text-align:center;">
                 Not ready yet? No worries — your free plan is always here. Just reply if you have questions.
+              </p>
+              <p style="margin:8px 0 0;color:#666666;font-size:12px;text-align:center;">
+                <a href="${APP_URL}/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}" style="color:#666666;text-decoration:underline;">Unsubscribe</a>
               </p>
             </td>
           </tr>
@@ -648,6 +657,9 @@ export async function sendWelcomeSequenceDay14(
               </div>
               <p style="margin:0;color:#666666;font-size:13px;text-align:center;">
                 Any questions? Just reply — we read every email.
+              </p>
+              <p style="margin:8px 0 0;color:#666666;font-size:12px;text-align:center;">
+                <a href="${APP_URL}/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}" style="color:#666666;text-decoration:underline;">Unsubscribe</a>
               </p>
             </td>
           </tr>
