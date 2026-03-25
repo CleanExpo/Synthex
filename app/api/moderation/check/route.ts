@@ -17,29 +17,41 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
-import { contentSafety, BrandGuidelines } from '@/lib/moderation/content-safety';
+import {
+  contentSafety,
+  BrandGuidelines,
+} from '@/lib/moderation/content-safety';
 import { logger } from '@/lib/logger';
 
 // Request validation schemas
 const ModerationCheckSchema = z.object({
   content: z.string().min(1).max(10000),
-  platform: z.enum(['twitter', 'instagram', 'linkedin', 'facebook', 'tiktok', 'youtube']).optional(),
+  platform: z
+    .enum(['twitter', 'instagram', 'linkedin', 'facebook', 'tiktok', 'youtube'])
+    .optional(),
   mediaUrls: z.array(z.string().url()).optional(),
   checkType: z.enum(['full', 'quick']).default('full'),
   isPaidPromotion: z.boolean().default(false),
   targetAudience: z.enum(['general', 'children', 'adults']).default('general'),
-  brandGuidelines: z.object({
-    companyName: z.string(),
-    competitors: z.array(z.string()).optional(),
-    blockedWords: z.array(z.string()).optional(),
-    requiredDisclosures: z.array(z.string()).optional(),
-    toneOfVoice: z.enum(['professional', 'casual', 'friendly', 'authoritative']).optional(),
-    sensitiveTopics: z.array(z.string()).optional(),
-    approvedHashtags: z.array(z.string()).optional(),
-    blockedHashtags: z.array(z.string()).optional(),
-  }).optional(),
+  brandGuidelines: z
+    .object({
+      companyName: z.string(),
+      competitors: z.array(z.string()).optional(),
+      blockedWords: z.array(z.string()).optional(),
+      requiredDisclosures: z.array(z.string()).optional(),
+      toneOfVoice: z
+        .enum(['professional', 'casual', 'friendly', 'authoritative'])
+        .optional(),
+      sensitiveTopics: z.array(z.string()).optional(),
+      approvedHashtags: z.array(z.string()).optional(),
+      blockedHashtags: z.array(z.string()).optional(),
+    })
+    .optional(),
 });
 
 const QuickCheckSchema = z.object({
@@ -99,11 +111,14 @@ export async function POST(request: NextRequest) {
       case 'ftc': {
         // FTC disclosure check
         const validated = FTCCheckSchema.parse(body);
-        const result = contentSafety.checkFTCDisclosureRequired(validated.content, {
-          isPaidPromotion: validated.isPaidPromotion,
-          hasAffiliateLinks: validated.hasAffiliateLinks,
-          isGifted: validated.isGifted,
-        });
+        const result = contentSafety.checkFTCDisclosureRequired(
+          validated.content,
+          {
+            isPaidPromotion: validated.isPaidPromotion,
+            hasAffiliateLinks: validated.hasAffiliateLinks,
+            isGifted: validated.isGifted,
+          }
+        );
 
         return APISecurityChecker.createSecureResponse({
           ...result,
@@ -161,7 +176,9 @@ export async function POST(request: NextRequest) {
           {
             platform: validated.platform,
             mediaUrls: validated.mediaUrls,
-            brandGuidelines: validated.brandGuidelines as BrandGuidelines | undefined,
+            brandGuidelines: validated.brandGuidelines as
+              | BrandGuidelines
+              | undefined,
             checkType: validated.checkType,
             isPaidPromotion: validated.isPaidPromotion,
             targetAudience: validated.targetAudience,
@@ -194,7 +211,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }
@@ -282,7 +299,9 @@ export async function PUT(request: NextRequest) {
       competitors: z.array(z.string()).optional(),
       blockedWords: z.array(z.string()).optional(),
       requiredDisclosures: z.array(z.string()).optional(),
-      toneOfVoice: z.enum(['professional', 'casual', 'friendly', 'authoritative']).optional(),
+      toneOfVoice: z
+        .enum(['professional', 'casual', 'friendly', 'authoritative'])
+        .optional(),
       sensitiveTopics: z.array(z.string()).optional(),
       approvedHashtags: z.array(z.string()).optional(),
       blockedHashtags: z.array(z.string()).optional(),
@@ -338,7 +357,7 @@ export async function PUT(request: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }

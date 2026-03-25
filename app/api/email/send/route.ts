@@ -15,7 +15,7 @@ const sendEmailSchema = z.object({
   to: z.string().email(),
   subject: z.string().optional(),
   template: z.string().optional(),
-  variables: z.record(z.any()).optional(),
+  variables: z.record(z.string(), z.any()).optional(),
   type: z.string().optional(),
 });
 

@@ -26,12 +26,14 @@ export const runtime = 'nodejs';
 const patchSchema = z.object({
   title: z.string().min(1).max(500).optional(),
   content: z.string().min(1).optional(),
-  contentType: z.enum(['post', 'caption', 'story', 'thread', 'template', 'snippet']).optional(),
+  contentType: z
+    .enum(['post', 'caption', 'story', 'thread', 'template', 'snippet'])
+    .optional(),
   platform: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
   status: z.enum(['active', 'archived', 'deleted']).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // =============================================================================
@@ -90,7 +92,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
   } catch (error) {
     logger.error('[content-library/[id]] GET error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to fetch content item' },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to fetch content item',
+      },
       { status: 500 }
     );
   }
@@ -132,7 +137,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const { metadata, ...restData } = validation.data;
     const updateData = {
       ...restData,
-      ...(metadata !== undefined && { metadata: metadata as Prisma.InputJsonValue }),
+      ...(metadata !== undefined && {
+        metadata: metadata as Prisma.InputJsonValue,
+      }),
     };
 
     const updated = await prisma.contentLibrary.update({
@@ -159,7 +166,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   } catch (error) {
     logger.error('[content-library/[id]] PATCH error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to update content item' },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to update content item',
+      },
       { status: 500 }
     );
   }
@@ -198,7 +208,10 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   } catch (error) {
     logger.error('[content-library/[id]] DELETE error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to delete content item' },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to delete content item',
+      },
       { status: 500 }
     );
   }

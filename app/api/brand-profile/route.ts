@@ -46,7 +46,7 @@ const brandProfileSchema = z.object({
     .regex(/^#[0-9A-Fa-f]{6}$/)
     .optional()
     .or(z.literal('')),
-  socialHandles: z.record(z.string().max(100)).optional(),
+  socialHandles: z.record(z.string(), z.string().max(100)).optional(),
 });
 
 // =============================================================================
@@ -97,7 +97,9 @@ function formatBrandProfile(org: {
     favicon: org.favicon,
     primaryColor: org.primaryColor,
     socialHandles:
-      org.socialHandles && typeof org.socialHandles === 'object' && !Array.isArray(org.socialHandles)
+      org.socialHandles &&
+      typeof org.socialHandles === 'object' &&
+      !Array.isArray(org.socialHandles)
         ? (org.socialHandles as Record<string, string>)
         : {},
     updatedAt: org.updatedAt.toISOString(),
@@ -108,13 +110,15 @@ function formatBrandProfile(org: {
  * Resolve the authenticated user's active organisation ID.
  * Returns { userId, organizationId } on success, or a NextResponse on failure.
  */
-async function resolveUserOrg(request: NextRequest): Promise<
-  | { userId: string; organizationId: string }
-  | NextResponse
-> {
+async function resolveUserOrg(
+  request: NextRequest
+): Promise<{ userId: string; organizationId: string } | NextResponse> {
   const userId = await getUserIdFromRequestOrCookies(request);
   if (!userId) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
   }
 
   const user = await prisma.user.findUnique({
@@ -155,10 +159,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    return NextResponse.json({ data: formatBrandProfile(org) }, { status: 200 });
+    return NextResponse.json(
+      { data: formatBrandProfile(org) },
+      { status: 200 }
+    );
   } catch (error) {
-    logger.error('[brand-profile] GET failed:', error instanceof Error ? error.message : error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error(
+      '[brand-profile] GET failed:',
+      error instanceof Error ? error.message : error
+    );
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -196,18 +209,24 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
   // Build partial update — only include explicitly provided fields
   const updateData: Record<string, unknown> = {};
   if (body.name !== undefined) updateData.name = body.name;
-  if (body.description !== undefined) updateData.description = body.description || null;
+  if (body.description !== undefined)
+    updateData.description = body.description || null;
   if (body.website !== undefined) updateData.website = body.website || null;
   if (body.industry !== undefined) updateData.industry = body.industry;
   if (body.teamSize !== undefined) updateData.teamSize = body.teamSize;
   if (body.abn !== undefined) updateData.abn = body.abn || null;
   if (body.logo !== undefined) updateData.logo = body.logo || null;
   if (body.favicon !== undefined) updateData.favicon = body.favicon || null;
-  if (body.primaryColor !== undefined) updateData.primaryColor = body.primaryColor || null;
-  if (body.socialHandles !== undefined) updateData.socialHandles = body.socialHandles;
+  if (body.primaryColor !== undefined)
+    updateData.primaryColor = body.primaryColor || null;
+  if (body.socialHandles !== undefined)
+    updateData.socialHandles = body.socialHandles;
 
   if (Object.keys(updateData).length === 0) {
-    return NextResponse.json({ error: 'No fields provided to update' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'No fields provided to update' },
+      { status: 400 }
+    );
   }
 
   try {
@@ -217,9 +236,18 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       select: ORG_SELECT,
     });
 
-    return NextResponse.json({ data: formatBrandProfile(updated) }, { status: 200 });
+    return NextResponse.json(
+      { data: formatBrandProfile(updated) },
+      { status: 200 }
+    );
   } catch (error) {
-    logger.error('[brand-profile] PATCH failed:', error instanceof Error ? error.message : error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error(
+      '[brand-profile] PATCH failed:',
+      error instanceof Error ? error.message : error
+    );
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

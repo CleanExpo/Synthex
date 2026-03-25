@@ -314,7 +314,7 @@ export class APISecurityChecker {
       return schema.parse(data);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        throw new ValidationError('Invalid input', error.errors);
+        throw new ValidationError('Invalid input', error.issues);
       }
       throw error;
     }

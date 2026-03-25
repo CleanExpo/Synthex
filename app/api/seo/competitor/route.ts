@@ -6,7 +6,10 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
 const RequestSchema = z.object({
@@ -15,7 +18,10 @@ const RequestSchema = z.object({
 });
 
 function slugify(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
 }
 
 function generateCompetitorPages(brandName: string, competitorName: string) {
@@ -30,17 +36,61 @@ function generateCompetitorPages(brandName: string, competitorName: string) {
     metaDescription: `Compare ${brandName} and ${competitorName} side by side. See features, pricing, pros & cons, and which is right for your business.`,
     slug: `compare/${brandSlug}-vs-${competitorSlug}`,
     outline: [
-      { heading: `${brandName} vs ${competitorName}: Quick Overview`, type: 'h2' as const, notes: 'Summary table with key differences at a glance' },
-      { heading: 'Feature Comparison', type: 'h2' as const, notes: 'Detailed feature-by-feature matrix' },
-      { heading: 'AI Content Generation', type: 'h3' as const, notes: 'Compare AI capabilities of both platforms' },
-      { heading: 'Social Media Management', type: 'h3' as const, notes: 'Compare scheduling, publishing, and platform support' },
-      { heading: 'Analytics & Reporting', type: 'h3' as const, notes: 'Compare analytics depth and reporting tools' },
-      { heading: 'Pricing Comparison', type: 'h2' as const, notes: 'Side-by-side pricing tables with value analysis' },
-      { heading: 'Pros & Cons', type: 'h2' as const, notes: 'Balanced pros/cons for each platform' },
-      { heading: `${brandName} Pros`, type: 'h3' as const, notes: 'Key advantages of your platform' },
-      { heading: `${competitorName} Pros`, type: 'h3' as const, notes: 'Fair acknowledgment of competitor strengths' },
-      { heading: 'Who Should Choose Which?', type: 'h2' as const, notes: 'Use-case based recommendations' },
-      { heading: 'Verdict', type: 'h2' as const, notes: 'Final recommendation with clear CTA' },
+      {
+        heading: `${brandName} vs ${competitorName}: Quick Overview`,
+        type: 'h2' as const,
+        notes: 'Summary table with key differences at a glance',
+      },
+      {
+        heading: 'Feature Comparison',
+        type: 'h2' as const,
+        notes: 'Detailed feature-by-feature matrix',
+      },
+      {
+        heading: 'AI Content Generation',
+        type: 'h3' as const,
+        notes: 'Compare AI capabilities of both platforms',
+      },
+      {
+        heading: 'Social Media Management',
+        type: 'h3' as const,
+        notes: 'Compare scheduling, publishing, and platform support',
+      },
+      {
+        heading: 'Analytics & Reporting',
+        type: 'h3' as const,
+        notes: 'Compare analytics depth and reporting tools',
+      },
+      {
+        heading: 'Pricing Comparison',
+        type: 'h2' as const,
+        notes: 'Side-by-side pricing tables with value analysis',
+      },
+      {
+        heading: 'Pros & Cons',
+        type: 'h2' as const,
+        notes: 'Balanced pros/cons for each platform',
+      },
+      {
+        heading: `${brandName} Pros`,
+        type: 'h3' as const,
+        notes: 'Key advantages of your platform',
+      },
+      {
+        heading: `${competitorName} Pros`,
+        type: 'h3' as const,
+        notes: 'Fair acknowledgment of competitor strengths',
+      },
+      {
+        heading: 'Who Should Choose Which?',
+        type: 'h2' as const,
+        notes: 'Use-case based recommendations',
+      },
+      {
+        heading: 'Verdict',
+        type: 'h2' as const,
+        notes: 'Final recommendation with clear CTA',
+      },
     ],
     schema: {
       '@context': 'https://schema.org',
@@ -90,15 +140,51 @@ function generateCompetitorPages(brandName: string, competitorName: string) {
     metaDescription: `Looking for ${competitorName} alternatives? Discover why ${brandName} is the top choice with AI-powered features, better pricing, and more.`,
     slug: `alternatives/${competitorSlug}-alternatives`,
     outline: [
-      { heading: `Why People Switch from ${competitorName}`, type: 'h2' as const, notes: 'Common pain points and limitations' },
-      { heading: `Top ${competitorName} Alternatives`, type: 'h2' as const, notes: 'List of alternatives with your brand featured prominently' },
-      { heading: `1. ${brandName} — Best Overall Alternative`, type: 'h3' as const, notes: 'Detailed feature overview and unique selling points' },
-      { heading: 'Key Features', type: 'h3' as const, notes: 'Highlight differentiating features' },
-      { heading: 'Pricing', type: 'h3' as const, notes: 'Transparent pricing comparison' },
-      { heading: '2-5. Other Alternatives', type: 'h3' as const, notes: 'Brief mentions of other alternatives for fairness' },
-      { heading: 'Comparison Table', type: 'h2' as const, notes: 'Feature matrix of all alternatives vs competitor' },
-      { heading: `How to Migrate from ${competitorName}`, type: 'h2' as const, notes: 'Step-by-step migration guide' },
-      { heading: 'Frequently Asked Questions', type: 'h2' as const, notes: 'FAQ schema markup opportunity' },
+      {
+        heading: `Why People Switch from ${competitorName}`,
+        type: 'h2' as const,
+        notes: 'Common pain points and limitations',
+      },
+      {
+        heading: `Top ${competitorName} Alternatives`,
+        type: 'h2' as const,
+        notes: 'List of alternatives with your brand featured prominently',
+      },
+      {
+        heading: `1. ${brandName} — Best Overall Alternative`,
+        type: 'h3' as const,
+        notes: 'Detailed feature overview and unique selling points',
+      },
+      {
+        heading: 'Key Features',
+        type: 'h3' as const,
+        notes: 'Highlight differentiating features',
+      },
+      {
+        heading: 'Pricing',
+        type: 'h3' as const,
+        notes: 'Transparent pricing comparison',
+      },
+      {
+        heading: '2-5. Other Alternatives',
+        type: 'h3' as const,
+        notes: 'Brief mentions of other alternatives for fairness',
+      },
+      {
+        heading: 'Comparison Table',
+        type: 'h2' as const,
+        notes: 'Feature matrix of all alternatives vs competitor',
+      },
+      {
+        heading: `How to Migrate from ${competitorName}`,
+        type: 'h2' as const,
+        notes: 'Step-by-step migration guide',
+      },
+      {
+        heading: 'Frequently Asked Questions',
+        type: 'h2' as const,
+        notes: 'FAQ schema markup opportunity',
+      },
     ],
     schema: {
       '@context': 'https://schema.org',
@@ -138,7 +224,10 @@ function generateCompetitorPages(brandName: string, competitorName: string) {
 }
 
 export async function POST(request: NextRequest) {
-  const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_WRITE);
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_WRITE
+  );
   if (!security.allowed) {
     return APISecurityChecker.createSecureResponse(
       { error: security.error },
@@ -151,12 +240,19 @@ export async function POST(request: NextRequest) {
     const validation = RequestSchema.safeParse(body);
     if (!validation.success) {
       return APISecurityChecker.createSecureResponse(
-        { success: false, error: 'Invalid request', details: validation.error.errors },
+        {
+          success: false,
+          error: 'Invalid request',
+          details: validation.error.issues,
+        },
         400
       );
     }
 
-    const pages = generateCompetitorPages(validation.data.brandName, validation.data.competitorName);
+    const pages = generateCompetitorPages(
+      validation.data.brandName,
+      validation.data.competitorName
+    );
     return APISecurityChecker.createSecureResponse({ success: true, pages });
   } catch (error) {
     logger.error('Competitor pages error:', error);

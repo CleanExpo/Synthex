@@ -13,7 +13,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isOwnerEmail } from '@/lib/auth/jwt-utils';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
 import {
@@ -45,12 +48,20 @@ function isMissingTableError(error: unknown): boolean {
   );
 }
 
-async function requireOwner(request: NextRequest): Promise<
-  { userId: string; ipAddress: string; userAgent: string } | { error: NextResponse }
+async function requireOwner(
+  request: NextRequest
+): Promise<
+  | { userId: string; ipAddress: string; userAgent: string }
+  | { error: NextResponse }
 > {
-  const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_READ
+  );
   if (!security.allowed) {
-    return { error: NextResponse.json({ error: 'Unauthorised' }, { status: 401 }) };
+    return {
+      error: NextResponse.json({ error: 'Unauthorised' }, { status: 401 }),
+    };
   }
 
   const userId = security.context.userId!;
@@ -60,16 +71,28 @@ async function requireOwner(request: NextRequest): Promise<
   });
 
   if (!user?.email || !isOwnerEmail(user.email)) {
-    return { error: NextResponse.json({ error: 'Forbidden', message: 'Owner access required' }, { status: 403 }) };
+    return {
+      error: NextResponse.json(
+        { error: 'Forbidden', message: 'Owner access required' },
+        { status: 403 }
+      ),
+    };
   }
 
-  const ipAddress = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
+  const ipAddress =
+    request.headers.get('x-forwarded-for') ??
+    request.headers.get('x-real-ip') ??
+    'unknown';
   const userAgent = request.headers.get('user-agent') ?? 'unknown';
 
   return { userId, ipAddress, userAgent };
 }
 
-function buildActor(auth: { userId: string; ipAddress: string; userAgent: string }): VaultActor {
+function buildActor(auth: {
+  userId: string;
+  ipAddress: string;
+  userAgent: string;
+}): VaultActor {
   return {
     id: auth.userId,
     type: 'user',
@@ -86,7 +109,9 @@ export async function GET(request: NextRequest) {
     if ('error' in auth) return auth.error;
 
     if (!isPrismaAvailable()) {
-      logger.warn('[Vault API] Prisma client not available — returning empty list');
+      logger.warn(
+        '[Vault API] Prisma client not available — returning empty list'
+      );
       return NextResponse.json({ secrets: [], total: 0 });
     }
 
@@ -100,17 +125,20 @@ export async function GET(request: NextRequest) {
 
     if (!query.success) {
       return NextResponse.json(
-        { error: 'Invalid query parameters', details: query.error.errors },
+        { error: 'Invalid query parameters', details: query.error.issues },
         { status: 400 }
       );
     }
 
     try {
-      const secrets = await VaultService.listSecrets(query.data.organizationId, {
-        secretType: query.data.secretType,
-        provider: query.data.provider,
-        includeInactive: query.data.includeInactive,
-      });
+      const secrets = await VaultService.listSecrets(
+        query.data.organizationId,
+        {
+          secretType: query.data.secretType,
+          provider: query.data.provider,
+          includeInactive: query.data.includeInactive,
+        }
+      );
 
       return NextResponse.json({ secrets, total: secrets.length });
     } catch (dbError) {
@@ -123,7 +151,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('[Vault API] GET error:', error);
     return NextResponse.json(
-      { error: sanitizeErrorForResponse(error, 'Failed to fetch vault secrets') },
+      {
+        error: sanitizeErrorForResponse(error, 'Failed to fetch vault secrets'),
+      },
       { status: 500 }
     );
   }
@@ -141,7 +171,7 @@ export async function POST(request: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid request', details: parsed.error.errors },
+        { error: 'Invalid request', details: parsed.error.issues },
         { status: 400 }
       );
     }
@@ -153,7 +183,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { organizationId, name, secretType, provider, value, description, expiresAt, isRotatable } = parsed.data;
+    const {
+      organizationId,
+      name,
+      secretType,
+      provider,
+      value,
+      description,
+      expiresAt,
+      isRotatable,
+    } = parsed.data;
     const slug = parsed.data.slug ?? slugify(name);
 
     // Encrypt + mask
@@ -196,7 +235,9 @@ export async function POST(request: NextRequest) {
       const msg = dbError instanceof Error ? dbError.message : String(dbError);
       if (msg.includes('Unique constraint') || msg.includes('P2002')) {
         return NextResponse.json(
-          { error: `Secret with slug "${slug}" already exists for this organisation.` },
+          {
+            error: `Secret with slug "${slug}" already exists for this organisation.`,
+          },
           { status: 409 }
         );
       }
@@ -205,7 +246,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('[Vault API] POST error:', error);
     return NextResponse.json(
-      { error: sanitizeErrorForResponse(error, 'Failed to create vault secret') },
+      {
+        error: sanitizeErrorForResponse(error, 'Failed to create vault secret'),
+      },
       { status: 500 }
     );
   }
@@ -223,7 +266,7 @@ export async function PATCH(request: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid request', details: parsed.error.errors },
+        { error: 'Invalid request', details: parsed.error.issues },
         { status: 400 }
       );
     }
@@ -238,7 +281,12 @@ export async function PATCH(request: NextRequest) {
     const { organizationId, slug, newValue } = parsed.data;
 
     try {
-      const secret = await VaultService.rotateSecret(organizationId, slug, newValue, buildActor(auth));
+      const secret = await VaultService.rotateSecret(
+        organizationId,
+        slug,
+        newValue,
+        buildActor(auth)
+      );
 
       if (!secret) {
         return NextResponse.json(
@@ -260,7 +308,9 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     logger.error('[Vault API] PATCH error:', error);
     return NextResponse.json(
-      { error: sanitizeErrorForResponse(error, 'Failed to rotate vault secret') },
+      {
+        error: sanitizeErrorForResponse(error, 'Failed to rotate vault secret'),
+      },
       { status: 500 }
     );
   }
@@ -278,7 +328,7 @@ export async function DELETE(request: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid request', details: parsed.error.errors },
+        { error: 'Invalid request', details: parsed.error.issues },
         { status: 400 }
       );
     }
@@ -293,7 +343,11 @@ export async function DELETE(request: NextRequest) {
     const { organizationId, slug } = parsed.data;
 
     try {
-      const deleted = await VaultService.deleteSecret(organizationId, slug, buildActor(auth));
+      const deleted = await VaultService.deleteSecret(
+        organizationId,
+        slug,
+        buildActor(auth)
+      );
 
       if (!deleted) {
         return NextResponse.json(
@@ -315,7 +369,9 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     logger.error('[Vault API] DELETE error:', error);
     return NextResponse.json(
-      { error: sanitizeErrorForResponse(error, 'Failed to delete vault secret') },
+      {
+        error: sanitizeErrorForResponse(error, 'Failed to delete vault secret'),
+      },
       { status: 500 }
     );
   }

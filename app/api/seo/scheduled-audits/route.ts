@@ -26,7 +26,7 @@ const createTargetSchema = z.object({
   url: z.string().url('Invalid URL provided'),
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
   frequency: z.enum(['daily', 'weekly', 'monthly'], {
-    errorMap: () => ({
+    error: () => ({
       message: 'Frequency must be daily, weekly, or monthly',
     }),
   }),

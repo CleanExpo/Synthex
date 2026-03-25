@@ -50,7 +50,9 @@ export async function GET(request: NextRequest) {
           heapTotalMB: Math.round(memory.heapTotal / 1024 / 1024),
           rssMB: Math.round(memory.rss / 1024 / 1024),
           externalMB: Math.round(memory.external / 1024 / 1024),
-          heapUsedPercent: Math.round((memory.heapUsed / memory.heapTotal) * 100),
+          heapUsedPercent: Math.round(
+            (memory.heapUsed / memory.heapTotal) * 100
+          ),
         },
         nodeVersion: process.version,
         platform: process.platform,
@@ -68,7 +70,7 @@ export async function GET(request: NextRequest) {
         },
         errorRate: report.api.errorRate.toFixed(2) + '%',
         statusCodes: report.api.statusCodeDistribution,
-        slowestEndpoints: report.api.slowestEndpoints.slice(0, 5).map((e) => ({
+        slowestEndpoints: report.api.slowestEndpoints.slice(0, 5).map(e => ({
           endpoint: e.endpoint,
           avgTime: Math.round(e.avgTime),
           requests: e.count,
@@ -133,7 +135,7 @@ export async function GET(request: NextRequest) {
 }
 
 const clientMetricsSchema = z.object({
-  metrics: z.record(z.unknown()),
+  metrics: z.record(z.string(), z.unknown()),
   url: z.string().optional(),
   timestamp: z.string().optional(),
   userAgent: z.string().optional(),
@@ -149,7 +151,11 @@ export async function POST(request: NextRequest) {
     const validation = clientMetricsSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Invalid request data', details: validation.error.issues },
+        {
+          success: false,
+          error: 'Invalid request data',
+          details: validation.error.issues,
+        },
         { status: 400 }
       );
     }
@@ -191,7 +197,11 @@ interface PerformanceReport {
     p99: number;
     errorRate: number;
     statusCodeDistribution: Record<string, number>;
-    slowestEndpoints: Array<{ endpoint: string; avgTime: number; count: number }>;
+    slowestEndpoints: Array<{
+      endpoint: string;
+      avgTime: number;
+      count: number;
+    }>;
   };
   database: {
     totalQueries: number;
@@ -270,7 +280,9 @@ function formatUptime(seconds: number): string {
   return `${minutes}m`;
 }
 
-function getHealthStatus(report: PerformanceReport): 'healthy' | 'degraded' | 'unhealthy' {
+function getHealthStatus(
+  report: PerformanceReport
+): 'healthy' | 'degraded' | 'unhealthy' {
   const avgMemory = report.system?.avgMemoryUsage ?? 0;
   if (report.api.errorRate > 10 || avgMemory > 90) {
     return 'unhealthy';
@@ -281,14 +293,18 @@ function getHealthStatus(report: PerformanceReport): 'healthy' | 'degraded' | 'u
   return 'healthy';
 }
 
-function getMemoryStatus(memory: NodeJS.MemoryUsage): 'healthy' | 'warning' | 'critical' {
+function getMemoryStatus(
+  memory: NodeJS.MemoryUsage
+): 'healthy' | 'warning' | 'critical' {
   const heapPercent = (memory.heapUsed / memory.heapTotal) * 100;
   if (heapPercent > 90) return 'critical';
   if (heapPercent > 75) return 'warning';
   return 'healthy';
 }
 
-function getAPIStatus(report: PerformanceReport): 'healthy' | 'degraded' | 'unhealthy' {
+function getAPIStatus(
+  report: PerformanceReport
+): 'healthy' | 'degraded' | 'unhealthy' {
   if (report.api.errorRate > 10) return 'unhealthy';
   if (report.api.errorRate > 5 || report.api.p90 > 1000) return 'degraded';
   return 'healthy';
@@ -300,11 +316,15 @@ function formatPrometheus(metrics: MetricsData): string {
   // Memory metrics
   lines.push('# HELP synthex_memory_heap_used_bytes Heap memory used');
   lines.push('# TYPE synthex_memory_heap_used_bytes gauge');
-  lines.push(`synthex_memory_heap_used_bytes ${metrics.system.memory.heapUsedMB * 1024 * 1024}`);
+  lines.push(
+    `synthex_memory_heap_used_bytes ${metrics.system.memory.heapUsedMB * 1024 * 1024}`
+  );
 
   lines.push('# HELP synthex_memory_heap_total_bytes Total heap memory');
   lines.push('# TYPE synthex_memory_heap_total_bytes gauge');
-  lines.push(`synthex_memory_heap_total_bytes ${metrics.system.memory.heapTotalMB * 1024 * 1024}`);
+  lines.push(
+    `synthex_memory_heap_total_bytes ${metrics.system.memory.heapTotalMB * 1024 * 1024}`
+  );
 
   // API metrics
   lines.push('# HELP synthex_api_requests_total Total API requests');
@@ -315,7 +335,9 @@ function formatPrometheus(metrics: MetricsData): string {
   lines.push('# TYPE synthex_api_response_time_ms gauge');
   lines.push(`synthex_api_response_time_ms ${metrics.api.averageResponseTime}`);
 
-  lines.push('# HELP synthex_api_response_time_p95_ms 95th percentile response time');
+  lines.push(
+    '# HELP synthex_api_response_time_p95_ms 95th percentile response time'
+  );
   lines.push('# TYPE synthex_api_response_time_p95_ms gauge');
   lines.push(`synthex_api_response_time_p95_ms ${metrics.api.percentiles.p95}`);
 

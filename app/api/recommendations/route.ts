@@ -12,7 +12,10 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import {
   contentRecommendationEngine,
@@ -74,7 +77,9 @@ export async function GET(request: NextRequest) {
 
     // Get recommendation cards for dashboard
     if (action === 'cards') {
-      const platforms = searchParams.get('platforms')?.split(',') as Platform[] | undefined;
+      const platforms = searchParams.get('platforms')?.split(',') as
+        | Platform[]
+        | undefined;
 
       const cards = await contentRecommendationEngine.getRecommendationCards(
         userId,
@@ -117,18 +122,22 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      const formats = await contentRecommendationEngine.getFormatRecommendations(
-        userId,
-        platform
-      );
+      const formats =
+        await contentRecommendationEngine.getFormatRecommendations(
+          userId,
+          platform
+        );
 
       return APISecurityChecker.createSecureResponse({ formats });
     }
 
     // Get content gap analysis
     if (action === 'gaps') {
-      const platforms = (searchParams.get('platforms')?.split(',') ||
-        ['instagram', 'twitter', 'linkedin']) as Platform[];
+      const platforms = (searchParams.get('platforms')?.split(',') || [
+        'instagram',
+        'twitter',
+        'linkedin',
+      ]) as Platform[];
 
       const gaps = await contentRecommendationEngine.analyzeContentGaps(
         userId,
@@ -139,14 +148,20 @@ export async function GET(request: NextRequest) {
     }
 
     // Default: Get all recommendations
-    const platforms = searchParams.get('platforms')?.split(',') as Platform[] | undefined;
-    const types = searchParams.get('types')?.split(',') as RecommendationType[] | undefined;
+    const platforms = searchParams.get('platforms')?.split(',') as
+      | Platform[]
+      | undefined;
+    const types = searchParams.get('types')?.split(',') as
+      | RecommendationType[]
+      | undefined;
     const limit = parseInt(searchParams.get('limit') || '10', 10);
 
-    const recommendations = await contentRecommendationEngine.getRecommendations(
-      userId,
-      { platforms, types, limit }
-    );
+    const recommendations =
+      await contentRecommendationEngine.getRecommendations(userId, {
+        platforms,
+        types,
+        limit,
+      });
 
     return APISecurityChecker.createSecureResponse({
       recommendations,
@@ -189,14 +204,12 @@ export async function POST(request: NextRequest) {
     if (action === 'get') {
       const validated = GetRecommendationsSchema.parse(body);
 
-      const recommendations = await contentRecommendationEngine.getRecommendations(
-        userId,
-        {
+      const recommendations =
+        await contentRecommendationEngine.getRecommendations(userId, {
           platforms: validated.platforms as Platform[],
           types: validated.types as RecommendationType[],
           limit: validated.limit,
-        }
-      );
+        });
 
       return APISecurityChecker.createSecureResponse({
         recommendations,
@@ -220,10 +233,11 @@ export async function POST(request: NextRequest) {
     if (action === 'formats') {
       const validated = FormatRecommendationsSchema.parse(body);
 
-      const formats = await contentRecommendationEngine.getFormatRecommendations(
-        userId,
-        validated.platform as Platform
-      );
+      const formats =
+        await contentRecommendationEngine.getFormatRecommendations(
+          userId,
+          validated.platform as Platform
+        );
 
       return APISecurityChecker.createSecureResponse({ formats });
     }
@@ -256,7 +270,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }
@@ -363,7 +377,7 @@ export async function PUT(request: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }

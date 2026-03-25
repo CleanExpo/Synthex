@@ -25,7 +25,7 @@ const createDraftSchema = z.object({
   tone: z.string().optional(),
   topic: z.string().optional(),
   targetLength: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -42,7 +42,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || undefined;
     const platform = searchParams.get('platform') || undefined;
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || '50', 10),
+      100
+    );
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     const [drafts, total] = await Promise.all([
@@ -106,13 +109,25 @@ export async function POST(request: NextRequest) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.flatten().fieldErrors },
+        {
+          error: 'Validation failed',
+          details: validation.error.flatten().fieldErrors,
+        },
         { status: 400 }
       );
     }
 
-    const { platform, content, title, hashtags, hookType, tone, topic, targetLength, metadata } =
-      validation.data;
+    const {
+      platform,
+      content,
+      title,
+      hashtags,
+      hookType,
+      tone,
+      topic,
+      targetLength,
+      metadata,
+    } = validation.data;
 
     const draft = await prisma.contentDraft.create({
       data: {

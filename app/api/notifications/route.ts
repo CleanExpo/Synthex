@@ -27,7 +27,7 @@ const createNotificationSchema = z.object({
   type: z.enum(['info', 'warning', 'error', 'success']),
   title: z.string().min(1).max(200),
   message: z.string().min(1).max(2000),
-  data: z.record(z.unknown()).optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
   userId: z.string().cuid().optional(), // If not provided, uses authenticated user
 });
 
@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Invalid query parameters', details: error.errors },
+        { error: 'Invalid query parameters', details: error.issues },
         400,
         security.context
       );
@@ -269,7 +269,7 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Invalid notification data', details: error.errors },
+        { error: 'Invalid notification data', details: error.issues },
         400,
         security.context
       );
@@ -367,7 +367,7 @@ export async function PATCH(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Invalid request body', details: error.errors },
+        { error: 'Invalid request body', details: error.issues },
         400,
         security.context
       );

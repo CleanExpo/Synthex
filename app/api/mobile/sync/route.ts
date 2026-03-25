@@ -33,7 +33,7 @@ const syncDataSchema = z.object({
         type: z.enum(['create', 'update', 'delete']),
         entity: z.string(),
         id: z.string(),
-        data: z.record(z.unknown()).optional(),
+        data: z.record(z.string(), z.unknown()).optional(),
         timestamp: z.string().datetime(),
       })
     )
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     const validation = syncDataSchema.safeParse(body);
     if (!validation.success) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation failed', details: validation.error.errors },
+        { error: 'Validation failed', details: validation.error.issues },
         400,
         security.context
       );

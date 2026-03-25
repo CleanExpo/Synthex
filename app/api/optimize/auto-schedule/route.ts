@@ -461,7 +461,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }
@@ -502,6 +502,7 @@ export async function PUT(request: NextRequest) {
       defaultTimezone: z.string().optional(),
       platformSettings: z
         .record(
+          z.string(),
           z.object({
             enabled: z.boolean().optional(),
             postsPerWeek: z.number().min(0).max(30).optional(),
@@ -533,7 +534,7 @@ export async function PUT(request: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }

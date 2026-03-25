@@ -34,7 +34,7 @@ const CreateInvestmentSchema = z.object({
   description: z.string().max(2000).optional(),
   platform: z.string().max(100).optional(),
   postId: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // =============================================================================

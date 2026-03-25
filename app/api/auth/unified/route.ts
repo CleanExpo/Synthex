@@ -3,7 +3,12 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { rateLimiters } from '@/lib/rate-limit';
-import { generateToken, getUserIdFromRequestOrCookies, unauthorizedResponse, isOwnerEmail } from '@/lib/auth/jwt-utils';
+import {
+  generateToken,
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+  isOwnerEmail,
+} from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // Validation schemas
@@ -28,28 +33,28 @@ export async function POST(request: NextRequest) {
   return rateLimiters.auth(request, async () => {
     try {
       const body = await request.json();
-    const { action } = body;
+      const { action } = body;
 
-    // Handle different auth actions
-    switch (action) {
-      case 'login':
-        return handleLogin(body);
-      
-      case 'signup':
-        return handleSignup(body);
-      
-      case 'logout':
-        return handleLogout();
-      
-      case 'verify':
-        return handleVerify(request);
-      
-      default:
-        return NextResponse.json(
-          { error: 'Invalid action. Use: login, signup, logout, or verify' },
-          { status: 400 }
-        );
-    }
+      // Handle different auth actions
+      switch (action) {
+        case 'login':
+          return handleLogin(body);
+
+        case 'signup':
+          return handleSignup(body);
+
+        case 'logout':
+          return handleLogout();
+
+        case 'verify':
+          return handleVerify(request);
+
+        default:
+          return NextResponse.json(
+            { error: 'Invalid action. Use: login, signup, logout, or verify' },
+            { status: 400 }
+          );
+      }
     } catch (error) {
       logger.error('Auth error:', error);
       return NextResponse.json(
@@ -90,7 +95,10 @@ async function handleLogin(body: z.infer<typeof loginSchema>) {
     // Check if user has a password (OAuth-only users don't)
     if (!user.password) {
       return NextResponse.json(
-        { error: 'Please login with your linked account (Google or other provider)' },
+        {
+          error:
+            'Please login with your linked account (Google or other provider)',
+        },
         { status: 400 }
       );
     }
@@ -111,10 +119,14 @@ async function handleLogin(body: z.infer<typeof loginSchema>) {
 
     // Auto-fix DB flags for owner on login (fire-and-forget)
     if (ownerBypass && (!user.onboardingComplete || !user.apiKeyConfigured)) {
-      prisma.user.update({
-        where: { id: user.id },
-        data: { onboardingComplete: true, apiKeyConfigured: true },
-      }).catch(() => { /* non-fatal */ });
+      prisma.user
+        .update({
+          where: { id: user.id },
+          data: { onboardingComplete: true, apiKeyConfigured: true },
+        })
+        .catch(() => {
+          /* non-fatal */
+        });
     }
 
     // Generate token (include onboarding flags for middleware)
@@ -136,7 +148,7 @@ async function handleLogin(body: z.infer<typeof loginSchema>) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input', details: error.errors },
+        { error: 'Invalid input', details: error.issues },
         { status: 400 }
       );
     }
@@ -199,7 +211,7 @@ async function handleSignup(body: z.infer<typeof signupSchema>) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input', details: error.errors },
+        { error: 'Invalid input', details: error.issues },
         { status: 400 }
       );
     }
@@ -242,10 +254,7 @@ async function handleVerify(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     return NextResponse.json({

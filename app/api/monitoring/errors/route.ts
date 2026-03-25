@@ -35,7 +35,7 @@ const errorLogSchema = z
     url: z.string().optional(),
     timestamp: z.string().optional(),
     level: z.string().optional(),
-    context: z.record(z.unknown()).optional(),
+    context: z.record(z.string(), z.unknown()).optional(),
     id: z.string().optional(),
   })
   .passthrough();

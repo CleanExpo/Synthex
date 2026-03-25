@@ -22,7 +22,7 @@ import { logAuditEvent } from '@/lib/audit/audit-logger';
 // Validation schema for account deletion
 const deleteAccountSchema = z.object({
   confirmation: z.literal('DELETE_MY_ACCOUNT', {
-    errorMap: () => ({ message: 'Must confirm with "DELETE_MY_ACCOUNT"' }),
+    error: () => ({ message: 'Must confirm with "DELETE_MY_ACCOUNT"' }),
   }),
 });
 

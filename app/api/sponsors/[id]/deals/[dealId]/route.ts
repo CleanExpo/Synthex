@@ -32,7 +32,7 @@ const UpdateDealSchema = z.object({
   endDate: z.string().nullable().optional(),
   paidAt: z.string().nullable().optional(),
   revenueEntryId: z.string().nullable().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // =============================================================================

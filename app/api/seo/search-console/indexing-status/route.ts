@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: 'Invalid request',
-          details: validationResult.error.errors,
+          details: validationResult.error.issues,
         },
         400
       );

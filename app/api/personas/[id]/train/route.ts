@@ -13,8 +13,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-import { PersonaTrainingPipeline, TrainingSource } from '@/lib/ai/persona-training-pipeline';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
+import {
+  PersonaTrainingPipeline,
+  TrainingSource,
+} from '@/lib/ai/persona-training-pipeline';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
@@ -24,16 +30,20 @@ import { logger } from '@/lib/logger';
 const trainingSourceSchema = z.object({
   type: z.enum(['text', 'social_post', 'document', 'website', 'conversation']),
   content: z.string().min(50, 'Content must be at least 50 characters'),
-  metadata: z.object({
-    platform: z.string().optional(),
-    engagement: z.number().optional(),
-    date: z.string().optional(),
-    url: z.string().optional(),
-  }).optional(),
+  metadata: z
+    .object({
+      platform: z.string().optional(),
+      engagement: z.number().optional(),
+      date: z.string().optional(),
+      url: z.string().optional(),
+    })
+    .optional(),
 });
 
 const trainRequestSchema = z.object({
-  sources: z.array(trainingSourceSchema).min(1, 'At least one training source required'),
+  sources: z
+    .array(trainingSourceSchema)
+    .min(1, 'At least one training source required'),
 });
 
 // ============================================================================
@@ -48,7 +58,10 @@ export async function POST(
     const { id: personaId } = await params;
 
     // Security check
-    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_WRITE);
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
+    );
 
     if (!security.allowed || !security.context.userId) {
       return NextResponse.json(
@@ -65,10 +78,7 @@ export async function POST(
     });
 
     if (!persona) {
-      return NextResponse.json(
-        { error: 'Persona not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Persona not found' }, { status: 404 });
     }
 
     // Check if already training
@@ -85,7 +95,7 @@ export async function POST(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request', details: validation.error.errors },
+        { error: 'Invalid request', details: validation.error.issues },
         { status: 400 }
       );
     }
@@ -110,7 +120,8 @@ export async function POST(
     // Start training asynchronously — fire-and-forget with database status updates.
     // In serverless, in-memory progress tracking via Map resets between invocations,
     // so the database-backed persona.status is the reliable source of truth.
-    pipeline.train(personaId, trainingSources)
+    pipeline
+      .train(personaId, trainingSources)
       .then(async () => {
         await prisma.persona.update({
           where: { id: personaId },
@@ -121,7 +132,7 @@ export async function POST(
           },
         });
       })
-      .catch(async (error) => {
+      .catch(async error => {
         logger.error('Training failed:', error);
         await prisma.persona.update({
           where: { id: personaId },
@@ -156,7 +167,10 @@ export async function GET(
     const { id: personaId } = await params;
 
     // Security check
-    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_READ
+    );
 
     if (!security.allowed || !security.context.userId) {
       return NextResponse.json(
@@ -173,10 +187,7 @@ export async function GET(
     });
 
     if (!persona) {
-      return NextResponse.json(
-        { error: 'Persona not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Persona not found' }, { status: 404 });
     }
 
     // Check persona status from database (the source of truth)

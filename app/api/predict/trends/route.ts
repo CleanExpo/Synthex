@@ -12,7 +12,10 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { trendPredictor, Platform } from '@/lib/analytics/trend-predictor';
 import { logger } from '@/lib/logger';
@@ -53,11 +56,13 @@ const ViralPotentialSchema = z.object({
   }),
   platform: z.string(),
   scheduledTime: z.string().datetime().optional(),
-  accountMetrics: z.object({
-    followers: z.number(),
-    avgEngagementRate: z.number(),
-    postFrequency: z.number().optional(),
-  }).optional(),
+  accountMetrics: z
+    .object({
+      followers: z.number(),
+      avgEngagementRate: z.number(),
+      postFrequency: z.number().optional(),
+    })
+    .optional(),
 });
 
 const ContentPerformanceSchema = z.object({
@@ -248,16 +253,15 @@ export async function POST(request: NextRequest) {
     if (action === 'viral') {
       const validated = ViralPotentialSchema.parse(body);
 
-      const viralScore = await trendPredictor.calculateViralPotential(
-        userId,
-        {
-          text: validated.content.text || '',
-          hashtags: validated.content.hashtags,
-          mediaType: validated.content.mediaType,
-          platform: validated.platform as Platform,
-          scheduledTime: validated.scheduledTime ? new Date(validated.scheduledTime) : undefined,
-        }
-      );
+      const viralScore = await trendPredictor.calculateViralPotential(userId, {
+        text: validated.content.text || '',
+        hashtags: validated.content.hashtags,
+        mediaType: validated.content.mediaType,
+        platform: validated.platform as Platform,
+        scheduledTime: validated.scheduledTime
+          ? new Date(validated.scheduledTime)
+          : undefined,
+      });
 
       await auditLogger.logData(
         'read',
@@ -288,7 +292,11 @@ export async function POST(request: NextRequest) {
         {
           text: validated.topics.join(' '),
           hashtags: validated.topics.map(t => `#${t.replace(/\s+/g, '')}`),
-          mediaType: validated.contentType as 'image' | 'video' | 'carousel' | 'text',
+          mediaType: validated.contentType as
+            | 'image'
+            | 'video'
+            | 'carousel'
+            | 'text',
           platform: validated.platform as Platform,
         }
       );
@@ -334,7 +342,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }

@@ -11,7 +11,7 @@ const monitoringEventSchema = z
     userId: z.string().optional(),
     timestamp: z.string().optional(),
     type: z.string().optional(),
-    data: z.record(z.unknown()).optional(),
+    data: z.record(z.string(), z.unknown()).optional(),
     errors: z.array(z.any()).optional(),
     actions: z.array(z.any()).optional(),
   })

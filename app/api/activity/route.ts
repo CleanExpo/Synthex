@@ -16,7 +16,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
@@ -70,13 +73,19 @@ interface ActivityItem {
 export async function GET(request: NextRequest) {
   try {
     // Security check
-    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_READ
+    );
 
     // Get limit from query params
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get('limit') || '10', 10), 50);
     const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1);
-    const offset = parseInt(searchParams.get('offset') || String((page - 1) * limit), 10);
+    const offset = parseInt(
+      searchParams.get('offset') || String((page - 1) * limit),
+      10
+    );
 
     // Build user filter if authenticated
     const userId = security.context.userId;
@@ -133,9 +142,11 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Transform posts to activity items
-    const postActivities: ActivityItem[] = posts.map((post) => {
+    const postActivities: ActivityItem[] = posts.map(post => {
       const analytics = post.analytics as Record<string, number> | null;
-      const hasEngagement = analytics && (analytics.likes || analytics.comments || analytics.shares);
+      const hasEngagement =
+        analytics &&
+        (analytics.likes || analytics.comments || analytics.shares);
 
       let type: ActivityType = 'post_created';
       let title = 'Draft created';
@@ -175,7 +186,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform audit logs to activity items
-    const auditActivities: ActivityItem[] = auditLogs.map((log) => ({
+    const auditActivities: ActivityItem[] = auditLogs.map(log => ({
       id: `audit-${log.id}`,
       type: log.action.includes('campaign') ? 'campaign' : 'post',
       title: formatAuditAction(log.action),
@@ -186,13 +197,16 @@ export async function GET(request: NextRequest) {
 
     // Merge and sort all activities
     const allActivities = [...postActivities, ...auditActivities]
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      )
       .slice(0, limit);
 
     // Filter by types if specified (exact match only)
     const typesParam = searchParams.get('types');
     const filteredActivities = typesParam
-      ? allActivities.filter((a) => {
+      ? allActivities.filter(a => {
           const requestedTypes = typesParam.split(',').map(t => t.trim());
           return requestedTypes.includes(a.type);
         })
@@ -231,7 +245,10 @@ function formatAuditAction(action: string): string {
     'auth.logout': 'Logged out',
   };
 
-  return actionMap[action] || action.replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return (
+    actionMap[action] ||
+    action.replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+  );
 }
 
 // ============================================================================
@@ -244,7 +261,7 @@ const createActivitySchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
   platform: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   teamId: z.string().optional(),
 });
 
@@ -271,10 +288,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { type, title, description, platform, metadata, teamId } = validation.data;
+    const { type, title, description, platform, metadata, teamId } =
+      validation.data;
 
     // Validate type
-    if (!VALID_ACTIVITY_TYPES.includes(type as typeof VALID_ACTIVITY_TYPES[number])) {
+    if (
+      !VALID_ACTIVITY_TYPES.includes(
+        type as (typeof VALID_ACTIVITY_TYPES)[number]
+      )
+    ) {
       return NextResponse.json(
         { error: 'Invalid activity type' },
         { status: 400 }

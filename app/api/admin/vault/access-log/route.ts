@@ -9,7 +9,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isOwnerEmail } from '@/lib/auth/jwt-utils';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
 import { VaultService, AccessLogQuerySchema } from '@/lib/vault';
@@ -20,7 +23,9 @@ export const dynamic = 'force-dynamic';
 // --- Helpers (shared pattern) ---
 
 function isPrismaAvailable(): boolean {
-  return prisma != null && typeof prisma.vaultAccessLog?.findMany === 'function';
+  return (
+    prisma != null && typeof prisma.vaultAccessLog?.findMany === 'function'
+  );
 }
 
 function isMissingTableError(error: unknown): boolean {
@@ -33,12 +38,17 @@ function isMissingTableError(error: unknown): boolean {
   );
 }
 
-async function requireOwner(request: NextRequest): Promise<
-  { userId: string } | { error: NextResponse }
-> {
-  const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+async function requireOwner(
+  request: NextRequest
+): Promise<{ userId: string } | { error: NextResponse }> {
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_READ
+  );
   if (!security.allowed) {
-    return { error: NextResponse.json({ error: 'Unauthorised' }, { status: 401 }) };
+    return {
+      error: NextResponse.json({ error: 'Unauthorised' }, { status: 401 }),
+    };
   }
 
   const userId = security.context.userId!;
@@ -48,7 +58,12 @@ async function requireOwner(request: NextRequest): Promise<
   });
 
   if (!user?.email || !isOwnerEmail(user.email)) {
-    return { error: NextResponse.json({ error: 'Forbidden', message: 'Owner access required' }, { status: 403 }) };
+    return {
+      error: NextResponse.json(
+        { error: 'Forbidden', message: 'Owner access required' },
+        { status: 403 }
+      ),
+    };
   }
 
   return { userId };
@@ -62,7 +77,9 @@ export async function GET(request: NextRequest) {
     if ('error' in auth) return auth.error;
 
     if (!isPrismaAvailable()) {
-      logger.warn('[Vault Access Log API] Prisma client not available — returning empty');
+      logger.warn(
+        '[Vault Access Log API] Prisma client not available — returning empty'
+      );
       return NextResponse.json({ logs: [], total: 0 });
     }
 
@@ -77,18 +94,21 @@ export async function GET(request: NextRequest) {
 
     if (!query.success) {
       return NextResponse.json(
-        { error: 'Invalid query parameters', details: query.error.errors },
+        { error: 'Invalid query parameters', details: query.error.issues },
         { status: 400 }
       );
     }
 
     try {
-      const result = await VaultService.getAccessLogs(query.data.organizationId, {
-        vaultSecretId: query.data.vaultSecretId,
-        action: query.data.action,
-        limit: query.data.limit,
-        offset: query.data.offset,
-      });
+      const result = await VaultService.getAccessLogs(
+        query.data.organizationId,
+        {
+          vaultSecretId: query.data.vaultSecretId,
+          action: query.data.action,
+          limit: query.data.limit,
+          offset: query.data.offset,
+        }
+      );
 
       return NextResponse.json(result);
     } catch (dbError) {
@@ -101,7 +121,12 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('[Vault Access Log API] GET error:', error);
     return NextResponse.json(
-      { error: sanitizeErrorForResponse(error, 'Failed to fetch vault access logs') },
+      {
+        error: sanitizeErrorForResponse(
+          error,
+          'Failed to fetch vault access logs'
+        ),
+      },
       { status: 500 }
     );
   }

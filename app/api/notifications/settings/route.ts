@@ -11,7 +11,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
@@ -107,7 +110,7 @@ export async function PUT(request: NextRequest) {
     const validation = notificationSettingsSchema.safeParse(body);
     if (!validation.success) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation failed', details: validation.error.errors },
+        { error: 'Validation failed', details: validation.error.issues },
         400,
         security.context
       );
@@ -121,7 +124,8 @@ export async function PUT(request: NextRequest) {
       select: { preferences: true },
     });
 
-    const currentPreferences = (user?.preferences as Record<string, unknown>) || {};
+    const currentPreferences =
+      (user?.preferences as Record<string, unknown>) || {};
 
     // Merge new settings with current preferences
     const updatedPreferences = {
@@ -155,4 +159,3 @@ export async function PUT(request: NextRequest) {
 
 // Node.js runtime required for Prisma
 export const runtime = 'nodejs';
-

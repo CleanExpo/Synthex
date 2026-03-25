@@ -121,7 +121,7 @@ const sendAlertSchema = z.object({
   message: z.string().min(1),
   severity: z.enum(['info', 'warning', 'error', 'critical']),
   source: z.string().min(1),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   tags: z.array(z.string()).optional(),
 });
 

@@ -35,7 +35,7 @@ const UpdateRevenueSchema = z.object({
   paidAt: z.string().optional(),
   periodStart: z.string().nullable().optional(),
   periodEnd: z.string().nullable().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // =============================================================================

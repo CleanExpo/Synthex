@@ -11,7 +11,10 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
 // Validation schemas
@@ -21,13 +24,13 @@ const createCompetitorSchema = z.object({
   competitorTagline: z.string().max(500).optional(),
   identifiedPrinciples: z.array(z.string()).optional().default([]),
   differentiationStrategy: z.string().max(2000).optional(),
-  marketPosition: z.string().max(1000).optional()
+  marketPosition: z.string().max(1000).optional(),
 });
 
 const querySchema = z.object({
   generationId: z.string().uuid().optional(),
   limit: z.string().regex(/^\d+$/).optional(),
-  offset: z.string().regex(/^\d+$/).optional()
+  offset: z.string().regex(/^\d+$/).optional(),
 });
 
 /**
@@ -55,7 +58,7 @@ export async function GET(request: NextRequest) {
     const queryParams = {
       generationId: url.searchParams.get('generationId') || undefined,
       limit: url.searchParams.get('limit') || undefined,
-      offset: url.searchParams.get('offset') || undefined
+      offset: url.searchParams.get('offset') || undefined,
     };
 
     const query = querySchema.parse(queryParams);
@@ -68,8 +71,8 @@ export async function GET(request: NextRequest) {
       generationId?: string;
     } = {
       generation: {
-        userId: security.context.userId!  // Validated by security check above
-      }
+        userId: security.context.userId!, // Validated by security check above
+      },
     };
 
     if (query.generationId) {
@@ -88,12 +91,12 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               brandNames: true,
-              businessType: true
-            }
-          }
-        }
+              businessType: true,
+            },
+          },
+        },
       }),
-      prisma.competitiveAnalysis.count({ where: whereClause })
+      prisma.competitiveAnalysis.count({ where: whereClause }),
     ]);
 
     return APISecurityChecker.createSecureResponse(
@@ -103,19 +106,18 @@ export async function GET(request: NextRequest) {
           total,
           limit,
           offset,
-          hasMore: offset + analyses.length < total
-        }
+          hasMore: offset + analyses.length < total,
+        },
       },
       200,
       security.context
     );
-
   } catch (error) {
     logger.error('Competitors fetch error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Invalid query parameters', details: error.errors },
+        { error: 'Invalid query parameters', details: error.issues },
         400,
         security.context
       );
@@ -157,8 +159,8 @@ export async function POST(request: NextRequest) {
     const generation = await prisma.brandGeneration.findFirst({
       where: {
         id: data.generationId,
-        userId: security.context.userId
-      }
+        userId: security.context.userId,
+      },
     });
 
     if (!generation) {
@@ -177,33 +179,32 @@ export async function POST(request: NextRequest) {
         competitorTagline: data.competitorTagline || null,
         identifiedPrinciples: data.identifiedPrinciples,
         differentiationStrategy: data.differentiationStrategy || null,
-        marketPosition: data.marketPosition || null
+        marketPosition: data.marketPosition || null,
       },
       include: {
         generation: {
           select: {
             id: true,
-            brandNames: true
-          }
-        }
-      }
+            brandNames: true,
+          },
+        },
+      },
     });
 
     return APISecurityChecker.createSecureResponse(
       {
         success: true,
-        data: analysis
+        data: analysis,
       },
       201,
       security.context
     );
-
   } catch (error) {
     logger.error('Competitor creation error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Invalid competitor data', details: error.errors },
+        { error: 'Invalid competitor data', details: error.issues },
         400,
         security.context
       );

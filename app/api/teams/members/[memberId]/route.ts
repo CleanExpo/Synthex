@@ -20,14 +20,17 @@ import { Prisma } from '@prisma/client';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 
 // Validation schema for member updates
 const UpdateMemberSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   avatar: z.string().url().optional().nullable(),
-  preferences: z.record(z.unknown()).optional(),
+  preferences: z.record(z.string(), z.unknown()).optional(),
 });
 
 // ============================================================================
@@ -132,26 +135,24 @@ export async function GET(
     });
 
     if (!member) {
-      return NextResponse.json(
-        { error: 'Member not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Member not found' }, { status: 404 });
     }
 
     // Get member's roles
     const extendedPrisma = prisma as unknown as PrismaWithRoles;
-    const userRoles = await extendedPrisma.userRole?.findMany({
-      where: { userId: memberId },
-      include: {
-        role: {
-          select: {
-            id: true,
-            name: true,
-            permissions: true,
+    const userRoles =
+      (await extendedPrisma.userRole?.findMany({
+        where: { userId: memberId },
+        include: {
+          role: {
+            select: {
+              id: true,
+              name: true,
+              permissions: true,
+            },
           },
         },
-      },
-    }) || [];
+      })) || [];
 
     const roles = userRoles.map((ur: UserRoleRecord) => ({
       id: ur.role?.id,
@@ -231,10 +232,7 @@ export async function PATCH(
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json(
-        { error: 'Invalid JSON body' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
     const parseResult = UpdateMemberSchema.safeParse(body);
@@ -267,17 +265,19 @@ export async function PATCH(
     });
 
     if (!member) {
-      return NextResponse.json(
-        { error: 'Member not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Member not found' }, { status: 404 });
     }
 
     // Only allow self-update or admin update
-    const isAdmin = await checkUserIsAdmin(userId, requestingUser.organizationId);
+    const isAdmin = await checkUserIsAdmin(
+      userId,
+      requestingUser.organizationId
+    );
     if (userId !== memberId && !isAdmin) {
       return NextResponse.json(
-        { error: 'You can only update your own profile unless you are an admin' },
+        {
+          error: 'You can only update your own profile unless you are an admin',
+        },
         { status: 403 }
       );
     }
@@ -293,7 +293,10 @@ export async function PATCH(
     if (name !== undefined) updateData.name = name;
     if (avatar !== undefined) updateData.avatar = avatar;
     if (preferences !== undefined) {
-      const currentPrefs = (member.preferences || {}) as Record<string, unknown>;
+      const currentPrefs = (member.preferences || {}) as Record<
+        string,
+        unknown
+      >;
       updateData.preferences = {
         ...currentPrefs,
         ...preferences,
@@ -340,7 +343,10 @@ export async function PATCH(
     );
   } catch (error) {
     logger.error('Failed to update member', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to update member', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to update member',
+      500
+    );
   }
 }
 
@@ -406,7 +412,10 @@ export async function DELETE(
     }
 
     // Check admin permission
-    const isAdmin = await checkUserIsAdmin(userId, requestingUser.organizationId);
+    const isAdmin = await checkUserIsAdmin(
+      userId,
+      requestingUser.organizationId
+    );
     if (!isAdmin) {
       return NextResponse.json(
         { error: 'Only admins can remove members' },
@@ -423,10 +432,7 @@ export async function DELETE(
     });
 
     if (!member) {
-      return NextResponse.json(
-        { error: 'Member not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Member not found' }, { status: 404 });
     }
 
     // Remove member from organization (soft remove - just unlink)
@@ -437,10 +443,11 @@ export async function DELETE(
 
     // Remove all user roles for this organization
     const extendedPrisma = prisma as unknown as PrismaWithRoles;
-    const orgRoles = await extendedPrisma.role?.findMany({
-      where: { organizationId: requestingUser.organizationId },
-      select: { id: true },
-    }) || [];
+    const orgRoles =
+      (await extendedPrisma.role?.findMany({
+        where: { organizationId: requestingUser.organizationId },
+        select: { id: true },
+      })) || [];
 
     if (orgRoles.length > 0) {
       await extendedPrisma.userRole?.deleteMany({
@@ -478,7 +485,10 @@ export async function DELETE(
     });
   } catch (error) {
     logger.error('Failed to remove member', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to remove member', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to remove member',
+      500
+    );
   }
 }
 
@@ -486,22 +496,26 @@ export async function DELETE(
 // HELPER FUNCTIONS
 // ============================================================================
 
-async function checkUserIsAdmin(userId: string, organizationId: string): Promise<boolean> {
+async function checkUserIsAdmin(
+  userId: string,
+  organizationId: string
+): Promise<boolean> {
   try {
     // Get user's roles in this organization
     const extendedPrisma = prisma as unknown as PrismaWithRoles;
-    const userRoles = await extendedPrisma.userRole?.findMany({
-      where: { userId },
-      include: {
-        role: {
-          where: { organizationId },
-          select: {
-            name: true,
-            permissions: true,
+    const userRoles =
+      (await extendedPrisma.userRole?.findMany({
+        where: { userId },
+        include: {
+          role: {
+            where: { organizationId },
+            select: {
+              name: true,
+              permissions: true,
+            },
           },
         },
-      },
-    }) || [];
+      })) || [];
 
     // Check if any role has admin permissions
     for (const ur of userRoles) {

@@ -85,7 +85,7 @@ export async function GET(
 const UpdateSchema = z.object({
   phone: z.string().optional(),
   website: z.string().url().optional(),
-  hours: z.record(z.unknown()).optional(),
+  hours: z.record(z.string(), z.unknown()).optional(),
 });
 
 export async function PATCH(

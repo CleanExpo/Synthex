@@ -29,7 +29,7 @@ const updateReportSchema = z.object({
       z.object({
         title: z.string(),
         description: z.string(),
-        data: z.record(z.unknown()).optional(),
+        data: z.record(z.string(), z.unknown()).optional(),
       })
     )
     .optional(),

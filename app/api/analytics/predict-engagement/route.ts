@@ -15,7 +15,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -25,8 +28,17 @@ import { logger } from '@/lib/logger';
 
 const predictEngagementSchema = z.object({
   text: z.string().min(1).max(10000),
-  platform: z.enum(['twitter', 'instagram', 'linkedin', 'facebook', 'tiktok', 'youtube']),
-  contentType: z.enum(['post', 'campaign', 'story', 'reel', 'thread']).default('post'),
+  platform: z.enum([
+    'twitter',
+    'instagram',
+    'linkedin',
+    'facebook',
+    'tiktok',
+    'youtube',
+  ]),
+  contentType: z
+    .enum(['post', 'campaign', 'story', 'reel', 'thread'])
+    .default('post'),
   contentId: z.string().optional(),
   hasMedia: z.boolean().default(false),
   mediaType: z.enum(['image', 'video', 'carousel', 'gif']).optional(),
@@ -94,11 +106,19 @@ interface PredictionWhereClause {
 /** Extended prisma client for prediction operations */
 interface PrismaWithPrediction {
   engagementPrediction?: {
-    findUnique: (args: Record<string, unknown>) => Promise<EngagementPredictionRecord | null>;
-    findMany: (args: Record<string, unknown>) => Promise<EngagementPredictionRecord[]>;
+    findUnique: (
+      args: Record<string, unknown>
+    ) => Promise<EngagementPredictionRecord | null>;
+    findMany: (
+      args: Record<string, unknown>
+    ) => Promise<EngagementPredictionRecord[]>;
     count: (args: Record<string, unknown>) => Promise<number>;
-    create: (args: Record<string, unknown>) => Promise<EngagementPredictionRecord>;
-    update: (args: Record<string, unknown>) => Promise<EngagementPredictionRecord>;
+    create: (
+      args: Record<string, unknown>
+    ) => Promise<EngagementPredictionRecord>;
+    update: (
+      args: Record<string, unknown>
+    ) => Promise<EngagementPredictionRecord>;
   };
   sentimentAnalysis?: {
     updateMany: (args: Record<string, unknown>) => Promise<{ count: number }>;
@@ -112,12 +132,15 @@ interface PrismaWithPrediction {
 /**
  * Platform-specific base engagement rates
  */
-const PLATFORM_BASE_RATES: Record<string, {
-  likes: number;
-  comments: number;
-  shares: number;
-  avgReach: number;
-}> = {
+const PLATFORM_BASE_RATES: Record<
+  string,
+  {
+    likes: number;
+    comments: number;
+    shares: number;
+    avgReach: number;
+  }
+> = {
   twitter: { likes: 0.02, comments: 0.005, shares: 0.01, avgReach: 500 },
   instagram: { likes: 0.04, comments: 0.01, shares: 0.005, avgReach: 800 },
   linkedin: { likes: 0.03, comments: 0.015, shares: 0.008, avgReach: 400 },
@@ -135,8 +158,16 @@ function analyzeContentFactors(
   hasMedia: boolean,
   mediaType?: string,
   scheduledTime?: Date
-): { factor: string; impact: 'positive' | 'neutral' | 'negative'; weight: number }[] {
-  const factors: { factor: string; impact: 'positive' | 'neutral' | 'negative'; weight: number }[] = [];
+): {
+  factor: string;
+  impact: 'positive' | 'neutral' | 'negative';
+  weight: number;
+}[] {
+  const factors: {
+    factor: string;
+    impact: 'positive' | 'neutral' | 'negative';
+    weight: number;
+  }[] = [];
 
   // Text length analysis
   const wordCount = text.split(/\s+/).length;
@@ -151,17 +182,37 @@ function analyzeContentFactors(
 
   const [min, max] = optimalLength[platform] || [20, 100];
   if (wordCount >= min && wordCount <= max) {
-    factors.push({ factor: 'Optimal content length', impact: 'positive', weight: 1.15 });
+    factors.push({
+      factor: 'Optimal content length',
+      impact: 'positive',
+      weight: 1.15,
+    });
   } else if (wordCount < min / 2 || wordCount > max * 2) {
-    factors.push({ factor: 'Content length not optimal', impact: 'negative', weight: 0.85 });
+    factors.push({
+      factor: 'Content length not optimal',
+      impact: 'negative',
+      weight: 0.85,
+    });
   }
 
   // Emoji usage
-  const emojiCount = (text.match(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu) || []).length;
+  const emojiCount = (
+    text.match(
+      /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu
+    ) || []
+  ).length;
   if (emojiCount >= 1 && emojiCount <= 5) {
-    factors.push({ factor: 'Good emoji usage', impact: 'positive', weight: 1.1 });
+    factors.push({
+      factor: 'Good emoji usage',
+      impact: 'positive',
+      weight: 1.1,
+    });
   } else if (emojiCount > 10) {
-    factors.push({ factor: 'Excessive emojis', impact: 'negative', weight: 0.9 });
+    factors.push({
+      factor: 'Excessive emojis',
+      impact: 'negative',
+      weight: 0.9,
+    });
   }
 
   // Hashtags
@@ -177,21 +228,41 @@ function analyzeContentFactors(
 
   const [minH, maxH] = optimalHashtags[platform] || [1, 5];
   if (hashtagCount >= minH && hashtagCount <= maxH) {
-    factors.push({ factor: 'Optimal hashtag count', impact: 'positive', weight: 1.12 });
+    factors.push({
+      factor: 'Optimal hashtag count',
+      impact: 'positive',
+      weight: 1.12,
+    });
   } else if (hashtagCount === 0 && platform !== 'linkedin') {
     factors.push({ factor: 'No hashtags', impact: 'negative', weight: 0.92 });
   } else if (hashtagCount > maxH * 2) {
-    factors.push({ factor: 'Too many hashtags', impact: 'negative', weight: 0.88 });
+    factors.push({
+      factor: 'Too many hashtags',
+      impact: 'negative',
+      weight: 0.88,
+    });
   }
 
   // Questions drive engagement
   if (text.includes('?')) {
-    factors.push({ factor: 'Contains question (drives comments)', impact: 'positive', weight: 1.2 });
+    factors.push({
+      factor: 'Contains question (drives comments)',
+      impact: 'positive',
+      weight: 1.2,
+    });
   }
 
   // Call to action
-  if (text.match(/\b(comment|share|like|follow|subscribe|click|check out|link in bio|swipe)\b/i)) {
-    factors.push({ factor: 'Has call-to-action', impact: 'positive', weight: 1.15 });
+  if (
+    text.match(
+      /\b(comment|share|like|follow|subscribe|click|check out|link in bio|swipe)\b/i
+    )
+  ) {
+    factors.push({
+      factor: 'Has call-to-action',
+      impact: 'positive',
+      weight: 1.15,
+    });
   }
 
   // Media impact
@@ -203,9 +274,17 @@ function analyzeContentFactors(
       gif: 1.2,
     };
     const mult = mediaMultipliers[mediaType || 'image'] || 1.25;
-    factors.push({ factor: `Has ${mediaType || 'image'} media`, impact: 'positive', weight: mult });
+    factors.push({
+      factor: `Has ${mediaType || 'image'} media`,
+      impact: 'positive',
+      weight: mult,
+    });
   } else if (platform !== 'twitter' && platform !== 'linkedin') {
-    factors.push({ factor: 'No media (visual platforms prefer media)', impact: 'negative', weight: 0.6 });
+    factors.push({
+      factor: 'No media (visual platforms prefer media)',
+      impact: 'negative',
+      weight: 0.6,
+    });
   }
 
   // Time-based factors
@@ -215,24 +294,57 @@ function analyzeContentFactors(
 
     // Peak hours (9-11am, 7-9pm)
     if ((hour >= 9 && hour <= 11) || (hour >= 19 && hour <= 21)) {
-      factors.push({ factor: 'Posted during peak hours', impact: 'positive', weight: 1.15 });
+      factors.push({
+        factor: 'Posted during peak hours',
+        impact: 'positive',
+        weight: 1.15,
+      });
     } else if (hour >= 0 && hour <= 5) {
-      factors.push({ factor: 'Posted during off-peak hours', impact: 'negative', weight: 0.75 });
+      factors.push({
+        factor: 'Posted during off-peak hours',
+        impact: 'negative',
+        weight: 0.75,
+      });
     }
 
     // Weekday vs weekend
     if (platform === 'linkedin' && (dayOfWeek === 0 || dayOfWeek === 6)) {
-      factors.push({ factor: 'LinkedIn weekend posting', impact: 'negative', weight: 0.7 });
-    } else if (platform !== 'linkedin' && (dayOfWeek === 0 || dayOfWeek === 6)) {
-      factors.push({ factor: 'Weekend posting (higher engagement)', impact: 'positive', weight: 1.1 });
+      factors.push({
+        factor: 'LinkedIn weekend posting',
+        impact: 'negative',
+        weight: 0.7,
+      });
+    } else if (
+      platform !== 'linkedin' &&
+      (dayOfWeek === 0 || dayOfWeek === 6)
+    ) {
+      factors.push({
+        factor: 'Weekend posting (higher engagement)',
+        impact: 'positive',
+        weight: 1.1,
+      });
     }
   }
 
   // Sentiment boost (simple check)
-  const positiveWords = ['amazing', 'love', 'excited', 'great', 'awesome', 'incredible', 'best'];
-  const hasPositive = positiveWords.some((word) => text.toLowerCase().includes(word));
+  const positiveWords = [
+    'amazing',
+    'love',
+    'excited',
+    'great',
+    'awesome',
+    'incredible',
+    'best',
+  ];
+  const hasPositive = positiveWords.some(word =>
+    text.toLowerCase().includes(word)
+  );
   if (hasPositive) {
-    factors.push({ factor: 'Positive sentiment', impact: 'positive', weight: 1.1 });
+    factors.push({
+      factor: 'Positive sentiment',
+      impact: 'positive',
+      weight: 1.1,
+    });
   }
 
   return factors;
@@ -242,39 +354,57 @@ function analyzeContentFactors(
  * Generate recommendations based on factors
  */
 function generateRecommendations(
-  factors: { factor: string; impact: 'positive' | 'neutral' | 'negative'; weight: number }[],
+  factors: {
+    factor: string;
+    impact: 'positive' | 'neutral' | 'negative';
+    weight: number;
+  }[],
   platform: string,
   hasMedia: boolean
 ): string[] {
   const recommendations: string[] = [];
 
-  const negativeFactors = factors.filter((f) => f.impact === 'negative');
+  const negativeFactors = factors.filter(f => f.impact === 'negative');
 
   for (const factor of negativeFactors) {
     if (factor.factor.includes('length')) {
-      recommendations.push('Adjust content length to platform optimal range for better engagement.');
+      recommendations.push(
+        'Adjust content length to platform optimal range for better engagement.'
+      );
     }
     if (factor.factor.includes('hashtag')) {
-      recommendations.push(`Optimize hashtag usage for ${platform} (recommended: 3-5 relevant hashtags).`);
+      recommendations.push(
+        `Optimize hashtag usage for ${platform} (recommended: 3-5 relevant hashtags).`
+      );
     }
     if (factor.factor.includes('No media')) {
-      recommendations.push('Adding visual media significantly increases engagement on this platform.');
+      recommendations.push(
+        'Adding visual media significantly increases engagement on this platform.'
+      );
     }
     if (factor.factor.includes('off-peak')) {
-      recommendations.push('Consider scheduling for peak engagement hours (9-11am or 7-9pm local time).');
+      recommendations.push(
+        'Consider scheduling for peak engagement hours (9-11am or 7-9pm local time).'
+      );
     }
     if (factor.factor.includes('weekend') && platform === 'linkedin') {
-      recommendations.push('LinkedIn engagement is typically lower on weekends. Consider weekday posting.');
+      recommendations.push(
+        'LinkedIn engagement is typically lower on weekends. Consider weekday posting.'
+      );
     }
   }
 
   // General recommendations
-  if (!factors.some((f) => f.factor.includes('question'))) {
-    recommendations.push('Adding a question can significantly increase comment engagement.');
+  if (!factors.some(f => f.factor.includes('question'))) {
+    recommendations.push(
+      'Adding a question can significantly increase comment engagement.'
+    );
   }
 
-  if (!factors.some((f) => f.factor.includes('call-to-action'))) {
-    recommendations.push('Include a clear call-to-action to guide audience engagement.');
+  if (!factors.some(f => f.factor.includes('call-to-action'))) {
+    recommendations.push(
+      'Include a clear call-to-action to guide audience engagement.'
+    );
   }
 
   return recommendations.slice(0, 5);
@@ -291,18 +421,25 @@ function predictEngagement(
   scheduledTime?: Date,
   audienceSize?: number
 ): PredictionResult {
-  const baseRates = PLATFORM_BASE_RATES[platform] || PLATFORM_BASE_RATES.twitter;
+  const baseRates =
+    PLATFORM_BASE_RATES[platform] || PLATFORM_BASE_RATES.twitter;
   const reach = audienceSize || baseRates.avgReach;
 
   // Analyze factors
-  const factors = analyzeContentFactors(text, platform, hasMedia, mediaType, scheduledTime);
+  const factors = analyzeContentFactors(
+    text,
+    platform,
+    hasMedia,
+    mediaType,
+    scheduledTime
+  );
 
   // Calculate multiplier from factors
   const positiveWeight = factors
-    .filter((f) => f.impact === 'positive')
+    .filter(f => f.impact === 'positive')
     .reduce((acc, f) => acc * f.weight, 1);
   const negativeWeight = factors
-    .filter((f) => f.impact === 'negative')
+    .filter(f => f.impact === 'negative')
     .reduce((acc, f) => acc * f.weight, 1);
 
   const totalMultiplier = positiveWeight * negativeWeight;
@@ -311,7 +448,8 @@ function predictEngagement(
   const likes = Math.round(reach * baseRates.likes * totalMultiplier);
   const comments = Math.round(reach * baseRates.comments * totalMultiplier);
   const shares = Math.round(reach * baseRates.shares * totalMultiplier);
-  const engagementRate = Math.round(((likes + comments + shares) / reach) * 10000) / 100;
+  const engagementRate =
+    Math.round(((likes + comments + shares) / reach) * 10000) / 100;
 
   // Confidence based on factor clarity
   const confidence = Math.min(0.85, 0.5 + factors.length * 0.05);
@@ -359,12 +497,18 @@ export async function POST(request: NextRequest) {
       const updateValidation = updateActualsSchema.safeParse(body);
       if (!updateValidation.success) {
         return NextResponse.json(
-          { error: 'Invalid input', details: updateValidation.error.errors },
+          { error: 'Invalid input', details: updateValidation.error.issues },
           { status: 400 }
         );
       }
 
-      const { predictionId, actualLikes, actualComments, actualShares, actualReach } = updateValidation.data;
+      const {
+        predictionId,
+        actualLikes,
+        actualComments,
+        actualShares,
+        actualReach,
+      } = updateValidation.data;
 
       // Find and update prediction
       const extendedPrisma = prisma as unknown as PrismaWithPrediction;
@@ -380,15 +524,26 @@ export async function POST(request: NextRequest) {
       }
 
       // Calculate accuracy
-      const predictedTotal = prediction.predictedLikes + prediction.predictedComments + prediction.predictedShares;
+      const predictedTotal =
+        prediction.predictedLikes +
+        prediction.predictedComments +
+        prediction.predictedShares;
       const actualTotal = actualLikes + actualComments + actualShares;
-      const accuracy = predictedTotal > 0
-        ? Math.round((1 - Math.abs(predictedTotal - actualTotal) / predictedTotal) * 100) / 100
-        : 0;
+      const accuracy =
+        predictedTotal > 0
+          ? Math.round(
+              (1 - Math.abs(predictedTotal - actualTotal) / predictedTotal) *
+                100
+            ) / 100
+          : 0;
 
-      const actualEngRate = actualReach && actualReach > 0
-        ? Math.round(((actualLikes + actualComments + actualShares) / actualReach) * 10000) / 100
-        : null;
+      const actualEngRate =
+        actualReach && actualReach > 0
+          ? Math.round(
+              ((actualLikes + actualComments + actualShares) / actualReach) *
+                10000
+            ) / 100
+          : null;
 
       const updated = await extendedPrisma.engagementPrediction?.update({
         where: { id: predictionId },
@@ -405,21 +560,23 @@ export async function POST(request: NextRequest) {
 
       // Also update sentiment analysis if linked
       if (prediction.contentId) {
-        await extendedPrisma.sentimentAnalysis?.updateMany({
-          where: {
-            contentId: prediction.contentId,
-            userId,
-          },
-          data: {
-            actualEngagement: {
-              likes: actualLikes,
-              comments: actualComments,
-              shares: actualShares,
-              engagementRate: actualEngRate,
+        await extendedPrisma.sentimentAnalysis
+          ?.updateMany({
+            where: {
+              contentId: prediction.contentId,
+              userId,
             },
-            predictionAccuracy: accuracy,
-          },
-        }).catch(() => {});
+            data: {
+              actualEngagement: {
+                likes: actualLikes,
+                comments: actualComments,
+                shares: actualShares,
+                engagementRate: actualEngRate,
+              },
+              predictionAccuracy: accuracy,
+            },
+          })
+          .catch(() => {});
       }
 
       return NextResponse.json({
@@ -433,26 +590,62 @@ export async function POST(request: NextRequest) {
     const validation = predictEngagementSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
+        { error: 'Invalid input', details: validation.error.issues },
         { status: 400 }
       );
     }
 
-    const { text, platform, contentType, contentId, hasMedia, mediaType, scheduledTime, audienceSize } = validation.data;
+    const {
+      text,
+      platform,
+      contentType,
+      contentId,
+      hasMedia,
+      mediaType,
+      scheduledTime,
+      audienceSize,
+    } = validation.data;
 
     const parsedTime = scheduledTime ? new Date(scheduledTime) : undefined;
 
     // Get prediction
-    const prediction = predictEngagement(text, platform, hasMedia, mediaType, parsedTime, audienceSize);
+    const prediction = predictEngagement(
+      text,
+      platform,
+      hasMedia,
+      mediaType,
+      parsedTime,
+      audienceSize
+    );
 
     // Simple sentiment analysis for storage
     const lowerText = text.toLowerCase();
-    const positiveWords = ['love', 'great', 'amazing', 'awesome', 'excellent', 'fantastic'];
-    const negativeWords = ['hate', 'terrible', 'awful', 'bad', 'worst', 'disappointing'];
-    const posCount = positiveWords.filter((w) => lowerText.includes(w)).length;
-    const negCount = negativeWords.filter((w) => lowerText.includes(w)).length;
-    const sentimentScore = posCount > negCount ? 50 : negCount > posCount ? -50 : 0;
-    const sentiment = posCount > negCount ? 'positive' : negCount > posCount ? 'negative' : 'neutral';
+    const positiveWords = [
+      'love',
+      'great',
+      'amazing',
+      'awesome',
+      'excellent',
+      'fantastic',
+    ];
+    const negativeWords = [
+      'hate',
+      'terrible',
+      'awful',
+      'bad',
+      'worst',
+      'disappointing',
+    ];
+    const posCount = positiveWords.filter(w => lowerText.includes(w)).length;
+    const negCount = negativeWords.filter(w => lowerText.includes(w)).length;
+    const sentimentScore =
+      posCount > negCount ? 50 : negCount > posCount ? -50 : 0;
+    const sentiment =
+      posCount > negCount
+        ? 'positive'
+        : negCount > posCount
+          ? 'negative'
+          : 'neutral';
 
     // Store prediction
     const extendedPrisma = prisma as unknown as PrismaWithPrediction;
@@ -527,7 +720,10 @@ export async function GET(request: NextRequest) {
 
     const platform = searchParams.get('platform');
     const withActuals = searchParams.get('withActuals') === 'true';
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || '20', 10),
+      100
+    );
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Build query
@@ -548,10 +744,22 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Calculate accuracy stats
-    const withResults = predictions.filter((p: EngagementPredictionRecord) => p.accuracy !== null && p.accuracy !== undefined);
-    const avgAccuracy = withResults.length > 0
-      ? Math.round((withResults.reduce((sum: number, p: EngagementPredictionRecord) => sum + (p.accuracy || 0), 0) / withResults.length) * 100)
-      : null;
+    const withResults = predictions.filter(
+      (p: EngagementPredictionRecord) =>
+        p.accuracy !== null && p.accuracy !== undefined
+    );
+    const avgAccuracy =
+      withResults.length > 0
+        ? Math.round(
+            (withResults.reduce(
+              (sum: number, p: EngagementPredictionRecord) =>
+                sum + (p.accuracy || 0),
+              0
+            ) /
+              withResults.length) *
+              100
+          )
+        : null;
 
     return NextResponse.json({
       predictions: predictions || [],

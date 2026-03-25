@@ -114,7 +114,7 @@ export const platformConnectionSchema = z.object({
   platformUsername: z.string().optional().nullable(),
   isActive: z.boolean(),
   connectedAt: dateStringSchema.optional(),
-  metadata: z.record(z.unknown()).optional().nullable(),
+  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 export type PlatformConnection = z.infer<typeof platformConnectionSchema>;
 
@@ -132,12 +132,16 @@ export const seoAuditSchema = z.object({
   url: z.string().optional(),
   score: z.number().min(0).max(100).optional(),
   status: z.string().optional(),
-  issues: z.array(z.object({
-    type: z.string(),
-    severity: z.string().optional(),
-    message: z.string(),
-    recommendation: z.string().optional(),
-  })).optional(),
+  issues: z
+    .array(
+      z.object({
+        type: z.string(),
+        severity: z.string().optional(),
+        message: z.string(),
+        recommendation: z.string().optional(),
+      })
+    )
+    .optional(),
   createdAt: dateStringSchema.optional(),
 });
 
@@ -196,7 +200,8 @@ export const affiliateSchema = z.object({
   createdAt: dateStringSchema.optional(),
 });
 
-export const revenueResponseSchema = paginatedResponseSchema(revenueEntrySchema);
+export const revenueResponseSchema =
+  paginatedResponseSchema(revenueEntrySchema);
 export const sponsorResponseSchema = paginatedResponseSchema(sponsorSchema);
 export const affiliateResponseSchema = paginatedResponseSchema(affiliateSchema);
 
@@ -221,13 +226,17 @@ export const aiMessageSchema = z.object({
 
 export const aiChatResponseSchema = z.object({
   success: z.literal(true),
-  data: z.object({
-    message: aiMessageSchema.optional(),
-    conversation: aiConversationSchema.optional(),
-  }).or(z.object({
-    response: z.string(),
-    conversationId: z.string().optional(),
-  })),
+  data: z
+    .object({
+      message: aiMessageSchema.optional(),
+      conversation: aiConversationSchema.optional(),
+    })
+    .or(
+      z.object({
+        response: z.string(),
+        conversationId: z.string().optional(),
+      })
+    ),
 });
 
 // =============================================================================
@@ -270,14 +279,23 @@ export const organizationSchema = z.object({
 // Health Check Schema
 // =============================================================================
 
-export const healthCheckResponseSchema = z.object({
-  status: z.string(),
-  timestamp: z.string().optional(),
-  uptime: z.number().optional(),
-  services: z.record(z.object({
+export const healthCheckResponseSchema = z
+  .object({
     status: z.string(),
-    latency: z.number().optional(),
-  })).optional(),
-}).or(z.object({
-  ok: z.boolean(),
-}));
+    timestamp: z.string().optional(),
+    uptime: z.number().optional(),
+    services: z
+      .record(
+        z.string(),
+        z.object({
+          status: z.string(),
+          latency: z.number().optional(),
+        })
+      )
+      .optional(),
+  })
+  .or(
+    z.object({
+      ok: z.boolean(),
+    })
+  );

@@ -39,7 +39,7 @@ const UpdateInvestmentSchema = z.object({
   platform: z.string().max(100).nullable().optional(),
   postId: z.string().nullable().optional(),
   investedAt: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // =============================================================================

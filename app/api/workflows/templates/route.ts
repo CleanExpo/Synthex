@@ -13,7 +13,7 @@ const stepDefSchema = z.object({
   type: z.enum(['ai', 'approval', 'action', 'validation']),
   promptTemplate: z.string().optional(),
   actionType: z.enum(['publish', 'schedule', 'notify']).optional(),
-  config: z.record(z.unknown()).optional(),
+  config: z.record(z.string(), z.unknown()).optional(),
   autoApproveThreshold: z.number().min(0).max(1).optional(),
 })
 

@@ -294,7 +294,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }
@@ -427,7 +427,7 @@ export async function GET(request: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }
@@ -543,7 +543,7 @@ export async function PUT(request: NextRequest) {
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         400
       );
     }

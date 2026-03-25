@@ -15,7 +15,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -35,12 +38,22 @@ interface CompetitorSnapshot {
 /** Extended Prisma client with competitor models */
 interface ExtendedPrismaClient {
   trackedCompetitor?: {
-    findFirst: (args: { where: Record<string, unknown>; include?: Record<string, unknown> }) => Promise<CompetitorDetailRecord | null>;
-    update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<CompetitorDetailRecord>;
+    findFirst: (args: {
+      where: Record<string, unknown>;
+      include?: Record<string, unknown>;
+    }) => Promise<CompetitorDetailRecord | null>;
+    update: (args: {
+      where: { id: string };
+      data: Record<string, unknown>;
+    }) => Promise<CompetitorDetailRecord>;
     delete: (args: { where: { id: string } }) => Promise<void>;
   };
   competitorPost?: {
-    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string>; take?: number }) => Promise<unknown[]>;
+    findMany: (args: {
+      where: Record<string, unknown>;
+      orderBy?: Record<string, string>;
+      take?: number;
+    }) => Promise<unknown[]>;
   };
 }
 
@@ -55,7 +68,8 @@ interface CompetitorDetailRecord {
 }
 
 /** Get prisma with extended models */
-const extendedPrisma = prisma as unknown as typeof prisma & ExtendedPrismaClient;
+const extendedPrisma = prisma as unknown as typeof prisma &
+  ExtendedPrismaClient;
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -145,24 +159,32 @@ export async function GET(
       const previous = recentSnapshots[1];
 
       trends = {
-        followersChange: latest.followersCount && previous.followersCount
-          ? latest.followersCount - previous.followersCount
-          : null,
-        engagementChange: latest.engagementRate && previous.engagementRate
-          ? Math.round((latest.engagementRate - previous.engagementRate) * 100) / 100
-          : null,
-        performanceChange: latest.performanceScore && previous.performanceScore
-          ? Math.round((latest.performanceScore - previous.performanceScore) * 10) / 10
-          : null,
+        followersChange:
+          latest.followersCount && previous.followersCount
+            ? latest.followersCount - previous.followersCount
+            : null,
+        engagementChange:
+          latest.engagementRate && previous.engagementRate
+            ? Math.round(
+                (latest.engagementRate - previous.engagementRate) * 100
+              ) / 100
+            : null,
+        performanceChange:
+          latest.performanceScore && previous.performanceScore
+            ? Math.round(
+                (latest.performanceScore - previous.performanceScore) * 10
+              ) / 10
+            : null,
       };
     }
 
     // Get top performing posts
-    const topPosts = await extendedPrisma.competitorPost?.findMany({
-      where: { competitorId: id, isTopPerforming: true },
-      orderBy: { engagementRate: 'desc' },
-      take: 5,
-    }) || [];
+    const topPosts =
+      (await extendedPrisma.competitorPost?.findMany({
+        where: { competitorId: id, isTopPerforming: true },
+        orderBy: { engagementRate: 'desc' },
+        take: 5,
+      })) || [];
 
     return NextResponse.json({
       competitor: {
@@ -212,7 +234,7 @@ export async function PATCH(
     const validation = updateCompetitorSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
+        { error: 'Invalid input', details: validation.error.issues },
         { status: 400 }
       );
     }

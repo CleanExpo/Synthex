@@ -29,16 +29,25 @@ export const platformSchema = z.enum([
 
 export type Platform = z.infer<typeof platformSchema>;
 
-export const dateRangeSchema = z.object({
-  startDate: z.string().datetime('Invalid start date'),
-  endDate: z.string().datetime('Invalid end date'),
-}).refine((data) => new Date(data.startDate) < new Date(data.endDate), {
-  message: 'Start date must be before end date',
-});
+export const dateRangeSchema = z
+  .object({
+    startDate: z.string().datetime('Invalid start date'),
+    endDate: z.string().datetime('Invalid end date'),
+  })
+  .refine(data => new Date(data.startDate) < new Date(data.endDate), {
+    message: 'Start date must be before end date',
+  });
 
 export type DateRange = z.infer<typeof dateRangeSchema>;
 
-export const granularitySchema = z.enum(['hour', 'day', 'week', 'month', 'quarter', 'year']);
+export const granularitySchema = z.enum([
+  'hour',
+  'day',
+  'week',
+  'month',
+  'quarter',
+  'year',
+]);
 
 export type Granularity = z.infer<typeof granularitySchema>;
 
@@ -70,7 +79,10 @@ export type MetricType = z.infer<typeof metricTypeSchema>;
 export const dashboardQuerySchema = z.object({
   platforms: z.array(platformSchema).optional().default(['all']),
   dateRange: dateRangeSchema.optional(),
-  period: z.enum(['today', '7d', '30d', '90d', 'ytd', 'custom']).optional().default('30d'),
+  period: z
+    .enum(['today', '7d', '30d', '90d', 'ytd', 'custom'])
+    .optional()
+    .default('30d'),
   metrics: z.array(metricTypeSchema).optional(),
   granularity: granularitySchema.optional().default('day'),
   timezone: z.string().optional().default('UTC'),
@@ -90,7 +102,10 @@ export type DashboardQueryInput = z.infer<typeof dashboardQuerySchema>;
 export const engagementQuerySchema = z.object({
   platforms: z.array(platformSchema).optional().default(['all']),
   dateRange: dateRangeSchema,
-  groupBy: z.enum(['platform', 'contentType', 'day', 'hour', 'campaign']).optional().default('day'),
+  groupBy: z
+    .enum(['platform', 'contentType', 'day', 'hour', 'campaign'])
+    .optional()
+    .default('day'),
   includeTopPosts: z.boolean().optional().default(true),
   topPostsLimit: z.number().min(1).max(50).optional().default(10),
   includeEngagementRate: z.boolean().optional().default(true),
@@ -108,7 +123,10 @@ export const performanceQuerySchema = z.object({
   entityId: uuidSchema.optional(),
   dateRange: dateRangeSchema,
   metrics: z.array(metricTypeSchema).min(1, 'At least one metric is required'),
-  benchmark: z.enum(['industry', 'historical', 'competitors', 'none']).optional().default('historical'),
+  benchmark: z
+    .enum(['industry', 'historical', 'competitors', 'none'])
+    .optional()
+    .default('historical'),
   granularity: granularitySchema.optional().default('day'),
 });
 
@@ -121,7 +139,9 @@ export type PerformanceQueryInput = z.infer<typeof performanceQuerySchema>;
 export const realtimeQuerySchema = z.object({
   platforms: z.array(platformSchema).optional().default(['all']),
   refreshInterval: z.number().min(5000).max(60000).optional().default(30000),
-  metrics: z.array(z.enum(['activeUsers', 'liveEngagement', 'trending', 'recentPosts'])).optional(),
+  metrics: z
+    .array(z.enum(['activeUsers', 'liveEngagement', 'trending', 'recentPosts']))
+    .optional(),
 });
 
 export type RealtimeQueryInput = z.infer<typeof realtimeQuerySchema>;
@@ -146,7 +166,10 @@ export const insightsQuerySchema = z.object({
       ])
     )
     .optional(),
-  depth: z.enum(['summary', 'detailed', 'comprehensive']).optional().default('detailed'),
+  depth: z
+    .enum(['summary', 'detailed', 'comprehensive'])
+    .optional()
+    .default('detailed'),
 });
 
 export type InsightsQueryInput = z.infer<typeof insightsQuerySchema>;
@@ -272,10 +295,18 @@ export const generateReportSchema = z.object({
   branding: z
     .object({
       logo: z.string().url().optional(),
-      colors: z.object({
-        primary: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-        secondary: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-      }).optional(),
+      colors: z
+        .object({
+          primary: z
+            .string()
+            .regex(/^#[0-9A-Fa-f]{6}$/)
+            .optional(),
+          secondary: z
+            .string()
+            .regex(/^#[0-9A-Fa-f]{6}$/)
+            .optional(),
+        })
+        .optional(),
       companyName: z.string().max(100).optional(),
     })
     .optional(),
@@ -286,7 +317,10 @@ export const generateReportSchema = z.object({
       recipients: z.array(z.string().email()).max(10).optional(),
       dayOfWeek: z.number().min(0).max(6).optional(),
       dayOfMonth: z.number().min(1).max(28).optional(),
-      time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/).optional(),
+      time: z
+        .string()
+        .regex(/^([01]\d|2[0-3]):([0-5]\d)$/)
+        .optional(),
     })
     .optional(),
 });
@@ -379,7 +413,10 @@ export function validateGenerateReport(data: unknown): GenerateReportInput {
 /**
  * Parse period string to date range
  */
-export function periodToDateRange(period: string): { startDate: string; endDate: string } {
+export function periodToDateRange(period: string): {
+  startDate: string;
+  endDate: string;
+} {
   const now = new Date();
   const endDate = now.toISOString();
   let startDate: Date;
@@ -414,7 +451,13 @@ export function periodToDateRange(period: string): { startDate: string; endDate:
  * Get default metrics for a platform
  */
 export function getDefaultMetrics(platform: Platform): MetricType[] {
-  const baseMetrics: MetricType[] = ['impressions', 'reach', 'engagement', 'likes', 'comments'];
+  const baseMetrics: MetricType[] = [
+    'impressions',
+    'reach',
+    'engagement',
+    'likes',
+    'comments',
+  ];
 
   const platformSpecific: Record<Platform, MetricType[]> = {
     twitter: [...baseMetrics, 'shares', 'clicks', 'profileViews'],
@@ -423,7 +466,15 @@ export function getDefaultMetrics(platform: Platform): MetricType[] {
     facebook: [...baseMetrics, 'shares', 'clicks', 'videoViews'],
     tiktok: [...baseMetrics, 'shares', 'videoViews', 'watchTime'],
     threads: [...baseMetrics, 'shares'],
-    youtube: ['impressions', 'reach', 'likes', 'comments', 'videoViews', 'watchTime', 'followers'],
+    youtube: [
+      'impressions',
+      'reach',
+      'likes',
+      'comments',
+      'videoViews',
+      'watchTime',
+      'followers',
+    ],
     pinterest: [...baseMetrics, 'saves', 'clicks'],
     all: baseMetrics,
   };
@@ -461,22 +512,30 @@ export const dashboardOverviewResponseSchema = z.object({
       followerGrowth: z.number(),
     }),
     trends: z.array(metricDataPointSchema).optional(),
-    breakdown: z.record(z.number()).optional(),
-    topPosts: z.array(z.object({
-      id: z.string(),
-      content: z.string().optional(),
-      engagement: z.number(),
-      platform: platformSchema.optional(),
-    })).optional(),
+    breakdown: z.record(z.string(), z.number()).optional(),
+    topPosts: z
+      .array(
+        z.object({
+          id: z.string(),
+          content: z.string().optional(),
+          engagement: z.number(),
+          platform: platformSchema.optional(),
+        })
+      )
+      .optional(),
   }),
-  meta: z.object({
-    dateRange: dateRangeSchema.optional(),
-    platforms: z.array(platformSchema).optional(),
-    generatedAt: z.string().optional(),
-  }).optional(),
+  meta: z
+    .object({
+      dateRange: dateRangeSchema.optional(),
+      platforms: z.array(platformSchema).optional(),
+      generatedAt: z.string().optional(),
+    })
+    .optional(),
 });
 
-export type DashboardOverviewResponse = z.infer<typeof dashboardOverviewResponseSchema>;
+export type DashboardOverviewResponse = z.infer<
+  typeof dashboardOverviewResponseSchema
+>;
 
 /**
  * Engagement analytics response
@@ -492,16 +551,22 @@ export const engagementAnalyticsResponseSchema = z.object({
     }),
     rate: z.number(),
     trend: z.array(metricDataPointSchema).optional(),
-    byPlatform: z.record(z.number()).optional(),
-    topPosts: z.array(z.object({
-      id: z.string(),
-      engagement: z.number(),
-      engagementRate: z.number().optional(),
-    })).optional(),
+    byPlatform: z.record(z.string(), z.number()).optional(),
+    topPosts: z
+      .array(
+        z.object({
+          id: z.string(),
+          engagement: z.number(),
+          engagementRate: z.number().optional(),
+        })
+      )
+      .optional(),
   }),
 });
 
-export type EngagementAnalyticsResponse = z.infer<typeof engagementAnalyticsResponseSchema>;
+export type EngagementAnalyticsResponse = z.infer<
+  typeof engagementAnalyticsResponseSchema
+>;
 
 /**
  * Analytics export response
@@ -517,7 +582,9 @@ export const analyticsExportResponseSchema = z.object({
   }),
 });
 
-export type AnalyticsExportResponse = z.infer<typeof analyticsExportResponseSchema>;
+export type AnalyticsExportResponse = z.infer<
+  typeof analyticsExportResponseSchema
+>;
 
 /**
  * Analytics error response
@@ -529,4 +596,6 @@ export const analyticsErrorResponseSchema = z.object({
   code: z.string().optional(),
 });
 
-export type AnalyticsErrorResponse = z.infer<typeof analyticsErrorResponseSchema>;
+export type AnalyticsErrorResponse = z.infer<
+  typeof analyticsErrorResponseSchema
+>;

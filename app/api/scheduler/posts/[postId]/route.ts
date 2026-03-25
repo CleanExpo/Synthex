@@ -12,20 +12,25 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
 // Validation schemas
 const paramsSchema = z.object({
-  postId: z.string().cuid()
+  postId: z.string().cuid(),
 });
 
 const updatePostSchema = z.object({
   content: z.string().min(1).max(10000).optional(),
   platform: z.string().optional(),
-  status: z.enum(['draft', 'scheduled', 'published', 'failed', 'cancelled']).optional(),
+  status: z
+    .enum(['draft', 'scheduled', 'published', 'failed', 'cancelled'])
+    .optional(),
   scheduledAt: z.string().datetime().optional().nullable(),
-  metadata: z.record(z.unknown()).optional()
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 interface RouteParams {
@@ -36,10 +41,7 @@ interface RouteParams {
  * GET /api/scheduler/posts/[postId]
  * Get a single scheduled post
  */
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   const security = await APISecurityChecker.check(
     request,
     DEFAULT_POLICIES.AUTHENTICATED_READ
@@ -65,10 +67,10 @@ export async function GET(
           select: {
             id: true,
             name: true,
-            userId: true
-          }
-        }
-      }
+            userId: true,
+          },
+        },
+      },
     });
 
     if (!post) {
@@ -95,13 +97,12 @@ export async function GET(
       {
         data: {
           ...post,
-          campaign: campaignData
-        }
+          campaign: campaignData,
+        },
       },
       200,
       security.context
     );
-
   } catch (error) {
     logger.error('Get post error:', error);
 
@@ -125,10 +126,7 @@ export async function GET(
  * PATCH /api/scheduler/posts/[postId]
  * Update a scheduled post
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const security = await APISecurityChecker.check(
     request,
     DEFAULT_POLICIES.AUTHENTICATED_WRITE
@@ -155,9 +153,9 @@ export async function PATCH(
       where: { id: postId },
       include: {
         campaign: {
-          select: { userId: true }
-        }
-      }
+          select: { userId: true },
+        },
+      },
     });
 
     if (!existingPost) {
@@ -189,7 +187,9 @@ export async function PATCH(
       }
     }
     if (data.scheduledAt !== undefined) {
-      updatePayload.scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : null;
+      updatePayload.scheduledAt = data.scheduledAt
+        ? new Date(data.scheduledAt)
+        : null;
     }
     if (data.metadata !== undefined) updatePayload.metadata = data.metadata;
 
@@ -201,27 +201,26 @@ export async function PATCH(
         campaign: {
           select: {
             id: true,
-            name: true
-          }
-        }
-      }
+            name: true,
+          },
+        },
+      },
     });
 
     return APISecurityChecker.createSecureResponse(
       {
         success: true,
-        data: updatedPost
+        data: updatedPost,
       },
       200,
       security.context
     );
-
   } catch (error) {
     logger.error('Update post error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Invalid update data', details: error.errors },
+        { error: 'Invalid update data', details: error.issues },
         400,
         security.context
       );
@@ -239,10 +238,7 @@ export async function PATCH(
  * DELETE /api/scheduler/posts/[postId]
  * Delete a scheduled post
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const security = await APISecurityChecker.check(
     request,
     DEFAULT_POLICIES.AUTHENTICATED_WRITE
@@ -265,9 +261,9 @@ export async function DELETE(
       where: { id: postId },
       include: {
         campaign: {
-          select: { userId: true }
-        }
-      }
+          select: { userId: true },
+        },
+      },
     });
 
     if (!existingPost) {
@@ -288,18 +284,17 @@ export async function DELETE(
 
     // Delete the post
     await prisma.post.delete({
-      where: { id: postId }
+      where: { id: postId },
     });
 
     return APISecurityChecker.createSecureResponse(
       {
         success: true,
-        message: 'Post deleted successfully'
+        message: 'Post deleted successfully',
       },
       200,
       security.context
     );
-
   } catch (error) {
     logger.error('Delete post error:', error);
 

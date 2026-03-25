@@ -14,7 +14,10 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { encryptApiKey, maskApiKey } from '@/lib/encryption/api-key-encryption';
 import { isOwnerEmail } from '@/lib/auth/jwt-utils';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
 
@@ -28,7 +31,10 @@ export const dynamic = 'force-dynamic';
  * Returns false when DATABASE_URL is missing or the client failed to initialise.
  */
 function isPrismaAvailable(): boolean {
-  return prisma != null && typeof prisma.platformOAuthCredential?.findMany === 'function';
+  return (
+    prisma != null &&
+    typeof prisma.platformOAuthCredential?.findMany === 'function'
+  );
 }
 
 /**
@@ -48,12 +54,17 @@ function isMissingTableError(error: unknown): boolean {
  * Verify the request comes from a platform owner.
  * Returns the userId on success, or a NextResponse error to return immediately.
  */
-async function requireOwner(request: NextRequest): Promise<
-  { userId: string } | { error: NextResponse }
-> {
-  const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+async function requireOwner(
+  request: NextRequest
+): Promise<{ userId: string } | { error: NextResponse }> {
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_READ
+  );
   if (!security.allowed) {
-    return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
+    return {
+      error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
+    };
   }
 
   const userId = security.context.userId!;
@@ -63,7 +74,12 @@ async function requireOwner(request: NextRequest): Promise<
   });
 
   if (!user?.email || !isOwnerEmail(user.email)) {
-    return { error: NextResponse.json({ error: 'Forbidden', message: 'Owner access required' }, { status: 403 }) };
+    return {
+      error: NextResponse.json(
+        { error: 'Forbidden', message: 'Owner access required' },
+        { status: 403 }
+      ),
+    };
   }
 
   return { userId };
@@ -72,9 +88,18 @@ async function requireOwner(request: NextRequest): Promise<
 // --- Zod Schemas ---
 
 const VALID_PLATFORMS = [
-  'twitter', 'linkedin', 'instagram', 'facebook', 'tiktok',
-  'youtube', 'pinterest', 'reddit', 'threads',
-  'searchconsole', 'googleanalytics', 'googledrive',
+  'twitter',
+  'linkedin',
+  'instagram',
+  'facebook',
+  'tiktok',
+  'youtube',
+  'pinterest',
+  'reddit',
+  'threads',
+  'searchconsole',
+  'googleanalytics',
+  'googledrive',
 ] as const;
 
 const UpsertCredentialSchema = z.object({
@@ -95,7 +120,9 @@ export async function GET(request: NextRequest) {
     if ('error' in auth) return auth.error;
 
     if (!isPrismaAvailable()) {
-      logger.warn('[Admin Platform Credentials] Prisma client not available — returning empty list');
+      logger.warn(
+        '[Admin Platform Credentials] Prisma client not available — returning empty list'
+      );
       return NextResponse.json({ credentials: [] });
     }
 
@@ -115,9 +142,14 @@ export async function GET(request: NextRequest) {
       });
     } catch (dbError) {
       if (isMissingTableError(dbError)) {
-        logger.warn('[Admin Platform Credentials] Table not found — returning empty list');
+        logger.warn(
+          '[Admin Platform Credentials] Table not found — returning empty list'
+        );
       } else {
-        logger.error('[Admin Platform Credentials] Database query failed:', dbError);
+        logger.error(
+          '[Admin Platform Credentials] Database query failed:',
+          dbError
+        );
       }
       return NextResponse.json({ credentials: [] });
     }
@@ -126,7 +158,12 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('[Admin Platform Credentials] GET error:', error);
     return NextResponse.json(
-      { error: sanitizeErrorForResponse(error, 'Failed to fetch platform credentials') },
+      {
+        error: sanitizeErrorForResponse(
+          error,
+          'Failed to fetch platform credentials'
+        ),
+      },
       { status: 500 }
     );
   }
@@ -144,7 +181,7 @@ export async function POST(request: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid request', details: parsed.error.errors },
+        { error: 'Invalid request', details: parsed.error.issues },
         { status: 400 }
       );
     }
@@ -152,7 +189,9 @@ export async function POST(request: NextRequest) {
     const { platform, clientId, clientSecret } = parsed.data;
 
     if (!isPrismaAvailable()) {
-      logger.error('[Admin Platform Credentials] Prisma client not available for POST');
+      logger.error(
+        '[Admin Platform Credentials] Prisma client not available for POST'
+      );
       return NextResponse.json(
         { error: 'Database not available. Please try again later.' },
         { status: 503 }
@@ -168,9 +207,13 @@ export async function POST(request: NextRequest) {
     } catch (encErr) {
       const msg = encErr instanceof Error ? encErr.message : '';
       if (msg.includes('not found in environment')) {
-        logger.error('[Admin Platform Credentials] ENCRYPTION_KEY_V1 env var is missing');
+        logger.error(
+          '[Admin Platform Credentials] ENCRYPTION_KEY_V1 env var is missing'
+        );
         return NextResponse.json(
-          { error: 'Server encryption not configured. Please contact support.' },
+          {
+            error: 'Server encryption not configured. Please contact support.',
+          },
           { status: 503 }
         );
       }
@@ -209,7 +252,9 @@ export async function POST(request: NextRequest) {
       });
     } catch (dbError) {
       if (isMissingTableError(dbError)) {
-        logger.error('[Admin Platform Credentials] Table not found — run `npx prisma db push`');
+        logger.error(
+          '[Admin Platform Credentials] Table not found — run `npx prisma db push`'
+        );
         return NextResponse.json(
           { error: 'Database not configured. Please contact support.' },
           { status: 503 }
@@ -233,7 +278,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('[Admin Platform Credentials] POST error:', error);
     return NextResponse.json(
-      { error: sanitizeErrorForResponse(error, 'Failed to save platform credential') },
+      {
+        error: sanitizeErrorForResponse(
+          error,
+          'Failed to save platform credential'
+        ),
+      },
       { status: 500 }
     );
   }
@@ -251,13 +301,15 @@ export async function DELETE(request: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid request', details: parsed.error.errors },
+        { error: 'Invalid request', details: parsed.error.issues },
         { status: 400 }
       );
     }
 
     if (!isPrismaAvailable()) {
-      logger.error('[Admin Platform Credentials] Prisma client not available for DELETE');
+      logger.error(
+        '[Admin Platform Credentials] Prisma client not available for DELETE'
+      );
       return NextResponse.json(
         { error: 'Database not available. Please try again later.' },
         { status: 503 }
@@ -296,9 +348,17 @@ export async function DELETE(request: NextRequest) {
         where: { platform },
       });
     } catch (dbError) {
-      logger.error('[Admin Platform Credentials] Failed to delete credential:', dbError);
+      logger.error(
+        '[Admin Platform Credentials] Failed to delete credential:',
+        dbError
+      );
       return NextResponse.json(
-        { error: sanitizeErrorForResponse(dbError, 'Failed to delete credential') },
+        {
+          error: sanitizeErrorForResponse(
+            dbError,
+            'Failed to delete credential'
+          ),
+        },
         { status: 500 }
       );
     }
@@ -307,7 +367,12 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     logger.error('[Admin Platform Credentials] DELETE error:', error);
     return NextResponse.json(
-      { error: sanitizeErrorForResponse(error, 'Failed to delete platform credential') },
+      {
+        error: sanitizeErrorForResponse(
+          error,
+          'Failed to delete platform credential'
+        ),
+      },
       { status: 500 }
     );
   }
