@@ -5282,6 +5282,66 @@ model MarketplaceOrder {
 }
 
 // ==========================================
+// Push Notifications (Web Push / PWA)
+// ==========================================
+
+/// Stores browser push subscription payloads so the server can send
+/// Web Push notifications to specific users / orgs.
+/// One device = one row. Upserted on subscribe, deleted on unsubscribe.
+model PushSubscription {
+  id             String    @id @default(cuid())
+  endpoint       String    @unique
+  p256dh         String    @map("p256dh")
+  auth           String
+  organizationId String?   @map("organization_id")
+  userId         String?   @map("user_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+// ==========================================
+// SYN-408: Industry Modes + Voice Onboarding
+// ==========================================
+
+/// Content scenario templates grouped by industry.
+/// Seeded with 120+ prompts across 6 verticals (trades, café, salon,
+/// gym, clinic, retail). Used by the Industry Mode content generator.
+model IndustryTemplate {
+  id           String   @id @default(cuid())
+  industry     String   // e.g. "trades", "cafe", "salon", "gym", "clinic", "retail"
+  scenarioName String   @map("scenario_name")
+  promptTemplate String  @db.Text @map("prompt_template")
+  exampleOutput String? @db.Text @map("example_output")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([industry])
+  @@map("industry_templates")
+}
+
+/// Captured answers from the 5-question voice onboarding wizard.
+/// One row per organisation — upserted whenever the wizard is resubmitted.
+model OnboardingProfile {
+  id               String   @id @default(cuid())
+  organizationId   String   @unique @map("organization_id")
+  userId           String   @map("user_id")
+  industry         String
+  targetCustomer   String   @db.Text @map("target_customer")
+  differentiator   String   @db.Text
+  tone             String   // e.g. "friendly", "professional", "bold"
+  firstPostTopic   String   @db.Text @map("first_post_topic")
+  completedAt      DateTime @default(now()) @map("completed_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([userId])
+  @@map("onboarding_profiles")
+}
+
+// ==========================================
 // Waitlist
 // ==========================================
 

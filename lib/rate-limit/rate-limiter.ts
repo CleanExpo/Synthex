@@ -14,6 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { Redis } from '@upstash/redis';
 import { logger } from '@/lib/logger';
 import type {
   RateLimitConfig,
@@ -24,52 +25,47 @@ import type {
 } from './types';
 
 // ---------------------------------------------------------------------------
-// Redis storage layer (Upstash REST API — no extra dependency needed)
+// Redis storage layer (Upstash SDK — serverless-safe)
 // ---------------------------------------------------------------------------
 
-const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL;
-const UPSTASH_TOKEN =
-  process.env.UPSTASH_REDIS_REST_TOKEN || process.env.REDIS_TOKEN;
+let _redis: Redis | null = null;
 
-const useRedis = Boolean(UPSTASH_URL && UPSTASH_TOKEN);
+function getUpstashClient(): Redis | null {
+  if (_redis) return _redis;
+
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.REDIS_TOKEN;
+
+  if (!url || !token) return null;
+
+  try {
+    _redis = new Redis({ url, token });
+    return _redis;
+  } catch {
+    return null;
+  }
+}
+
+const useRedis = Boolean(
+  (process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL) &&
+  (process.env.UPSTASH_REDIS_REST_TOKEN || process.env.REDIS_TOKEN)
+);
 
 /** Increment a key in Upstash, setting TTL on first write. Returns new count. */
 async function redisIncr(key: string, ttlSeconds: number): Promise<number> {
-  if (!UPSTASH_URL || !UPSTASH_TOKEN) return -1;
+  const redis = getUpstashClient();
+  if (!redis) return -1;
 
   try {
-    // INCR + EXPIRE pipeline via Upstash REST
-    const res = await fetch(`${UPSTASH_URL}/pipeline`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${UPSTASH_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify([
-        ['INCR', key],
-        ['TTL', key],
-      ]),
-    });
+    // Pipeline: INCR + TTL
+    const results = await redis.pipeline().incr(key).ttl(key).exec();
 
-    if (!res.ok) {
-      logger.warn('Upstash Redis request failed', { status: res.status });
-      return -1;
-    }
-
-    const results: { result: number }[] = await res.json();
-    const count = results[0]?.result ?? 1;
-    const ttl = results[1]?.result ?? -1;
+    const count = (results[0] as number) ?? 1;
+    const ttl = (results[1] as number) ?? -1;
 
     // Set TTL only on first increment (TTL == -1 means no expiry set)
     if (ttl === -1) {
-      await fetch(`${UPSTASH_URL}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${UPSTASH_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(['EXPIRE', key, ttlSeconds]),
-      });
+      await redis.expire(key, ttlSeconds);
     }
 
     return count;
@@ -322,17 +318,10 @@ export class UsageTracker {
     count: number = 1
   ): Promise<void> {
     try {
-      // Use Upstash for tracking if available
-      if (useRedis && UPSTASH_URL && UPSTASH_TOKEN) {
+      const redis = getUpstashClient();
+      if (useRedis && redis) {
         const key = `usage:${userId}:${feature}:${new Date().toISOString().slice(0, 7)}`; // monthly key
-        await fetch(`${UPSTASH_URL}`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${UPSTASH_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(['INCRBY', key, count]),
-        });
+        await redis.incrby(key, count);
       }
     } catch (error) {
       logger.error('Usage tracking error', { error, userId, feature });
@@ -381,18 +370,11 @@ export class UsageTracker {
     if (limit === -1) return true; // Unlimited
 
     try {
-      if (useRedis && UPSTASH_URL && UPSTASH_TOKEN) {
+      const redis = getUpstashClient();
+      if (useRedis && redis) {
         const key = `usage:${userId}:${feature}:${new Date().toISOString().slice(0, 7)}`;
-        const res = await fetch(`${UPSTASH_URL}`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${UPSTASH_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(['GET', key]),
-        });
-        const data = await res.json();
-        const count = parseInt(data.result || '0', 10);
+        const value = await redis.get<string>(key);
+        const count = parseInt(value || '0', 10);
         return count < limit;
       }
       return true; // Allow if Redis not available

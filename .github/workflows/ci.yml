@@ -37,6 +37,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
+      - run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
       - run: npm run type-check
 
   test:
@@ -50,6 +54,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
+      - run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
       - run: npm test -- --coverage --coverageThreshold='{"global":{"statements":5}}'
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
@@ -112,6 +120,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
+      - run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
       - run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}

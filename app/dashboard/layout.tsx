@@ -855,6 +855,18 @@ export default function DashboardLayout({
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-white/[0.06]" />
+                  <DropdownMenuItem asChild>
+                    <a
+                      href="https://status.synthex.social"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm"
+                    >
+                      <HelpCircle className="h-3.5 w-3.5" />
+                      System Status
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-white/[0.06]" />
                   <DropdownMenuItem>
                     <button
                       onClick={() => router.push('/api/auth/signout')}

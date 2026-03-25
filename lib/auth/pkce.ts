@@ -178,18 +178,12 @@ export async function getCodeVerifier(state: string): Promise<string | null> {
 }
 
 // ==========================================
-// Redis Integration (Optional)
+// Redis Integration (Upstash — serverless-safe)
 // ==========================================
 
-/** Redis client interface for PKCE state storage */
-interface RedisClientLike {
-  connect: () => Promise<unknown>;
-  setEx: (key: string, ttl: number, value: string) => Promise<unknown>;
-  get: (key: string) => Promise<string | null>;
-  del: (key: string) => Promise<unknown>;
-}
+import { Redis } from '@upstash/redis';
 
-let redisClient: RedisClientLike | null = null;
+let upstashClient: Redis | null = null;
 let redisAvailable: boolean | null = null;
 
 async function isRedisAvailable(): Promise<boolean> {
@@ -197,25 +191,26 @@ async function isRedisAvailable(): Promise<boolean> {
     return redisAvailable;
   }
 
-  const redisUrl = process.env.REDIS_URL;
-  if (!redisUrl) {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) {
     redisAvailable = false;
     return false;
   }
 
   try {
-    // Dynamic import to avoid requiring redis in development
-
-    const { createClient } = await (import('redis' as string) as Promise<{
-      createClient: (opts: { url: string }) => RedisClientLike;
-    }>);
-    const client = createClient({ url: redisUrl });
-    await client.connect();
-    redisClient = client;
+    upstashClient = new Redis({ url, token });
+    // Verify connectivity
+    await upstashClient.ping();
     redisAvailable = true;
     return true;
   } catch (error) {
-    logger.error('[PKCE] Redis not available, using in-memory storage', error);
+    logger.error(
+      '[PKCE] Upstash Redis not available, using database fallback',
+      error
+    );
+    upstashClient = null;
     redisAvailable = false;
     return false;
   }
@@ -225,24 +220,24 @@ async function storeInRedis(
   state: string,
   pkceState: PKCEState
 ): Promise<void> {
-  if (!redisClient) return;
+  if (!upstashClient) return;
 
   const key = `pkce:${state}`;
   const ttlSeconds = Math.ceil(PKCE_STATE_TTL_MS / 1000);
 
-  await redisClient.setEx(key, ttlSeconds, JSON.stringify(pkceState));
+  await upstashClient.setex(key, ttlSeconds, JSON.stringify(pkceState));
 }
 
 async function retrieveFromRedis(state: string): Promise<PKCEState | null> {
-  if (!redisClient) return null;
+  if (!upstashClient) return null;
 
   const key = `pkce:${state}`;
-  const data = await redisClient.get(key);
+  const data = await upstashClient.get<string>(key);
 
   if (!data) return null;
 
   // Delete after retrieval (one-time use)
-  await redisClient.del(key);
+  await upstashClient.del(key);
 
   try {
     return JSON.parse(data) as PKCEState;

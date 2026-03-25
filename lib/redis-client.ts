@@ -1,28 +1,20 @@
 /**
- * Redis Client Factory with Cluster & Sentinel Support
+ * Redis Client Factory
  *
- * @task UNI-437 - Implement Redis Cluster Configuration
+ * @task SYN-442 - Swap Redis client to Upstash SDK
  *
  * This module provides a unified Redis client that automatically selects
  * the appropriate connection mode based on configuration:
- * - Cluster mode for horizontal scaling
- * - Sentinel mode for high availability
- * - Standalone mode for simple deployments
- * - Upstash for serverless (Vercel)
+ * - Upstash for serverless (Vercel) — primary mode, uses @upstash/redis SDK
  * - Memory fallback when Redis unavailable
+ *
+ * Cluster and Sentinel modes are intentionally removed: Synthex is deployed
+ * on Vercel serverless where persistent TCP connections are not viable.
+ * Upstash REST API is the correct transport for this environment.
  */
 
-import Redis, {
-  Cluster,
-  RedisOptions,
-  ClusterOptions,
-  ClusterNode,
-} from 'ioredis';
+import { Redis } from '@upstash/redis';
 import {
-  getRedisConfig,
-  getRedisClusterConfig,
-  getRedisSentinelConfig,
-  getRedisPoolConfig,
   getUpstashConfig,
   determineRedisMode,
   RedisHealthStatus,
@@ -32,11 +24,9 @@ import {
 // TYPES
 // ============================================================================
 
-type RedisClient = Redis | Cluster;
-
 interface RedisClientWrapper {
-  client: RedisClient | null;
-  mode: 'cluster' | 'sentinel' | 'standalone' | 'upstash' | 'memory';
+  client: Redis | null;
+  mode: 'upstash' | 'memory';
   isConnected: boolean;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
@@ -175,175 +165,65 @@ let redisClientInstance: RedisClientWrapper | null = null;
 let memoryCache: MemoryCache | null = null;
 
 /**
- * Create a standalone Redis client
- */
-function createStandaloneClient(): Redis {
-  const config = getRedisConfig();
-  const poolConfig = getRedisPoolConfig();
-
-  const options: RedisOptions = {
-    host: config.host,
-    port: config.port,
-    password: config.password,
-    db: config.db,
-    keyPrefix: config.keyPrefix,
-    maxRetriesPerRequest: config.maxRetriesPerRequest,
-    enableReadyCheck: config.enableReadyCheck,
-    lazyConnect: config.lazyConnect,
-    connectTimeout: config.connectTimeout,
-    keepAlive: config.keepAlive,
-    family: config.family,
-    retryStrategy: (times: number) => {
-      if (times > 10) {
-        console.error('[Redis] Max retry attempts reached');
-        return null;
-      }
-      return Math.min(times * 100, 3000);
-    },
-    reconnectOnError: config.reconnectOnError,
-  };
-
-  if (config.url) {
-    return new Redis(config.url, options);
-  }
-
-  return new Redis(options);
-}
-
-/**
- * Create a Redis Cluster client
- */
-function createClusterClient(): Cluster {
-  const clusterConfig = getRedisClusterConfig();
-  const poolConfig = getRedisPoolConfig();
-
-  const nodes: ClusterNode[] = clusterConfig.nodes.map(node => ({
-    host: node.host,
-    port: node.port,
-  }));
-
-  const options: ClusterOptions = {
-    clusterRetryStrategy: clusterConfig.options.clusterRetryStrategy,
-    enableReadyCheck: clusterConfig.options.enableReadyCheck,
-    scaleReads: clusterConfig.options.scaleReads,
-    maxRedirections: clusterConfig.options.maxRedirections,
-    retryDelayOnFailover: clusterConfig.options.retryDelayOnFailover,
-    retryDelayOnClusterDown: clusterConfig.options.retryDelayOnClusterDown,
-    retryDelayOnTryAgain: clusterConfig.options.retryDelayOnTryAgain,
-    slotsRefreshTimeout: clusterConfig.options.slotsRefreshTimeout,
-    slotsRefreshInterval: clusterConfig.options.slotsRefreshInterval,
-    natMap: clusterConfig.options.natMap,
-    redisOptions: {
-      password: clusterConfig.redisOptions.password,
-      connectTimeout: clusterConfig.redisOptions.connectTimeout,
-      commandTimeout: clusterConfig.redisOptions.commandTimeout,
-    },
-  };
-
-  return new Cluster(nodes, options);
-}
-
-/**
- * Create a Redis Sentinel client
- */
-function createSentinelClient(): Redis {
-  const sentinelConfig = getRedisSentinelConfig();
-
-  const options: RedisOptions = {
-    sentinels: sentinelConfig.sentinels,
-    name: sentinelConfig.name,
-    password: sentinelConfig.options.password,
-    sentinelPassword: sentinelConfig.options.sentinelPassword,
-    db: sentinelConfig.options.db,
-    enableTLSForSentinelMode: sentinelConfig.options.enableTLSForSentinelMode,
-    sentinelRetryStrategy: sentinelConfig.options.sentinelRetryStrategy,
-    reconnectOnError: sentinelConfig.options.reconnectOnError,
-    failoverDetector: sentinelConfig.options.failoverDetector,
-  };
-
-  return new Redis(options);
-}
-
-/**
- * Create the appropriate Redis client based on configuration
+ * Create the appropriate Redis client based on configuration.
+ * On Vercel (serverless), Upstash mode is selected automatically when
+ * UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are set.
  */
 export function createRedisClient(): RedisClientWrapper {
   if (redisClientInstance) {
     return redisClientInstance;
   }
 
-  const mode = determineRedisMode();
-  let client: RedisClient | null = null;
+  const rawMode = determineRedisMode();
+  // Collapse any non-upstash TCP mode to memory — serverless cannot hold
+  // persistent TCP connections. Upstash REST is the only viable remote store.
+  const mode: 'upstash' | 'memory' =
+    rawMode === 'upstash' ? 'upstash' : 'memory';
 
-  // For memory or upstash mode, we don't create an ioredis client
-  if (mode !== 'memory' && mode !== 'upstash') {
+  // Build Upstash client if credentials are present
+  let upstashClient: Redis | null = null;
+  if (mode === 'upstash') {
     try {
-      switch (mode) {
-        case 'cluster':
-          client = createClusterClient();
-          break;
-        case 'sentinel':
-          client = createSentinelClient();
-          break;
-        case 'standalone':
-        default:
-          client = createStandaloneClient();
-          break;
-      }
-
-      // Set up error handlers
-      if (client) {
-        client.on('error', err => {
-          console.error('[Redis] Connection error:', err.message);
+      const upstashConfig = getUpstashConfig();
+      if (upstashConfig?.url && upstashConfig?.token) {
+        upstashClient = new Redis({
+          url: upstashConfig.url,
+          token: upstashConfig.token,
         });
-
-        client.on('connect', () => {});
-
-        client.on('ready', () => {});
-
-        client.on('close', () => {});
-
-        client.on('reconnecting', () => {});
       }
     } catch (error) {
-      console.error('[Redis] Failed to create client:', error);
-      client = null;
+      console.error('[Redis] Failed to create Upstash client:', error);
+      upstashClient = null;
     }
   }
 
-  // Initialize memory cache as fallback
+  // Initialise memory cache as fallback
   if (!memoryCache) {
-    const cacheConfig = getRedisPoolConfig();
     memoryCache = new MemoryCache(1000);
   }
 
   const wrapper: RedisClientWrapper = {
-    client,
+    client: upstashClient,
     mode,
     isConnected: false,
 
     async connect() {
-      if (mode === 'memory' || mode === 'upstash') {
-        this.isConnected = true;
-        return;
-      }
-
-      if (client) {
+      if (upstashClient) {
         try {
-          await client.ping();
+          await upstashClient.ping();
           this.isConnected = true;
         } catch (error) {
-          console.error('[Redis] Connection failed:', error);
+          console.error('[Redis] Upstash connection failed:', error);
           this.isConnected = false;
         }
+      } else {
+        // Memory mode — always "connected"
+        this.isConnected = true;
       }
     },
 
     async disconnect() {
-      if (client) {
-        await client.quit();
-        this.isConnected = false;
-      }
+      this.isConnected = false;
       if (memoryCache) {
         memoryCache.destroy();
         memoryCache = null;
@@ -353,7 +233,7 @@ export function createRedisClient(): RedisClientWrapper {
     async healthCheck(): Promise<RedisHealthStatus> {
       const startTime = Date.now();
 
-      if (mode === 'memory') {
+      if (mode === 'memory' || !upstashClient) {
         return {
           connected: true,
           mode: 'memory',
@@ -361,69 +241,28 @@ export function createRedisClient(): RedisClientWrapper {
         };
       }
 
-      if (mode === 'upstash') {
-        // Upstash health check would be done via REST API
+      try {
+        await upstashClient.ping();
         return {
           connected: true,
           mode: 'upstash',
-          latency: 0,
-        };
-      }
-
-      if (!client) {
-        return {
-          connected: false,
-          mode,
-          error: 'Client not initialized',
-        };
-      }
-
-      try {
-        await client.ping();
-        const latency = Date.now() - startTime;
-
-        // Get cluster/sentinel specific info
-        if (mode === 'cluster' && client instanceof Cluster) {
-          const nodes = client.nodes('all');
-          return {
-            connected: true,
-            mode,
-            latency,
-            nodes: nodes.map(node => ({
-              host: node.options.host || 'unknown',
-              port: node.options.port || 0,
-              status: node.status as
-                | 'connected'
-                | 'disconnected'
-                | 'connecting',
-            })),
-          };
-        }
-
-        return {
-          connected: true,
-          mode,
-          latency,
+          latency: Date.now() - startTime,
         };
       } catch (error) {
         return {
           connected: false,
-          mode,
+          mode: 'upstash',
           latency: Date.now() - startTime,
-          error:
-            error instanceof Error
-              ? error instanceof Error
-                ? error.message
-                : String(error)
-              : 'Unknown error',
+          error: error instanceof Error ? error.message : 'Unknown error',
         };
       }
     },
 
     async get(key: string): Promise<string | null> {
-      if (client && this.isConnected) {
+      if (upstashClient) {
         try {
-          return await client.get(key);
+          const value = await upstashClient.get<string>(key);
+          return value ?? null;
         } catch (error) {
           console.warn('[Redis] GET failed, using memory fallback:', error);
         }
@@ -432,12 +271,12 @@ export function createRedisClient(): RedisClientWrapper {
     },
 
     async set(key: string, value: string, ttl?: number): Promise<void> {
-      if (client && this.isConnected) {
+      if (upstashClient) {
         try {
           if (ttl) {
-            await client.setex(key, ttl, value);
+            await upstashClient.setex(key, ttl, value);
           } else {
-            await client.set(key, value);
+            await upstashClient.set(key, value);
           }
           return;
         } catch (error) {
@@ -449,9 +288,9 @@ export function createRedisClient(): RedisClientWrapper {
 
     async del(keys: string | string[]): Promise<number> {
       const keyArray = Array.isArray(keys) ? keys : [keys];
-      if (client && this.isConnected) {
+      if (upstashClient) {
         try {
-          return await client.del(...keyArray);
+          return await upstashClient.del(...keyArray);
         } catch (error) {
           console.warn('[Redis] DEL failed, using memory fallback:', error);
         }
@@ -460,9 +299,9 @@ export function createRedisClient(): RedisClientWrapper {
     },
 
     async exists(key: string): Promise<boolean> {
-      if (client && this.isConnected) {
+      if (upstashClient) {
         try {
-          const result = await client.exists(key);
+          const result = await upstashClient.exists(key);
           return result === 1;
         } catch (error) {
           console.warn('[Redis] EXISTS failed, using memory fallback:', error);
@@ -472,9 +311,9 @@ export function createRedisClient(): RedisClientWrapper {
     },
 
     async keys(pattern: string): Promise<string[]> {
-      if (client && this.isConnected) {
+      if (upstashClient) {
         try {
-          return await client.keys(pattern);
+          return await upstashClient.keys(pattern);
         } catch (error) {
           console.warn('[Redis] KEYS failed, using memory fallback:', error);
         }
@@ -483,9 +322,9 @@ export function createRedisClient(): RedisClientWrapper {
     },
 
     async incr(key: string): Promise<number> {
-      if (client && this.isConnected) {
+      if (upstashClient) {
         try {
-          return await client.incr(key);
+          return await upstashClient.incr(key);
         } catch (error) {
           console.warn('[Redis] INCR failed, using memory fallback:', error);
         }
@@ -494,9 +333,9 @@ export function createRedisClient(): RedisClientWrapper {
     },
 
     async expire(key: string, seconds: number): Promise<boolean> {
-      if (client && this.isConnected) {
+      if (upstashClient) {
         try {
-          const result = await client.expire(key, seconds);
+          const result = await upstashClient.expire(key, seconds);
           return result === 1;
         } catch (error) {
           console.warn('[Redis] EXPIRE failed, using memory fallback:', error);
@@ -506,9 +345,9 @@ export function createRedisClient(): RedisClientWrapper {
     },
 
     async ttl(key: string): Promise<number> {
-      if (client && this.isConnected) {
+      if (upstashClient) {
         try {
-          return await client.ttl(key);
+          return await upstashClient.ttl(key);
         } catch (error) {
           console.warn('[Redis] TTL failed, using memory fallback:', error);
         }
@@ -517,9 +356,10 @@ export function createRedisClient(): RedisClientWrapper {
     },
 
     async mget(keys: string[]): Promise<(string | null)[]> {
-      if (client && this.isConnected) {
+      if (upstashClient) {
         try {
-          return await client.mget(...keys);
+          const results = await upstashClient.mget<(string | null)[]>(...keys);
+          return results;
         } catch (error) {
           console.warn('[Redis] MGET failed, using memory fallback:', error);
         }
@@ -528,13 +368,10 @@ export function createRedisClient(): RedisClientWrapper {
     },
 
     async mset(keyValues: Record<string, string>): Promise<void> {
-      if (client && this.isConnected) {
+      if (upstashClient) {
         try {
-          const args: string[] = [];
-          for (const [key, value] of Object.entries(keyValues)) {
-            args.push(key, value);
-          }
-          await client.mset(...args);
+          // Upstash mset accepts an object directly
+          await upstashClient.mset(keyValues);
           return;
         } catch (error) {
           console.warn('[Redis] MSET failed, using memory fallback:', error);
