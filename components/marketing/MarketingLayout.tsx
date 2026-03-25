@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 
 // Synthex Logo Component
 export function SynthexLogo({
@@ -55,8 +55,17 @@ export function FloatingParticles() {
   );
 }
 
+const NAV_LINKS = [
+  { href: '/features', label: 'Features', key: 'features' },
+  { href: '/pricing', label: 'Pricing', key: 'pricing' },
+  { href: '/about', label: 'About', key: 'about' },
+  { href: '/blog', label: 'Blog', key: 'blog' },
+];
+
 // Navigation Component
 export function MarketingNav({ currentPage }: { currentPage?: string }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
     <nav className="fixed top-0 w-full z-50 bg-charcoal-800/80 backdrop-blur-xl border-b border-white/[0.06]">
       <div className="container mx-auto px-6 py-4">
@@ -71,30 +80,15 @@ export function MarketingNav({ currentPage }: { currentPage?: string }) {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/features"
-              className={`${currentPage === 'features' ? 'text-orange-400' : 'text-white/50'} hover:text-orange-400 transition-colors text-sm font-medium`}
-            >
-              Features
-            </Link>
-            <Link
-              href="/pricing"
-              className={`${currentPage === 'pricing' ? 'text-orange-400' : 'text-white/50'} hover:text-orange-400 transition-colors text-sm font-medium`}
-            >
-              Pricing
-            </Link>
-            <Link
-              href="/about"
-              className={`${currentPage === 'about' ? 'text-orange-400' : 'text-white/50'} hover:text-orange-400 transition-colors text-sm font-medium`}
-            >
-              About
-            </Link>
-            <Link
-              href="/blog"
-              className={`${currentPage === 'blog' ? 'text-orange-400' : 'text-white/50'} hover:text-orange-400 transition-colors text-sm font-medium`}
-            >
-              Blog
-            </Link>
+            {NAV_LINKS.map(({ href, label, key }) => (
+              <Link
+                key={key}
+                href={href}
+                className={`${currentPage === key ? 'text-orange-400' : 'text-white/50'} hover:text-orange-400 transition-colors text-sm font-medium`}
+              >
+                {label}
+              </Link>
+            ))}
             <Link
               href="/login"
               className="text-white/50 hover:text-orange-400 transition-colors text-sm font-medium"
@@ -109,23 +103,74 @@ export function MarketingNav({ currentPage }: { currentPage?: string }) {
           </div>
 
           {/* Mobile menu button */}
-          <button className="md:hidden p-2 text-gray-400 hover:text-white">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
+          <button
+            className="md:hidden p-2 text-gray-400 hover:text-white"
+            onClick={() => setMobileOpen(prev => !prev)}
+            aria-label="Toggle navigation menu"
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? (
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            )}
           </button>
         </div>
       </div>
+
+      {/* Mobile menu panel */}
+      {mobileOpen && (
+        <div className="md:hidden border-t border-white/[0.06] bg-charcoal-900/95 backdrop-blur-xl">
+          <div className="container mx-auto px-6 py-4 flex flex-col space-y-4">
+            {NAV_LINKS.map(({ href, label, key }) => (
+              <Link
+                key={key}
+                href={href}
+                onClick={() => setMobileOpen(false)}
+                className={`${currentPage === key ? 'text-orange-400' : 'text-white/70'} hover:text-orange-400 transition-colors text-base font-medium py-1`}
+              >
+                {label}
+              </Link>
+            ))}
+            <Link
+              href="/login"
+              onClick={() => setMobileOpen(false)}
+              className="text-white/70 hover:text-orange-400 transition-colors text-base font-medium py-1"
+            >
+              Login
+            </Link>
+            <Link href="/signup" onClick={() => setMobileOpen(false)}>
+              <Button className="w-full bg-orange-500 hover:bg-orange-400 text-charcoal-900 font-bold rounded-full mt-2">
+                Get Started
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
