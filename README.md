@@ -9,6 +9,7 @@
   [![Users](https://img.shields.io/badge/users-1000%2B-blue)](https://synthex.social)
   [![License](https://img.shields.io/badge/license-MIT-purple)](LICENSE)
   [![Built with Next.js](https://img.shields.io/badge/built%20with-Next.js%2015-black)](https://nextjs.org)
+  [![Better Stack Badge](https://uptime.betterstack.com/status-badges/v1/monitor/2ibvl.svg)](https://status.synthex.social)
 </div>
 
 ---
@@ -22,50 +23,60 @@ Think of it as having a team of social media experts, data analysts, and content
 ## 💼 Who Is This For?
 
 ### Business Owners
+
 Transform your brand's social presence without hiring an expensive agency. SYNTHEX learns your brand voice and creates content that converts followers into customers.
 
 ### Influencers & Creators
+
 Scale your influence with AI that understands what makes content go viral. Never run out of engaging content ideas again.
 
 ### Marketing Agencies
+
 Manage multiple clients efficiently with our white-label ready platform. Deliver exceptional results with AI-powered insights.
 
 ### Entrepreneurs
+
 Launch and grow your social presence from day one with proven strategies and automated excellence.
 
 ## 🌟 Core Features
 
 ### 🧠 **AI Content Intelligence**
+
 - **Viral Pattern Analysis**: Our AI analyzes millions of successful posts to understand what makes content go viral
 - **Persona Learning**: The system learns your unique voice and style, ensuring authenticity in every post
 - **Smart Content Generation**: Create engaging posts that resonate with your audience using multi-provider AI (OpenRouter, Claude, Gemini, GPT)
 - **Trend Prediction**: Stay ahead of trends with predictive analytics
 
 ### 📊 **Advanced Analytics Dashboard**
+
 - **Real-time Performance Metrics**: Track engagement, reach, and growth across all platforms
 - **Competitor Analysis**: Understand how you stack up against your competition
 - **ROI Tracking**: Measure the actual business impact of your social media efforts
 - **Custom Reports**: Generate professional reports for stakeholders
 
 ### 🎯 **Multi-Platform Mastery**
+
 - **Unified Publishing**: Post to Twitter, LinkedIn, Instagram, TikTok, and more from one dashboard
 - **Platform-Specific Optimization**: Each post is optimized for maximum performance on its target platform
 - **Best Practice Compliance**: Automatically ensures your content follows each platform's best practices
 - **Cross-Platform Campaigns**: Coordinate campaigns across multiple platforms seamlessly
 
 ### 📅 **Intelligent Scheduling**
+
 - **Optimal Time Posting**: AI determines the best times to post for maximum engagement
 - **Content Calendar**: Visual calendar with drag-and-drop functionality
 - **Bulk Scheduling**: Plan weeks or months of content in advance
 - **Time Zone Intelligence**: Automatically adjusts for global audiences
 
 ### 🔍 **Content Discovery & Curation**
+
 - **Trending Topics**: Discover what's trending in your industry
 - **Content Inspiration**: Never run out of ideas with AI-powered suggestions
 - **Hashtag Research**: Find the most effective hashtags for your content
 - **Visual Asset Library**: Access millions of stock images and videos
 
 ### 🤝 **Team Collaboration**
+
 - **Role-Based Access**: Manage team permissions efficiently
 - **Approval Workflows**: Set up content approval processes
 - **Client Portals**: Give clients visibility into their campaigns
@@ -74,6 +85,7 @@ Launch and grow your social presence from day one with proven strategies and aut
 ## 🛠️ Technology Stack
 
 ### Frontend
+
 - **Next.js 15**: React framework with App Router for optimal performance
 - **TypeScript 5**: Type-safe development experience
 - **Tailwind CSS**: Modern, responsive design system
@@ -81,6 +93,7 @@ Launch and grow your social presence from day one with proven strategies and aut
 - **Radix UI**: Accessible component primitives
 
 ### Backend & Infrastructure
+
 - **Supabase**: PostgreSQL database with connection pooling
 - **Prisma 6**: Type-safe ORM with 67 models
 - **Redis (Upstash)**: Serverless caching
@@ -88,6 +101,7 @@ Launch and grow your social presence from day one with proven strategies and aut
 - **BullMQ**: Background job queues
 
 ### AI & Intelligence
+
 - **OpenRouter**: Primary AI gateway (multi-model)
 - **Anthropic SDK**: Claude integration
 - **Google AI SDK**: Gemini integration
@@ -95,6 +109,7 @@ Launch and grow your social presence from day one with proven strategies and aut
 - **Vercel AI SDK**: Streaming and tool use
 
 ### Integrations
+
 - **Stripe**: Subscription billing with webhooks
 - **SendGrid + Resend**: Transactional email system
 - **OAuth 2.0**: Google & GitHub authentication (NextAuth.js)
@@ -103,6 +118,7 @@ Launch and grow your social presence from day one with proven strategies and aut
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js 22 LTS
 - PostgreSQL database (or Supabase account)
 - Redis instance (or Upstash account)
@@ -111,29 +127,34 @@ Launch and grow your social presence from day one with proven strategies and aut
 ### Installation
 
 1. **Clone the repository**
+
 ```bash
 git clone https://github.com/your-org/synthex.git
 cd synthex
 ```
 
 2. **Install dependencies**
+
 ```bash
 npm install
 ```
 
 3. **Set up environment variables**
+
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
 4. **Initialize the database**
+
 ```bash
 npx prisma migrate dev
 npx prisma generate
 ```
 
 5. **Run the development server**
+
 ```bash
 npm run dev
 ```
@@ -143,11 +164,13 @@ Visit `http://localhost:3000` to see your instance running.
 ## 📈 Why SYNTHEX?
 
 ### 🎯 **Proven Results**
+
 - **2.2x Average Engagement Boost**: Our AI optimization delivers measurable results
 - **87% Time Savings**: Automate repetitive tasks and focus on strategy
 - **1000+ Active Users**: Join a growing community of successful social media professionals
 
 ### 💡 **Unique Value Propositions**
+
 1. **Not Just a Tool, But a Partner**: SYNTHEX learns and grows with your brand
 2. **Agency-Level Strategy**: Get enterprise-level social media strategy at a fraction of the cost
 3. **Always Learning**: Our AI continuously improves based on the latest social media trends
@@ -156,6 +179,7 @@ Visit `http://localhost:3000` to see your instance running.
 ## 🎨 Design Philosophy
 
 SYNTHEX features a modern, professional interface that stands apart from generic AI tools:
+
 - **Clean, Intuitive Navigation**: Every feature is exactly where you expect it
 - **Dark/Light Mode**: Comfortable viewing in any environment
 - **Responsive Design**: Perfect experience on desktop, tablet, and mobile
@@ -173,6 +197,7 @@ SYNTHEX features a modern, professional interface that stands apart from generic
 ## 📚 Documentation
 
 Comprehensive documentation is available:
+
 - [User Guide](docs/user-guide.md) - Complete user documentation
 - [API Documentation](docs/api.md) - For developers and integrations
 - [Best Practices](docs/best-practices.md) - Social media strategy guides
