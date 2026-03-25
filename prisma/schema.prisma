@@ -5282,6 +5282,28 @@ model MarketplaceOrder {
 }
 
 // ==========================================
+// Push Notifications (Web Push / PWA)
+// ==========================================
+
+/// Stores browser push subscription payloads so the server can send
+/// Web Push notifications to specific users / orgs.
+/// One device = one row. Upserted on subscribe, deleted on unsubscribe.
+model PushSubscription {
+  id             String    @id @default(cuid())
+  endpoint       String    @unique
+  p256dh         String    @map("p256dh")
+  auth           String
+  organizationId String?   @map("organization_id")
+  userId         String?   @map("user_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+// ==========================================
 // Waitlist
 // ==========================================
 
