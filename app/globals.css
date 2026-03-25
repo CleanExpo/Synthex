@@ -1,7 +1,12 @@
 /* Font loaded via next/font in layout.tsx — no CSS @import needed */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss' source(none);
+@import 'tw-animate-css';
+@config "../tailwind.config.cjs";
+
+/* Explicit source scanning — Tailwind v4 requires source(none) to disable auto-scan on Windows */
+@source "../app/**/*.{ts,tsx}";
+@source "../components/**/*.{ts,tsx}";
+@source "../pages/**/*.{ts,tsx}";
 
 /* Lenis smooth scroll — required classes */
 html.lenis,
