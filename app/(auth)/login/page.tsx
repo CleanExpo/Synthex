@@ -512,9 +512,41 @@ function LoginContent() {
   );
 }
 
+function LoginSkeleton() {
+  return (
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="w-full max-w-md px-4">
+        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8 space-y-6 animate-pulse">
+          {/* Logo placeholder */}
+          <div className="flex justify-center mb-6">
+            <div className="h-10 w-32 rounded-lg bg-white/10" />
+          </div>
+          {/* Heading placeholder */}
+          <div className="space-y-2">
+            <div className="h-7 w-3/4 mx-auto rounded bg-white/10" />
+            <div className="h-4 w-1/2 mx-auto rounded bg-white/10" />
+          </div>
+          {/* Email field */}
+          <div className="space-y-2">
+            <div className="h-4 w-16 rounded bg-white/10" />
+            <div className="h-11 w-full rounded-lg bg-white/10" />
+          </div>
+          {/* Password field */}
+          <div className="space-y-2">
+            <div className="h-4 w-20 rounded bg-white/10" />
+            <div className="h-11 w-full rounded-lg bg-white/10" />
+          </div>
+          {/* Button */}
+          <div className="h-11 w-full rounded-lg bg-white/10" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<LoginSkeleton />}>
       <LoginContent />
     </Suspense>
   );

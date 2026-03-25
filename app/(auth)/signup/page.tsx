@@ -442,7 +442,7 @@ export default function SignupPage() {
                 <p className="text-[10px] text-white/60">
                   No invite?{' '}
                   <Link
-                    href="/"
+                    href="/waitlist"
                     className="text-amber-500/60 hover:text-amber-500/80 transition-colors"
                   >
                     Request access

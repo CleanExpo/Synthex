@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 const NAV_LINKS = [
-  { href: '/features', label: 'Platform' },
-  { href: '/about', label: 'Solutions' },
+  { href: '/features', label: 'Features' },
+  { href: '/about', label: 'About' },
   { href: '/pricing', label: 'Pricing' },
   { href: '/blog', label: 'Blog' },
 ];

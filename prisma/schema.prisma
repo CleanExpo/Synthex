@@ -5282,3 +5282,17 @@ model MarketplaceOrder {
   @@index([orgId, channelId])
   @@map("marketplace_orders")
 }
+
+// ==========================================
+// Waitlist
+// ==========================================
+
+/// Email waitlist for early access requests.
+/// Public — no user or org association required.
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("waitlist_entries")
+}

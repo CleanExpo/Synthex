@@ -30,18 +30,6 @@ interface BlogPost {
 
 const blogPosts: BlogPost[] = [
   {
-    id: 'what-is-skill-md-claude-code',
-    title: 'What Is SKILL.md? The Authoritative Guide to Claude Code Skills',
-    excerpt:
-      'SKILL.md is a structured Markdown file that teaches Claude Code reusable, domain-specific workflows. Learn the format, see real examples, and understand how skills differ from agents and project instructions.',
-    author: 'Phill McGurk',
-    date: '2026-02-28',
-    readTime: '8 min read',
-    category: 'Developer Tools',
-    image: '/blog/skill-md-guide.jpg',
-    featured: true,
-  },
-  {
     id: '1',
     title: 'How AI is Revolutionizing Social Media Marketing in 2025',
     excerpt:

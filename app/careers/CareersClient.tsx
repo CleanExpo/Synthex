@@ -368,10 +368,12 @@ export default function CareersPage() {
                       ))}
                     </div>
                   </div>
-                  <Button className="bg-gradient-to-r from-orange-500 to-orange-600 text-white whitespace-nowrap">
-                    Apply Now
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
+                  <a href="mailto:careers@synthex.social">
+                    <Button className="bg-gradient-to-r from-orange-500 to-orange-600 text-white whitespace-nowrap">
+                      Apply Now
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  </a>
                 </div>
               </Card>
             ))}
@@ -391,9 +393,11 @@ export default function CareersPage() {
               We're always looking for exceptional talent. Send us your resume
               and tell us how you can contribute to our mission.
             </p>
-            <Button className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-3">
-              Send Your Resume
-            </Button>
+            <a href="mailto:careers@synthex.social">
+              <Button className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-3">
+                Send Your Resume
+              </Button>
+            </a>
             <p className="text-gray-400 mt-4">careers@synthex.social</p>
           </Card>
         </div>

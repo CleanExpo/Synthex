@@ -85,7 +85,7 @@ const values = [
 const milestones = [
   {
     period: 'Q3 2023',
-    event: 'Founded in Sydney, Australia. First prototype built in 6 weeks.',
+    event: 'Founded in Brisbane, Australia. First prototype built in 6 weeks.',
   },
   {
     period: 'Q4 2023',
@@ -308,7 +308,7 @@ export default function AboutPage() {
             </h2>
             <p className="text-gray-300 max-w-2xl mx-auto">
               A small team that moves fast and takes craft seriously. Based in
-              Sydney, building for the world.
+              Brisbane, building for the world.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">

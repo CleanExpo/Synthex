@@ -42,17 +42,20 @@ function CountUpValue({
   stat: (typeof STATS)[number];
   shouldAnimate: boolean;
 }) {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(stat.numericValue ?? 0);
   const [done, setDone] = useState(false);
+  const [started, setStarted] = useState(false);
 
   useEffect(() => {
-    if (!shouldAnimate || stat.numericValue === null) return;
+    if (!shouldAnimate || stat.numericValue === null || started) return;
+    setStarted(true);
     const target = stat.numericValue;
     const duration = 1500;
     const steps = 40;
     const increment = target / steps;
     let current = 0;
     let step = 0;
+    setCount(0);
 
     const timer = setInterval(() => {
       step++;
@@ -65,14 +68,10 @@ function CountUpValue({
     }, duration / steps);
 
     return () => clearInterval(timer);
-  }, [shouldAnimate, stat.numericValue]);
+  }, [shouldAnimate, stat.numericValue, started]);
 
   if (stat.numericValue === null) {
     return <>{stat.value}</>;
-  }
-
-  if (!shouldAnimate && !done) {
-    return <>0</>;
   }
 
   return (
