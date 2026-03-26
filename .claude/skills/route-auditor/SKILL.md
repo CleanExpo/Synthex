@@ -1,22 +1,30 @@
 ---
 name: route-auditor
 description: >-
-  API Route Compliance Scanner for SYNTHEX. Audits any API route file against
-  the standard security and architecture pattern. Catches auth drift, unsafe
-  casts, missing validation, exposed error messages, and org-scoping gaps.
-  Use when creating, modifying, or reviewing any file under app/api/.
+  Synthex API route compliance scanner. NEVER apply generic REST conventions
+  without grounding in Synthex's specific security pattern. ALWAYS audit
+  against: getUserIdFromRequestOrCookies() auth, { organizationId } on every
+  query, Zod safeParse() on all mutations, withRateLimit() on AI routes, and
+  migrate diff + db execute for schema changes. Activate on ANY request to
+  audit a route, check API security, review an endpoint, or scan for auth
+  or org-scope issues.
 effort: high
 metadata:
   author: synthex
   version: '1.0'
   engine: synthex-ai-agency
-  type: enforcement-skill
+  type: capability-uplift-code
   triggers:
     - audit route
     - check api route
     - route compliance
     - api review
     - route audit
+    - route audit
+    - api audit
+    - security scan
+    - endpoint review
+    - auth check
 ---
 
 # Route Auditor — API Route Compliance Scanner
@@ -293,3 +301,23 @@ grep -rn "console\.\(log\|error\|warn\)" app/api/ --include="*.ts"
 grep -rn "error\.message" app/api/ --include="*.ts"
 grep -rn "request: Request[^a-zA-Z]" app/api/ --include="*.ts"
 ```
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** flag generic REST issues without Synthex context, approve Prisma
+queries without `organizationId` filter, accept `prisma db push` for schema
+changes, or allow any auth system other than Supabase.
+
+**INSTEAD** every route audit checks these Synthex-specific gates in order:
+
+1. Auth: `getUserIdFromRequestOrCookies(request)` → 401 if null
+2. Org scope: every DB query has `{ organizationId }` or `{ campaign: { organizationId } }`
+3. Mutations: `ZodSchema.safeParse(body)` → 400 with `{ error, details }` if invalid
+4. Rate limiting: `withRateLimit` or equivalent wrapping AI and mutation routes
+5. Error shape: all error responses return `{ error: string, details?: unknown }`
+
+Flag any deviation from these 5 gates as a blocker. Everything else is a warning.
+
+**REFERENCE** `.claude/skills/synthex-standards/references/code-standards.md`
