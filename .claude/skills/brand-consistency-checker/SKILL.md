@@ -1,17 +1,18 @@
 ---
 name: brand-consistency-checker
 description: >-
-  Audits content against a Business DNA profile and scores it for brand alignment across
-  tone of voice, vocabulary, visual direction, messaging, and platform appropriateness.
-  Flags off-brand language, missing CTAs, and inconsistent positioning. Use when the
-  user says "check this against my brand", "is this on-brand?", "brand audit", "review
-  my content", "does this match my brand voice", or pastes content for review before
-  publishing. Also use as a quality gate before approving scheduled posts.
+  Synthex brand consistency enforcer. NEVER produce vague feedback ("sounds
+  on-brand", "good feel", "consistent with your voice"). ALWAYS score against
+  specific criteria: vocabulary match percentage, anti-pattern phrase count,
+  and CTA quality. Every feedback item must be specific enough to act on
+  immediately. Activate on ANY request to check brand consistency, audit
+  content against brand guidelines, review voice alignment, or validate that
+  content matches a Business DNA profile.
 metadata:
   author: synthex
-  version: "1.0"
+  version: '1.0'
   engine: synthex-ai-agency
-  type: workflow-skill
+  type: capability-uplift-content
   triggers:
     - brand check
     - on-brand
@@ -21,6 +22,9 @@ metadata:
     - does this match
     - check my post
     - quality gate
+    - check brand
+    - voice check
+    - brand alignment
 ---
 
 # Brand Consistency Checker
@@ -54,12 +58,14 @@ Score each dimension 0–100. Overall = weighted average.
 Compare the content's tone against `dna.toneOfVoice` and `dna.languageStyle`.
 
 Check for:
+
 - Formality level match (formal vs casual)
 - Energy level (enthusiastic vs measured)
 - Perspective (first-person brand voice vs third-person)
 - Authenticity (genuine vs generic "AI-sounding" phrases)
 
 **Automatic fails (score 0):**
+
 - Generic opener: "In today's fast-paced world..."
 - Hollow superlatives: "world-class", "cutting-edge", "game-changing" (unless in brand vocabulary)
 - Passive voice overuse (>20% of sentences)
@@ -87,6 +93,7 @@ Compare key messages against `dna.usp`, `dna.keyBenefits`, and `dna.differentiat
 ### 4. Platform Appropriateness (15%)
 
 If platform is known, check against platform rules in `platform-content-adaptor` skill:
+
 - Length within platform limits
 - Hashtag count appropriate
 - Format correct (thread vs single, portrait vs landscape reference)
@@ -101,12 +108,12 @@ If platform is known, check against platform rules in `platform-content-adaptor`
 
 ## Scoring Thresholds
 
-| Score | Verdict | Action |
-|-------|---------|--------|
-| 85–100 | ✅ PASS | Ready to publish |
-| 70–84 | ⚠️ CONDITIONAL | Minor tweaks recommended |
-| 50–69 | 🔶 REVISE | Specific rewrites needed before publishing |
-| 0–49 | ❌ FAIL | Significant brand misalignment — regenerate |
+| Score  | Verdict        | Action                                      |
+| ------ | -------------- | ------------------------------------------- |
+| 85–100 | ✅ PASS        | Ready to publish                            |
+| 70–84  | ⚠️ CONDITIONAL | Minor tweaks recommended                    |
+| 50–69  | 🔶 REVISE      | Specific rewrites needed before publishing  |
+| 0–49   | ❌ FAIL        | Significant brand misalignment — regenerate |
 
 ## Output Format
 
@@ -155,3 +162,28 @@ Apply brand dimension scoring via LLM call using the Business DNA as context.
 - Content scorer: `lib/ai/content-scorer.ts`
 - Persona system: `lib/ai/content-generator.ts` (personaId + system prompt)
 - Brand profile: `app/dashboard/settings/brand-profile`
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** output vague brand feedback: "this sounds on-brand", "good feel",
+"consistent with your voice", "aligns with your brand values". This feedback
+is useless — it cannot be acted on. Never approve content that contains
+anti-pattern phrases from content-standards.md without flagging them.
+
+**INSTEAD** every consistency check produces a structured score:
+
+BRAND CONSISTENCY REPORT
+─────────────────────────
+Vocabulary match: [X]% — [N] DNA words used, [N] missing from expected set
+Anti-patterns found: [N] — [list each phrase explicitly]
+CTA quality: [Pass/Fail] — [exact CTA text] → names action: [Y/N] + benefit: [Y/N]
+Tone match: [X]/10 — [specific description of what's aligned and what isn't]
+Overall: [Pass ≥7/10 / Revise <7/10]
+
+Specific fixes:
+
+- Line [N]: Replace "[exact phrase]" → "[suggested replacement]"
+
+**REFERENCE** `.claude/skills/synthex-standards/references/content-standards.md`
