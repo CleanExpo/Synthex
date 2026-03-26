@@ -1,21 +1,29 @@
 ---
 name: code-review
 description: >-
-  Automated code quality analyzer for SYNTHEX. Enforces coding standards,
-  catches regressions, and ensures adherence to architectural patterns and
-  security requirements. Use when reviewing PRs, analyzing code quality,
-  checking security vulnerabilities, or validating CLAUDE.md standards.
+  Synthex code quality enforcer. NEVER flag Synthex conventions as bugs
+  (Australian English, Supabase-only auth, SWR with credentials:'include',
+  selective error boundaries). NEVER suggest Redux, Zustand, tRPC, or any
+  pattern absent from this codebase. ALWAYS enforce: useRouter from
+  next/navigation, no window.location.href, SWR for client data fetching,
+  { error: string } response shape. Activate on ANY request to review code,
+  audit a PR, check a component, or validate an implementation.
 metadata:
   author: synthex
-  version: "2.0"
+  version: '2.0'
   engine: synthex-ai-agency
-  type: quality-skill
+  type: capability-uplift-code
   triggers:
     - code review
     - pr review
     - quality check
     - security scan
     - standards check
+    - review code
+    - code audit
+    - pr review
+    - check implementation
+    - validate code
 ---
 
 # Code Review Agent
@@ -30,6 +38,7 @@ and standards enforcement.
 ## When to Use
 
 Activate this skill when:
+
 - Reviewing pull requests or code changes
 - Analyzing code quality across files or directories
 - Checking for security vulnerabilities in code
@@ -68,31 +77,31 @@ Activate this skill when:
 
 ## Input Specification
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| target | string | yes | File path, directory, or PR number |
-| scope | string | no | `security`, `performance`, `standards`, `full` (default: `full`) |
+| Parameter | Type   | Required | Description                                                      |
+| --------- | ------ | -------- | ---------------------------------------------------------------- |
+| target    | string | yes      | File path, directory, or PR number                               |
+| scope     | string | no       | `security`, `performance`, `standards`, `full` (default: `full`) |
 
 ## Output Specification
 
-| Field | Type | Description |
-|-------|------|-------------|
-| file | string | File path reviewed |
-| severity | critical/warning/info | Issue severity |
-| category | string | security/performance/standards/pattern |
-| description | string | Issue description |
-| suggestion | string | Recommended fix |
-| line | number | Line number (if applicable) |
+| Field       | Type                  | Description                            |
+| ----------- | --------------------- | -------------------------------------- |
+| file        | string                | File path reviewed                     |
+| severity    | critical/warning/info | Issue severity                         |
+| category    | string                | security/performance/standards/pattern |
+| description | string                | Issue description                      |
+| suggestion  | string                | Recommended fix                        |
+| line        | number                | Line number (if applicable)            |
 
 ## Error Handling
 
-| Error | Action |
-|-------|--------|
-| Binary file encountered | Skip with info message |
-| File too large (>5000 lines) | Warn and review in chunks |
-| Corrupted/unreadable file | Log error, skip file |
-| Lint/typecheck crash | Report tool failure, continue manual review |
-| PR not found | Report clear error with correct PR format |
+| Error                        | Action                                      |
+| ---------------------------- | ------------------------------------------- |
+| Binary file encountered      | Skip with info message                      |
+| File too large (>5000 lines) | Warn and review in chunks                   |
+| Corrupted/unreadable file    | Log error, skip file                        |
+| Lint/typecheck crash         | Report tool failure, continue manual review |
+| PR not found                 | Report clear error with correct PR format   |
 
 ## Review Checklist
 
@@ -126,3 +135,26 @@ pnpm turbo run type-check lint test  # Run all checks
 - Works with **api-testing** for endpoint coverage
 - Coordinates with **database-prisma** for query optimisation
 - Reports to **ui-ux** for component standards
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** apply generic clean code principles that contradict Synthex conventions.
+Australian English spellings are correct. Supabase-only auth is correct.
+SWR with `credentials: 'include'` is correct. Don't flag these as issues.
+
+**INSTEAD** reviews enforce Synthex-specific patterns:
+
+- `useRouter` from `next/navigation` (never `next/router`, never `window.location.href`)
+- SWR for all client-side data fetching with `credentials: 'include'` fetcher
+- `{ error: string, details?: unknown }` for all 4xx responses
+- `{ organizationId }` filter on every Prisma query
+- Zod `safeParse` (not `parse`) on all mutation inputs
+- `getUserIdFromRequestOrCookies` (not any other auth helper)
+
+Blockers: security issues (missing auth/org-scope), runtime errors.
+Warnings: code quality (any types, silent catches, missing error shape).
+Suggestions: improvements that don't change behaviour.
+
+**REFERENCE** `.claude/skills/synthex-standards/references/code-standards.md`
