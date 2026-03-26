@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="fb-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <circle cx="25.5" cy="25.5" r="20" fill="rgba(0,0,0,0.3)"/>
+  <circle cx="24" cy="24" r="20" fill="url(#fb-grad)"/>
+  <path d="M28 12h-4a6 6 0 0 0-6 6v4h-4v6h4v14h6V28h4l1-6h-5v-4a1 1 0 0 1 1-1h4z" fill="white"/>
+  <path d="M6 14A20 20 0 0 1 22 5" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="yt-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f87171"/>
+      <stop offset="100%" stop-color="#b91c1c"/>
+    </linearGradient>
+  </defs>
+  <!-- shadow -->
+  <rect x="5.5" y="13.5" width="37" height="23" rx="8" fill="rgba(0,0,0,0.3)"/>
+  <!-- base -->
+  <rect x="4" y="12" width="37" height="23" rx="8" fill="url(#yt-grad)"/>
+  <!-- play triangle shadow -->
+  <path d="M21.5 19.5l13 7.5-13 7.5z" fill="rgba(0,0,0,0.25)"/>
+  <!-- play triangle -->
+  <path d="M20 18l13 7.5-13 7.5z" fill="white"/>
+  <!-- highlight -->
+  <path d="M4 18a8 8 0 0 1 8-6h24a8 8 0 0 1 5 2" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
