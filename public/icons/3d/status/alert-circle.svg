@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="err-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f87171"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+    <linearGradient id="err-hl" x1="0%" y1="0%" x2="50%" y2="50%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.2)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+  </defs>
+  <!-- shadow -->
+  <circle cx="25.5" cy="25.5" r="18" fill="rgba(0,0,0,0.3)"/>
+  <!-- base -->
+  <circle cx="24" cy="24" r="18" fill="url(#err-grad)"/>
+  <!-- highlight arc -->
+  <path d="M12 18A18 18 0 0 1 30 7" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3" stroke-linecap="round"/>
+  <!-- exclamation -->
+  <rect x="22" y="13" width="4" height="14" rx="2" fill="white"/>
+  <circle cx="24" cy="33" r="2.5" fill="white"/>
+</svg>

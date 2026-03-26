@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="feat-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+  <!-- shadow -->
+  <path d="M9 24l10 10 20-20" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" transform="translate(1.5,1.5)"/>
+  <!-- base check -->
+  <path d="M9 24l10 10 20-20" fill="none" stroke="url(#feat-grad)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- highlight -->
+  <path d="M9 24l10 10 20-20" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

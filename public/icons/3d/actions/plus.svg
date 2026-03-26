@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="feat-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- shadow -->
+  <rect x="21" y="9.5" width="7" height="30" rx="3.5" fill="rgba(0,0,0,0.3)"/>
+  <rect x="9.5" y="21" width="30" height="7" rx="3.5" fill="rgba(0,0,0,0.3)"/>
+  <!-- base -->
+  <rect x="20" y="8" width="7" height="30" rx="3.5" fill="url(#feat-grad)"/>
+  <rect x="8" y="20" width="30" height="7" rx="3.5" fill="url(#feat-grad)"/>
+  <!-- highlights -->
+  <rect x="20" y="8" width="7" height="3" rx="3" fill="rgba(255,255,255,0.25)"/>
+  <rect x="8" y="20" width="30" height="2.5" rx="1.25" fill="rgba(255,255,255,0.15)"/>
+</svg>

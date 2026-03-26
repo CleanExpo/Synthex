@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="feat-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- shadow pencil body -->
+  <path d="M32 8l8 8-22 22H10v-8z" fill="rgba(0,0,0,0.3)" transform="translate(1.5,1.5)"/>
+  <!-- pencil body -->
+  <path d="M32 8l8 8-22 22H10v-8z" fill="url(#feat-grad)"/>
+  <!-- pencil tip -->
+  <path d="M10 38l4-4v4z" fill="#ea580c"/>
+  <!-- eraser end -->
+  <path d="M32 8l4-4 8 8-4 4z" fill="#fed7aa"/>
+  <!-- shine on body -->
+  <path d="M32 8l8 8-3 3-8-8z" fill="rgba(255,255,255,0.2)"/>
+</svg>
