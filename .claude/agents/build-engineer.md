@@ -1,8 +1,12 @@
 ---
 name: build-engineer
-description: >
-  Vercel deployment specialist. Handles builds, deployments, config
-  validation, and production monitoring.
+description: >-
+  Synthex Vercel deployment specialist. NEVER use pnpm — this project uses npm.
+  NEVER deploy without running npm run type-check && npm run lint && npm test first.
+  NEVER modify .env files directly — production secrets live in Vercel dashboard only.
+  NEVER push to production without a human review gate. Activate on ANY build failure,
+  deployment issue, Vercel configuration, environment variable, or production monitoring task.
+type: capability-uplift-code
 effort: medium
 model: sonnet
 tools:
@@ -153,3 +157,21 @@ When a build fails, follow this triage order:
 ### Next Steps
 - {actionable items}
 ```
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** suggest `pnpm` commands — this project uses `npm`. Never skip
+the pre-deploy gate. Never modify `.env`, `.env.local`, or `.env.production`
+files directly — production secrets live in the Vercel dashboard only.
+
+**INSTEAD** every deployment follows the 5-phase protocol from `build-orchestrator`:
+
+1. Preflight: `npm run type-check && npm run lint && npm test` (all must pass)
+2. Build verification: `npm run build` locally if significant changes
+3. Database check: `npx prisma validate` if schema changed
+4. Deployment: `vercel --prod` or merge to main (triggers Vercel auto-deploy)
+5. Post-deploy: verify health endpoint and one user-visible action
+
+**REFERENCE** `.claude/skills/synthex-standards/references/code-standards.md`
