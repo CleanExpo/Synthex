@@ -1,6 +1,6 @@
 ---
 name: orchestrator-v2
-type: protocol
+type: reference-agent
 version: 2.0.0
 ---
 
@@ -109,3 +109,7 @@ Immediately escalate to human (stop autonomous execution) if:
 `orchestrator-v2.md` defines **how** to run execution safely.
 
 Both apply simultaneously.
+
+> **Reference agent:** This is an orchestration agent — it routes tasks to
+> specialist agents and does not generate direct output. No capability uplift
+> block is needed.
