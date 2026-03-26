@@ -243,3 +243,4 @@ vercel-deploy2.txt
 # Codex agent cache — fetched on demand, not committed
 .claude/agents/codex/*.md
 !.claude/agents/codex/CATALOGUE.md
+!.claude/agents/codex/security-auditor.md
