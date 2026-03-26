@@ -483,7 +483,7 @@ git add .claude/skills/synthex-standards/
 git commit -m "feat(skills): synthex-standards shared uplift reference layer"
 ```
 
-Expected: 5 files changed, 5 insertions, 0 deletions.
+Expected: 5 files changed, 0 deletions (insertions count will reflect full file sizes).
 
 - [ ] **Step 8: Sprint 1 boundary — verify clean**
 
@@ -1695,6 +1695,7 @@ fetching in client components uses SWR. The layer rule is non-negotiable.
 - [ ] **Step 2: Verify only insertions, then commit**
 
 ```bash
+git diff --stat .claude/agents/code-architect.md
 git add .claude/agents/code-architect.md
 git commit -m "feat(agents): uplift code-architect — enforce Synthex layer rule and existing patterns only"
 ```
