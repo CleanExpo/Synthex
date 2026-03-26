@@ -7,6 +7,7 @@ description: >
   Use when user says "scan project", "audit dependencies", "check codebase",
   "architecture map", "security scan", or "code health".
 type: reference-skill
+context: fork
 ---
 
 # Project Scanner & Codebase Auditor

@@ -25,6 +25,7 @@ metadata:
     - layer
     - structure
     - new system
+context: fork
 ---
 
 # Architecture Enforcer — Pattern Consistency Guard

@@ -27,6 +27,7 @@ metadata:
     - plan posts
     - schedule content
     - content strategy
+context: fork
 ---
 
 # Campaign Planner

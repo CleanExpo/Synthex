@@ -27,6 +27,7 @@ metadata:
     - injection
     - ssrf
     - csrf
+context: fork
 ---
 
 # Security Hardener — Security Posture Enforcer

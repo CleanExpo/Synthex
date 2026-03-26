@@ -23,6 +23,7 @@ metadata:
   requires:
     - google-business-profile
     - google-search-console
+context: fork
 ---
 
 # Competitive Local Strategy — Analysis, Benchmarking, and Displacement

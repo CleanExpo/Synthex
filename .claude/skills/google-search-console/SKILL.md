@@ -21,6 +21,7 @@ metadata:
     - URL inspection
   requires:
     - google-updates-sentinel
+context: fork
 ---
 
 # Google Search Console — Data Interpretation and Diagnostics

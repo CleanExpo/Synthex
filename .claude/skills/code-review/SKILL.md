@@ -24,6 +24,7 @@ metadata:
     - pr review
     - check implementation
     - validate code
+context: fork
 ---
 
 # Code Review Agent

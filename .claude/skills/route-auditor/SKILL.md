@@ -25,6 +25,7 @@ metadata:
     - security scan
     - endpoint review
     - auth check
+context: fork
 ---
 
 # Route Auditor — API Route Compliance Scanner

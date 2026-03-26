@@ -6,6 +6,7 @@ description: >-
   Use when a model call fails, a retirement is imminent, or any feature
   hardcodes a model name.
 type: reference-skill
+context: fork
 ---
 
 # Scout — AI Provider & Model Monitor

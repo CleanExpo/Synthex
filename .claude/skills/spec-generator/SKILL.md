@@ -7,6 +7,7 @@ description: >
   are written to `.claude/specs/`. Includes detection logic to intercept
   implementation tasks that lack a spec.
 type: reference-skill
+context: fork
 ---
 
 # Specification Generator

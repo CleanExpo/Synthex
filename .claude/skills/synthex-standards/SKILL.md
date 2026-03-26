@@ -33,6 +33,7 @@ metadata:
     - styling
     - image
     - prompt
+context: fork
 ---
 
 # Synthex Standards — Capability Uplift Master Reference

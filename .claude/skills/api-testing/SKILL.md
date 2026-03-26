@@ -24,6 +24,7 @@ metadata:
     - integration test
   requires:
     - code-review
+context: fork
 ---
 
 # API Testing Agent

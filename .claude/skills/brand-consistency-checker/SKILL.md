@@ -25,6 +25,7 @@ metadata:
     - check brand
     - voice check
     - brand alignment
+context: fork
 ---
 
 # Brand Consistency Checker

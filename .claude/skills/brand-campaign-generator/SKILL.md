@@ -26,6 +26,7 @@ metadata:
     - generate posts
     - social content
     - launch content
+context: fork
 ---
 
 # Brand Campaign Generator

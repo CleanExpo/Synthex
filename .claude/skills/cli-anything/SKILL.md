@@ -26,6 +26,7 @@ metadata:
   requires:
     - content-pipeline
     - build-orchestrator
+context: fork
 ---
 
 ## Purpose

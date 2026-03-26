@@ -25,6 +25,7 @@ metadata:
     - google-business-profile
     - competitive-local-strategy
     - google-updates-sentinel
+context: fork
 ---
 
 # Local SEO Agent — Unified Local Search Strategy

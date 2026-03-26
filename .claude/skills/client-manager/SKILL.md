@@ -6,6 +6,7 @@ description: >
   API usage. Use when user says "create campaign", "list campaigns", "update
   post", "delete project", "client data", or "manage analytics".
 type: reference-skill
+context: fork
 ---
 
 # Client & Campaign Data Manager

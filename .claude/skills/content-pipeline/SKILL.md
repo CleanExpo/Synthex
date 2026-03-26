@@ -21,6 +21,7 @@ metadata:
     - content scoring
     - model registry
     - content repurpose
+context: fork
 ---
 
 # Content Pipeline — AI Content Generation Guide

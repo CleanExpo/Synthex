@@ -20,6 +20,7 @@ metadata:
     - local pack
     - NAP consistency
     - business categories
+context: fork
 ---
 
 # Google Business Profile — Listing Optimisation and Local Pack Strategy

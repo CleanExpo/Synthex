@@ -27,6 +27,7 @@ metadata:
     - distribute
     - repurpose
     - platform version
+context: fork
 ---
 
 # Platform Content Adaptor

@@ -28,6 +28,7 @@ metadata:
     - db change
   requires:
     - database/migrations.skill.md
+context: fork
 ---
 
 # Database Operations Agent

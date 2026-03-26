@@ -28,6 +28,7 @@ metadata:
     - generate image
     - image generation
     - photography brief
+context: fork
 ---
 
 # Visual Content Brief

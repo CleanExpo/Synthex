@@ -16,6 +16,7 @@ metadata:
     - rls audit
     - index optimization
     - supabase security
+context: fork
 ---
 
 # SQL Cleanup & Security Hardening Skill

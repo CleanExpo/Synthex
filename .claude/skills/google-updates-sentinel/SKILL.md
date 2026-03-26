@@ -23,6 +23,7 @@ metadata:
     - algorithm recovery
   requires:
     - google-search-console
+context: fork
 ---
 
 # Google Updates Sentinel — Algorithm Monitoring and Recovery

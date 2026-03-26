@@ -28,6 +28,7 @@ metadata:
     - persona
     - dna
     - website analysis
+context: fork
 ---
 
 # Business DNA — Brand Profile Extraction

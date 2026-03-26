@@ -20,6 +20,7 @@ metadata:
     - owner check
     - pkce
     - oauth flow
+context: fork
 ---
 
 # Auth Patterns — Authentication & Authorisation Guide

@@ -27,6 +27,7 @@ metadata:
     - page check
   requires:
     - api-testing
+context: fork
 ---
 
 # UI Review Agent

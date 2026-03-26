@@ -6,6 +6,7 @@ description: >
   Use when deploying to production, running build pipelines, or diagnosing
   deployment failures. Phases: PREFLIGHT, BUILD, DEPLOY, VERIFY, MONITOR.
 type: reference-skill
+context: fork
 ---
 
 # Build & Deployment Orchestrator

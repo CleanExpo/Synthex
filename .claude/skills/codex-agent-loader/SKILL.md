@@ -13,6 +13,7 @@ metadata:
     - install agent
     - specialist agent
     - awesome-codex
+context: fork
 ---
 
 # Codex Agent Loader
