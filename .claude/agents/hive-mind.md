@@ -4,6 +4,7 @@ description: >
   Synthex project orchestrator. Routes complex multi-step tasks to the correct
   specialist agents. Knows the Synthex codebase structure, planning workflow,
   and Linear MCP integration. Use for tasks spanning multiple phases or agents.
+type: reference-agent
 effort: high
 model: opus
 memory: project
@@ -166,3 +167,7 @@ Files changed: [count and key files]
 Verification: [qa-sentinel / senior-reviewer sign-off or pending]
 Next action: [what comes next in the roadmap]
 ```
+
+> **Reference agent:** This is an orchestration agent — it routes tasks to
+> specialist agents and does not generate direct output. No capability uplift
+> block is needed.
