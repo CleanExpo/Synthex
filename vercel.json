@@ -200,6 +200,10 @@
     {
       "path": "/api/cron/model-scout",
       "schedule": "0 23 * * 0"
+    },
+    {
+      "path": "/api/cron/health-check",
+      "schedule": "*/5 * * * *"
     }
   ]
 }
