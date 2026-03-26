@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="nav-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <!-- shadow -->
+  <path d="M11 17l13 13 13-13" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" transform="translate(1,2)"/>
+  <!-- base chevron -->
+  <path d="M11 17l13 13 13-13" fill="none" stroke="url(#nav-grad)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- highlight on top edge -->
+  <path d="M11 17l13 13 13-13" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

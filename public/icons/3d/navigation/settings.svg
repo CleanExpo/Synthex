@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="nav-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="nav-hl" x1="0%" y1="0%" x2="50%" y2="50%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.2)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+  </defs>
+  <!-- shadow gear -->
+  <path d="M20.5 8h7l1 4.5c1.2.5 2.3 1.1 3.3 1.9l4.3-1.6 4.9 5-2 4.1c.3 1.1.4 2.2.3 3.3l4.1 2.4-2 6.4-4.5-.5c-.8 1-1.7 1.8-2.8 2.5l.5 4.5h-7l-1-4.5c-1.2-.5-2.3-1.1-3.3-1.9l-4.3 1.6-4.9-5 2-4.1c-.3-1.1-.4-2.2-.3-3.3l-4.1-2.4 2-6.4 4.5.5c.8-1 1.7-1.8 2.8-2.5z" fill="rgba(0,0,0,0.3)" transform="translate(1,1.5)"/>
+  <!-- base gear -->
+  <path d="M20.5 8h7l1 4.5c1.2.5 2.3 1.1 3.3 1.9l4.3-1.6 4.9 5-2 4.1c.3 1.1.4 2.2.3 3.3l4.1 2.4-2 6.4-4.5-.5c-.8 1-1.7 1.8-2.8 2.5l.5 4.5h-7l-1-4.5c-1.2-.5-2.3-1.1-3.3-1.9l-4.3 1.6-4.9-5 2-4.1c-.3-1.1-.4-2.2-.3-3.3l-4.1-2.4 2-6.4 4.5.5c.8-1 1.7-1.8 2.8-2.5z" fill="url(#nav-grad)"/>
+  <!-- center hole -->
+  <circle cx="24" cy="24" r="5" fill="#0f172a"/>
+  <!-- highlight arc -->
+  <path d="M20.5 8h7l0.5 2.2A14 14 0 0 0 14 20l-2.8-.3 2-6.4 4.5.5c.8-1 1.7-1.8 2.8-2.5z" fill="url(#nav-hl)"/>
+</svg>
