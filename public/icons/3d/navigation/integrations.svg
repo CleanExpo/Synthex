@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="integrationsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <!-- Left circle shadow -->
+  <circle cx="12" cy="24" r="9" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Right circle shadow -->
+  <circle cx="36" cy="24" r="9" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Bridge/connector shadow -->
+  <rect x="18" y="21" width="12" height="6" rx="3" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Node shadows -->
+  <circle cx="24" cy="24" r="4" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+
+  <!-- Left circle -->
+  <circle cx="12" cy="24" r="9" fill="url(#integrationsGrad)"/>
+  <!-- Right circle -->
+  <circle cx="36" cy="24" r="9" fill="url(#integrationsGrad)"/>
+  <!-- Bridge connector -->
+  <rect x="18" y="21" width="12" height="6" rx="3" fill="url(#integrationsGrad)"/>
+  <!-- Centre node (on top) -->
+  <circle cx="24" cy="24" r="4" fill="url(#integrationsGrad)"/>
+  <!-- Centre node ring highlight -->
+  <circle cx="24" cy="24" r="4" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+
+  <!-- Highlights -->
+  <ellipse cx="8" cy="20" rx="4" ry="3" fill="rgba(255,255,255,0.22)"/>
+  <ellipse cx="32" cy="20" rx="4" ry="3" fill="rgba(255,255,255,0.22)"/>
+  <ellipse cx="23" cy="22" rx="2" ry="1.5" fill="rgba(255,255,255,0.28)"/>
+</svg>

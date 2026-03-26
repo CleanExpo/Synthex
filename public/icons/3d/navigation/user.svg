@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="userGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <!-- Body/shoulders shadow -->
+  <path d="M8 44c0-8.8 7.2-16 16-16s16 7.2 16 16z" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Head shadow -->
+  <circle cx="24" cy="16" r="10" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Head -->
+  <circle cx="24" cy="16" r="10" fill="url(#userGrad)"/>
+  <!-- Body / shoulders arc -->
+  <path d="M8 44c0-8.8 7.2-16 16-16s16 7.2 16 16z" fill="url(#userGrad)"/>
+  <!-- Head highlight -->
+  <ellipse cx="19" cy="11" rx="6" ry="4" fill="rgba(255,255,255,0.22)"/>
+  <!-- Shoulder highlight -->
+  <path d="M8 44c0-4 2.5-7.5 6-10a16 16 0 0 0-6 10z" fill="rgba(255,255,255,0.15)"/>
+</svg>

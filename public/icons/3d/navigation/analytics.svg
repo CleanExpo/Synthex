@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="analyticsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadows -->
+  <rect x="7" y="28" width="9" height="14" rx="2" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <rect x="19" y="18" width="9" height="24" rx="2" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <rect x="31" y="8" width="9" height="34" rx="2" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Baseline -->
+  <rect x="5" y="43" width="38" height="2" rx="1" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Bar 1 (short) -->
+  <rect x="7" y="28" width="9" height="14" rx="2" fill="url(#analyticsGrad)"/>
+  <!-- Bar 2 (medium) -->
+  <rect x="19" y="18" width="9" height="24" rx="2" fill="url(#analyticsGrad)"/>
+  <!-- Bar 3 (tall) -->
+  <rect x="31" y="8" width="9" height="34" rx="2" fill="url(#analyticsGrad)"/>
+  <!-- Baseline -->
+  <rect x="5" y="43" width="38" height="2" rx="1" fill="url(#analyticsGrad)"/>
+  <!-- Highlights -->
+  <rect x="7" y="28" width="5" height="6" rx="2" fill="rgba(255,255,255,0.22)"/>
+  <rect x="19" y="18" width="5" height="6" rx="2" fill="rgba(255,255,255,0.22)"/>
+  <rect x="31" y="8" width="5" height="6" rx="2" fill="rgba(255,255,255,0.22)"/>
+</svg>

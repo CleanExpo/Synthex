@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="scheduleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <!-- Calendar shadow -->
+  <rect x="4" y="7" width="28" height="30" rx="3" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Clock shadow -->
+  <circle cx="34" cy="34" r="10" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Calendar body -->
+  <rect x="4" y="7" width="28" height="30" rx="3" fill="url(#scheduleGrad)"/>
+  <!-- Calendar header bar -->
+  <rect x="4" y="7" width="28" height="10" rx="3" fill="rgba(0,0,0,0.2)"/>
+  <!-- Calendar tabs -->
+  <rect x="11" y="3" width="4" height="8" rx="2" fill="url(#scheduleGrad)"/>
+  <rect x="21" y="3" width="4" height="8" rx="2" fill="url(#scheduleGrad)"/>
+  <!-- Calendar grid dots -->
+  <rect x="8" y="22" width="5" height="4" rx="1" fill="rgba(255,255,255,0.28)"/>
+  <rect x="16" y="22" width="5" height="4" rx="1" fill="rgba(255,255,255,0.28)"/>
+  <rect x="8" y="29" width="5" height="4" rx="1" fill="rgba(255,255,255,0.28)"/>
+  <rect x="16" y="29" width="5" height="4" rx="1" fill="rgba(255,255,255,0.4)"/>
+  <!-- Calendar header highlight -->
+  <rect x="4" y="7" width="16" height="5" rx="3" fill="rgba(255,255,255,0.18)"/>
+  <!-- Clock face -->
+  <circle cx="34" cy="34" r="10" fill="url(#scheduleGrad)"/>
+  <!-- Clock highlight -->
+  <ellipse cx="30" cy="30" rx="5" ry="3" fill="rgba(255,255,255,0.22)"/>
+  <!-- Clock hands -->
+  <line x1="34" y1="34" x2="34" y2="27" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round"/>
+  <line x1="34" y1="34" x2="39" y2="36" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round"/>
+  <!-- Clock centre dot -->
+  <circle cx="34" cy="34" r="1.5" fill="rgba(255,255,255,0.9)"/>
+</svg>
