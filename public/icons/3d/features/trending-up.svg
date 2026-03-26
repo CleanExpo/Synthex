@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="trendingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow -->
+  <polyline points="6,36 18,22 27,29 42,12" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" transform="translate(1.5,1.5)"/>
+  <polyline points="33,12 42,12 42,21" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" transform="translate(1.5,1.5)"/>
+  <!-- Main line -->
+  <polyline points="6,36 18,22 27,29 42,12" fill="none" stroke="url(#trendingGrad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="33,12 42,12 42,21" fill="none" stroke="url(#trendingGrad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Highlight -->
+  <ellipse cx="20" cy="16" rx="8" ry="4" fill="rgba(255,255,255,0.18)" transform="rotate(-35,20,16)"/>
+</svg>

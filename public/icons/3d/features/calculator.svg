@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="calculatorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow -->
+  <rect x="10" y="5" width="28" height="38" rx="3" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Main body -->
+  <rect x="10" y="5" width="28" height="38" rx="3" fill="url(#calculatorGrad)"/>
+  <!-- Display -->
+  <rect x="14" y="9" width="20" height="9" rx="1.5" fill="rgba(0,0,0,0.25)"/>
+  <!-- Display number lines -->
+  <rect x="24" y="11" width="8" height="2" rx="1" fill="rgba(255,255,255,0.35)"/>
+  <rect x="24" y="14" width="6" height="2" rx="1" fill="rgba(255,255,255,0.35)"/>
+  <!-- Button grid 3x4 -->
+  <rect x="13" y="22" width="6" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
+  <rect x="21" y="22" width="6" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
+  <rect x="29" y="22" width="6" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
+  <rect x="13" y="29" width="6" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
+  <rect x="21" y="29" width="6" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
+  <rect x="29" y="29" width="6" height="5" rx="1" fill="rgba(0,0,0,0.15)"/>
+  <rect x="13" y="36" width="14" height="5" rx="1" fill="rgba(255,255,255,0.3)"/>
+  <rect x="29" y="36" width="6" height="5" rx="1" fill="rgba(0,0,0,0.15)"/>
+  <!-- Highlight -->
+  <rect x="10" y="5" width="16" height="12" rx="3" fill="rgba(255,255,255,0.18)"/>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="lightbulbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow -->
+  <path d="M24 6a13 13 0 0 1 9 22c-1.5 1.5-2 3-2 5H17c0-2-0.5-3.5-2-5A13 13 0 0 1 24 6z" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <rect x="19" y="35" width="10" height="2.5" rx="1" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <rect x="20" y="39" width="8" height="2.5" rx="1.2" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Main bulb -->
+  <path d="M24 6a13 13 0 0 1 9 22c-1.5 1.5-2 3-2 5H17c0-2-0.5-3.5-2-5A13 13 0 0 1 24 6z" fill="url(#lightbulbGrad)"/>
+  <!-- Base lines -->
+  <rect x="19" y="35" width="10" height="2.5" rx="1" fill="url(#lightbulbGrad)"/>
+  <rect x="20" y="39" width="8" height="2.5" rx="1.2" fill="url(#lightbulbGrad)"/>
+  <!-- Highlight -->
+  <ellipse cx="19" cy="14" rx="5" ry="6" fill="rgba(255,255,255,0.18)"/>
+</svg>

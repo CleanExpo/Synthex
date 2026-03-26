@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="filesGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow back doc -->
+  <path d="M16 6h18l6 6v28a2 2 0 0 1-2 2H16a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Shadow front doc -->
+  <path d="M8 12h18l6 6v24a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V14a2 2 0 0 1 2-2z" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Back document -->
+  <path d="M16 6h18l6 6v28a2 2 0 0 1-2 2H16a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" fill="url(#filesGrad)" opacity="0.6"/>
+  <path d="M34 6l6 6h-6z" fill="rgba(0,0,0,0.2)"/>
+  <!-- Front document -->
+  <path d="M8 12h18l6 6v24a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V14a2 2 0 0 1 2-2z" fill="url(#filesGrad)"/>
+  <path d="M26 12l6 6h-6z" fill="rgba(0,0,0,0.2)"/>
+  <!-- Lines on front doc -->
+  <rect x="11" y="24" width="14" height="2" rx="1" fill="rgba(255,255,255,0.35)"/>
+  <rect x="11" y="29" width="14" height="2" rx="1" fill="rgba(255,255,255,0.35)"/>
+  <rect x="11" y="34" width="10" height="2" rx="1" fill="rgba(255,255,255,0.35)"/>
+  <!-- Highlight on front doc -->
+  <path d="M8 12h18l6 6H26l-6-6H8v8z" fill="rgba(255,255,255,0.18)"/>
+</svg>

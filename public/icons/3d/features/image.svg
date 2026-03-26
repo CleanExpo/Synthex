@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="imageGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow -->
+  <rect x="5" y="8" width="38" height="32" rx="3" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Main frame -->
+  <rect x="5" y="8" width="38" height="32" rx="3" fill="url(#imageGrad)"/>
+  <!-- Sky area (lighter) -->
+  <rect x="5" y="8" width="38" height="16" rx="3" fill="rgba(255,255,255,0.15)"/>
+  <!-- Mountain shape -->
+  <polygon points="10,36 22,20 30,28 36,22 43,36" fill="rgba(0,0,0,0.2)"/>
+  <!-- Sun circle -->
+  <circle cx="36" cy="17" r="5" fill="rgba(255,255,255,0.25)"/>
+  <!-- Highlight top-left -->
+  <rect x="5" y="8" width="18" height="8" rx="3" fill="rgba(255,255,255,0.18)"/>
+</svg>

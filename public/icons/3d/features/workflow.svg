@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="workflowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow circles -->
+  <circle cx="10" cy="24" r="7" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <circle cx="24" cy="10" r="7" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <circle cx="38" cy="24" r="7" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Shadow arrows -->
+  <line x1="17" y1="20" x2="27" y2="14" stroke="rgba(0,0,0,0.35)" stroke-width="2.5" stroke-linecap="round" transform="translate(1.5,1.5)"/>
+  <line x1="31" y1="14" x2="31" y2="20" stroke="rgba(0,0,0,0.35)" stroke-width="2.5" stroke-linecap="round" transform="translate(1.5,1.5)"/>
+  <!-- Arrow lines -->
+  <line x1="17" y1="20" x2="27" y2="14" stroke="url(#workflowGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="31" y1="14" x2="31" y2="20" stroke="url(#workflowGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Arrowheads -->
+  <polygon points="27,11 31,14 27,17" fill="url(#workflowGrad)"/>
+  <polygon points="28,20 31,24 34,20" fill="url(#workflowGrad)"/>
+  <!-- Main circles -->
+  <circle cx="10" cy="24" r="7" fill="url(#workflowGrad)"/>
+  <circle cx="24" cy="10" r="7" fill="url(#workflowGrad)"/>
+  <circle cx="38" cy="24" r="7" fill="url(#workflowGrad)"/>
+  <!-- Plus connector below -->
+  <circle cx="24" cy="38" r="5" fill="url(#workflowGrad)" opacity="0.7"/>
+  <line x1="24" y1="29" x2="24" y2="33" stroke="url(#workflowGrad)" stroke-width="2" stroke-linecap="round"/>
+  <!-- Highlights on circles -->
+  <ellipse cx="22" cy="7" rx="4" ry="2.5" fill="rgba(255,255,255,0.18)"/>
+  <ellipse cx="8" cy="21" rx="4" ry="2.5" fill="rgba(255,255,255,0.18)"/>
+  <ellipse cx="36" cy="21" rx="4" ry="2.5" fill="rgba(255,255,255,0.18)"/>
+</svg>
