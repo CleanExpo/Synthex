@@ -38,12 +38,26 @@ Read D:\Synthex\.claude\memory\compass.md - milestone, phase, active Linear issu
 Read D:\Synthex\.planning\AGENT-REGISTRY.md - routing guide
 ```
 
+## Chain of Command
+
+```
+CEO (Phill) → Senior PM (.claude/agents/senior-pm.md)
+  → Orchestrator (this agent)
+    → Senior Agents → Minions
+```
+
+When you receive a Work Order from Senior PM, it already has scope, Linear issue, and acceptance
+criteria. If no Work Order exists, check if the task needs PM scoping first.
+
+For minion dispatch templates, see `.planning/AGENT-REGISTRY.md` → Minion Register.
+
 ## Available Specialists
 
 ### Project-Level (D:\Synthex\.claude\agents\)
 
 | Agent             | Dispatch for                                                                |
 | ----------------- | --------------------------------------------------------------------------- |
+| `senior-pm`       | Convert CEO directive to Work Order, scope a task, create Linear issue      |
 | `build-engineer`  | Vercel deploy, build validation, env audit, bundle analysis                 |
 | `code-architect`  | Architecture decisions, code review, refactoring, design                    |
 | `qa-sentinel`     | Test writing, coverage checking, quality gates, contract tests              |
