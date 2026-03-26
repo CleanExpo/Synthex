@@ -1,16 +1,19 @@
 ---
 name: business-dna
 description: >-
-  Extracts a structured brand profile (Business DNA) from a website URL — colours,
-  typography, tone of voice, USP, target audience, and visual style. Powers all
-  campaign, visual, and consistency skills. Use when the user says "scan my website",
-  "extract brand DNA", "analyse my brand", "create a brand profile", or provides a URL
-  to extract brand identity from.
+  Synthex brand DNA extractor. NEVER produce surface-level brand descriptions
+  ("professional and friendly"), generic persona archetypes ("busy professional
+  aged 25–45"), or tone descriptions that could apply to any brand. ALWAYS
+  extract vocabulary the brand actually uses, describe what the brand explicitly
+  is NOT, and ground the audience in a specific outcome they are seeking.
+  Activate on ANY request to extract brand identity, build a DNA profile,
+  define a brand voice, analyse a website for brand signals, or create a
+  persona profile.
 metadata:
   author: synthex
-  version: "1.0"
+  version: '1.0'
   engine: synthex-ai-agency
-  type: workflow-skill
+  type: capability-uplift-content
   triggers:
     - scan website
     - brand DNA
@@ -20,6 +23,11 @@ metadata:
     - business identity
     - brand kit
     - pomelli
+    - brand identity
+    - brand voice
+    - persona
+    - dna
+    - website analysis
 ---
 
 # Business DNA — Brand Profile Extraction
@@ -50,34 +58,34 @@ interface BusinessDNA {
   brandName: string;
   tagline?: string;
   industry: string;
-  location?: string;           // For local SEO + tone
+  location?: string; // For local SEO + tone
 
   // Audience
-  targetAudience: string;      // "small business owners aged 35-55"
+  targetAudience: string; // "small business owners aged 35-55"
   audiencePainPoints: string[];
 
   // Voice
-  toneOfVoice: string[];       // e.g. ["professional", "direct", "approachable"]
-  vocabulary: string[];        // Brand-specific terms to always use
-  avoidWords: string[];        // Words/phrases to never use
+  toneOfVoice: string[]; // e.g. ["professional", "direct", "approachable"]
+  vocabulary: string[]; // Brand-specific terms to always use
+  avoidWords: string[]; // Words/phrases to never use
   languageStyle: 'formal' | 'casual' | 'technical' | 'conversational';
 
   // Visual
-  primaryColour: string;       // Hex — e.g. "#00F5FF"
-  secondaryColours: string[];  // Supporting palette
-  typography: string;          // Font family or description
-  imageStyle: string;          // e.g. "clean product shots on white"
+  primaryColour: string; // Hex — e.g. "#00F5FF"
+  secondaryColours: string[]; // Supporting palette
+  typography: string; // Font family or description
+  imageStyle: string; // e.g. "clean product shots on white"
   logoDescription?: string;
 
   // Value proposition
-  usp: string;                 // Single-sentence unique selling proposition
-  keyBenefits: string[];       // 3-5 core benefits
-  differentiators: string[];   // What makes them different
-  socialProof?: string;        // Credentials, awards, client counts
+  usp: string; // Single-sentence unique selling proposition
+  keyBenefits: string[]; // 3-5 core benefits
+  differentiators: string[]; // What makes them different
+  socialProof?: string; // Credentials, awards, client counts
 
   // Platforms
-  activePlatforms: string[];   // Detected social platforms
-  contentThemes: string[];     // Recurring content topics
+  activePlatforms: string[]; // Detected social platforms
+  contentThemes: string[]; // Recurring content topics
 }
 ```
 
@@ -139,9 +147,34 @@ Your Business DNA is locked in. What would you like to do next?
 
 ## Common Issues
 
-| Issue | Fix |
-|-------|-----|
-| Site blocks scraping | Ask user to paste homepage text or upload brand kit |
-| Colours not detected | Ask user to provide hex codes from their logo/website |
-| Tone unclear | Ask 3 quick questions: "formal or casual?", "educational or inspiring?", "local or national?" |
-| Missing audience | Ask: "Who is your ideal customer in one sentence?" |
+| Issue                | Fix                                                                                           |
+| -------------------- | --------------------------------------------------------------------------------------------- |
+| Site blocks scraping | Ask user to paste homepage text or upload brand kit                                           |
+| Colours not detected | Ask user to provide hex codes from their logo/website                                         |
+| Tone unclear         | Ask 3 quick questions: "formal or casual?", "educational or inspiring?", "local or national?" |
+| Missing audience     | Ask: "Who is your ideal customer in one sentence?"                                            |
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** describe a brand's tone as "professional and friendly" (every brand
+says this), produce a target audience as "busy professionals aged 25–45" (too
+generic to act on), or write brand values that sound like an MBA mission
+statement ("we deliver excellence through innovation").
+
+**INSTEAD** a high-quality Business DNA extraction includes:
+
+1. **Vocabulary the brand actually uses** — specific words and phrases pulled
+   verbatim from their website/materials, not inferred generics
+2. **What the brand is NOT** — explicit exclusions are as valuable as inclusions
+   ("never corporate-speak", "never aspirational fluff", "never discounts")
+3. **Audience defined by outcome** — not demographics, but what they're seeking:
+   - ✗ "Women aged 30–45 interested in wellness"
+   - ✓ "Mums who want to lose the baby weight without giving up wine on Friday"
+4. **Voice on a spectrum** — position on 3 axes:
+   - Formal ←→ Casual
+   - Serious ←→ Playful
+   - Broad ←→ Niche
+
+**REFERENCE** `.claude/skills/synthex-standards/references/content-standards.md`
