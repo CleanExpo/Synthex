@@ -181,6 +181,7 @@ export async function POST(request: NextRequest) {
                 platform: platforms.join(','),
                 status: 'active',
                 userId,
+                ...(organizationId ? { organizationId } : {}),
               },
             });
             txCampaignId = campaign.id;

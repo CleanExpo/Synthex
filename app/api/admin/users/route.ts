@@ -210,15 +210,19 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Enforce org scope: JWT-authenticated admins cannot mutate users from other orgs
-      if (
-        adminUser?.organizationId &&
-        targetUser.organizationId !== adminUser.organizationId
-      ) {
-        return NextResponse.json(
-          { error: 'Forbidden', message: 'User not in your organisation' },
-          { status: 403 }
-        );
+      // Enforce org scope: all admins (JWT or API-key) must stay within their org.
+      // When auth.userId is null (API-key path) adminUser is null — in that case we
+      // cannot verify org membership, so deny access to any org-scoped user.
+      if (targetUser.organizationId !== null) {
+        if (
+          !adminUser?.organizationId ||
+          targetUser.organizationId !== adminUser.organizationId
+        ) {
+          return NextResponse.json(
+            { error: 'Forbidden', message: 'User not in your organisation' },
+            { status: 403 }
+          );
+        }
       }
 
       // Prevent modifying superadmins
@@ -434,15 +438,19 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
-      // Enforce org scope: JWT-authenticated admins cannot mutate users from other orgs
-      if (
-        adminUser?.organizationId &&
-        targetUser.organizationId !== adminUser.organizationId
-      ) {
-        return NextResponse.json(
-          { error: 'Forbidden', message: 'User not in your organisation' },
-          { status: 403 }
-        );
+      // Enforce org scope: all admins (JWT or API-key) must stay within their org.
+      // When auth.userId is null (API-key path) adminUser is null — in that case we
+      // cannot verify org membership, so deny access to any org-scoped user.
+      if (targetUser.organizationId !== null) {
+        if (
+          !adminUser?.organizationId ||
+          targetUser.organizationId !== adminUser.organizationId
+        ) {
+          return NextResponse.json(
+            { error: 'Forbidden', message: 'User not in your organisation' },
+            { status: 403 }
+          );
+        }
       }
 
       // Prevent modifying superadmins
