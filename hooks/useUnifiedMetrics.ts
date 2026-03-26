@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import useSWR from 'swr';
 
 // ============================================================================
 // TYPES
@@ -58,22 +58,16 @@ export interface UseUnifiedMetricsOptions {
 }
 
 // ============================================================================
-// HELPERS
+// FETCHER
 // ============================================================================
 
-function getAuthHeaders(): HeadersInit {
-  if (typeof window === 'undefined') return { 'Content-Type': 'application/json' };
-
-  const token =
-    localStorage.getItem('auth_token') ||
-    sessionStorage.getItem('auth_token') ||
-    localStorage.getItem('token');
-
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return headers;
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const result = await res.json();
+  if (!result.success)
+    throw new Error(result.error || 'Failed to fetch metrics');
+  return result.data as T;
 }
 
 // ============================================================================
@@ -83,92 +77,26 @@ function getAuthHeaders(): HeadersInit {
 export function useUnifiedMetrics(options: UseUnifiedMetricsOptions = {}) {
   const { period = '30d', startDate, endDate } = options;
 
-  // State
-  const [data, setData] = useState<UnifiedMetrics | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const params = new URLSearchParams();
+  params.set('period', period);
+  if (startDate) params.set('startDate', startDate);
+  if (endDate) params.set('endDate', endDate);
 
-  // Refs
-  const mountedRef = useRef(true);
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  // Fetch metrics
-  const fetchMetrics = useCallback(async () => {
-    // Abort previous request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const params = new URLSearchParams();
-      params.set('period', period);
-      if (startDate) params.set('startDate', startDate);
-      if (endDate) params.set('endDate', endDate);
-
-      const response = await fetch(`/api/unified/metrics?${params.toString()}`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: getAuthHeaders(),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      if (result.success && mountedRef.current) {
-        setData(result.data);
-      } else if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch metrics');
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return;
-      }
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : String(err));
-      }
-    } finally {
-      if (mountedRef.current) {
-        setIsLoading(false);
-      }
-    }
-  }, [period, startDate, endDate]);
-
-  // Refetch function
-  const refetch = useCallback(async () => {
-    await fetchMetrics();
-  }, [fetchMetrics]);
-
-  // Initial fetch
-  useEffect(() => {
-    fetchMetrics();
-  }, [fetchMetrics]);
-
-  // Cleanup
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, []);
+  const { data, error, isLoading, mutate } = useSWR<UnifiedMetrics>(
+    `/api/unified/metrics?${params.toString()}`,
+    fetchJson,
+    { revalidateOnFocus: false }
+  );
 
   return {
-    data,
+    data: data ?? null,
     isLoading,
-    error,
-    refetch,
+    error: error
+      ? error instanceof Error
+        ? error.message
+        : String(error)
+      : null,
+    refetch: mutate,
   };
 }
 

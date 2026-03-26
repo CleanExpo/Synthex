@@ -4,13 +4,13 @@
  * @description Manages third-party integration state (Canva, Buffer, Zapier).
  * Provides connect, disconnect, refresh, and updateConfig actions.
  *
- * Uses raw fetch + useState pattern (no SWR/TanStack Query).
- * Follows the same pattern as hooks/use-report-templates.ts.
+ * Uses SWR for GET data fetching; mutations use direct fetch + mutate().
  */
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
+import useSWR from 'swr';
 
 // ============================================================================
 // TYPES
@@ -79,91 +79,63 @@ interface UpdateConfigResponse {
 }
 
 // ============================================================================
+// FETCHER
+// ============================================================================
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
+// ============================================================================
 // HOOK
 // ============================================================================
 
 export function useThirdPartyIntegrations() {
-  const [integrations, setIntegrations] = useState<ThirdPartyIntegration[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const mountedRef = useRef(true);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const {
+    data: response,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<IntegrationsListResponse>(
+    '/api/integrations/third-party',
+    fetchJson,
+    { revalidateOnFocus: false }
+  );
 
-  /**
-   * Fetch all integrations from API
-   */
-  const fetchIntegrations = useCallback(async () => {
-    // Cancel any in-flight request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    if (!mountedRef.current) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/integrations/third-party', {
-        credentials: 'include',
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data: IntegrationsListResponse = await response.json();
-
-      if (mountedRef.current) {
-        setIntegrations(data.integrations);
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return; // Request was cancelled, don't update state
-      }
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : String(err));
-      }
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
-    }
-  }, []);
+  // Backward-compatible aliases
+  const loading = isLoading;
+  const integrations = response?.integrations ?? [];
 
   /**
    * Connect a provider with credentials
    */
   const connect = useCallback(
-    async (provider: ThirdPartyProvider, credentials: Record<string, unknown>): Promise<void> => {
-      try {
-        const response = await fetch(`/api/integrations/third-party/${provider}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(credentials),
-        });
+    async (
+      provider: ThirdPartyProvider,
+      credentials: Record<string, unknown>
+    ): Promise<void> => {
+      const res = await fetch(`/api/integrations/third-party/${provider}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(credentials),
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const _data: ConnectResponse = await response.json();
-
-        // Refetch all integrations to reflect the change
-        if (mountedRef.current) {
-          await fetchIntegrations();
-        }
-      } catch (err) {
-        throw err instanceof Error ? err : new Error(String(err));
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            errorData.message ||
+            `HTTP ${res.status}: ${res.statusText}`
+        );
       }
+
+      const _data: ConnectResponse = await res.json();
+      await mutate();
     },
-    [fetchIntegrations]
+    [mutate]
   );
 
   /**
@@ -171,28 +143,24 @@ export function useThirdPartyIntegrations() {
    */
   const disconnect = useCallback(
     async (provider: ThirdPartyProvider): Promise<void> => {
-      try {
-        const response = await fetch(`/api/integrations/third-party/${provider}`, {
-          method: 'DELETE',
-          credentials: 'include',
-        });
+      const res = await fetch(`/api/integrations/third-party/${provider}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const _data: DisconnectResponse = await response.json();
-
-        // Refetch all integrations to reflect the change
-        if (mountedRef.current) {
-          await fetchIntegrations();
-        }
-      } catch (err) {
-        throw err instanceof Error ? err : new Error(String(err));
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            errorData.message ||
+            `HTTP ${res.status}: ${res.statusText}`
+        );
       }
+
+      const _data: DisconnectResponse = await res.json();
+      await mutate();
     },
-    [fetchIntegrations]
+    [mutate]
   );
 
   /**
@@ -200,72 +168,65 @@ export function useThirdPartyIntegrations() {
    */
   const refresh = useCallback(
     async (provider: ThirdPartyProvider): Promise<void> => {
-      try {
-        const response = await fetch(`/api/integrations/third-party/${provider}`, {
-          credentials: 'include',
-        });
+      const res = await fetch(`/api/integrations/third-party/${provider}`, {
+        credentials: 'include',
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const _data: StatusResponse = await response.json();
-
-        // Refetch all integrations to reflect any status changes
-        if (mountedRef.current) {
-          await fetchIntegrations();
-        }
-      } catch (err) {
-        throw err instanceof Error ? err : new Error(String(err));
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            errorData.message ||
+            `HTTP ${res.status}: ${res.statusText}`
+        );
       }
+
+      const _data: StatusResponse = await res.json();
+      await mutate();
     },
-    [fetchIntegrations]
+    [mutate]
   );
 
   /**
    * Update provider-specific configuration
    */
   const updateConfig = useCallback(
-    async (provider: ThirdPartyProvider, config: Record<string, unknown>): Promise<void> => {
-      try {
-        const response = await fetch(`/api/integrations/third-party/${provider}/config`, {
+    async (
+      provider: ThirdPartyProvider,
+      config: Record<string, unknown>
+    ): Promise<void> => {
+      const res = await fetch(
+        `/api/integrations/third-party/${provider}/config`,
+        {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(config),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
         }
+      );
 
-        const _data: UpdateConfigResponse = await response.json();
-      } catch (err) {
-        throw err instanceof Error ? err : new Error(String(err));
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            errorData.message ||
+            `HTTP ${res.status}: ${res.statusText}`
+        );
       }
+
+      const _data: UpdateConfigResponse = await res.json();
     },
     []
   );
 
-  // Initial fetch on mount
-  useEffect(() => {
-    mountedRef.current = true;
-    fetchIntegrations();
-
-    return () => {
-      mountedRef.current = false;
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, [fetchIntegrations]);
-
   return {
     integrations,
     loading,
-    error,
+    error: error
+      ? error instanceof Error
+        ? error.message
+        : String(error)
+      : null,
     connect,
     disconnect,
     refresh,

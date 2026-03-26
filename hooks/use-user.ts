@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback } from 'react';
+import useSWR from 'swr';
 
 // Custom user type matching the API response
 export interface AppUser {
@@ -20,6 +21,11 @@ export interface AppUser {
   ownedBusinessCount?: number;
 }
 
+interface ApiUserResponse {
+  success: boolean;
+  user: AppUser;
+}
+
 interface UseUserOptions {
   /** If true, redirect to /login when the API returns 401 (session expired). Default: false. */
   redirectOnUnauth?: boolean;
@@ -29,68 +35,74 @@ interface UseUserReturn {
   user: AppUser | null;
   isLoading: boolean;
   error: Error | null;
-  refetch: () => Promise<void>;
+  refetch: () => void;
+}
+
+async function fetchUser(url: string): Promise<ApiUserResponse> {
+  const res = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (res.status === 401) {
+    // Throw a special error so the hook can detect it
+    const err = new Error('Unauthorised');
+    (err as Error & { status: number }).status = 401;
+    throw err;
+  }
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch user');
+  }
+
+  return res.json() as Promise<ApiUserResponse>;
 }
 
 /**
- * Custom hook to get the current authenticated user
- * Uses the custom JWT auth API instead of Supabase Auth
+ * Custom hook to get the current authenticated user.
+ * Uses SWR + the custom JWT auth API.
  *
  * @param options.redirectOnUnauth If true, redirect to login on 401 (use in dashboard pages)
  */
 export function useUser({
   redirectOnUnauth = false,
 }: UseUserOptions = {}): UseUserReturn {
-  const [user, setUser] = useState<AppUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchUser = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await fetch('/api/auth/user', {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          setUser(null);
-          if (redirectOnUnauth) {
-            // Session expired or invalid — redirect to login
-            window.location.href = '/login?reason=session_expired';
-          }
-          return;
+  const { data, error, isLoading, mutate } = useSWR<ApiUserResponse>(
+    '/api/auth/user',
+    fetchUser,
+    {
+      revalidateOnFocus: false,
+      onError(err) {
+        if (
+          redirectOnUnauth &&
+          typeof window !== 'undefined' &&
+          (err as Error & { status?: number }).status === 401
+        ) {
+          window.location.href = '/login?reason=session_expired';
         }
-        throw new Error('Failed to fetch user');
-      }
-
-      const data = await response.json();
-
-      if (data.success && data.user) {
-        setUser(data.user);
-      } else {
-        setUser(null);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch user'));
-      setUser(null);
-    } finally {
-      setIsLoading(false);
+      },
     }
-  }, [redirectOnUnauth]);
+  );
 
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+  const user = data?.success && data?.user ? data.user : null;
+
+  // Treat 401 as "no user", not a hard error
+  const resolvedError =
+    error && (error as Error & { status?: number }).status !== 401
+      ? error instanceof Error
+        ? error
+        : new Error(String(error))
+      : null;
+
+  const refetch = useCallback(() => {
+    void mutate();
+  }, [mutate]);
 
   return {
     user,
     isLoading,
-    error,
-    refetch: fetchUser,
+    error: resolvedError,
+    refetch,
   };
 }
 

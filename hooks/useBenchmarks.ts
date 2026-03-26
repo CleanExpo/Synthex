@@ -3,11 +3,14 @@
  *
  * @description Fetches and manages benchmark comparison data
  * comparing user's performance to industry standards.
+ *
+ * Uses SWR for data fetching with credentials: 'include'.
  */
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
+import useSWR from 'swr';
 import type {
   BenchmarkReport,
   PlatformReport,
@@ -35,23 +38,26 @@ export interface BenchmarkData extends BenchmarkReport {
   };
 }
 
+interface ApiResponse {
+  success: boolean;
+  data: BenchmarkReport;
+  meta?: {
+    platform: string;
+    period: string;
+    platformsAnalyzed: number;
+    postsAnalyzed: number;
+  };
+  error?: string;
+}
+
 // ============================================================================
-// HELPERS
+// FETCHER
 // ============================================================================
 
-function getAuthHeaders(): HeadersInit {
-  if (typeof window === 'undefined') return { 'Content-Type': 'application/json' };
-
-  const token =
-    localStorage.getItem('auth_token') ||
-    sessionStorage.getItem('auth_token') ||
-    localStorage.getItem('token');
-
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return headers;
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise<T>;
 }
 
 // ============================================================================
@@ -61,93 +67,34 @@ function getAuthHeaders(): HeadersInit {
 export function useBenchmarks(options: UseBenchmarksOptions = {}) {
   const { platform = 'all', period = '30d' } = options;
 
-  // State
-  const [data, setData] = useState<BenchmarkData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const params = new URLSearchParams();
+  params.set('platform', platform);
+  params.set('period', period);
+  const url = `/api/analytics/benchmarks?${params.toString()}`;
 
-  // Refs
-  const mountedRef = useRef(true);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const {
+    data: response,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<ApiResponse>(url, fetchJson, { revalidateOnFocus: false });
 
-  // Fetch benchmark data
-  const fetchBenchmarks = useCallback(async () => {
-    // Abort previous request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
+  const data: BenchmarkData | null = response?.success
+    ? { ...response.data, meta: response.meta }
+    : null;
 
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const params = new URLSearchParams();
-      params.set('platform', platform);
-      params.set('period', period);
-
-      const response = await fetch(`/api/analytics/benchmarks?${params.toString()}`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: getAuthHeaders(),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      if (result.success && mountedRef.current) {
-        setData({
-          ...result.data,
-          meta: result.meta,
-        });
-      } else if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch benchmark data');
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return;
-      }
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : String(err));
-      }
-    } finally {
-      if (mountedRef.current) {
-        setIsLoading(false);
-      }
-    }
-  }, [platform, period]);
-
-  // Refetch function
   const refetch = useCallback(async () => {
-    await fetchBenchmarks();
-  }, [fetchBenchmarks]);
-
-  // Initial fetch
-  useEffect(() => {
-    fetchBenchmarks();
-  }, [fetchBenchmarks]);
-
-  // Cleanup
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, []);
+    await mutate();
+  }, [mutate]);
 
   return {
     data,
     isLoading,
-    error,
+    error: error
+      ? error instanceof Error
+        ? error.message
+        : String(error)
+      : null,
     refetch,
   };
 }

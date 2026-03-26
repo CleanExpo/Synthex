@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Sparkles, ArrowRight, Zap } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { useAIPM } from '@/hooks/useAIPM';
@@ -11,6 +12,7 @@ interface AIPMWidgetProps {
 }
 
 export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
+  const router = useRouter();
   const { greeting, dashboardSuggestions, loadDashboardSuggestions } =
     useAIPM();
 
@@ -57,7 +59,12 @@ export default function AIPMWidget({ onOpenChat }: AIPMWidgetProps) {
               key={i}
               onClick={() => {
                 if (suggestion.actionUrl) {
-                  window.location.href = suggestion.actionUrl;
+                  // Use router.push for internal paths; fall back to window for external URLs
+                  if (suggestion.actionUrl.startsWith('http')) {
+                    window.location.href = suggestion.actionUrl;
+                  } else {
+                    router.push(suggestion.actionUrl);
+                  }
                 } else {
                   onOpenChat();
                 }

@@ -1,11 +1,20 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import useSWR from 'swr';
+import { useCallback } from 'react';
 import { useUser } from './use-user';
 
 export interface SubscriptionData {
   id: string;
-  plan: 'free' | 'starter' | 'pro' | 'growth' | 'scale' | 'professional' | 'business' | 'custom';
+  plan:
+    | 'free'
+    | 'starter'
+    | 'pro'
+    | 'growth'
+    | 'scale'
+    | 'professional'
+    | 'business'
+    | 'custom';
   status: string;
   limits: {
     socialAccounts: number;
@@ -28,96 +37,140 @@ interface UseSubscriptionReturn {
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
-  hasAccess: (requiredPlan: 'free' | 'starter' | 'pro' | 'growth' | 'scale' | 'professional' | 'business' | 'custom') => boolean;
+  hasAccess: (
+    requiredPlan:
+      | 'free'
+      | 'starter'
+      | 'pro'
+      | 'growth'
+      | 'scale'
+      | 'professional'
+      | 'business'
+      | 'custom'
+  ) => boolean;
 }
 
-const PLAN_HIERARCHY = ['free', 'starter', 'pro', 'growth', 'scale', 'professional', 'business', 'custom'];
+const PLAN_HIERARCHY = [
+  'free',
+  'starter',
+  'pro',
+  'growth',
+  'scale',
+  'professional',
+  'business',
+  'custom',
+];
+
+const DEFAULT_FREE_SUBSCRIPTION: SubscriptionData = {
+  id: '',
+  plan: 'free',
+  status: 'active',
+  limits: {
+    socialAccounts: 2,
+    aiPosts: 10,
+    personas: 1,
+    seoAudits: 0,
+    seoPages: 0,
+  },
+  usage: { aiPosts: 0, seoAudits: 0, seoPages: 0 },
+  cancelAtPeriodEnd: false,
+};
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to fetch subscription');
+  const data = await res.json();
+  // Normalise SEO fields that may be absent on older records
+  return {
+    ...data,
+    limits: {
+      ...data.limits,
+      seoAudits:
+        data.limits?.seoAudits ??
+        (data.plan === 'free'
+          ? 0
+          : data.plan === 'pro' || data.plan === 'professional'
+            ? 10
+            : -1),
+      seoPages:
+        data.limits?.seoPages ??
+        (data.plan === 'free'
+          ? 0
+          : data.plan === 'pro' || data.plan === 'professional'
+            ? 50
+            : -1),
+    },
+    usage: {
+      ...data.usage,
+      seoAudits: data.usage?.seoAudits ?? 0,
+      seoPages: data.usage?.seoPages ?? 0,
+    },
+  } as T;
+}
 
 /**
  * Custom hook to get the current user's subscription
  */
 export function useSubscription(): UseSubscriptionReturn {
   const { user, isLoading: userLoading } = useUser();
-  const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
 
-  const fetchSubscription = useCallback(async () => {
-    if (!user) {
-      setSubscription(null);
-      setIsLoading(false);
-      return;
+  const { data, error, isLoading, mutate } = useSWR<SubscriptionData>(
+    !userLoading && user ? '/api/user/subscription' : null,
+    fetchJson,
+    {
+      revalidateOnFocus: false,
+      // Fall back to free plan on fetch error so the UI never breaks
+      onErrorRetry: (_err, _key, _config, revalidate, { retryCount }) => {
+        if (retryCount >= 2) return;
+        setTimeout(() => revalidate({ retryCount }), 5000);
+      },
     }
+  );
 
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await fetch('/api/user/subscription', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch subscription');
-      }
-
-      const data = await response.json();
-
-      // Add SEO defaults if not present
-      setSubscription({
-        ...data,
-        limits: {
-          ...data.limits,
-          seoAudits: data.limits?.seoAudits ?? (data.plan === 'free' ? 0 : (data.plan === 'pro' || data.plan === 'professional') ? 10 : -1),
-          seoPages: data.limits?.seoPages ?? (data.plan === 'free' ? 0 : (data.plan === 'pro' || data.plan === 'professional') ? 50 : -1),
-        },
-        usage: {
-          ...data.usage,
-          seoAudits: data.usage?.seoAudits ?? 0,
-          seoPages: data.usage?.seoPages ?? 0,
-        },
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch subscription'));
-      // Set default free subscription on error
-      setSubscription({
-        id: '',
-        plan: 'free',
-        status: 'active',
-        limits: { socialAccounts: 2, aiPosts: 10, personas: 1, seoAudits: 0, seoPages: 0 },
-        usage: { aiPosts: 0, seoAudits: 0, seoPages: 0 },
-        cancelAtPeriodEnd: false,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (!userLoading) {
-      fetchSubscription();
-    }
-  }, [userLoading, fetchSubscription]);
+  const refetch = useCallback(async () => {
+    await mutate();
+  }, [mutate]);
 
   const hasAccess = useCallback(
-    (requiredPlan: 'free' | 'starter' | 'pro' | 'growth' | 'scale' | 'professional' | 'business' | 'custom') => {
+    (
+      requiredPlan:
+        | 'free'
+        | 'starter'
+        | 'pro'
+        | 'growth'
+        | 'scale'
+        | 'professional'
+        | 'business'
+        | 'custom'
+    ) => {
+      const subscription = data ?? (error ? DEFAULT_FREE_SUBSCRIPTION : null);
       if (!subscription) return false;
       const userPlanIndex = PLAN_HIERARCHY.indexOf(subscription.plan);
       const requiredPlanIndex = PLAN_HIERARCHY.indexOf(requiredPlan);
       return userPlanIndex >= requiredPlanIndex;
     },
-    [subscription]
+    [data, error]
   );
+
+  // When user is not logged in, subscription is null with no loading
+  const subscription =
+    !userLoading && !user
+      ? null
+      : (data ?? (error ? DEFAULT_FREE_SUBSCRIPTION : null));
 
   return {
     subscription,
-    isLoading: isLoading || userLoading,
-    error,
-    refetch: fetchSubscription,
+    isLoading: userLoading || isLoading,
+    error:
+      error instanceof Error
+        ? error
+        : error
+          ? new Error('Failed to fetch subscription')
+          : null,
+    refetch,
     hasAccess,
   };
 }

@@ -15,16 +15,27 @@
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import useSWR from 'swr';
+import { useCallback } from 'react';
 import { toast } from 'sonner';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export type ReportFrequency = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly';
+export type ReportFrequency =
+  | 'daily'
+  | 'weekly'
+  | 'biweekly'
+  | 'monthly'
+  | 'quarterly';
 export type ReportFormat = 'pdf' | 'csv' | 'json';
-export type DateRangeType = 'last_period' | 'custom' | 'rolling_7d' | 'rolling_30d' | 'rolling_90d';
+export type DateRangeType =
+  | 'last_period'
+  | 'custom'
+  | 'rolling_7d'
+  | 'rolling_30d'
+  | 'rolling_90d';
 
 export interface ReportSchedule {
   dayOfWeek?: number;
@@ -91,11 +102,37 @@ export interface UseScheduledReportsReturn {
   schedules: ScheduledReport[];
   isLoading: boolean;
   error: Error | null;
-  createSchedule: (input: CreateScheduleInput) => Promise<ScheduledReport | null>;
-  updateSchedule: (id: string, input: UpdateScheduleInput) => Promise<ScheduledReport | null>;
+  createSchedule: (
+    input: CreateScheduleInput
+  ) => Promise<ScheduledReport | null>;
+  updateSchedule: (
+    id: string,
+    input: UpdateScheduleInput
+  ) => Promise<ScheduledReport | null>;
   deleteSchedule: (id: string) => Promise<boolean>;
   toggleActive: (id: string, isActive: boolean) => Promise<boolean>;
   refresh: () => Promise<void>;
+}
+
+// ============================================================================
+// FETCHER
+// ============================================================================
+
+function mapSchedule(s: any): ScheduledReport {
+  return {
+    ...s,
+    lastRunAt: s.lastRunAt ? new Date(s.lastRunAt) : undefined,
+    nextRunAt: s.nextRunAt ? new Date(s.nextRunAt) : undefined,
+    createdAt: new Date(s.createdAt),
+    updatedAt: new Date(s.updatedAt),
+  };
+}
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch scheduled reports');
+  const data = await res.json();
+  return (data.scheduledReports || []).map(mapSchedule) as T;
 }
 
 // ============================================================================
@@ -107,55 +144,25 @@ export function useScheduledReports(
 ): UseScheduledReportsReturn {
   const { autoLoad = true, activeOnly = false } = options;
 
-  const [schedules, setSchedules] = useState<ScheduledReport[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const params = new URLSearchParams();
+  if (activeOnly) params.set('activeOnly', 'true');
 
-  /**
-   * Fetch scheduled reports
-   */
-  const fetchSchedules = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const params = new URLSearchParams();
-      if (activeOnly) params.set('activeOnly', 'true');
-
-      const response = await fetch(`/api/reports/scheduled?${params}`, {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch scheduled reports');
-      }
-
-      const data = await response.json();
-      setSchedules(
-        (data.scheduledReports || []).map((s: any) => ({
-          ...s,
-          lastRunAt: s.lastRunAt ? new Date(s.lastRunAt) : undefined,
-          nextRunAt: s.nextRunAt ? new Date(s.nextRunAt) : undefined,
-          createdAt: new Date(s.createdAt),
-          updatedAt: new Date(s.updatedAt),
-        }))
-      );
-    } catch (err) {
-      setError(err as Error);
-      console.error('Fetch scheduled reports error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [activeOnly]);
+  const {
+    data: schedules = [],
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<ScheduledReport[]>(
+    autoLoad ? `/api/reports/scheduled?${params}` : null,
+    fetchJson,
+    { revalidateOnFocus: false }
+  );
 
   /**
    * Create a new scheduled report
    */
   const createSchedule = useCallback(
     async (input: CreateScheduleInput): Promise<ScheduledReport | null> => {
-      setIsLoading(true);
-      setError(null);
-
       try {
         const response = await fetch('/api/reports/scheduled', {
           method: 'POST',
@@ -177,29 +184,26 @@ export function useScheduledReports(
           updatedAt: new Date(data.scheduledReport.updatedAt),
         };
 
-        setSchedules((prev) => [newSchedule, ...prev]);
+        await mutate();
         toast.success('Scheduled report created');
 
         return newSchedule;
       } catch (err) {
-        setError(err as Error);
         toast.error((err as Error).message);
         return null;
-      } finally {
-        setIsLoading(false);
       }
     },
-    []
+    [mutate]
   );
 
   /**
    * Update a scheduled report
    */
   const updateSchedule = useCallback(
-    async (id: string, input: UpdateScheduleInput): Promise<ScheduledReport | null> => {
-      setIsLoading(true);
-      setError(null);
-
+    async (
+      id: string,
+      input: UpdateScheduleInput
+    ): Promise<ScheduledReport | null> => {
       try {
         const response = await fetch(`/api/reports/scheduled?id=${id}`, {
           method: 'PATCH',
@@ -221,53 +225,45 @@ export function useScheduledReports(
           updatedAt: new Date(data.scheduledReport.updatedAt),
         };
 
-        setSchedules((prev) =>
-          prev.map((s) => (s.id === id ? updatedSchedule : s))
-        );
+        await mutate();
         toast.success('Schedule updated');
 
         return updatedSchedule;
       } catch (err) {
-        setError(err as Error);
         toast.error((err as Error).message);
         return null;
-      } finally {
-        setIsLoading(false);
       }
     },
-    []
+    [mutate]
   );
 
   /**
    * Delete a scheduled report
    */
-  const deleteSchedule = useCallback(async (id: string): Promise<boolean> => {
-    setIsLoading(true);
-    setError(null);
+  const deleteSchedule = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        const response = await fetch(`/api/reports/scheduled?id=${id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
 
-    try {
-      const response = await fetch(`/api/reports/scheduled?id=${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to delete schedule');
+        }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete schedule');
+        await mutate();
+        toast.success('Schedule deleted');
+
+        return true;
+      } catch (err) {
+        toast.error((err as Error).message);
+        return false;
       }
-
-      setSchedules((prev) => prev.filter((s) => s.id !== id));
-      toast.success('Schedule deleted');
-
-      return true;
-    } catch (err) {
-      setError(err as Error);
-      toast.error((err as Error).message);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [mutate]
+  );
 
   /**
    * Toggle schedule active state
@@ -280,24 +276,20 @@ export function useScheduledReports(
     [updateSchedule]
   );
 
-  /**
-   * Auto-load on mount
-   */
-  useEffect(() => {
-    if (autoLoad) {
-      fetchSchedules();
-    }
-  }, [autoLoad, fetchSchedules]);
+  const refresh = useCallback(async () => {
+    await mutate();
+  }, [mutate]);
 
   return {
     schedules,
     isLoading,
-    error,
+    error:
+      error instanceof Error ? error : error ? new Error(String(error)) : null,
     createSchedule,
     updateSchedule,
     deleteSchedule,
     toggleActive,
-    refresh: fetchSchedules,
+    refresh,
   };
 }
 

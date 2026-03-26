@@ -11,6 +11,7 @@
  */
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import useSWR from 'swr';
 
 // =============================================================================
 // Types
@@ -120,64 +121,66 @@ interface DynamicBrandProviderProps {
   children: React.ReactNode;
 }
 
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch');
+  return res.json();
+}
+
+interface BrandProfileResponse {
+  profile?: {
+    primaryColour?: string;
+    secondaryColour?: string;
+    neutralColour?: string;
+    accentColour?: string;
+    logoUrl?: string | null;
+    businessName?: string;
+  } | null;
+}
+
 export function DynamicBrandProvider({
   orgId,
   children,
 }: DynamicBrandProviderProps) {
   const [tokens, setTokens] = useState<BrandTokens>(SYNTHEX_DEFAULTS);
 
+  const { data } = useSWR<BrandProfileResponse>(
+    orgId ? `/api/brand/profile?orgId=${orgId}` : null,
+    fetchJson,
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
+  );
+
   useEffect(() => {
     if (!orgId) {
-      // No org = Synthex defaults (landing page, unauthenticated)
       applyBrandTokens(SYNTHEX_DEFAULTS);
       setTokens(SYNTHEX_DEFAULTS);
       return;
     }
 
-    // Fetch brand profile from API
-    let cancelled = false;
+    if (!data) return;
 
-    async function loadBrand() {
-      try {
-        const res = await fetch(`/api/brand/profile?orgId=${orgId}`);
-        if (!res.ok) throw new Error('Brand profile fetch failed');
-        const data = await res.json();
-
-        if (cancelled) return;
-
-        if (data.profile) {
-          const clientTokens: BrandTokens = {
-            primaryColour:
-              data.profile.primaryColour || SYNTHEX_DEFAULTS.primaryColour,
-            secondaryColour:
-              data.profile.secondaryColour || SYNTHEX_DEFAULTS.secondaryColour,
-            neutralColour:
-              data.profile.neutralColour || SYNTHEX_DEFAULTS.neutralColour,
-            accentColour:
-              data.profile.accentColour || SYNTHEX_DEFAULTS.accentColour,
-            logoUrl: data.profile.logoUrl || null,
-            businessName: data.profile.businessName || 'SYNTHEX',
-            loaded: true,
-            isClientBranded: true,
-          };
-          applyBrandTokens(clientTokens);
-          setTokens(clientTokens);
-        } else {
-          applyBrandTokens(SYNTHEX_DEFAULTS);
-          setTokens(SYNTHEX_DEFAULTS);
-        }
-      } catch {
-        // Silently fall back to Synthex defaults
-        applyBrandTokens(SYNTHEX_DEFAULTS);
-        setTokens(SYNTHEX_DEFAULTS);
-      }
+    if (data.profile) {
+      const clientTokens: BrandTokens = {
+        primaryColour:
+          data.profile.primaryColour || SYNTHEX_DEFAULTS.primaryColour,
+        secondaryColour:
+          data.profile.secondaryColour || SYNTHEX_DEFAULTS.secondaryColour,
+        neutralColour:
+          data.profile.neutralColour || SYNTHEX_DEFAULTS.neutralColour,
+        accentColour:
+          data.profile.accentColour || SYNTHEX_DEFAULTS.accentColour,
+        logoUrl: data.profile.logoUrl || null,
+        businessName: data.profile.businessName || 'SYNTHEX',
+        loaded: true,
+        isClientBranded: true,
+      };
+      applyBrandTokens(clientTokens);
+      setTokens(clientTokens);
+    } else {
+      applyBrandTokens(SYNTHEX_DEFAULTS);
+      setTokens(SYNTHEX_DEFAULTS);
     }
-
-    loadBrand();
-    return () => {
-      cancelled = true;
-    };
-  }, [orgId]);
+  }, [orgId, data]);
 
   return (
     <BrandContext.Provider value={tokens}>{children}</BrandContext.Provider>

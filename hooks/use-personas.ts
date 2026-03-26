@@ -4,13 +4,13 @@
  * @description Manages persona state and operations (CRUD + training).
  * Provides create, update, delete, startTraining, and getTrainingStatus actions.
  *
- * Uses raw fetch + useState pattern (no SWR/TanStack Query).
- * Follows the same pattern as hooks/use-approvals.ts.
+ * Uses SWR for GET data fetching; mutations use direct fetch + mutate().
  */
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
+import useSWR from 'swr';
 
 // ============================================================================
 // TYPES
@@ -49,7 +49,12 @@ export interface CreatePersonaData {
   name: string;
   description?: string;
   tone?: 'professional' | 'casual' | 'authoritative' | 'friendly' | 'humorous';
-  style?: 'formal' | 'conversational' | 'thought-provoking' | 'educational' | 'inspirational';
+  style?:
+    | 'formal'
+    | 'conversational'
+    | 'thought-provoking'
+    | 'educational'
+    | 'inspirational';
   vocabulary?: 'simple' | 'standard' | 'technical' | 'sophisticated';
   emotion?: 'neutral' | 'friendly' | 'confident' | 'inspiring' | 'empathetic';
 }
@@ -110,25 +115,13 @@ interface StartTrainingResponse {
 }
 
 // ============================================================================
-// HELPERS
+// FETCHER
 // ============================================================================
 
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return (
-    localStorage.getItem('auth_token') ||
-    sessionStorage.getItem('auth_token') ||
-    localStorage.getItem('token')
-  );
-}
-
-function getAuthHeaders(): HeadersInit {
-  const token = getAuthToken();
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return headers;
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise<T>;
 }
 
 // ============================================================================
@@ -136,58 +129,18 @@ function getAuthHeaders(): HeadersInit {
 // ============================================================================
 
 export function usePersonas() {
-  const [personas, setPersonas] = useState<Persona[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const mountedRef = useRef(true);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const {
+    data: response,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<PersonasListResponse>('/api/personas', fetchJson, {
+    revalidateOnFocus: false,
+  });
 
-  /**
-   * Fetch all personas from API
-   */
-  const fetchPersonas = useCallback(async () => {
-    // Cancel any in-flight request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    if (!mountedRef.current) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/personas', {
-        credentials: 'include',
-        headers: getAuthHeaders(),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data: PersonasListResponse = await response.json();
-
-      if (mountedRef.current) {
-        setPersonas(data.data);
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return; // Request was cancelled, don't update state
-      }
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : String(err));
-      }
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
-    }
-  }, []);
+  // Backward-compatible aliases
+  const loading = isLoading;
+  const personas = response?.data ?? [];
 
   /**
    * Create a new persona
@@ -195,36 +148,30 @@ export function usePersonas() {
   const createPersona = useCallback(
     async (data: CreatePersonaData): Promise<Persona | null> => {
       try {
-        const response = await fetch('/api/personas', {
+        const res = await fetch('/api/personas', {
           method: 'POST',
-          headers: getAuthHeaders(),
+          headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(data),
         });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
           throw new Error(
-            errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`
+            errorData.error ||
+              errorData.message ||
+              `HTTP ${res.status}: ${res.statusText}`
           );
         }
 
-        const result: CreatePersonaResponse = await response.json();
-
-        // Refetch to reflect the change
-        if (mountedRef.current) {
-          await fetchPersonas();
-        }
-
+        const result: CreatePersonaResponse = await res.json();
+        await mutate();
         return result.data;
       } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-        return null;
+        throw err instanceof Error ? err : new Error(String(err));
       }
     },
-    [fetchPersonas]
+    [mutate]
   );
 
   /**
@@ -233,36 +180,30 @@ export function usePersonas() {
   const updatePersona = useCallback(
     async (id: string, data: UpdatePersonaData): Promise<Persona | null> => {
       try {
-        const response = await fetch('/api/personas', {
+        const res = await fetch('/api/personas', {
           method: 'PATCH',
-          headers: getAuthHeaders(),
+          headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ id, ...data }),
         });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
           throw new Error(
-            errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`
+            errorData.error ||
+              errorData.message ||
+              `HTTP ${res.status}: ${res.statusText}`
           );
         }
 
-        const result: UpdatePersonaResponse = await response.json();
-
-        // Refetch to reflect the change
-        if (mountedRef.current) {
-          await fetchPersonas();
-        }
-
+        const result: UpdatePersonaResponse = await res.json();
+        await mutate();
         return result.data;
       } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-        return null;
+        throw err instanceof Error ? err : new Error(String(err));
       }
     },
-    [fetchPersonas]
+    [mutate]
   );
 
   /**
@@ -271,35 +212,29 @@ export function usePersonas() {
   const deletePersona = useCallback(
     async (id: string): Promise<boolean> => {
       try {
-        const response = await fetch(`/api/personas?id=${encodeURIComponent(id)}`, {
+        const res = await fetch(`/api/personas?id=${encodeURIComponent(id)}`, {
           method: 'DELETE',
-          headers: getAuthHeaders(),
+          headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
         });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
           throw new Error(
-            errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`
+            errorData.error ||
+              errorData.message ||
+              `HTTP ${res.status}: ${res.statusText}`
           );
         }
 
-        const _result: DeletePersonaResponse = await response.json();
-
-        // Refetch to reflect the change
-        if (mountedRef.current) {
-          await fetchPersonas();
-        }
-
+        const _result: DeletePersonaResponse = await res.json();
+        await mutate();
         return true;
       } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-        return false;
+        throw err instanceof Error ? err : new Error(String(err));
       }
     },
-    [fetchPersonas]
+    [mutate]
   );
 
   /**
@@ -308,97 +243,82 @@ export function usePersonas() {
   const startTraining = useCallback(
     async (id: string, sources: TrainingSource[]): Promise<boolean> => {
       try {
-        const response = await fetch(`/api/personas/${encodeURIComponent(id)}/train`, {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          credentials: 'include',
-          body: JSON.stringify({ sources }),
-        });
+        const res = await fetch(
+          `/api/personas/${encodeURIComponent(id)}/train`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ sources }),
+          }
+        );
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
           throw new Error(
-            errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`
+            errorData.error ||
+              errorData.message ||
+              `HTTP ${res.status}: ${res.statusText}`
           );
         }
 
-        const _result: StartTrainingResponse = await response.json();
-
+        const _result: StartTrainingResponse = await res.json();
         // Refetch to reflect the change (persona status → 'training')
-        if (mountedRef.current) {
-          await fetchPersonas();
-        }
-
+        await mutate();
         return true;
       } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-        return false;
+        throw err instanceof Error ? err : new Error(String(err));
       }
     },
-    [fetchPersonas]
+    [mutate]
   );
 
   /**
    * Get training status for a persona
    */
-  const getTrainingStatus = useCallback(async (id: string): Promise<TrainingStatus | null> => {
-    try {
-      const response = await fetch(`/api/personas/${encodeURIComponent(id)}/train`, {
+  const getTrainingStatus = useCallback(
+    async (id: string): Promise<TrainingStatus | null> => {
+      const res = await fetch(`/api/personas/${encodeURIComponent(id)}/train`, {
         method: 'GET',
-        headers: getAuthHeaders(),
         credentials: 'include',
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
         throw new Error(
-          errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`
+          errorData.error ||
+            errorData.message ||
+            `HTTP ${res.status}: ${res.statusText}`
         );
       }
 
-      const result: TrainingStatus = await response.json();
-      return result;
-    } catch (err) {
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : String(err));
-      }
-      return null;
-    }
-  }, []);
+      return res.json() as Promise<TrainingStatus>;
+    },
+    []
+  );
 
   /**
    * Refresh the personas list
    */
   const refresh = useCallback(async (): Promise<void> => {
-    await fetchPersonas();
-  }, [fetchPersonas]);
+    await mutate();
+  }, [mutate]);
 
   /**
-   * Clear error state
+   * Clear error state — no-op in SWR (included for backward compatibility)
    */
   const clearError = useCallback(() => {
-    setError(null);
+    // SWR manages error state; call mutate() to retry
   }, []);
-
-  // Initial fetch on mount
-  useEffect(() => {
-    mountedRef.current = true;
-    fetchPersonas();
-
-    return () => {
-      mountedRef.current = false;
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, [fetchPersonas]);
 
   return {
     personas,
     loading,
-    error,
+    error: error
+      ? error instanceof Error
+        ? error.message
+        : String(error)
+      : null,
     refresh,
     clearError,
     createPersona,

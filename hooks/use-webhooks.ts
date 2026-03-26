@@ -4,13 +4,13 @@
  * @description Manages webhook subscription state.
  * Provides create, update, remove, and refresh actions.
  *
- * Uses raw fetch + useState pattern (no SWR/TanStack Query).
- * Follows the same pattern as hooks/use-third-party-integrations.ts.
+ * Uses SWR for GET data fetching; mutations use direct fetch + mutate().
  */
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
+import useSWR from 'swr';
 
 // ============================================================================
 // TYPES
@@ -77,99 +77,63 @@ interface DeleteWebhookResponse {
 }
 
 // ============================================================================
+// FETCHER
+// ============================================================================
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
+// ============================================================================
 // HOOK
 // ============================================================================
 
 export function useWebhooks() {
-  const [webhooks, setWebhooks] = useState<WebhookEndpoint[]>([]);
-  const [availableEvents, setAvailableEvents] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const mountedRef = useRef(true);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const {
+    data: response,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<WebhooksListResponse>('/api/webhooks/user', fetchJson, {
+    revalidateOnFocus: false,
+  });
 
-  /**
-   * Fetch all webhooks from API
-   */
-  const fetchWebhooks = useCallback(async () => {
-    // Cancel any in-flight request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    if (!mountedRef.current) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/webhooks/user', {
-        credentials: 'include',
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data: WebhooksListResponse = await response.json();
-
-      if (mountedRef.current) {
-        setWebhooks(data.data);
-        setAvailableEvents(data.availableEvents);
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return; // Request was cancelled, don't update state
-      }
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : String(err));
-      }
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
-    }
-  }, []);
+  // Backward-compatible aliases
+  const loading = isLoading;
+  const webhooks = response?.data ?? [];
+  const availableEvents = response?.availableEvents ?? [];
 
   /**
    * Create a new webhook subscription
    * Returns the full webhook data including the secret (shown only once)
    */
   const create = useCallback(
-    async (data: CreateWebhookData): Promise<WebhookEndpointWithSecret | null> => {
-      try {
-        const response = await fetch('/api/webhooks/user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(data),
-        });
+    async (
+      data: CreateWebhookData
+    ): Promise<WebhookEndpointWithSecret | null> => {
+      const res = await fetch('/api/webhooks/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result: CreateWebhookResponse = await response.json();
-
-        // Refetch all webhooks to reflect the change
-        if (mountedRef.current) {
-          await fetchWebhooks();
-        }
-
-        return result.data;
-      } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-        return null;
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            errorData.message ||
+            `HTTP ${res.status}: ${res.statusText}`
+        );
       }
+
+      const result: CreateWebhookResponse = await res.json();
+      await mutate();
+      return result.data;
     },
-    [fetchWebhooks]
+    [mutate]
   );
 
   /**
@@ -177,35 +141,27 @@ export function useWebhooks() {
    */
   const update = useCallback(
     async (id: string, data: UpdateWebhookData): Promise<boolean> => {
-      try {
-        const response = await fetch('/api/webhooks/user', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ id, ...data }),
-        });
+      const res = await fetch('/api/webhooks/user', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id, ...data }),
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const _result: UpdateWebhookResponse = await response.json();
-
-        // Refetch all webhooks to reflect the change
-        if (mountedRef.current) {
-          await fetchWebhooks();
-        }
-
-        return true;
-      } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-        return false;
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            errorData.message ||
+            `HTTP ${res.status}: ${res.statusText}`
+        );
       }
+
+      const _result: UpdateWebhookResponse = await res.json();
+      await mutate();
+      return true;
     },
-    [fetchWebhooks]
+    [mutate]
   );
 
   /**
@@ -213,60 +169,46 @@ export function useWebhooks() {
    */
   const remove = useCallback(
     async (id: string): Promise<boolean> => {
-      try {
-        const response = await fetch(`/api/webhooks/user?id=${encodeURIComponent(id)}`, {
+      const res = await fetch(
+        `/api/webhooks/user?id=${encodeURIComponent(id)}`,
+        {
           method: 'DELETE',
           credentials: 'include',
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
         }
+      );
 
-        const _result: DeleteWebhookResponse = await response.json();
-
-        // Refetch all webhooks to reflect the change
-        if (mountedRef.current) {
-          await fetchWebhooks();
-        }
-
-        return true;
-      } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-        return false;
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            errorData.message ||
+            `HTTP ${res.status}: ${res.statusText}`
+        );
       }
+
+      const _result: DeleteWebhookResponse = await res.json();
+      await mutate();
+      return true;
     },
-    [fetchWebhooks]
+    [mutate]
   );
 
   /**
    * Refresh the webhooks list
    */
   const refresh = useCallback(async (): Promise<void> => {
-    await fetchWebhooks();
-  }, [fetchWebhooks]);
-
-  // Initial fetch on mount
-  useEffect(() => {
-    mountedRef.current = true;
-    fetchWebhooks();
-
-    return () => {
-      mountedRef.current = false;
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, [fetchWebhooks]);
+    await mutate();
+  }, [mutate]);
 
   return {
     webhooks,
     availableEvents,
     loading,
-    error,
+    error: error
+      ? error instanceof Error
+        ? error.message
+        : String(error)
+      : null,
     create,
     update,
     remove,

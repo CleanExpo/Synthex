@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import useSWR from 'swr';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +29,43 @@ import { CalculatorTab } from './CalculatorTab';
 import { CampaignsTab } from './CampaignsTab';
 import { ChannelsTab } from './ChannelsTab';
 import { FunnelTab } from './FunnelTab';
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch');
+  return res.json();
+}
+
+interface CampaignsApiResponse {
+  campaigns?: Array<{
+    id: string;
+    name: string;
+    platform: string;
+    status: string;
+    createdAt: string;
+    posts?: Array<{
+      analytics?: {
+        impressions?: number;
+        clicks?: number;
+        conversions?: number;
+        revenue?: number;
+      };
+    }>;
+    settings?: { scheduledAt?: string };
+  }>;
+}
+
+interface PerformanceApiResponse {
+  success?: boolean;
+  data?: {
+    platforms?: Array<{ platform: string; posts: number; engagement: number }>;
+    timeline?: Array<{ date: string; engagement?: number; posts?: number }>;
+  };
+}
+
+interface StatsApiResponse {
+  posts?: { total?: number };
+}
 
 export function ROICalculator() {
   const [metrics, setMetrics] = useState<ROIMetrics>({
@@ -96,212 +134,215 @@ export function ROICalculator() {
     retentionRate,
   ]);
 
-  const loadCampaignData = useCallback(async () => {
-    try {
-      const [campaignsRes, performanceRes, statsRes] = await Promise.all([
-        fetch('/api/campaigns'),
-        fetch('/api/analytics/performance?period=30d'),
-        fetch('/api/stats'),
-      ]);
+  const { data: campaignsData, error: campaignsError } =
+    useSWR<CampaignsApiResponse>('/api/campaigns', fetchJson, {
+      revalidateOnFocus: false,
+      dedupingInterval: 60000,
+    });
 
-      if (campaignsRes.ok) {
-        const data = await campaignsRes.json();
-        if (data.campaigns && Array.isArray(data.campaigns)) {
-          setCampaigns(
-            data.campaigns.map((camp: any) => {
-              const posts = camp.posts || [];
-              const totalImpressions = posts.reduce(
-                (s: number, p: any) => s + (p.analytics?.impressions || 0),
-                0
-              );
-              const totalClicks = posts.reduce(
-                (s: number, p: any) => s + (p.analytics?.clicks || 0),
-                0
-              );
-              const totalConversions = posts.reduce(
-                (s: number, p: any) => s + (p.analytics?.conversions || 0),
-                0
-              );
-              const totalRevenue = posts.reduce(
-                (s: number, p: any) => s + (p.analytics?.revenue || 0),
-                0
-              );
-              const estimatedBudget = totalRevenue > 0 ? totalRevenue * 0.2 : 0;
-              const spent = estimatedBudget * 0.95;
-              const roi =
-                spent > 0 ? ((totalRevenue - spent) / spent) * 100 : 0;
-              const status: 'active' | 'completed' | 'planned' =
-                camp.status === 'active'
-                  ? 'active'
-                  : camp.status === 'completed' || camp.status === 'archived'
-                    ? 'completed'
-                    : camp.status === 'scheduled'
-                      ? 'planned'
-                      : 'active';
-              return {
-                id: camp.id,
-                name: camp.name,
-                platform: camp.platform,
-                startDate: new Date(camp.createdAt),
-                endDate: new Date(
-                  camp.settings?.scheduledAt ||
-                    Date.now() + 30 * 24 * 60 * 60 * 1000
-                ),
-                budget: estimatedBudget,
-                spent,
-                impressions: totalImpressions,
-                clicks: totalClicks,
-                conversions: totalConversions,
-                revenue: totalRevenue,
-                roi: Math.round(roi),
-                status,
-              };
-            })
-          );
-        }
-      }
+  const { data: performanceData, error: performanceError } =
+    useSWR<PerformanceApiResponse>(
+      '/api/analytics/performance?period=30d',
+      fetchJson,
+      { revalidateOnFocus: false, dedupingInterval: 60000 }
+    );
 
-      if (performanceRes.ok) {
-        const perfData = await performanceRes.json();
-        if (perfData.success && perfData.data?.platforms) {
-          const channels: ChannelPerformance[] = perfData.data.platforms.map(
-            (plat: any) => {
-              const inv = plat.posts * 50;
-              const rev = plat.engagement * 5;
-              const roi = inv > 0 ? ((rev - inv) / inv) * 100 : 0;
-              const conv = Math.floor(plat.engagement * 0.05);
-              return {
-                channel:
-                  plat.platform.charAt(0).toUpperCase() +
-                  plat.platform.slice(1),
-                investment: inv,
-                revenue: rev,
-                roi: Math.round(roi),
-                conversions: conv,
-                cpa: conv > 0 ? Math.round((inv / conv) * 100) / 100 : 0,
-              };
-            }
-          );
-          if (channels.length > 0) setChannelPerformance(channels);
-        }
-        if (perfData.success && perfData.data?.timeline) {
-          const months = [
-            'Jan',
-            'Feb',
-            'Mar',
-            'Apr',
-            'May',
-            'Jun',
-            'Jul',
-            'Aug',
-            'Sep',
-            'Oct',
-            'Nov',
-            'Dec',
-          ];
-          const monthlyData = new Map<
-            string,
-            { engagement: number; posts: number }
-          >();
-          for (const point of perfData.data.timeline) {
-            const date = new Date(point.date);
-            const key = `${date.getFullYear()}-${date.getMonth()}`;
-            if (!monthlyData.has(key))
-              monthlyData.set(key, { engagement: 0, posts: 0 });
-            const d = monthlyData.get(key)!;
-            d.engagement += point.engagement || 0;
-            d.posts += point.posts || 0;
-          }
-          const trendData: Array<{
-            month: string;
-            roi: number;
-            target: number;
-          }> = [];
-          for (const [key, data] of monthlyData) {
-            const [, month] = key.split('-');
-            const cost = data.posts * 50;
-            const rev = data.engagement * 5;
-            trendData.push({
-              month: months[parseInt(month)],
-              roi: cost > 0 ? Math.round(((rev - cost) / cost) * 100) : 0,
-              target: 100,
-            });
-          }
-          if (trendData.length > 0) setRoiTrendData(trendData.slice(-12));
-          else
-            setRoiTrendData(
-              months.map(m => ({ month: m, roi: 0, target: 100 }))
-            );
-        }
-      }
+  const { data: statsData, error: statsError } = useSWR<StatsApiResponse>(
+    '/api/stats',
+    fetchJson,
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
+  );
 
-      if (statsRes.ok) {
-        const statsData = await statsRes.json();
-        const totalPosts = statsData.posts?.total || 0;
-        const visitors = totalPosts * 100;
-        const productViews = Math.floor(visitors * 0.6);
-        const addToCart = Math.floor(productViews * 0.4);
-        const checkout = Math.floor(addToCart * 0.5);
-        const purchase = Math.floor(checkout * 0.5);
-        setFunnelData([
-          {
-            name: 'Visitors',
-            value: visitors,
-            conversionRate: 100,
-            dropOff: 0,
-          },
-          {
-            name: 'Product Views',
-            value: productViews,
-            conversionRate:
-              visitors > 0 ? Math.round((productViews / visitors) * 100) : 0,
-            dropOff:
-              visitors > 0
-                ? Math.round((1 - productViews / visitors) * 100)
-                : 0,
-          },
-          {
-            name: 'Add to Cart',
-            value: addToCart,
-            conversionRate:
-              productViews > 0
-                ? Math.round((addToCart / productViews) * 100)
-                : 0,
-            dropOff:
-              productViews > 0
-                ? Math.round((1 - addToCart / productViews) * 100)
-                : 0,
-          },
-          {
-            name: 'Checkout',
-            value: checkout,
-            conversionRate:
-              addToCart > 0 ? Math.round((checkout / addToCart) * 100) : 0,
-            dropOff:
-              addToCart > 0 ? Math.round((1 - checkout / addToCart) * 100) : 0,
-          },
-          {
-            name: 'Purchase',
-            value: purchase,
-            conversionRate:
-              checkout > 0 ? Math.round((purchase / checkout) * 100) : 0,
-            dropOff:
-              checkout > 0 ? Math.round((1 - purchase / checkout) * 100) : 0,
-          },
-        ]);
-      }
-    } catch (error) {
-      console.error('Error loading campaign data:', error);
+  const processCampaignData = useCallback(() => {
+    if (campaignsError || performanceError || statsError) {
+      console.error(
+        'Error loading campaign data:',
+        campaignsError ?? performanceError ?? statsError
+      );
       notify.error('Failed to load campaign data');
+      return;
     }
-  }, []);
+
+    if (campaignsData?.campaigns && Array.isArray(campaignsData.campaigns)) {
+      setCampaigns(
+        campaignsData.campaigns.map(camp => {
+          const posts = camp.posts || [];
+          const totalImpressions = posts.reduce(
+            (s, p) => s + (p.analytics?.impressions || 0),
+            0
+          );
+          const totalClicks = posts.reduce(
+            (s, p) => s + (p.analytics?.clicks || 0),
+            0
+          );
+          const totalConversions = posts.reduce(
+            (s, p) => s + (p.analytics?.conversions || 0),
+            0
+          );
+          const totalRevenue = posts.reduce(
+            (s, p) => s + (p.analytics?.revenue || 0),
+            0
+          );
+          const estimatedBudget = totalRevenue > 0 ? totalRevenue * 0.2 : 0;
+          const spent = estimatedBudget * 0.95;
+          const roi = spent > 0 ? ((totalRevenue - spent) / spent) * 100 : 0;
+          const status: 'active' | 'completed' | 'planned' =
+            camp.status === 'active'
+              ? 'active'
+              : camp.status === 'completed' || camp.status === 'archived'
+                ? 'completed'
+                : camp.status === 'scheduled'
+                  ? 'planned'
+                  : 'active';
+          return {
+            id: camp.id,
+            name: camp.name,
+            platform: camp.platform,
+            startDate: new Date(camp.createdAt),
+            endDate: new Date(
+              camp.settings?.scheduledAt ||
+                Date.now() + 30 * 24 * 60 * 60 * 1000
+            ),
+            budget: estimatedBudget,
+            spent,
+            impressions: totalImpressions,
+            clicks: totalClicks,
+            conversions: totalConversions,
+            revenue: totalRevenue,
+            roi: Math.round(roi),
+            status,
+          };
+        })
+      );
+    }
+
+    if (performanceData?.success && performanceData.data?.platforms) {
+      const channels: ChannelPerformance[] = performanceData.data.platforms.map(
+        plat => {
+          const inv = plat.posts * 50;
+          const rev = plat.engagement * 5;
+          const roi = inv > 0 ? ((rev - inv) / inv) * 100 : 0;
+          const conv = Math.floor(plat.engagement * 0.05);
+          return {
+            channel:
+              plat.platform.charAt(0).toUpperCase() + plat.platform.slice(1),
+            investment: inv,
+            revenue: rev,
+            roi: Math.round(roi),
+            conversions: conv,
+            cpa: conv > 0 ? Math.round((inv / conv) * 100) / 100 : 0,
+          };
+        }
+      );
+      if (channels.length > 0) setChannelPerformance(channels);
+    }
+
+    if (performanceData?.success && performanceData.data?.timeline) {
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+      const monthlyData = new Map<
+        string,
+        { engagement: number; posts: number }
+      >();
+      for (const point of performanceData.data.timeline) {
+        const date = new Date(point.date);
+        const key = `${date.getFullYear()}-${date.getMonth()}`;
+        if (!monthlyData.has(key))
+          monthlyData.set(key, { engagement: 0, posts: 0 });
+        const d = monthlyData.get(key)!;
+        d.engagement += point.engagement || 0;
+        d.posts += point.posts || 0;
+      }
+      const trendData: Array<{ month: string; roi: number; target: number }> =
+        [];
+      for (const [key, data] of monthlyData) {
+        const [, month] = key.split('-');
+        const cost = data.posts * 50;
+        const rev = data.engagement * 5;
+        trendData.push({
+          month: months[parseInt(month)],
+          roi: cost > 0 ? Math.round(((rev - cost) / cost) * 100) : 0,
+          target: 100,
+        });
+      }
+      if (trendData.length > 0) setRoiTrendData(trendData.slice(-12));
+      else
+        setRoiTrendData(months.map(m => ({ month: m, roi: 0, target: 100 })));
+    }
+
+    if (statsData) {
+      const totalPosts = statsData.posts?.total || 0;
+      const visitors = totalPosts * 100;
+      const productViews = Math.floor(visitors * 0.6);
+      const addToCart = Math.floor(productViews * 0.4);
+      const checkout = Math.floor(addToCart * 0.5);
+      const purchase = Math.floor(checkout * 0.5);
+      setFunnelData([
+        { name: 'Visitors', value: visitors, conversionRate: 100, dropOff: 0 },
+        {
+          name: 'Product Views',
+          value: productViews,
+          conversionRate:
+            visitors > 0 ? Math.round((productViews / visitors) * 100) : 0,
+          dropOff:
+            visitors > 0 ? Math.round((1 - productViews / visitors) * 100) : 0,
+        },
+        {
+          name: 'Add to Cart',
+          value: addToCart,
+          conversionRate:
+            productViews > 0 ? Math.round((addToCart / productViews) * 100) : 0,
+          dropOff:
+            productViews > 0
+              ? Math.round((1 - addToCart / productViews) * 100)
+              : 0,
+        },
+        {
+          name: 'Checkout',
+          value: checkout,
+          conversionRate:
+            addToCart > 0 ? Math.round((checkout / addToCart) * 100) : 0,
+          dropOff:
+            addToCart > 0 ? Math.round((1 - checkout / addToCart) * 100) : 0,
+        },
+        {
+          name: 'Purchase',
+          value: purchase,
+          conversionRate:
+            checkout > 0 ? Math.round((purchase / checkout) * 100) : 0,
+          dropOff:
+            checkout > 0 ? Math.round((1 - purchase / checkout) * 100) : 0,
+        },
+      ]);
+    }
+  }, [
+    campaignsData,
+    performanceData,
+    statsData,
+    campaignsError,
+    performanceError,
+    statsError,
+  ]);
 
   useEffect(() => {
     calculateROI();
   }, [calculateROI]);
+
   useEffect(() => {
-    loadCampaignData();
-  }, [loadCampaignData]);
+    processCampaignData();
+  }, [processCampaignData]);
 
   return (
     <div className="space-y-6">

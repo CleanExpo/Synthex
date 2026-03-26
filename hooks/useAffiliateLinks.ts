@@ -63,7 +63,8 @@ export interface AffiliateLinksData {
 // ============================================================================
 
 function getAuthHeaders(): HeadersInit {
-  if (typeof window === 'undefined') return { 'Content-Type': 'application/json' };
+  if (typeof window === 'undefined')
+    return { 'Content-Type': 'application/json' };
 
   const token =
     localStorage.getItem('auth_token') ||
@@ -123,14 +124,17 @@ export function useAffiliateLinks(options: UseAffiliateLinksOptions = {}) {
       const [networksRes, linksRes, statsRes] = await Promise.all([
         fetch('/api/affiliates/networks', {
           headers,
+          credentials: 'include',
           signal: abortControllerRef.current.signal,
         }),
         fetch(linkUrl, {
           headers,
+          credentials: 'include',
           signal: abortControllerRef.current.signal,
         }),
         fetch('/api/affiliates/stats', {
           headers,
+          credentials: 'include',
           signal: abortControllerRef.current.signal,
         }),
       ]);
@@ -182,141 +186,162 @@ export function useAffiliateLinks(options: UseAffiliateLinksOptions = {}) {
   // NETWORK MUTATIONS
   // ============================================================================
 
-  const createNetwork = useCallback(async (input: CreateNetworkInput): Promise<AffiliateNetwork> => {
-    setIsMutating(true);
-    try {
-      const res = await fetch('/api/affiliates/networks', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(input),
-      });
+  const createNetwork = useCallback(
+    async (input: CreateNetworkInput): Promise<AffiliateNetwork> => {
+      setIsMutating(true);
+      try {
+        const res = await fetch('/api/affiliates/networks', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          credentials: 'include',
+          body: JSON.stringify(input),
+        });
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to create network');
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || 'Failed to create network');
+        }
+
+        const { data: network } = await res.json();
+        await fetchData();
+        return network;
+      } finally {
+        setIsMutating(false);
       }
+    },
+    [fetchData]
+  );
 
-      const { data: network } = await res.json();
-      await fetchData();
-      return network;
-    } finally {
-      setIsMutating(false);
-    }
-  }, [fetchData]);
+  const updateNetwork = useCallback(
+    async (
+      networkId: string,
+      input: UpdateNetworkInput
+    ): Promise<AffiliateNetwork> => {
+      setIsMutating(true);
+      try {
+        const res = await fetch(`/api/affiliates/networks/${networkId}`, {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          credentials: 'include',
+          body: JSON.stringify(input),
+        });
 
-  const updateNetwork = useCallback(async (
-    networkId: string,
-    input: UpdateNetworkInput
-  ): Promise<AffiliateNetwork> => {
-    setIsMutating(true);
-    try {
-      const res = await fetch(`/api/affiliates/networks/${networkId}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(input),
-      });
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || 'Failed to update network');
+        }
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to update network');
+        const { data: network } = await res.json();
+        await fetchData();
+        return network;
+      } finally {
+        setIsMutating(false);
       }
+    },
+    [fetchData]
+  );
 
-      const { data: network } = await res.json();
-      await fetchData();
-      return network;
-    } finally {
-      setIsMutating(false);
-    }
-  }, [fetchData]);
+  const deleteNetwork = useCallback(
+    async (networkId: string): Promise<void> => {
+      setIsMutating(true);
+      try {
+        const res = await fetch(`/api/affiliates/networks/${networkId}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders(),
+          credentials: 'include',
+        });
 
-  const deleteNetwork = useCallback(async (networkId: string): Promise<void> => {
-    setIsMutating(true);
-    try {
-      const res = await fetch(`/api/affiliates/networks/${networkId}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-      });
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || 'Failed to delete network');
+        }
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to delete network');
+        await fetchData();
+      } finally {
+        setIsMutating(false);
       }
-
-      await fetchData();
-    } finally {
-      setIsMutating(false);
-    }
-  }, [fetchData]);
+    },
+    [fetchData]
+  );
 
   // ============================================================================
   // LINK MUTATIONS
   // ============================================================================
 
-  const createLink = useCallback(async (input: CreateLinkInput): Promise<AffiliateLink> => {
-    setIsMutating(true);
-    try {
-      const res = await fetch('/api/affiliates/links', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(input),
-      });
+  const createLink = useCallback(
+    async (input: CreateLinkInput): Promise<AffiliateLink> => {
+      setIsMutating(true);
+      try {
+        const res = await fetch('/api/affiliates/links', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          credentials: 'include',
+          body: JSON.stringify(input),
+        });
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to create link');
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || 'Failed to create link');
+        }
+
+        const { data: link } = await res.json();
+        await fetchData();
+        return link;
+      } finally {
+        setIsMutating(false);
       }
+    },
+    [fetchData]
+  );
 
-      const { data: link } = await res.json();
-      await fetchData();
-      return link;
-    } finally {
-      setIsMutating(false);
-    }
-  }, [fetchData]);
+  const updateLink = useCallback(
+    async (linkId: string, input: UpdateLinkInput): Promise<AffiliateLink> => {
+      setIsMutating(true);
+      try {
+        const res = await fetch(`/api/affiliates/links/${linkId}`, {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          credentials: 'include',
+          body: JSON.stringify(input),
+        });
 
-  const updateLink = useCallback(async (
-    linkId: string,
-    input: UpdateLinkInput
-  ): Promise<AffiliateLink> => {
-    setIsMutating(true);
-    try {
-      const res = await fetch(`/api/affiliates/links/${linkId}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(input),
-      });
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || 'Failed to update link');
+        }
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to update link');
+        const { data: link } = await res.json();
+        await fetchData();
+        return link;
+      } finally {
+        setIsMutating(false);
       }
+    },
+    [fetchData]
+  );
 
-      const { data: link } = await res.json();
-      await fetchData();
-      return link;
-    } finally {
-      setIsMutating(false);
-    }
-  }, [fetchData]);
+  const deleteLink = useCallback(
+    async (linkId: string): Promise<void> => {
+      setIsMutating(true);
+      try {
+        const res = await fetch(`/api/affiliates/links/${linkId}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders(),
+          credentials: 'include',
+        });
 
-  const deleteLink = useCallback(async (linkId: string): Promise<void> => {
-    setIsMutating(true);
-    try {
-      const res = await fetch(`/api/affiliates/links/${linkId}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-      });
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || 'Failed to delete link');
+        }
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to delete link');
+        await fetchData();
+      } finally {
+        setIsMutating(false);
       }
-
-      await fetchData();
-    } finally {
-      setIsMutating(false);
-    }
-  }, [fetchData]);
+    },
+    [fetchData]
+  );
 
   // ============================================================================
   // RETURN

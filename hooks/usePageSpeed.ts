@@ -5,13 +5,12 @@
  * - analyzeUrl: Run on-demand PageSpeed analysis for a URL
  * - history: Past analysis records from SEOAudit storage
  * - trends: Performance trend data aggregated by date
- *
- * Uses raw fetch + useState pattern (no SWR/TanStack Query).
  */
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
+import useSWR from 'swr';
 
 // ============================================================================
 // TYPES
@@ -90,19 +89,36 @@ interface AnalyzeResponse {
   error?: string;
 }
 
-interface HistoryResponse {
-  success: boolean;
-  history?: PageSpeedHistoryEntry[];
-  total?: number;
-  message?: string;
-  error?: string;
+// ============================================================================
+// FETCHERS
+// ============================================================================
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(
+      (errorData as { error?: string }).error ||
+        `HTTP ${res.status}: ${res.statusText}`
+    );
+  }
+  return res.json() as Promise<T>;
 }
 
-interface TrendsResponse {
-  success: boolean;
-  trends?: PerformanceTrendPoint[];
-  days?: number;
-  error?: string;
+async function fetchHistory(url: string): Promise<PageSpeedHistoryEntry[]> {
+  const data = await fetchJson<{
+    success: boolean;
+    history?: PageSpeedHistoryEntry[];
+  }>(url);
+  return data.history || [];
+}
+
+async function fetchTrends(url: string): Promise<PerformanceTrendPoint[]> {
+  const data = await fetchJson<{
+    success: boolean;
+    trends?: PerformanceTrendPoint[];
+  }>(url);
+  return data.trends || [];
 }
 
 // ============================================================================
@@ -110,23 +126,34 @@ interface TrendsResponse {
 // ============================================================================
 
 export function usePageSpeed() {
-  // Analysis state
+  // Analysis state — remains manual (POST with body)
   const [analysis, setAnalysis] = useState<PageSpeedAnalysis | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
-  // History state
-  const [history, setHistory] = useState<PageSpeedHistoryEntry[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(true);
-
-  // Trends state
-  const [trends, setTrends] = useState<PerformanceTrendPoint[]>([]);
-  const [trendsLoading, setTrendsLoading] = useState(true);
-
-  const mountedRef = useRef(true);
   const analyzeControllerRef = useRef<AbortController | null>(null);
-  const historyControllerRef = useRef<AbortController | null>(null);
-  const trendsControllerRef = useRef<AbortController | null>(null);
+
+  // History via SWR
+  const {
+    data: history = [],
+    isLoading: historyLoading,
+    mutate: mutateHistory,
+  } = useSWR<PageSpeedHistoryEntry[]>(
+    '/api/seo/pagespeed/history',
+    fetchHistory,
+    { revalidateOnFocus: false }
+  );
+
+  // Trends via SWR
+  const {
+    data: trends = [],
+    isLoading: trendsLoading,
+    mutate: mutateTrends,
+  } = useSWR<PerformanceTrendPoint[]>(
+    '/api/seo/pagespeed/trends',
+    fetchTrends,
+    { revalidateOnFocus: false }
+  );
 
   /**
    * Run PageSpeed analysis on a URL
@@ -144,7 +171,6 @@ export function usePageSpeed() {
       const controller = new AbortController();
       analyzeControllerRef.current = controller;
 
-      if (!mountedRef.current) return null;
       setAnalysisLoading(true);
       setAnalysisError(null);
       setAnalysis(null);
@@ -160,13 +186,18 @@ export function usePageSpeed() {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+          throw new Error(
+            (errorData as { error?: string }).error ||
+              `HTTP ${response.status}: ${response.statusText}`
+          );
         }
 
         const data: AnalyzeResponse = await response.json();
 
-        if (mountedRef.current && data.analysis) {
+        if (data.analysis) {
           setAnalysis(data.analysis);
+          // Refresh history after new analysis
+          void mutateHistory();
         }
 
         return data.analysis || null;
@@ -174,104 +205,28 @@ export function usePageSpeed() {
         if (err instanceof Error && err.name === 'AbortError') {
           return null;
         }
-        if (mountedRef.current) {
-          setAnalysisError(err instanceof Error ? err.message : String(err));
-        }
+        setAnalysisError(err instanceof Error ? err.message : String(err));
         return null;
       } finally {
-        if (mountedRef.current) {
-          setAnalysisLoading(false);
-        }
+        setAnalysisLoading(false);
       }
     },
-    []
+    [mutateHistory]
   );
 
-  /**
-   * Fetch analysis history
-   */
-  const fetchHistory = useCallback(async () => {
-    if (historyControllerRef.current) {
-      historyControllerRef.current.abort();
-    }
+  const refetchHistory = useCallback(
+    async (_days?: number) => {
+      await mutateHistory();
+    },
+    [mutateHistory]
+  );
 
-    const controller = new AbortController();
-    historyControllerRef.current = controller;
-
-    if (!mountedRef.current) return;
-    setHistoryLoading(true);
-
-    try {
-      const response = await fetch('/api/seo/pagespeed/history', {
-        credentials: 'include',
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data: HistoryResponse = await response.json();
-
-      if (mountedRef.current) {
-        setHistory(data.history || []);
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return;
-      }
-      // Silently fail for history — not critical
-      console.warn('Failed to fetch PageSpeed history:', err);
-    } finally {
-      if (mountedRef.current) {
-        setHistoryLoading(false);
-      }
-    }
-  }, []);
-
-  /**
-   * Fetch performance trends
-   */
-  const fetchTrends = useCallback(async (days?: number) => {
-    if (trendsControllerRef.current) {
-      trendsControllerRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    trendsControllerRef.current = controller;
-
-    if (!mountedRef.current) return;
-    setTrendsLoading(true);
-
-    try {
-      const params = days ? `?days=${days}` : '';
-      const response = await fetch(`/api/seo/pagespeed/trends${params}`, {
-        credentials: 'include',
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data: TrendsResponse = await response.json();
-
-      if (mountedRef.current) {
-        setTrends(data.trends || []);
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return;
-      }
-      console.warn('Failed to fetch PageSpeed trends:', err);
-    } finally {
-      if (mountedRef.current) {
-        setTrendsLoading(false);
-      }
-    }
-  }, []);
+  const refetchTrends = useCallback(
+    async (_days?: number) => {
+      await mutateTrends();
+    },
+    [mutateTrends]
+  );
 
   /**
    * Clear analysis result
@@ -280,20 +235,6 @@ export function usePageSpeed() {
     setAnalysis(null);
     setAnalysisError(null);
   }, []);
-
-  // Fetch history and trends on mount
-  useEffect(() => {
-    mountedRef.current = true;
-    fetchHistory();
-    fetchTrends();
-
-    return () => {
-      mountedRef.current = false;
-      if (analyzeControllerRef.current) analyzeControllerRef.current.abort();
-      if (historyControllerRef.current) historyControllerRef.current.abort();
-      if (trendsControllerRef.current) trendsControllerRef.current.abort();
-    };
-  }, [fetchHistory, fetchTrends]);
 
   return {
     // Analysis
@@ -306,12 +247,12 @@ export function usePageSpeed() {
     // History
     history,
     historyLoading,
-    fetchHistory,
+    fetchHistory: refetchHistory,
 
     // Trends
     trends,
     trendsLoading,
-    fetchTrends,
+    fetchTrends: refetchTrends,
 
     // Convenience loading state
     isLoading: analysisLoading || historyLoading || trendsLoading,

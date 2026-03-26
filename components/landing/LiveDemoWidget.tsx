@@ -254,6 +254,7 @@ export function LiveDemoWidget() {
       const res = await fetch('/api/demo/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ url: normalised }),
       });
       if (!res.ok) throw new Error('failed');

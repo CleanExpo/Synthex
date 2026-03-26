@@ -4,13 +4,13 @@
  * @description Manages content comment state.
  * Provides create, update, remove, resolve, unresolve, and refresh actions.
  *
- * Uses raw fetch + useState pattern (no SWR/TanStack Query).
- * Follows the same pattern as hooks/use-webhooks.ts.
+ * Uses SWR for GET data fetching; mutations use direct fetch + mutate().
  */
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
+import useSWR from 'swr';
 
 // ============================================================================
 // TYPES
@@ -74,66 +74,35 @@ interface DeleteCommentResponse {
 }
 
 // ============================================================================
+// FETCHER
+// ============================================================================
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
+// ============================================================================
 // HOOK
 // ============================================================================
 
 export function useComments(contentType: string, contentId: string) {
-  const [comments, setComments] = useState<ContentComment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const mountedRef = useRef(true);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const params = new URLSearchParams({ contentType, contentId });
+  const url = `/api/comments?${params.toString()}`;
 
-  /**
-   * Fetch all comments from API
-   */
-  const fetchComments = useCallback(async () => {
-    // Cancel any in-flight request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
+  const {
+    data: response,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<CommentsListResponse>(url, fetchJson, {
+    revalidateOnFocus: false,
+  });
 
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    if (!mountedRef.current) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const params = new URLSearchParams({
-        contentType,
-        contentId,
-      });
-
-      const response = await fetch(`/api/comments?${params.toString()}`, {
-        credentials: 'include',
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data: CommentsListResponse = await response.json();
-
-      if (mountedRef.current) {
-        setComments(data.data);
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return; // Request was cancelled, don't update state
-      }
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : String(err));
-      }
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
-    }
-  }, [contentType, contentId]);
+  // Backward-compatible aliases
+  const loading = isLoading;
+  const comments = response?.data ?? [];
 
   /**
    * Create a new comment
@@ -142,34 +111,30 @@ export function useComments(contentType: string, contentId: string) {
   const create = useCallback(
     async (data: CreateCommentData): Promise<ContentComment | null> => {
       try {
-        const response = await fetch('/api/comments', {
+        const res = await fetch('/api/comments', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(data),
         });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(
+            errorData.error ||
+              errorData.message ||
+              `HTTP ${res.status}: ${res.statusText}`
+          );
         }
 
-        const result: CreateCommentResponse = await response.json();
-
-        // Refetch all comments to reflect the change
-        if (mountedRef.current) {
-          await fetchComments();
-        }
-
+        const result: CreateCommentResponse = await res.json();
+        await mutate();
         return result.data;
       } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-        return null;
+        throw err instanceof Error ? err : new Error(String(err));
       }
     },
-    [fetchComments]
+    [mutate]
   );
 
   /**
@@ -177,32 +142,26 @@ export function useComments(contentType: string, contentId: string) {
    */
   const update = useCallback(
     async (id: string, data: UpdateCommentData): Promise<void> => {
-      try {
-        const response = await fetch(`/api/comments/${encodeURIComponent(id)}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(data),
-        });
+      const res = await fetch(`/api/comments/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const _result: UpdateCommentResponse = await response.json();
-
-        // Refetch all comments to reflect the change
-        if (mountedRef.current) {
-          await fetchComments();
-        }
-      } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            errorData.message ||
+            `HTTP ${res.status}: ${res.statusText}`
+        );
       }
+
+      const _result: UpdateCommentResponse = await res.json();
+      await mutate();
     },
-    [fetchComments]
+    [mutate]
   );
 
   /**
@@ -210,30 +169,24 @@ export function useComments(contentType: string, contentId: string) {
    */
   const remove = useCallback(
     async (id: string): Promise<void> => {
-      try {
-        const response = await fetch(`/api/comments/${encodeURIComponent(id)}`, {
-          method: 'DELETE',
-          credentials: 'include',
-        });
+      const res = await fetch(`/api/comments/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const _result: DeleteCommentResponse = await response.json();
-
-        // Refetch all comments to reflect the change
-        if (mountedRef.current) {
-          await fetchComments();
-        }
-      } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            errorData.message ||
+            `HTTP ${res.status}: ${res.statusText}`
+        );
       }
+
+      const _result: DeleteCommentResponse = await res.json();
+      await mutate();
     },
-    [fetchComments]
+    [mutate]
   );
 
   /**
@@ -260,26 +213,17 @@ export function useComments(contentType: string, contentId: string) {
    * Refresh the comments list
    */
   const refresh = useCallback(async (): Promise<void> => {
-    await fetchComments();
-  }, [fetchComments]);
-
-  // Initial fetch on mount
-  useEffect(() => {
-    mountedRef.current = true;
-    fetchComments();
-
-    return () => {
-      mountedRef.current = false;
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, [fetchComments]);
+    await mutate();
+  }, [mutate]);
 
   return {
     comments,
     loading,
-    error,
+    error: error
+      ? error instanceof Error
+        ? error.message
+        : String(error)
+      : null,
     create,
     update,
     remove,

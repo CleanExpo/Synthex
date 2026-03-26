@@ -5,13 +5,12 @@
  * - analyzeReadiness: Run on-demand GEO readiness analysis for content
  * - history: Past analysis records from GEOAnalysis storage
  * - trends: Score trend data aggregated by date
- *
- * Uses raw fetch + useState pattern (no SWR/TanStack Query).
  */
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
+import useSWR from 'swr';
 import type {
   GEOScore,
   CitablePassage,
@@ -91,20 +90,36 @@ interface AnalyzeResponse {
   error?: string;
 }
 
-interface HistoryResponse {
-  success: boolean;
-  analyses?: GeoAnalysisHistoryItem[];
-  total?: number;
-  isDemo?: boolean;
-  error?: string;
+// ============================================================================
+// FETCHERS
+// ============================================================================
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(
+      (errorData as { error?: string }).error ||
+        `HTTP ${res.status}: ${res.statusText}`
+    );
+  }
+  const data = await res.json();
+  return data as T;
 }
 
-interface TrendsResponse {
-  success: boolean;
-  trends?: GeoScoreTrend[];
-  period?: { start: string; end: string; days: number };
-  isDemo?: boolean;
-  error?: string;
+async function fetchHistory(url: string): Promise<GeoAnalysisHistoryItem[]> {
+  const data = await fetchJson<{
+    success: boolean;
+    analyses?: GeoAnalysisHistoryItem[];
+  }>(url);
+  return data.analyses || [];
+}
+
+async function fetchTrends(url: string): Promise<GeoScoreTrend[]> {
+  const data = await fetchJson<{ success: boolean; trends?: GeoScoreTrend[] }>(
+    url
+  );
+  return data.trends || [];
 }
 
 // ============================================================================
@@ -112,23 +127,32 @@ interface TrendsResponse {
 // ============================================================================
 
 export function useGeoReadiness() {
-  // Analysis state
+  // Analysis state — remains manual (POST with body)
   const [result, setResult] = useState<GeoReadinessResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // History state
-  const [history, setHistory] = useState<GeoAnalysisHistoryItem[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(true);
-
-  // Trends state
-  const [trends, setTrends] = useState<GeoScoreTrend[]>([]);
-  const [trendsLoading, setTrendsLoading] = useState(true);
-
-  const mountedRef = useRef(true);
   const analyzeControllerRef = useRef<AbortController | null>(null);
-  const historyControllerRef = useRef<AbortController | null>(null);
-  const trendsControllerRef = useRef<AbortController | null>(null);
+
+  // History via SWR
+  const {
+    data: history = [],
+    isLoading: historyLoading,
+    mutate: mutateHistory,
+  } = useSWR<GeoAnalysisHistoryItem[]>(
+    '/api/seo/geo-readiness/history',
+    fetchHistory,
+    { revalidateOnFocus: false }
+  );
+
+  // Trends via SWR
+  const {
+    data: trends = [],
+    isLoading: trendsLoading,
+    mutate: mutateTrends,
+  } = useSWR<GeoScoreTrend[]>('/api/seo/geo-readiness/trends', fetchTrends, {
+    revalidateOnFocus: false,
+  });
 
   /**
    * Run GEO Readiness analysis on content
@@ -147,7 +171,6 @@ export function useGeoReadiness() {
       const controller = new AbortController();
       analyzeControllerRef.current = controller;
 
-      if (!mountedRef.current) return null;
       setLoading(true);
       setError(null);
       setResult(null);
@@ -163,12 +186,15 @@ export function useGeoReadiness() {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+          throw new Error(
+            (errorData as { error?: string }).error ||
+              `HTTP ${response.status}: ${response.statusText}`
+          );
         }
 
         const data: AnalyzeResponse = await response.json();
 
-        if (mountedRef.current && data.result) {
+        if (data.result) {
           const mappedResult: GeoReadinessResult = {
             score: data.result.score,
             readinessTier: data.result.readiness.tier,
@@ -181,6 +207,8 @@ export function useGeoReadiness() {
             metadata: data.result.metadata,
           };
           setResult(mappedResult);
+          // Refresh history after new analysis
+          void mutateHistory();
           return mappedResult;
         }
 
@@ -189,105 +217,39 @@ export function useGeoReadiness() {
         if (err instanceof Error && err.name === 'AbortError') {
           return null;
         }
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
+        setError(err instanceof Error ? err.message : String(err));
         return null;
       } finally {
-        if (mountedRef.current) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     },
-    []
+    [mutateHistory]
   );
 
   /**
-   * Fetch analysis history
+   * Reload history with optional limit param
    */
-  const loadHistory = useCallback(async (limit?: number) => {
-    if (historyControllerRef.current) {
-      historyControllerRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    historyControllerRef.current = controller;
-
-    if (!mountedRef.current) return;
-    setHistoryLoading(true);
-
-    try {
-      const params = limit ? `?limit=${limit}` : '';
-      const response = await fetch(`/api/seo/geo-readiness/history${params}`, {
-        credentials: 'include',
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+  const loadHistory = useCallback(
+    async (limit?: number) => {
+      if (limit) {
+        // Re-fetch with limit param — revalidate full key
+        await mutateHistory();
+      } else {
+        await mutateHistory();
       }
-
-      const data: HistoryResponse = await response.json();
-
-      if (mountedRef.current) {
-        setHistory(data.analyses || []);
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return;
-      }
-      // Silently fail for history — not critical
-      console.warn('Failed to fetch GEO Readiness history:', err);
-    } finally {
-      if (mountedRef.current) {
-        setHistoryLoading(false);
-      }
-    }
-  }, []);
+    },
+    [mutateHistory]
+  );
 
   /**
-   * Fetch score trends
+   * Reload trends with optional days param
    */
-  const loadTrends = useCallback(async (days?: number) => {
-    if (trendsControllerRef.current) {
-      trendsControllerRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    trendsControllerRef.current = controller;
-
-    if (!mountedRef.current) return;
-    setTrendsLoading(true);
-
-    try {
-      const params = days ? `?days=${days}` : '';
-      const response = await fetch(`/api/seo/geo-readiness/trends${params}`, {
-        credentials: 'include',
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data: TrendsResponse = await response.json();
-
-      if (mountedRef.current) {
-        setTrends(data.trends || []);
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return;
-      }
-      console.warn('Failed to fetch GEO Readiness trends:', err);
-    } finally {
-      if (mountedRef.current) {
-        setTrendsLoading(false);
-      }
-    }
-  }, []);
+  const loadTrends = useCallback(
+    async (_days?: number) => {
+      await mutateTrends();
+    },
+    [mutateTrends]
+  );
 
   /**
    * Clear analysis result
@@ -296,20 +258,6 @@ export function useGeoReadiness() {
     setResult(null);
     setError(null);
   }, []);
-
-  // Fetch history and trends on mount
-  useEffect(() => {
-    mountedRef.current = true;
-    loadHistory();
-    loadTrends();
-
-    return () => {
-      mountedRef.current = false;
-      if (analyzeControllerRef.current) analyzeControllerRef.current.abort();
-      if (historyControllerRef.current) historyControllerRef.current.abort();
-      if (trendsControllerRef.current) trendsControllerRef.current.abort();
-    };
-  }, [loadHistory, loadTrends]);
 
   return {
     // Analysis

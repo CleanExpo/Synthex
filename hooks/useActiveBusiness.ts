@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import useSWR from 'swr';
 import { useUser } from '@/hooks/use-user';
 
 interface OwnedBusiness {
@@ -20,6 +21,11 @@ interface OwnedBusiness {
   };
 }
 
+interface BusinessesResponse {
+  businesses: OwnedBusiness[];
+  activeBusiness: string | null;
+}
+
 interface UseActiveBusinessReturn {
   businesses: OwnedBusiness[];
   activeBusiness: OwnedBusiness | null;
@@ -27,89 +33,72 @@ interface UseActiveBusinessReturn {
   isOwner: boolean;
   isLoading: boolean;
   switchBusiness: (orgId: string | null) => Promise<void>;
-  refetch: () => Promise<void>;
+  refetch: () => void;
+}
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise<T>;
 }
 
 export function useActiveBusiness(): UseActiveBusinessReturn {
   const { user } = useUser();
-  const [businesses, setBusinesses] = useState<OwnedBusiness[]>([]);
-  const [activeOrganizationId, setActiveOrganizationId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
   const isOwner = user?.isMultiBusinessOwner ?? false;
 
-  const fetchBusinesses = useCallback(async () => {
-    if (!isOwner) {
-      setIsLoading(false);
-      return;
-    }
+  // Switching state — separate from SWR loading
+  const [isSwitching, setIsSwitching] = useState(false);
 
-    try {
-      setIsLoading(true);
-      const response = await fetch('/api/businesses', {
-        credentials: 'include',
-      });
+  // Pass null key when not owner — SWR will skip the request
+  const { data, isLoading, mutate } = useSWR<BusinessesResponse>(
+    isOwner ? '/api/businesses' : null,
+    fetchJson,
+    { revalidateOnFocus: false }
+  );
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch businesses');
+  const businesses = data?.businesses ?? [];
+  const activeOrganizationId = data?.activeBusiness ?? null;
+  const activeBusiness =
+    businesses.find(b => b.organizationId === activeOrganizationId) ?? null;
+
+  const switchBusiness = useCallback(
+    async (orgId: string | null) => {
+      try {
+        setIsSwitching(true);
+        const res = await fetch('/api/businesses/switch', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ organizationId: orgId }),
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to switch business');
+        }
+
+        // Revalidate to get updated data
+        await mutate();
+      } catch (error) {
+        console.error('Error switching business:', error);
+        throw error;
+      } finally {
+        setIsSwitching(false);
       }
+    },
+    [mutate]
+  );
 
-      const data = await response.json();
-      setBusinesses(data.businesses || []);
-      setActiveOrganizationId(data.activeBusiness || null);
-    } catch (error) {
-      console.error('Error fetching businesses:', error);
-      setBusinesses([]);
-      setActiveOrganizationId(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isOwner]);
-
-  const switchBusiness = useCallback(async (orgId: string | null) => {
-    try {
-      setIsLoading(true);
-      const response = await fetch('/api/businesses/switch', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ organizationId: orgId }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to switch business');
-      }
-
-      const data = await response.json();
-      setActiveOrganizationId(data.activeOrganizationId);
-
-      // Refetch to get updated data
-      await fetchBusinesses();
-    } catch (error) {
-      console.error('Error switching business:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [fetchBusinesses]);
-
-  useEffect(() => {
-    fetchBusinesses();
-  }, [fetchBusinesses]);
-
-  const activeBusiness = businesses.find(
-    (b) => b.organizationId === activeOrganizationId
-  ) || null;
+  const refetch = useCallback(() => {
+    void mutate();
+  }, [mutate]);
 
   return {
     businesses,
     activeBusiness,
     activeOrganizationId,
     isOwner,
-    isLoading,
+    isLoading: isLoading || isSwitching,
     switchBusiness,
-    refetch: fetchBusinesses,
+    refetch,
   };
 }

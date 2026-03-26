@@ -7,18 +7,19 @@
  * - Update template via PATCH /api/reports/templates?id=X
  * - Delete template via DELETE /api/reports/templates?id=X
  *
- * Uses raw fetch + useState pattern (no SWR/TanStack Query).
+ * Uses SWR for GET data fetching; mutations use direct fetch + mutate().
  */
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
+import useSWR from 'swr';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-/** Visualization configuration within a report template */
+/** Visualisation configuration within a report template */
 export interface TemplateVisualization {
   type: 'line' | 'bar' | 'pie' | 'area' | 'table' | 'metric' | 'heatmap';
   title: string;
@@ -70,7 +71,14 @@ export interface SaveTemplateParams {
   name: string;
   description?: string;
   category: 'performance' | 'engagement' | 'growth' | 'content' | 'custom';
-  reportType: 'overview' | 'engagement' | 'content' | 'audience' | 'campaigns' | 'growth' | 'custom';
+  reportType:
+    | 'overview'
+    | 'engagement'
+    | 'content'
+    | 'audience'
+    | 'campaigns'
+    | 'growth'
+    | 'custom';
   metrics: string[];
   dimensions?: string[];
   visualizations?: TemplateVisualization[];
@@ -108,164 +116,134 @@ interface DeleteTemplateResponse {
 }
 
 // ============================================================================
+// FETCHER
+// ============================================================================
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
+// ============================================================================
 // HOOK
 // ============================================================================
 
 export function useReportTemplates(options?: { category?: string }) {
-  const [templates, setTemplates] = useState<ReportTemplate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const mountedRef = useRef(true);
-
   const category = options?.category;
 
-  /**
-   * Fetch templates from API
-   */
-  const fetchTemplates = useCallback(async () => {
-    if (!mountedRef.current) return;
-    setIsLoading(true);
-    setError(null);
+  const params = new URLSearchParams();
+  if (category) params.set('category', category);
+  const url = `/api/reports/templates${params.toString() ? `?${params.toString()}` : ''}`;
 
-    try {
-      const params = new URLSearchParams();
-      if (category) params.set('category', category);
+  const {
+    data: response,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<TemplatesResponse>(url, fetchJson, { revalidateOnFocus: false });
 
-      const url = `/api/reports/templates${params.toString() ? `?${params.toString()}` : ''}`;
-      const response = await fetch(url, {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data: TemplatesResponse = await response.json();
-
-      if (mountedRef.current) {
-        setTemplates(data.templates);
-      }
-    } catch (err) {
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err : new Error(String(err)));
-      }
-    } finally {
-      if (mountedRef.current) {
-        setIsLoading(false);
-      }
-    }
-  }, [category]);
+  const templates = response?.templates ?? [];
 
   /**
    * Save a new template
    */
-  const saveTemplate = useCallback(async (params: SaveTemplateParams): Promise<ReportTemplate | null> => {
-    try {
-      const response = await fetch('/api/reports/templates', {
+  const saveTemplate = useCallback(
+    async (
+      templateParams: SaveTemplateParams
+    ): Promise<ReportTemplate | null> => {
+      const res = await fetch('/api/reports/templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(params),
+        body: JSON.stringify(templateParams),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `HTTP ${res.status}: ${res.statusText}`
+        );
       }
 
-      const data: CreateTemplateResponse = await response.json();
-
-      // Refetch templates to include the new one
-      if (mountedRef.current) {
-        await fetchTemplates();
-      }
-
+      const data: CreateTemplateResponse = await res.json();
+      await mutate();
       return data.template;
-    } catch (err) {
-      throw err instanceof Error ? err : new Error(String(err));
-    }
-  }, [fetchTemplates]);
+    },
+    [mutate]
+  );
 
   /**
    * Update an existing template
    */
-  const updateTemplate = useCallback(async (id: string, params: UpdateTemplateParams): Promise<ReportTemplate | null> => {
-    try {
-      const response = await fetch(`/api/reports/templates?id=${encodeURIComponent(id)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(params),
-      });
+  const updateTemplate = useCallback(
+    async (
+      id: string,
+      templateParams: UpdateTemplateParams
+    ): Promise<ReportTemplate | null> => {
+      const res = await fetch(
+        `/api/reports/templates?id=${encodeURIComponent(id)}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(templateParams),
+        }
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `HTTP ${res.status}: ${res.statusText}`
+        );
       }
 
-      const data: UpdateTemplateResponse = await response.json();
-
-      // Refetch templates to reflect the update
-      if (mountedRef.current) {
-        await fetchTemplates();
-      }
-
+      const data: UpdateTemplateResponse = await res.json();
+      await mutate();
       return data.template;
-    } catch (err) {
-      throw err instanceof Error ? err : new Error(String(err));
-    }
-  }, [fetchTemplates]);
+    },
+    [mutate]
+  );
 
   /**
    * Delete a template
    */
-  const deleteTemplate = useCallback(async (id: string): Promise<boolean> => {
-    try {
-      const response = await fetch(`/api/reports/templates?id=${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
+  const deleteTemplate = useCallback(
+    async (id: string): Promise<boolean> => {
+      const res = await fetch(
+        `/api/reports/templates?id=${encodeURIComponent(id)}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+        }
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `HTTP ${res.status}: ${res.statusText}`
+        );
       }
 
-      const data: DeleteTemplateResponse = await response.json();
-
-      // Refetch templates to reflect the deletion
-      if (mountedRef.current) {
-        await fetchTemplates();
-      }
-
+      const data: DeleteTemplateResponse = await res.json();
+      await mutate();
       return data.success;
-    } catch (err) {
-      throw err instanceof Error ? err : new Error(String(err));
-    }
-  }, [fetchTemplates]);
+    },
+    [mutate]
+  );
 
   /**
    * Refetch templates manually
    */
   const refetch = useCallback(() => {
-    return fetchTemplates();
-  }, [fetchTemplates]);
-
-  // Initial fetch
-  useEffect(() => {
-    mountedRef.current = true;
-    fetchTemplates();
-
-    return () => {
-      mountedRef.current = false;
-    };
-  }, [fetchTemplates]);
+    return mutate();
+  }, [mutate]);
 
   return {
     templates,
     isLoading,
-    error,
+    error:
+      error instanceof Error ? error : error ? new Error(String(error)) : null,
     saveTemplate,
     updateTemplate,
     deleteTemplate,

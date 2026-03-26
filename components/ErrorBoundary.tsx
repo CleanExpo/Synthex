@@ -1,9 +1,25 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { AlertTriangle, RefreshCw, Home } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+
+/** Extracted into a function component so useRouter can be used inside a class-based ErrorBoundary. */
+function GoHomeButton() {
+  const router = useRouter();
+  return (
+    <Button
+      onClick={() => router.push('/')}
+      variant="outline"
+      className="border-orange-400/50 text-orange-400 hover:bg-orange-400/10"
+    >
+      <Home className="w-4 h-4 mr-2" />
+      Go Home
+    </Button>
+  );
+}
 // NOTE: @sentry/nextjs import REMOVED — Phase 114-02.
 // Even in a 'use client' component, Next.js SSR evaluates this server-side.
 // With @sentry/nextjs in serverExternalPackages, webpack emits require('@sentry/nextjs')
@@ -123,14 +139,7 @@ export class ErrorBoundary extends Component<
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Try Again
                   </Button>
-                  <Button
-                    onClick={() => (window.location.href = '/')}
-                    variant="outline"
-                    className="border-orange-400/50 text-orange-400 hover:bg-orange-400/10"
-                  >
-                    <Home className="w-4 h-4 mr-2" />
-                    Go Home
-                  </Button>
+                  <GoHomeButton />
                 </div>
               </div>
             </Card>

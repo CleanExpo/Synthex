@@ -4,13 +4,13 @@
  * @description Manages content sharing state.
  * Provides create, update, revoke, and refresh actions.
  *
- * Uses raw fetch + useState pattern (no SWR/TanStack Query).
- * Follows the same pattern as hooks/use-webhooks.ts.
+ * Uses SWR for GET data fetching; mutations use direct fetch + mutate().
  */
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
+import useSWR from 'swr';
 
 // ============================================================================
 // TYPES
@@ -92,81 +92,49 @@ interface RevokeShareResponse {
 }
 
 // ============================================================================
+// FETCHER
+// ============================================================================
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
+// Build query string from filter
+function buildQueryString(f: ShareFilter): string {
+  const params = new URLSearchParams();
+
+  if (f.contentType && f.contentId) {
+    params.set('contentType', f.contentType);
+    params.set('contentId', f.contentId);
+  } else if (f.sharedWithMe) {
+    params.set('sharedWithMe', 'true');
+  } else if (f.sharedByMe) {
+    params.set('sharedByMe', 'true');
+  }
+
+  return params.toString();
+}
+
+// ============================================================================
 // HOOK
 // ============================================================================
 
 export function useShares(filter: ShareFilter) {
-  const [shares, setShares] = useState<ContentShare[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const mountedRef = useRef(true);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const queryString = buildQueryString(filter);
+  const url = `/api/shares?${queryString}`;
 
-  /**
-   * Build query string from filter
-   */
-  const buildQueryString = useCallback((f: ShareFilter): string => {
-    const params = new URLSearchParams();
+  const {
+    data: response,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<SharesListResponse>(url, fetchJson, { revalidateOnFocus: false });
 
-    if (f.contentType && f.contentId) {
-      params.set('contentType', f.contentType);
-      params.set('contentId', f.contentId);
-    } else if (f.sharedWithMe) {
-      params.set('sharedWithMe', 'true');
-    } else if (f.sharedByMe) {
-      params.set('sharedByMe', 'true');
-    }
-
-    return params.toString();
-  }, []);
-
-  /**
-   * Fetch all shares from API
-   */
-  const fetchShares = useCallback(async () => {
-    // Cancel any in-flight request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    if (!mountedRef.current) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const queryString = buildQueryString(filter);
-
-      const response = await fetch(`/api/shares?${queryString}`, {
-        credentials: 'include',
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data: SharesListResponse = await response.json();
-
-      if (mountedRef.current) {
-        setShares(data.data);
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return; // Request was cancelled, don't update state
-      }
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : String(err));
-      }
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
-    }
-  }, [filter, buildQueryString]);
+  // Backward-compatible aliases
+  const loading = isLoading;
+  const shares = response?.data ?? [];
 
   /**
    * Create a new share
@@ -174,35 +142,27 @@ export function useShares(filter: ShareFilter) {
    */
   const create = useCallback(
     async (data: CreateShareData): Promise<ContentShare | null> => {
-      try {
-        const response = await fetch('/api/shares', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(data),
-        });
+      const res = await fetch('/api/shares', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result: CreateShareResponse = await response.json();
-
-        // Refetch all shares to reflect the change
-        if (mountedRef.current) {
-          await fetchShares();
-        }
-
-        return result.data;
-      } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-        return null;
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            errorData.message ||
+            `HTTP ${res.status}: ${res.statusText}`
+        );
       }
+
+      const result: CreateShareResponse = await res.json();
+      await mutate();
+      return result.data;
     },
-    [fetchShares]
+    [mutate]
   );
 
   /**
@@ -210,32 +170,26 @@ export function useShares(filter: ShareFilter) {
    */
   const update = useCallback(
     async (id: string, data: UpdateShareData): Promise<void> => {
-      try {
-        const response = await fetch(`/api/shares/${encodeURIComponent(id)}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(data),
-        });
+      const res = await fetch(`/api/shares/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const _result: UpdateShareResponse = await response.json();
-
-        // Refetch all shares to reflect the change
-        if (mountedRef.current) {
-          await fetchShares();
-        }
-      } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            errorData.message ||
+            `HTTP ${res.status}: ${res.statusText}`
+        );
       }
+
+      const _result: UpdateShareResponse = await res.json();
+      await mutate();
     },
-    [fetchShares]
+    [mutate]
   );
 
   /**
@@ -243,60 +197,45 @@ export function useShares(filter: ShareFilter) {
    */
   const revoke = useCallback(
     async (id: string, reason?: string): Promise<void> => {
-      try {
-        const url = reason
-          ? `/api/shares/${encodeURIComponent(id)}?reason=${encodeURIComponent(reason)}`
-          : `/api/shares/${encodeURIComponent(id)}`;
+      const revokeUrl = reason
+        ? `/api/shares/${encodeURIComponent(id)}?reason=${encodeURIComponent(reason)}`
+        : `/api/shares/${encodeURIComponent(id)}`;
 
-        const response = await fetch(url, {
-          method: 'DELETE',
-          credentials: 'include',
-        });
+      const res = await fetch(revokeUrl, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const _result: RevokeShareResponse = await response.json();
-
-        // Refetch all shares to reflect the change
-        if (mountedRef.current) {
-          await fetchShares();
-        }
-      } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            errorData.message ||
+            `HTTP ${res.status}: ${res.statusText}`
+        );
       }
+
+      const _result: RevokeShareResponse = await res.json();
+      await mutate();
     },
-    [fetchShares]
+    [mutate]
   );
 
   /**
    * Refresh the shares list
    */
   const refresh = useCallback(async (): Promise<void> => {
-    await fetchShares();
-  }, [fetchShares]);
-
-  // Initial fetch on mount
-  useEffect(() => {
-    mountedRef.current = true;
-    fetchShares();
-
-    return () => {
-      mountedRef.current = false;
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, [fetchShares]);
+    await mutate();
+  }, [mutate]);
 
   return {
     shares,
     loading,
-    error,
+    error: error
+      ? error instanceof Error
+        ? error.message
+        : String(error)
+      : null,
     create,
     update,
     revoke,

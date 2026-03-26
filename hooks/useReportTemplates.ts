@@ -15,16 +15,36 @@
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import useSWR from 'swr';
+import { useCallback } from 'react';
 import { toast } from 'sonner';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export type TemplateCategory = 'performance' | 'engagement' | 'growth' | 'content' | 'custom';
-export type ReportType = 'overview' | 'engagement' | 'content' | 'audience' | 'campaigns' | 'growth' | 'custom';
-export type VisualizationType = 'line' | 'bar' | 'pie' | 'area' | 'table' | 'metric' | 'heatmap';
+export type TemplateCategory =
+  | 'performance'
+  | 'engagement'
+  | 'growth'
+  | 'content'
+  | 'custom';
+export type ReportType =
+  | 'overview'
+  | 'engagement'
+  | 'content'
+  | 'audience'
+  | 'campaigns'
+  | 'growth'
+  | 'custom';
+export type VisualizationType =
+  | 'line'
+  | 'bar'
+  | 'pie'
+  | 'area'
+  | 'table'
+  | 'metric'
+  | 'heatmap';
 
 export interface Visualization {
   type: VisualizationType;
@@ -86,11 +106,35 @@ export interface UseReportTemplatesReturn {
   templates: ReportTemplate[];
   isLoading: boolean;
   error: Error | null;
-  createTemplate: (input: CreateTemplateInput) => Promise<ReportTemplate | null>;
-  updateTemplate: (id: string, input: UpdateTemplateInput) => Promise<ReportTemplate | null>;
+  createTemplate: (
+    input: CreateTemplateInput
+  ) => Promise<ReportTemplate | null>;
+  updateTemplate: (
+    id: string,
+    input: UpdateTemplateInput
+  ) => Promise<ReportTemplate | null>;
   deleteTemplate: (id: string) => Promise<boolean>;
   getTemplate: (id: string) => ReportTemplate | undefined;
   refresh: () => Promise<void>;
+}
+
+// ============================================================================
+// FETCHER
+// ============================================================================
+
+function mapTemplate(t: any): ReportTemplate {
+  return {
+    ...t,
+    createdAt: t.createdAt ? new Date(t.createdAt) : undefined,
+    updatedAt: t.updatedAt ? new Date(t.updatedAt) : undefined,
+  };
+}
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch templates');
+  const data = await res.json();
+  return (data.templates || []).map(mapTemplate) as T;
 }
 
 // ============================================================================
@@ -102,54 +146,26 @@ export function useReportTemplates(
 ): UseReportTemplatesReturn {
   const { autoLoad = true, category, includeSystem = true } = options;
 
-  const [templates, setTemplates] = useState<ReportTemplate[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const params = new URLSearchParams();
+  if (category) params.set('category', category);
+  params.set('includeSystem', String(includeSystem));
 
-  /**
-   * Fetch templates
-   */
-  const fetchTemplates = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const params = new URLSearchParams();
-      if (category) params.set('category', category);
-      params.set('includeSystem', String(includeSystem));
-
-      const response = await fetch(`/api/reports/templates?${params}`, {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch templates');
-      }
-
-      const data = await response.json();
-      setTemplates(
-        (data.templates || []).map((t: any) => ({
-          ...t,
-          createdAt: t.createdAt ? new Date(t.createdAt) : undefined,
-          updatedAt: t.updatedAt ? new Date(t.updatedAt) : undefined,
-        }))
-      );
-    } catch (err) {
-      setError(err as Error);
-      console.error('Fetch templates error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [category, includeSystem]);
+  const {
+    data: templates = [],
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<ReportTemplate[]>(
+    autoLoad ? `/api/reports/templates?${params}` : null,
+    fetchJson,
+    { revalidateOnFocus: false }
+  );
 
   /**
    * Create a new template
    */
   const createTemplate = useCallback(
     async (input: CreateTemplateInput): Promise<ReportTemplate | null> => {
-      setIsLoading(true);
-      setError(null);
-
       try {
         const response = await fetch('/api/reports/templates', {
           method: 'POST',
@@ -164,40 +180,33 @@ export function useReportTemplates(
         }
 
         const data = await response.json();
-        const newTemplate: ReportTemplate = {
-          ...data.template,
-          createdAt: new Date(data.template.createdAt),
-          updatedAt: new Date(data.template.updatedAt),
-        };
+        const newTemplate = mapTemplate(data.template);
 
-        setTemplates((prev) => [newTemplate, ...prev]);
+        await mutate();
         toast.success('Template created');
 
         return newTemplate;
       } catch (err) {
-        setError(err as Error);
         toast.error((err as Error).message);
         return null;
-      } finally {
-        setIsLoading(false);
       }
     },
-    []
+    [mutate]
   );
 
   /**
    * Update a template
    */
   const updateTemplate = useCallback(
-    async (id: string, input: UpdateTemplateInput): Promise<ReportTemplate | null> => {
+    async (
+      id: string,
+      input: UpdateTemplateInput
+    ): Promise<ReportTemplate | null> => {
       // Can't update system templates
       if (id.startsWith('system-')) {
         toast.error('System templates cannot be modified');
         return null;
       }
-
-      setIsLoading(true);
-      setError(null);
 
       try {
         const response = await fetch(`/api/reports/templates?id=${id}`, {
@@ -213,94 +222,78 @@ export function useReportTemplates(
         }
 
         const data = await response.json();
-        const updatedTemplate: ReportTemplate = {
-          ...data.template,
-          createdAt: new Date(data.template.createdAt),
-          updatedAt: new Date(data.template.updatedAt),
-        };
+        const updatedTemplate = mapTemplate(data.template);
 
-        setTemplates((prev) =>
-          prev.map((t) => (t.id === id ? updatedTemplate : t))
-        );
+        await mutate();
         toast.success('Template updated');
 
         return updatedTemplate;
       } catch (err) {
-        setError(err as Error);
         toast.error((err as Error).message);
         return null;
-      } finally {
-        setIsLoading(false);
       }
     },
-    []
+    [mutate]
   );
 
   /**
    * Delete a template
    */
-  const deleteTemplate = useCallback(async (id: string): Promise<boolean> => {
-    // Can't delete system templates
-    if (id.startsWith('system-')) {
-      toast.error('System templates cannot be deleted');
-      return false;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`/api/reports/templates?id=${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete template');
+  const deleteTemplate = useCallback(
+    async (id: string): Promise<boolean> => {
+      // Can't delete system templates
+      if (id.startsWith('system-')) {
+        toast.error('System templates cannot be deleted');
+        return false;
       }
 
-      setTemplates((prev) => prev.filter((t) => t.id !== id));
-      toast.success('Template deleted');
+      try {
+        const response = await fetch(`/api/reports/templates?id=${id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
 
-      return true;
-    } catch (err) {
-      setError(err as Error);
-      toast.error((err as Error).message);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to delete template');
+        }
+
+        await mutate();
+        toast.success('Template deleted');
+
+        return true;
+      } catch (err) {
+        toast.error((err as Error).message);
+        return false;
+      }
+    },
+    [mutate]
+  );
 
   /**
    * Get a template by ID
    */
   const getTemplate = useCallback(
     (id: string): ReportTemplate | undefined => {
-      return templates.find((t) => t.id === id);
+      return templates.find(t => t.id === id);
     },
     [templates]
   );
 
-  /**
-   * Auto-load on mount
-   */
-  useEffect(() => {
-    if (autoLoad) {
-      fetchTemplates();
-    }
-  }, [autoLoad, fetchTemplates]);
+  const refresh = useCallback(async () => {
+    await mutate();
+  }, [mutate]);
 
   return {
     templates,
     isLoading,
-    error,
+    error:
+      error instanceof Error ? error : error ? new Error(String(error)) : null,
     createTemplate,
     updateTemplate,
     deleteTemplate,
     getTemplate,
-    refresh: fetchTemplates,
+    refresh,
   };
 }
 

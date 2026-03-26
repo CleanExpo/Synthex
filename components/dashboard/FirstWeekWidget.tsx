@@ -11,6 +11,7 @@
 import { useState } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Sparkles,
   Calendar,
@@ -59,6 +60,7 @@ const PLATFORM_LABELS: Record<string, string> = {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function FirstWeekWidget() {
+  const router = useRouter();
   const { data, isLoading, error } = useSWR<KickstartStatus>(
     '/api/onboarding/kickstart',
     fetchJson,
@@ -114,7 +116,7 @@ export function FirstWeekWidget() {
           description: 'Review and publish your AI-drafted posts.',
           action: {
             label: 'View Drafts',
-            onClick: () => window.location.assign('/dashboard/content/drafts'),
+            onClick: () => router.push('/dashboard/content/drafts'),
           },
           duration: 6000,
         });

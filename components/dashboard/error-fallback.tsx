@@ -1,9 +1,16 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AlertTriangle, RefreshCw, Home } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 interface DashboardErrorProps {
   error: Error & { digest?: string };
@@ -18,6 +25,7 @@ export function DashboardError({
   title = 'Something went wrong',
   description = 'An error occurred while loading this page.',
 }: DashboardErrorProps) {
+  const router = useRouter();
   useEffect(() => {
     console.error('[DashboardError]', error);
   }, [error]);
@@ -53,7 +61,7 @@ export function DashboardError({
             </Button>
             <Button
               variant="outline"
-              onClick={() => window.location.href = '/dashboard'}
+              onClick={() => router.push('/dashboard')}
               className="bg-white/5 border-white/10 text-red-200/80"
             >
               <Home className="h-4 w-4 mr-2" />

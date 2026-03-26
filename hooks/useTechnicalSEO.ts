@@ -5,13 +5,12 @@
  * - cwvHistory: Core Web Vitals history from stored audits
  * - checkMobileParity: Compare mobile vs desktop performance
  * - validateRobotsTxt: Validate robots.txt and AI bot access
- *
- * Uses raw fetch + useState pattern (no SWR/TanStack Query).
  */
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
+import useSWR from 'swr';
 
 // ============================================================================
 // TYPES
@@ -105,162 +104,143 @@ interface RobotsTxtResponse {
 }
 
 // ============================================================================
+// FETCHER
+// ============================================================================
+
+async function fetchCwvHistory(url: string): Promise<CwvHistoryEntry[]> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(
+      (errorData as { error?: string }).error ||
+        `HTTP ${res.status}: ${res.statusText}`
+    );
+  }
+  const data: CwvHistoryResponse = await res.json();
+  return data.history || [];
+}
+
+// ============================================================================
 // HOOK
 // ============================================================================
 
 export function useTechnicalSEO() {
-  // CWV History state
-  const [cwvHistory, setCwvHistory] = useState<CwvHistoryEntry[]>([]);
-  const [cwvHistoryLoading, setCwvHistoryLoading] = useState(true);
-  const [cwvHistoryError, setCwvHistoryError] = useState<string | null>(null);
+  // CWV History via SWR
+  const {
+    data: cwvHistory = [],
+    isLoading: cwvHistoryLoading,
+    error: cwvHistoryErrorRaw,
+    mutate: mutateCwvHistory,
+  } = useSWR<CwvHistoryEntry[]>(
+    '/api/seo/technical/cwv-history',
+    fetchCwvHistory,
+    { revalidateOnFocus: false }
+  );
 
-  // Mobile Parity state
-  const [mobileParityResult, setMobileParityResult] = useState<MobileParityResult | null>(null);
+  const cwvHistoryError = cwvHistoryErrorRaw
+    ? cwvHistoryErrorRaw instanceof Error
+      ? cwvHistoryErrorRaw.message
+      : String(cwvHistoryErrorRaw)
+    : null;
+
+  // Mobile Parity state — on-demand POST
+  const [mobileParityResult, setMobileParityResult] =
+    useState<MobileParityResult | null>(null);
   const [mobileParityLoading, setMobileParityLoading] = useState(false);
-  const [mobileParityError, setMobileParityError] = useState<string | null>(null);
+  const [mobileParityError, setMobileParityError] = useState<string | null>(
+    null
+  );
 
-  // Robots.txt state
-  const [robotsTxtResult, setRobotsTxtResult] = useState<RobotsTxtResult | null>(null);
+  // Robots.txt state — on-demand POST
+  const [robotsTxtResult, setRobotsTxtResult] =
+    useState<RobotsTxtResult | null>(null);
   const [robotsTxtLoading, setRobotsTxtLoading] = useState(false);
   const [robotsTxtError, setRobotsTxtError] = useState<string | null>(null);
-
-  const mountedRef = useRef(true);
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  /**
-   * Fetch CWV history from API
-   */
-  const fetchCwvHistory = useCallback(async () => {
-    // Cancel any in-flight request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    if (!mountedRef.current) return;
-    setCwvHistoryLoading(true);
-    setCwvHistoryError(null);
-
-    try {
-      const response = await fetch('/api/seo/technical/cwv-history', {
-        credentials: 'include',
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data: CwvHistoryResponse = await response.json();
-
-      if (mountedRef.current) {
-        setCwvHistory(data.history || []);
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return; // Request was cancelled
-      }
-      if (mountedRef.current) {
-        setCwvHistoryError(err instanceof Error ? err.message : String(err));
-      }
-    } finally {
-      if (mountedRef.current) {
-        setCwvHistoryLoading(false);
-      }
-    }
-  }, []);
 
   /**
    * Check mobile/desktop parity for a URL
    */
-  const checkMobileParity = useCallback(async (url: string): Promise<MobileParityResult | null> => {
-    if (!mountedRef.current) return null;
-    setMobileParityLoading(true);
-    setMobileParityError(null);
-    setMobileParityResult(null);
+  const checkMobileParity = useCallback(
+    async (url: string): Promise<MobileParityResult | null> => {
+      setMobileParityLoading(true);
+      setMobileParityError(null);
+      setMobileParityResult(null);
 
-    try {
-      const response = await fetch('/api/seo/technical/mobile-parity', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ url }),
-      });
+      try {
+        const response = await fetch('/api/seo/technical/mobile-parity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ url }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            (errorData as { error?: string }).error ||
+              `HTTP ${response.status}: ${response.statusText}`
+          );
+        }
 
-      const data: MobileParityResponse = await response.json();
+        const data: MobileParityResponse = await response.json();
 
-      if (mountedRef.current) {
         setMobileParityResult(data.mobileParity);
-      }
-
-      return data.mobileParity;
-    } catch (err) {
-      if (mountedRef.current) {
+        return data.mobileParity;
+      } catch (err) {
         setMobileParityError(err instanceof Error ? err.message : String(err));
-      }
-      return null;
-    } finally {
-      if (mountedRef.current) {
+        return null;
+      } finally {
         setMobileParityLoading(false);
       }
-    }
-  }, []);
+    },
+    []
+  );
 
   /**
    * Validate robots.txt for a URL
    */
-  const validateRobotsTxt = useCallback(async (url: string): Promise<RobotsTxtResult | null> => {
-    if (!mountedRef.current) return null;
-    setRobotsTxtLoading(true);
-    setRobotsTxtError(null);
-    setRobotsTxtResult(null);
+  const validateRobotsTxt = useCallback(
+    async (url: string): Promise<RobotsTxtResult | null> => {
+      setRobotsTxtLoading(true);
+      setRobotsTxtError(null);
+      setRobotsTxtResult(null);
 
-    try {
-      const response = await fetch('/api/seo/technical/robots-txt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ url }),
-      });
+      try {
+        const response = await fetch('/api/seo/technical/robots-txt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ url }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            (errorData as { error?: string }).error ||
+              `HTTP ${response.status}: ${response.statusText}`
+          );
+        }
 
-      const data: RobotsTxtResponse = await response.json();
+        const data: RobotsTxtResponse = await response.json();
 
-      if (mountedRef.current) {
         setRobotsTxtResult(data.robotsTxt);
-      }
-
-      return data.robotsTxt;
-    } catch (err) {
-      if (mountedRef.current) {
+        return data.robotsTxt;
+      } catch (err) {
         setRobotsTxtError(err instanceof Error ? err.message : String(err));
-      }
-      return null;
-    } finally {
-      if (mountedRef.current) {
+        return null;
+      } finally {
         setRobotsTxtLoading(false);
       }
-    }
-  }, []);
+    },
+    []
+  );
 
   /**
    * Refresh CWV history
    */
   const refreshCwvHistory = useCallback(async (): Promise<void> => {
-    await fetchCwvHistory();
-  }, [fetchCwvHistory]);
+    await mutateCwvHistory();
+  }, [mutateCwvHistory]);
 
   /**
    * Clear mobile parity results
@@ -277,19 +257,6 @@ export function useTechnicalSEO() {
     setRobotsTxtResult(null);
     setRobotsTxtError(null);
   }, []);
-
-  // Initial fetch on mount
-  useEffect(() => {
-    mountedRef.current = true;
-    fetchCwvHistory();
-
-    return () => {
-      mountedRef.current = false;
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, [fetchCwvHistory]);
 
   return {
     // CWV History

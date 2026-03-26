@@ -7,13 +7,12 @@
  * - updateTarget: Modify target settings
  * - deleteTarget: Remove a target
  * - runManualAudit: Trigger immediate audit
- *
- * Uses raw fetch + useState pattern (no SWR/TanStack Query).
  */
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import useSWR from 'swr';
+import { useCallback, useState } from 'react';
 
 // ============================================================================
 // TYPES
@@ -88,13 +87,30 @@ interface AuditResponse {
 }
 
 // ============================================================================
+// FETCHER
+// ============================================================================
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    if ((errorData as { upgradeRequired?: boolean }).upgradeRequired) {
+      throw new Error('Scheduled audits require a Professional subscription');
+    }
+    throw new Error(
+      (errorData as { error?: string }).error ||
+        `HTTP ${res.status}: ${res.statusText}`
+    );
+  }
+  const data: TargetsResponse = await res.json();
+  return (data.targets ?? []) as T;
+}
+
+// ============================================================================
 // HOOK
 // ============================================================================
 
 export function useScheduledAudits() {
-  // Targets state
-  const [targets, setTargets] = useState<ScheduledAuditTarget[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Operation states
@@ -103,234 +119,189 @@ export function useScheduledAudits() {
   const [deleting, setDeleting] = useState(false);
   const [auditRunning, setAuditRunning] = useState(false);
 
-  const mountedRef = useRef(true);
-  const loadControllerRef = useRef<AbortController | null>(null);
+  const {
+    data: targets = [],
+    isLoading: loading,
+    mutate,
+  } = useSWR<ScheduledAuditTarget[]>('/api/seo/scheduled-audits', fetchJson, {
+    revalidateOnFocus: false,
+  });
 
-  /**
-   * Load all scheduled audit targets
-   */
   const loadTargets = useCallback(async () => {
-    if (loadControllerRef.current) {
-      loadControllerRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    loadControllerRef.current = controller;
-
-    if (!mountedRef.current) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/seo/scheduled-audits', {
-        credentials: 'include',
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        if (errorData.upgradeRequired) {
-          throw new Error('Scheduled audits require a Professional subscription');
-        }
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data: TargetsResponse = await response.json();
-
-      if (mountedRef.current) {
-        setTargets(data.targets || []);
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return;
-      }
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : String(err));
-      }
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
-    }
-  }, []);
+    await mutate();
+  }, [mutate]);
 
   /**
    * Create a new scheduled audit target
    */
-  const createTarget = useCallback(async (data: CreateTargetData): Promise<ScheduledAuditTarget | null> => {
-    if (!mountedRef.current) return null;
-    setCreating(true);
-    setError(null);
+  const createTarget = useCallback(
+    async (data: CreateTargetData): Promise<ScheduledAuditTarget | null> => {
+      setCreating(true);
+      setError(null);
 
-    try {
-      const response = await fetch('/api/seo/scheduled-audits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(data),
-      });
+      try {
+        const response = await fetch('/api/seo/scheduled-audits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(data),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            (errorData as { error?: string }).error ||
+              `HTTP ${response.status}: ${response.statusText}`
+          );
+        }
 
-      const result: SingleTargetResponse = await response.json();
+        const result: SingleTargetResponse = await response.json();
 
-      if (mountedRef.current && result.target) {
-        setTargets(prev => [result.target!, ...prev]);
-        return result.target;
-      }
+        if (result.target) {
+          await mutate();
+          return result.target;
+        }
 
-      return null;
-    } catch (err) {
-      if (mountedRef.current) {
+        return null;
+      } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
-      }
-      return null;
-    } finally {
-      if (mountedRef.current) {
+        return null;
+      } finally {
         setCreating(false);
       }
-    }
-  }, []);
+    },
+    [mutate]
+  );
 
   /**
    * Update an existing target
    */
-  const updateTarget = useCallback(async (id: string, data: UpdateTargetData): Promise<ScheduledAuditTarget | null> => {
-    if (!mountedRef.current) return null;
-    setUpdating(true);
-    setError(null);
+  const updateTarget = useCallback(
+    async (
+      id: string,
+      data: UpdateTargetData
+    ): Promise<ScheduledAuditTarget | null> => {
+      setUpdating(true);
+      setError(null);
 
-    try {
-      const response = await fetch(`/api/seo/scheduled-audits/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(data),
-      });
+      try {
+        const response = await fetch(`/api/seo/scheduled-audits/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(data),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            (errorData as { error?: string }).error ||
+              `HTTP ${response.status}: ${response.statusText}`
+          );
+        }
 
-      const result: SingleTargetResponse = await response.json();
+        const result: SingleTargetResponse = await response.json();
 
-      if (mountedRef.current && result.target) {
-        setTargets(prev => prev.map(t => t.id === id ? result.target! : t));
-        return result.target;
-      }
+        if (result.target) {
+          await mutate();
+          return result.target;
+        }
 
-      return null;
-    } catch (err) {
-      if (mountedRef.current) {
+        return null;
+      } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
-      }
-      return null;
-    } finally {
-      if (mountedRef.current) {
+        return null;
+      } finally {
         setUpdating(false);
       }
-    }
-  }, []);
+    },
+    [mutate]
+  );
 
   /**
    * Delete a target
    */
-  const deleteTarget = useCallback(async (id: string): Promise<boolean> => {
-    if (!mountedRef.current) return false;
-    setDeleting(true);
-    setError(null);
+  const deleteTarget = useCallback(
+    async (id: string): Promise<boolean> => {
+      setDeleting(true);
+      setError(null);
 
-    try {
-      const response = await fetch(`/api/seo/scheduled-audits/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
+      try {
+        const response = await fetch(`/api/seo/scheduled-audits/${id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            (errorData as { error?: string }).error ||
+              `HTTP ${response.status}: ${response.statusText}`
+          );
+        }
 
-      if (mountedRef.current) {
-        setTargets(prev => prev.filter(t => t.id !== id));
-      }
-
-      return true;
-    } catch (err) {
-      if (mountedRef.current) {
+        await mutate();
+        return true;
+      } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
-      }
-      return false;
-    } finally {
-      if (mountedRef.current) {
+        return false;
+      } finally {
         setDeleting(false);
       }
-    }
-  }, []);
+    },
+    [mutate]
+  );
 
   /**
    * Run a manual audit for a URL (immediate)
    */
-  const runManualAudit = useCallback(async (url: string): Promise<AuditResponse['audit'] | null> => {
-    if (!mountedRef.current) return null;
-    setAuditRunning(true);
-    setError(null);
+  const runManualAudit = useCallback(
+    async (url: string): Promise<AuditResponse['audit'] | null> => {
+      setAuditRunning(true);
+      setError(null);
 
-    try {
-      const response = await fetch('/api/seo/audit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ url }),
-      });
+      try {
+        const response = await fetch('/api/seo/audit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ url }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            (errorData as { error?: string }).error ||
+              `HTTP ${response.status}: ${response.statusText}`
+          );
+        }
 
-      const result: AuditResponse = await response.json();
+        const result: AuditResponse = await response.json();
 
-      // Refresh targets to get updated lastScore
-      if (mountedRef.current) {
-        loadTargets();
-      }
+        // Refresh targets to get updated lastScore
+        await mutate();
 
-      return result.audit || null;
-    } catch (err) {
-      if (mountedRef.current) {
+        return result.audit || null;
+      } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
-      }
-      return null;
-    } finally {
-      if (mountedRef.current) {
+        return null;
+      } finally {
         setAuditRunning(false);
       }
-    }
-  }, [loadTargets]);
+    },
+    [mutate]
+  );
 
   /**
    * Toggle target enabled state
    */
-  const toggleEnabled = useCallback(async (id: string, enabled: boolean): Promise<boolean> => {
-    const result = await updateTarget(id, { enabled });
-    return result !== null;
-  }, [updateTarget]);
-
-  // Load targets on mount
-  useEffect(() => {
-    mountedRef.current = true;
-    loadTargets();
-
-    return () => {
-      mountedRef.current = false;
-      if (loadControllerRef.current) loadControllerRef.current.abort();
-    };
-  }, [loadTargets]);
+  const toggleEnabled = useCallback(
+    async (id: string, enabled: boolean): Promise<boolean> => {
+      const result = await updateTarget(id, { enabled });
+      return result !== null;
+    },
+    [updateTarget]
+  );
 
   return {
     // Data

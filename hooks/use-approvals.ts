@@ -4,13 +4,13 @@
  * @description Manages approval request state and workflow actions.
  * Provides create, approve, reject, revision, resubmit, comment, and remove actions.
  *
- * Uses raw fetch + useState pattern (no SWR/TanStack Query).
- * Follows the same pattern as hooks/use-webhooks.ts.
+ * Uses SWR for GET data fetching; mutations use direct fetch + mutate().
  */
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
+import useSWR from 'swr';
 
 // ============================================================================
 // TYPES
@@ -29,9 +29,19 @@ export interface ApprovalComment {
 export interface ApprovalStep {
   id: string;
   order: number;
-  type: 'review' | 'approval' | 'legal_check' | 'brand_check' | 'final_approval';
+  type:
+    | 'review'
+    | 'approval'
+    | 'legal_check'
+    | 'brand_check'
+    | 'final_approval';
   name: string;
-  status: 'pending' | 'in_review' | 'approved' | 'rejected' | 'revision_requested';
+  status:
+    | 'pending'
+    | 'in_review'
+    | 'approved'
+    | 'rejected'
+    | 'revision_requested';
   assignedTo: string[];
   comments: ApprovalComment[];
   requiredApprovals: number;
@@ -50,7 +60,12 @@ export interface ApprovalRequest {
   submittedBy: string;
   submitterName?: string;
   submitterEmail?: string;
-  status: 'pending' | 'in_review' | 'approved' | 'rejected' | 'revision_requested';
+  status:
+    | 'pending'
+    | 'in_review'
+    | 'approved'
+    | 'rejected'
+    | 'revision_requested';
   priority: 'low' | 'normal' | 'high' | 'urgent';
   currentStep: number;
   totalSteps: number;
@@ -111,79 +126,45 @@ interface DeleteApprovalResponse {
 }
 
 // ============================================================================
+// FETCHER
+// ============================================================================
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
+// ============================================================================
 // HOOK
 // ============================================================================
 
 export function useApprovals(options?: UseApprovalsOptions) {
-  const [requests, setRequests] = useState<ApprovalRequest[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const mountedRef = useRef(true);
-  const abortControllerRef = useRef<AbortController | null>(null);
 
-  /**
-   * Build query params from options
-   */
-  const buildQueryParams = useCallback((opts?: UseApprovalsOptions): string => {
-    const params = new URLSearchParams();
-    if (opts?.status) params.set('status', opts.status);
-    if (opts?.assignedToMe) params.set('assignedToMe', 'true');
-    if (opts?.submittedByMe) params.set('submittedByMe', 'true');
-    if (opts?.contentType) params.set('contentType', opts.contentType);
-    if (opts?.priority) params.set('priority', opts.priority);
-    return params.toString();
-  }, []);
+  // Build query string from options
+  const params = new URLSearchParams();
+  if (options?.status) params.set('status', options.status);
+  if (options?.assignedToMe) params.set('assignedToMe', 'true');
+  if (options?.submittedByMe) params.set('submittedByMe', 'true');
+  if (options?.contentType) params.set('contentType', options.contentType);
+  if (options?.priority) params.set('priority', options.priority);
+  const queryString = params.toString();
+  const url = `/api/approvals${queryString ? `?${queryString}` : ''}`;
 
-  /**
-   * Fetch all approval requests from API
-   */
-  const fetchApprovals = useCallback(async () => {
-    // Cancel any in-flight request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
+  const {
+    data: response,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<ApprovalsListResponse>(url, fetchJson, {
+    revalidateOnFocus: false,
+  });
 
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    if (!mountedRef.current) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const queryString = buildQueryParams(options);
-      const url = `/api/approvals${queryString ? `?${queryString}` : ''}`;
-
-      const response = await fetch(url, {
-        credentials: 'include',
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data: ApprovalsListResponse = await response.json();
-
-      if (mountedRef.current) {
-        setRequests(data.data);
-        setTotal(data.total);
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return; // Request was cancelled, don't update state
-      }
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : String(err));
-      }
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
-    }
-  }, [buildQueryParams, options]);
+  // Backward-compatible aliases
+  const loading = isLoading;
+  const requests = response?.data ?? [];
+  const total = response?.total ?? 0;
 
   /**
    * Create a new approval request
@@ -191,34 +172,30 @@ export function useApprovals(options?: UseApprovalsOptions) {
   const create = useCallback(
     async (data: CreateApprovalData): Promise<ApprovalRequest | null> => {
       try {
-        const response = await fetch('/api/approvals', {
+        const res = await fetch('/api/approvals', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(data),
         });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(
+            errorData.error ||
+              errorData.message ||
+              `HTTP ${res.status}: ${res.statusText}`
+          );
         }
 
-        const result: CreateApprovalResponse = await response.json();
-
-        // Refetch to reflect the change
-        if (mountedRef.current) {
-          await fetchApprovals();
-        }
-
+        const result: CreateApprovalResponse = await res.json();
+        await mutate();
         return result.data;
       } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-        return null;
+        throw err instanceof Error ? err : new Error(String(err));
       }
     },
-    [fetchApprovals]
+    [mutate]
   );
 
   /**
@@ -227,39 +204,40 @@ export function useApprovals(options?: UseApprovalsOptions) {
   const performAction = useCallback(
     async (
       id: string,
-      action: 'approve' | 'reject' | 'request_revision' | 'resubmit' | 'add_comment',
+      action:
+        | 'approve'
+        | 'reject'
+        | 'request_revision'
+        | 'resubmit'
+        | 'add_comment',
       comment?: string,
       attachments?: string[]
     ): Promise<boolean> => {
       try {
-        const response = await fetch(`/api/approvals/${id}`, {
+        const res = await fetch(`/api/approvals/${id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ action, comment, attachments }),
         });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(
+            errorData.error ||
+              errorData.message ||
+              `HTTP ${res.status}: ${res.statusText}`
+          );
         }
 
-        const _result: ActionApprovalResponse = await response.json();
-
-        // Refetch to reflect the change
-        if (mountedRef.current) {
-          await fetchApprovals();
-        }
-
+        const _result: ActionApprovalResponse = await res.json();
+        await mutate();
         return true;
-      } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
+      } catch {
         return false;
       }
     },
-    [fetchApprovals]
+    [mutate]
   );
 
   /**
@@ -306,7 +284,11 @@ export function useApprovals(options?: UseApprovalsOptions) {
    * Add comment to current step
    */
   const addComment = useCallback(
-    async (id: string, content: string, attachments?: string[]): Promise<boolean> => {
+    async (
+      id: string,
+      content: string,
+      attachments?: string[]
+    ): Promise<boolean> => {
       return performAction(id, 'add_comment', content, attachments);
     },
     [performAction]
@@ -318,59 +300,49 @@ export function useApprovals(options?: UseApprovalsOptions) {
   const remove = useCallback(
     async (id: string): Promise<boolean> => {
       try {
-        const response = await fetch(`/api/approvals/${id}`, {
+        const res = await fetch(`/api/approvals/${id}`, {
           method: 'DELETE',
           credentials: 'include',
         });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(
+            errorData.error ||
+              errorData.message ||
+              `HTTP ${res.status}: ${res.statusText}`
+          );
         }
 
-        const _result: DeleteApprovalResponse = await response.json();
-
-        // Refetch to reflect the change
-        if (mountedRef.current) {
-          await fetchApprovals();
-        }
-
+        const _result: DeleteApprovalResponse = await res.json();
+        await mutate();
         return true;
-      } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
+      } catch {
         return false;
       }
     },
-    [fetchApprovals]
+    [mutate]
   );
 
   /**
    * Refresh the approvals list
    */
   const refresh = useCallback(async (): Promise<void> => {
-    await fetchApprovals();
-  }, [fetchApprovals]);
+    await mutate();
+  }, [mutate]);
 
-  // Initial fetch on mount
-  useEffect(() => {
-    mountedRef.current = true;
-    fetchApprovals();
-
-    return () => {
-      mountedRef.current = false;
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, [fetchApprovals]);
+  // Keep mountedRef in sync (not strictly needed with SWR but keeps parity)
+  mountedRef.current = true;
 
   return {
     requests,
     total,
     loading,
-    error,
+    error: error
+      ? error instanceof Error
+        ? error.message
+        : String(error)
+      : null,
     refresh,
     create,
     approve,

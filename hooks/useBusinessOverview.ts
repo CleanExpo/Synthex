@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import useSWR from 'swr';
 import { useUser } from '@/hooks/use-user';
 
 interface OwnedBusiness {
@@ -30,52 +31,42 @@ interface CrossBusinessAggregation {
   perBusiness: OwnedBusiness[];
 }
 
+interface ApiResponse {
+  overview: CrossBusinessAggregation | null;
+}
+
 interface UseBusinessOverviewReturn {
   overview: CrossBusinessAggregation | null;
   isLoading: boolean;
-  refetch: () => Promise<void>;
+  refetch: () => void;
+}
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise<T>;
 }
 
 export function useBusinessOverview(): UseBusinessOverviewReturn {
   const { user } = useUser();
-  const [overview, setOverview] = useState<CrossBusinessAggregation | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
   const isOwner = user?.isMultiBusinessOwner ?? false;
 
-  const fetchOverview = useCallback(async () => {
-    if (!isOwner) {
-      setIsLoading(false);
-      return;
-    }
+  // Pass null key when not owner — SWR will skip the request
+  const { data, isLoading, mutate } = useSWR<ApiResponse>(
+    isOwner ? '/api/businesses/overview' : null,
+    fetchJson,
+    { revalidateOnFocus: false }
+  );
 
-    try {
-      setIsLoading(true);
-      const response = await fetch('/api/businesses/overview', {
-        credentials: 'include',
-      });
+  const overview = data?.overview ?? null;
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch business overview');
-      }
-
-      const data = await response.json();
-      setOverview(data.overview || null);
-    } catch (error) {
-      console.error('Error fetching business overview:', error);
-      setOverview(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isOwner]);
-
-  useEffect(() => {
-    fetchOverview();
-  }, [fetchOverview]);
+  const refetch = useCallback(() => {
+    void mutate();
+  }, [mutate]);
 
   return {
     overview,
     isLoading,
-    refetch: fetchOverview,
+    refetch,
   };
 }

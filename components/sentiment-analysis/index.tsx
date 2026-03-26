@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import useSWR from 'swr';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -36,6 +37,12 @@ import { TopicsTab } from './TopicsTab';
 import { MentionsTab } from './MentionsTab';
 import { AnalyzerTab } from './AnalyzerTab';
 
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch');
+  return res.json();
+}
+
 export function SentimentAnalysis() {
   const [sentimentData, setSentimentData] = useState<SentimentData[]>([]);
   const [trends, setTrends] = useState<SentimentTrend[]>([]);
@@ -56,99 +63,109 @@ export function SentimentAnalysis() {
     trend: 0,
   });
 
-  const loadSentimentData = useCallback(async () => {
-    setLoading(true);
+  const days =
+    selectedTimeRange === '7d' ? 7 : selectedTimeRange === '30d' ? 30 : 90;
+  const platformParam =
+    selectedPlatform !== 'all' ? `&platform=${selectedPlatform}` : '';
 
-    try {
-      const [analyticsRes, analysesRes] = await Promise.all([
-        fetch(
-          `/api/analytics/sentiment?days=${selectedTimeRange === '7d' ? 7 : selectedTimeRange === '30d' ? 30 : 90}${selectedPlatform !== 'all' ? `&platform=${selectedPlatform}` : ''}`
-        ),
-        fetch(
-          `/api/ai-content/sentiment?limit=50${selectedPlatform !== 'all' ? `&platform=${selectedPlatform}` : ''}`
-        ),
-      ]);
+  const {
+    data: analyticsData,
+    error: analyticsError,
+    mutate: mutateAnalytics,
+  } = useSWR<AnalyticsResponse>(
+    `/api/analytics/sentiment?days=${days}${platformParam}`,
+    fetchJson,
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
+  );
 
-      if (!analyticsRes.ok || !analysesRes.ok) {
-        throw new Error('Failed to fetch sentiment data');
-      }
+  const {
+    data: analysesData,
+    error: analysesError,
+    mutate: mutateAnalyses,
+  } = useSWR<AnalysisResponse>(
+    `/api/ai-content/sentiment?limit=50${platformParam}`,
+    fetchJson,
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
+  );
 
-      const analyticsData: AnalyticsResponse = await analyticsRes.json();
-      const analysesData: AnalysisResponse = await analysesRes.json();
+  const loadSentimentData = useCallback(() => {
+    void mutateAnalytics();
+    void mutateAnalyses();
+  }, [mutateAnalytics, mutateAnalyses]);
 
-      // Transform API analyses to component's SentimentData format
-      const transformedData: SentimentData[] = analysesData.analyses.map(
-        (analysis, i) => ({
-          id: analysis.id || `sent-${i}`,
-          content: '',
-          platform: analysis.platform || 'Unknown',
-          author: 'User',
-          timestamp: new Date(analysis.analyzedAt),
-          sentiment:
-            analysis.sentiment === 'mixed' ? 'neutral' : analysis.sentiment,
-          score: analysis.score / 100,
-          confidence: analysis.confidence * 100,
-          emotions: analysis.emotions.map(e => ({
-            emotion: e.emotion as EmotionScore['emotion'],
-            score: e.intensity,
-          })),
-          topics: [],
-          entities: [],
-          engagement: { likes: 0, comments: 0, shares: 0, reach: 0 },
-          actionable: false,
-          priority: 'low',
-        })
-      );
-
-      setSentimentData(transformedData);
-
-      const transformedTrends: SentimentTrend[] = analyticsData.trends.map(
-        t => ({
-          date: new Date(t.date),
-          positive: t.positive,
-          negative: t.negative,
-          neutral: t.neutral,
-          volume: t.count,
-        })
-      );
-      setTrends(transformedTrends);
-
-      const topicSentimentData: TopicSentiment[] =
-        analyticsData.topEmotions.map(e => ({
-          topic: e.emotion,
-          mentions: e.count,
-          sentiment: e.percentage / 100 - 0.5,
-          trend: 'stable' as const,
-        }));
-      setTopicSentiments(topicSentimentData);
-
-      if (analyticsData.overall.total > 0) {
-        setOverallSentiment({
-          score: analyticsData.overall.avgScore / 100,
-          positive:
-            (analyticsData.overall.positive / analyticsData.overall.total) *
-            100,
-          negative:
-            (analyticsData.overall.negative / analyticsData.overall.total) *
-            100,
-          neutral:
-            (analyticsData.overall.neutral / analyticsData.overall.total) * 100,
-          trend: 0,
-        });
-      }
-    } catch (error) {
+  const processSentimentData = useCallback(() => {
+    if (analyticsError || analysesError) {
       notify.error('Failed to load sentiment data');
       setSentimentData([]);
       setTrends([]);
       setTopicSentiments([]);
-    } finally {
-      setLoading(false);
+      return;
     }
-  }, [selectedPlatform, selectedTimeRange]);
+
+    if (!analyticsData || !analysesData) return;
+
+    // Transform API analyses to component's SentimentData format
+    const transformedData: SentimentData[] = analysesData.analyses.map(
+      (analysis, i) => ({
+        id: analysis.id || `sent-${i}`,
+        content: '',
+        platform: analysis.platform || 'Unknown',
+        author: 'User',
+        timestamp: new Date(analysis.analyzedAt),
+        sentiment:
+          analysis.sentiment === 'mixed' ? 'neutral' : analysis.sentiment,
+        score: analysis.score / 100,
+        confidence: analysis.confidence * 100,
+        emotions: analysis.emotions.map(e => ({
+          emotion: e.emotion as EmotionScore['emotion'],
+          score: e.intensity,
+        })),
+        topics: [],
+        entities: [],
+        engagement: { likes: 0, comments: 0, shares: 0, reach: 0 },
+        actionable: false,
+        priority: 'low',
+      })
+    );
+
+    setSentimentData(transformedData);
+
+    const transformedTrends: SentimentTrend[] = analyticsData.trends.map(t => ({
+      date: new Date(t.date),
+      positive: t.positive,
+      negative: t.negative,
+      neutral: t.neutral,
+      volume: t.count,
+    }));
+    setTrends(transformedTrends);
+
+    const topicSentimentData: TopicSentiment[] = analyticsData.topEmotions.map(
+      e => ({
+        topic: e.emotion,
+        mentions: e.count,
+        sentiment: e.percentage / 100 - 0.5,
+        trend: 'stable' as const,
+      })
+    );
+    setTopicSentiments(topicSentimentData);
+
+    if (analyticsData.overall.total > 0) {
+      setOverallSentiment({
+        score: analyticsData.overall.avgScore / 100,
+        positive:
+          (analyticsData.overall.positive / analyticsData.overall.total) * 100,
+        negative:
+          (analyticsData.overall.negative / analyticsData.overall.total) * 100,
+        neutral:
+          (analyticsData.overall.neutral / analyticsData.overall.total) * 100,
+        trend: 0,
+      });
+    }
+  }, [analyticsData, analysesData, analyticsError, analysesError]);
 
   useEffect(() => {
-    loadSentimentData();
-  }, [loadSentimentData, selectedPlatform, selectedTimeRange]);
+    processSentimentData();
+  }, [processSentimentData]);
 
   const analyzeSentiment = async () => {
     if (!testText.trim()) {
@@ -162,6 +179,7 @@ export function SentimentAnalysis() {
       const response = await fetch('/api/ai-content/sentiment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           text: testText,
           contentType: 'text',

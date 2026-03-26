@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Sheet,
   SheetContent,
@@ -26,6 +27,7 @@ export default function AIPMPanel({
   onOpenChange,
   initialContext,
 }: AIPMPanelProps) {
+  const router = useRouter();
   const {
     conversations,
     activeConversation,
@@ -103,8 +105,7 @@ export default function AIPMPanel({
               className="mt-6 bg-gradient-to-r from-orange-500 to-orange-500 text-white hover:from-orange-400 hover:to-orange-400"
               onClick={() => {
                 onOpenChange(false);
-                // Navigate to settings/subscription
-                window.location.href = '/dashboard/settings';
+                router.push('/dashboard/settings');
               }}
             >
               Upgrade to Business

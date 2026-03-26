@@ -17,7 +17,8 @@
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
+import useSWR from 'swr';
 import { toast } from 'sonner';
 
 // ============================================================================
@@ -71,67 +72,62 @@ export interface UseContentShareReturn {
   shares: ContentShare[];
   isLoading: boolean;
   error: Error | null;
-  shareContent: (options: ShareOptions) => Promise<{ share: ContentShare; shareUrl?: string } | null>;
+  shareContent: (
+    options: ShareOptions
+  ) => Promise<{ share: ContentShare; shareUrl?: string } | null>;
   revokeShare: (shareId: string) => Promise<boolean>;
   refresh: () => Promise<void>;
   getShareUrl: (share: ContentShare) => string | null;
 }
 
 // ============================================================================
+// FETCHER
+// ============================================================================
+
+function mapShare(s: any): ContentShare {
+  return {
+    ...s,
+    createdAt: new Date(s.createdAt),
+    expiresAt: s.expiresAt ? new Date(s.expiresAt) : undefined,
+    lastAccessedAt: s.lastAccessedAt ? new Date(s.lastAccessedAt) : undefined,
+  };
+}
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch shares');
+  const data = await res.json();
+  return (data.shares || []).map(mapShare) as T;
+}
+
+// ============================================================================
 // HOOK IMPLEMENTATION
 // ============================================================================
 
-export function useContentShare(options: UseContentShareOptions): UseContentShareReturn {
+export function useContentShare(
+  options: UseContentShareOptions
+): UseContentShareReturn {
   const { contentType, contentId, autoLoad = true } = options;
 
-  const [shares, setShares] = useState<ContentShare[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const key =
+    autoLoad && contentType && contentId
+      ? `/api/content/share?contentType=${contentType}&contentId=${contentId}`
+      : null;
 
-  /**
-   * Fetch shares for content
-   */
-  const fetchShares = useCallback(async () => {
-    if (!contentType || !contentId) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(
-        `/api/content/share?contentType=${contentType}&contentId=${contentId}`,
-        { credentials: 'include' }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch shares');
-      }
-
-      const data = await response.json();
-      setShares(
-        (data.shares || []).map((s: any) => ({
-          ...s,
-          createdAt: new Date(s.createdAt),
-          expiresAt: s.expiresAt ? new Date(s.expiresAt) : undefined,
-          lastAccessedAt: s.lastAccessedAt ? new Date(s.lastAccessedAt) : undefined,
-        }))
-      );
-    } catch (err) {
-      setError(err as Error);
-      console.error('Fetch shares error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [contentType, contentId]);
+  const {
+    data: shares = [],
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<ContentShare[]>(key, fetchJson, { revalidateOnFocus: false });
 
   /**
    * Share content
    */
   const shareContent = useCallback(
-    async (shareOptions: ShareOptions): Promise<{ share: ContentShare; shareUrl?: string } | null> => {
-      setIsLoading(true);
-      setError(null);
-
+    async (
+      shareOptions: ShareOptions
+    ): Promise<{ share: ContentShare; shareUrl?: string } | null> => {
       try {
         const response = await fetch('/api/content/share', {
           method: 'POST',
@@ -157,60 +153,53 @@ export function useContentShare(options: UseContentShareOptions): UseContentShar
         const newShare: ContentShare = {
           ...data.share,
           createdAt: new Date(data.share.createdAt),
-          expiresAt: data.share.expiresAt ? new Date(data.share.expiresAt) : undefined,
+          expiresAt: data.share.expiresAt
+            ? new Date(data.share.expiresAt)
+            : undefined,
         };
 
         if (data.updated) {
-          setShares((prev) =>
-            prev.map((s) => (s.id === newShare.id ? newShare : s))
-          );
           toast.success('Share updated');
         } else {
-          setShares((prev) => [newShare, ...prev]);
           toast.success('Content shared successfully');
         }
 
+        await mutate();
         return { share: newShare, shareUrl: data.shareUrl };
       } catch (err) {
-        setError(err as Error);
         toast.error((err as Error).message);
         return null;
-      } finally {
-        setIsLoading(false);
       }
     },
-    [contentType, contentId]
+    [contentType, contentId, mutate]
   );
 
   /**
    * Revoke a share
    */
-  const revokeShare = useCallback(async (shareId: string): Promise<boolean> => {
-    setIsLoading(true);
-    setError(null);
+  const revokeShare = useCallback(
+    async (shareId: string): Promise<boolean> => {
+      try {
+        const response = await fetch(`/api/content/share?id=${shareId}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
 
-    try {
-      const response = await fetch(`/api/content/share?id=${shareId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to revoke share');
+        }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to revoke share');
+        await mutate();
+        toast.success('Share revoked');
+        return true;
+      } catch (err) {
+        toast.error((err as Error).message);
+        return false;
       }
-
-      setShares((prev) => prev.filter((s) => s.id !== shareId));
-      toast.success('Share revoked');
-      return true;
-    } catch (err) {
-      setError(err as Error);
-      toast.error((err as Error).message);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [mutate]
+  );
 
   /**
    * Get share URL
@@ -220,22 +209,18 @@ export function useContentShare(options: UseContentShareOptions): UseContentShar
     return `${window.location.origin}/shared/${share.accessLink}`;
   }, []);
 
-  /**
-   * Auto-load on mount
-   */
-  useEffect(() => {
-    if (autoLoad && contentType && contentId) {
-      fetchShares();
-    }
-  }, [autoLoad, fetchShares, contentType, contentId]);
+  const refresh = useCallback(async () => {
+    await mutate();
+  }, [mutate]);
 
   return {
     shares,
     isLoading,
-    error,
+    error:
+      error instanceof Error ? error : error ? new Error(String(error)) : null,
     shareContent,
     revokeShare,
-    refresh: fetchShares,
+    refresh,
     getShareUrl,
   };
 }
@@ -244,47 +229,23 @@ export function useContentShare(options: UseContentShareOptions): UseContentShar
  * Hook for shares that were shared with the current user
  */
 export function useSharedWithMe() {
-  const [shares, setShares] = useState<ContentShare[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchShares = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/content/share?sharedWithMe=true', {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch shared content');
-      }
-
-      const data = await response.json();
-      setShares(
-        (data.shares || []).map((s: any) => ({
-          ...s,
-          createdAt: new Date(s.createdAt),
-          expiresAt: s.expiresAt ? new Date(s.expiresAt) : undefined,
-        }))
-      );
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchShares();
-  }, [fetchShares]);
+  const {
+    data: shares = [],
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<ContentShare[]>(
+    '/api/content/share?sharedWithMe=true',
+    fetchJson,
+    { revalidateOnFocus: false }
+  );
 
   return {
     shares,
     isLoading,
-    error,
-    refresh: fetchShares,
+    error:
+      error instanceof Error ? error : error ? new Error(String(error)) : null,
+    refresh: mutate,
   };
 }
 

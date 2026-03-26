@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,20 @@ export { CompetitorCard } from './CompetitorCard';
 export { ComparisonView } from './ComparisonView';
 export { CompetitorDetailView } from './CompetitorDetailView';
 
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch');
+  return res.json();
+}
+
+interface TrackResponse {
+  competitors?: Array<Record<string, unknown>>;
+}
+
+interface IntelResponse {
+  competitors?: Array<Record<string, unknown>>;
+}
+
 export function CompetitorAnalysis() {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [selectedCompetitor, setSelectedCompetitor] =
@@ -36,50 +51,50 @@ export function CompetitorAnalysis() {
   );
   const [activeTab, setActiveTab] = useState('overview');
 
+  const { data: trackData, error: trackError } = useSWR<TrackResponse>(
+    '/api/competitors/track?active=true',
+    fetchJson,
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
+  );
+
+  const { data: intelData, error: intelError } = useSWR<IntelResponse>(
+    '/api/intelligence/competitors?action=list',
+    fetchJson,
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
+  );
+
   useEffect(() => {
-    loadCompetitors();
-  }, []);
-
-  const loadCompetitors = async () => {
-    setLoading(true);
-    try {
-      const [trackRes, intelRes] = await Promise.all([
-        fetch('/api/competitors/track?active=true'),
-        fetch('/api/intelligence/competitors?action=list'),
-      ]);
-
-      const loaded: Competitor[] = [];
-
-      if (trackRes.ok) {
-        const trackData = await trackRes.json();
-        if (trackData.competitors && Array.isArray(trackData.competitors)) {
-          for (const comp of trackData.competitors) {
-            loaded.push(transformTrackingCompetitor(comp));
-          }
-        }
-      }
-
-      if (intelRes.ok) {
-        const intelData = await intelRes.json();
-        if (intelData.competitors && Array.isArray(intelData.competitors)) {
-          for (const comp of intelData.competitors) {
-            if (!loaded.some(c => c.id === comp.id)) {
-              loaded.push(transformIntelligenceCompetitor(comp));
-            }
-          }
-        }
-      }
-
-      setCompetitors(loaded);
-      if (loaded.length > 0) setSelectedCompetitor(loaded[0]);
-    } catch (error) {
-      console.error('Error loading competitors:', error);
+    if (trackError || intelError) {
       notify.error('Failed to load competitors');
       setCompetitors([]);
-    } finally {
-      setLoading(false);
+      return;
     }
-  };
+
+    if (!trackData && !intelData) return;
+
+    const loaded: Competitor[] = [];
+
+    if (trackData?.competitors && Array.isArray(trackData.competitors)) {
+      for (const comp of trackData.competitors) {
+        loaded.push(
+          transformTrackingCompetitor(comp as Record<string, unknown>)
+        );
+      }
+    }
+
+    if (intelData?.competitors && Array.isArray(intelData.competitors)) {
+      for (const comp of intelData.competitors) {
+        if (!loaded.some(c => c.id === (comp as Record<string, unknown>).id)) {
+          loaded.push(
+            transformIntelligenceCompetitor(comp as Record<string, unknown>)
+          );
+        }
+      }
+    }
+
+    setCompetitors(loaded);
+    if (loaded.length > 0) setSelectedCompetitor(prev => prev ?? loaded[0]);
+  }, [trackData, intelData, trackError, intelError]);
 
   const addCompetitor = async () => {
     if (!newCompetitorUrl) {
@@ -107,6 +122,7 @@ export function CompetitorAnalysis() {
       const response = await fetch('/api/competitors/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           name,
           domain: newCompetitorUrl.startsWith('http')
