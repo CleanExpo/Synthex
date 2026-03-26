@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { SynthexLogo } from './synthex-logo';
 
 const NAV_LINKS = [
   { href: '/features', label: 'Features' },
@@ -74,10 +75,8 @@ export function NavBar() {
           }`}
         >
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-            <div className="w-7 h-7 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-charcoal-900 font-black text-xs">S</span>
-            </div>
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+            <SynthexLogo className="w-7 h-7 flex-shrink-0" />
             <span className="text-white font-black tracking-[0.15em] text-sm uppercase hidden sm:block">
               SYNTHEX
             </span>

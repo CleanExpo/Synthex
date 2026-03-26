@@ -109,12 +109,16 @@ export function CTASection() {
             <div className="relative z-10">
               {/* Headline */}
               <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white mb-4">
-                Ready to get started?
+                Stop posting manually.{' '}
+                <em className="text-orange-400 not-italic">
+                  Start growing automatically.
+                </em>
               </h2>
 
               {/* Subtext */}
               <p className="text-white/50 text-base mb-10 max-w-xl mx-auto">
-                Start growing your social presence on autopilot.
+                Join 5,000+ businesses that have replaced manual posting with AI
+                — across all 9 platforms, from one place.
               </p>
 
               {/* CTAs */}
@@ -123,13 +127,13 @@ export function CTASection() {
                   href="/signup"
                   className="candy-gradient-btn inline-flex items-center justify-center px-8 py-3.5 text-charcoal-900 font-bold rounded-full transition-all duration-200 text-sm"
                 >
-                  Start free
+                  Start free — no card required
                 </Link>
                 <Link
-                  href="/contact"
+                  href="/features"
                   className="inline-flex items-center justify-center px-8 py-3.5 bg-white/[0.08] border border-white/20 text-white font-medium rounded-full hover:bg-white/[0.12] hover:border-white/30 hover:-translate-y-0.5 transition-all duration-200 text-sm backdrop-blur-sm"
                 >
-                  Book a demo
+                  Watch how it works
                 </Link>
               </div>
             </div>

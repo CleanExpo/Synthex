@@ -55,7 +55,7 @@ function SocialProofRow() {
         ))}
       </div>
       <p className="text-sm text-white/50">
-        Start growing your social presence
+        5,000+ businesses already automated
       </p>
     </div>
   );
@@ -76,7 +76,9 @@ export function HeroSection() {
           {/* Left — copy */}
           <div>
             <div>
-              <EyebrowPill>AI-native social media</EyebrowPill>
+              <EyebrowPill>
+                Your business. Every platform. Fully automated.
+              </EyebrowPill>
             </div>
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.05] mb-6">
@@ -86,8 +88,9 @@ export function HeroSection() {
             </h1>
 
             <p className="text-lg text-white/50 max-w-lg leading-relaxed mb-10">
-              Synthex learns your brand voice, then creates and schedules posts
-              across all 9 platforms — automatically.
+              Paste your website URL. Synthex learns your brand voice and
+              automatically creates, schedules, and publishes content across all
+              9 platforms — in under 60 seconds.
             </p>
 
             <div>

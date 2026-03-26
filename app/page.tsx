@@ -16,6 +16,7 @@ import { UrlHealthCheck } from '@/components/landing/UrlHealthCheck';
 import { CTASection } from '@/components/landing/cta-section';
 import { EmailCaptureSection } from '@/components/landing/email-capture-section';
 import { FooterSection } from '@/components/landing/footer-section';
+import { LogoBanner } from '@/components/landing/LogoBanner';
 
 export const metadata: Metadata = PAGE_METADATA.home;
 
@@ -33,6 +34,9 @@ export default function HomePage() {
 
       {/* Hero */}
       <HeroSection />
+
+      {/* Industry marquee — SMB social proof */}
+      <LogoBanner />
 
       {/* Stats strip */}
       <StatsSection />

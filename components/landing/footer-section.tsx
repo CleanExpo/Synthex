@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SynthexLogo } from './synthex-logo';
 
 const FOOTER_LINKS = [
   { label: 'Privacy', href: '/privacy' },
@@ -15,12 +16,8 @@ export function FooterSection() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-            <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
-              <span className="text-charcoal-900 font-black text-[10px]">
-                S
-              </span>
-            </div>
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+            <SynthexLogo className="w-6 h-6" />
             <span className="text-white font-black tracking-[0.2em] text-xs uppercase">
               SYNTHEX
             </span>

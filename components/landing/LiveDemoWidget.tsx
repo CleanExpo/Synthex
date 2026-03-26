@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import type { AnalyzeResult } from '@/app/api/demo/analyze/route';
+import { DemoConversionCard } from './DemoConversionCard';
 
 type DemoState = 'idle' | 'loading' | 'result' | 'error';
 
@@ -447,18 +448,13 @@ export function LiveDemoWidget() {
             <p className="text-amber-400/60 text-[10px]">
               ✓ {(durationMs / 1000).toFixed(1)}s &middot; {result.industry}
             </p>
-            <button
-              onClick={handleReset}
-              className="text-white/40 hover:text-white/60 text-[10px] transition-colors"
-            >
-              Try another &rarr;
-            </button>
+            <DemoBadge model={result.model} />
           </div>
-          <DemoBadge model={result.model} />
-          <p className="text-[10px] text-white/60 mt-1 leading-relaxed">
-            Sign up to unlock Claude, GPT-4 &amp; Gemini Pro with your brand
-            voice.
-          </p>
+          <DemoConversionCard
+            businessName={result.businessName}
+            caption={result.caption}
+            onReset={handleReset}
+          />
         </div>
       )}
     </div>
