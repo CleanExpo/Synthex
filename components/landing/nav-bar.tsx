@@ -7,7 +7,7 @@ const NAV_LINKS = [
   { href: '/features', label: 'Features' },
   { href: '/about', label: 'About' },
   { href: '/pricing', label: 'Pricing' },
-  { href: '/blog', label: 'Blog' },
+  // { href: '/blog', label: 'Blog' }, // Blog link hidden until content is ready
 ];
 
 /** Floating pill nav — candy-themed premium glass morphism */

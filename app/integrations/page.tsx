@@ -199,18 +199,22 @@ export default function IntegrationsPage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
             {PLATFORMS.map(p => (
-              <Card
-                key={p.name}
-                className="bg-[#0d1f35]/60 border-orange-500/10 hover:border-orange-500/30 transition-all p-6 flex items-start gap-4"
-              >
-                <div className="h-10 w-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-                  <p.icon className={`h-5 w-5 ${p.color}`} />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white mb-1">{p.name}</h3>
-                  <p className="text-sm text-gray-400">{p.description}</p>
-                </div>
-              </Card>
+              <Link key={p.name} href="/dashboard/integrations">
+                <Card className="bg-[#0d1f35]/60 border-orange-500/10 hover:border-orange-500/30 transition-all p-6 flex items-start gap-4 h-full">
+                  <div className="h-10 w-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
+                    <p.icon className={`h-5 w-5 ${p.color}`} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-white mb-1">{p.name}</h3>
+                    <p className="text-sm text-gray-400 mb-2">
+                      {p.description}
+                    </p>
+                    <span className="text-xs text-orange-400 hover:text-orange-300 transition-colors">
+                      Connect →
+                    </span>
+                  </div>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>
