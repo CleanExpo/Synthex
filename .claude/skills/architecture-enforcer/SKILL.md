@@ -1,22 +1,30 @@
 ---
 name: architecture-enforcer
 description: >-
-  Pattern Consistency Guard for SYNTHEX. Enforces architectural patterns across
-  the entire codebase to prevent drift. Checks auth centralisation, import
-  conventions, icon barrel usage, Prisma import paths, API response format,
-  theme tokens, client directives, fetch credentials, and dead code. Use after
-  bulk changes, during reviews, or periodically.
+  Synthex architecture pattern enforcer. NEVER suggest Redux, Zustand, tRPC,
+  GraphQL, Server Actions for mutations, or any pattern absent from this
+  codebase. NEVER allow cross-layer imports (page importing from lib/ directly).
+  ALWAYS enforce: Pages → Components → Hooks → lib/ → Database. All mutations
+  go through API routes. Activate on ANY request to design architecture, review
+  patterns, plan a new system, refactor, or assess structural decisions.
 metadata:
   author: synthex
-  version: "1.0"
+  version: '1.0'
   engine: synthex-ai-agency
-  type: enforcement-skill
+  type: capability-uplift-code
   triggers:
     - architecture check
     - pattern audit
     - consistency check
     - codebase review
     - convention check
+    - architecture
+    - pattern
+    - refactor
+    - design system
+    - layer
+    - structure
+    - new system
 ---
 
 # Architecture Enforcer — Pattern Consistency Guard
@@ -35,6 +43,7 @@ This skill encodes those conventions as automated checks.
 ## When to Use
 
 Activate this skill when:
+
 - Reviewing a PR with changes across multiple files
 - After a bulk refactoring session
 - Running a periodic architecture health check
@@ -63,8 +72,10 @@ Activate this skill when:
 ## Pattern Checks
 
 ### P1: Auth Centralisation
+
 **Rule:** All `app/api/` routes import auth from `@/lib/auth/jwt-utils` or use `APISecurityChecker`. No route should define its own auth functions.
 **Check:**
+
 ```bash
 # Find routes with local auth definitions
 grep -rn "function getJWTSecret\|function getUserFromRequest\|function getTokenFromRequest\|function getUserId(" app/api/ --include="*.ts"
@@ -72,96 +83,121 @@ grep -rn "function getJWTSecret\|function getUserFromRequest\|function getTokenF
 # Find routes importing jwt directly instead of centralised auth
 grep -rn "from 'jsonwebtoken'" app/api/ --include="*.ts"
 ```
+
 **Expected:** 0 results for both.
 **Fix:** Replace with imports from `@/lib/auth/jwt-utils`.
 
 ### P2: No Duplicate Utilities
+
 **Rule:** Utility functions should exist in exactly one location. Specifically:
+
 - `getJWTSecret()` — only in `lib/auth/jwt-utils.ts`
 - `verifyToken()` — only in `lib/auth/jwt-utils.ts`
 - `prisma` client — only in `lib/prisma.ts`
-**Check:**
+  **Check:**
+
 ```bash
 grep -rn "function getJWTSecret" app/ lib/ --include="*.ts" | grep -v "lib/auth/jwt-utils"
 grep -rn "new PrismaClient" app/ lib/ --include="*.ts" | grep -v "lib/prisma"
 ```
+
 **Expected:** 0 results.
 
 ### P3: Icon Barrel Imports
+
 **Rule:** All icon imports must come from `@/components/icons`, never directly from `lucide-react`.
 **Why:** The barrel export ensures consistent icon naming and allows future icon library changes.
 **Check:**
+
 ```bash
 grep -rn "from 'lucide-react'" components/ app/ --include="*.tsx" --include="*.ts" | grep -v "components/icons"
 ```
+
 **Expected:** 0 results (only `components/icons.tsx` imports from lucide-react).
 **Fix:** Change `import { Icon } from 'lucide-react'` to `import { Icon } from '@/components/icons'`.
 
 ### P4: Prisma Import Path
+
 **Rule:** Always import Prisma from `@/lib/prisma`, never from `@prisma/client` directly.
 **Why:** The centralised import configures logging, connection pooling, and error handling.
 **Check:**
+
 ```bash
 grep -rn "from '@prisma/client'" app/ --include="*.ts" | grep -v "import.*Prisma\b\|import type"
 ```
+
 **Expected:** Only type imports (`import { Prisma } from '@prisma/client'` for types is acceptable).
 **Fix:** Use `import { prisma } from '@/lib/prisma'` for the client instance.
 
 ### P5: API Response Format
+
 **Rule:** API routes return consistent JSON structure:
+
 - Success: `{ data: ... }` or `{ ...data }` with 200/201 status
 - Error: `{ error: 'message' }` with appropriate 4xx/5xx status
 - Never: `{ message: ... }`, `{ result: ... }`, `{ success: true, ... }`
-**Check:** Manual review — look for inconsistent response shapes in API routes.
+  **Check:** Manual review — look for inconsistent response shapes in API routes.
 
 ### P6: Dark Theme Tokens
+
 **Rule:** Use Tailwind utility classes for theming. Avoid hardcoded hex colours.
 **Anti-patterns:** `bg-[#0f172a]`, `text-[#06b6d4]`, `border-[#1e293b]`
 **Preferred:** `bg-gray-950`, `text-cyan-400`, `border-gray-800`, `bg-[#0f172a]/80` (opacity variants are acceptable)
 **Check:**
+
 ```bash
 grep -rn "bg-\[#\|text-\[#\|border-\[#" components/ app/ --include="*.tsx" | grep -v "/80\|/60\|/40\|/20\|/50"
 ```
+
 **Note:** Opacity variants like `bg-[#0f172a]/80` are acceptable as Tailwind doesn't support opacity on arbitrary colours natively.
 
 ### P7: Client Directive
+
 **Rule:** Every React component that uses hooks (`useState`, `useEffect`, `useRef`, etc.) or browser APIs must have `'use client'` as the first line.
 **Check:**
+
 ```bash
 # Find files using hooks without 'use client'
 grep -rln "useState\|useEffect\|useRef\|useCallback\|useMemo\|useContext" components/ app/ --include="*.tsx" | xargs grep -L "'use client'"
 ```
+
 **Expected:** 0 results.
 
 ### P8: Fetch Credentials
+
 **Rule:** All client-side `fetch()` calls must include `credentials: 'include'`.
 **Why:** Without this, the httpOnly `auth-token` cookie is not sent, causing auth failures.
 **Check:**
+
 ```bash
 grep -rn "fetch(" components/ app/ hooks/ --include="*.tsx" --include="*.ts" | grep -v "credentials.*include\|server\|api/\|node_modules"
 ```
 
 ### P9: Multi-Business Scoping
+
 **Rule:** Routes that query data for the current user/organisation must use `userId` filtering or `getEffectiveQueryFilter()` from `@/lib/multi-business/business-scope`.
 **Why:** Without org scoping, multi-business users could see data from wrong organisations.
 **Check:** Manual review — look for Prisma queries in API routes that access user data without `userId` or `organizationId` in the `where` clause.
 
 ### P10: Dead Code Detection
+
 **Rule:** No unused imports, no unused variables, no large commented-out code blocks (>5 lines).
 **Check:**
+
 ```bash
 # Commented-out code blocks (crude but effective)
 grep -rn "^[[:space:]]*//" app/ components/ lib/ --include="*.ts" --include="*.tsx" | head -50
 ```
+
 **Note:** This check is best done by running ESLint with `no-unused-vars` and `no-unused-imports`.
 
 ## Input Specification
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| target | string | no | Directory or file to check (default: entire project) |
-| scope | string | no | Specific pattern IDs: `P1,P3,P7` or `all` (default: `all`) |
-| fix | boolean | no | Auto-fix safe patterns (P3, P4, P7) where possible |
+| Parameter | Type    | Required | Description                                                |
+| --------- | ------- | -------- | ---------------------------------------------------------- |
+| target    | string  | no       | Directory or file to check (default: entire project)       |
+| scope     | string  | no       | Specific pattern IDs: `P1,P3,P7` or `all` (default: `all`) |
+| fix       | boolean | no       | Auto-fix safe patterns (P3, P4, P7) where possible         |
 
 ## Output Specification
 
@@ -204,11 +240,11 @@ No direct lucide-react imports found outside icons barrel.
 
 ## Error Handling
 
-| Error | Action |
-|-------|--------|
+| Error                    | Action                                                     |
+| ------------------------ | ---------------------------------------------------------- |
 | No files found in target | Report: "No TypeScript files found in specified directory" |
-| Grep returns no matches | Report pattern as PASS |
-| File permission error | Skip and report |
+| Grep returns no matches  | Report pattern as PASS                                     |
+| File permission error    | Skip and report                                            |
 
 ## Reference Files (Canonical Implementations)
 
@@ -224,6 +260,26 @@ No direct lucide-react imports found outside icons barrel.
 - Complements **security-hardener** (architecture vs security)
 - Called by **senior-reviewer** agent for comprehensive reviews
 - Feeds into **post-route-create** hook for new route validation
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** recommend architectural patterns not present in the Synthex codebase:
+Redux, Zustand, tRPC, GraphQL, Server Actions for mutations, React Query.
+Never allow cross-layer imports. Never suggest splitting the monorepo.
+
+**INSTEAD** every architectural decision must:
+
+1. Trace back to an existing pattern in the codebase (find it with Grep first)
+2. Follow the layer rule: `app/` pages → `components/` → `hooks/` → `lib/` → Prisma → DB
+3. Route all mutations through `app/api/` routes with Zod validation
+4. Use SWR for client-side data (never useEffect + fetch)
+5. Keep auth in `lib/auth/` — never duplicate auth logic in components
+
+New patterns require: existing pattern was insufficient + migration path documented.
+
+**REFERENCE** `.claude/skills/synthex-standards/references/code-standards.md`
 
 ## Commands
 
