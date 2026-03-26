@@ -154,11 +154,6 @@ Radius scale:
   full: 9999px (pills, avatars)
 ```
 
-## Icons
-
-Use Lucide React unless an icon is unavailable, then use Heroicons.
-Never use Font Awesome. Never inline SVG from external sources without review.
-
 ## For chart/data visualisation standards → see data-viz-standards.md
 
 ````
@@ -485,10 +480,18 @@ data-viz-standards.md
 
 ```bash
 git add .claude/skills/synthex-standards/
-git commit -m "feat(skills): synthex-standards shared capability uplift reference layer"
+git commit -m "feat(skills): synthex-standards shared uplift reference layer"
 ```
 
 Expected: 5 files changed, 5 insertions, 0 deletions.
+
+- [ ] **Step 8: Sprint 1 boundary — verify clean**
+
+```bash
+git status
+```
+
+Expected: `nothing to commit, working tree clean`
 
 ---
 
@@ -787,6 +790,14 @@ git diff --stat .claude/skills/ui-review/SKILL.md
 git add .claude/skills/ui-review/SKILL.md
 git commit -m "feat(skills): uplift ui-review — override generic audits with Synthex dark-theme context"
 ```
+
+- [ ] **Sprint 2 boundary — verify clean**
+
+```bash
+git status
+```
+
+Expected: `nothing to commit, working tree clean`
 
 ---
 
@@ -1174,6 +1185,14 @@ git add .claude/skills/business-dna/SKILL.md
 git commit -m "feat(skills): uplift business-dna — replace generic brand descriptions with specific extraction"
 ```
 
+- [ ] **Sprint 3 boundary — verify clean**
+
+```bash
+git status
+```
+
+Expected: `nothing to commit, working tree clean`
+
 ---
 
 ## Sprint 4 — Category C: Code Output Skills
@@ -1556,6 +1575,14 @@ git diff --stat .claude/skills/architecture-enforcer/SKILL.md
 git add .claude/skills/architecture-enforcer/SKILL.md
 git commit -m "feat(skills): uplift architecture-enforcer — ban absent patterns, enforce layer rule"
 ```
+
+- [ ] **Sprint 4 boundary — verify clean**
+
+```bash
+git status
+```
+
+Expected: `nothing to commit, working tree clean`
 
 ---
 
@@ -1949,22 +1976,19 @@ git commit -m "feat(agents): uplift ceo — ban buzzwords, enforce client-outcom
 
 ---
 
-### Task 25: Tag Category D agents (`hive-mind`, `orchestrator-v2`)
+### Task 25: Tag `hive-mind` agent (Category D)
 
 **Files:**
 
 - Modify: `.claude/agents/hive-mind.md`
-- Modify: `.claude/agents/orchestrator-v2.md`
 
-- [ ] **Step 1: Read both files**
+- [ ] **Step 1: Read `hive-mind.md` in full**
 
-Read `.claude/agents/hive-mind.md` and `.claude/agents/orchestrator-v2.md` in full.
+- [ ] **Step 2: Add `type: reference-agent` to frontmatter**
 
-- [ ] **Step 2: Add type tag to both**
+Add to frontmatter: `type: reference-agent`
 
-Add `type: reference-agent` to each file's frontmatter.
-
-Append to each agent body:
+Append to body:
 
 ```markdown
 > **Reference agent:** This is an orchestration agent — it routes tasks to
@@ -1972,13 +1996,51 @@ Append to each agent body:
 > block is needed.
 ```
 
-- [ ] **Step 3: Verify only insertions, then commit both together**
+- [ ] **Step 3: Verify only insertions, then commit**
 
 ```bash
-git diff --stat .claude/agents/hive-mind.md .claude/agents/orchestrator-v2.md
-git add .claude/agents/hive-mind.md .claude/agents/orchestrator-v2.md
-git commit -m "chore(agents): tag hive-mind + orchestrator-v2 as reference-agent (Category D)"
+git diff --stat .claude/agents/hive-mind.md
+git add .claude/agents/hive-mind.md
+git commit -m "chore(agents): tag hive-mind as reference-agent (Category D)"
 ```
+
+---
+
+### Task 25b: Tag `orchestrator-v2` agent (Category D)
+
+**Files:**
+
+- Modify: `.claude/agents/orchestrator-v2.md`
+
+- [ ] **Step 1: Read `orchestrator-v2.md` in full**
+
+- [ ] **Step 2: Add `type: reference-agent` to frontmatter**
+
+Add to frontmatter: `type: reference-agent`
+
+Append to body:
+
+```markdown
+> **Reference agent:** This is an orchestration agent — it routes tasks to
+> specialist agents and does not generate direct output. No capability uplift
+> block is needed.
+```
+
+- [ ] **Step 3: Verify only insertions, then commit**
+
+```bash
+git diff --stat .claude/agents/orchestrator-v2.md
+git add .claude/agents/orchestrator-v2.md
+git commit -m "chore(agents): tag orchestrator-v2 as reference-agent (Category D)"
+```
+
+- [ ] **Sprint 5 boundary — verify clean**
+
+```bash
+git status
+```
+
+Expected: `nothing to commit, working tree clean`
 
 ---
 
