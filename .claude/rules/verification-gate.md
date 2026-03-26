@@ -71,3 +71,36 @@ If Claude has already said "done" without a checklist, it must immediately produ
 I should have provided a verification checklist. Here it is:
 [checklist]
 ```
+
+---
+
+## Mandatory Live Verification for API Endpoints (CEO Directive — 2026-03-26)
+
+Before claiming ANY API fix is complete, you MUST run the actual curl and paste the output.
+
+**Demo endpoint — production:**
+
+```bash
+curl -s -X POST https://synthex.social/api/demo/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://google.com.au"}'
+```
+
+Response MUST contain `"businessName"` and `"caption"` keys. If it contains `"error"`, the fix is NOT complete.
+
+**Demo endpoint — localhost:**
+
+```bash
+curl -s -X POST http://localhost:3000/api/demo/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://google.com.au"}'
+```
+
+**Non-negotiable rules:**
+
+- No curl output in your response = no "done" claim. Paste the actual output.
+- If curl returns `{"error":...}` or HTTP 500/503, the work is not complete — debug it.
+- Do not declare a deployment complete until the Vercel dashboard shows "Ready" (not "Building" or "Error").
+- Do not declare tests passing without pasting the actual Jest output line: `Tests: X passed, Y total`.
+
+These rules exist because agents repeatedly said "fixed" when nothing was fixed. Trust is earned by showing the output, not asserting it.

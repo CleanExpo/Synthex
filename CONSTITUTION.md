@@ -124,3 +124,13 @@ For all AI workflow product features (WorkflowExecution, StepExecution):
 - Never delete files — move to .claude/archived/YYYY-MM-DD/ instead
 - Never run `prisma migrate reset` (destructive)
 - Never skip pre-commit hooks (--no-verify)
+
+### Verification Non-Negotiables (CEO Directive — 2026-03-26)
+
+These rules were added after repeated incidents where agents declared work "done" or "fixed" when nothing had actually changed on the live site. Violations of these rules are the direct reason Phill lost confidence in the system.
+
+- NEVER declare a demo endpoint "fixed" without running the actual curl against the live production URL and pasting the response in your reply
+- NEVER declare tests "passing" without pasting the real Jest output line (`Tests: X passed, Y total`)
+- NEVER declare a deployment "complete" without confirming the Vercel dashboard shows "Ready"
+- NEVER use phrases like "should work", "probably passes", "looks correct" — run the command and report the actual output
+- The verification-gate.md rule is NOT documentation — it is enforced. Paste the curl output or don't claim done.

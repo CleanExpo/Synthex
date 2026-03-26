@@ -1,6 +1,6 @@
 # session-start-protocol.ps1
 # SessionStart hook - fires at the start of each Claude Code session
-# Replaces session-start.ps1 - prints orientation context to prevent context drift
+# Prints orientation context to prevent context drift
 
 $sep = "=" * 52
 
@@ -19,7 +19,7 @@ if (Test-Path $dedupFile) {
             } catch { }
         }
         $kept | ConvertTo-Json -Depth 3 | Set-Content -Path $dedupFile -Encoding UTF8
-    } catch { }  # non-fatal
+    } catch { }
 }
 
 Write-Output ""
@@ -105,6 +105,51 @@ $branch = git -C "D:\Synthex" branch --show-current 2>$null
 Write-Output "Branch: $branch"
 git -C "D:\Synthex" log --oneline -3 2>$null | ForEach-Object { Write-Output "  $_" }
 Write-Output "--- END GIT ---"
+
+# 6. Environment check - GEMINI_API_KEY required for local demo testing
+Write-Output ""
+Write-Output "--- ENV CHECK ---"
+$envFile = "D:\Synthex\.env.local"
+if (Test-Path $envFile) {
+    $envContent = Get-Content $envFile -Raw
+    if ($envContent -match 'GEMINI_API_KEY=[^\s]+') {
+        Write-Output "  GEMINI_API_KEY: SET (demo endpoint will work on localhost)"
+    } else {
+        Write-Output "  WARNING: GEMINI_API_KEY not set in .env.local"
+        Write-Output "  /api/demo/analyze will return 503 on localhost without it."
+        Write-Output "  Fix: add GEMINI_API_KEY=<key> to D:\Synthex\.env.local"
+        Write-Output "  Note: Production Vercel env var is already set -- production is fine."
+    }
+} else {
+    Write-Output "  WARNING: .env.local not found at D:\Synthex\.env.local"
+    Write-Output "  Copy .env.example to .env.local and add GEMINI_API_KEY."
+    Write-Output "  Demo endpoint (/api/demo/analyze) needs GEMINI_API_KEY to work locally."
+}
+Write-Output "--- END ENV CHECK ---"
+
+# 7. Chrome extension reminder - must be connected before any browser automation
+Write-Output ""
+Write-Output "--- CHROME EXTENSION ---"
+$nativeHostPath = "C:\Users\Disaster Recovery 4\.claude\chrome\chrome-native-host.bat"
+if (Test-Path $nativeHostPath) {
+    Write-Output "  Native host: FOUND"
+    Write-Output "  ACTION: Open Chrome, check Claude Code extension shows Connected."
+    Write-Output "  If Not Connected: click extension icon then Reconnect (or reload extension)."
+    Write-Output "  Must be connected BEFORE any browser automation tasks."
+} else {
+    Write-Output "  Native host: NOT FOUND at expected path"
+    Write-Output "  Install: Claude Code settings > Extensions > Claude in Chrome"
+}
+Write-Output "--- END CHROME EXTENSION ---"
+
+# 8. MCP context note - explains the Disaster Recovery label to prevent confusion
+Write-Output ""
+Write-Output "--- MCP NOTE ---"
+Write-Output "  Supabase MCP appears as Disaster-Recovery-Supabase (name from initial setup)."
+Write-Output "  This IS the correct Synthex Supabase project -- all queries go to the right DB."
+Write-Output "  To permanently rename: run /mcp remove Disaster-Recovery-Supabase in Claude Code"
+Write-Output "  then re-add via /integrations add supabase and name it Synthex-Supabase."
+Write-Output "--- END MCP NOTE ---"
 
 Write-Output ""
 Write-Output $sep

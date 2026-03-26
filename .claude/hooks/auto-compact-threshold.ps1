@@ -1,9 +1,10 @@
 # auto-compact-threshold.ps1
-# UserPromptSubmit hook: warns when context window reaches 45%+
+# UserPromptSubmit hook: triggers mandatory /compact directive when context reaches 50%+
 #
 # Claude Code has no native compactThreshold setting.
 # This hook reads context percentage from stdin (if Claude Code exposes it)
-# and surfaces a systemMessage so the user knows to run /compact.
+# and outputs a MANDATORY systemMessage directive at 50%+ so Claude is
+# forced to run /compact before responding to anything else.
 # Gracefully no-ops if context data is absent from stdin.
 
 param()
@@ -31,13 +32,15 @@ elseif (
     if ($max -gt 0) { $pct = ($used / $max) * 100 }
 }
 
-if ($null -eq $pct -or $pct -lt 45) { exit 0 }
+# Trigger at 50% — not 45%. Anything below 50% is fine.
+if ($null -eq $pct -or $pct -lt 50) { exit 0 }
 
 $rounded = [math]::Round($pct, 1)
-$level   = if ($pct -ge 70) { "CRITICAL" } elseif ($pct -ge 55) { "HIGH" } else { "WARN" }
 
+# MANDATORY directive — Claude reads systemMessage before the user's prompt each turn.
+# Using directive-level language ensures Claude treats this as a hard rule, not a suggestion.
 @{
-    systemMessage = "[$level] Context at ${rounded}% -- run /compact now to keep the session fast"
+    systemMessage = "MANDATORY COMPACT REQUIRED: Context window is at ${rounded}%. You MUST run /compact as your absolute FIRST action before reading or responding to anything else. Do not acknowledge the user message, do not write code, do not search files, do not produce any output. Run /compact RIGHT NOW. This is a non-negotiable system rule set by the project owner."
 } | ConvertTo-Json -Compress
 
 exit 0
