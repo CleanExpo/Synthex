@@ -178,88 +178,57 @@ async function generateCaption(
   businessName: string,
   industry: string,
   description: string,
-  geminiKey?: string,
-  openaiKey?: string
+  geminiKey: string
 ): Promise<{ caption: string; model: string }> {
   const prompt = `Write a single Instagram caption (2-3 sentences, 1-2 hashtags) for an Australian ${industry} business called "${businessName}".${description ? ` About them: ${description.slice(0, 200)}` : ''} Conversational tone, no emojis. Return only the finished caption text, nothing else.`;
 
-  if (geminiKey) {
-    try {
-      const geminiController = new AbortController();
-      const geminiTimer = setTimeout(() => geminiController.abort(), 12000);
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
-        {
-          method: 'POST',
-          signal: geminiController.signal,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              maxOutputTokens: 400,
-              temperature: 0.85,
-              // Disable thinking mode — Gemini 2.5 Flash is a thinking model.
-              // Without thinkingBudget:0 it returns a `thought:true` part first
-              // containing mid-reasoning text, causing truncated output.
-              thinkingConfig: { thinkingBudget: 0 },
-            },
-          }),
-        }
-      );
-      clearTimeout(geminiTimer);
-      if (res.ok) {
-        const d = (await res.json()) as {
-          candidates?: Array<{
-            content?: {
-              parts?: Array<{ text?: string; thought?: boolean }>;
-            };
-          }>;
-        };
-        // Skip thinking-token parts (thought:true) and join only answer parts
-        const rawParts = d?.candidates?.[0]?.content?.parts ?? [];
-        const text = rawParts
-          .filter(p => !p.thought)
-          .map(p => p.text ?? '')
-          .join('')
-          .trim();
-        if (text) return { caption: text, model: 'gemini-2.5-flash' };
-      }
-    } catch {}
-  }
-
-  if (openaiKey) {
-    try {
-      const openaiController = new AbortController();
-      const openaiTimer = setTimeout(() => openaiController.abort(), 12000);
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        signal: openaiController.signal,
-        headers: {
-          Authorization: `Bearer ${openaiKey}`,
-          'Content-Type': 'application/json',
+  const geminiController = new AbortController();
+  const geminiTimer = setTimeout(() => geminiController.abort(), 12000);
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+    {
+      method: 'POST',
+      signal: geminiController.signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          maxOutputTokens: 400,
+          temperature: 0.85,
+          // Disable thinking mode — Gemini 2.5 Flash is a thinking model.
+          // Without thinkingBudget:0 it returns a `thought:true` part first
+          // containing mid-reasoning text, causing truncated output.
+          thinkingConfig: { thinkingBudget: 0 },
         },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 200,
-          temperature: 0.8,
-        }),
-      });
-      clearTimeout(openaiTimer);
-      if (res.ok) {
-        const d = (await res.json()) as {
-          choices?: Array<{ message?: { content?: string } }>;
-        };
-        const text = d?.choices?.[0]?.message?.content?.trim();
-        if (text) return { caption: text, model: 'gpt-4o-mini' };
-      }
-    } catch {}
+      }),
+    }
+  );
+  clearTimeout(geminiTimer);
+
+  if (!res.ok) {
+    throw new Error(`Gemini API error: ${res.status}`);
   }
 
-  return {
-    caption: `${businessName} — proudly serving the local community. Follow us for updates, behind-the-scenes content, and exclusive offers. #AustralianBusiness #LocalLove`,
-    model: 'sample',
+  const d = (await res.json()) as {
+    candidates?: Array<{
+      content?: {
+        parts?: Array<{ text?: string; thought?: boolean }>;
+      };
+    }>;
   };
+  // Skip thinking-token parts (thought:true) and join only answer parts
+  const rawParts = d?.candidates?.[0]?.content?.parts ?? [];
+  const text = rawParts
+    .filter(p => !p.thought)
+    .map(p => p.text ?? '')
+    .join('')
+    .trim();
+
+  if (!text) {
+    throw new Error('Gemini returned empty response');
+  }
+
+  return { caption: text, model: 'gemini-2.5-flash' };
 }
 
 function getPicsumUrl(industry: string): string {
@@ -338,21 +307,31 @@ export async function POST(req: NextRequest) {
     const scores = scoreWebsite(html, bodyText);
 
     const geminiKey = process.env.GEMINI_API_KEY;
-    const openaiKey = process.env.OPENAI_API_KEY;
 
-    if (!geminiKey && !openaiKey) {
-      console.warn(
-        '[demo/analyze] No AI keys configured (GEMINI_API_KEY, OPENAI_API_KEY). ' +
-          'Returning sample caption. Set at least one key for live AI generation.'
+    if (!geminiKey) {
+      return NextResponse.json(
+        { error: 'AI generation unavailable — GEMINI_API_KEY not configured' },
+        { status: 503 }
       );
     }
 
-    const [captionResult, imageUrl] = await Promise.all([
-      generateCaption(businessName, industry, metaDesc, geminiKey, openaiKey),
-      Promise.resolve(
-        geminiKey ? getPicsumUrl(industry) : getPicsumUrl(industry)
-      ),
-    ]);
+    let captionResult: { caption: string; model: string };
+    try {
+      captionResult = await generateCaption(
+        businessName,
+        industry,
+        metaDesc,
+        geminiKey
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      return NextResponse.json(
+        { error: `AI generation failed: ${msg}` },
+        { status: 503 }
+      );
+    }
+
+    const imageUrl = getPicsumUrl(industry);
 
     const result: AnalyzeResult = {
       businessName,
