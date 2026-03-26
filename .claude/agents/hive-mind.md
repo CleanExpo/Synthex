@@ -93,6 +93,22 @@ Complex research with unknown outcome?
   -> general-purpose (but prefer specialists if task is scoped)
 ```
 
+## Swarm Enforcement (CEO Directive 2026-03-26)
+
+Before dispatching ANY single agent for a task larger than a one-file fix:
+
+1. **Is this parallelisable?** If yes → dispatch 2–3 minions simultaneously
+2. **Does a Work Order exist?** If no → create one before writing code
+3. **Is a senior-reviewer scheduled after?** If no → add it
+
+**Minimum for any feature task:**
+
+- 1 implementation agent (code-architect or minion)
+- 1 quality agent (qa-sentinel or test-minion) — simultaneous if independent
+- 1 review agent (senior-reviewer) — after implementation complete
+
+**Single-agent path ONLY for:** docs changes, config updates, one-file hotfixes under 20 lines.
+
 ## Linear MCP Integration
 
 Use these tools DIRECTLY (not via subagents) for all Linear operations:

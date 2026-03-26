@@ -303,6 +303,44 @@ Reference: `.planning/research/stripe-minions-synthesis.md`
 
 ---
 
+## Swarm Examples (CEO Directive 2026-03-26)
+
+### 3-minion parallel dispatch
+
+**Task:** New API endpoint
+
+```
+Dispatch simultaneously:
+  Minion A (api-security-minion): route handler + Zod validation
+  Minion B (test-minion): contract tests for the same route
+  Minion C (review-minion): audit similar routes for patterns
+
+After all 3 return:
+  → Synthesise: integrate A code + B tests
+  → Gate: senior-reviewer on the combined diff
+```
+
+### Sequential with human gate
+
+**Task:** Database migration + UI update
+
+```
+Phase 1: db-minion → schema change (CEO gate before Phase 2)
+Phase 2 (parallel after gate):
+  Minion A (ui-minion): update UI to use new field
+  Minion B (test-minion): update tests for new field
+Phase 3: senior-reviewer → final audit
+```
+
+### Single-agent path (only these cases)
+
+- Documentation changes
+- Config updates (env, settings files)
+- One-file hotfixes under 20 lines
+- Git operations
+
+---
+
 ## Dispatch Template
 
 When spawning a specialist, always include:
