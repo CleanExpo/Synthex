@@ -1,17 +1,19 @@
 ---
 name: visual-content-brief
 description: >-
-  Generates on-brand AI image prompts, visual direction briefs, and creative specs from
-  a Business DNA profile. Produces prompts for DALL-E, Imagen, Flux, and Midjourney
-  alongside colour-accurate platform graphic specs. Use when the user says "create visual
-  content", "generate image prompts", "design brief", "product photography", "social
-  graphics", "make visuals for my brand", or "what should my images look like". Extends
-  Pomelli-style visual generation with Synthex's brand memory and BYOK image generation.
+  Synthex visual content enforcer. NEVER produce generic stock-photo prompts,
+  "professional woman at a desk" imagery without brand colour injection, or
+  AI image prompts that could belong to any brand. ALWAYS inject the brand's
+  primary hex, lighting that matches brand tone, and a negative prompt banning
+  competitor colours and stock-photo feel. Activate on ANY request to create
+  visuals, image prompts, design briefs, social graphics, product photography,
+  or brand imagery — including "what should my images look like".
 metadata:
   author: synthex
   version: "1.0"
   engine: synthex-ai-agency
   type: workflow-skill
+  type: capability-uplift-visual
   triggers:
     - visual content
     - image prompts
@@ -22,6 +24,11 @@ metadata:
     - ai images
     - canva alternative
     - create visuals
+    - visual brief
+    - ai image
+    - generate image
+    - image generation
+    - photography brief
 ---
 
 # Visual Content Brief
@@ -57,6 +64,7 @@ Structure every prompt using this formula:
 ```
 
 **Example for a wellness brand:**
+
 ```
 A calm professional woman working at a minimalist desk, soft morning light,
 brand palette: sage green #8FAF8F and warm white #FAFAF8, clean editorial style,
@@ -65,6 +73,7 @@ shallow depth of field, magazine-quality photography, no text overlays,
 ```
 
 **Negative prompt (always include):**
+
 ```
 Avoid: busy backgrounds, stock photo feel, competitor brand colours,
 harsh shadows, low resolution, watermarks, text in image
@@ -87,15 +96,15 @@ FORBIDDEN: [colours that clash with brand or signal competitors]
 
 ### 3. Platform Specs
 
-| Platform | Format | Dimensions | Safe Zone |
-|----------|--------|------------|-----------|
-| Instagram Feed | Square / 4:5 portrait | 1080×1080 / 1080×1350 | 250px top/bottom |
-| Instagram Story | 9:16 vertical | 1080×1920 | 250px top/bottom |
-| LinkedIn Post | Landscape | 1200×627 | 100px all sides |
-| Facebook Post | Landscape | 1200×628 | 100px all sides |
-| Twitter/X | Landscape | 1600×900 | 100px all sides |
-| TikTok / Reel | 9:16 vertical | 1080×1920 | 350px top/bottom |
-| YouTube Thumbnail | 16:9 | 1280×720 | 100px all sides |
+| Platform          | Format                | Dimensions            | Safe Zone        |
+| ----------------- | --------------------- | --------------------- | ---------------- |
+| Instagram Feed    | Square / 4:5 portrait | 1080×1080 / 1080×1350 | 250px top/bottom |
+| Instagram Story   | 9:16 vertical         | 1080×1920             | 250px top/bottom |
+| LinkedIn Post     | Landscape             | 1200×627              | 100px all sides  |
+| Facebook Post     | Landscape             | 1200×628              | 100px all sides  |
+| Twitter/X         | Landscape             | 1600×900              | 100px all sides  |
+| TikTok / Reel     | 9:16 vertical         | 1080×1920             | 350px top/bottom |
+| YouTube Thumbnail | 16:9                  | 1280×720              | 100px all sides  |
 
 ## Content Type Templates
 
@@ -172,3 +181,25 @@ PRODUCT PHOTOGRAPHY BRIEF
 - Imagen designer: `.claude/skills/imagen-designer/`
 - Brand DNA: `.claude/skills/business-dna/`
 - Synthex image routes: `app/api/ai/images/`
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** produce a prompt that omits the brand's colour palette, uses
+"professional woman/man at a clean desk" as a default setting, outputs prompts
+that could apply to any brand, or skips the negative prompt.
+
+**INSTEAD** every image prompt uses this structure:
+
+[Subject + Action] + [Brand Visual Style from DNA] + [Primary Colour Hex] +
+[Lighting that matches brand tone: editorial/dramatic/natural/documentary] +
+[Mood] + [Technical Spec: aspect ratio, photorealistic/illustrated]
+
+Negative: stock photo feel, generic office background, competitor brand colours
+[hex list], watermarks, harsh shadows, low resolution
+
+For a Synthex-generated brand, pull the primary colour from Business DNA
+before writing any prompt. A prompt without a hex code is not a Synthex prompt.
+
+**REFERENCE** `.claude/skills/synthex-standards/references/aesthetic-standards.md`
