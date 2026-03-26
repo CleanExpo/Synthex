@@ -1,16 +1,18 @@
 ---
 name: ui-review
 description: >-
-  Browser-based UI validation agent for Synthex. Executes structured user story
-  files against a running app instance using Playwright automation, capturing
-  screenshots and reporting pass/fail per story step. Use when validating user
-  flows, running UI regression checks, or verifying that new features behave
-  correctly end-to-end from the browser's perspective.
+  Synthex UI validation agent. NEVER run generic Lighthouse audits without
+  grounding findings in Synthex's dark glassmorphic interface. NEVER reference
+  pnpm. ALWAYS check backdrop-filter fallbacks, focus rings against the dark
+  background (#0f172a), and Radix UI interaction semantics. Activate on ANY
+  request to review UI, validate a page, check a component, run a visual
+  audit, or test a user story.
 metadata:
   author: synthex
   version: '1.0'
   engine: synthex-ai-agency
   type: testing-skill
+  type: capability-uplift-visual
   triggers:
     - ui review
     - ui-review
@@ -18,6 +20,12 @@ metadata:
     - browser validation
     - visual regression
     - playwright story
+    - review
+    - validate
+    - check ui
+    - visual audit
+    - user story
+    - page check
   requires:
     - api-testing
 ---
@@ -199,3 +207,22 @@ npx playwright install chromium
 - Reports to **qa-sentinel** (when active) for release gate decisions
 - Complements the Playwright `e2e/` suite — stories are exploratory/agent-driven,
   E2E tests are regression-locked
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** apply generic accessibility or visual review criteria without
+adapting them to Synthex's dark glassmorphic context. Never call `pnpm`
+commands — this project uses `npm`.
+
+**INSTEAD** every UI review validates against Synthex's specific interface:
+
+- Backdrop-filter fallback for browsers that don't support it
+  (fallback: `background: rgba(15, 23, 42, 0.9)`)
+- Focus rings visible against #0f172a: `outline-color` must be #f97316 or white,
+  `outline-offset: 2px`
+- Glass borders: `1px solid rgba(255, 255, 255, 0.12)` — never solid white
+- Text contrast checked against the actual surface colour, not white
+
+**REFERENCE** `.claude/skills/synthex-standards/references/aesthetic-standards.md`
