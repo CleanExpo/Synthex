@@ -109,7 +109,8 @@ export async function GET(request: NextRequest) {
       'organizationId' in queryFilter
         ? (queryFilter as { organizationId: string }).organizationId
         : null;
-    const cacheKey = `synthex:cache:campaigns:${orgId ?? userId}:all`;
+    const cachePrefix = orgId ? `org:${orgId}` : `user:${userId}`;
+    const cacheKey = `synthex:cache:campaigns:${cachePrefix}:all`;
     try {
       const redis = getRedisClient();
       const cached = await redis.get(cacheKey);

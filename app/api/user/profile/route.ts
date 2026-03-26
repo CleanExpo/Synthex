@@ -71,11 +71,8 @@ const profileUpdateSchema = z
   .strip();
 
 const deleteAccountSchema = z.object({
-  confirmation: z
-    .literal('DELETE_MY_ACCOUNT', {
-      error: () => ({ message: 'Must confirm with "DELETE_MY_ACCOUNT"' }),
-    })
-    .optional(),
+  // TODO: Add status/deletedAt to User model for soft-delete support
+  confirm: z.literal(true),
 });
 
 // GET current user profile
@@ -434,24 +431,15 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Require confirmation for account deletion (safety measure)
-    try {
-      const body = await request.json();
-      const validationResult = deleteAccountSchema.safeParse(body);
-      if (!validationResult.success || !validationResult.data.confirmation) {
-        return NextResponse.json(
-          {
-            error: 'Account deletion requires confirmation',
-            message: 'Send { "confirmation": "DELETE_MY_ACCOUNT" } to confirm',
-          },
-          { status: 400 }
-        );
-      }
-    } catch {
+    // Require explicit confirmation body before hard-delete (no soft-delete available
+    // until status/deletedAt fields are added to the User model — see TODO above)
+    const rawBody = await request.json().catch(() => ({}));
+    const validationResult = deleteAccountSchema.safeParse(rawBody);
+    if (!validationResult.success) {
       return NextResponse.json(
         {
           error: 'Account deletion requires confirmation',
-          message: 'Send { "confirmation": "DELETE_MY_ACCOUNT" } to confirm',
+          details: 'Send { confirm: true } to delete account',
         },
         { status: 400 }
       );

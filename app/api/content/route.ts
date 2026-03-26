@@ -16,6 +16,12 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+
+const paginationSchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,12 +36,21 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || undefined;
     const platform = searchParams.get('platform') || undefined;
-    const limitParam = searchParams.get('limit');
-    const pageParam = searchParams.get('page');
-    const limit = limitParam
-      ? Math.min(parseInt(limitParam, 10) || 50, 200)
-      : 50;
-    const page = pageParam ? Math.max(parseInt(pageParam, 10) || 1, 1) : 1;
+
+    const paginationResult = paginationSchema.safeParse({
+      page: searchParams.get('page') ?? undefined,
+      limit: searchParams.get('limit') ?? undefined,
+    });
+    if (!paginationResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Invalid pagination parameters',
+          details: paginationResult.error.issues,
+        },
+        { status: 400 }
+      );
+    }
+    const { page, limit } = paginationResult.data;
     const skip = (page - 1) * limit;
 
     const organizationId = await getEffectiveOrganizationId(userId);

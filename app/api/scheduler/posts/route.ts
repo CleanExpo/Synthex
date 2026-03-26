@@ -494,6 +494,20 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Require explicit confirmation body before hard-delete
+    const confirmBodySchema = z.object({ confirm: z.literal(true) });
+    const rawBody = await request.json().catch(() => ({}));
+    const confirmParsed = confirmBodySchema.safeParse(rawBody);
+    if (!confirmParsed.success) {
+      return NextResponse.json(
+        {
+          error: 'Confirmation required',
+          details: 'Send { confirm: true } to delete',
+        },
+        { status: 400 }
+      );
+    }
+
     // Verify ownership through campaign
     const existingPost = await prisma.post.findUnique({
       where: { id },

@@ -26,7 +26,11 @@
 import { NextRequest } from 'next/server';
 import { timingSafeEqual } from 'crypto';
 import prisma from '@/lib/prisma';
-import { verifyToken, isOwnerEmail } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  isOwnerEmail,
+} from '@/lib/auth/jwt-utils';
+// Uses centralised auth — getUserIdFromRequestOrCookies() from lib/auth/jwt-utils
 
 // =============================================================================
 // Types
@@ -57,12 +61,6 @@ function timingSafeCompare(a: string, b: string): boolean {
 // =============================================================================
 
 /**
- * Verify that the incoming request is authorised to access admin endpoints.
- *
- * @param request - Incoming NextRequest
- * @returns AdminAuthResult — { isAdmin, userId?, error? }
- */
-/**
  * Look up a user's email by userId for server-component admin guards.
  * Provides a service-layer wrapper so layouts don't import Prisma directly.
  */
@@ -74,6 +72,18 @@ export async function getUserEmailById(userId: string): Promise<string | null> {
   return user?.email ?? null;
 }
 
+/**
+ * Verify that the incoming request is authorised to access admin endpoints.
+ *
+ * Auth chain:
+ *   1. x-admin-api-key header — timing-safe compare with ADMIN_API_KEY env var
+ *   2. JWT userId via getUserIdFromRequestOrCookies() from lib/auth/jwt-utils
+ *      (reads httpOnly auth-token cookie first, then Authorization: Bearer header)
+ *   3. DB lookup to confirm user exists and has admin/superadmin role or owner email
+ *
+ * @param request - Incoming NextRequest
+ * @returns AdminAuthResult — { isAdmin, userId?, error? }
+ */
 export async function verifyAdmin(
   request: NextRequest
 ): Promise<AdminAuthResult> {
@@ -87,65 +97,45 @@ export async function verifyAdmin(
   }
 
   // ------------------------------------------------------------------
-  // 2. JWT — Authorization: Bearer header OR auth-token cookie
+  // 2. JWT — uses centralised getUserIdFromRequestOrCookies() from lib/auth/jwt-utils
+  //    (httpOnly cookie → Authorization: Bearer fallback)
   // ------------------------------------------------------------------
-  const authHeader = request.headers.get('authorization');
-  const cookieHeader = request.headers.get('cookie');
+  const userId = await getUserIdFromRequestOrCookies(request);
 
-  let token: string | null = null;
-
-  if (authHeader?.startsWith('Bearer ')) {
-    token = authHeader.slice(7);
-  } else if (cookieHeader) {
-    // Parse auth-token from cookie string
-    const match = cookieHeader.match(/(?:^|;\s*)auth-token=([^;]+)/);
-    if (match) {
-      token = decodeURIComponent(match[1]);
-    }
-  }
-
-  if (!token) {
+  if (!userId) {
     return { isAdmin: false, error: 'Authentication required' };
   }
 
-  try {
-    const decoded = verifyToken(token);
+  // ------------------------------------------------------------------
+  // 3. DB lookup — always re-verify to pick up suspensions / role changes
+  // ------------------------------------------------------------------
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, preferences: true },
+  });
 
-    if (!decoded.userId) {
-      return { isAdmin: false, error: 'Invalid token payload' };
-    }
-
-    // Look up user in DB — always re-verify against DB to pick up suspensions / role changes
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: { id: true, email: true, preferences: true },
-    });
-
-    if (!user) {
-      return {
-        isAdmin: false,
-        userId: decoded.userId,
-        error: 'User not found',
-      };
-    }
-
-    // Owner email bypass — owner always has admin access regardless of DB role
-    if (isOwnerEmail(user.email)) {
-      return { isAdmin: true, userId: decoded.userId };
-    }
-
-    // Role-based check via preferences JSON field
-    const prefs = user.preferences as { role?: string } | null;
-    if (prefs?.role !== 'admin' && prefs?.role !== 'superadmin') {
-      return {
-        isAdmin: false,
-        userId: decoded.userId,
-        error: 'Admin access required',
-      };
-    }
-
-    return { isAdmin: true, userId: decoded.userId };
-  } catch {
-    return { isAdmin: false, error: 'Invalid token' };
+  if (!user) {
+    return {
+      isAdmin: false,
+      userId,
+      error: 'User not found',
+    };
   }
+
+  // Owner email bypass — owner always has admin access regardless of DB role
+  if (isOwnerEmail(user.email)) {
+    return { isAdmin: true, userId };
+  }
+
+  // Role-based check via preferences JSON field
+  const prefs = user.preferences as { role?: string } | null;
+  if (prefs?.role !== 'admin' && prefs?.role !== 'superadmin') {
+    return {
+      isAdmin: false,
+      userId,
+      error: 'Admin access required',
+    };
+  }
+
+  return { isAdmin: true, userId };
 }
