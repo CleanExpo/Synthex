@@ -7,18 +7,20 @@
  * The executor wraps execution, handles timeouts, and returns structured results.
  */
 
-import type { WorkflowStepDefinition, StepContext, StepResult } from './types'
-import { execute as executeAiGenerate } from './step-types/ai-generate'
-import { execute as executeAiAnalyse } from './step-types/ai-analyse'
-import { execute as executeAiEnrich } from './step-types/ai-enrich'
-import { execute as executeHumanApproval } from './step-types/human-approval'
-import { execute as executeActionPublish } from './step-types/action-publish'
-import { execute as executeActionSchedule } from './step-types/action-schedule'
-import { execute as executeActionNotify } from './step-types/action-notify'
-import { execute as executeCredentialInject } from './step-types/credential-inject'
+import type { WorkflowStepDefinition, StepContext, StepResult } from './types';
+import { execute as executeAiGenerate } from './step-types/ai-generate';
+import { execute as executeAiAnalyse } from './step-types/ai-analyse';
+import { execute as executeAiEnrich } from './step-types/ai-enrich';
+import { execute as executeHumanApproval } from './step-types/human-approval';
+import { execute as executeActionPublish } from './step-types/action-publish';
+import { execute as executeActionSchedule } from './step-types/action-schedule';
+import { execute as executeActionNotify } from './step-types/action-notify';
+import { execute as executeCredentialInject } from './step-types/credential-inject';
+import { execute as executeAiPlan } from './step-types/ai-plan';
+import { execute as executeAiEvaluate } from './step-types/ai-evaluate';
 
 /** Default step execution timeout in milliseconds */
-const DEFAULT_TIMEOUT_MS = 30_000
+const DEFAULT_TIMEOUT_MS = 30_000;
 
 /**
  * Execute a single step by its type.
@@ -37,23 +39,26 @@ export async function executeStep(
 ): Promise<StepResult> {
   const timeoutPromise = new Promise<StepResult>((_, reject) =>
     setTimeout(
-      () => reject(new Error(`Step "${stepDef.name}" timed out after ${timeoutMs}ms`)),
+      () =>
+        reject(
+          new Error(`Step "${stepDef.name}" timed out after ${timeoutMs}ms`)
+        ),
       timeoutMs
     )
-  )
+  );
 
-  const executionPromise = executeStepByType(stepDef, context)
+  const executionPromise = executeStepByType(stepDef, context);
 
   try {
-    return await Promise.race([executionPromise, timeoutPromise])
+    return await Promise.race([executionPromise, timeoutPromise]);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
+    const message = err instanceof Error ? err.message : String(err);
     return {
       success: false,
       error: message,
       // Timeouts are not terminal — orchestrator may retry
       terminal: false,
-    }
+    };
   }
 }
 
@@ -67,22 +72,26 @@ async function executeStepByType(
 ): Promise<StepResult> {
   switch (stepDef.type) {
     case 'ai':
-      return executeAiStep(stepDef, context)
+      return executeAiStep(stepDef, context);
+    case 'ai-plan':
+      return executeAiPlan(stepDef, context);
+    case 'ai-evaluate':
+      return executeAiEvaluate(stepDef, context);
     case 'approval':
-      return executeApprovalStep(stepDef, context)
+      return executeApprovalStep(stepDef, context);
     case 'action':
-      return executeActionStep(stepDef, context)
+      return executeActionStep(stepDef, context);
     case 'validation':
-      return executeValidationStep(stepDef, context)
+      return executeValidationStep(stepDef, context);
     case 'credential-inject':
-      return executeCredentialInject(stepDef, context)
+      return executeCredentialInject(stepDef, context);
     default: {
-      const exhaustive: never = stepDef.type
+      const exhaustive: never = stepDef.type;
       return {
         success: false,
         error: `Unknown step type: ${exhaustive}`,
         terminal: true,
-      }
+      };
     }
   }
 }
@@ -95,14 +104,14 @@ async function executeAiStep(
   stepDef: WorkflowStepDefinition,
   context: StepContext
 ): Promise<StepResult> {
-  const subType = (stepDef.config as { subType?: string } | undefined)?.subType
+  const subType = (stepDef.config as { subType?: string } | undefined)?.subType;
   switch (subType) {
     case 'analyse':
-      return executeAiAnalyse(stepDef, context)
+      return executeAiAnalyse(stepDef, context);
     case 'enrich':
-      return executeAiEnrich(stepDef, context)
+      return executeAiEnrich(stepDef, context);
     default:
-      return executeAiGenerate(stepDef, context)
+      return executeAiGenerate(stepDef, context);
   }
 }
 
@@ -110,7 +119,7 @@ async function executeApprovalStep(
   stepDef: WorkflowStepDefinition,
   context: StepContext
 ): Promise<StepResult> {
-  return executeHumanApproval(stepDef, context)
+  return executeHumanApproval(stepDef, context);
 }
 
 async function executeActionStep(
@@ -119,13 +128,13 @@ async function executeActionStep(
 ): Promise<StepResult> {
   switch (stepDef.actionType) {
     case 'publish':
-      return executeActionPublish(stepDef, context)
+      return executeActionPublish(stepDef, context);
     case 'schedule':
-      return executeActionSchedule(stepDef, context)
+      return executeActionSchedule(stepDef, context);
     case 'notify':
-      return executeActionNotify(stepDef, context)
+      return executeActionNotify(stepDef, context);
     default:
-      return { success: false, error: 'Unknown action type', terminal: true }
+      return { success: false, error: 'Unknown action type', terminal: true };
   }
 }
 
@@ -135,18 +144,21 @@ async function executeValidationStep(
 ): Promise<StepResult> {
   // Basic validation: check prior steps completed successfully
   const failedPriorSteps = context.priorOutputs.filter(
-    (s) => s.output && typeof s.output === 'object' && 'error' in (s.output as object)
-  )
+    s =>
+      s.output &&
+      typeof s.output === 'object' &&
+      'error' in (s.output as object)
+  );
   if (failedPriorSteps.length > 0) {
     return {
       success: false,
       error: `Validation failed: ${failedPriorSteps.length} prior step(s) had errors`,
       terminal: false,
-    }
+    };
   }
   return {
     success: true,
     output: { validated: true, priorStepsChecked: context.priorOutputs.length },
     confidenceScore: 1.0,
-  }
+  };
 }

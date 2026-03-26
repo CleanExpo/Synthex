@@ -7,26 +7,33 @@
 // Step Definitions (the blueprint for what a step should do)
 // ---------------------------------------------------------------------------
 
-export type StepType = 'ai' | 'approval' | 'action' | 'validation' | 'credential-inject'
+export type StepType =
+  | 'ai'
+  | 'ai-plan'
+  | 'ai-evaluate'
+  | 'approval'
+  | 'action'
+  | 'validation'
+  | 'credential-inject';
 
 export interface WorkflowStepDefinition {
-  name: string
-  type: StepType
+  name: string;
+  type: StepType;
   /** For AI steps: the prompt template. Use {{variable}} for interpolation. */
-  promptTemplate?: string
+  promptTemplate?: string;
   /** For action steps: which action to perform */
-  actionType?: 'publish' | 'schedule' | 'notify'
+  actionType?: 'publish' | 'schedule' | 'notify';
   /** Metadata passed to the step executor */
-  config?: Record<string, unknown>
+  config?: Record<string, unknown>;
   /** Override auto-approve threshold for this step (0.0–1.0) */
-  autoApproveThreshold?: number
+  autoApproveThreshold?: number;
 }
 
 export interface WorkflowDefinition {
-  title: string
-  steps: WorkflowStepDefinition[]
+  title: string;
+  steps: WorkflowStepDefinition[];
   /** Default confidence threshold for auto-approval (default: 0.85) */
-  autoApproveThreshold?: number
+  autoApproveThreshold?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -34,32 +41,32 @@ export interface WorkflowDefinition {
 // ---------------------------------------------------------------------------
 
 export interface PriorStepOutput {
-  stepIndex: number
-  stepName: string
-  stepType: StepType
-  output: unknown
-  confidenceScore?: number
+  stepIndex: number;
+  stepName: string;
+  stepType: StepType;
+  output: unknown;
+  confidenceScore?: number;
 }
 
 export interface StepContext {
   /** The step definition being executed */
-  stepDefinition: WorkflowStepDefinition
+  stepDefinition: WorkflowStepDefinition;
   /** Token-budgeted prior outputs (last N steps only) */
-  priorOutputs: PriorStepOutput[]
+  priorOutputs: PriorStepOutput[];
   /** The workflow's initial input data */
-  workflowInput?: unknown
+  workflowInput?: unknown;
   /** Current step index (0-based) */
-  stepIndex: number
+  stepIndex: number;
   /** Total steps in the workflow */
-  totalSteps: number
+  totalSteps: number;
   /** Organisation ID for vault credential access */
-  organizationId?: string
+  organizationId?: string;
   /**
    * Decrypted credentials from credential-inject steps.
    * SECURITY: Never included in priorOutputs — separate channel to prevent
    * credential leakage into AI prompts.
    */
-  credentials?: Record<string, string>
+  credentials?: Record<string, string>;
 }
 
 // ---------------------------------------------------------------------------
@@ -67,32 +74,32 @@ export interface StepContext {
 // ---------------------------------------------------------------------------
 
 export interface StepResultSuccess {
-  success: true
-  output: unknown
+  success: true;
+  output: unknown;
   /** Required for AI steps (0.0–1.0). Use 1.0 for deterministic action steps. */
-  confidenceScore?: number
+  confidenceScore?: number;
   /** If true, orchestrator will require human approval regardless of confidence */
-  requiresApproval?: boolean
+  requiresApproval?: boolean;
 }
 
 export interface StepResultFailure {
-  success: false
-  error: string
+  success: false;
+  error: string;
   /** If true, orchestrator will NOT retry this step */
-  terminal?: boolean
+  terminal?: boolean;
 }
 
-export type StepResult = StepResultSuccess | StepResultFailure
+export type StepResult = StepResultSuccess | StepResultFailure;
 
 // ---------------------------------------------------------------------------
 // Orchestrator Gate Decision
 // ---------------------------------------------------------------------------
 
-export type GateDecision = 'auto_approve' | 'await_human' | 'failed'
+export type GateDecision = 'auto_approve' | 'await_human' | 'failed';
 
 export interface GateOutcome {
-  decision: GateDecision
-  reason: string
+  decision: GateDecision;
+  reason: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -105,7 +112,7 @@ export type WorkflowExecutionStatus =
   | 'waiting_approval'
   | 'completed'
   | 'failed'
-  | 'cancelled'
+  | 'cancelled';
 
 export type StepExecutionStatus =
   | 'pending'
@@ -113,4 +120,4 @@ export type StepExecutionStatus =
   | 'completed'
   | 'failed'
   | 'skipped'
-  | 'waiting_approval'
+  | 'waiting_approval';
