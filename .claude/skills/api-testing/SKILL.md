@@ -1,21 +1,27 @@
 ---
 name: api-testing
 description: >-
-  Automated API testing specialist for SYNTHEX marketing platform. Validates
-  endpoints, ensures contract compliance, and monitors breaking changes across
-  Next.js API routes. Use when creating or modifying API routes, testing
-  endpoints, validating request/response contracts, or checking API security.
+  Synthex API testing enforcer. NEVER mock the database in integration tests —
+  use real Supabase. NEVER skip the 401 (unauthenticated) or 403 (wrong org)
+  test cases. NEVER use pnpm. ALWAYS structure tests as: 401 → 403 → 400 →
+  200/201 happy path. Activate on ANY request to write API tests, validate
+  endpoints, add test coverage, or check test quality.
 metadata:
   author: synthex
-  version: "2.0"
+  version: '2.0'
   engine: synthex-ai-agency
-  type: testing-skill
+  type: capability-uplift-code
   triggers:
     - api test
     - endpoint testing
     - api validation
     - contract testing
     - api security check
+    - api test
+    - write tests
+    - test coverage
+    - endpoint test
+    - integration test
   requires:
     - code-review
 ---
@@ -31,6 +37,7 @@ and monitors for breaking changes across the Next.js App Router API surface.
 ## When to Use
 
 Activate this skill when:
+
 - Creating or modifying API routes in `app/api/`
 - Testing endpoint request/response contracts
 - Validating API security (auth, rate limiting, CORS)
@@ -69,31 +76,31 @@ Activate this skill when:
 
 ## Input Specification
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| endpoint | string | yes | API route path (e.g., `/api/analytics/sentiment`) |
-| method | string | no | HTTP method to test (default: all supported) |
-| scope | string | no | `security`, `contract`, `full` (default: `full`) |
+| Parameter | Type   | Required | Description                                       |
+| --------- | ------ | -------- | ------------------------------------------------- |
+| endpoint  | string | yes      | API route path (e.g., `/api/analytics/sentiment`) |
+| method    | string | no       | HTTP method to test (default: all supported)      |
+| scope     | string | no       | `security`, `contract`, `full` (default: `full`)  |
 
 ## Output Specification
 
-| Field | Type | Description |
-|-------|------|-------------|
-| endpoint | string | Tested route path |
-| method | string | HTTP method tested |
-| status | pass/fail | Test result |
-| details | string | Error description if failed |
-| security_score | number | 0-100 security compliance score |
+| Field          | Type      | Description                     |
+| -------------- | --------- | ------------------------------- |
+| endpoint       | string    | Tested route path               |
+| method         | string    | HTTP method tested              |
+| status         | pass/fail | Test result                     |
+| details        | string    | Error description if failed     |
+| security_score | number    | 0-100 security compliance score |
 
 ## Error Handling
 
-| Error | Action |
-|-------|--------|
-| Route not found | Log warning, skip with clear message |
-| Authentication failure | Flag as critical security issue |
-| Schema mismatch | Report expected vs actual types |
-| Timeout (>5s response) | Flag as performance issue |
-| Rate limit not configured | Flag as security warning |
+| Error                     | Action                               |
+| ------------------------- | ------------------------------------ |
+| Route not found           | Log warning, skip with clear message |
+| Authentication failure    | Flag as critical security issue      |
+| Schema mismatch           | Report expected vs actual types      |
+| Timeout (>5s response)    | Flag as performance issue            |
+| Rate limit not configured | Flag as security warning             |
 
 ## Key Directories
 
@@ -115,3 +122,28 @@ pnpm run lint                   # Validate schemas
 - Works with **database-prisma** for data validation
 - Coordinates with **code-review** for endpoint coverage
 - Reports to **client-retention** for SLA monitoring
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** mock the database in integration tests — past incidents showed that
+mock/prod divergence caused production failures that passing tests masked.
+Never skip the unauthenticated (401) or wrong-org (403) test cases — these
+are the most commonly exploited paths. Never use `pnpm` — this project uses `npm`.
+
+**INSTEAD** every API route test suite covers these cases in this order:
+
+```typescript
+describe('POST /api/resource', () => {
+  it('returns 401 when unauthenticated', async () => { ... })
+  it('returns 403 when accessing another org', async () => { ... })
+  it('returns 400 when body is invalid', async () => { ... })
+  it('returns 201 on success', async () => { ... })
+})
+```
+
+Tests run against real Supabase (test database). The test user is a real
+auth.users row. The org is a real Organization row. No mocks for DB calls.
+
+**REFERENCE** `.claude/skills/synthex-standards/references/code-standards.md`
