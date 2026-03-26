@@ -1,17 +1,18 @@
 ---
 name: platform-content-adaptor
 description: >-
-  Adapts a single piece of content into correctly formatted versions for all social
-  media platforms — LinkedIn, Instagram, Facebook, TikTok, X/Twitter, YouTube, Pinterest,
-  and Google Business Profile. Adjusts length, tone, hashtags, emojis, and structure
-  per platform. Use when the user says "adapt this for all platforms", "resize this post",
-  "make a LinkedIn version", "turn this into a TikTok script", "platform versions", or
-  pastes content and asks to distribute it across channels.
+  Synthex platform content enforcer. NEVER produce copy that reads the same
+  across platforms, pad LinkedIn posts with generic business language, or
+  treat hashtags as decorative. ALWAYS enforce platform-distinct voice: LinkedIn
+  hooks never start with "I", Instagram hooks land in 125 chars, TikTok opens
+  with a challenge or question. Activate on ANY request to adapt content for
+  platforms, resize a post, create a LinkedIn version, turn content into a
+  TikTok script, or distribute content across channels.
 metadata:
   author: synthex
-  version: "1.0"
+  version: '1.0'
   engine: synthex-ai-agency
-  type: workflow-skill
+  type: capability-uplift-content
   triggers:
     - adapt for all platforms
     - resize content
@@ -21,6 +22,11 @@ metadata:
     - repurpose content
     - cross-post
     - distribute content
+    - adapt
+    - resize
+    - distribute
+    - repurpose
+    - platform version
 ---
 
 # Platform Content Adaptor
@@ -88,12 +94,14 @@ repurposing engine — extended with platform-aware formatting rules.
 ### X / Twitter
 
 Single tweet (280 chars):
+
 ```
 [Hook — under 100 chars] + [value or proof] + [CTA or question]
 #hashtag1 #hashtag2
 ```
 
 Thread (5-7 tweets):
+
 ```
 Tweet 1: Bold hook or controversial statement (ends with "Thread 🧵")
 Tweet 2-6: One insight per tweet, numbered (2/)
@@ -107,6 +115,7 @@ Tweet 7: Summary + CTA + link
 
 - **Title:** 50-70 chars. Include primary keyword. Start with number or power word.
 - **Description:**
+
   ```
   [2-3 sentence summary with keywords]
 
@@ -119,6 +128,7 @@ Tweet 7: Summary + CTA + link
 
   TAGS: [comma-separated keywords]
   ```
+
 - **Tone:** Informative, clear, searchable
 
 ### Pinterest
@@ -146,7 +156,7 @@ import { repurposeContent } from '@/lib/ai/content-repurposer';
 const adaptations = await repurposeContent({
   sourceContent: originalPost,
   targetPlatforms: ['linkedin', 'instagram', 'tiktok', 'twitter'],
-  persona: brandPersona,  // brand voice from Business DNA
+  persona: brandPersona, // brand voice from Business DNA
 });
 ```
 
@@ -178,3 +188,21 @@ CAPTION: [caption + hashtags]
 - Scorer: `lib/ai/content-scorer.ts`
 - Platform rules: `lib/social/platform-rules.ts` (if exists) or apply rules above
 - Social integrations: `.claude/skills/social-integrations/`
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** apply the same voice and structure across all platform adaptations.
+Never pad LinkedIn posts with generic opener phrases. Never append hashtags
+randomly — every hashtag must be searchable and tiered by volume.
+
+**INSTEAD** enforce the platform voice matrix from content-standards.md.
+The first adaptation check: does this LinkedIn version sound like LinkedIn
+(professional first-person authority)? Does the TikTok version open with
+a challenge in the first 3 words? If not, rewrite before outputting.
+
+Hashtag tier rule: 2–3 broad (1M+), 3–5 medium (100K–1M), 5–10 niche (<100K).
+Never append the same hashtag list across all platforms.
+
+**REFERENCE** `.claude/skills/synthex-standards/references/content-standards.md`
