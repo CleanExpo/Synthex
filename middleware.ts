@@ -201,7 +201,10 @@ export async function middleware(request: NextRequest) {
     ['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)
   ) {
     const origin = request.headers.get('origin');
-    if (!origin || !origin.includes(request.nextUrl.hostname)) {
+    const allowedOrigins: string[] = process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+      : ['https://synthex.social'];
+    if (!origin || !allowedOrigins.includes(origin)) {
       return new NextResponse('Forbidden', { status: 403 });
     }
   }

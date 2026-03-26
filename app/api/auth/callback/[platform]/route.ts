@@ -206,13 +206,19 @@ function integrationErrorResponse(
   returnTo?: string
 ): NextResponse {
   if (returnTo) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    try {
-      const url = new URL(returnTo, appUrl);
-      url.searchParams.set('error', errorMsg);
-      return NextResponse.redirect(url.toString());
-    } catch {
-      // returnTo was invalid — fall through to postMessage
+    const isRelative =
+      returnTo.startsWith('/') &&
+      !returnTo.startsWith('//') &&
+      !returnTo.includes('://');
+    if (isRelative) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      try {
+        const url = new URL(returnTo, appUrl);
+        url.searchParams.set('error', errorMsg);
+        return NextResponse.redirect(url.toString());
+      } catch {
+        // returnTo was invalid — fall through to postMessage
+      }
     }
   }
   const html = buildPostMessageHtml(
@@ -243,12 +249,8 @@ function verifyAndDecodeState(
 
   const lastDot = signedState.lastIndexOf('.');
   if (lastDot === -1) {
-    // Legacy unsigned state -- try base64 decode for backward compatibility
-    try {
-      return JSON.parse(Buffer.from(signedState, 'base64').toString());
-    } catch {
-      return null;
-    }
+    // No signature separator — reject; all state must be HMAC-signed.
+    return null;
   }
 
   const payload = signedState.substring(0, lastDot);
@@ -809,11 +811,17 @@ export async function GET(
       // If returnTo is set in state (e.g. from onboarding/connect or platforms page),
       // do a full-page redirect back there. Otherwise close popup.
       if (returnTo) {
-        const appUrl =
-          process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-        const redirectUrl = new URL(returnTo, appUrl);
-        redirectUrl.searchParams.set('connected', platform);
-        return NextResponse.redirect(redirectUrl.toString());
+        const isRelative =
+          returnTo.startsWith('/') &&
+          !returnTo.startsWith('//') &&
+          !returnTo.includes('://');
+        if (isRelative) {
+          const appUrl =
+            process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+          const redirectUrl = new URL(returnTo, appUrl);
+          redirectUrl.searchParams.set('connected', platform);
+          return NextResponse.redirect(redirectUrl.toString());
+        }
       }
 
       // Close popup and notify parent window (include org context)

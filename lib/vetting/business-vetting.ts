@@ -10,6 +10,8 @@
  * Returns overall score (0-100) and component scores.
  */
 
+import { validateExternalUrl } from '@/lib/security/validate-url';
+
 export interface VettingInput {
   businessName: string;
   website?: string;
@@ -74,7 +76,9 @@ export interface SocialDetails {
 /**
  * Check SEO health of a website
  */
-async function checkSEO(url: string): Promise<{ score: number; details: SEODetails }> {
+async function checkSEO(
+  url: string
+): Promise<{ score: number; details: SEODetails }> {
   const details: SEODetails = {
     mobileReady: false,
     hasRobotsTxt: false,
@@ -84,6 +88,12 @@ async function checkSEO(url: string): Promise<{ score: number; details: SEODetai
   };
 
   let score = 0;
+
+  try {
+    validateExternalUrl(url);
+  } catch {
+    return { score: 0, details };
+  }
 
   try {
     const response = await fetch(url, {
@@ -107,7 +117,9 @@ async function checkSEO(url: string): Promise<{ score: number; details: SEODetai
     // Check for robots.txt by fetching it directly
     try {
       const robotsUrl = new URL('/robots.txt', url).href;
-      const robotsRes = await fetch(robotsUrl, { signal: AbortSignal.timeout(5000) });
+      const robotsRes = await fetch(robotsUrl, {
+        signal: AbortSignal.timeout(5000),
+      });
       if (robotsRes.ok) {
         const robotsText = await robotsRes.text();
         details.hasRobotsTxt = robotsText.toLowerCase().includes('user-agent');
@@ -131,7 +143,8 @@ async function checkSEO(url: string): Promise<{ score: number; details: SEODetai
     }
 
     // Check for basic meta tags
-    const metaTagsRegex = /<meta\s+(?:name|property)="(og:|twitter:|description|keywords)"/gi;
+    const metaTagsRegex =
+      /<meta\s+(?:name|property)="(og:|twitter:|description|keywords)"/gi;
     const metaTags = html.match(metaTagsRegex) || [];
     if (metaTags.length >= 3) {
       details.metaTagsComplete = true;
@@ -154,21 +167,30 @@ async function checkSEO(url: string): Promise<{ score: number; details: SEODetai
     try {
       const encodedUrl = encodeURIComponent(url);
       const [mobileRes, desktopRes] = await Promise.allSettled([
-        fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodedUrl}&strategy=mobile&category=performance`, { signal: AbortSignal.timeout(15000) }),
-        fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodedUrl}&strategy=desktop&category=performance`, { signal: AbortSignal.timeout(15000) }),
+        fetch(
+          `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodedUrl}&strategy=mobile&category=performance`,
+          { signal: AbortSignal.timeout(15000) }
+        ),
+        fetch(
+          `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodedUrl}&strategy=desktop&category=performance`,
+          { signal: AbortSignal.timeout(15000) }
+        ),
       ]);
       if (mobileRes.status === 'fulfilled' && mobileRes.value.ok) {
         const mData = await mobileRes.value.json();
-        details.mobileSpeed = Math.round((mData?.lighthouseResult?.categories?.performance?.score ?? 0) * 100);
+        details.mobileSpeed = Math.round(
+          (mData?.lighthouseResult?.categories?.performance?.score ?? 0) * 100
+        );
       }
       if (desktopRes.status === 'fulfilled' && desktopRes.value.ok) {
         const dData = await desktopRes.value.json();
-        details.desktopSpeed = Math.round((dData?.lighthouseResult?.categories?.performance?.score ?? 0) * 100);
+        details.desktopSpeed = Math.round(
+          (dData?.lighthouseResult?.categories?.performance?.score ?? 0) * 100
+        );
       }
     } catch {
       // PageSpeed API unavailable — leave speeds as undefined (honest reporting)
     }
-
   } catch (error) {
     console.error('[SEO Check] Error:', error);
   }
@@ -179,7 +201,9 @@ async function checkSEO(url: string): Promise<{ score: number; details: SEODetai
 /**
  * Check AEO (AI Engine Optimization) health
  */
-async function checkAEO(url: string): Promise<{ score: number; details: AEODetails }> {
+async function checkAEO(
+  url: string
+): Promise<{ score: number; details: AEODetails }> {
   const details: AEODetails = {
     schemaMarkup: [],
     entityData: [],
@@ -239,7 +263,6 @@ async function checkAEO(url: string): Promise<{ score: number; details: AEODetai
       details.contentStructure = 'well-organized';
       score += 15;
     }
-
   } catch (error) {
     console.error('[AEO Check] Error:', error);
   }
@@ -250,7 +273,10 @@ async function checkAEO(url: string): Promise<{ score: number; details: AEODetai
 /**
  * Check GEO (Geographic/Local SEO) health
  */
-async function checkGEO(businessName: string, location?: string): Promise<{ score: number; details: GEODetails }> {
+async function checkGEO(
+  businessName: string,
+  location?: string
+): Promise<{ score: number; details: GEODetails }> {
   const details: GEODetails = {
     googleBusinessProfile: false,
     localCitations: 0,
@@ -284,7 +310,6 @@ async function checkGEO(businessName: string, location?: string): Promise<{ scor
     details.localCitations = 0;
     details.averageRating = undefined;
     details.reviewCount = undefined;
-
   } catch (error) {
     console.error('[GEO Check] Error:', error);
   }
@@ -295,7 +320,9 @@ async function checkGEO(businessName: string, location?: string): Promise<{ scor
 /**
  * Check social media presence
  */
-async function checkSocial(businessName: string): Promise<{ score: number; details: SocialDetails }> {
+async function checkSocial(
+  businessName: string
+): Promise<{ score: number; details: SocialDetails }> {
   const details: SocialDetails = {
     platforms: [],
     overallPresence: 'low',
@@ -308,26 +335,45 @@ async function checkSocial(businessName: string): Promise<{ score: number; detai
   const handle = businessName.toLowerCase().replace(/[^a-z0-9]/g, '');
 
   const platformChecks = [
-    { name: 'YouTube', baseScore: 20, url: `https://www.youtube.com/@${handle}` },
-    { name: 'Instagram', baseScore: 15, url: `https://www.instagram.com/${handle}/` },
+    {
+      name: 'YouTube',
+      baseScore: 20,
+      url: `https://www.youtube.com/@${handle}`,
+    },
+    {
+      name: 'Instagram',
+      baseScore: 15,
+      url: `https://www.instagram.com/${handle}/`,
+    },
     { name: 'TikTok', baseScore: 15, url: `https://www.tiktok.com/@${handle}` },
     { name: 'X', baseScore: 15, url: `https://x.com/${handle}` },
-    { name: 'Facebook', baseScore: 15, url: `https://www.facebook.com/${handle}` },
-    { name: 'LinkedIn', baseScore: 20, url: `https://www.linkedin.com/company/${handle}` },
+    {
+      name: 'Facebook',
+      baseScore: 15,
+      url: `https://www.facebook.com/${handle}`,
+    },
+    {
+      name: 'LinkedIn',
+      baseScore: 20,
+      url: `https://www.linkedin.com/company/${handle}`,
+    },
   ];
 
   try {
     // Check each platform URL with a lightweight HEAD/GET request
     // A 200-ish response suggests the handle exists (not conclusive for all platforms)
     const results = await Promise.allSettled(
-      platformChecks.map(async (platform) => {
+      platformChecks.map(async platform => {
         const res = await fetch(platform.url, {
           method: 'HEAD',
           redirect: 'follow',
           signal: AbortSignal.timeout(8000),
           headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SynthexBot/1.0)' },
         });
-        return { platform, found: res.ok || res.status === 301 || res.status === 302 };
+        return {
+          platform,
+          found: res.ok || res.status === 301 || res.status === 302,
+        };
       })
     );
 
@@ -358,7 +404,6 @@ async function checkSocial(businessName: string): Promise<{ score: number; detai
       details.overallPresence = 'low';
       details.engagementLevel = 'minimal';
     }
-
   } catch (error) {
     console.error('[Social Check] Error:', error);
   }
@@ -369,10 +414,16 @@ async function checkSocial(businessName: string): Promise<{ score: number; detai
 /**
  * Perform comprehensive business vetting
  */
-export async function performBusinessVetting(input: VettingInput): Promise<HealthCheckResult> {
+export async function performBusinessVetting(
+  input: VettingInput
+): Promise<HealthCheckResult> {
   const [seoResult, aeoResult, geoResult, socialResult] = await Promise.all([
-    input.website ? checkSEO(input.website) : Promise.resolve({ score: 0, details: {} as SEODetails }),
-    input.website ? checkAEO(input.website) : Promise.resolve({ score: 0, details: {} as AEODetails }),
+    input.website
+      ? checkSEO(input.website)
+      : Promise.resolve({ score: 0, details: {} as SEODetails }),
+    input.website
+      ? checkAEO(input.website)
+      : Promise.resolve({ score: 0, details: {} as AEODetails }),
     checkGEO(input.businessName, input.businessLocation),
     checkSocial(input.businessName),
   ]);
@@ -387,19 +438,23 @@ export async function performBusinessVetting(input: VettingInput): Promise<Healt
 
   const overallScore = Math.round(
     seoResult.score * weights.seo +
-    aeoResult.score * weights.aeo +
-    geoResult.score * weights.geo +
-    socialResult.score * weights.social
+      aeoResult.score * weights.aeo +
+      geoResult.score * weights.geo +
+      socialResult.score * weights.social
   );
 
   // Generate recommendations based on scores
   const recommendations: string[] = [];
 
   if (seoResult.score < 50) {
-    recommendations.push('Improve on-page SEO: add meta descriptions, optimize mobile experience');
+    recommendations.push(
+      'Improve on-page SEO: add meta descriptions, optimize mobile experience'
+    );
   }
   if (aeoResult.score < 50) {
-    recommendations.push('Add structured data (Schema.org) and E-E-A-T signals');
+    recommendations.push(
+      'Add structured data (Schema.org) and E-E-A-T signals'
+    );
   }
   if (geoResult.score < 50) {
     recommendations.push('Claim and optimize your Google Business Profile');

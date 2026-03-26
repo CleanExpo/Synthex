@@ -9,6 +9,7 @@
 
 import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
+import { validateExternalUrl } from '@/lib/security/validate-url';
 
 // ============================================================================
 // TYPES
@@ -147,6 +148,12 @@ async function scrapeWithFirecrawl(url: string): Promise<ScrapeResult | null> {
 // ============================================================================
 
 async function scrapeWithFetch(url: string): Promise<ScrapeResult> {
+  try {
+    validateExternalUrl(url);
+  } catch {
+    return emptyResult();
+  }
+
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
