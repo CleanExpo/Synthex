@@ -185,10 +185,13 @@ async function generateCaption(
 
   if (geminiKey) {
     try {
+      const geminiController = new AbortController();
+      const geminiTimer = setTimeout(() => geminiController.abort(), 12000);
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
         {
           method: 'POST',
+          signal: geminiController.signal,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
@@ -203,6 +206,7 @@ async function generateCaption(
           }),
         }
       );
+      clearTimeout(geminiTimer);
       if (res.ok) {
         const d = (await res.json()) as {
           candidates?: Array<{
@@ -225,8 +229,11 @@ async function generateCaption(
 
   if (openaiKey) {
     try {
+      const openaiController = new AbortController();
+      const openaiTimer = setTimeout(() => openaiController.abort(), 12000);
       const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
+        signal: openaiController.signal,
         headers: {
           Authorization: `Bearer ${openaiKey}`,
           'Content-Type': 'application/json',
@@ -238,6 +245,7 @@ async function generateCaption(
           temperature: 0.8,
         }),
       });
+      clearTimeout(openaiTimer);
       if (res.ok) {
         const d = (await res.json()) as {
           choices?: Array<{ message?: { content?: string } }>;

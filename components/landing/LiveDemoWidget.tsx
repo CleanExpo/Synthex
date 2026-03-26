@@ -253,12 +253,16 @@ export function LiveDemoWidget() {
     const t0 = Date.now();
 
     try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 18000);
       const res = await fetch('/api/demo/analyze', {
         method: 'POST',
+        signal: controller.signal,
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ url: normalised }),
       });
+      clearTimeout(timer);
       if (!res.ok) {
         let message = 'Something went wrong';
         try {
@@ -280,8 +284,15 @@ export function LiveDemoWidget() {
       setResult(data);
       setState('result');
     } catch (err) {
+      const isTimeout =
+        err instanceof Error &&
+        (err.name === 'AbortError' || err.message.includes('aborted'));
       setErrorMessage(
-        err instanceof Error ? err.message : 'Something went wrong'
+        isTimeout
+          ? 'Analysis timed out — try a simpler URL or use a quick demo above'
+          : err instanceof Error
+            ? err.message
+            : 'Something went wrong'
       );
       setState('error');
     }
