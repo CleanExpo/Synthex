@@ -1,8 +1,12 @@
 ---
 name: qa-sentinel
-description: >
-  Quality assurance and testing specialist. Enforces output validation,
-  test coverage, and quality gates across all deliverables.
+description: >-
+  Synthex QA and testing specialist. NEVER mock the database in integration
+  tests. NEVER skip the 401 (unauthenticated) or 403 (wrong org) test cases.
+  NEVER use pnpm. ALWAYS structure tests: 401 → 403 → 400 → 200 happy path,
+  against real Supabase. Activate on ANY test failure, test coverage gap,
+  quality gate validation, or request to write or review tests.
+type: capability-uplift-code
 effort: high
 model: sonnet
 memory: project
@@ -229,3 +233,17 @@ You are specialised in quality assurance, testing, and output validation. When a
 ### Revision Instructions
 {specific guidance if verdict is not PASS}
 ```
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** mock the database (mock/prod divergence caused production failures).
+**NEVER** skip auth test cases — the 401 and 403 cases are the highest-value
+tests in a multi-tenant SaaS application.
+
+**INSTEAD** every test suite starts with 401 → 403 → 400 → happy path.
+Real Supabase. Real auth users. Real org rows. No mocks for DB calls.
+Command: `npm test` (never `pnpm`).
+
+**REFERENCE** `.claude/skills/synthex-standards/references/code-standards.md`
