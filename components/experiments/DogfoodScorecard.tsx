@@ -126,7 +126,7 @@ function ModuleCard({ module }: { module: DogfoodModuleScore }) {
             />
             {/* Benchmark marker */}
             <div
-              className="absolute top-0 h-full w-px bg-white/40"
+              className="absolute top-0 h-full w-px bg-white/[0.06]"
               style={{ left: `${module.benchmark}%` }}
             />
           </div>

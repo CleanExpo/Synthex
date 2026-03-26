@@ -47,7 +47,7 @@ export function AuthorBlock({
           />
         )}
         <div className="min-w-0">
-          <strong className="block text-sm font-semibold text-gray-900 dark:text-white">
+          <strong className="block text-sm font-semibold text-white/80">
             {name}
           </strong>
           <span className="inline-block mt-0.5 text-xs font-medium text-orange-600 bg-orange-50 dark:bg-orange-900/20 px-2 py-0.5 rounded-full">

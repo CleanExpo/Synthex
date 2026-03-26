@@ -344,7 +344,7 @@ export function ObsidianImportModal({
                   value={pasteContent}
                   onChange={e => setPasteContent(e.target.value)}
                   placeholder="Paste your Obsidian note markdown here…"
-                  className="min-h-[220px] bg-gray-800 border-white/10 text-white placeholder:text-gray-600 font-mono text-sm resize-y"
+                  className="min-h-[220px] bg-gray-800 border-white/10 text-white placeholder:text-white/30 font-mono text-sm resize-y"
                 />
               </div>
             )}
@@ -384,7 +384,7 @@ export function ObsidianImportModal({
                   value={vaultPath}
                   onChange={e => setVaultPath(e.target.value)}
                   placeholder="e.g. Marketing/campaign-brief.md"
-                  className="bg-gray-800 border-white/10 text-white placeholder:text-gray-600"
+                  className="bg-gray-800 border-white/10 text-white placeholder:text-white/30"
                 />
                 <p className="text-xs text-gray-500">
                   Relative path from your vault root.
@@ -484,7 +484,7 @@ export function ObsidianImportModal({
                 value={editTone}
                 onChange={e => setEditTone(e.target.value)}
                 placeholder="e.g. professional, casual, witty"
-                className="bg-gray-800 border-white/10 text-white placeholder:text-gray-600"
+                className="bg-gray-800 border-white/10 text-white placeholder:text-white/30"
               />
             </div>
 
@@ -512,7 +512,7 @@ export function ObsidianImportModal({
                 value={editHashtags}
                 onChange={e => setEditHashtags(e.target.value)}
                 placeholder="#product, #launch"
-                className="bg-gray-800 border-white/10 text-white placeholder:text-gray-600"
+                className="bg-gray-800 border-white/10 text-white placeholder:text-white/30"
               />
             </div>
 

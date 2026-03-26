@@ -217,7 +217,7 @@ export function NetworkForm({
               onClick={() => setIsActive(!isActive)}
               className={cn(
                 'relative w-11 h-6 rounded-full transition-colors',
-                isActive ? 'bg-orange-600' : 'bg-white/20'
+                isActive ? 'bg-orange-600' : 'bg-white/10'
               )}
             >
               <span

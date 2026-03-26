@@ -327,7 +327,7 @@ export function PRGeneratorForm({ onSaved }: PRGeneratorFormProps) {
             type="button"
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold text-black transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold text-white transition-colors"
           >
             {isGenerating ? (
               <>

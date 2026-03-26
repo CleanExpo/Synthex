@@ -125,7 +125,7 @@ function SERPPreviewCard({
       : [];
 
     return (
-      <div className="bg-white text-black rounded-xl shadow-xl p-5 max-w-2xl">
+      <div className="bg-white/5 text-white rounded-xl shadow-xl p-5 max-w-2xl">
         {/* Mock search result row */}
         <div className="mb-4 pb-4 border-b border-gray-200">
           <div className="text-xs text-gray-500 mb-1">{googleUrl}</div>
@@ -172,7 +172,7 @@ function SERPPreviewCard({
     const reviewCount = previewData.reviewCount as number;
 
     return (
-      <div className="bg-white text-black rounded-xl shadow-xl p-5 max-w-2xl">
+      <div className="bg-white/5 text-white rounded-xl shadow-xl p-5 max-w-2xl">
         <div className="text-xs text-gray-500 mb-1">{googleUrl}</div>
         <div className="text-blue-700 text-lg font-medium hover:underline cursor-pointer mb-2">
           {googleTitle}
@@ -218,7 +218,7 @@ function SERPPreviewCard({
       : '';
 
     return (
-      <div className="bg-white text-black rounded-xl shadow-xl p-5 max-w-2xl">
+      <div className="bg-white/5 text-white rounded-xl shadow-xl p-5 max-w-2xl">
         <div className="text-xs text-gray-500 mb-1">{googleUrl}</div>
         <div className="text-blue-700 text-lg font-medium hover:underline cursor-pointer">
           {googleTitle}
@@ -256,7 +256,7 @@ function SERPPreviewCard({
       : '';
 
     return (
-      <div className="bg-white text-black rounded-xl shadow-xl p-5 max-w-2xl">
+      <div className="bg-white/5 text-white rounded-xl shadow-xl p-5 max-w-2xl">
         <div className="text-xs text-gray-500 mb-1">{googleUrl}</div>
         <div className="text-blue-700 text-lg font-medium hover:underline cursor-pointer">
           {googleTitle}
@@ -280,7 +280,7 @@ function SERPPreviewCard({
 
   // Generic / knowledge-panel / etc.
   return (
-    <div className="bg-white text-black rounded-xl shadow-xl p-5 max-w-2xl">
+    <div className="bg-white/5 text-white rounded-xl shadow-xl p-5 max-w-2xl">
       <div className="text-xs text-gray-500 mb-1">{googleUrl}</div>
       <div className="text-blue-700 text-lg font-medium hover:underline cursor-pointer">
         {googleTitle}

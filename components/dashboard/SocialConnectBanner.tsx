@@ -55,7 +55,7 @@ export function SocialConnectBanner() {
       <div className="flex items-center gap-2 flex-shrink-0">
         <Link
           href="/dashboard/platforms"
-          className="inline-flex items-center px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-400 text-black text-xs font-semibold transition-colors"
+          className="inline-flex items-center px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-400 text-white text-xs font-semibold transition-colors"
         >
           Connect a platform
         </Link>

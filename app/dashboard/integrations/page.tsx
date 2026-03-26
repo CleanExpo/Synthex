@@ -112,7 +112,7 @@ const DEFAULT_INTEGRATIONS: Integration[] = [
     description: 'Create and schedule TikTok videos',
     icon: Video,
     connected: false,
-    color: 'text-gray-900',
+    color: 'text-white/80',
     permissions: ['Post videos', 'View analytics', 'Manage account'],
   },
   {

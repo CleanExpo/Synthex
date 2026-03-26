@@ -376,7 +376,7 @@ export function LinkForm({
                 onClick={() => setAutoInsert(!autoInsert)}
                 className={cn(
                   'relative w-11 h-6 rounded-full transition-colors',
-                  autoInsert ? 'bg-orange-500' : 'bg-white/20'
+                  autoInsert ? 'bg-orange-500' : 'bg-white/10'
                 )}
               >
                 <span
@@ -446,7 +446,7 @@ export function LinkForm({
               onClick={() => setIsActive(!isActive)}
               className={cn(
                 'relative w-11 h-6 rounded-full transition-colors',
-                isActive ? 'bg-orange-600' : 'bg-white/20'
+                isActive ? 'bg-orange-600' : 'bg-white/10'
               )}
             >
               <span

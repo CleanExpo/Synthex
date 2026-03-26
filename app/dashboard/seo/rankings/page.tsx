@@ -212,9 +212,7 @@ export default function RankingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Keyword Rankings
-          </h1>
+          <h1 className="text-2xl font-bold text-white/80">Keyword Rankings</h1>
           <p className="mt-1 text-sm text-gray-500">
             Track how your target keywords rank on Google via Search Console
             data
@@ -359,13 +357,13 @@ export default function RankingsPage() {
                         key={target.id}
                         className="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50/50 dark:hover:bg-gray-800/20"
                       >
-                        <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                        <td className="px-4 py-3 font-medium text-white/80">
                           {target.keyword}
                         </td>
                         <td className="px-4 py-3 text-gray-500">
                           {target.location ?? '—'}
                         </td>
-                        <td className="px-4 py-3 text-center font-mono text-lg font-bold text-gray-900 dark:text-white">
+                        <td className="px-4 py-3 text-center font-mono text-lg font-bold text-white/80">
                           {formatPosition(latest?.position ?? null)}
                         </td>
                         <td className="px-4 py-3">

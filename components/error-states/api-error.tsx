@@ -174,7 +174,7 @@ export function APIErrorCard({
         {onRetry && (
           <button
             onClick={onRetry}
-            className="p-1.5 rounded-md hover:bg-white/50 dark:hover:bg-black/20 transition-colors"
+            className="p-1.5 rounded-md hover:bg-white/10 dark:hover:bg-black/20 transition-colors"
             aria-label="Retry"
           >
             <RefreshCw className="h-4 w-4 text-gray-600 dark:text-gray-300" />
@@ -194,7 +194,7 @@ export function APIErrorCard({
             <Icon className={`h-6 w-6 ${config.color}`} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+            <h3 className="text-lg font-semibold text-white/80 mb-1">
               {config.title}
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
@@ -354,9 +354,7 @@ export function EmptyState({
           <Icon className="h-8 w-8 text-gray-300 dark:text-gray-500" />
         </div>
       )}
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-        {title}
-      </h3>
+      <h3 className="text-lg font-semibold text-white/80 mb-1">{title}</h3>
       {description && (
         <p className="text-gray-500 dark:text-gray-300 mb-4 max-w-sm">
           {description}

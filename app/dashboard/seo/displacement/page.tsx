@@ -136,7 +136,7 @@ export default function DisplacementPage() {
             <ArrowLeft className="h-3.5 w-3.5" />
             SEO Dashboard
           </Link>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-white/80">
             <Target className="h-6 w-6 text-orange-500" />
             Competitor Displacement
           </h1>
@@ -324,10 +324,10 @@ export default function DisplacementPage() {
                       key={opp.id}
                       className="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50/50 dark:hover:bg-gray-800/20"
                     >
-                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                      <td className="px-4 py-3 font-medium text-white/80">
                         {opp.keyword}
                       </td>
-                      <td className="px-4 py-3 text-center font-mono text-base font-bold text-gray-900 dark:text-white">
+                      <td className="px-4 py-3 text-center font-mono text-base font-bold text-white/80">
                         {formatPosition(opp.ourPosition)}
                       </td>
                       <td className="px-4 py-3">

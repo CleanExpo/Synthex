@@ -35,7 +35,7 @@ const sliderRangeVariants = cva('absolute h-full transition-all', {
   variants: {
     variant: {
       default: 'bg-primary',
-      glass: 'bg-white/40',
+      glass: 'bg-white/10',
       'glass-solid': 'bg-slate-500',
       'glass-primary': 'bg-orange-500/70',
       'glass-secondary': 'bg-orange-500/70',

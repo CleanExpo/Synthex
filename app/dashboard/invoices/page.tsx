@@ -167,7 +167,7 @@ export default function InvoicesPage() {
           </Button>
           <Button
             size="sm"
-            className="gap-2 bg-cyan-500 hover:bg-cyan-600 text-black font-semibold"
+            className="gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold"
             onClick={() => toast.info('Invoice creation coming soon.')}
           >
             <Plus className="h-4 w-4" />
@@ -530,7 +530,7 @@ function EmptyState() {
         Create your first invoice to start tracking client payments and GST.
       </p>
       <Button
-        className="mt-6 gap-2 bg-cyan-500 hover:bg-cyan-600 text-black font-semibold"
+        className="mt-6 gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold"
         onClick={() => toast.info('Invoice creation coming soon.')}
       >
         <Plus className="h-4 w-4" />

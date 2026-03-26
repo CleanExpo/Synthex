@@ -69,7 +69,7 @@ function LockedCard({
       <Button
         onClick={onSetup}
         size="sm"
-        className="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
+        className="bg-amber-500 hover:bg-amber-600 text-white font-semibold"
       >
         <Key className="h-3.5 w-3.5 mr-1.5" />
         Set Up {config.name} Key

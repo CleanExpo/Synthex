@@ -125,7 +125,7 @@ export default function ReferralCard() {
           onChange={e => setInviteEmail(e.target.value)}
           placeholder="friend@email.com"
           type="email"
-          className="bg-white/5 border-white/10 text-xs text-gray-300 placeholder:text-gray-600"
+          className="bg-white/5 border-white/10 text-xs text-gray-300 placeholder:text-white/30"
         />
         <Button
           size="sm"

@@ -284,7 +284,7 @@ export function NewWorkflowDialog({
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder="E.g. Blog Post Campaign — March 2026"
-                className="w-full rounded-md bg-white/5 border border-white/10 text-sm text-white placeholder:text-gray-600 px-3 py-2 focus:outline-none focus:border-[#FF6B35]/50"
+                className="w-full rounded-md bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 px-3 py-2 focus:outline-none focus:border-[#FF6B35]/50"
               />
             </div>
 
@@ -299,7 +299,7 @@ export function NewWorkflowDialog({
                 value={inputDataRaw}
                 onChange={e => setInputDataRaw(e.target.value)}
                 placeholder='{ "topic": "AI marketing trends", "tone": "professional" }'
-                className="w-full rounded-md bg-white/5 border border-white/10 text-sm text-white placeholder:text-gray-600 px-3 py-2 resize-none font-mono text-xs focus:outline-none focus:border-orange-500/50"
+                className="w-full rounded-md bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 px-3 py-2 resize-none font-mono text-xs focus:outline-none focus:border-orange-500/50"
               />
             </div>
           </div>

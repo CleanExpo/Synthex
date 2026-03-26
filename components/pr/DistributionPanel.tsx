@@ -273,7 +273,7 @@ export function DistributionPanel({
         type="button"
         onClick={handleDistribute}
         disabled={isDistributing || selectedChannels.length === 0}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold text-black transition-colors"
+        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold text-white transition-colors"
       >
         {isDistributing ? (
           <>

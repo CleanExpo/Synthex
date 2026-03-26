@@ -143,8 +143,8 @@ export function ImagePreviewCard({
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-900">
-            <ImageIcon className="h-12 w-12 text-gray-700" />
+          <div className="w-full h-full flex items-center justify-center bg-slate-900">
+            <ImageIcon className="h-12 w-12 text-white/40" />
           </div>
         )}
 
