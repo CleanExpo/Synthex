@@ -53,7 +53,7 @@ async function checkDatabase(): Promise<HealthCheckResult> {
   try {
     const result = await Promise.race([
       checkDatabaseHealth(),
-      new Promise<{ healthy: false; error: string }>((resolve) =>
+      new Promise<{ healthy: false; error: string }>(resolve =>
         setTimeout(() => resolve({ healthy: false, error: 'Timeout' }), 5000)
       ),
     ]);
@@ -61,9 +61,15 @@ async function checkDatabase(): Promise<HealthCheckResult> {
     const latency = Date.now() - startTime;
 
     return {
-      status: result.healthy ? (latency > 1000 ? 'degraded' : 'healthy') : 'unhealthy',
+      status: result.healthy
+        ? latency > 1000
+          ? 'degraded'
+          : 'healthy'
+        : 'unhealthy',
       latency,
-      message: result.healthy ? 'Connected' : result.error || 'Connection failed',
+      message: result.healthy
+        ? 'Connected'
+        : result.error || 'Connection failed',
       details: {
         pool: getPoolMetrics(),
       },
@@ -86,11 +92,34 @@ async function checkCache(): Promise<HealthCheckResult> {
   try {
     const { getRedisClient } = await import('@/lib/redis-client');
     const redis = getRedisClient();
-    const health = await redis.healthCheck();
+    const health = await Promise.race([
+      redis.healthCheck(),
+      new Promise<{
+        connected: false;
+        mode: 'memory';
+        latency: undefined;
+        nodes: undefined;
+      }>(resolve =>
+        setTimeout(
+          () =>
+            resolve({
+              connected: false,
+              mode: 'memory',
+              latency: undefined,
+              nodes: undefined,
+            }),
+          3000
+        )
+      ),
+    ]);
 
     return {
-      status: health.connected ? 'healthy' : (health.mode === 'memory' ? 'degraded' : 'unhealthy'),
-      latency: health.latency || (Date.now() - startTime),
+      status: health.connected
+        ? 'healthy'
+        : health.mode === 'memory'
+          ? 'degraded'
+          : 'unhealthy',
+      latency: health.latency || Date.now() - startTime,
       message: `Mode: ${health.mode}`,
       details: {
         mode: health.mode,
@@ -114,7 +143,8 @@ function checkEnvironment(): HealthCheckResult {
   const validator = EnvValidator.getInstance();
   const result = validator.validate(false);
 
-  const { totalRequired, totalOptional, missingRequired, configured } = result.summary;
+  const { totalRequired, totalOptional, missingRequired, configured } =
+    result.summary;
   const missingRequiredCount = missingRequired.length;
   const configuredCount = configured.length;
   const totalDefined = totalRequired + totalOptional;
@@ -171,7 +201,12 @@ function checkResources(): HealthCheckResult {
   const heapPercent = (mem.heapUsed / mem.heapTotal) * 100;
 
   return {
-    status: heapPercent > 90 ? 'unhealthy' : heapPercent > 75 ? 'degraded' : 'healthy',
+    status:
+      heapPercent > 90
+        ? 'unhealthy'
+        : heapPercent > 75
+          ? 'degraded'
+          : 'healthy',
     message: `Heap: ${Math.round(heapPercent)}%`,
     details: {
       heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
@@ -226,7 +261,7 @@ export async function GET(request: NextRequest) {
     const checks = { database, cache, environment, resources };
 
     // Determine overall status
-    const statuses = Object.values(checks).map((c) => c.status);
+    const statuses = Object.values(checks).map(c => c.status);
     const hasUnhealthy = statuses.includes('unhealthy');
     const hasDegraded = statuses.includes('degraded');
 
@@ -310,7 +345,7 @@ export async function HEAD() {
   try {
     const result = await Promise.race([
       checkDatabaseHealth(),
-      new Promise<{ healthy: boolean }>((resolve) =>
+      new Promise<{ healthy: boolean }>(resolve =>
         setTimeout(() => resolve({ healthy: false }), 2000)
       ),
     ]);
