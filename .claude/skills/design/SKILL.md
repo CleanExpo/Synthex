@@ -9,9 +9,8 @@ description: >-
   shadows, animations, or anything a user will see on screen.
 metadata:
   author: synthex
-  version: "2.0"
+  version: '2.0'
   engine: synthex-ai-agency
-  type: design-skill
   type: capability-uplift-visual
   triggers:
     - design
