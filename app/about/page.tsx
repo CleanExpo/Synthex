@@ -16,7 +16,7 @@ import MarketingLayout from '@/components/marketing/MarketingLayout';
 import GlowCard from '@/components/landing/glow-card';
 
 const stats = [
-  { value: '10,000+', label: 'Active users across 50+ countries' },
+  { value: 'Global', label: 'Users across 50+ countries' },
   { value: '50M+', label: 'Posts generated to date' },
   { value: '97%', label: 'Customer satisfaction score' },
   { value: '3.5×', label: 'Average ROI for our users' },
@@ -147,8 +147,8 @@ export default function AboutPage() {
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-16">
             We started Synthex because we were tired of spending more time
-            writing captions than building businesses. Now 10,000+ creators use
-            it every day.
+            writing captions than building businesses. Now creators around the
+            world use it every day.
           </p>
 
           {/* Stats */}
