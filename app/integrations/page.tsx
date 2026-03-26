@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -10,16 +11,11 @@ import {
   CheckCircle2,
 } from '@/components/icons';
 import {
-  TwitterXIcon,
-  LinkedInIcon,
-  InstagramIcon,
-  TikTokIcon,
-  FacebookIcon,
-  YouTubeIcon,
   PinterestIcon,
   ThreadsIcon,
   RedditIcon,
 } from '@/components/icons/platform-icons';
+import { Icon3D } from '@/components/icons/Icon3D';
 import MarketingLayout from '@/components/marketing/MarketingLayout';
 
 export const metadata: Metadata = {
@@ -37,64 +33,71 @@ export const metadata: Metadata = {
 // Platform data
 // ────────────────────────────────────────────────────────────────────────────
 
-const PLATFORMS = [
+interface PlatformEntry {
+  name: string;
+  icon: ReactNode;
+  description: string;
+  color: string;
+}
+
+const PLATFORMS: PlatformEntry[] = [
   {
     name: 'YouTube',
-    icon: YouTubeIcon,
+    icon: <Icon3D name="youtube" category="platforms" size={32} />,
     description:
       'Publish videos, Shorts, and community posts directly from Synthex.',
     color: 'text-red-400',
   },
   {
     name: 'Instagram',
-    icon: InstagramIcon,
+    icon: <Icon3D name="instagram" category="platforms" size={32} />,
     description:
       'Schedule feed posts, Stories, and Reels with AI-optimised captions.',
     color: 'text-orange-400',
   },
   {
     name: 'TikTok',
-    icon: TikTokIcon,
+    icon: <Icon3D name="tiktok" category="platforms" size={32} />,
     description:
       'Create and publish TikTok content with trending audio suggestions.',
     color: 'text-orange-300',
   },
   {
     name: 'X (Twitter)',
-    icon: TwitterXIcon,
+    icon: <Icon3D name="twitter" category="platforms" size={32} />,
     description:
       'Thread generation, optimal posting times, and engagement tracking.',
     color: 'text-white',
   },
   {
     name: 'Facebook',
-    icon: FacebookIcon,
+    icon: <Icon3D name="facebook" category="platforms" size={32} />,
     description:
       'Page posts, group sharing, and audience insights in one place.',
     color: 'text-blue-400',
   },
   {
     name: 'LinkedIn',
-    icon: LinkedInIcon,
+    icon: <Icon3D name="linkedin" category="platforms" size={32} />,
     description: 'Professional content, article publishing, and B2B analytics.',
     color: 'text-sky-400',
   },
   {
     name: 'Pinterest',
-    icon: PinterestIcon,
+    icon: <PinterestIcon size={32} />,
     description:
       'Pin scheduling, board management, and visual content creation.',
     color: 'text-red-300',
   },
   {
     name: 'Threads',
-    icon: ThreadsIcon,
+    icon: <ThreadsIcon size={32} />,
     description: 'Cross-post from Instagram with Threads-native formatting.',
     color: 'text-white',
   },
   {
     name: 'Reddit',
-    icon: RedditIcon,
+    icon: <RedditIcon size={32} />,
     description:
       'Community engagement, subreddit targeting, and discussion tracking.',
     color: 'text-orange-400',
@@ -202,7 +205,7 @@ export default function IntegrationsPage() {
               <Link key={p.name} href="/dashboard/integrations">
                 <Card className="bg-[#0d1f35]/60 border-orange-500/10 hover:border-orange-500/30 transition-all p-6 flex items-start gap-4 h-full">
                   <div className="h-10 w-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-                    <p.icon className={`h-5 w-5 ${p.color}`} />
+                    {p.icon}
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-white mb-1">{p.name}</h3>
