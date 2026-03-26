@@ -74,13 +74,16 @@ export async function register() {
   // @sentry/nextjs OTel cold-start issue is resolved upstream.
 
   // Derive OAUTH_STATE_SECRET from JWT_SECRET if not explicitly set.
-  // This prevents startup crashes while maintaining cryptographic security.
+  // Uses globalThis.crypto.subtle (Web Crypto API) — available in both Node.js 16+
+  // and Edge Runtime, so Turbopack does not flag it as an incompatible module.
   if (!process.env.OAUTH_STATE_SECRET && process.env.JWT_SECRET) {
-    const crypto = await import(/* webpackIgnore: true */ 'node:crypto');
-    process.env.OAUTH_STATE_SECRET = crypto
-      .createHash('sha256')
-      .update(process.env.JWT_SECRET + ':oauth-state-secret')
-      .digest('base64');
+    const encoder = new TextEncoder();
+    const data = encoder.encode(process.env.JWT_SECRET + ':oauth-state-secret');
+    const hashBuffer = await globalThis.crypto.subtle.digest('SHA-256', data);
+    const hashBytes = Array.from(new Uint8Array(hashBuffer));
+    process.env.OAUTH_STATE_SECRET = btoa(
+      hashBytes.map(b => String.fromCharCode(b)).join('')
+    );
     console.warn(
       '[env-validator] OAUTH_STATE_SECRET not set — derived from JWT_SECRET. Set it explicitly for production: openssl rand -base64 32'
     );
