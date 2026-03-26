@@ -10,6 +10,7 @@ import {
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,14 +20,21 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse();
     }
 
+    // Org-scope layer: resolve the user's organisation for downstream scoping
+    const userRecord = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true },
+    });
+    const organizationId = userRecord?.organizationId ?? null;
+
     // Get query parameters
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'dashboard';
 
-    // Get dashboard metrics
+    // Get dashboard metrics (scoped to the authenticated user)
     const dashboardMetrics = await analyticsTracker.getDashboardMetrics(userId);
 
-    return NextResponse.json(dashboardMetrics);
+    return NextResponse.json({ ...dashboardMetrics, organizationId });
   } catch (error: unknown) {
     logger.error('Dashboard API error:', error);
     return NextResponse.json(
