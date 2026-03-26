@@ -237,6 +237,7 @@ export function LiveDemoWidget() {
   const [url, setUrl] = useState('');
   const [state, setState] = useState<DemoState>('idle');
   const [result, setResult] = useState<AnalyzeResult | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
   const [durationMs, setDurationMs] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -248,6 +249,7 @@ export function LiveDemoWidget() {
 
     setState('loading');
     setResult(null);
+    setErrorMessage('');
     const t0 = Date.now();
 
     try {
@@ -257,12 +259,30 @@ export function LiveDemoWidget() {
         credentials: 'include',
         body: JSON.stringify({ url: normalised }),
       });
-      if (!res.ok) throw new Error('failed');
+      if (!res.ok) {
+        let message = 'Something went wrong';
+        try {
+          const errBody = (await res.json()) as { error?: string };
+          message = errBody.error ?? message;
+        } catch {
+          // Response wasn't JSON (e.g. plain-text 403 "Forbidden")
+          message =
+            res.status === 403
+              ? 'Access blocked — please try on synthex.social'
+              : res.status === 429
+                ? 'Too many requests — please wait a moment'
+                : `Error ${res.status}`;
+        }
+        throw new Error(message);
+      }
       const data = (await res.json()) as AnalyzeResult;
       setDurationMs(Date.now() - t0);
       setResult(data);
       setState('result');
-    } catch {
+    } catch (err) {
+      setErrorMessage(
+        err instanceof Error ? err.message : 'Something went wrong'
+      );
       setState('error');
     }
   };
@@ -282,6 +302,7 @@ export function LiveDemoWidget() {
     setState('idle');
     setResult(null);
     setUrl('');
+    setErrorMessage('');
   };
 
   return (
@@ -370,7 +391,7 @@ export function LiveDemoWidget() {
       {state === 'error' && (
         <div className="text-center py-6">
           <p className="text-red-400/70 text-sm mb-1.5">
-            Couldn&apos;t reach that URL
+            {errorMessage || 'Couldn\u2019t reach that URL'}
           </p>
           <p className="text-white/60 text-xs">
             Check the address, or try a quick demo above.

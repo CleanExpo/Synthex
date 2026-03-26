@@ -323,6 +323,7 @@ export function UrlHealthCheck() {
   const [url, setUrl] = useState('');
   const [state, setState] = useState<CheckState>('idle');
   const [result, setResult] = useState<AnalyzeResult | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const runCheck = async (targetUrl?: string) => {
     const src = (targetUrl ?? url).trim();
@@ -332,6 +333,7 @@ export function UrlHealthCheck() {
 
     setState('loading');
     setResult(null);
+    setErrorMessage('');
 
     try {
       const res = await fetch('/api/demo/analyze', {
@@ -341,11 +343,29 @@ export function UrlHealthCheck() {
         body: JSON.stringify({ url: normalised }),
       });
 
-      if (!res.ok) throw new Error('check failed');
+      if (!res.ok) {
+        let message = 'Something went wrong';
+        try {
+          const errBody = (await res.json()) as { error?: string };
+          message = errBody.error ?? message;
+        } catch {
+          // Response wasn't JSON (e.g. plain-text 403 "Forbidden")
+          message =
+            res.status === 403
+              ? 'Access blocked — please try on synthex.social'
+              : res.status === 429
+                ? 'Too many requests — please wait a moment'
+                : `Error ${res.status}`;
+        }
+        throw new Error(message);
+      }
       const data = (await res.json()) as AnalyzeResult;
       setResult(data);
       setState('result');
-    } catch {
+    } catch (err) {
+      setErrorMessage(
+        err instanceof Error ? err.message : 'Something went wrong'
+      );
       setState('error');
     }
   };
@@ -354,6 +374,7 @@ export function UrlHealthCheck() {
     setState('idle');
     setResult(null);
     setUrl('');
+    setErrorMessage('');
   };
 
   return (
@@ -442,7 +463,7 @@ export function UrlHealthCheck() {
         {state === 'error' && (
           <div className="text-center py-12 bg-[#0a0a12] border border-white/[0.06] rounded-2xl">
             <p className="text-red-400/80 text-base font-semibold mb-2">
-              Couldn&apos;t reach that URL
+              {errorMessage || 'Couldn\u2019t reach that URL'}
             </p>
             <p className="text-white/60 text-sm mb-6">
               The site may be blocking external requests, or the URL may be

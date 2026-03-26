@@ -105,7 +105,10 @@ export async function middleware(request: NextRequest) {
 
   // Note: API rate limiting is handled per-route via withRateLimit() in
   // lib/middleware/rate-limiter.ts (backed by Upstash Redis in production).
-  // The middleware matcher below excludes /api/ routes.
+  // NOTE: /api/ routes ARE included in the middleware matcher — all request paths
+  // are matched except _next/static, _next/image, favicon.ico, and public/.
+  // Public API routes (/api/demo/analyze etc.) are exempted from CSRF via
+  // PUBLIC_API_PATHS below, NOT via the regex matcher.
 
   // Authentication check for protected routes
   const protectedPaths = [
@@ -194,12 +197,33 @@ export async function middleware(request: NextRequest) {
   // CSRF protection for mutations — block requests with no or foreign Origin.
   // Webhook paths are excluded: they arrive server-to-server with no Origin
   // and are authenticated by their own signature/secret mechanisms.
+  // Public API paths are excluded: these are intentionally unauthenticated
+  // routes (demo widget, health check) that must work from any origin including
+  // local dev and Vercel preview deployments. Add routes here — not via CORS_ORIGIN.
   const WEBHOOK_PATHS = ['/api/webhooks/', '/api/affiliates/webhook'];
   const isWebhookPath = WEBHOOK_PATHS.some(p => pathname.startsWith(p));
+
+  // Public API routes that are intentionally unauthenticated — CSRF check does not apply.
+  // IMPORTANT: This list is the single source of truth for public API exemptions.
+  // Do NOT remove entries from this list without confirming the route requires auth.
+  const PUBLIC_API_PATHS = [
+    '/api/demo/analyze',
+    '/api/demo/caption',
+    '/api/health',
+    '/api/website-analyze',
+  ] as const;
+
+  // Check if this is a public API route before applying CSRF protection
+  const isPublicApiPath = PUBLIC_API_PATHS.some(
+    path => pathname === path || pathname.startsWith(path + '/')
+  );
+
   if (
     !isWebhookPath &&
+    !isPublicApiPath &&
     ['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)
   ) {
+    // CSRF origin check — applies to all authenticated mutation routes
     const origin = request.headers.get('origin');
     const allowedOrigins: string[] = process.env.CORS_ORIGIN
       ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
@@ -246,9 +270,12 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
-     * - api routes (rate limited per-route via withRateLimit)
-     *   EXCEPTION: /api/ai/* routes are included so the API key hard gate
-     *   (checkApiKeyGate) can block requests before they reach the route handler.
+     *
+     * IMPORTANT: /api/ routes ARE included in this matcher — the middleware runs
+     * on all API routes. Public API routes (/api/demo/analyze, /api/health, etc.)
+     * are exempted from CSRF protection via the PUBLIC_API_PATHS constant above,
+     * NOT via the regex here. Do not add /api/ to the exclusion regex — that would
+     * remove ALL middleware protection from API routes, including auth and rate limiting.
      */
     '/((?!_next/static|_next/image|favicon.ico|public/).*)',
     '/api/ai/:path*',

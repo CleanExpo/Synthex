@@ -332,6 +332,13 @@ export async function POST(req: NextRequest) {
     const geminiKey = process.env.GEMINI_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
 
+    if (!geminiKey && !openaiKey) {
+      console.warn(
+        '[demo/analyze] No AI keys configured (GEMINI_API_KEY, OPENAI_API_KEY). ' +
+          'Returning sample caption. Set at least one key for live AI generation.'
+      );
+    }
+
     const [captionResult, imageUrl] = await Promise.all([
       generateCaption(businessName, industry, metaDesc, geminiKey, openaiKey),
       Promise.resolve(
