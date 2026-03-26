@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="feat-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- connection lines shadow -->
+  <line x1="24" y1="24" x2="12" y2="14" stroke="rgba(0,0,0,0.25)" stroke-width="2.5" transform="translate(1.5,1.5)"/>
+  <line x1="24" y1="24" x2="38" y2="14" stroke="rgba(0,0,0,0.25)" stroke-width="2.5" transform="translate(1.5,1.5)"/>
+  <line x1="24" y1="24" x2="12" y2="36" stroke="rgba(0,0,0,0.25)" stroke-width="2.5" transform="translate(1.5,1.5)"/>
+  <line x1="24" y1="24" x2="38" y2="36" stroke="rgba(0,0,0,0.25)" stroke-width="2.5" transform="translate(1.5,1.5)"/>
+  <!-- connection lines -->
+  <line x1="24" y1="24" x2="12" y2="14" stroke="rgba(249,115,22,0.5)" stroke-width="2"/>
+  <line x1="24" y1="24" x2="38" y2="14" stroke="rgba(249,115,22,0.5)" stroke-width="2"/>
+  <line x1="24" y1="24" x2="12" y2="36" stroke="rgba(249,115,22,0.5)" stroke-width="2"/>
+  <line x1="24" y1="24" x2="38" y2="36" stroke="rgba(249,115,22,0.5)" stroke-width="2"/>
+  <!-- satellite nodes (shadow) -->
+  <circle cx="13.5" cy="15.5" r="5" fill="rgba(0,0,0,0.3)"/>
+  <circle cx="39.5" cy="15.5" r="5" fill="rgba(0,0,0,0.3)"/>
+  <circle cx="13.5" cy="37.5" r="5" fill="rgba(0,0,0,0.3)"/>
+  <circle cx="39.5" cy="37.5" r="5" fill="rgba(0,0,0,0.3)"/>
+  <!-- central node (shadow) -->
+  <circle cx="25.5" cy="25.5" r="6.5" fill="rgba(0,0,0,0.3)"/>
+  <!-- satellite nodes -->
+  <circle cx="12" cy="14" r="5" fill="url(#feat-grad)"/>
+  <circle cx="38" cy="14" r="5" fill="url(#feat-grad)"/>
+  <circle cx="12" cy="36" r="5" fill="url(#feat-grad)"/>
+  <circle cx="38" cy="36" r="5" fill="url(#feat-grad)"/>
+  <!-- central node -->
+  <circle cx="24" cy="24" r="6.5" fill="url(#feat-grad)"/>
+  <!-- highlights -->
+  <circle cx="11" cy="13" r="2" fill="rgba(255,255,255,0.25)"/>
+  <circle cx="23" cy="23" r="2.5" fill="rgba(255,255,255,0.25)"/>
+</svg>

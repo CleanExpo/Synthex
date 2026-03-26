@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="feat-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+    <linearGradient id="feat-hl" x1="0%" y1="0%" x2="40%" y2="40%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.3)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+  </defs>
+  <!-- flame shadow -->
+  <path d="M20 36c0 4 4 7 4 7s4-3 4-7" fill="rgba(0,0,0,0.25)" transform="translate(1.5,1.5)"/>
+  <!-- rocket shadow -->
+  <path d="M24 7c-6 0-11 8-11 16v5h22v-5C35 15 30 7 24 7z" fill="rgba(0,0,0,0.3)" transform="translate(1.5,1.5)"/>
+  <!-- fins shadow -->
+  <path d="M13 28l-5 8 9-2z M35 28l5 8-9-2z" fill="rgba(0,0,0,0.25)" transform="translate(1.5,1.5)"/>
+  <!-- flame -->
+  <path d="M20 36c0 4 4 7 4 7s4-3 4-7" fill="#f59e0b"/>
+  <!-- fins -->
+  <path d="M13 28l-5 8 9-2z M35 28l5 8-9-2z" fill="#ea580c"/>
+  <!-- body -->
+  <path d="M24 7c-6 0-11 8-11 16v5h22v-5C35 15 30 7 24 7z" fill="url(#feat-grad)"/>
+  <!-- window -->
+  <circle cx="24" cy="20" r="4" fill="#0f172a"/>
+  <circle cx="23" cy="19" r="1.5" fill="rgba(255,255,255,0.3)"/>
+  <!-- body highlight -->
+  <path d="M24 7c-4 0-7.5 4-9.5 9.5C16.5 10 20 7.5 24 7z" fill="url(#feat-hl)"/>
+</svg>
