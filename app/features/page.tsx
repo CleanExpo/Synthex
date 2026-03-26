@@ -6,18 +6,16 @@ import { Card } from '@/components/ui/card';
 
 export const metadata: Metadata = PAGE_METADATA.features;
 import {
-  Sparkles,
   TrendingUp,
   Users,
   Calendar,
-  BarChart3,
-  Brain,
   Globe,
   Share2,
   Clock,
   ArrowRight,
   CheckCircle2,
 } from '@/components/icons';
+import { Icon3D } from '@/components/icons/Icon3D';
 import {
   TwitterXIcon,
   LinkedInIcon,
@@ -138,7 +136,7 @@ export default function FeaturesPage() {
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
                 <div className="bg-orange-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
-                  <Brain className="w-6 h-6 text-orange-500" />
+                  <Icon3D name="brain" category="features" size={32} />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-3">
                   AI That Sounds Like You
@@ -213,7 +211,7 @@ export default function FeaturesPage() {
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
                 <div className="bg-orange-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
-                  <Sparkles className="w-6 h-6 text-orange-500" />
+                  <Icon3D name="sparkles" category="features" size={32} />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-3">
                   10–15 On-Brand Variations in Seconds
@@ -284,7 +282,7 @@ export default function FeaturesPage() {
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
                 <div className="bg-orange-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
-                  <BarChart3 className="w-6 h-6 text-orange-500" />
+                  <Icon3D name="bar-chart" category="features" size={32} />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-3">
                   See What&apos;s Actually Working
@@ -481,7 +479,7 @@ export default function FeaturesPage() {
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
                 <div className="bg-orange-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
-                  <Sparkles className="w-6 h-6 text-orange-500" />
+                  <Icon3D name="sparkles" category="features" size={32} />
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">
                   Brand Kit
