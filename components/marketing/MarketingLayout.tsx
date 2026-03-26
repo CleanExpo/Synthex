@@ -59,7 +59,7 @@ const NAV_LINKS = [
   { href: '/features', label: 'Features', key: 'features' },
   { href: '/pricing', label: 'Pricing', key: 'pricing' },
   { href: '/about', label: 'About', key: 'about' },
-  { href: '/blog', label: 'Blog', key: 'blog' },
+  // { href: '/blog', label: 'Blog', key: 'blog' }, // Blog link hidden until content is ready
 ];
 
 // Navigation Component
@@ -309,7 +309,7 @@ export function MarketingFooter() {
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a
-              href="https://twitter.com/synthex"
+              href="https://twitter.com/synthex_social"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-600 hover:text-orange-400 transition-colors"

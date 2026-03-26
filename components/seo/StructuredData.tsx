@@ -114,7 +114,11 @@ export interface SoftwareApplicationData {
   featureList?: string[];
 }
 
-export function SoftwareApplicationSchema({ data }: { data: SoftwareApplicationData }) {
+export function SoftwareApplicationSchema({
+  data,
+}: {
+  data: SoftwareApplicationData;
+}) {
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
@@ -210,7 +214,7 @@ export function FAQPageSchema({ items }: { items: FAQItem[] }) {
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: items.map((item) => ({
+    mainEntity: items.map(item => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: {
@@ -283,14 +287,16 @@ export function ProductSchema({ data }: { data: ProductData }) {
       '@type': 'Brand',
       name: data.brand,
     },
-    offers: data.offers.map((offer) => ({
+    offers: data.offers.map(offer => ({
       '@type': 'Offer',
       name: offer.name,
       price: offer.price,
       priceCurrency: offer.priceCurrency,
       description: offer.description,
       availability: 'https://schema.org/InStock',
-      priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0],
     })),
   };
 
@@ -321,7 +327,11 @@ export interface SocialMediaPostingData {
   platform?: string;
 }
 
-export function SocialMediaPostingSchema({ data }: { data: SocialMediaPostingData }) {
+export function SocialMediaPostingSchema({
+  data,
+}: {
+  data: SocialMediaPostingData;
+}) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
 
   const schema = {
@@ -348,7 +358,9 @@ export function SocialMediaPostingSchema({ data }: { data: SocialMediaPostingDat
       sharedContent: {
         '@type': 'WebPage',
         url: data.sharedContent.url,
-        ...(data.sharedContent.headline && { headline: data.sharedContent.headline }),
+        ...(data.sharedContent.headline && {
+          headline: data.sharedContent.headline,
+        }),
       },
     }),
     ...(data.platform && {
@@ -380,9 +392,10 @@ export function SynthexMainSchema() {
           name: 'Synthex',
           url: baseUrl,
           logo: `${baseUrl}/logo.png`,
-          description: "The world's first fully autonomous AI marketing agency. AI-powered social media automation, content generation, and analytics.",
+          description:
+            "The world's first fully autonomous AI marketing agency. AI-powered social media automation, content generation, and analytics.",
           sameAs: [
-            'https://twitter.com/synthexai',
+            'https://twitter.com/synthex_social',
             'https://linkedin.com/company/synthex',
             'https://github.com/synthex',
           ],
@@ -397,7 +410,8 @@ export function SynthexMainSchema() {
         data={{
           name: 'Synthex - AI Marketing Agency',
           url: baseUrl,
-          description: 'AI-powered social media automation platform for content creation, scheduling, and analytics.',
+          description:
+            'AI-powered social media automation platform for content creation, scheduling, and analytics.',
           potentialAction: {
             target: `${baseUrl}/search?q={search_term_string}`,
             queryInput: 'required name=search_term_string',
@@ -407,7 +421,8 @@ export function SynthexMainSchema() {
       <SoftwareApplicationSchema
         data={{
           name: 'Synthex',
-          description: 'AI-powered social media automation platform. Generate viral content, schedule posts, and analyze engagement across all major social platforms.',
+          description:
+            'AI-powered social media automation platform. Generate viral content, schedule posts, and analyze engagement across all major social platforms.',
           url: baseUrl,
           applicationCategory: 'BusinessApplication',
           operatingSystem: 'Web',

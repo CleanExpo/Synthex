@@ -60,7 +60,11 @@ const faqs = [
 ];
 
 const socialLinks = [
-  { icon: Twitter, label: 'Twitter', url: 'https://twitter.com/synthex' },
+  {
+    icon: Twitter,
+    label: 'Twitter',
+    url: 'https://twitter.com/synthex_social',
+  },
   {
     icon: Linkedin,
     label: 'LinkedIn',
