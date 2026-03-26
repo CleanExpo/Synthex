@@ -10,17 +10,17 @@
 - Tooltips showing raw unformatted numbers (1234567 instead of 1,234,567)
 - Pie charts for more than 4 categories (use bar chart instead)
 - Hardcoded pixel widths — always responsive
-- Chart.js default blue #4472CA or default red #FF6384
+- Chart.js default blue #4472ca or default red #ff6384
 
 ## Synthex Chart Palette
 
 | Role           | Colour       | Hex       | Area Fill                   |
 | -------------- | ------------ | --------- | --------------------------- |
 | Primary series | Brand orange | `#f97316` | `rgba(249, 115, 22, 0.15)`  |
-| Comparison     | Emerald      | `#10B981` | `rgba(16, 185, 129, 0.15)`  |
-| Third series   | Sky blue     | `#38BDF8` | `rgba(56, 189, 248, 0.15)`  |
-| Fourth         | Purple       | `#A78BFA` | `rgba(167, 139, 250, 0.15)` |
-| Fifth          | Pink         | `#F472B6` | `rgba(244, 114, 182, 0.15)` |
+| Comparison     | Emerald      | `#10b981` | `rgba(16, 185, 129, 0.15)`  |
+| Third series   | Sky blue     | `#38bdf8` | `rgba(56, 189, 248, 0.15)`  |
+| Fourth         | Purple       | `#a78bfa` | `rgba(167, 139, 250, 0.15)` |
+| Fifth          | Pink         | `#f472b6` | `rgba(244, 114, 182, 0.15)` |
 
 ## Chart Anatomy Standards
 
