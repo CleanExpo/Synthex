@@ -9,14 +9,12 @@ import { NotificationBell } from '@/components/NotificationBell';
 import {
   Sparkles,
   CommandLine,
-  Home,
   FileText,
   Users,
   Calendar,
   BarChart3,
   Settings,
   HelpCircle,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Search,
@@ -26,7 +24,6 @@ import {
   Zap,
   Brain,
   Palette,
-  Menu,
   List,
   ListTodo,
   Target,
@@ -105,6 +102,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { Icon3D } from '@/components/icons/Icon3D';
 import {
   Tooltip,
   TooltipContent,
@@ -365,7 +363,9 @@ const MOBILE_NAV_ITEMS: NavItem[] = [
   {
     id: 'home',
     label: 'Home',
-    icon: <Home className="w-5 h-5" />,
+    icon: (
+      <Icon3D name="home" category="navigation" size={24} className="w-5 h-5" />
+    ),
     href: '/dashboard',
   },
   {
@@ -383,7 +383,14 @@ const MOBILE_NAV_ITEMS: NavItem[] = [
   {
     id: 'settings',
     label: 'Settings',
-    icon: <Settings className="w-5 h-5" />,
+    icon: (
+      <Icon3D
+        name="settings"
+        category="navigation"
+        size={24}
+        className="w-5 h-5"
+      />
+    ),
     href: '/dashboard/settings',
   },
 ];
@@ -444,7 +451,10 @@ function NavGroup({ group }: { group: SidebarNavGroup }) {
       >
         <group.icon className="h-3 w-3 flex-shrink-0" />
         <span className="flex-1">{group.label}</span>
-        <ChevronDown
+        <Icon3D
+          name="chevron-down"
+          category="navigation"
+          size={24}
           className={cn(
             'h-3 w-3 transition-transform',
             !isOpen && '-rotate-90'
@@ -778,7 +788,12 @@ export default function DashboardLayout({
                 className="lg:hidden p-1.5 text-white/40 hover:text-white transition-colors rounded-sm"
                 aria-label="Open menu"
               >
-                <Menu className="h-5 w-5" />
+                <Icon3D
+                  name="menu"
+                  category="navigation"
+                  size={24}
+                  className="h-5 w-5"
+                />
               </button>
 
               {/* Search */}
