@@ -1,21 +1,31 @@
 ---
 name: ui-ux
 description: >-
-  User experience specialist for SYNTHEX marketing platform. Optimises user
-  flows, ensures accessibility compliance (WCAG 2.1 AA), and validates
-  interaction patterns. Use when designing user flows, reviewing accessibility,
-  optimising interaction patterns, or conducting UX audits.
+  Synthex UX enforcer. NEVER produce generic bullet-list audit reports, recite
+  WCAG rules without grounding them in Synthex's dark glassmorphic interface,
+  or reference pnpm (this project uses npm). ALWAYS ground findings in
+  Synthex's #0f172a dark background, Radix UI primitive semantics, and 4px
+  spacing scale. Activate on ANY request to audit UX, review accessibility,
+  optimise flows, check interactions, or validate usability.
 metadata:
   author: synthex
   version: "2.0"
   engine: synthex-ai-agency
   type: ux-skill
+  type: capability-uplift-visual
   triggers:
     - ux audit
     - accessibility
     - user flow
     - interaction pattern
     - usability
+    - usability
+    - interaction
+    - flow
+    - wcag
+    - a11y
+    - audit
+    - review
   requires:
     - design
 ---
@@ -31,6 +41,7 @@ systematic UX audits across the application.
 ## When to Use
 
 Activate this skill when:
+
 - Designing or reviewing user flows and navigation
 - Auditing accessibility compliance (WCAG 2.1 AA)
 - Optimising form UX, loading states, or error feedback
@@ -68,31 +79,31 @@ Activate this skill when:
 
 ## Input Specification
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| target | string | yes | Page path, flow name, or component |
-| scope | string | no | `accessibility`, `flow`, `forms`, `full` (default: `full`) |
+| Parameter | Type   | Required | Description                                                |
+| --------- | ------ | -------- | ---------------------------------------------------------- |
+| target    | string | yes      | Page path, flow name, or component                         |
+| scope     | string | no       | `accessibility`, `flow`, `forms`, `full` (default: `full`) |
 
 ## Output Specification
 
-| Field | Type | Description |
-|-------|------|-------------|
-| element | string | Component or page element |
-| category | string | a11y/flow/form/feedback |
-| severity | critical/warning/info | Issue severity |
-| issue | string | Description of the problem |
-| recommendation | string | Suggested improvement |
-| wcag_rule | string | WCAG criterion violated (if applicable) |
+| Field          | Type                  | Description                             |
+| -------------- | --------------------- | --------------------------------------- |
+| element        | string                | Component or page element               |
+| category       | string                | a11y/flow/form/feedback                 |
+| severity       | critical/warning/info | Issue severity                          |
+| issue          | string                | Description of the problem              |
+| recommendation | string                | Suggested improvement                   |
+| wcag_rule      | string                | WCAG criterion violated (if applicable) |
 
 ## Error Handling
 
-| Error | Action |
-|-------|--------|
-| Inaccessible element found | Flag as critical with WCAG rule reference |
-| E2E test failure | Capture screenshot, report failure context |
-| Touch target too small | Report exact size vs required 44x44px |
-| Missing ARIA label | Suggest appropriate label text |
-| Motion preference ignored | Flag `prefers-reduced-motion` not respected |
+| Error                      | Action                                      |
+| -------------------------- | ------------------------------------------- |
+| Inaccessible element found | Flag as critical with WCAG rule reference   |
+| E2E test failure           | Capture screenshot, report failure context  |
+| Touch target too small     | Report exact size vs required 44x44px       |
+| Missing ARIA label         | Suggest appropriate label text              |
+| Motion preference ignored  | Flag `prefers-reduced-motion` not respected |
 
 ## Accessibility Checklist
 
@@ -108,18 +119,21 @@ Activate this skill when:
 ## Key UX Patterns
 
 ### Form UX
+
 - Progressive disclosure
 - Inline validation
 - Clear error messages (Australian English)
 - Success confirmation with toast
 
 ### Navigation UX
+
 - Breadcrumb trails
 - Active state indicators
 - Predictable layouts
 - Quick actions
 
 ### Feedback UX
+
 - Toast notifications
 - Progress indicators
 - Skeleton loaders
@@ -151,3 +165,20 @@ npx lighthouse --only-categories=accessibility      # Accessibility audit
 - Works with **design** for visual implementation
 - Coordinates with **api-testing** for response time UX
 - Supports **client-retention** with satisfaction metrics
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** produce a generic bullet-list audit report with copy-pasted WCAG
+criterion text, reference `pnpm test:e2e` (this project uses `npm run e2e`),
+flag Next.js 14 or React 18 patterns as the standard (we run Next.js 15 /
+React 19), or run contrast checks against a white background.
+
+**INSTEAD** every audit is grounded in Synthex's actual interface: contrast
+ratios are checked against #0f172a dark slate background (not white), ARIA
+audit considers that Radix UI primitives already handle most semantics (flag
+only when Radix patterns are bypassed), and focus rings are validated in dark
+theme (the default ring-offset colour needs to be --color-bg, not white).
+
+**REFERENCE** `.claude/skills/synthex-standards/references/aesthetic-standards.md`
