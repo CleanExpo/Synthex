@@ -138,13 +138,13 @@ const features = [
     icon: Code2,
     title: 'SDKs',
     description:
-      'Official SDKs for JavaScript, Python, Ruby, and Go coming soon.',
+      'SDK support is on our roadmap. In the meantime, the REST API works with any HTTP client.',
   },
   {
     icon: BookOpen,
     title: 'Webhooks',
     description:
-      'Real-time event notifications for post status and analytics updates.',
+      'Receive real-time POST notifications to any URL you configure. Supported events: post.published, campaign.completed, analytics.report_ready.',
   },
 ];
 
