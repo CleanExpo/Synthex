@@ -71,8 +71,7 @@ const profileUpdateSchema = z
   .strip();
 
 const deleteAccountSchema = z.object({
-  // TODO: Add status/deletedAt to User model for soft-delete support
-  confirm: z.literal(true),
+  confirmation: z.literal('DELETE_MY_ACCOUNT'),
 });
 
 // GET current user profile
@@ -439,7 +438,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Account deletion requires confirmation',
-          details: 'Send { confirm: true } to delete account',
+          details:
+            'Send { confirmation: "DELETE_MY_ACCOUNT" } to delete account',
         },
         { status: 400 }
       );
