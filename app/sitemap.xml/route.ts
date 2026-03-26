@@ -59,9 +59,31 @@ function buildSitemapEntries(): SitemapEntry[] {
         },
       ],
     },
-    { loc: '/features', lastmod: today, changefreq: 'weekly', priority: 0.9 },
-    { loc: '/pricing', lastmod: today, changefreq: 'weekly', priority: 0.9 },
-    { loc: '/about', lastmod: today, changefreq: 'monthly', priority: 0.8 },
+    // ── Primary Pillar Pages ───────────────────────────────────────
+    { loc: '/agencies', lastmod: today, changefreq: 'weekly', priority: 0.9 },
+    {
+      loc: '/features/ai-content',
+      lastmod: today,
+      changefreq: 'weekly',
+      priority: 0.9,
+    },
+    {
+      loc: '/features/platforms',
+      lastmod: today,
+      changefreq: 'monthly',
+      priority: 0.9,
+    },
+    // ── Compare / Competitor Pages ─────────────────────────────────
+    {
+      loc: '/compare/hootsuite',
+      lastmod: today,
+      changefreq: 'monthly',
+      priority: 0.8,
+    },
+    // ── Standard Marketing Pages ───────────────────────────────────
+    { loc: '/features', lastmod: today, changefreq: 'weekly', priority: 0.8 },
+    { loc: '/pricing', lastmod: today, changefreq: 'weekly', priority: 0.8 },
+    { loc: '/about', lastmod: today, changefreq: 'monthly', priority: 0.7 },
     { loc: '/blog', lastmod: today, changefreq: 'weekly', priority: 0.8 },
     {
       loc: '/demo',
