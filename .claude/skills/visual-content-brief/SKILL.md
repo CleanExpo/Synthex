@@ -10,9 +10,8 @@ description: >-
   or brand imagery — including "what should my images look like".
 metadata:
   author: synthex
-  version: "1.0"
+  version: '1.0'
   engine: synthex-ai-agency
-  type: workflow-skill
   type: capability-uplift-visual
   triggers:
     - visual content
