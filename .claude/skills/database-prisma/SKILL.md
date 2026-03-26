@@ -1,22 +1,31 @@
 ---
 name: database-prisma
 description: >-
-  Database operations manager for SYNTHEX. Automates schema validation,
-  migration safety, and query optimisation using Prisma ORM with
-  Supabase/PostgreSQL backend. Use when modifying Prisma schema, creating
-  migrations, optimising queries, or debugging database issues.
+  Synthex database operations enforcer. NEVER use prisma db push for schema
+  changes — use migrate diff + db execute. NEVER add non-nullable columns
+  without defaults. NEVER write Prisma queries without organizationId scope.
+  ALWAYS use backward-compatible migrations and validate with prisma validate
+  first. Activate on ANY request to change schema, write a query, create a
+  migration, add a model, or modify database operations.
 effort: high
 metadata:
   author: synthex
   version: '2.0'
   engine: synthex-ai-agency
-  type: database-skill
+  type: capability-uplift-code
   triggers:
     - database
     - prisma
     - schema
     - migration
     - query optimisation
+    - schema
+    - migration
+    - prisma
+    - query
+    - database
+    - model
+    - db change
   requires:
     - database/migrations.skill.md
 ---
@@ -144,3 +153,35 @@ npx prisma migrate dev --name <name> # Create migration
 - Coordinates with **code-review** for query patterns
 - Supports **client-retention** with metrics storage
 - References **migrations.skill.md** for raw SQL patterns
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** use `npx prisma db push` for schema changes in any environment —
+it bypasses migration history and will silently break production. Never add
+a non-nullable column without a default value (breaks existing rows). Never
+drop or rename a column without explicit human approval (data loss risk).
+
+**INSTEAD** every schema change follows:
+
+```bash
+# 1. Validate first
+npx prisma validate
+
+# 2. Generate SQL diff
+npx prisma migrate diff \
+  --from-schema-datasource \
+  --to-schema-datamodel prisma/schema.prisma \
+  --script > migration.sql
+
+# 3. Review the SQL manually
+
+# 4. Execute
+npx prisma db execute --file migration.sql --schema prisma/schema.prisma
+```
+
+Every new column is either nullable or has a `@default(...)`.
+Every query on a multi-tenant model includes `where: { organizationId }`.
+
+**REFERENCE** `.claude/skills/synthex-standards/references/code-standards.md`
