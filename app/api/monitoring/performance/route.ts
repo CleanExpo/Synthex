@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import performanceMonitor from '@/lib/monitoring/performance-monitor';
+import { verifyAdmin } from '@/lib/admin/verify-admin';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -25,6 +26,15 @@ export const runtime = 'nodejs';
  */
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
+
+  // Admin-only guard — performance monitoring exposes internal system metrics
+  const auth = await verifyAdmin(request);
+  if (!auth.isAdmin) {
+    return NextResponse.json(
+      { error: 'Forbidden', message: auth.error || 'Admin access required' },
+      { status: 403 }
+    );
+  }
 
   try {
     const { searchParams } = new URL(request.url);
@@ -132,6 +142,18 @@ const perfConfigSchema = z.object({
  * Update performance monitoring configuration
  */
 export async function POST(request: NextRequest) {
+  // Admin-only guard — performance config mutations are restricted to admins
+  const postAuth = await verifyAdmin(request);
+  if (!postAuth.isAdmin) {
+    return NextResponse.json(
+      {
+        error: 'Forbidden',
+        message: postAuth.error || 'Admin access required',
+      },
+      { status: 403 }
+    );
+  }
+
   try {
     const body = await request.json();
     const validation = perfConfigSchema.safeParse(body);

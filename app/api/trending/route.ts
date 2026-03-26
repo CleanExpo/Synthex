@@ -12,6 +12,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
@@ -32,6 +37,19 @@ interface TrendingTopic {
 
 export async function GET(request: NextRequest) {
   try {
+    // Auth guard
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
+
+    // Resolve org context — deny if no org (prevents cross-org data leak)
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context found' },
+        { status: 403 }
+      );
+    }
+
     // Get time range from query params
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get('days') || '7', 10);
@@ -39,9 +57,10 @@ export async function GET(request: NextRequest) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Fetch recent posts to analyze content
+    // Fetch recent posts to analyze content — scoped to the authenticated user's org via campaign
     const recentPosts = await prisma.post.findMany({
       where: {
+        campaign: { organizationId },
         createdAt: { gte: startDate },
         status: { in: ['published', 'scheduled'] },
       },
@@ -54,17 +73,23 @@ export async function GET(request: NextRequest) {
     });
 
     // Extract and count hashtags from posts
-    const hashtagCounts = new Map<string, { count: number; engagement: number }>();
+    const hashtagCounts = new Map<
+      string,
+      { count: number; engagement: number }
+    >();
 
-    recentPosts.forEach((post) => {
+    recentPosts.forEach(post => {
       // Extract hashtags from content
       const hashtags = post.content.match(/#\w+/g) || [];
       const analytics = post.analytics as Record<string, number> | null;
       const engagement = analytics?.engagement || analytics?.likes || 0;
 
-      hashtags.forEach((tag) => {
+      hashtags.forEach(tag => {
         const normalizedTag = tag.toLowerCase();
-        const existing = hashtagCounts.get(normalizedTag) || { count: 0, engagement: 0 };
+        const existing = hashtagCounts.get(normalizedTag) || {
+          count: 0,
+          engagement: 0,
+        };
         hashtagCounts.set(normalizedTag, {
           count: existing.count + 1,
           engagement: existing.engagement + engagement,
@@ -79,7 +104,9 @@ export async function GET(request: NextRequest) {
         topic,
         volume: data.count,
         change: calculateChange(data.engagement, data.count),
-        sentiment: determineSentiment(data.engagement / Math.max(data.count, 1)),
+        sentiment: determineSentiment(
+          data.engagement / Math.max(data.count, 1)
+        ),
       }))
       .sort((a, b) => b.volume - a.volume)
       .slice(0, 10);
@@ -88,7 +115,8 @@ export async function GET(request: NextRequest) {
     if (sortedTopics.length === 0) {
       return NextResponse.json({
         data: [],
-        message: 'No trending data available yet. Trending topics will appear as content is published and tracked.',
+        message:
+          'No trending data available yet. Trending topics will appear as content is published and tracked.',
       });
     }
 
@@ -96,7 +124,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('Trending topics error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch trending topics', message: 'An error occurred while analyzing trending data.' },
+      {
+        error: 'Failed to fetch trending topics',
+        message: 'An error occurred while analyzing trending data.',
+      },
       { status: 500 }
     );
   }
@@ -116,7 +147,9 @@ function calculateChange(engagement: number, count: number): number {
   return 0;
 }
 
-function determineSentiment(avgEngagement: number): 'positive' | 'neutral' | 'negative' {
+function determineSentiment(
+  avgEngagement: number
+): 'positive' | 'neutral' | 'negative' {
   if (avgEngagement > 50) return 'positive';
   if (avgEngagement > 10) return 'neutral';
   return 'negative';

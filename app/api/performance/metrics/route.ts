@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import performanceMonitor from '@/lib/monitoring/performance-monitor';
+import { verifyAdmin } from '@/lib/admin/verify-admin';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -24,6 +25,15 @@ export const runtime = 'nodejs';
  */
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
+
+  // Admin-only guard — raw performance metrics expose internal system state
+  const auth = await verifyAdmin(request);
+  if (!auth.isAdmin) {
+    return NextResponse.json(
+      { error: 'Forbidden', message: auth.error || 'Admin access required' },
+      { status: 403 }
+    );
+  }
 
   try {
     const { searchParams } = new URL(request.url);
@@ -146,6 +156,18 @@ const clientMetricsSchema = z.object({
  * Record client-side performance metrics (Web Vitals)
  */
 export async function POST(request: NextRequest) {
+  // Admin-only guard — client metrics ingestion is restricted to admins
+  const postAuth = await verifyAdmin(request);
+  if (!postAuth.isAdmin) {
+    return NextResponse.json(
+      {
+        error: 'Forbidden',
+        message: postAuth.error || 'Admin access required',
+      },
+      { status: 403 }
+    );
+  }
+
   try {
     const body = await request.json();
     const validation = clientMetricsSchema.safeParse(body);

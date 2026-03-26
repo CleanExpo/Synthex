@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
+import { verifyAdmin } from '@/lib/admin/verify-admin';
 import { logger } from '@/lib/logger';
 
 // Initialize Supabase client for server-side operations
@@ -11,18 +11,27 @@ const supabase = createClient(
 
 export async function GET(request: NextRequest) {
   try {
+    // Admin-only guard — monitoring metrics expose internal system state
+    const auth = await verifyAdmin(request);
+    if (!auth.isAdmin) {
+      return NextResponse.json(
+        { error: 'Forbidden', message: auth.error || 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
     // Get current timestamp
     const now = new Date();
-    
+
     // Fetch database metrics
     const { count: userCount } = await supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true });
-    
+
     const { count: postCount } = await supabase
       .from('content_posts')
       .select('*', { count: 'exact', head: true });
-    
+
     // System metrics — use null for values that require monitoring integration,
     // keep real data where we have it (userCount, postCount from Supabase queries above).
     const systemMetrics = {
@@ -55,7 +64,8 @@ export async function GET(request: NextRequest) {
         lastScan: null, // Requires security scanner
         sslStatus: 'valid', // Can verify with env check
       },
-      message: 'Basic health check operational. Detailed metrics require monitoring integration (Datadog, Prometheus, etc.).',
+      message:
+        'Basic health check operational. Detailed metrics require monitoring integration (Datadog, Prometheus, etc.).',
     };
 
     return NextResponse.json(systemMetrics);

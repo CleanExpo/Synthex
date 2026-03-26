@@ -19,6 +19,12 @@ const monitoringEventSchema = z
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth guard — require authentication before accepting audit log writes
+    const authUserId = await getUserIdFromCookies().catch(() => null);
+    if (!authUserId) {
+      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+    }
+
     const rawBody = await request.json();
     const validation = monitoringEventSchema.safeParse(rawBody);
     if (!validation.success) {
@@ -29,9 +35,8 @@ export async function POST(request: NextRequest) {
     }
     const body = validation.data;
 
-    // Resolve authenticated user to prevent userId spoofing in logs
-    const authUserId = await getUserIdFromCookies().catch(() => null);
-    const verifiedUserId = authUserId ?? null;
+    // Use the verified auth user ID — prevents userId spoofing in logs
+    const verifiedUserId = authUserId;
 
     // Persist client errors to AuditLog — survives Lambda cold starts
     if (body.errors && body.errors.length > 0) {
