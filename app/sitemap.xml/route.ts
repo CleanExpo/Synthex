@@ -10,7 +10,14 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
 interface SitemapEntry {
   loc: string;
   lastmod: string;
-  changefreq: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
+  changefreq:
+    | 'always'
+    | 'hourly'
+    | 'daily'
+    | 'weekly'
+    | 'monthly'
+    | 'yearly'
+    | 'never';
   priority: number;
   images?: Array<{ loc: string; title: string; caption?: string }>;
   videos?: Array<{
@@ -34,16 +41,18 @@ function buildSitemapEntries(): SitemapEntry[] {
       priority: 1.0,
       images: [
         {
-          loc: `${BASE_URL}/images/hero-robot.png`,
-          title: 'Synthex AI Marketing Robot',
+          loc: `${BASE_URL}/images/hero-visual.svg`,
+          title: 'Synthex AI Marketing Platform Visual',
           caption: 'AI-powered marketing automation',
         },
       ],
       videos: [
         {
-          thumbnailUrl: 'https://img.youtube.com/vi/7rRHU8xS-kU/maxresdefault.jpg',
+          thumbnailUrl:
+            'https://img.youtube.com/vi/7rRHU8xS-kU/maxresdefault.jpg',
           title: 'Synthex — AI-Powered Marketing Agency',
-          description: 'Discover how Synthex uses AI to automate your entire social media marketing — from content creation to scheduling and analytics.',
+          description:
+            'Discover how Synthex uses AI to automate your entire social media marketing — from content creation to scheduling and analytics.',
           contentUrl: 'https://youtu.be/7rRHU8xS-kU',
           playerUrl: 'https://www.youtube.com/embed/7rRHU8xS-kU',
           publicationDate: '2026-02-17',
@@ -61,9 +70,11 @@ function buildSitemapEntries(): SitemapEntry[] {
       priority: 0.8,
       videos: [
         {
-          thumbnailUrl: 'https://img.youtube.com/vi/vnn6SJUlsWU/maxresdefault.jpg',
+          thumbnailUrl:
+            'https://img.youtube.com/vi/vnn6SJUlsWU/maxresdefault.jpg',
           title: 'Synthex Product Demo',
-          description: 'Full product walkthrough of the Synthex AI marketing platform.',
+          description:
+            'Full product walkthrough of the Synthex AI marketing platform.',
           contentUrl: 'https://youtu.be/vnn6SJUlsWU',
           playerUrl: 'https://www.youtube.com/embed/vnn6SJUlsWU',
           publicationDate: '2026-02-17',
@@ -71,8 +82,18 @@ function buildSitemapEntries(): SitemapEntry[] {
       ],
     },
     { loc: '/docs', lastmod: today, changefreq: 'weekly', priority: 0.7 },
-    { loc: '/api-reference', lastmod: today, changefreq: 'weekly', priority: 0.7 },
-    { loc: '/case-studies', lastmod: today, changefreq: 'monthly', priority: 0.7 },
+    {
+      loc: '/api-reference',
+      lastmod: today,
+      changefreq: 'weekly',
+      priority: 0.7,
+    },
+    {
+      loc: '/case-studies',
+      lastmod: today,
+      changefreq: 'monthly',
+      priority: 0.7,
+    },
     { loc: '/support', lastmod: today, changefreq: 'monthly', priority: 0.6 },
     { loc: '/careers', lastmod: today, changefreq: 'monthly', priority: 0.6 },
     { loc: '/roadmap', lastmod: today, changefreq: 'weekly', priority: 0.6 },

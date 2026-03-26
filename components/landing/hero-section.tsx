@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { HeroVisual } from './HeroVisual';
 import { LiveDemoWidget } from './LiveDemoWidget';
 
 function EyebrowPill({ children }: { children: React.ReactNode }) {
@@ -117,8 +118,9 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Right — LiveDemoWidget */}
-          <div>
+          {/* Right — visual + LiveDemoWidget */}
+          <div className="relative">
+            <HeroVisual className="absolute inset-0 w-full h-full opacity-60 pointer-events-none" />
             <LiveDemoWidget />
           </div>
         </div>
