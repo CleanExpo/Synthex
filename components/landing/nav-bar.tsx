@@ -6,8 +6,9 @@ import { SynthexLogo } from './synthex-logo';
 
 const NAV_LINKS = [
   { href: '/features', label: 'Features' },
-  { href: '/about', label: 'About' },
+  { href: '/agencies', label: 'Agencies' },
   { href: '/pricing', label: 'Pricing' },
+  { href: '/about', label: 'About' },
   // { href: '/blog', label: 'Blog' }, // Blog link hidden until content is ready
 ];
 
