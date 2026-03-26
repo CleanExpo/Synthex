@@ -5,19 +5,30 @@ import { prisma } from '@/lib/prisma';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 
 export const runtime = 'nodejs';
 
 // Input validation schema
 const generateContentSchema = z.object({
-  platform: z.enum(['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok', 'threads']),
+  platform: z.enum([
+    'twitter',
+    'linkedin',
+    'instagram',
+    'facebook',
+    'tiktok',
+    'threads',
+  ]),
   topic: z.string().min(1, 'Topic is required').max(500, 'Topic too long'),
   personaId: z.string().uuid().optional(),
   hookType: z.string().optional(),
   tone: z.string().optional(),
   includeHashtags: z.boolean().optional().default(true),
   includeEmojis: z.boolean().optional().default(true),
-  targetLength: z.enum(['short', 'medium', 'long']).optional().default('medium'),
+  targetLength: z
+    .enum(['short', 'medium', 'long'])
+    .optional()
+    .default('medium'),
   useAI: z.boolean().optional().default(false),
 });
 
@@ -32,7 +43,7 @@ async function handlePost(request: AuthenticatedRequest) {
         {
           success: false,
           error: 'Validation failed',
-          details: validationResult.error.flatten().fieldErrors
+          details: validationResult.error.flatten().fieldErrors,
         },
         { status: 400 }
       );
@@ -53,7 +64,11 @@ async function handlePost(request: AuthenticatedRequest) {
     const userId = request.userId;
 
     // Fetch persona from database if provided
-    let persona: { id: string; name: string; attributes: Record<string, string> } | null = null;
+    let persona: {
+      id: string;
+      name: string;
+      attributes: Record<string, string>;
+    } | null = null;
     if (personaId) {
       const dbPersona = await prisma.persona.findUnique({
         where: { id: personaId, userId: userId }, // Scope to authenticated user to prevent IDOR
@@ -72,7 +87,8 @@ async function handlePost(request: AuthenticatedRequest) {
           {
             success: false,
             error: 'Persona not found',
-            message: 'The specified persona does not exist. Create one first or omit personaId to use default settings.',
+            message:
+              'The specified persona does not exist. Create one first or omit personaId to use default settings.',
           },
           { status: 404 }
         );
@@ -125,14 +141,19 @@ async function handlePost(request: AuthenticatedRequest) {
   } catch (error: unknown) {
     logger.error('Content generation error:', error);
     return NextResponse.json(
-      { success: false, error: 'An unexpected error occurred. Please try again.' },
+      {
+        success: false,
+        error: 'An unexpected error occurred. Please try again.',
+      },
       { status: 500 }
     );
   }
 }
 
-// Export with authentication wrapper
-export const POST = withAuth(handlePost);
+// Export with authentication and rate limiting wrappers
+export async function POST(request: NextRequest) {
+  return withRateLimit(request, async () => withAuth(handlePost)(request));
+}
 
 // AI generation input schema
 const aiGenerateSchema = z.object({
@@ -152,7 +173,7 @@ async function handlePut(request: AuthenticatedRequest) {
         {
           success: false,
           error: 'Validation failed',
-          details: validationResult.error.flatten().fieldErrors
+          details: validationResult.error.flatten().fieldErrors,
         },
         { status: 400 }
       );
@@ -172,11 +193,16 @@ async function handlePut(request: AuthenticatedRequest) {
   } catch (error: unknown) {
     logger.error('AI generation error:', error);
     return NextResponse.json(
-      { success: false, error: 'An unexpected error occurred. Please try again.' },
+      {
+        success: false,
+        error: 'An unexpected error occurred. Please try again.',
+      },
       { status: 500 }
     );
   }
 }
 
-// Export with authentication wrapper
-export const PUT = withAuth(handlePut);
+// Export with authentication and rate limiting wrappers
+export async function PUT(request: NextRequest) {
+  return withRateLimit(request, async () => withAuth(handlePut)(request));
+}

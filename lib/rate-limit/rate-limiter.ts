@@ -16,6 +16,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
 import { logger } from '@/lib/logger';
+import { prisma } from '@/lib/prisma';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import type {
   RateLimitConfig,
   RateLimitResult,
@@ -105,6 +107,60 @@ function memoryIncr(
   }
 
   return entry;
+}
+
+// ---------------------------------------------------------------------------
+// Verified tier resolution (DB-backed, Redis-cached)
+// ---------------------------------------------------------------------------
+
+// Prisma Subscription.plan → SubscriptionTier mapping
+const PLAN_TO_TIER: Record<string, SubscriptionTier> = {
+  free: 'free',
+  pro: 'pro',
+  professional: 'professional',
+  growth: 'growth',
+  business: 'business',
+  scale: 'scale',
+  custom: 'custom',
+};
+
+/**
+ * Resolve subscription tier for a verified user ID.
+ * Redis cache (5 min TTL) prevents a DB call on every request.
+ * Falls back to 'free' on any error — never elevates on failure.
+ */
+async function resolveVerifiedTier(userId: string): Promise<SubscriptionTier> {
+  // Try Redis cache first
+  const redis = getUpstashClient();
+  const cacheKey = `rate-limit:tier:${userId}`;
+  if (redis) {
+    try {
+      const cached = await redis.get<string>(cacheKey);
+      if (cached && cached in PLAN_TO_TIER) return cached as SubscriptionTier;
+    } catch {
+      /* fall through */
+    }
+  }
+
+  // DB lookup
+  try {
+    const sub = await prisma.subscription.findUnique({
+      where: { userId },
+      select: { plan: true, status: true },
+    });
+    const isActive = sub?.status === 'active' || sub?.status === 'trialing';
+    const tier: SubscriptionTier = isActive
+      ? (PLAN_TO_TIER[sub?.plan ?? 'free'] ?? 'free')
+      : 'free';
+
+    // Cache for 5 minutes
+    if (redis) {
+      redis.set(cacheKey, tier, { ex: 300 }).catch(() => {});
+    }
+    return tier;
+  } catch {
+    return 'free';
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -251,28 +307,15 @@ export async function withRateLimit(
 ): Promise<NextResponse> {
   const pathname = new URL(req.url).pathname;
 
-  // Resolve user tier from auth token
+  // Resolve user tier from verified auth — never trust unverified JWT payload
   let tier: SubscriptionTier = 'free';
   try {
-    const authHeader = req.headers.get('authorization');
-    const cookieToken = req.cookies.get('auth-token')?.value;
-    const token = authHeader?.startsWith('Bearer ')
-      ? authHeader.substring(7)
-      : cookieToken;
-
-    if (token) {
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(
-          Buffer.from(parts[1], 'base64url').toString()
-        );
-        if (payload?.tier) {
-          tier = payload.tier as SubscriptionTier;
-        }
-      }
+    const userId = await getUserIdFromRequestOrCookies(req);
+    if (userId) {
+      tier = await resolveVerifiedTier(userId);
     }
   } catch {
-    // Fall back to 'free' tier on any error
+    // Default to 'free' tier on any error — never elevate on failure
   }
 
   const limiter = createRateLimiter(pathname, tier);

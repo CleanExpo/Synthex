@@ -18,7 +18,7 @@
  *   // Pass def to WorkflowExecution.create()
  */
 
-import type { WorkflowDefinition } from '../types';
+import type { WorkflowDefinition } from './types';
 
 export interface ContentCampaignOptions {
   /**

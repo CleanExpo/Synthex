@@ -18,6 +18,7 @@ import { requireApiKey } from '@/lib/middleware/require-api-key';
 import { z } from 'zod';
 import { multiFormatAdapter } from '@/lib/ai/multi-format-adapter';
 import { logger } from '@/lib/logger';
+import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 
 // ============================================================================
 // VALIDATION
@@ -82,7 +83,9 @@ const MultiFormatRequestSchema = z.object({
  *   "goal": "engagement"
  * }
  */
-async function handlePost(request: AuthenticatedRequest): Promise<NextResponse> {
+async function handlePost(
+  request: AuthenticatedRequest
+): Promise<NextResponse> {
   // Parse and validate request body
   let body: unknown;
   try {
@@ -106,7 +109,8 @@ async function handlePost(request: AuthenticatedRequest): Promise<NextResponse> 
     );
   }
 
-  const { content, sourcePlatform, targetPlatforms, tone, goal } = parseResult.data;
+  const { content, sourcePlatform, targetPlatforms, tone, goal } =
+    parseResult.data;
 
   try {
     const result = await multiFormatAdapter.adaptContent({
@@ -134,8 +138,10 @@ async function handlePost(request: AuthenticatedRequest): Promise<NextResponse> 
 const authenticatedHandler = withAuth(handlePost);
 
 export async function POST(request: NextRequest) {
-  return requireApiKey(request, async () => {
-    return authenticatedHandler(request);
+  return withRateLimit(request, async () => {
+    return requireApiKey(request, async () => {
+      return authenticatedHandler(request);
+    });
   });
 }
 
