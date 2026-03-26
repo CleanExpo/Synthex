@@ -422,33 +422,70 @@ export function useSettingsData() {
   const handleExportData = useCallback(async () => {
     setIsExporting(true);
     try {
-      const data = { profile, notifications, privacy, advanced };
+      const response = await fetch('/api/user/export', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(
+          (err as { error?: string }).error || 'Export request failed'
+        );
+      }
+
+      const data = await response.json();
       const blob = new Blob([JSON.stringify(data, null, 2)], {
         type: 'application/json',
       });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'synthex-settings-export.json';
+      a.download = `synthex-data-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
       a.click();
-      toast.success('Data exported successfully!');
-    } catch {
-      toast.error('Failed to export data');
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success('Your data has been exported successfully!');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to export data');
     } finally {
       setIsExporting(false);
     }
-  }, [profile, notifications, privacy, advanced]);
+  }, []);
 
   const handleDeleteAccount = useCallback(() => {
-    if (
-      confirm(
-        'Are you sure you want to delete your account? This action cannot be undone.'
-      )
-    ) {
-      toast.error(
-        'Account deletion requires email confirmation. Check your inbox.'
-      );
-    }
+    toast.warning('Delete your account?', {
+      description:
+        'This permanently removes all your data and cannot be undone.',
+      action: {
+        label: 'Yes, delete it',
+        onClick: async () => {
+          try {
+            const res = await fetch('/api/founder/delete-account', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ confirmation: 'DELETE MY ACCOUNT' }),
+            });
+
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              toast.error(
+                (err as { error?: string }).error || 'Account deletion failed'
+              );
+              return;
+            }
+
+            toast.success('Account deleted. Redirecting...');
+            window.location.href = '/';
+          } catch {
+            toast.error('Failed to delete account. Please try again.');
+          }
+        },
+      },
+      duration: 15000,
+    });
   }, []);
 
   const handleUpgrade = useCallback(() => {
