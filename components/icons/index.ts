@@ -324,6 +324,12 @@ export { ClockIcon as Clock } from '@heroicons/react/24/outline';
 export { FileQuestion } from 'lucide-react';
 
 // ============================================
+// 3D ICON COMPONENT
+// ============================================
+
+export { Icon3D } from './Icon3D';
+
+// ============================================
 // TYPE DEFINITIONS
 // ============================================
 
