@@ -7,7 +7,7 @@ description: >-
   Use when creating or modifying any authenticated endpoint or middleware logic.
 metadata:
   author: synthex
-  version: "1.0"
+  version: '1.0'
   engine: synthex-ai-agency
   type: reference-skill
   triggers:
@@ -67,6 +67,7 @@ Request → middleware.ts → Supabase SSR client → getSession()
 ```
 
 **Key details:**
+
 - Runs in Edge Runtime (limited Node.js APIs)
 - Sets security headers (CSP, HSTS, X-Frame-Options)
 - Handles API key gate via `checkApiKeyGate()` for `/dashboard` routes
@@ -96,6 +97,7 @@ const userId = security.context.userId;
 ```
 
 **Default policies:**
+
 - `PUBLIC_READ` — No auth required, rate limited
 - `AUTHENTICATED_READ` — JWT required, read-only
 - `AUTHENTICATED_WRITE` — JWT required, CSRF protection
@@ -106,6 +108,7 @@ const userId = security.context.userId;
 ## Layer 3: RBAC (Fine-Grained Permissions)
 
 **Files:**
+
 - `lib/auth/rbac/permission-engine.ts` — Permission matching with wildcards
 - `lib/auth/rbac/role-manager.ts` — Role CRUD, user-role assignment
 - `lib/auth/rbac/access-control.ts` — Middleware-style access control
@@ -150,6 +153,7 @@ system configuration).
 **Purpose:** RFC 7636 implementation for secure OAuth 2.0 code exchange
 
 **Key functions:**
+
 - `generateCodeVerifier()` — 32 bytes of crypto-random, base64url encoded
 - `generateCodeChallenge()` — SHA-256 hash of verifier
 - `generatePKCEChallenge()` — Returns `{ codeVerifier, codeChallenge, method: 'S256' }`
@@ -170,39 +174,41 @@ errors with `sonner` toasts.
 
 ## Common Mistakes
 
-| Mistake | Why It's Wrong | Correct Pattern |
-|---------|---------------|----------------|
-| `jwt.verify(token, secret) as any` | Unsafe cast, no type safety | Use `APISecurityChecker.check()` |
-| Local `getJWTSecret()` function | Duplicates centralised utility | Import from `jwt-utils.ts` |
-| Missing org scoping on queries | Data leaks across organisations | Always filter by `organizationId` |
-| Hardcoded role checks | Bypasses RBAC system | Use `PermissionEngine.checkPermission()` |
-| `process.env.JWT_SECRET!` in route | Non-null assertion on env var | `getJWTSecret()` with validation |
-| Supabase auth in API routes | Wrong layer, session vs token | Use APISecurityChecker |
+| Mistake                            | Why It's Wrong                  | Correct Pattern                          |
+| ---------------------------------- | ------------------------------- | ---------------------------------------- |
+| `jwt.verify(token, secret) as any` | Unsafe cast, no type safety     | Use `APISecurityChecker.check()`         |
+| Local `getJWTSecret()` function    | Duplicates centralised utility  | Import from `jwt-utils.ts`               |
+| Missing org scoping on queries     | Data leaks across organisations | Always filter by `organizationId`        |
+| Hardcoded role checks              | Bypasses RBAC system            | Use `PermissionEngine.checkPermission()` |
+| `process.env.JWT_SECRET!` in route | Non-null assertion on env var   | `getJWTSecret()` with validation         |
+| Supabase auth in API routes        | Wrong layer, session vs token   | Use APISecurityChecker                   |
 
 ## Environment Variables
 
-| Variable | Layer | Required |
-|----------|-------|----------|
-| `JWT_SECRET` | JWT token signing | CRITICAL |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase session | CRITICAL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase session | CRITICAL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-side Supabase | CRITICAL |
-| `DATABASE_URL` | RBAC persistence | CRITICAL |
-| `REDIS_URL` | PKCE state storage | Recommended |
+| Variable                        | Layer                | Required    |
+| ------------------------------- | -------------------- | ----------- |
+| `JWT_SECRET`                    | JWT token signing    | CRITICAL    |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase session     | CRITICAL    |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase session     | CRITICAL    |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Server-side Supabase | CRITICAL    |
+| `DATABASE_URL`                  | RBAC persistence     | CRITICAL    |
+| `REDIS_URL`                     | PKCE state storage   | Recommended |
 
 ## File Index
 
-| File | Purpose |
-|------|---------|
-| `middleware.ts` | Route guards, security headers, session refresh |
-| `lib/auth/jwt-utils.ts` | JWT generation, verification, owner checks |
-| `lib/auth/pkce.ts` | PKCE challenge generation and state management |
-| `lib/auth/oauth-handler.ts` | Client-side OAuth flow initiation |
-| `lib/auth/rbac/permission-engine.ts` | Permission matching and evaluation |
-| `lib/auth/rbac/role-manager.ts` | Role CRUD and user assignment |
-| `lib/auth/rbac/access-control.ts` | Access control middleware |
-| `lib/auth/auth-service.ts` | Auth service utilities |
-| `lib/auth/account-service.ts` | Account management |
-| `lib/auth/signInFlow.ts` | Sign-in flow orchestration |
-| `lib/auth/monitoring.ts` | Auth event monitoring |
-| `lib/security/api-security-checker.ts` | API route security enforcement |
+| File                                   | Purpose                                         |
+| -------------------------------------- | ----------------------------------------------- |
+| `middleware.ts`                        | Route guards, security headers, session refresh |
+| `lib/auth/jwt-utils.ts`                | JWT generation, verification, owner checks      |
+| `lib/auth/pkce.ts`                     | PKCE challenge generation and state management  |
+| `lib/auth/oauth-handler.ts`            | Client-side OAuth flow initiation               |
+| `lib/auth/rbac/permission-engine.ts`   | Permission matching and evaluation              |
+| `lib/auth/rbac/role-manager.ts`        | Role CRUD and user assignment                   |
+| `lib/auth/rbac/access-control.ts`      | Access control middleware                       |
+| `lib/auth/auth-service.ts`             | Auth service utilities                          |
+| `lib/auth/account-service.ts`          | Account management                              |
+| `lib/auth/signInFlow.ts`               | Sign-in flow orchestration                      |
+| `lib/auth/monitoring.ts`               | Auth event monitoring                           |
+| `lib/security/api-security-checker.ts` | API route security enforcement                  |
+
+> **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.

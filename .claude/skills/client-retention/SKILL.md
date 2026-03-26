@@ -7,9 +7,9 @@ description: >-
   churn risks, optimising retention metrics, or reviewing customer success KPIs.
 metadata:
   author: synthex
-  version: "2.0"
+  version: '2.0'
   engine: synthex-ai-agency
-  type: business-skill
+  type: reference-skill
   triggers:
     - retention
     - churn
@@ -30,6 +30,7 @@ campaigns.
 ## When to Use
 
 Activate this skill when:
+
 - Analysing user engagement patterns and metrics
 - Identifying users at risk of churning
 - Optimising retention campaigns and strategies
@@ -66,30 +67,30 @@ Activate this skill when:
 
 ## Input Specification
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| operation | string | yes | `analyse`, `predict`, `intervene`, `report` |
-| cohort | string | no | Date range or cohort identifier |
-| user_segment | string | no | `all`, `at-risk`, `new`, `power-users` |
+| Parameter    | Type   | Required | Description                                 |
+| ------------ | ------ | -------- | ------------------------------------------- |
+| operation    | string | yes      | `analyse`, `predict`, `intervene`, `report` |
+| cohort       | string | no       | Date range or cohort identifier             |
+| user_segment | string | no       | `all`, `at-risk`, `new`, `power-users`      |
 
 ## Output Specification
 
-| Field | Type | Description |
-|-------|------|-------------|
-| metric | string | KPI name |
-| value | number | Current value |
-| trend | up/down/stable | Direction vs previous period |
-| at_risk_users | array | Users flagged for churn risk |
-| recommendations | array | Suggested interventions |
+| Field           | Type           | Description                  |
+| --------------- | -------------- | ---------------------------- |
+| metric          | string         | KPI name                     |
+| value           | number         | Current value                |
+| trend           | up/down/stable | Direction vs previous period |
+| at_risk_users   | array          | Users flagged for churn risk |
+| recommendations | array          | Suggested interventions      |
 
 ## Error Handling
 
-| Error | Action |
-|-------|--------|
-| Missing analytics data | Report data gap, use available period |
-| Prediction model failure | Fall back to rule-based heuristics |
-| Campaign send failure | Retry once, then queue for manual review |
-| Insufficient data for cohort | Warn and expand date range |
+| Error                        | Action                                       |
+| ---------------------------- | -------------------------------------------- |
+| Missing analytics data       | Report data gap, use available period        |
+| Prediction model failure     | Fall back to rule-based heuristics           |
+| Campaign send failure        | Retry once, then queue for manual review     |
+| Insufficient data for cohort | Warn and expand date range                   |
 | API rate limit on OpenRouter | Queue prediction batch, retry after cooldown |
 
 ## Key Metrics
@@ -111,11 +112,11 @@ interface EngagementMetrics {
 
 ```typescript
 interface RetentionMetrics {
-  day1Retention: number;   // % returning next day
-  day7Retention: number;   // % returning week 1
-  day30Retention: number;  // % returning month 1
-  churnRate: number;       // Monthly churn %
-  lifetimeValue: number;   // Average LTV in AUD
+  day1Retention: number; // % returning next day
+  day7Retention: number; // % returning week 1
+  day30Retention: number; // % returning month 1
+  churnRate: number; // Monthly churn %
+  lifetimeValue: number; // Average LTV in AUD
 }
 ```
 
@@ -154,3 +155,5 @@ pnpm run analytics:engagement    # Check engagement metrics
 - Coordinates with **ui-ux** for engagement features
 - Supports **database-prisma** for metrics storage
 - Uses **AI** (OpenRouter) for churn prediction models
+
+> **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.

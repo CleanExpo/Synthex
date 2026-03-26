@@ -7,9 +7,9 @@ description: >-
   or preparing for production deployment.
 metadata:
   author: synthex
-  version: "1.0"
+  version: '1.0'
   engine: synthex-ai-agency
-  type: database-skill
+  type: reference-skill
   triggers:
     - sql cleanup
     - sql hardening
@@ -27,6 +27,7 @@ Automates SQL file cleanup, security hardening, and optimization using the Supab
 ## When to Use
 
 Activate this skill when:
+
 - Cleaning up messy or inconsistent SQL files
 - Auditing RLS policies for security gaps
 - Adding missing indexes for performance
@@ -54,7 +55,9 @@ supabase db lint
 Analyze SQL files for common issues:
 
 #### 1. Missing Indexes
+
 Check for columns frequently used in WHERE, JOIN, ORDER BY:
+
 - Foreign key columns without indexes
 - Timestamp columns used for sorting
 - Status/type columns used for filtering
@@ -78,6 +81,7 @@ AND NOT EXISTS (
 ```
 
 #### 2. RLS Policy Gaps
+
 Check for tables missing RLS or with incomplete policies:
 
 ```sql
@@ -103,12 +107,14 @@ AND NOT EXISTS (
 ```
 
 #### 3. Constraint Weaknesses
+
 - Missing NOT NULL on required fields
 - Missing CHECK constraints for enums
 - Missing UNIQUE constraints where appropriate
 - Cascade behavior review
 
 #### 4. Security Gaps
+
 - Tables with public access
 - Missing auth.uid() checks
 - Overly permissive policies
@@ -143,25 +149,26 @@ supabase db push
 
 ## Input Specification
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| operation | string | yes | `audit`, `generate-indexes`, `generate-rls`, `consolidate`, `apply` |
-| target | string | no | Specific table or file to focus on |
-| dry_run | boolean | no | Generate but don't apply (default: true) |
+| Parameter | Type    | Required | Description                                                         |
+| --------- | ------- | -------- | ------------------------------------------------------------------- |
+| operation | string  | yes      | `audit`, `generate-indexes`, `generate-rls`, `consolidate`, `apply` |
+| target    | string  | no       | Specific table or file to focus on                                  |
+| dry_run   | boolean | no       | Generate but don't apply (default: true)                            |
 
 ## Output Specification
 
-| Field | Type | Description |
-|-------|------|-------------|
-| operation | string | Operation performed |
-| issues_found | array | List of issues detected |
-| fixes_generated | string | SQL fixes generated |
-| migration_path | string | Path to generated migration |
-| warnings | array | Potential breaking changes |
+| Field           | Type   | Description                 |
+| --------------- | ------ | --------------------------- |
+| operation       | string | Operation performed         |
+| issues_found    | array  | List of issues detected     |
+| fixes_generated | string | SQL fixes generated         |
+| migration_path  | string | Path to generated migration |
+| warnings        | array  | Potential breaking changes  |
 
 ## Standard RLS Templates
 
 ### User-Owned Data Pattern
+
 ```sql
 -- Enable RLS
 ALTER TABLE {table_name} ENABLE ROW LEVEL SECURITY;
@@ -185,6 +192,7 @@ CREATE POLICY "{table_name}_delete_own"
 ```
 
 ### Organization-Scoped Pattern (Multi-Business)
+
 ```sql
 -- For tables with organization_id
 CREATE POLICY "{table_name}_org_access"
@@ -203,6 +211,7 @@ CREATE POLICY "{table_name}_org_access"
 ```
 
 ### Team-Scoped Pattern
+
 ```sql
 -- For tables with team_id
 CREATE POLICY "{table_name}_team_access"
@@ -216,6 +225,7 @@ CREATE POLICY "{table_name}_team_access"
 ```
 
 ### Service Role Bypass
+
 ```sql
 -- Allow service role to bypass RLS
 CREATE POLICY "{table_name}_service_bypass"
@@ -327,3 +337,5 @@ supabase db push
 - Coordinates with **database-prisma** for ORM sync
 - Works with **code-review** for migration review
 - References **api-testing** for endpoint data validation
+
+> **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.

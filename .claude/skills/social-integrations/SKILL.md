@@ -7,7 +7,7 @@ description: >-
   debugging OAuth issues, or working on webhook handlers.
 metadata:
   author: synthex
-  version: "1.0"
+  version: '1.0'
   engine: synthex-ai-agency
   type: reference-skill
   triggers:
@@ -35,19 +35,20 @@ for adding or debugging platform support.
 
 ## Platform Matrix
 
-| Platform | Service File | OAuth | Webhooks | Direct API |
-|----------|-------------|-------|----------|------------|
-| YouTube | `youtube-service.ts` | Google OAuth 2.0 | Yes (PubSubHubbub) | YouTube Data API v3 |
-| Instagram | `instagram-service.ts` | Meta OAuth 2.0 | Yes (Meta webhooks) | Instagram Graph API |
-| TikTok | `tiktok-service.ts` | TikTok OAuth 2.0 | Yes | TikTok API v2 |
-| X (Twitter) | `twitter-service.ts` | OAuth 2.0 + OAuth 1.0a | Yes | Twitter API v2 |
-| Facebook | (via Meta) | Meta OAuth 2.0 | Yes (shared with IG) | Facebook Graph API |
-| LinkedIn | `linkedin-service.ts` | LinkedIn OAuth 2.0 | Yes | LinkedIn API |
-| Pinterest | `pinterest-service.ts` | Pinterest OAuth 2.0 | Yes | Pinterest API v5 |
-| Reddit | `reddit-service.ts` | Reddit OAuth 2.0 | Yes | Reddit API |
-| Threads | `threads-service.ts` | Meta OAuth 2.0 | Yes (shared with IG) | Threads API |
+| Platform    | Service File           | OAuth                  | Webhooks             | Direct API          |
+| ----------- | ---------------------- | ---------------------- | -------------------- | ------------------- |
+| YouTube     | `youtube-service.ts`   | Google OAuth 2.0       | Yes (PubSubHubbub)   | YouTube Data API v3 |
+| Instagram   | `instagram-service.ts` | Meta OAuth 2.0         | Yes (Meta webhooks)  | Instagram Graph API |
+| TikTok      | `tiktok-service.ts`    | TikTok OAuth 2.0       | Yes                  | TikTok API v2       |
+| X (Twitter) | `twitter-service.ts`   | OAuth 2.0 + OAuth 1.0a | Yes                  | Twitter API v2      |
+| Facebook    | (via Meta)             | Meta OAuth 2.0         | Yes (shared with IG) | Facebook Graph API  |
+| LinkedIn    | `linkedin-service.ts`  | LinkedIn OAuth 2.0     | Yes                  | LinkedIn API        |
+| Pinterest   | `pinterest-service.ts` | Pinterest OAuth 2.0    | Yes                  | Pinterest API v5    |
+| Reddit      | `reddit-service.ts`    | Reddit OAuth 2.0       | Yes                  | Reddit API          |
+| Threads     | `threads-service.ts`   | Meta OAuth 2.0         | Yes (shared with IG) | Threads API         |
 
 **Supporting files:**
+
 - `twitter-sync-service.ts` — Twitter-specific analytics sync
 - `competitor-fetcher.ts` — Cross-platform competitor data
 - `mention-fetcher.ts` — Cross-platform mention tracking
@@ -59,6 +60,7 @@ for adding or debugging platform support.
 **Purpose:** Defines the interface all platform services must implement
 
 **PlatformCredentials:**
+
 ```typescript
 interface PlatformCredentials {
   accessToken: string;
@@ -125,6 +127,7 @@ Redirect to /dashboard/settings with success toast
 **Class:** `SignatureVerifier`
 
 **Platform-specific secrets:**
+
 ```
 twitter   → TWITTER_WEBHOOK_SECRET
 facebook  → META_WEBHOOK_SECRET
@@ -168,6 +171,7 @@ mention tracking, engagement updates)
 ## Per-Platform Notes
 
 ### X (Twitter)
+
 - **Dual OAuth:** Supports both OAuth 2.0 (user context) and OAuth 1.0a (app context)
 - **Direct API vars:** `TWITTER_API_KEY`, `TWITTER_API_SECRET`, `TWITTER_ACCESS_TOKEN`,
   `TWITTER_ACCESS_TOKEN_SECRET`, `TWITTER_BEARER_TOKEN`
@@ -175,79 +179,84 @@ mention tracking, engagement updates)
 - **Rate limits:** Strict per-endpoint limits, tracked per 15-minute window
 
 ### Meta (Facebook, Instagram, Threads)
+
 - **Shared webhook secret:** All three platforms use `META_WEBHOOK_SECRET`
 - **Graph API:** Shared base URL (`graph.facebook.com`) with platform-specific edges
 - **Page tokens:** Facebook requires page-level tokens (not user tokens) for posting
 
 ### LinkedIn
+
 - **Direct API vars:** `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`
 - **Organisation posts:** Requires `w_organization_social` scope for company page posting
 - **UGC API:** Uses User-Generated Content API for post creation
 
 ### YouTube
+
 - **Data API vars:** `YOUTUBE_API_KEY`, `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`
 - **Quota system:** YouTube Data API uses quota units (not simple rate limits)
 - **PubSubHubbub:** Webhook notifications via Google's PubSubHubbub hub
 
 ## Common Mistakes
 
-| Mistake | Why It's Wrong | Correct Pattern |
-|---------|---------------|----------------|
-| Storing tokens in plain text | Security vulnerability | Encrypt with `api-key-encryption.ts` |
-| Skipping signature verification | Webhook forgery risk | Always verify with `SignatureVerifier` |
-| Using `receiveAndProcess()` in long-lived server | Unnecessary blocking | Use async queue mode |
-| Hardcoding callback URLs | Breaks across environments | Use `NEXT_PUBLIC_APP_URL` env var |
-| Ignoring token refresh | Stale credentials cause failures | Implement `TokenRefreshCallback` |
-| Not handling rate limits | API bans and service disruption | Check platform-specific limits |
+| Mistake                                          | Why It's Wrong                   | Correct Pattern                        |
+| ------------------------------------------------ | -------------------------------- | -------------------------------------- |
+| Storing tokens in plain text                     | Security vulnerability           | Encrypt with `api-key-encryption.ts`   |
+| Skipping signature verification                  | Webhook forgery risk             | Always verify with `SignatureVerifier` |
+| Using `receiveAndProcess()` in long-lived server | Unnecessary blocking             | Use async queue mode                   |
+| Hardcoding callback URLs                         | Breaks across environments       | Use `NEXT_PUBLIC_APP_URL` env var      |
+| Ignoring token refresh                           | Stale credentials cause failures | Implement `TokenRefreshCallback`       |
+| Not handling rate limits                         | API bans and service disruption  | Check platform-specific limits         |
 
 ## Environment Variables
 
-| Variable | Platform | Required |
-|----------|----------|----------|
-| `TWITTER_API_KEY` | X (Twitter) | For direct API |
-| `TWITTER_API_SECRET` | X (Twitter) | For direct API |
-| `TWITTER_ACCESS_TOKEN` | X (Twitter) | For direct API |
-| `TWITTER_ACCESS_TOKEN_SECRET` | X (Twitter) | For direct API |
-| `TWITTER_BEARER_TOKEN` | X (Twitter) | For direct API |
-| `TWITTER_WEBHOOK_SECRET` | X (Twitter) | For webhooks |
-| `LINKEDIN_CLIENT_ID` | LinkedIn | For OAuth |
-| `LINKEDIN_CLIENT_SECRET` | LinkedIn | For OAuth |
-| `LINKEDIN_WEBHOOK_SECRET` | LinkedIn | For webhooks |
-| `YOUTUBE_API_KEY` | YouTube | For Data API |
-| `YOUTUBE_CLIENT_ID` | YouTube | For OAuth |
-| `YOUTUBE_CLIENT_SECRET` | YouTube | For OAuth |
-| `META_WEBHOOK_SECRET` | FB/IG/Threads | For webhooks |
-| `TIKTOK_WEBHOOK_SECRET` | TikTok | For webhooks |
-| `PINTEREST_WEBHOOK_SECRET` | Pinterest | For webhooks |
-| `REDDIT_WEBHOOK_SECRET` | Reddit | For webhooks |
-| `GOOGLE_WEBHOOK_SECRET` | YouTube | For webhooks |
-| `INTERNAL_WEBHOOK_SECRET` | System | For internal webhooks |
-| `API_ENCRYPTION_KEY` | All | Token encryption |
-| `NEXT_PUBLIC_APP_URL` | All | OAuth callback base URL |
+| Variable                      | Platform      | Required                |
+| ----------------------------- | ------------- | ----------------------- |
+| `TWITTER_API_KEY`             | X (Twitter)   | For direct API          |
+| `TWITTER_API_SECRET`          | X (Twitter)   | For direct API          |
+| `TWITTER_ACCESS_TOKEN`        | X (Twitter)   | For direct API          |
+| `TWITTER_ACCESS_TOKEN_SECRET` | X (Twitter)   | For direct API          |
+| `TWITTER_BEARER_TOKEN`        | X (Twitter)   | For direct API          |
+| `TWITTER_WEBHOOK_SECRET`      | X (Twitter)   | For webhooks            |
+| `LINKEDIN_CLIENT_ID`          | LinkedIn      | For OAuth               |
+| `LINKEDIN_CLIENT_SECRET`      | LinkedIn      | For OAuth               |
+| `LINKEDIN_WEBHOOK_SECRET`     | LinkedIn      | For webhooks            |
+| `YOUTUBE_API_KEY`             | YouTube       | For Data API            |
+| `YOUTUBE_CLIENT_ID`           | YouTube       | For OAuth               |
+| `YOUTUBE_CLIENT_SECRET`       | YouTube       | For OAuth               |
+| `META_WEBHOOK_SECRET`         | FB/IG/Threads | For webhooks            |
+| `TIKTOK_WEBHOOK_SECRET`       | TikTok        | For webhooks            |
+| `PINTEREST_WEBHOOK_SECRET`    | Pinterest     | For webhooks            |
+| `REDDIT_WEBHOOK_SECRET`       | Reddit        | For webhooks            |
+| `GOOGLE_WEBHOOK_SECRET`       | YouTube       | For webhooks            |
+| `INTERNAL_WEBHOOK_SECRET`     | System        | For internal webhooks   |
+| `API_ENCRYPTION_KEY`          | All           | Token encryption        |
+| `NEXT_PUBLIC_APP_URL`         | All           | OAuth callback base URL |
 
 ## File Index
 
-| File | Purpose |
-|------|---------|
-| `lib/social/base-platform-service.ts` | Base service contract and types |
-| `lib/social/twitter-service.ts` | X (Twitter) API integration |
-| `lib/social/twitter-sync-service.ts` | Twitter analytics sync |
-| `lib/social/instagram-service.ts` | Instagram Graph API |
-| `lib/social/linkedin-service.ts` | LinkedIn API |
-| `lib/social/youtube-service.ts` | YouTube Data API v3 |
-| `lib/social/tiktok-service.ts` | TikTok API v2 |
-| `lib/social/pinterest-service.ts` | Pinterest API v5 |
-| `lib/social/reddit-service.ts` | Reddit API |
-| `lib/social/threads-service.ts` | Threads API |
-| `lib/social/index.ts` | Platform service exports |
-| `lib/social/competitor-fetcher.ts` | Cross-platform competitor data |
-| `lib/social/mention-fetcher.ts` | Cross-platform mention tracking |
-| `lib/social/sentiment-analyzer.ts` | NLP sentiment analysis |
-| `lib/webhooks/signature-verifier.ts` | Webhook signature verification |
-| `lib/webhooks/webhook-handler.ts` | Central webhook processing |
+| File                                      | Purpose                            |
+| ----------------------------------------- | ---------------------------------- |
+| `lib/social/base-platform-service.ts`     | Base service contract and types    |
+| `lib/social/twitter-service.ts`           | X (Twitter) API integration        |
+| `lib/social/twitter-sync-service.ts`      | Twitter analytics sync             |
+| `lib/social/instagram-service.ts`         | Instagram Graph API                |
+| `lib/social/linkedin-service.ts`          | LinkedIn API                       |
+| `lib/social/youtube-service.ts`           | YouTube Data API v3                |
+| `lib/social/tiktok-service.ts`            | TikTok API v2                      |
+| `lib/social/pinterest-service.ts`         | Pinterest API v5                   |
+| `lib/social/reddit-service.ts`            | Reddit API                         |
+| `lib/social/threads-service.ts`           | Threads API                        |
+| `lib/social/index.ts`                     | Platform service exports           |
+| `lib/social/competitor-fetcher.ts`        | Cross-platform competitor data     |
+| `lib/social/mention-fetcher.ts`           | Cross-platform mention tracking    |
+| `lib/social/sentiment-analyzer.ts`        | NLP sentiment analysis             |
+| `lib/webhooks/signature-verifier.ts`      | Webhook signature verification     |
+| `lib/webhooks/webhook-handler.ts`         | Central webhook processing         |
 | `lib/webhooks/social-webhook-handlers.ts` | Platform-specific webhook handlers |
-| `lib/webhooks/verifier.ts` | Additional verification utilities |
-| `lib/webhooks/index.ts` | Webhook module exports |
-| `lib/auth/pkce.ts` | PKCE challenge generation |
-| `lib/auth/oauth-handler.ts` | Client-side OAuth initiation |
-| `lib/encryption/api-key-encryption.ts` | Token encryption/decryption |
+| `lib/webhooks/verifier.ts`                | Additional verification utilities  |
+| `lib/webhooks/index.ts`                   | Webhook module exports             |
+| `lib/auth/pkce.ts`                        | PKCE challenge generation          |
+| `lib/auth/oauth-handler.ts`               | Client-side OAuth initiation       |
+| `lib/encryption/api-key-encryption.ts`    | Token encryption/decryption        |
+
+> **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.

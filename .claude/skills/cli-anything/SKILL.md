@@ -11,7 +11,7 @@ metadata:
   author: synthex
   version: '1.0'
   engine: synthex-ai-agency
-  type: integration-skill
+  type: reference-skill
   triggers:
     - cli-anything
     - agent-native cli
@@ -470,3 +470,5 @@ app/api/command-centre/               — AI Command Centre API routes
 components/command-centre/            — AI Command Centre UI
 scripts/                              — Existing utility scripts to unify
 ```
+
+> **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.

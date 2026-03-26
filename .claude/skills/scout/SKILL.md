@@ -1,3 +1,13 @@
+---
+name: scout
+description: >-
+  AI provider and model monitoring for Synthex. Detects approaching model
+  retirements, alerts on model errors, and recommends fallback models.
+  Use when a model call fails, a retirement is imminent, or any feature
+  hardcodes a model name.
+type: reference-skill
+---
+
 # Scout — AI Provider & Model Monitor
 
 ## Purpose
@@ -7,6 +17,7 @@ Scout monitors the AI provider ecosystem for Synthex. It detects approaching mod
 ## When This Skill Applies
 
 **Auto-trigger when:**
+
 - An AI model call fails with a `model_not_found`, `deprecated`, or `invalid_model` error
 - A model retirement date in `.claude/provider-registry.json` is within 14 days
 - Asked to check if any models are nearing end-of-life
@@ -32,10 +43,10 @@ Always read this file fresh — do not rely on cached knowledge of model names.
   "lastUpdated": "YYYY-MM-DD",
   "models": {
     "<provider>": {
-      "fast":     "<model-id>",
+      "fast": "<model-id>",
       "balanced": "<model-id>",
       "advanced": "<model-id>",
-      "notes":    "<usage notes>",
+      "notes": "<usage notes>",
       "retirements": {
         "<model-id>": "<YYYY-MM-DD retirement date>"
       }
@@ -49,10 +60,10 @@ Always read this file fresh — do not rely on cached knowledge of model names.
     "registryPath": ".claude/provider-registry.json"
   },
   "tierAccess": {
-    "free":         ["openrouter"],
+    "free": ["openrouter"],
     "professional": ["openrouter", "anthropic", "openai"],
-    "business":     ["openrouter", "anthropic", "openai", "google"],
-    "custom":       ["openrouter", "anthropic", "openai", "google"]
+    "business": ["openrouter", "anthropic", "openai", "google"],
+    "custom": ["openrouter", "anthropic", "openai", "google"]
   }
 }
 ```
@@ -62,28 +73,31 @@ Always read this file fresh — do not rely on cached knowledge of model names.
 ## Retirement Check Protocol
 
 ### Step 1 — Read Registry
+
 ```bash
 cat .claude/provider-registry.json
 ```
 
 ### Step 2 — Identify Retirements
+
 For each provider, check the `retirements` object.
 Compare each date to today's date (format: `YYYY-MM-DD`).
 
 ### Step 3 — Classify by Urgency
 
-| Days Until Retirement | Severity | Action |
-|-----------------------|----------|--------|
+| Days Until Retirement | Severity    | Action                               |
+| --------------------- | ----------- | ------------------------------------ |
 | ≤ 7 days              | 🔴 Critical | Block deployment; update immediately |
-| 8–14 days             | 🟡 Warning  | Flag in PR review; schedule update |
-| 15–30 days            | 🔵 Info     | Note for awareness; plan migration |
-| > 30 days             | ✅ OK       | No action required |
+| 8–14 days             | 🟡 Warning  | Flag in PR review; schedule update   |
+| 15–30 days            | 🔵 Info     | Note for awareness; plan migration   |
+| > 30 days             | ✅ OK       | No action required                   |
 
 ### Step 4 — Suggest Replacement
 
 When a model is retiring, suggest the same-tier replacement from the **same provider first**, then cross-provider alternatives.
 
 **Replacement lookup order:**
+
 1. Same provider, same tier (e.g., `google.advanced` → check for updated `gemini-*-pro`)
 2. Same tier, different provider (e.g., `openrouter.advanced` as OpenRouter passthrough)
 3. One tier down from same provider (degrade gracefully)
@@ -110,13 +124,13 @@ When an AI call returns a model-related error (`model_not_found`, `deprecated_mo
 
 When a model needs updating, check these files:
 
-| File | What to update |
-|------|----------------|
-| `.claude/provider-registry.json` | Registry source of truth |
-| `lib/ai/providers/openrouter-provider.ts` | OpenRouter model presets |
-| `lib/ai/providers/anthropic-provider.ts` | Anthropic model presets |
-| `lib/ai/providers/google-provider.ts` | Google model presets |
-| `lib/ai/providers/base-provider.ts` | `ModelPresets` interface (if tiers change) |
+| File                                      | What to update                             |
+| ----------------------------------------- | ------------------------------------------ |
+| `.claude/provider-registry.json`          | Registry source of truth                   |
+| `lib/ai/providers/openrouter-provider.ts` | OpenRouter model presets                   |
+| `lib/ai/providers/anthropic-provider.ts`  | Anthropic model presets                    |
+| `lib/ai/providers/google-provider.ts`     | Google model presets                       |
+| `lib/ai/providers/base-provider.ts`       | `ModelPresets` interface (if tiers change) |
 
 **Never hardcode model IDs in feature code** — always use `ai.models.fast`, `ai.models.balanced`, or `ai.models.premium` via the `getAIProvider()` abstraction.
 
@@ -125,6 +139,7 @@ When a model needs updating, check these files:
 ## BYOK Considerations
 
 Users may supply their own API keys (BYOK). When a system model retires:
+
 - The BYOK path is unaffected (users control their own model selections)
 - Only the platform-level `getAIProvider()` singleton needs updating
 - Alert Phill to check if the BYOK validation endpoint (`/api/onboarding/validate-key`) still accepts the old model ID as a test target
@@ -138,6 +153,7 @@ bash .claude/skills/scout/run.sh
 ```
 
 Outputs a colour-coded retirement report. Run this:
+
 - Before any deployment (`npm run release:check`)
 - At the start of any session touching AI code
 - Whenever a model error is observed in production logs
@@ -173,6 +189,7 @@ git commit -m "fix(ai): update <provider> <tier> model post-retirement"
 Refer to `.claude/provider-registry.json` for live state.
 
 **Known upcoming retirements:**
+
 - `google.gemini-3-pro-preview` → retiring **2026-03-09** (within 14-day window as of 2026-03-01)
   - Suggested replacement: `gemini-2.5-pro-preview-05-06` (already in `google.balanced`)
   - Update target: `lib/ai/providers/google-provider.ts` line for `advanced` preset
@@ -188,3 +205,5 @@ bash .claude/skills/scout/run.sh || echo "⚠️  Scout: model retirement warnin
 ```
 
 Scout exits with code 0 (OK) or 1 (warnings found).
+
+> **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.

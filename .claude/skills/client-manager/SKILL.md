@@ -5,6 +5,7 @@ description: >
   on campaigns, posts, projects, and user preferences. Tracks analytics and
   API usage. Use when user says "create campaign", "list campaigns", "update
   post", "delete project", "client data", or "manage analytics".
+type: reference-skill
 ---
 
 # Client & Campaign Data Manager
@@ -20,6 +21,7 @@ description: >
 ## Prisma Models
 
 ### User
+
 - `id` (cuid), `email` (unique), `name`, `password`
 - OAuth: `googleId`, `avatar`, `authProvider` (local | google)
 - API keys: `openrouterApiKey`, `anthropicApiKey` (encrypted)
@@ -28,6 +30,7 @@ description: >
 - Table: `users`
 
 ### Campaign
+
 - `id` (cuid), `name`, `description`, `platform`, `status`
 - Platform values: youtube, instagram, tiktok, twitter, facebook, linkedin, pinterest, reddit
 - Status values: draft, active, paused, completed
@@ -36,6 +39,7 @@ description: >
 - Table: `campaigns`
 
 ### Post
+
 - `id` (cuid), `content`, `platform`, `status`
 - Status values: draft, scheduled, published, failed
 - Scheduling: `scheduledAt`, `publishedAt`
@@ -44,12 +48,14 @@ description: >
 - Table: `posts`
 
 ### Project
+
 - `id` (cuid), `name`, `description`, `type`, `data` (JSON)
 - Type values: marketing, content, analytics
 - Relations: belongs to `User`
 - Table: `projects`
 
 ### ApiUsage
+
 - `id` (cuid), `endpoint`, `model`, `tokens`, `cost`, `status`
 - Status values: success, error, rate_limited
 - Data fields: `requestData` (JSON), `responseData` (JSON), `errorMessage`
@@ -57,6 +63,7 @@ description: >
 - Table: `api_usage`
 
 ### Session
+
 - `id` (cuid), `token` (unique), `userId`, `expiresAt`
 - Table: `sessions`
 
@@ -64,22 +71,22 @@ description: >
 
 ### Campaign CRUD
 
-| Operation | Prisma Method | Required Fields |
-|-----------|---------------|-----------------|
-| CREATE | `prisma.campaign.create()` | name, platform, userId |
-| READ | `prisma.campaign.findUnique()` / `findMany()` | id or filter |
-| UPDATE | `prisma.campaign.update()` | id, fields to update |
-| DELETE | `prisma.campaign.delete()` | id |
-| LIST | `prisma.campaign.findMany()` | userId, optional status/platform filter |
+| Operation | Prisma Method                                 | Required Fields                         |
+| --------- | --------------------------------------------- | --------------------------------------- |
+| CREATE    | `prisma.campaign.create()`                    | name, platform, userId                  |
+| READ      | `prisma.campaign.findUnique()` / `findMany()` | id or filter                            |
+| UPDATE    | `prisma.campaign.update()`                    | id, fields to update                    |
+| DELETE    | `prisma.campaign.delete()`                    | id                                      |
+| LIST      | `prisma.campaign.findMany()`                  | userId, optional status/platform filter |
 
 ### Post Management
 
-| Operation | Prisma Method | Required Fields |
-|-----------|---------------|-----------------|
-| CREATE | `prisma.post.create()` | content, platform, campaignId |
-| SCHEDULE | `prisma.post.update()` | id, scheduledAt, status = "scheduled" |
-| PUBLISH | `prisma.post.update()` | id, publishedAt, status = "published" |
-| BULK CREATE | `prisma.post.createMany()` | array of post data |
+| Operation   | Prisma Method              | Required Fields                       |
+| ----------- | -------------------------- | ------------------------------------- |
+| CREATE      | `prisma.post.create()`     | content, platform, campaignId         |
+| SCHEDULE    | `prisma.post.update()`     | id, scheduledAt, status = "scheduled" |
+| PUBLISH     | `prisma.post.update()`     | id, publishedAt, status = "published" |
+| BULK CREATE | `prisma.post.createMany()` | array of post data                    |
 
 ### Analytics Tracking
 
@@ -97,6 +104,7 @@ description: >
 ## Query Patterns
 
 ### Filtering campaigns by status and platform
+
 ```
 prisma.campaign.findMany({
   where: { userId, status, platform },
@@ -106,6 +114,7 @@ prisma.campaign.findMany({
 ```
 
 ### Aggregating post analytics across a campaign
+
 ```
 prisma.post.findMany({
   where: { campaignId },
@@ -114,6 +123,7 @@ prisma.post.findMany({
 ```
 
 ### Tracking API costs for a user over a date range
+
 ```
 prisma.apiUsage.aggregate({
   where: { userId, createdAt: { gte: startDate, lte: endDate } },
@@ -137,3 +147,5 @@ prisma.apiUsage.aggregate({
 - Post `scheduledAt` must be in the future for scheduling operations
 - User `email` must be unique and valid format
 - All delete operations cascade to child records (posts under campaigns, etc.)
+
+> **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.

@@ -70,3 +70,5 @@ See: `.claude/agents/codex/CATALOGUE.md`
 - Codex `gpt-5.4` agents → mapped to `sonnet` (deep reasoning)
 - Codex `gpt-5.3-codex-spark` agents → mapped to `haiku` (fast scan/synthesis)
 - Agent names are prefixed `codex-` in Claude to avoid conflicts with native agents
+
+> **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.

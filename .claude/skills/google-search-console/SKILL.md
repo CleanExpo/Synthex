@@ -233,3 +233,5 @@ Clicks declining in GSC analytics?
 - The `getSearchAnalytics` function defaults to `type: 'web'` — this excludes image, video, and news results
 - GSC property URLs must match exactly — `https://example.com` and `https://www.example.com` are different properties
 - OAuth token resolution follows a priority chain: explicit connectionId > org-level OAuth connection > service account fallback
+
+> **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.

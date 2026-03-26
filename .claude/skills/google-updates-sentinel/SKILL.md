@@ -218,3 +218,5 @@ When Google announces a new algorithm update:
 2. Include: `name`, `updateType`, `announcedAt`, `rolloutStart`, `rolloutEnd` (null if ongoing), `impactLevel`, `description`, `sourceUrl`
 3. The `seedAlgorithmUpdates()` function will upsert it on next cron run
 4. Set `rolloutEnd` once Google confirms the rollout is complete
+
+> **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.

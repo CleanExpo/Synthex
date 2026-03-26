@@ -239,3 +239,5 @@ character limits, and audience expectations.
 | `lib/ai/content-repurposer.ts`            | Multi-platform content adaptation           |
 | `lib/ai/openrouter-client.ts`             | Legacy OpenRouter client (prefer providers) |
 | `lib/encryption/api-key-encryption.ts`    | AES-256-GCM key encryption/decryption       |
+
+> **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.

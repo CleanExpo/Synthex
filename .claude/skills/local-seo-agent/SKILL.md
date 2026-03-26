@@ -9,7 +9,7 @@ metadata:
   author: synthex
   version: '1.0'
   engine: synthex-ai-agency
-  type: workflow-skill
+  type: reference-skill
   triggers:
     - local SEO
     - local search
@@ -337,3 +337,5 @@ Deliverable for each client:
 | `competitive-local-strategy` | Competitor analysis, benchmarking, content gaps, displacement tactics         |
 | `business-dna`               | Brand messaging consistency across all local content                          |
 | `content-pipeline`           | AI content generation for service-area pages and blog posts                   |
+
+> **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.

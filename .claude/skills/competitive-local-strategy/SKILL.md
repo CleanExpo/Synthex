@@ -9,7 +9,7 @@ metadata:
   author: synthex
   version: '1.0'
   engine: synthex-ai-agency
-  type: business-skill
+  type: reference-skill
   triggers:
     - competitor analysis
     - competitive advantage
@@ -269,3 +269,5 @@ Review count behind top competitor?
   }[];
 }
 ```
+
+> **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.
