@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="fileTextNavGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow -->
+  <path d="M10 5h20l12 12v28a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Main doc -->
+  <path d="M10 5h20l12 12v28a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" fill="url(#fileTextNavGrad)"/>
+  <!-- Folded corner -->
+  <path d="M30 5l12 12H30z" fill="rgba(0,0,0,0.25)"/>
+  <!-- Text lines -->
+  <rect x="14" y="24" width="20" height="2.5" rx="1.2" fill="rgba(255,255,255,0.3)"/>
+  <rect x="14" y="30" width="20" height="2.5" rx="1.2" fill="rgba(255,255,255,0.3)"/>
+  <rect x="14" y="36" width="14" height="2.5" rx="1.2" fill="rgba(255,255,255,0.3)"/>
+  <!-- Highlight on top-left -->
+  <path d="M10 5h20v10H10z" fill="rgba(255,255,255,0.22)"/>
+</svg>

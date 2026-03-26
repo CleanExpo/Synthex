@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="bellNavGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow -->
+  <path d="M24 6a14 14 0 0 1 14 14v10l4 5H6l4-5V20A14 14 0 0 1 24 6z" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <path d="M20 38a4 4 0 0 0 8 0" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Bell body -->
+  <path d="M24 6a14 14 0 0 1 14 14v10l4 5H6l4-5V20A14 14 0 0 1 24 6z" fill="url(#bellNavGrad)"/>
+  <!-- Clapper / base -->
+  <path d="M20 38a4 4 0 0 0 8 0" fill="url(#bellNavGrad)"/>
+  <!-- Bell bar at top -->
+  <circle cx="24" cy="7" r="2.5" fill="rgba(255,255,255,0.25)"/>
+  <!-- Highlight on bell top-left -->
+  <ellipse cx="17" cy="17" rx="6" ry="8" fill="rgba(255,255,255,0.22)" transform="rotate(-15,17,17)"/>
+</svg>

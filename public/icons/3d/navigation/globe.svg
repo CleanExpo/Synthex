@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="globeNavGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow -->
+  <circle cx="24" cy="24" r="19" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Main globe -->
+  <circle cx="24" cy="24" r="19" fill="url(#globeNavGrad)"/>
+  <!-- Longitude lines -->
+  <ellipse cx="24" cy="24" rx="8" ry="19" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.2"/>
+  <!-- Vertical center -->
+  <line x1="24" y1="5" x2="24" y2="43" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+  <!-- Latitude lines -->
+  <line x1="5" y1="24" x2="43" y2="24" stroke="rgba(255,255,255,0.2)" stroke-width="1.2"/>
+  <path d="M8 16h32" stroke="rgba(255,255,255,0.15)" stroke-width="1" fill="none"/>
+  <path d="M8 32h32" stroke="rgba(255,255,255,0.15)" stroke-width="1" fill="none"/>
+  <!-- Highlight top-left arc -->
+  <ellipse cx="16" cy="13" rx="8" ry="5" fill="rgba(255,255,255,0.22)"/>
+</svg>
