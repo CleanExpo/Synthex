@@ -239,3 +239,7 @@ git-status-err.txt
 tsc-out.txt
 vercel-deploy.txt
 vercel-deploy2.txt
+
+# Codex agent cache — fetched on demand, not committed
+.claude/agents/codex/*.md
+!.claude/agents/codex/CATALOGUE.md
