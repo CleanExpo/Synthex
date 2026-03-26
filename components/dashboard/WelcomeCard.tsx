@@ -17,13 +17,13 @@ import { cn } from '@/lib/utils';
 import {
   Sparkles,
   Globe,
-  ArrowRight,
   X,
   Zap,
   Users,
   BarChart,
   AlertCircle,
 } from '@/components/icons';
+import { Icon3D } from '@/components/icons/Icon3D';
 import { fetchJson } from '@/lib/fetcher';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -165,7 +165,12 @@ export function WelcomeCard({
           >
             <Sparkles className="h-3.5 w-3.5" />
             Complete Setup
-            <ArrowRight className="h-3.5 w-3.5" />
+            <Icon3D
+              name="arrow-right"
+              category="actions"
+              size={24}
+              className="h-3.5 w-3.5"
+            />
           </Link>
         </div>
       </div>
@@ -373,7 +378,12 @@ export function WelcomeCard({
                 <p className="text-xs text-white/60 flex-1 group-hover:text-white/80 transition-colors">
                   {action.label}
                 </p>
-                <ArrowRight className="h-3.5 w-3.5 text-white/50 group-hover:text-orange-400 transition-colors flex-shrink-0" />
+                <Icon3D
+                  name="arrow-right"
+                  category="actions"
+                  size={24}
+                  className="h-3.5 w-3.5 text-white/50 group-hover:text-orange-400 transition-colors flex-shrink-0"
+                />
               </Link>
             ))}
           </div>
