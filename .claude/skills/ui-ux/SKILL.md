@@ -9,16 +9,14 @@ description: >-
   optimise flows, check interactions, or validate usability.
 metadata:
   author: synthex
-  version: "2.0"
+  version: '2.0'
   engine: synthex-ai-agency
-  type: ux-skill
   type: capability-uplift-visual
   triggers:
     - ux audit
     - accessibility
     - user flow
     - interaction pattern
-    - usability
     - usability
     - interaction
     - flow
