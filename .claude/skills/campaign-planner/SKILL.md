@@ -1,17 +1,18 @@
 ---
 name: campaign-planner
 description: >-
-  Builds a structured 30, 60, or 90-day social media content calendar from a Business
-  DNA profile and campaign goal. Produces weekly themes, content hooks, post types,
-  posting cadence, and publishing schedule per platform. Use when the user says "plan
-  my content", "content calendar", "monthly plan", "what should I post this month",
-  "30-day plan", "quarterly campaign", or asks for a posting schedule for a product
-  launch, seasonal push, or ongoing brand presence.
+  Synthex campaign planning enforcer. NEVER produce generic Mon-announcement,
+  Wed-educational, Fri-promotional calendar arcs, or fill slots with placeholder
+  content types without brand-specific reasoning. ALWAYS derive the content arc
+  from the brand's DNA and campaign goal, vary cadence by platform, and name
+  the specific hook angle for every calendar slot. Activate on ANY request to
+  plan a campaign, build a content calendar, schedule posts, or map out a
+  30/60/90-day content strategy.
 metadata:
   author: synthex
-  version: "1.0"
+  version: '1.0'
   engine: synthex-ai-agency
-  type: workflow-skill
+  type: capability-uplift-content
   triggers:
     - content calendar
     - content plan
@@ -23,6 +24,9 @@ metadata:
     - posting schedule
     - what should I post
     - campaign planner
+    - plan posts
+    - schedule content
+    - content strategy
 ---
 
 # Campaign Planner
@@ -64,12 +68,12 @@ CAMPAIGN PARAMETERS
 
 ### Phase Framework (30-day example)
 
-| Week | Phase | Theme Focus | Content Mix |
-|------|-------|-------------|-------------|
-| Week 1 | Awareness | Brand story + problem statement | 60% educational, 40% brand |
-| Week 2 | Interest | Solution + benefits | 50% value, 30% social proof, 20% CTA |
-| Week 3 | Desire | Outcomes + transformation | 40% social proof, 40% CTA, 20% educational |
-| Week 4 | Action | Urgency + conversion | 60% CTA, 30% social proof, 10% brand |
+| Week   | Phase     | Theme Focus                     | Content Mix                                |
+| ------ | --------- | ------------------------------- | ------------------------------------------ |
+| Week 1 | Awareness | Brand story + problem statement | 60% educational, 40% brand                 |
+| Week 2 | Interest  | Solution + benefits             | 50% value, 30% social proof, 20% CTA       |
+| Week 3 | Desire    | Outcomes + transformation       | 40% social proof, 40% CTA, 20% educational |
+| Week 4 | Action    | Urgency + conversion            | 60% CTA, 30% social proof, 10% brand       |
 
 **For 60-day plans:** repeat the cycle with a different campaign angle in weeks 5-8.
 **For 90-day plans:** add weeks 9-12 as retention/community phase.
@@ -78,27 +82,27 @@ CAMPAIGN PARAMETERS
 
 Healthy content mix across all SMB accounts:
 
-| Type | % of Posts | Purpose |
-|------|-----------|---------|
-| Educational (tips, how-to) | 30% | Builds authority and saves/shares |
-| Brand/story | 20% | Builds trust and connection |
-| Social proof (reviews, results, case studies) | 20% | Converts consideration to intent |
-| Promotional (offer, CTA) | 20% | Drives direct revenue |
-| Community (questions, polls, UGC) | 10% | Builds engagement and algorithm reach |
+| Type                                          | % of Posts | Purpose                               |
+| --------------------------------------------- | ---------- | ------------------------------------- |
+| Educational (tips, how-to)                    | 30%        | Builds authority and saves/shares     |
+| Brand/story                                   | 20%        | Builds trust and connection           |
+| Social proof (reviews, results, case studies) | 20%        | Converts consideration to intent      |
+| Promotional (offer, CTA)                      | 20%        | Drives direct revenue                 |
+| Community (questions, polls, UGC)             | 10%        | Builds engagement and algorithm reach |
 
 ### Platform Cadence (recommended for SMBs)
 
-| Platform | Posts/Week | Best Days | Best Times (AEST) |
-|----------|-----------|-----------|-------------------|
-| LinkedIn | 3-4 | Tue, Wed, Thu | 7-9am, 12-1pm |
-| Instagram | 4-5 | Mon, Wed, Fri, Sat | 7-9am, 6-8pm |
-| Facebook | 3-4 | Wed, Thu, Fri | 9-11am, 1-3pm |
-| TikTok | 5-7 | Daily | 7-9am, 7-10pm |
-| X/Twitter | 5-7 | Weekdays | 8-10am, 12-1pm, 5-6pm |
-| YouTube | 1-2 | Wed, Sat | 12-3pm, 6-9pm |
+| Platform  | Posts/Week | Best Days          | Best Times (AEST)     |
+| --------- | ---------- | ------------------ | --------------------- |
+| LinkedIn  | 3-4        | Tue, Wed, Thu      | 7-9am, 12-1pm         |
+| Instagram | 4-5        | Mon, Wed, Fri, Sat | 7-9am, 6-8pm          |
+| Facebook  | 3-4        | Wed, Thu, Fri      | 9-11am, 1-3pm         |
+| TikTok    | 5-7        | Daily              | 7-9am, 7-10pm         |
+| X/Twitter | 5-7        | Weekdays           | 8-10am, 12-1pm, 5-6pm |
+| YouTube   | 1-2        | Wed, Sat           | 12-3pm, 6-9pm         |
 
-*Times are suggestive — override with actual engagement data from Synthex analytics
-once available for the user's specific audience.*
+_Times are suggestive — override with actual engagement data from Synthex analytics
+once available for the user's specific audience._
 
 ## Calendar Output Format
 
@@ -153,18 +157,22 @@ After calendar approval, offer to generate content for each slot:
 ## Key Content Hooks by Goal
 
 **Product Launch:**
+
 - Week 1: Tease ("something's coming")
 - Week 2: Reveal + benefits
 - Week 3: Social proof + early access
 - Week 4: Launch day + urgency + FOMO
 
 **Brand Awareness:**
+
 - Rotate: founder story → customer story → educational → behind the scenes
 
 **Lead Generation:**
+
 - Lead magnet → social proof → FAQ → offer → testimonial → offer
 
 **Seasonal:**
+
 - Pre-season (awareness) → peak (conversion) → post-season (retention)
 
 ## Reference
@@ -174,3 +182,24 @@ After calendar approval, offer to generate content for each slot:
 - Platform adaptor: `.claude/skills/platform-content-adaptor/`
 - Scheduling API: `app/api/schedule/`
 - Analytics (for timing optimisation): `app/api/analytics/`
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** produce the default Mon/Wed/Fri three-pillar calendar (announce,
+educate, promote) applied generically across all brands. Never fill a calendar
+slot with "Educational post" without specifying what topic, what angle, and
+what platform-specific hook it uses.
+
+**INSTEAD** every calendar slot specifies:
+
+1. Platform (LinkedIn ≠ Instagram — different cadences)
+2. Hook angle (the specific opening line concept, not just "educational")
+3. Content pillar it belongs to (from Business DNA)
+4. CTA direction (what action this piece drives)
+
+Cadence varies by platform: LinkedIn 3×/week max, Instagram daily is fine,
+TikTok 1–2×/day is normal, Facebook 4×/week max, X/Twitter up to 3×/day.
+
+**REFERENCE** `.claude/skills/synthex-standards/references/content-standards.md`
