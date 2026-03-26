@@ -52,10 +52,13 @@ export async function middleware(request: NextRequest) {
   });
   const pathname = request.nextUrl.pathname;
 
-  // Fast-path: health check endpoints must NEVER block on auth or Supabase I/O.
-  // These are called by Vercel/load-balancers with no session cookies, and any
-  // network latency in getSession() would make them appear unavailable.
-  if (pathname.startsWith('/api/health')) {
+  // Fast-path: public API routes must NEVER block on auth or Supabase I/O.
+  // - /api/health: called by Vercel/load-balancers with no session cookies
+  // - /api/demo/*: unauthenticated public demo — getSession() adds a Supabase
+  //   round-trip on every request, causing hangs on localhost and extra latency
+  //   in production. These routes have no auth requirement.
+  const PUBLIC_FAST_PATHS = ['/api/health', '/api/demo/'];
+  if (PUBLIC_FAST_PATHS.some(p => pathname.startsWith(p))) {
     Object.entries(securityHeaders).forEach(([key, value]) => {
       response.headers.set(key, value);
     });

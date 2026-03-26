@@ -54,20 +54,32 @@ const useRedis = Boolean(
 );
 
 /** Increment a key in Upstash, setting TTL on first write. Returns new count. */
+/** 2s timeout guard — prevents misconfigured Redis from hanging requests */
+function withRedisTimeout<T>(promise: Promise<T>): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Redis timeout')), 2000)
+    ),
+  ]);
+}
+
 async function redisIncr(key: string, ttlSeconds: number): Promise<number> {
   const redis = getUpstashClient();
   if (!redis) return -1;
 
   try {
-    // Pipeline: INCR + TTL
-    const results = await redis.pipeline().incr(key).ttl(key).exec();
+    // Pipeline: INCR + TTL (2s timeout — misconfigured Redis must not hang requests)
+    const results = await withRedisTimeout(
+      redis.pipeline().incr(key).ttl(key).exec()
+    );
 
     const count = (results[0] as number) ?? 1;
     const ttl = (results[1] as number) ?? -1;
 
     // Set TTL only on first increment (TTL == -1 means no expiry set)
     if (ttl === -1) {
-      await redis.expire(key, ttlSeconds);
+      await withRedisTimeout(redis.expire(key, ttlSeconds));
     }
 
     return count;
@@ -135,7 +147,7 @@ async function resolveVerifiedTier(userId: string): Promise<SubscriptionTier> {
   const cacheKey = `rate-limit:tier:${userId}`;
   if (redis) {
     try {
-      const cached = await redis.get<string>(cacheKey);
+      const cached = await withRedisTimeout(redis.get<string>(cacheKey));
       if (cached && cached in PLAN_TO_TIER) return cached as SubscriptionTier;
     } catch {
       /* fall through */
