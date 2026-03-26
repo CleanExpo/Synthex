@@ -1,16 +1,18 @@
 ---
 name: brand-campaign-generator
 description: >-
-  Generates a complete multi-platform social media campaign from a Business DNA profile
-  or brand brief. Produces on-brand content variations for LinkedIn, Instagram, Facebook,
-  TikTok, X, and YouTube — then schedules via Synthex. Use when the user says "create a
-  campaign", "generate posts for my campaign", "write social content for [product/offer]",
-  or "launch a campaign". Requires Business DNA (run business-dna skill first if not set).
+  Synthex campaign content enforcer. NEVER open posts with "Excited to
+  announce", use "leverage", "game-changing", or "revolutionary", produce
+  platform-agnostic copy, or generate content that scores below 80. ALWAYS
+  write platform-distinct hooks, use specific numbers over superlatives,
+  and enforce exactly one CTA per piece. Activate on ANY request to create
+  a campaign, generate posts, write social content, or launch content for
+  a product, offer, or event.
 metadata:
   author: synthex
-  version: "1.0"
+  version: '1.0'
   engine: synthex-ai-agency
-  type: workflow-skill
+  type: capability-uplift-content
   triggers:
     - create campaign
     - generate campaign
@@ -19,6 +21,11 @@ metadata:
     - launch campaign
     - content for my product
     - campaign content
+    - write campaign
+    - create content
+    - generate posts
+    - social content
+    - launch content
 ---
 
 # Brand Campaign Generator
@@ -60,14 +67,14 @@ Campaign Brief:
 
 For each platform, generate:
 
-| Platform | Format | Length | Variations |
-|----------|--------|--------|------------|
-| LinkedIn | article-style post | 150-300 words | 3 |
-| Instagram | caption + hashtags | 100-150 words + 15 hashtags | 3 |
-| Facebook | conversational post | 80-150 words | 3 |
-| TikTok | script/caption | 50-100 words | 3 |
-| X (Twitter) | thread or single | 280 chars / 5-tweet thread | 3 |
-| YouTube | description + title | 150-200 words | 2 |
+| Platform    | Format              | Length                      | Variations |
+| ----------- | ------------------- | --------------------------- | ---------- |
+| LinkedIn    | article-style post  | 150-300 words               | 3          |
+| Instagram   | caption + hashtags  | 100-150 words + 15 hashtags | 3          |
+| Facebook    | conversational post | 80-150 words                | 3          |
+| TikTok      | script/caption      | 50-100 words                | 3          |
+| X (Twitter) | thread or single    | 280 chars / 5-tweet thread  | 3          |
+| YouTube     | description + title | 150-200 words               | 2          |
 
 ## Content Generation via Synthex Pipeline
 
@@ -76,9 +83,9 @@ For each platform, generate:
 ```typescript
 const request = {
   type: 'post',
-  platform: 'linkedin',        // iterate per platform
-  tone: dna.toneOfVoice[0],   // from Business DNA
-  personaId: brandPersonaId,   // if persona exists for this brand
+  platform: 'linkedin', // iterate per platform
+  tone: dna.toneOfVoice[0], // from Business DNA
+  personaId: brandPersonaId, // if persona exists for this brand
   keywords: dna.vocabulary,
   targetAudience: dna.targetAudience,
   length: 'medium',
@@ -145,3 +152,26 @@ See `social-integrations` skill for platform OAuth requirements.
 - Repurposing: `lib/ai/content-repurposer.ts`
 - BYOK injection: `lib/ai/api-credential-injector.ts`
 - Scheduling API: `app/api/schedule/`
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** open any post with "Excited to announce", "We're thrilled to share",
+or "In today's fast-paced world". Never use "leverage", "game-changing",
+"revolutionary", "seamless", or "robust". Never produce the same tone for
+LinkedIn and TikTok. Never end with a three-bullet summary. Never output
+content that scores below 80 via the content scorer.
+
+**INSTEAD** every campaign uses platform-distinct hooks:
+
+- LinkedIn: counterintuitive insight or specific outcome in the first line
+- Instagram: scene-setting or sensory detail in 125 characters
+- TikTok: direct challenge or bold question in the first 3 words
+- Facebook: community question or local-business relatable scenario
+- X/Twitter: surprising fact or punchy opinionated take
+
+Every piece has exactly one CTA naming the specific action AND benefit:
+"Book a 15-min call → get your first post live this week"
+
+**REFERENCE** `.claude/skills/synthex-standards/references/content-standards.md`
