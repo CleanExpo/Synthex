@@ -11,7 +11,6 @@ metadata:
   author: synthex
   version: '1.0'
   engine: synthex-ai-agency
-  type: testing-skill
   type: capability-uplift-visual
   triggers:
     - ui review
