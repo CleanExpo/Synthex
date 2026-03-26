@@ -448,7 +448,10 @@ export function CommentsPanel({
                           <Check className="w-4 h-4" />
                         </button>
                         <div className="relative group">
-                          <button className="p-1 text-white/40 hover:text-white hover:bg-white/10 rounded transition-colors">
+                          <button
+                            className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded transition-colors focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
+                            aria-label="More options"
+                          >
                             <MoreVertical className="w-4 h-4" />
                           </button>
                           <div className="absolute right-0 top-full mt-1 py-1 bg-gray-900 border border-white/10 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 min-w-[120px]">

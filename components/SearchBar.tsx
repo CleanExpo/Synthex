@@ -221,7 +221,7 @@ export function SearchBar({
           {query && (
             <button
               onClick={clearSearch}
-              className="p-1 hover:bg-white/10 rounded transition-colors"
+              className="p-2 hover:bg-white/10 rounded transition-colors focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
             >
               <X className="h-4 w-4 text-gray-300" />
             </button>

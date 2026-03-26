@@ -500,7 +500,7 @@ export function TimeSlotPicker({
           type="button"
           onClick={() => setWeekOffset(w => Math.max(0, w - 1))}
           disabled={weekOffset === 0}
-          className="p-1 rounded text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="p-2 rounded text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -514,7 +514,7 @@ export function TimeSlotPicker({
         <button
           type="button"
           onClick={() => setWeekOffset(w => w + 1)}
-          className="p-1 rounded text-slate-300 hover:text-white transition-colors"
+          className="p-2 rounded text-slate-300 hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
         >
           <ChevronRight className="h-4 w-4" />
         </button>

@@ -56,27 +56,45 @@ function TwitterMockup({
             </div>
           )}
           <div className="mt-3 flex items-center space-x-6 text-gray-500">
-            <button className="flex items-center space-x-1 hover:text-blue-400">
+            <button
+              className="flex items-center space-x-1 hover:text-blue-400 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none rounded"
+              aria-label="Reply"
+            >
               <MessageSquare className="h-5 w-5" />
               <span className="text-sm">0</span>
             </button>
-            <button className="flex items-center space-x-1 hover:text-green-400">
+            <button
+              className="flex items-center space-x-1 hover:text-green-400 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none rounded"
+              aria-label="Retweet"
+            >
               <Repeat className="h-5 w-5" />
               <span className="text-sm">0</span>
             </button>
-            <button className="flex items-center space-x-1 hover:text-red-400">
+            <button
+              className="flex items-center space-x-1 hover:text-red-400 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none rounded"
+              aria-label="Like"
+            >
               <Heart className="h-5 w-5" />
               <span className="text-sm">0</span>
             </button>
-            <button className="flex items-center space-x-1 hover:text-blue-400">
+            <button
+              className="flex items-center space-x-1 hover:text-blue-400 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none rounded"
+              aria-label="Bookmark"
+            >
               <Bookmark className="h-5 w-5" />
             </button>
-            <button className="flex items-center space-x-1 hover:text-blue-400">
+            <button
+              className="flex items-center space-x-1 hover:text-blue-400 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none rounded"
+              aria-label="Share"
+            >
               <Send className="h-5 w-5" />
             </button>
           </div>
         </div>
-        <button className="text-gray-500 hover:text-white">
+        <button
+          className="text-gray-500 hover:text-white focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none rounded"
+          aria-label="More options"
+        >
           <MoreHorizontal className="h-5 w-5" />
         </button>
       </div>

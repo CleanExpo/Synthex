@@ -316,7 +316,7 @@ export function FileUpload({
                   <button
                     onClick={() => removeFile(index)}
                     disabled={file.status === 'uploading'}
-                    className="p-1 hover:bg-white/10 rounded transition-colors disabled:opacity-50"
+                    className="p-2 hover:bg-white/10 rounded transition-colors disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
                   >
                     <X className="h-4 w-4 text-gray-300" />
                   </button>

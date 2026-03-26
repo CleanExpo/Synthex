@@ -269,7 +269,7 @@ export function CoverageFeed() {
 
       {/* Manual add button */}
       <div className="mt-4">
-        <button className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors">
+        <button className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none rounded">
           <Plus className="h-4 w-4" />
           Add coverage manually
         </button>

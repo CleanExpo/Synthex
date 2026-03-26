@@ -191,7 +191,8 @@ function LinkCard({
           <span className="truncate">/go/{link.shortCode}</span>
           <button
             onClick={handleCopy}
-            className="p-1 hover:bg-white/10 rounded transition-colors"
+            aria-label="Copy link"
+            className="p-2 hover:bg-white/10 rounded transition-colors focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
           >
             {copied ? (
               <Check className="h-3 w-3 text-emerald-400" />

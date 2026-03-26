@@ -801,7 +801,7 @@ export default function DashboardLayout({
               {/* User Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 p-1 rounded-sm hover:bg-white/[0.04] transition-colors">
+                  <button className="flex items-center gap-2 p-2 rounded-sm hover:bg-white/[0.04] transition-colors focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none">
                     <Avatar className="h-7 w-7">
                       <AvatarImage src={user?.avatar ?? undefined} />
                       <AvatarFallback className="bg-amber-500/10 text-amber-500 text-xs">

@@ -410,12 +410,12 @@ export function EmptyState({
       {/* Content-specific help tiles */}
       {type === 'content' && (
         <div className="mt-8 grid grid-cols-2 gap-4 text-sm">
-          <button className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
+          <button className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none">
             <Upload className="w-5 h-5 text-amber-400 mb-2 mx-auto" />
             <span className="block text-white font-medium">Import Content</span>
             <span className="text-gray-300">From file or URL</span>
           </button>
-          <button className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
+          <button className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none">
             <Sparkles className="w-5 h-5 text-amber-400 mb-2 mx-auto" />
             <span className="block text-white font-medium">
               Use AI Assistant

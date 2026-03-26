@@ -1245,7 +1245,8 @@ export function VaultImportDialog({
                             <button
                               type="button"
                               onClick={() => toggleReveal(entry.id)}
-                              className="p-1 text-zinc-500 hover:text-white transition-colors"
+                              aria-label="Toggle password visibility"
+                              className="p-1 text-zinc-500 hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none rounded"
                             >
                               {revealedIds.has(entry.id) ? (
                                 <EyeOff className="w-3 h-3" />
@@ -1288,7 +1289,8 @@ export function VaultImportDialog({
                           <button
                             type="button"
                             onClick={() => deleteEntry(entry.id)}
-                            className="p-1 text-zinc-600 hover:text-red-400 transition-colors"
+                            aria-label="Delete entry"
+                            className="p-1 text-zinc-600 hover:text-red-400 transition-colors focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none rounded"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>

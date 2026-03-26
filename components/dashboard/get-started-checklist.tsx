@@ -247,7 +247,7 @@ export function GetStartedChecklist({ className }: { className?: string }) {
               type="button"
               onClick={handleDismiss}
               aria-label="Dismiss activation checklist"
-              className="p-1 rounded-sm text-white/50 hover:text-white/50 hover:bg-white/[0.05] transition-colors flex-shrink-0"
+              className="p-2 rounded-sm text-white/50 hover:text-white/50 hover:bg-white/[0.05] transition-colors flex-shrink-0 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
             >
               <X className="h-4 w-4" />
             </button>
