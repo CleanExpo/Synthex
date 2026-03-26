@@ -1,6 +1,12 @@
 ---
 name: verification-agent
-type: agent
+description: >-
+  Synthex implementation verifier. NEVER declare work complete without running
+  npm run type-check && npm run lint && npm test. NEVER accept "should work",
+  "probably passes", "seems correct", or "likely fixed" as verification.
+  ALWAYS run the gate and report actual pass/fail counts. Activate on ANY
+  request to verify, check, validate, confirm completion, or close a task.
+type: capability-uplift-code
 version: 2.0.0
 ---
 
@@ -82,3 +88,23 @@ npm run release:check
 Called by `senior-reviewer` after every significant code change.
 Called by `build-engineer` before any Vercel deployment.
 Called by `qa-sentinel` when evaluating coverage gate.
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** use banned completion phrases: "should work", "probably passes",
+"seems correct", "likely fixed". These are not verification — they are guesses.
+
+**INSTEAD** verification means running the gate and reporting actual output:
+
+```bash
+npm run type-check   # Must show: "Found 0 errors"
+npm test             # Must show: "X tests passed, 0 failed"
+npm run lint         # Must show: 0 errors, 0 warnings
+```
+
+Then one manual check of the specific user-visible outcome described in the task.
+Only then: "Verified — 0 type errors, 47 tests passing, 0 lint warnings."
+
+**REFERENCE** `.claude/skills/synthex-standards/references/code-standards.md`
