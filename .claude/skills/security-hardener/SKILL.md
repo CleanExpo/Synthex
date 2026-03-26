@@ -1,22 +1,32 @@
 ---
 name: security-hardener
 description: >-
-  Security Posture Enforcer for SYNTHEX. Proactive security scan covering the
-  full attack surface beyond individual routes: build config, secret exposure,
-  CSP headers, rate limiting, cookie security, dependency vulnerabilities, and
-  type safety. Use before deployment or on demand for security audits.
+  Synthex security posture enforcer. NEVER apply generic OWASP checklists
+  without grounding in Synthex's specific threat model. NEVER suggest any
+  auth system other than Supabase. ALWAYS audit: SSRF via validateExternalUrl,
+  JWT tier elevation via resolveVerifiedTier, CORS via CORS_ORIGIN exact-match,
+  org-scope bypass in Prisma. Activate on ANY request to harden security,
+  audit vulnerabilities, review auth patterns, check for injection risks,
+  or assess an attack surface.
 effort: high
 metadata:
   author: synthex
   version: '1.0'
   engine: synthex-ai-agency
-  type: enforcement-skill
+  type: capability-uplift-code
   triggers:
     - security scan
     - security audit
     - hardening check
     - pre-deploy security
     - vulnerability check
+    - security audit
+    - vulnerability
+    - harden
+    - attack surface
+    - injection
+    - ssrf
+    - csrf
 ---
 
 # Security Hardener — Security Posture Enforcer
@@ -298,3 +308,26 @@ npm audit --audit-level=high
 grep -rn "console\.\(log\|error\)" app/api/ --include="*.ts" | wc -l
 grep -rn "error\.message\|error\.stack" app/api/ --include="*.ts"
 ```
+
+---
+
+## Capability Uplift — Override Defaults
+
+**NEVER** run a theoretical OWASP scan without a concrete attack vector for
+this specific codebase. Never suggest auth systems other than Supabase.
+Never flag issues that the codebase already handles correctly as if they
+were open vulnerabilities.
+
+**INSTEAD** audit against Synthex's known attack surfaces in priority order:
+
+1. **SSRF** — user-supplied URLs must go through `validateExternalUrl()` from
+   `lib/security/validate-url` before any `fetch()` call
+2. **JWT tier elevation** — tier must be resolved via `resolveVerifiedTier()`
+   with Redis cache TTL, never decoded from unverified JWT payload directly
+3. **CORS** — `CORS_ORIGIN` env var exact-match allowlist in middleware.ts,
+   never `origin.includes(hostname)` substring match
+4. **Org-scope bypass** — every Prisma query must have `organizationId` filter;
+   a query returning data without org filter is a data leak
+5. **OAuth open redirect** — `returnTo` must start with `/`, not `//` or `://`
+
+**REFERENCE** `.claude/skills/synthex-standards/references/code-standards.md`
