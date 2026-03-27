@@ -4,19 +4,12 @@ import { PAGE_METADATA } from '@/lib/seo/metadata';
 // Landing page is static — cache at CDN for 1 hour, revalidate in background
 export const revalidate = 3600;
 
-import { NavBar } from '@/components/landing/nav-bar';
-import { HeroSection } from '@/components/landing/hero-section';
-import { StatsSection } from '@/components/landing/stats-section';
-import { HowItWorks } from '@/components/landing/how-it-works';
-import { IntelligenceSection } from '@/components/landing/intelligence-section';
-import { Testimonials } from '@/components/landing/testimonials';
-import { FAQSection } from '@/components/landing/faq-section';
-import { buildFaqSchemaJson } from '@/lib/seo/faq-data';
-import { UrlHealthCheck } from '@/components/landing/UrlHealthCheck';
-import { CTASection } from '@/components/landing/cta-section';
-import { EmailCaptureSection } from '@/components/landing/email-capture-section';
-import { FooterSection } from '@/components/landing/footer-section';
+import { CleanLightNav } from '@/components/landing/clean-light-nav';
+import { CleanLightHero } from '@/components/landing/clean-light-hero';
+import { CleanLightFeatures } from '@/components/landing/clean-light-features';
 import { LogoBanner } from '@/components/landing/LogoBanner';
+import { FooterSection } from '@/components/landing/footer-section';
+import { buildFaqSchemaJson } from '@/lib/seo/faq-data';
 
 export const metadata: Metadata = PAGE_METADATA.home;
 
@@ -67,7 +60,8 @@ const organizationSchema = {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-charcoal-900 text-white overflow-hidden">
+    <div className="bg-[#fafafa] min-h-screen text-neutral-900 font-sans selection:bg-[#ffd1dc]/40">
+      <CleanLightNav />
       {/* FAQPage JSON-LD Schema */}
       <script
         type="application/ld+json"
@@ -83,42 +77,22 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
       />
-
-      {/* Navigation */}
-      <NavBar />
-
-      {/* Hero */}
-      <HeroSection />
-
-      {/* Industry marquee — SMB social proof */}
-      <LogoBanner />
-
-      {/* Stats strip */}
-      <StatsSection />
-
-      {/* Deployment Pipeline */}
-      <HowItWorks />
-
-      {/* Free URL Health Check */}
-      <UrlHealthCheck />
-
-      {/* Unified Social Intelligence */}
-      <IntelligenceSection />
-
-      {/* Testimonial */}
-      <Testimonials />
-
-      {/* FAQ */}
-      <FAQSection />
-
-      {/* Final CTA */}
-      <CTASection />
-
-      {/* Newsletter / Email capture */}
-      <EmailCaptureSection />
-
-      {/* Footer */}
-      <FooterSection />
+      
+      <main>
+        <CleanLightHero />
+        
+        <div className="relative z-10 border-y border-neutral-200 bg-white/60 backdrop-blur-md opacity-90 overflow-hidden">
+           {/* Subtle ambient light behind logos */}
+           <div className="absolute inset-0 bg-[radial-gradient(circle,_#e0c3fc_0%,_transparent_100%)] opacity-10 pointer-events-none"></div>
+           <LogoBanner />
+        </div>
+        
+        <CleanLightFeatures />
+        
+        <div className="border-t border-neutral-200 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
+          <FooterSection />
+        </div>
+      </main>
     </div>
   );
 }

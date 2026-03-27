@@ -130,10 +130,9 @@ html.lenis body {
     /* =========================================================================
        TYPOGRAPHY TOKENS
        ========================================================================= */
-    --font-satoshi: 'Satoshi', system-ui, sans-serif;
-    --font-sans: 'Satoshi', system-ui, -apple-system, sans-serif;
+    --font-sans: var(--font-sans, system-ui), -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-    --font-display: 'Satoshi', system-ui, sans-serif;
+    --font-display: var(--font-outfit, system-ui), sans-serif;
 
     /* =========================================================================
        ANIMATION TOKENS

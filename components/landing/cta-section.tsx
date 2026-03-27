@@ -9,129 +9,103 @@ export function CTASection() {
       <style jsx>{`
         @keyframes gradientBorderShift {
           0% {
-            border-color: #ff6b35;
+            border-color: #FF8A00;
             box-shadow:
-              0 0 30px rgba(255, 107, 53, 0.5),
-              inset 0 0 30px rgba(255, 107, 53, 0.1);
-          }
-          25% {
-            border-color: #ffd60a;
-            box-shadow:
-              0 0 30px rgba(255, 214, 10, 0.4),
-              inset 0 0 30px rgba(255, 214, 10, 0.08);
+              0 0 30px rgba(255, 138, 0, 0.4),
+              inset 0 0 30px rgba(255, 138, 0, 0.1);
           }
           50% {
-            border-color: #f472b6;
+            border-color: #9D4EDD;
             box-shadow:
-              0 0 30px rgba(244, 114, 182, 0.5),
-              inset 0 0 30px rgba(244, 114, 182, 0.1);
-          }
-          75% {
-            border-color: #ff3b5c;
-            box-shadow:
-              0 0 30px rgba(255, 59, 92, 0.5),
-              inset 0 0 30px rgba(255, 59, 92, 0.1);
+              0 0 30px rgba(157, 78, 221, 0.4),
+              inset 0 0 30px rgba(157, 78, 221, 0.1);
           }
           100% {
-            border-color: #ff6b35;
+            border-color: #FF8A00;
             box-shadow:
-              0 0 30px rgba(255, 107, 53, 0.5),
-              inset 0 0 30px rgba(255, 107, 53, 0.1);
+              0 0 30px rgba(255, 138, 0, 0.4),
+              inset 0 0 30px rgba(255, 138, 0, 0.1);
           }
         }
 
         .cta-card {
           animation: gradientBorderShift 6s ease infinite;
+          background: rgba(9, 9, 11, 0.8);
         }
 
-        @keyframes floatOrbs {
-          0%,
-          100% {
-            transform: translateY(0px) scale(1);
-            opacity: 0.3;
-          }
-          50% {
-            transform: translateY(-20px) scale(1.1);
-            opacity: 0.6;
-          }
+        .premium-btn {
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 4px 12px rgba(0, 0, 0, 0.5);
+          position: relative;
+          overflow: hidden;
         }
 
-        .floating-orb {
-          animation: floatOrbs 6s ease-in-out infinite;
+        .premium-btn::before {
+          content: "";
           position: absolute;
-          border-radius: 50%;
+          inset: 0;
+          border-radius: inherit;
+          padding: 1px;
+          background: linear-gradient(135deg, #FF8A00, #9D4EDD);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          opacity: 0.8;
+          transition: opacity 0.3s ease;
         }
 
-        .candy-gradient-btn {
-          background: linear-gradient(135deg, #ff6b35 0%, #ff3b5c 100%);
-          box-shadow: 0 0 30px rgba(255, 107, 53, 0.4);
+        .premium-btn:hover {
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+          transform: translateY(-1px);
         }
 
-        .candy-gradient-btn:hover {
-          box-shadow:
-            0 0 50px rgba(255, 107, 53, 0.6),
-            0 0 80px rgba(255, 59, 92, 0.4);
-          transform: translateY(-2px);
+        .premium-btn:hover::before {
+          opacity: 1;
         }
       `}</style>
 
-      <section className="relative py-24 z-10">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="cta-card relative overflow-hidden rounded-2xl px-12 py-20 text-center backdrop-blur-xl border-2 shadow-2xl shadow-black/50 ring-1 ring-white/[0.04]">
-            {/* Mesh gradient background - deep purples to orange to pink */}
-            <div className="absolute inset-0 pointer-events-none">
-              {/* Base gradient mesh */}
-              <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-gradient-to-br from-purple-900/30 via-orange-500/10 to-transparent blur-[120px] rounded-full" />
-              <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-gradient-to-l from-pink-500/20 via-orange-400/10 to-transparent blur-[150px] rounded-full" />
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-gradient-to-t from-orange-500/15 to-transparent blur-[100px] rounded-full" />
+      <section className="relative py-32 z-10">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="cta-card relative overflow-hidden rounded-3xl px-8 py-20 md:py-24 text-center backdrop-blur-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+            {/* Mesh gradient background */}
+            <div className="absolute inset-0 pointer-events-none opacity-50">
+              <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-[#9D4EDD]/20 via-transparent to-transparent blur-[120px] rounded-full" />
+              <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-[#FF8A00]/20 via-transparent to-transparent blur-[120px] rounded-full" />
             </div>
 
-            {/* Floating light orbs */}
-            {[0, 1, 2].map(i => (
-              <div
-                key={`orb-${i}`}
-                className="floating-orb"
-                style={{
-                  width: `${60 + i * 40}px`,
-                  height: `${60 + i * 40}px`,
-                  background: [
-                    'rgba(255, 107, 53, 0.2)',
-                    'rgba(244, 114, 182, 0.2)',
-                    'rgba(255, 214, 10, 0.15)',
-                  ][i],
-                  left: `${20 + i * 30}%`,
-                  top: `${15 + i * 20}%`,
-                  animationDelay: `${i * 1.5}s`,
-                }}
-              />
-            ))}
-
             <div className="relative z-10">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.03] border border-white/10 mb-8 backdrop-blur-md mx-auto">
+                <span className="font-mono text-[10px] font-bold tracking-[0.2em] uppercase text-white/50">
+                  Ready To Grow?
+                </span>
+              </div>
+
               {/* Headline */}
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white mb-4">
-                Stop posting manually.{' '}
-                <em className="text-orange-400 not-italic">
-                  Start growing automatically.
-                </em>
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-display font-medium tracking-tight text-white mb-6">
+                Stop guessing. <br />
+                <span className="bg-gradient-to-r from-[#FF8A00] to-[#9D4EDD] bg-clip-text text-transparent italic pr-2">
+                  Start dominating local.
+                </span>
               </h2>
 
               {/* Subtext */}
-              <p className="text-white/50 text-base mb-10 max-w-xl mx-auto">
-                Join 5,000+ businesses that have replaced manual posting with AI
-                — across all 9 platforms, from one place.
+              <p className="text-white/60 text-lg mb-10 max-w-xl mx-auto font-sans leading-relaxed">
+                Join 5,000+ businesses that have replaced manual posting with an automated AI marketing team that works 24/7.
               </p>
 
               {/* CTAs */}
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   href="/signup"
-                  className="candy-gradient-btn inline-flex items-center justify-center px-8 py-3.5 text-charcoal-900 font-bold rounded-full transition-all duration-200 text-sm"
+                  className="premium-btn inline-flex items-center justify-center px-10 py-4 text-white font-semibold rounded-full transition-all duration-300 text-[15px]"
                 >
                   Start free — no card required
                 </Link>
                 <Link
                   href="/features"
-                  className="inline-flex items-center justify-center px-8 py-3.5 bg-white/[0.08] border border-white/20 text-white font-medium rounded-full hover:bg-white/[0.12] hover:border-white/30 hover:-translate-y-0.5 transition-all duration-200 text-sm backdrop-blur-sm"
+                  className="inline-flex items-center justify-center px-10 py-4 bg-white/[0.03] border border-white/10 text-white font-medium rounded-full hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 transition-all duration-300 text-[15px] backdrop-blur-md"
                 >
                   Watch how it works
                 </Link>

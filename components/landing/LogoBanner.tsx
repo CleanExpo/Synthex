@@ -25,10 +25,10 @@ export function LogoBanner() {
   const items = [...INDUSTRIES, ...INDUSTRIES];
 
   return (
-    <div className="relative py-5 border-y border-white/[0.04] overflow-hidden bg-charcoal-900/50">
+    <div className="relative py-5 border-y border-white/[0.04] overflow-hidden bg-[#09090B]">
       {/* Fade edges */}
-      <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-charcoal-900 to-transparent z-10 pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-charcoal-900 to-transparent z-10 pointer-events-none" />
+      <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#09090B] to-transparent z-10 pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#09090B] to-transparent z-10 pointer-events-none" />
 
       <p className="text-center text-[10px] uppercase tracking-[0.3em] text-white/30 mb-3">
         Trusted by businesses across every industry

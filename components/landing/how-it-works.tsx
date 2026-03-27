@@ -9,24 +9,24 @@ const STEPS = [
     icon: Network,
     title: 'Enter your URL',
     description:
-      'Paste your website URL. Our AI extracts your brand voice, colours, and tone automatically.',
-    borderColor: '#FF6B35',
+      'Paste your website URL. Our AI extracts your local business data, brand voice, and services automatically.',
+    borderColor: '#FF8A00',
   },
   {
     number: '02',
     icon: Sparkles,
-    title: 'AI extracts your brand',
+    title: 'AI executes discovery strategy',
     description:
-      'Within seconds, Synthex builds a Brand DNA profile — your unique voice, values, and visual identity.',
-    borderColor: '#FFD60A',
+      'Synthex builds a Local Discovery plan — generating high-converting content for your specific region and audience.',
+    borderColor: '#9D4EDD',
   },
   {
     number: '03',
     icon: Rocket,
-    title: 'Approve your first post',
+    title: 'Dominate every platform',
     description:
-      'Review and approve your first AI-generated post. Go live in under 60 seconds.',
-    borderColor: '#34D399',
+      'Review and approve your first AI-generated post. Go live everywhere your locals are searching in under 60 seconds.',
+    borderColor: '#6366F1',
   },
 ];
 
@@ -37,17 +37,17 @@ export function HowItWorks() {
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 mb-6">
-            <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-orange-400">
-              How it works
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.03] border border-white/10 mb-6 backdrop-blur-md">
+            <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-[#FF8A00]">
+              The Workflow
             </span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-4">
-            Up and running in minutes
+          <h2 className="text-4xl md:text-5xl font-display font-medium tracking-tight text-white mb-4">
+            Local Discovery on Autopilot.
           </h2>
-          <p className="text-white/40 text-base max-w-lg">
-            No setup required. No manual configuration. Just your URL and you're
-            live.
+          <p className="text-white/50 text-base max-w-lg">
+            No agencies. No retainers. Just your business URL and you're
+            live everywhere your locals are searching.
           </p>
         </div>
 
@@ -56,12 +56,12 @@ export function HowItWorks() {
           {/* Connecting dots between cards (desktop only) */}
           <div className="hidden md:flex absolute top-16 left-0 right-0 justify-between px-8 z-0">
             <div className="flex-1 flex justify-center items-center relative -mx-4">
-              <div className="flex-1 h-0.5 bg-gradient-to-r from-orange-500/30 via-yellow-400/30 to-transparent" />
-              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-orange-500 to-yellow-400 shadow-lg shadow-orange-500/50" />
+              <div className="flex-1 h-0.5 bg-gradient-to-r from-[#FF8A00]/30 via-[#9D4EDD]/30 to-transparent" />
+              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-[#FF8A00] to-[#9D4EDD] shadow-[0_0_15px_#9D4EDD]" />
             </div>
             <div className="flex-1 flex justify-center items-center relative -mx-4">
-              <div className="flex-1 h-0.5 bg-gradient-to-r from-transparent via-yellow-400/30 to-green-400/30" />
-              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-yellow-400 to-green-400 shadow-lg shadow-yellow-400/50" />
+              <div className="flex-1 h-0.5 bg-gradient-to-r from-transparent via-[#9D4EDD]/30 to-indigo-500/30" />
+              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-[#9D4EDD] to-indigo-500 shadow-[0_0_15px_#6366F1]" />
             </div>
           </div>
 
@@ -74,7 +74,7 @@ export function HowItWorks() {
                 <React.Fragment key={number}>
                   <div
                     key={number}
-                    className="group relative bg-charcoal-800/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-8 overflow-hidden shadow-2xl shadow-black/30 ring-1 ring-white/[0.04] hover:-translate-y-1 transition-all duration-300 z-10"
+                    className="group relative bg-[#09090B]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-8 overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-white/[0.02] hover:-translate-y-1 transition-all duration-300 z-10"
                     style={{
                       borderTopColor: borderColor,
                       borderTopWidth: '2px',
@@ -83,21 +83,20 @@ export function HowItWorks() {
                       const el = e.currentTarget as HTMLElement;
                       el.style.borderColor = borderColor;
                       el.style.borderTopColor = borderColor;
-                      el.style.boxShadow = `0 0 20px ${borderColor}40, 0 25px 50px rgba(0,0,0,0.3)`;
+                      el.style.boxShadow = `0 0 25px ${borderColor}20, 0 25px 50px rgba(0,0,0,0.8)`;
                     }}
                     onMouseLeave={e => {
                       const el = e.currentTarget as HTMLElement;
                       el.style.borderColor = 'rgba(255,255,255,0.06)';
                       el.style.borderTopColor = borderColor;
-                      el.style.boxShadow = '0 25px 50px rgba(0,0,0,0.3)';
+                      el.style.boxShadow = '0 25px 50px rgba(0,0,0,0.8)';
                     }}
                   >
-                    {/* Step number — gradient orange→yellow */}
+                    {/* Step number — gradient */}
                     <div
-                      className="font-black text-5xl leading-none mb-6 select-none bg-clip-text text-transparent"
+                      className="font-display font-bold text-5xl leading-none mb-6 select-none bg-clip-text text-transparent"
                       style={{
-                        backgroundImage:
-                          'linear-gradient(135deg, #FF6B35 0%, #FFD60A 100%)',
+                        backgroundImage: `linear-gradient(135deg, ${borderColor} 0%, rgba(255,255,255,0.8) 100%)`,
                       }}
                     >
                       {number}
@@ -105,16 +104,12 @@ export function HowItWorks() {
 
                     {/* Icon with gradient circle background */}
                     <div
-                      className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-5"
+                      className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-5 bg-[#09090B] border border-white/5"
                       style={{
-                        background:
-                          'linear-gradient(135deg, rgba(255,107,53,0.2) 0%, rgba(255,214,10,0.2) 100%)',
-                        border: '1px solid',
-                        borderColor: borderColor + '50',
-                        boxShadow: `0 0 20px ${borderColor}40`,
+                        boxShadow: `0 0 20px ${borderColor}20`,
                       }}
                     >
-                      <Icon className="w-6 h-6 text-orange-400" />
+                      <Icon className="w-6 h-6 text-white" style={{ filter: `drop-shadow(0 0 4px ${borderColor}80)` }} />
                     </div>
 
                     {/* Title */}

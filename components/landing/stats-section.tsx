@@ -104,24 +104,28 @@ export function StatsSection() {
   }, []);
 
   return (
-    <section className="py-20 border-y border-white/[0.04] bg-charcoal-800/30 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-6">
-        <div ref={ref} className="grid grid-cols-2 lg:grid-cols-4">
+    <section className="py-20 border-y border-white/[0.02] bg-[#050508]/60 backdrop-blur-3xl relative overflow-hidden">
+      {/* Subtle ambient light for stats */}
+      <div className="absolute inset-0 pointer-events-none flex justify-center items-center">
+        <div className="w-full h-full max-w-7xl bg-gradient-to-r from-transparent via-[#9D4EDD]/[0.02] to-transparent" />
+      </div>
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
+        <div ref={ref} className="grid grid-cols-2 lg:grid-cols-4 relative">
           {STATS.map((stat, index) => (
             <div
               key={stat.label}
-              className={`flex flex-col items-center justify-center text-center py-10 px-6 ${
-                index < STATS.length - 1 ? 'border-r border-white/[0.04]' : ''
+              className={`flex flex-col items-center justify-center text-center py-10 px-6 relative ${
+                index < STATS.length - 1 ? 'border-r border-white/5' : ''
               }`}
             >
               <span
-                className={`text-4xl md:text-5xl font-black tracking-tight mb-2 ${
-                  stat.highlight ? 'text-orange-500' : 'text-white'
+                className={`text-5xl md:text-6xl font-display font-medium tracking-tight mb-3 ${
+                  stat.highlight ? 'bg-gradient-to-r from-[#FF8A00] to-[#9D4EDD] bg-clip-text text-transparent' : 'text-white'
                 }`}
               >
                 <CountUpValue stat={stat} shouldAnimate={isInView} />
               </span>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/50">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">
                 {stat.label}
               </span>
             </div>
