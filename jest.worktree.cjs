@@ -62,6 +62,11 @@ module.exports = {
   detectOpenHandles: true,
 
   moduleNameMapper: {
+    // Force CJS build of isomorphic-dompurify — Jest 30 resolves the .mjs version
+    // via exports map conditions even with customExportConditions:['require'],
+    // causing "Unexpected token 'export'" for the jsdom→@exodus/bytes chain.
+    '^isomorphic-dompurify$':
+      require.resolve('isomorphic-dompurify/dist/index.js'),
     '^@/components/(.*)$': '<rootDir>/components/$1',
     '^@/lib/(.*)$': '<rootDir>/lib/$1',
     '^@/hooks/(.*)$': '<rootDir>/hooks/$1',
