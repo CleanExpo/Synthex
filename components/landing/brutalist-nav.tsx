@@ -40,7 +40,7 @@ export const BrutalistNav = () => {
               href={`#${item.toLowerCase()}`}
               className="hover:bg-acid-yellow hover:text-black px-2 py-1 transition-colors border-2 border-transparent hover:border-black"
             >
-              /* {item} */
+              {item}
             </Link>
           ))}
         </nav>

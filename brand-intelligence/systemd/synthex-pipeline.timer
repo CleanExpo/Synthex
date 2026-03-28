@@ -1,0 +1,20 @@
+[Unit]
+Description=Synthex Brand Intelligence Pipeline — 6-hour trigger
+Documentation=https://github.com/CleanExpo/Synthex/tree/main/brand-intelligence
+Requires=synthex-pipeline.service
+
+[Timer]
+# Fire at 00:00, 06:00, 12:00, 18:00 UTC every day
+OnCalendar=*-*-* 00,06,12,18:00:00 UTC
+
+# If the system was offline when a trigger was due, run once on next boot
+Persistent=true
+
+# Spread load ± 60 seconds to avoid thundering-herd on shared servers
+RandomizedDelaySec=60
+
+# Accurate start time (don't drift across reboots)
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

@@ -39,7 +39,8 @@ module.exports = {
     '/coverage/',
     '/tests/e2e/',
     '/tests/playwright/',
-    '\\.claude',
+    // Ignore .claude config dirs but NOT .claude/worktrees (this config runs from inside a worktree)
+    '[\\\\/]\\.claude[\\\\/](?!worktrees)',
   ],
 
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
@@ -69,6 +70,7 @@ module.exports = {
     // and crashes (objectEnumValues undefined). Pointing directly to default.js bypasses
     // the browser field while still allowing sub-path imports (e.g. @prisma/client/runtime/*)
     // to resolve through the package exports map via testEnvironmentOptions above.
-    '^@prisma/client$': '<rootDir>/node_modules/@prisma/client/default.js',
+    // Use require.resolve so this works in both repo root AND git worktrees (no local node_modules).
+    '^@prisma/client$': require.resolve('@prisma/client/default.js'),
   },
 };
