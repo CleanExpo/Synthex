@@ -1,153 +1,15 @@
-﻿{
+{
   "permissions": {
     "allow": [
-      "Bash(git *)",
-      "Bash(npm run *)",
-      "Bash(npm test*)",
-      "Bash(npm install*)",
-      "Bash(npx prisma generate)",
-      "Bash(npx prisma db push)",
-      "Bash(npx prisma migrate dev*)",
-      "Bash(npx prisma studio)",
-      "Bash(npx tsc*)",
-      "Bash(node *)",
-      "Bash(powershell *)",
-      "Skill(gsd:progress)",
-      "Skill(gsd:complete-milestone)",
-      "Bash(wc -l \"D:\\\\Synthex/tests/e2e\"/*.spec.ts)",
-      "Bash(wc -l /d/Synthex/app/api/*/route.ts)",
-      "Bash(grep -l \"stub\\\\|TODO\\\\|FIXME\\\\|not implemented\" /d/Synthex/app/api/*/route.ts)",
-      "Bash(find /d/Synthex/app -type d -name \"\\(auth\\)\" -o -name \"\\(onboarding\\)\")",
-      "Bash(wc -l \"D:\\\\Synthex/lib/schemas\"/*.ts)",
-      "Bash(ls -1d \"D:\\\\Synthex/app/api\"/*/)",
-      "Bash(grep -l \"EngagementChart\\\\|GrowthChart\\\\|PerformanceChart\\\\|PlatformChart\\\\|TopPosts\\\\|MetricsTable\\\\|EngagementTrendsChart\\\\|PlatformDistributionChart\" D:/Synthex/app/dashboard/*/page.tsx D:/Synthex/app/dashboard/*/*/page.tsx)",
-      "Bash(grep -l \"PatternCharts\\\\|AIInsightsPanel\\\\|PerformanceOverview\\\\|TopPostsGrid\" D:/Synthex/app/dashboard/*/page.tsx D:/Synthex/app/dashboard/*/*/page.tsx)",
-      "Bash(grep -l \"RichTextEditor\\\\|AIWritingAssistant\" D:/Synthex/app/dashboard/*/page.tsx D:/Synthex/app/dashboard/*/*/page.tsx)",
-      "Bash(find D:/Synthex/app/dashboard -name \"*.tsx\" -type f -exec grep -l \"<img \" {} ;)",
-      "Bash(git commit:*)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" npx eslint . --max-warnings=1000)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" npx eslint . --max-warnings=15000)",
-      "Bash(sed 's/.*error  //')",
-      "mcp__Desktop_Commander__read_file",
-      "Bash(ls -la \"D:\\\\Synthex\\\\app\\\\api\\\\businesses\"\" && ls -la \"D:Synthexappapiorganizations\"\")",
-      "Bash(ls -la /d/Synthex/app/\\\\\\(onboarding\\\\\\)/onboarding/)",
-      "Bash(xargs grep -l \"role\\\\|admin\\\\|owner\")",
-      "Bash(find D:Synthex -name \"page.tsx\" -path \"*/app/*\" -not -path \"*/dashboard/*\" -not -path \"*/onboarding/*\" -not -path \"*/\\(auth\\)/*\")",
-      "mcp__Desktop_Commander__start_search",
-      "mcp__Desktop_Commander__get_more_search_results",
-      "mcp__Desktop_Commander__write_file",
-      "mcp__Desktop_Commander__edit_block",
-      "mcp__Desktop_Commander__start_process",
-      "mcp__Desktop_Commander__read_process_output",
-      "mcp__Desktop_Commander__list_directory",
-      "mcp__Desktop_Commander__create_directory",
-      "Bash(grep -n \"export.*getAuthUser\\\\|export.*getSession\\\\|export.*getCurrentUser\" lib/auth/*.ts)",
-      "mcp__Desktop_Commander__force_terminate",
-      "mcp__Desktop_Commander__get_file_info",
-      "mcp__Desktop_Commander__stop_search",
-      "Bash(xargs grep -l \"profiles\")",
-      "Bash(grep -r \"profiles\" database/migrations supabase* --include=\"*.sql\")",
-      "Bash(ls /d/Synthex/app/\\\\\\(onboarding\\\\\\)/)",
-      "Bash(grep -n \"user.*credential\\\\|api.*key\\\\|openrouter\" /d/Synthex/app/\\\\\\(onboarding\\\\\\)*/route.ts)",
-      "Bash(curl -s http://localhost:3000/api/health)",
-      "Bash(curl -s http://localhost:3001/api/health)",
-      "Bash(findstr \"LISTENING\")",
-      "Bash(findstr \":300\")",
-      "Bash(curl -v http://localhost:3000)",
-      "Bash(ls -la D:/Synthex/.env*)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)",
-      "Bash(curl -s http://localhost:3000/api/user/profile)",
-      "Bash(node -e \":*)",
-      "mcp__mcp-registry__suggest_connectors",
-      "Bash(taskkill /f /im node.exe)",
-      "Bash(timeout /t 3 /nobreak)",
-      "Bash(rd /s /q \"D:\\\\Synthex\\\\.next\")",
-      "Bash(python3 -m json.tool)",
-      "Bash(git -C:*)",
-      "Bash(Remove-Item -Recurse -Force D:Synthex.next -ErrorAction SilentlyContinue)",
-      "Bash(ls D:/Synthex/lib/prisma*)",
-      "Bash(python -c \":*)",
-      "Bash(findstr /i \"error\\\\|fail\\\\|success\\\\|completed\\\\|built\")",
-      "Bash(Select-Object -First 30)",
-      "Bash(xargs grep -l \"api-credentials\\\\|apiKey\")",
-      "Bash(xargs grep -l \"BullMQ\\\\|bullmq\\\\|queue\")",
-      "Bash(wc -l D:/Synthex/app/dashboard/*/page.tsx D:/Synthex/app/dashboard/*/*/page.tsx)",
-      "Bash(wc -l D:/Synthex/components/*/CompetitorAnalysis.tsx D:/Synthex/components/*/ROICalculator.tsx D:/Synthex/components/*/CustomReportBuilder.tsx D:/Synthex/components/*/WorkflowAutomation.tsx D:/Synthex/components/*/SentimentAnalysis.tsx)",
-      "Bash(bash .husky/pre-commit)",
-      "Bash(npx ts-node --project tsconfig.json -e \":*)",
-      "Bash(xargs -I{} sh -c 'echo \"\"$\\(grep -c \"\"console\\\\.log\\(\"\" \"\"{}\"\"\\)\\\\t{}\"\"')",
-      "Bash(grep -v \"^\\\\s*//\")",
-      "Bash(python3 -c \":*)",
-      "Bash(powershell.exe -NoProfile -Command ':*)",
-      "Bash(powershell.exe -NoProfile -Command 'Select-String -Path \"\"D:\\\\Synthex\\\\**\\\\*.tsx\"\",\"\"D:\\\\Synthex\\\\**\\\\*.ts\"\" -Pattern \"\"from .react-hot-toast.\"\" -Recurse | Select-Object -Property Path, LineNumber, Line | Format-Table -AutoSize -Wrap')",
-      "Bash(/tmp/inspect.py:*)",
-      "Bash(python3 /tmp/inspect.py)",
-      "Bash(/tmp/inspect2.py:*)",
-      "Bash(python3 /tmp/inspect2.py)",
-      "Bash(/tmp/fix2.py:*)",
-      "Bash(python3 /tmp/fix2.py)",
-      "Bash(/tmp/inspect3.py:*)",
-      "Bash(python3 /tmp/inspect3.py)",
-      "Bash(/tmp/debug.py:*)",
-      "Bash(python3 /tmp/debug.py)",
-      "Bash(/tmp/fix3.py:*)",
-      "Bash(python3 /tmp/fix3.py)",
-      "Bash(xargs grep -l \"stripe\\\\.subscriptions\\\\.create\\\\|stripe\\\\.customers\\\\.create\")",
-      "Bash(xargs grep -l \"stripePriceId\\\\|STRIPE_PRICE\")",
-      "Bash(findstr /i \"schedule\\\\|scheduler\")",
-      "Bash(findstr \"schedule scheduler\")",
-      "Bash(findstr /C:\"schedule\" /C:\"Schedule\" /C:\"calendar\" /C:\"Calendar\")",
-      "Bash(Select-String -Pattern \"schedule|calendar\" -SimpleMatch)",
-      "Bash(xargs grep -l \"api.key\\\\|api-key\\\\|apiKey\")",
-      "Bash(wc -l D:/Synthex/lib/social/*.ts)",
-      "Bash(grep -l \"getEffectiveOrganizationId\" /d/Synthex/lib/*.ts)",
-      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); issues=[i for i in json.loads\\(data[0][''text'']\\)[''issues''] if i[''identifier''] in \\(''SYN-18'',''SYN-44'',''SYN-45'',''SYN-1'',''SYN-2''\\)]; [print\\(i[''identifier''],i[''id''],i[''status''],i[''title''][:60]\\) for i in issues]\")",
-      "mcp__exa__web_search_exa",
-      "mcp__exa__crawling_exa",
+      "Read",
+      "Write",
+      "Edit",
+      "Bash(*)",
+      "Agent(*)",
+      "Skill(*)",
       "WebSearch",
-      "WebFetch(domain:api.semanticscholar.org)",
-      "WebFetch(domain:www.semanticscholar.org)",
-      "Bash(xargs grep -l \"subscription\")",
-      "WebFetch(domain:api.gov.au)",
-      "Bash(grep -l \"export.*getAIProvider\\\\|export.*AIProvider\" /d/Synthex/lib/ai/providers/*.ts)",
-      "Bash(xargs -I {} sh -c 'echo \"\"=== {} ===\"\" && head -50 {}')",
-      "Bash(grep -l \"upgradeRequired\" hooks/*.ts)",
-      "WebFetch(domain:www.youtube.com)",
-      "Skill(gsd:plan-phase)",
-      "Skill(gsd:plan-phase:*)",
-      "WebFetch(domain:github.com)",
-      "WebFetch(domain:google.github.io)",
-      "WebFetch(domain:www.nature.com)",
-      "mcp__mcp-registry__search_mcp_registry",
-      "Skill(gsd:execute-plan)",
-      "Skill(gsd:execute-plan:*)",
-      "Read(//d/NodeJS-Starter-V1/**)",
-      "Bash(grep -r '\"\"reactflow\"\"' apps/web/components/workflow/)",
-      "Bash(xargs grep:*)",
-      "Bash(grep '\"\"eslint-config-next\"\"' apps/web/package.json)",
-      "Bash(ls:*)",
-      "Bash(find /d/Synthex -type f -name *.sql)",
-      "Bash(head -20 /d/Synthex/database/migrations/*.sql)",
-      "Bash(grep -l \"RLS\\\\|ROW LEVEL SECURITY\\\\|CREATE POLICY\" /d/Synthex/supabase/*.sql /d/Synthex/database/migrations/*.sql)",
-      "mcp__linear__list_issues",
-      "mcp__linear__list_teams",
-      "mcp__linear__list_projects",
-      "mcp__linear__list_issue_labels",
-      "mcp__linear__list_issue_statuses",
-      "mcp__linear__get_issue",
-      "mcp__linear__get_project",
-      "mcp__linear__create_issue",
-      "mcp__linear__update_issue",
-      "mcp__linear__save_issue",
-      "mcp__linear__save_comment",
-      "mcp__linear__create_comment",
-      "mcp__linear__search_documentation",
-      "Bash(find /d/Synthex -name *.ts -path */worker* -o -name *worker*.ts)",
-      "Bash(grep -r \"startAllWorkers\\\\|createScheduledPostsWorker\\\\|createAnalyticsWorker\" /d/Synthex/app --include=*.ts --include=*.tsx)",
-      "Bash(find /d/Synthex/lib -type d -name *social* -o -name *integrat* -o -name *platform*)",
-      "Bash(grep -r \"startAllWorkers\\\\|import.*queue.*worker\" /d/Synthex --include=*.ts --include=*.tsx --exclude-dir=node_modules --exclude-dir=.next)",
-      "Bash(grep -r \"rate-limit\\\\|rate_limit\" /d/Synthex/app/api --include=*.ts)",
-      "Bash(done)"
+      "WebFetch(*)",
+      "mcp__*"
     ],
     "deny": [
       "Bash(git push --force*)",
@@ -169,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-compact-save.ps1\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\pre-compact-save.ps1\""
           }
         ]
       }
@@ -179,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\post-compact-verify.ps1\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\post-compact-verify.ps1\""
           }
         ]
       }
@@ -189,7 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\instructions-loaded.ps1\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\instructions-loaded.ps1\""
           }
         ]
       }
@@ -199,7 +61,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\session-start-protocol.ps1\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\session-start-protocol.ps1\""
           }
         ]
       }
@@ -210,7 +72,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-agent-dispatch.ps1\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\pre-agent-dispatch.ps1\""
           }
         ]
       },
@@ -219,11 +81,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\guard-destructive.ps1\" -ToolInput \"$TOOL_INPUT\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\guard-destructive.ps1\" -ToolInput \"$TOOL_INPUT\""
           },
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-build-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\pre-build-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
           }
         ]
       },
@@ -232,7 +94,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-write-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\pre-write-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
           }
         ]
       }
@@ -243,11 +105,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\post-write-quality.ps1\" -ToolInput \"$TOOL_INPUT\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\post-write-quality.ps1\" -ToolInput \"$TOOL_INPUT\""
           },
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\post-research-capture.ps1\" -ToolInput \"$TOOL_INPUT\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\post-research-capture.ps1\" -ToolInput \"$TOOL_INPUT\""
           }
         ]
       }
@@ -257,7 +119,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\stop-failure.ps1\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\stop-failure.ps1\""
           }
         ]
       }
@@ -267,7 +129,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\auto-compact-threshold.ps1\"",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\auto-compact-threshold.ps1\"",
             "statusMessage": "Checking context window..."
           }
         ]
