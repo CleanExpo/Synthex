@@ -43,6 +43,10 @@ module.exports = {
     '[\\\\/]\\.claude[\\\\/](?!worktrees)',
   ],
 
+  // Allow Jest to transform ESM-only packages that are transitive deps
+  // (e.g. isomorphic-dompurify → jsdom → @exodus/bytes uses ESM export syntax)
+  transformIgnorePatterns: ['/node_modules/(?!(@exodus/bytes)/)'],
+
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: { jsx: 'react-jsx' } }],
