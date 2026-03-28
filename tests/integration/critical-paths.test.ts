@@ -647,6 +647,7 @@ describe('Critical Path Integration Tests', () => {
 
     it('should reset usage monthly', async () => {
       const lastMonth = new Date();
+      lastMonth.setDate(1);
       lastMonth.setMonth(lastMonth.getMonth() - 1);
 
       const subscription = createMockSubscription({
@@ -665,6 +666,7 @@ describe('Critical Path Integration Tests', () => {
 
     it('should auto-reset usage when checking limit after month boundary', async () => {
       const lastMonth = new Date();
+      lastMonth.setDate(1);
       lastMonth.setMonth(lastMonth.getMonth() - 1);
 
       const subscription = createMockSubscription({
