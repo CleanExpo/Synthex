@@ -65,8 +65,9 @@ module.exports = {
     // Force CJS build of isomorphic-dompurify — Jest 30 resolves the .mjs version
     // via exports map conditions even with customExportConditions:['require'],
     // causing "Unexpected token 'export'" for the jsdom→@exodus/bytes chain.
-    '^isomorphic-dompurify$':
-      require.resolve('isomorphic-dompurify/dist/index.js'),
+    // Use require.resolve('isomorphic-dompurify') (not the /dist/index.js subpath)
+    // because the package exports map only exposes "." — the subpath is not exported.
+    '^isomorphic-dompurify$': require.resolve('isomorphic-dompurify'),
     '^@/components/(.*)$': '<rootDir>/components/$1',
     '^@/lib/(.*)$': '<rootDir>/lib/$1',
     '^@/hooks/(.*)$': '<rootDir>/hooks/$1',
