@@ -190,6 +190,7 @@ Synthex/
 !scripts/**/*.py
 !.claude/**/*.py
 !synthex-bayesian-service/**/*.py
+!brand-intelligence/**/*.py
 
 # Script-generated data files
 scripts/video-ids.json
