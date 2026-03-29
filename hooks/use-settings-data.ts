@@ -533,6 +533,56 @@ export function useSettingsData() {
     [invoices]
   );
 
+  const handleChangePassword = useCallback(
+    async (
+      currentPassword: string,
+      newPassword: string,
+      confirmPassword: string
+    ): Promise<boolean> => {
+      const token =
+        localStorage.getItem('auth_token') ||
+        sessionStorage.getItem('auth_token') ||
+        localStorage.getItem('token');
+
+      try {
+        const response = await fetch('/api/user/change-password', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            currentPassword,
+            newPassword,
+            confirmPassword,
+          }),
+        });
+
+        const data = (await response.json().catch(() => ({}))) as {
+          success?: boolean;
+          error?: string;
+          details?: Record<string, string[]>;
+        };
+
+        if (!response.ok) {
+          const firstDetail = data.details
+            ? Object.values(data.details).flat()[0]
+            : null;
+          toast.error(firstDetail || data.error || 'Failed to change password');
+          return false;
+        }
+
+        toast.success('Password changed successfully');
+        return true;
+      } catch {
+        toast.error('Failed to change password. Please try again.');
+        return false;
+      }
+    },
+    []
+  );
+
   return {
     // State
     isSaving,
@@ -563,5 +613,6 @@ export function useSettingsData() {
     handleUpgrade,
     handleManagePayment,
     handleDownloadInvoice,
+    handleChangePassword,
   };
 }

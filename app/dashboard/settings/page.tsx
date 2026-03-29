@@ -86,6 +86,7 @@ function SettingsPageContent() {
     handleUpgrade,
     handleManagePayment,
     handleDownloadInvoice,
+    handleChangePassword,
   } = useSettingsData();
 
   return (
@@ -155,6 +156,7 @@ function SettingsPageContent() {
               onAvatarUpload={handleAvatarUpload}
               onSave={handleSave}
               isSaving={isSaving}
+              onChangePassword={handleChangePassword}
             />
             {/* Brand quick-links */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
