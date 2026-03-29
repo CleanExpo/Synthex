@@ -284,6 +284,7 @@ export async function GET(request: NextRequest) {
           topContributors,
           limits,
           organization: {
+            id: organizationId,
             name: requestingUser.organization?.name,
             plan: requestingUser.organization?.plan,
           },

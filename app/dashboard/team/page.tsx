@@ -17,6 +17,7 @@ import {
   ActivityLogCard,
   RolePermissionsCard,
   InvitationsTab,
+  TeamSettingsTab,
 } from '@/components/team';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useTeamData } from '@/hooks/use-team-data';
@@ -124,6 +125,7 @@ export default function TeamPage() {
             )}
           </TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
         {/* ── Members tab ───────────────────────────────────────── */}
@@ -162,6 +164,11 @@ export default function TeamPage() {
           <div className="mt-2 max-w-2xl">
             <ActivityLogCard activities={activityLog} maxItems={50} />
           </div>
+        </TabsContent>
+
+        {/* ── Settings tab ──────────────────────────────────────── */}
+        <TabsContent value="settings">
+          <TeamSettingsTab className="mt-2 max-w-2xl" />
         </TabsContent>
       </Tabs>
     </div>

@@ -18,3 +18,4 @@ export { InviteDialog } from './invite-dialog';
 export { ActivityLogCard } from './activity-log';
 export { RolePermissionsCard } from './role-permissions';
 export { InvitationsTab } from './invitations-tab';
+export { TeamSettingsTab } from './settings-tab';
