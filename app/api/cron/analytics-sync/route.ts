@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { createFirstWinNotification } from '@/lib/notifications/createFirstWinNotification';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -39,6 +40,13 @@ export async function GET(request: NextRequest) {
       },
       select: {
         id: true,
+        firstWinDetected: true,
+        // Primary user — the org owner receives the first-win notification
+        users: {
+          where: { role: 'owner' },
+          select: { id: true },
+          take: 1,
+        },
         platformConnections: {
           where: { isActive: true },
           select: {
@@ -56,6 +64,7 @@ export async function GET(request: NextRequest) {
 
     let totalSynced = 0;
     let totalErrors = 0;
+    let firstWinsDetected = 0;
 
     for (const org of orgs) {
       for (const conn of org.platformConnections) {
@@ -76,6 +85,35 @@ export async function GET(request: NextRequest) {
           totalErrors++;
         }
       }
+
+      // ── First Win Detection (SYN-525) ────────────────────────────────────
+      // Run after each org's analytics sync — skip if already detected
+      if (!org.firstWinDetected) {
+        const primaryUserId = org.users[0]?.id;
+        if (primaryUserId) {
+          try {
+            const result = await createFirstWinNotification(
+              org.id,
+              primaryUserId
+            );
+            if (result.detected) {
+              firstWinsDetected++;
+              logger.info('cron:analytics-sync:first-win', {
+                orgId: org.id,
+                notificationId: result.notificationId,
+                metric: result.win?.metric,
+                improvementPct: result.win?.improvementPct,
+              });
+            }
+          } catch (err) {
+            // Non-fatal — don't fail the whole sync for a detection error
+            logger.error('cron:analytics-sync:first-win-error', {
+              orgId: org.id,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          }
+        }
+      }
     }
 
     const duration = Date.now() - startTime;
@@ -90,6 +128,7 @@ export async function GET(request: NextRequest) {
       orgsSynced: orgs.length,
       connectionsSynced: totalSynced,
       errors: totalErrors,
+      firstWinsDetected,
       durationMs: duration,
     });
   } catch (error) {

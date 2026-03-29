@@ -85,6 +85,7 @@ import { BottomMenu } from '@/components/landing/bottom-menu';
 import type { NavItem } from '@/components/landing/bottom-menu';
 import { useRouter } from 'next/navigation';
 import { ModeProvider } from '@/components/providers/mode-provider';
+import { FirstWinBanner } from '@/components/notifications/FirstWinBanner';
 import {
   Sidebar,
   SidebarContent,
@@ -903,7 +904,11 @@ export default function DashboardLayout({
           </header>
 
           {/* Page Content */}
-          <main className="p-4 md:p-6">{children}</main>
+          <main className="p-4 md:p-6">
+            {/* First Win Banner — SYN-525: shown once until dismissed */}
+            <FirstWinBanner className="mb-5" />
+            {children}
+          </main>
         </div>
 
         {/* Mobile overlay */}

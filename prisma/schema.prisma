@@ -489,6 +489,9 @@ model Organization {
   plan        String   @default("free") // 'free', 'starter', 'pro', 'enterprise'
   status      String   @default("active") // 'active', 'suspended', 'pending', 'deleted'
   settings    Json? // Organization-wide settings
+
+  // Engagement milestones — SYN-525
+  firstWinDetected Boolean @default(false) @map("first_win_detected")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
