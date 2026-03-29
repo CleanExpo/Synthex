@@ -64,6 +64,14 @@ const RevenueProjectionWidget = dynamic(
   { ssr: false }
 );
 
+const BrandIQCard = dynamic(
+  () =>
+    import('@/components/dashboard/BrandIQCard').then(m => ({
+      default: m.BrandIQCard,
+    })),
+  { ssr: false }
+);
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -381,6 +389,9 @@ export default function DashboardPage() {
               <VisibilityScoreWidget />
               <ContentOpportunitiesWidget />
               <RevenueProjectionWidget />
+              <div className="lg:col-span-2">
+                <BrandIQCard />
+              </div>
             </div>
             <AICommandCentre />
           </>
