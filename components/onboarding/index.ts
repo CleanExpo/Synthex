@@ -7,3 +7,4 @@
 
 // ── Components ───────────────────────────────────────────────────────
 export { StepProgressV2, ONBOARDING_STEPS_V2 } from './StepProgressV2';
+export { BrandMirror } from './BrandMirror';

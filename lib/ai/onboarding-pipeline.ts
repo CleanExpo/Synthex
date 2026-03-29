@@ -16,6 +16,7 @@ import {
   analyzeWebsite,
   type WebsiteAnalysisResult,
 } from '@/lib/ai/website-analyzer';
+import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
@@ -25,6 +26,8 @@ import { logger } from '@/lib/logger';
 export interface PipelineInput {
   url: string;
   businessName: string;
+  /** User-supplied industry hint (overrides AI-detected value when provided). */
+  industry?: string;
 }
 
 export interface SEOSignals {
@@ -90,6 +93,9 @@ export interface PipelineResult {
 
   // AI confidence
   confidence: number;
+
+  // Brand Mirror — generated after main pipeline (SYN-503)
+  sampleCaption: string | null;
 
   // Structured data found on website
   structuredData: {
@@ -487,6 +493,42 @@ function computeOverallHealth(
 }
 
 // ============================================================================
+// CAPTION GENERATION (SYN-503: Brand Mirror)
+// ============================================================================
+
+/**
+ * Generate one sample social media caption from the extracted brand profile.
+ * Uses the fast model — non-blocking, fires after main pipeline agents complete.
+ * Returns null on any failure so the Brand Mirror degrades gracefully.
+ */
+async function generateSampleCaption(
+  businessName: string,
+  industry: string,
+  tone: string,
+  keyTopics: string[]
+): Promise<string | null> {
+  try {
+    const ai = getAIProvider();
+    const topicsText = keyTopics.slice(0, 3).join(', ') || 'your services';
+    const response = await ai.complete({
+      model: ai.models.fast,
+      messages: [
+        {
+          role: 'user',
+          content: `Write one engaging social media caption (Instagram or LinkedIn) for "${businessName}", a ${industry} business. Tone: ${tone}. Topics: ${topicsText}. Keep it under 150 characters. No hashtags. Output only the caption text, nothing else.`,
+        },
+      ],
+      max_tokens: 100,
+    });
+    const caption = response.choices[0]?.message?.content?.trim() ?? null;
+    return caption || null;
+  } catch (error) {
+    logger.warn('[pipeline] Caption generation failed', { error: String(error) });
+    return null;
+  }
+}
+
+// ============================================================================
 // MAIN PIPELINE
 // ============================================================================
 
@@ -508,6 +550,10 @@ export async function runOnboardingPipeline(
       runSEOScrape(input.url),
       runEnhancedScrape(input.url),
     ]);
+
+  // User-supplied industry overrides AI-detected value
+  const resolvedIndustry =
+    input.industry || analysisResult?.industry || 'other';
 
   // Collect all social links from analysis + enhanced scrape
   const allSocialUrls = [
@@ -540,12 +586,24 @@ export async function runOnboardingPipeline(
     seoSignals?.ogImage ||
     null;
 
+  const resolvedTone = analysisResult?.suggestedTone || 'professional';
+  const resolvedTopics = analysisResult?.keyTopics || [];
+  const resolvedConfidence = analysisResult?.confidence ?? 30;
+
+  // Generate sample caption — fires after main agents, non-blocking on failure
+  const sampleCaption = await generateSampleCaption(
+    input.businessName,
+    resolvedIndustry,
+    resolvedTone,
+    resolvedTopics
+  );
+
   const elapsed = Date.now() - startTime;
   logger.info(`[pipeline] Complete in ${elapsed}ms`);
 
   return {
     businessName: input.businessName,
-    industry: analysisResult?.industry || 'other',
+    industry: resolvedIndustry,
     description:
       analysisResult?.description || seoSignals?.metaDescription || '',
     teamSize: analysisResult?.teamSize || 'small',
@@ -568,13 +626,15 @@ export async function runOnboardingPipeline(
     socialProfiles,
     socialHandles,
 
-    keyTopics: analysisResult?.keyTopics || [],
+    keyTopics: resolvedTopics,
     targetAudience: analysisResult?.targetAudience || '',
-    suggestedTone: analysisResult?.suggestedTone || 'professional',
+    suggestedTone: resolvedTone,
     suggestedPersonaName:
       analysisResult?.suggestedPersonaName || input.businessName,
 
-    confidence: analysisResult?.confidence || 30,
+    confidence: resolvedConfidence,
+
+    sampleCaption,
 
     structuredData: {
       phone: enhancedScrape.phone || undefined,

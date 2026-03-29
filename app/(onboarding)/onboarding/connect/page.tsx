@@ -47,6 +47,8 @@ import type {
   PipelineResult,
   SocialProfile,
 } from '@/lib/ai/onboarding-pipeline';
+import { fireEvent } from '@/lib/analytics/onboarding-events';
+import { BRAND_MIRROR_COOKIE } from '@/lib/constants/onboarding';
 
 // ============================================================================
 // PLATFORM CONFIG
@@ -179,6 +181,23 @@ function ConnectPageInner() {
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [finishing, setFinishing] = useState(false);
 
+  // ── SYN-504 client-side guard ─────────────────────────────────────
+  // Middleware handles the primary gate. This is a backup for cases where
+  // middleware is bypassed (e.g. client-side navigation via router.push).
+  // Existing users (those with at least one existing connection) are exempt.
+  useEffect(() => {
+    if (loadingConnections) return; // Wait until we know connection state
+    const hasExistingConnections = connections.length > 0;
+    if (hasExistingConnections) return; // Existing user — bypass gate
+
+    const brandMirrorViewed = document.cookie
+      .split('; ')
+      .find(row => row.startsWith(`${BRAND_MIRROR_COOKIE}=`));
+    if (!brandMirrorViewed) {
+      router.replace('/onboarding');
+    }
+  }, [loadingConnections, connections, router]);
+
   // ── Load detected platforms from pipeline result ──────────────────
   useEffect(() => {
     try {
@@ -223,6 +242,7 @@ function ConnectPageInner() {
 
     if (platform) {
       toast.success(`${platform} connected successfully!`);
+      fireEvent('social_account_connected', { platform });
       // Refresh connections
       fetchConnections();
       // Clean URL params
