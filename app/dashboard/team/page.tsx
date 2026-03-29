@@ -2,9 +2,9 @@
 
 /**
  * Team Management Page
- * Manage team members, roles, and permissions
+ * Manage team members, roles, invitations, and activity
  *
- * @task UNI-417 - Team Page Decomposition
+ * @task UNI-1653
  */
 
 import { DashboardSkeleton } from '@/components/skeletons';
@@ -16,8 +16,11 @@ import {
   InviteDialog,
   ActivityLogCard,
   RolePermissionsCard,
+  InvitationsTab,
 } from '@/components/team';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useTeamData } from '@/hooks/use-team-data';
+import { useInvitations } from '@/hooks/use-invitations';
 
 export default function TeamPage() {
   const {
@@ -44,6 +47,9 @@ export default function TeamPage() {
     handleResendInvitation,
     handleInviteFormChange,
   } = useTeamData();
+
+  // Invitations count for badge — prefetch alongside members
+  const { total: pendingInviteCount } = useInvitations();
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -97,37 +103,67 @@ export default function TeamPage() {
         </div>
       </div>
 
-      {/* Stats */}
+      {/* Stats — always visible above tabs */}
       <TeamStatsGrid stats={stats} />
 
-      {/* Filters */}
-      <TeamFilters
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        roleFilter={roleFilter}
-        onRoleFilterChange={setRoleFilter}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-      />
+      {/* Tabbed content */}
+      <Tabs defaultValue="members">
+        <TabsList variant="underline" className="w-full justify-start mb-4">
+          <TabsTrigger value="members">
+            Members
+            <span className="ml-1.5 text-[10px] text-white/30">
+              {filteredMembers.length}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="invitations">
+            Invitations
+            {pendingInviteCount > 0 && (
+              <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-orange-500/20 text-orange-300 text-[9px] font-semibold">
+                {pendingInviteCount > 9 ? '9+' : pendingInviteCount}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
+        </TabsList>
 
-      {/* Main Content */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Team Members List */}
-        <div className="lg:col-span-2">
-          <MemberList
-            members={filteredMembers}
-            onUpdateRole={handleUpdateRole}
-            onRemove={handleRemoveMember}
-            onResendInvitation={handleResendInvitation}
+        {/* ── Members tab ───────────────────────────────────────── */}
+        <TabsContent value="members">
+          <TeamFilters
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            roleFilter={roleFilter}
+            onRoleFilterChange={setRoleFilter}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
           />
-        </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          <ActivityLogCard activities={activityLog} />
-          <RolePermissionsCard />
-        </div>
-      </div>
+          <div className="mt-6 grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <MemberList
+                members={filteredMembers}
+                onUpdateRole={handleUpdateRole}
+                onRemove={handleRemoveMember}
+                onResendInvitation={handleResendInvitation}
+              />
+            </div>
+            <div>
+              <RolePermissionsCard />
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* ── Invitations tab ───────────────────────────────────── */}
+        <TabsContent value="invitations">
+          <InvitationsTab className="mt-2" />
+        </TabsContent>
+
+        {/* ── Activity tab ──────────────────────────────────────── */}
+        <TabsContent value="activity">
+          <div className="mt-2 max-w-2xl">
+            <ActivityLogCard activities={activityLog} maxItems={50} />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

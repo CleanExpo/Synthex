@@ -47,6 +47,40 @@ export function useTeamData() {
     message: '',
   });
 
+  // Fetch activity feed from API
+  const fetchActivity = useCallback(async () => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch('/api/teams/activity?limit=20', {
+        credentials: 'include',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        const apiActivities = (json.data ?? []) as Array<
+          Record<string, unknown>
+        >;
+        const mapped: ActivityLog[] = apiActivities.map(a => ({
+          id: a.id as string,
+          userId: (a.memberId as string) || '',
+          userName: (a.memberName as string) || 'Unknown',
+          action: `${a.action as string}${a.target ? ` ${a.target as string}` : ''}`,
+          timestamp: new Date(a.timestamp as string).toLocaleString('en-AU', {
+            day: '2-digit',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          details: undefined,
+        }));
+        setActivityLog(mapped);
+      }
+    } catch {
+      // Non-fatal — activity feed is supplementary
+    }
+  }, []);
+
   // Fetch team members from API
   const fetchTeamMembers = useCallback(async () => {
     setIsLoading(true);
@@ -61,17 +95,19 @@ export function useTeamData() {
 
         if (response.ok) {
           const { data } = await response.json();
-          const apiMembers: TeamMember[] = data.map((m: Record<string, unknown>) => ({
-            id: m.id as string,
-            name: (m.name as string) || 'Unknown',
-            email: m.email as string,
-            role: capitalizeRole((m.role as string) || 'viewer'),
-            avatar: (m.avatar as string) || '',
-            status: m.lastActive ? 'Active' : 'Pending',
-            joinedAt: (m.joinedAt as string)?.split('T')[0] || '',
-            lastActive: formatLastActive(m.lastActive as string | null),
-            permissions: getRolePermissions((m.role as string) || 'viewer'),
-          }));
+          const apiMembers: TeamMember[] = data.map(
+            (m: Record<string, unknown>) => ({
+              id: m.id as string,
+              name: (m.name as string) || 'Unknown',
+              email: m.email as string,
+              role: capitalizeRole((m.role as string) || 'viewer'),
+              avatar: (m.avatar as string) || '',
+              status: m.lastActive ? 'Active' : 'Pending',
+              joinedAt: (m.joinedAt as string)?.split('T')[0] || '',
+              lastActive: formatLastActive(m.lastActive as string | null),
+              permissions: getRolePermissions((m.role as string) || 'viewer'),
+            })
+          );
 
           setTeamMembers(apiMembers);
           setIsLoading(false);
@@ -98,16 +134,18 @@ export function useTeamData() {
 
   useEffect(() => {
     fetchTeamMembers();
-  }, [fetchTeamMembers]);
+    fetchActivity();
+  }, [fetchTeamMembers, fetchActivity]);
 
   // Filter team members
   const filteredMembers = useMemo(() => {
-    return teamMembers.filter((member) => {
+    return teamMembers.filter(member => {
       const matchesSearch =
         member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         member.email.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesRole = roleFilter === 'all' || member.role === roleFilter;
-      const matchesStatus = statusFilter === 'all' || member.status === statusFilter;
+      const matchesStatus =
+        statusFilter === 'all' || member.status === statusFilter;
       return matchesSearch && matchesRole && matchesStatus;
     });
   }, [teamMembers, searchQuery, roleFilter, statusFilter]);
@@ -116,9 +154,9 @@ export function useTeamData() {
   const stats: TeamStats = useMemo(
     () => ({
       total: teamMembers.length,
-      active: teamMembers.filter((m) => m.status === 'Active').length,
-      pending: teamMembers.filter((m) => m.status === 'Pending').length,
-      admins: teamMembers.filter((m) => m.role === 'Admin').length,
+      active: teamMembers.filter(m => m.status === 'Active').length,
+      pending: teamMembers.filter(m => m.status === 'Pending').length,
+      admins: teamMembers.filter(m => m.role === 'Admin').length,
     }),
     [teamMembers]
   );
@@ -160,7 +198,7 @@ export function useTeamData() {
             lastActive: 'Never',
             permissions: getRolePermissions(inviteForm.role),
           };
-          setTeamMembers((prev) => [...prev, newMember]);
+          setTeamMembers(prev => [...prev, newMember]);
 
           const newActivity: ActivityLog = {
             id: Date.now().toString(),
@@ -170,7 +208,7 @@ export function useTeamData() {
             timestamp: 'Just now',
             details: `Sent invitation to ${inviteForm.email}`,
           };
-          setActivityLog((prev) => [newActivity, ...prev]);
+          setActivityLog(prev => [newActivity, ...prev]);
 
           toast.success(`Invitation sent to ${inviteForm.email}`);
           setInviteDialogOpen(false);
@@ -186,7 +224,7 @@ export function useTeamData() {
       }
 
       // Fallback: simulate for demo
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       const newMember: TeamMember = {
         id: Date.now().toString(),
@@ -199,7 +237,7 @@ export function useTeamData() {
         permissions: getRolePermissions(inviteForm.role),
       };
 
-      setTeamMembers((prev) => [...prev, newMember]);
+      setTeamMembers(prev => [...prev, newMember]);
 
       const newActivity: ActivityLog = {
         id: Date.now().toString(),
@@ -209,7 +247,7 @@ export function useTeamData() {
         timestamp: 'Just now',
         details: `Sent invitation to ${inviteForm.email}`,
       };
-      setActivityLog((prev) => [newActivity, ...prev]);
+      setActivityLog(prev => [newActivity, ...prev]);
 
       toast.success(`Invitation sent to ${inviteForm.email}`);
       setInviteDialogOpen(false);
@@ -222,57 +260,91 @@ export function useTeamData() {
     }
   }, [inviteForm]);
 
-  const handleUpdateRole = useCallback((memberId: string, newRole: TeamRole) => {
-    const member = teamMembers.find((m) => m.id === memberId);
-    if (!member) return;
+  const handleUpdateRole = useCallback(
+    (memberId: string, newRole: TeamRole) => {
+      const member = teamMembers.find(m => m.id === memberId);
+      if (!member) return;
 
-    setTeamMembers((prev) =>
-      prev.map((m) =>
-        m.id === memberId ? { ...m, role: newRole, permissions: getRolePermissions(newRole) } : m
-      )
-    );
+      setTeamMembers(prev =>
+        prev.map(m =>
+          m.id === memberId
+            ? { ...m, role: newRole, permissions: getRolePermissions(newRole) }
+            : m
+        )
+      );
 
-    const newActivity: ActivityLog = {
-      id: Date.now().toString(),
-      userId: '1',
-      userName: 'You',
-      action: 'Updated member role',
-      timestamp: 'Just now',
-      details: `Changed ${member.name}'s role to ${newRole}`,
-    };
-    setActivityLog((prev) => [newActivity, ...prev]);
+      const newActivity: ActivityLog = {
+        id: Date.now().toString(),
+        userId: '1',
+        userName: 'You',
+        action: 'Updated member role',
+        timestamp: 'Just now',
+        details: `Changed ${member.name}'s role to ${newRole}`,
+      };
+      setActivityLog(prev => [newActivity, ...prev]);
 
-    toast.success(`${member.name}'s role updated to ${newRole}`);
-  }, [teamMembers]);
+      toast.success(`${member.name}'s role updated to ${newRole}`);
+    },
+    [teamMembers]
+  );
 
-  const handleRemoveMember = useCallback((memberId: string) => {
-    const member = teamMembers.find((m) => m.id === memberId);
-    if (!member) return;
+  const handleRemoveMember = useCallback(
+    async (memberId: string) => {
+      const member = teamMembers.find(m => m.id === memberId);
+      if (!member) return;
 
-    setTeamMembers((prev) => prev.filter((m) => m.id !== memberId));
+      try {
+        const token = getAuthToken();
+        const response = await fetch(`/api/teams/members/${memberId}`, {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
 
-    const newActivity: ActivityLog = {
-      id: Date.now().toString(),
-      userId: '1',
-      userName: 'You',
-      action: 'Removed team member',
-      timestamp: 'Just now',
-      details: `Removed ${member.name} from the team`,
-    };
-    setActivityLog((prev) => [newActivity, ...prev]);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          toast.error(
+            (errorData as { error?: string }).error || 'Failed to remove member'
+          );
+          return;
+        }
+      } catch {
+        toast.error('Failed to remove member');
+        return;
+      }
 
-    toast.success(`${member.name} removed from team`);
-  }, [teamMembers]);
+      setTeamMembers(prev => prev.filter(m => m.id !== memberId));
 
-  const handleResendInvitation = useCallback((memberId: string) => {
-    const member = teamMembers.find((m) => m.id === memberId);
-    if (!member) return;
-    toast.success(`Invitation resent to ${member.email}`);
-  }, [teamMembers]);
+      const newActivity: ActivityLog = {
+        id: Date.now().toString(),
+        userId: '1',
+        userName: 'You',
+        action: 'Removed team member',
+        timestamp: 'Just now',
+        details: `Removed ${member.name} from the team`,
+      };
+      setActivityLog(prev => [newActivity, ...prev]);
 
-  const handleInviteFormChange = useCallback((data: Partial<InviteFormData>) => {
-    setInviteForm((prev) => ({ ...prev, ...data }));
-  }, []);
+      toast.success(`${member.name} removed from team`);
+    },
+    [teamMembers]
+  );
+
+  const handleResendInvitation = useCallback(
+    (memberId: string) => {
+      const member = teamMembers.find(m => m.id === memberId);
+      if (!member) return;
+      toast.success(`Invitation resent to ${member.email}`);
+    },
+    [teamMembers]
+  );
+
+  const handleInviteFormChange = useCallback(
+    (data: Partial<InviteFormData>) => {
+      setInviteForm(prev => ({ ...prev, ...data }));
+    },
+    []
+  );
 
   return {
     // State
@@ -295,6 +367,7 @@ export function useTeamData() {
 
     // Handlers
     fetchTeamMembers,
+    fetchActivity,
     handleInviteMember,
     handleUpdateRole,
     handleRemoveMember,
