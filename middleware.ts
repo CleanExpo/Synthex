@@ -188,6 +188,39 @@ export async function middleware(request: NextRequest) {
   }
 
   // ──────────────────────────────────────────────────────────────────────
+  // SYN-504: Brand Mirror gate — new users must view Brand Mirror before
+  // reaching /onboarding/connect. (Board Session 3: Client Journey Opt.)
+  //
+  // Gate logic (cookie-based, Edge-safe — no DB query needed):
+  //   - Only applies to new sessions (users without onboardingComplete=true)
+  //   - Existing users with valid JWT (onboardingComplete=true) pass through
+  //   - If brand mirror cookie is missing → redirect to /onboarding
+  //   - Sticky re-prompt: cookie expires after 1 hour, so users who close the
+  //     tab mid-flow are re-prompted on next visit (not hard-blocked)
+  // ──────────────────────────────────────────────────────────────────────
+  if (pathname === '/onboarding/connect' || pathname.startsWith('/onboarding/connect/')) {
+    // Check if this is an existing user who has already completed onboarding
+    let isExistingUser = false;
+    if (hasCustomAuth && authToken) {
+      try {
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+        const { payload } = await jwtVerify(authToken, secret);
+        isExistingUser = payload.onboardingComplete === true || payload.role === 'superadmin';
+      } catch {
+        // Token invalid — treat as new user
+      }
+    }
+
+    // Existing users bypass the brand mirror gate
+    if (!isExistingUser) {
+      const brandMirrorViewed = request.cookies.get('synthex_brand_mirror_viewed')?.value;
+      if (!brandMirrorViewed) {
+        return NextResponse.redirect(new URL('/onboarding', request.url));
+      }
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────────────────
   // Hard gate: block /api/ai/* if user has not configured a valid API key.
   // Uses JWT claim only (Edge-safe). The route handler still performs a
   // full DB-backed check via requireApiKey().

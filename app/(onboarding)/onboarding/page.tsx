@@ -1,16 +1,19 @@
 'use client';
 
 /**
- * Onboarding Entry Page — URL-First Design
+ * Onboarding Entry Page — URL-First Design (SYN-503)
  *
- * The only required human input: website URL + business name.
- * AI does everything else via the unified pipeline API.
+ * The only required human input: business name + website URL.
+ * Industry is optional — AI auto-detects it, user can override.
  *
- * Flow:
- *   1. User enters URL + business name
- *   2. Pipeline runs (~15-20s) with animated progress stages
- *   3. On success → navigate to /onboarding/review with pre-filled data
+ * Flow (Board Session 3: Client Journey Optimisation — SYN-502):
+ *   1. User enters business name + URL (+ optional industry)
+ *   2. Pipeline runs (~20s) with animated progress stages
+ *   3. Brand Mirror shows extracted brand voice + sample caption
+ *   4. "Connect accounts" CTA → /onboarding/connect
+ *      OR "edit first" → /onboarding/review (existing flow)
  *
+ * Existing users with connected accounts skip directly to dashboard (no change).
  * Chrome Extension integration: if detected, offers to use current tab URL.
  */
 
@@ -28,9 +31,19 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { StepProgressV2 } from '@/components/onboarding';
+import { StepProgressV2, BrandMirror } from '@/components/onboarding';
 import { HelpVideo } from '@/components/ui/HelpVideo';
+import { BRAND_MIRROR_COOKIE } from '@/lib/constants/onboarding';
+import type { PipelineResult } from '@/lib/ai/onboarding-pipeline';
+import { fireEvent } from '@/lib/analytics/onboarding-events';
 
 // ============================================================================
 // CONSTANTS
@@ -74,12 +87,27 @@ const PIPELINE_STAGES = [
   },
   {
     id: 'plan',
-    label: 'Generating your marketing plan…',
-    subLabel: 'Building a 30-day content strategy just for you',
+    label: 'Generating your brand mirror…',
+    subLabel: 'Building your brand voice profile',
     icon: Sparkles,
     delay: 19000,
   },
 ] as const;
+
+const INDUSTRY_OPTIONS = [
+  { value: 'retail', label: 'Retail & E-commerce' },
+  { value: 'hospitality', label: 'Hospitality & Food' },
+  { value: 'professional-services', label: 'Professional Services' },
+  { value: 'health-wellness', label: 'Health & Wellness' },
+  { value: 'trades', label: 'Trades & Construction' },
+  { value: 'real-estate', label: 'Real Estate' },
+  { value: 'beauty', label: 'Beauty & Personal Care' },
+  { value: 'education', label: 'Education & Training' },
+  { value: 'technology', label: 'Technology' },
+  { value: 'other', label: 'Other' },
+] as const;
+
+type Phase = 'form' | 'scanning' | 'mirror';
 
 // ============================================================================
 // COMPONENT
@@ -91,12 +119,14 @@ export default function OnboardingPage() {
   // Form state
   const [businessName, setBusinessName] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
+  const [industry, setIndustry] = useState('');
 
-  // Pipeline state
-  const [running, setRunning] = useState(false);
+  // Pipeline / phase state
+  const [phase, setPhase] = useState<Phase>('form');
   const [currentStage, setCurrentStage] = useState(0);
   const [completedStages, setCompletedStages] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [pipelineResult, setPipelineResult] = useState<PipelineResult | null>(null);
 
   // Chrome Extension detection
   const [extensionDetected, setExtensionDetected] = useState(false);
@@ -161,10 +191,15 @@ export default function OnboardingPage() {
       finalUrl = `https://${finalUrl}`;
     }
 
-    setRunning(true);
+    setPhase('scanning');
     setError(null);
     setCurrentStage(0);
     setCompletedStages([]);
+
+    fireEvent('onboarding_form_submitted');
+    fireEvent('brand_scan_initiated');
+
+    const scanStart = Date.now();
 
     // Stagger loading stage animations
     const newTimers: NodeJS.Timeout[] = [];
@@ -198,7 +233,11 @@ export default function OnboardingPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ url: finalUrl, businessName: trimmedName }),
+        body: JSON.stringify({
+          url: finalUrl,
+          businessName: trimmedName,
+          ...(industry && { industry }),
+        }),
         signal: abortController.signal,
       });
 
@@ -213,7 +252,7 @@ export default function OnboardingPage() {
         throw new Error(data.error || 'Pipeline failed. Please try again.');
       }
 
-      const result = await res.json();
+      const result: PipelineResult = await res.json();
 
       // Store result in sessionStorage for the review page
       sessionStorage.setItem('synthex_pipeline_result', JSON.stringify(result));
@@ -228,13 +267,26 @@ export default function OnboardingPage() {
         // Non-blocking — review page will fall back to server or redirect to entry
       });
 
-      // Mark all stages complete, then navigate
+      // Mark all stages complete
       setCompletedStages(PIPELINE_STAGES.map((_, i) => i));
       setCurrentStage(PIPELINE_STAGES.length);
 
-      // Brief pause to show completion, then navigate
+      const scanDuration = Math.round((Date.now() - scanStart) / 1000);
+      fireEvent('brand_scan_complete', {
+        confidence_score: result.confidence,
+        scan_duration_seconds: scanDuration,
+      });
+
+      // Brief pause to show completion, then show Brand Mirror
       setTimeout(() => {
-        router.push('/onboarding/review');
+        setPipelineResult(result);
+        setPhase('mirror');
+
+        if (result.confidence < 60) {
+          fireEvent('brand_mirror_fallback_shown', { confidence_score: result.confidence });
+        } else {
+          fireEvent('brand_mirror_shown');
+        }
       }, 800);
     } catch (err) {
       newTimers.forEach(clearTimeout);
@@ -251,12 +303,38 @@ export default function OnboardingPage() {
             ? err.message
             : 'Something went wrong. Please try again.'
       );
-      setRunning(false);
+      setPhase('form');
     }
+  };
+
+  // Brand Mirror — "connect accounts" CTA
+  const handleMirrorContinue = () => {
+    // Set the brand mirror viewed cookie (1 hour) — read by SYN-504 routing gate
+    document.cookie = `${BRAND_MIRROR_COOKIE}=1; path=/; max-age=3600; SameSite=Lax`;
+    router.push('/onboarding/connect');
+  };
+
+  // Brand Mirror — "edit first" fallback → existing review page
+  const handleMirrorSkip = () => {
+    router.push('/onboarding/review');
   };
 
   const isValid =
     businessName.trim().length > 0 && websiteUrl.trim().length > 0;
+
+  // ── Brand Mirror phase ───────────────────────────────────────────────
+  if (phase === 'mirror' && pipelineResult) {
+    return (
+      <div className="space-y-8">
+        <StepProgressV2 currentStep={1} />
+        <BrandMirror
+          result={pipelineResult}
+          onContinue={handleMirrorContinue}
+          onSkip={handleMirrorSkip}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -283,7 +361,7 @@ export default function OnboardingPage() {
       </div>
 
       {/* Form or Pipeline Progress */}
-      {!running ? (
+      {phase === 'form' ? (
         <div className="max-w-lg mx-auto space-y-5">
           <div className="p-6 rounded-xl bg-surface-base/80 border border-orange-500/10 backdrop-blur-sm space-y-5">
             {/* Business Name */}
@@ -315,6 +393,35 @@ export default function OnboardingPage() {
                 placeholder="https://yoursite.com.au"
                 className="bg-surface-dark/50 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
               />
+            </div>
+
+            {/* Industry — optional, helps AI analyse your brand */}
+            <div className="space-y-2">
+              <Label htmlFor="industry" className="text-gray-300">
+                Industry{' '}
+                <span className="text-gray-500 text-xs font-normal">
+                  (optional — AI will detect it)
+                </span>
+              </Label>
+              <Select value={industry} onValueChange={setIndustry}>
+                <SelectTrigger
+                  id="industry"
+                  className="bg-surface-dark/50 border-orange-500/20 text-white focus:border-orange-500/50 focus:ring-orange-500/20 data-[placeholder]:text-gray-500"
+                >
+                  <SelectValue placeholder="Select your industry…" />
+                </SelectTrigger>
+                <SelectContent className="bg-surface-dark border-orange-500/20">
+                  {INDUSTRY_OPTIONS.map(opt => (
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="text-gray-200 focus:bg-orange-500/10 focus:text-white"
+                    >
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Chrome Extension hint */}
@@ -385,7 +492,7 @@ export default function OnboardingPage() {
           </p>
         </div>
       ) : (
-        /* Pipeline Progress */
+        /* Pipeline Progress (phase === 'scanning') */
         <div className="max-w-lg mx-auto">
           <div className="p-6 rounded-xl bg-surface-base/80 border border-orange-500/10 backdrop-blur-sm space-y-4">
             <div className="text-center mb-2">
