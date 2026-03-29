@@ -41,11 +41,11 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         firstWinDetected: true,
-        // Primary user — the org owner receives the first-win notification
+        // Primary user — first member of the org receives the first-win notification
         users: {
-          where: { role: 'owner' },
           select: { id: true },
           take: 1,
+          orderBy: { createdAt: 'asc' },
         },
         platformConnections: {
           where: { isActive: true },

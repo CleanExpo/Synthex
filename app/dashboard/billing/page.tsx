@@ -20,6 +20,7 @@ import {
   RefreshCw,
   Zap,
 } from '@/components/icons';
+import { WinAnchoredConversionCard } from '@/components/billing/WinAnchoredConversionCard';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -341,22 +342,10 @@ export default function BillingPage() {
           ) : null}
         </div>
 
-        {/* Free plan upgrade prompt */}
+        {/* Free plan upgrade prompt — win-anchored variant (SYN-526) */}
         {isFreePlan && (
-          <div className="mx-6 mb-6 flex items-center justify-between gap-3 p-4 bg-orange-500/[0.05] border-[0.5px] border-orange-500/20 rounded-sm">
-            <div className="flex items-center gap-3">
-              <Zap className="w-3.5 h-3.5 text-orange-400 shrink-0" />
-              <p className="text-xs text-orange-200/70">
-                Upgrade to unlock more social accounts, unlimited AI posts, and
-                advanced analytics.
-              </p>
-            </div>
-            <button
-              onClick={() => router.push('/pricing')}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-400 text-[#050505] text-xs font-semibold rounded-sm transition-colors"
-            >
-              View Plans
-            </button>
+          <div className="mx-6 mb-6">
+            <WinAnchoredConversionCard />
           </div>
         )}
 
@@ -384,18 +373,7 @@ export default function BillingPage() {
         <div className="p-6">
           {isFreePlan ? (
             <div>
-              <p className="text-sm text-white/40 mb-6 leading-relaxed">
-                You are on the free plan. No payment method is required. Upgrade
-                anytime to access premium features.
-              </p>
-              <button
-                onClick={() => router.push('/pricing')}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-orange-500 hover:bg-orange-400 text-[#050505] text-xs font-semibold tracking-wide rounded-sm transition-colors"
-              >
-                <Zap className="w-3.5 h-3.5" />
-                Explore Plans &amp; Pricing
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </button>
+              <WinAnchoredConversionCard className="mb-0" />
             </div>
           ) : (
             <div>
