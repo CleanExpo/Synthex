@@ -321,7 +321,7 @@ export { ClockIcon as Clock } from '@heroicons/react/24/outline';
 // LUCIDE-REACT DIRECT EXPORTS (No Heroicons equivalent)
 // ============================================
 
-export { FileQuestion } from 'lucide-react';
+export { QuestionMarkCircleIcon as FileQuestion } from '@heroicons/react/24/outline';
 
 // ============================================
 // 3D ICON COMPONENT

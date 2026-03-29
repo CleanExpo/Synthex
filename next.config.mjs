@@ -27,6 +27,7 @@ const nextConfig = {
   // Vercel handles deployment differently and doesn't need standalone mode
   output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
   reactStrictMode: true,
+  turbopack: {},
 
   // Enable gzip compression
   compress: true,

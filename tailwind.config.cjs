@@ -67,29 +67,33 @@ module.exports = {
         warning: 'rgb(var(--color-warning) / <alpha-value>)',
         error: 'rgb(var(--color-error) / <alpha-value>)',
         info: 'rgb(var(--color-info) / <alpha-value>)',
-        // Brutalist Dark Slate (brutalist base)
-        slate: {
-          950: '#07070A',
-          900: '#111111', 
-          800: '#1a1a1a', 
-          700: '#2b2b2b',
-          600: '#3c3c3c',
-          500: '#525252',
+        // Deep Space Dark (candy palette base — replaces brown charcoal)
+        charcoal: {
+          950: '#050508',
+          900: '#0A0A12', // page background
+          800: '#12121E', // card/surface
+          700: '#1A1A2A',
+          600: '#252536',
+          500: '#353548',
         },
-        // Acid Colors (neon brutalism)
-        acid: {
-          pink: '#FF0066',
-          yellow: '#FFEA00',
-          orange: '#FF5500',
-          green: '#00FF66',
-          blue: '#00CCFF',
+        // Candy Colors (primary palette)
+        candy: {
+          yellow: '#FFD60A',
+          'yellow-light': '#FFF176',
+          orange: '#FF6B35',
+          'orange-light': '#FF9A6C',
+          red: '#FF3B5C',
+          'red-light': '#FF7A8F',
+          green: '#34D399',
+          'green-light': '#6EE7B7',
+          pink: '#F472B6',
         },
         // App Surface Colors (dark theme backgrounds — tokens prevent inline hex)
         surface: {
-          dark: '#111111', 
-          darker: '#07070A', 
-          base: '#1a1a1a', 
-          void: '#111111', 
+          dark: '#050505', // deep navy — primary page background
+          darker: '#030303', // near-black — AI chat / image panels
+          base: '#111111', // slate-900 equivalent — card/panel backgrounds
+          void: '#030014', // near-black — marketing visual backgrounds
         },
         // Glass Colors
         glass: {
@@ -143,12 +147,13 @@ module.exports = {
         'glass-inset': 'var(--glass-inset)',
         'glow-primary': 'var(--glow-primary)',
         'glow-primary-lg': 'var(--glow-primary-lg)',
-        brutal: '6px 6px 0px 0px rgba(0,0,0,1)',
-        'brutal-lg': '12px 12px 0px 0px rgba(0,0,0,1)',
-        'brutal-acid-pink': '6px 6px 0px 0px #FF0066',
-        'brutal-acid-yellow': '6px 6px 0px 0px #FFEA00',
-        'brutal-acid-orange': '6px 6px 0px 0px #FF5500',
-        'brutal-white': '6px 6px 0px 0px #FFFFFF',
+        'glow-orange': '0 0 20px rgba(255, 107, 53, 0.4)',
+        'glow-yellow': '0 0 20px rgba(255, 214, 10, 0.4)',
+        'glow-red': '0 0 20px rgba(255, 59, 92, 0.4)',
+        'glow-green': '0 0 20px rgba(52, 211, 153, 0.4)',
+        'glow-candy':
+          '0 0 30px rgba(255, 107, 53, 0.3), 0 0 20px rgba(255, 214, 10, 0.2)',
+        'glow-pink': '0 0 20px rgba(244, 114, 182, 0.4)',
       },
       fontFamily: {
         sans: ['var(--font-sans)'],

@@ -5,11 +5,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LazyClientComponents } from './LazyClientComponents';
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
 import { InstallPrompt } from '@/components/pwa/InstallPrompt';
-import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
-const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
 
@@ -321,8 +317,14 @@ export default function RootLayout({
   const structuredData = buildStructuredDataScripts();
 
   return (
-    <html lang="en" className={`${inter.variable} ${outfit.variable} font-sans`} suppressHydrationWarning>
+    <html lang="en" className="font-sans" suppressHydrationWarning>
       <head>
+        {/* Satoshi font via Fontshare CDN */}
+        <link rel="preconnect" href="https://api.fontshare.com" />
+        <link
+          rel="stylesheet"
+          href="https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400&display=swap"
+        />
         {/* Preload critical resources */}
         <link rel="preload" href="/grid.svg" as="image" type="image/svg+xml" />
         {/* Schema.org Structured Data (JSON-LD) — all values are hardcoded constants */}
