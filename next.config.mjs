@@ -1,4 +1,7 @@
 // Phase 114-02: Force clean build — cache bust 2026-03-13
+// Authority Hub routes (/clients/[slug]) use ISR with revalidate=3600.
+// These pages carry LocalBusiness + VideoObject schema for E.E.A.T. positioning.
+// See SYN-512, SYN-516 for architectural context.
 // createRequire: used to resolve heroicons to CJS paths (avoids ESM .js sibling import bug in v2.2.0)
 import { createRequire } from 'module';
 const _require = createRequire(import.meta.url);

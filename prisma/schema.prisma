@@ -5423,3 +5423,22 @@ model BlogPost {
   @@index([createdAt(sort: Desc)])
   @@map("blog_posts")
 }
+
+/// Ledger of AI pipeline cost per run per client — SYN-518.
+/// Written by trackPipelineCost() in lib/pipelines/track-cost.ts.
+/// Query with scripts/cost-report.sql for margin monitoring.
+model PipelineCostLedger {
+  id           String   @id @default(cuid())
+  pipelineName String   @map("pipeline_name")
+  clientId     String?  @map("client_id") // null for board-level pipelines (video, cron)
+  runId        String   @map("run_id")
+  model        String
+  inputTokens  Int      @map("input_tokens")
+  outputTokens Int      @map("output_tokens")
+  costUsd      Float    @map("cost_usd")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([pipelineName, createdAt(sort: Desc)])
+  @@index([clientId, createdAt(sort: Desc)])
+  @@map("pipeline_cost_ledger")
+}
