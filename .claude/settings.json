@@ -241,7 +241,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\session-start.ps1\"",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\session-start.ps1\"",
             "timeout": 30
           }
         ]
@@ -252,7 +252,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-compact-save.ps1\"",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\pre-compact-save.ps1\"",
             "timeout": 30
           }
         ]
@@ -263,7 +263,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\stop-verify-git.ps1\"",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\stop-verify-git.ps1\"",
             "timeout": 15
           }
         ]
@@ -275,7 +275,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-bash-validate.ps1\"",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\pre-bash-validate.ps1\"",
             "timeout": 10
           }
         ]
