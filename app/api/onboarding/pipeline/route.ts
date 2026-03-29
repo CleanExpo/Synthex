@@ -28,6 +28,7 @@ import type { Prisma } from '@prisma/client';
 const pipelineSchema = z.object({
   url: z.string().url('Please enter a valid URL'),
   businessName: z.string().min(1, 'Business name is required').max(200),
+  industry: z.string().max(100).optional(),
 });
 
 // ============================================================================
@@ -78,12 +79,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { url, businessName } = validation.data;
+    const { url, businessName, industry } = validation.data;
 
     logger.info('[pipeline] Running pipeline', { userId: userId, url });
 
     // Run the full pipeline (~15-20 seconds)
-    const result: PipelineResult = await runOnboardingPipeline({ url, businessName });
+    const result: PipelineResult = await runOnboardingPipeline({ url, businessName, industry });
 
     // Persist pipeline results to OnboardingProgress (server-side, survives tab close)
     // OnboardingProgress requires organizationId — find or skip if org doesn't exist yet
