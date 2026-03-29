@@ -317,7 +317,7 @@ const sidebarGroups: SidebarNavGroup[] = [
       {
         icon: Sparkles,
         label: 'Autopilot',
-        href: '/dashboard/autonomous',
+        href: '/dashboard/autopilot',
         isNew: true,
       },
       {
