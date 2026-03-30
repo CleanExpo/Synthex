@@ -4,6 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,16 +18,17 @@ export async function POST(req: NextRequest) {
     const { clientSlug } = body;
 
     if (!clientSlug || typeof clientSlug !== 'string') {
-      return NextResponse.json({ error: 'clientSlug required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'clientSlug required' },
+        { status: 400 }
+      );
     }
 
     revalidatePath(`/clients/${clientSlug}`);
 
-    console.log(JSON.stringify({
-      event: 'authority_hub_revalidated',
+    logger.info('[webhook] authority_hub_revalidated', {
       client_slug: clientSlug,
-      timestamp: new Date().toISOString(),
-    }));
+    });
 
     return NextResponse.json({ revalidated: true, slug: clientSlug });
   } catch (err) {

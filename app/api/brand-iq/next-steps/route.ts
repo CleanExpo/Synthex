@@ -6,7 +6,8 @@ import { trackPipelineCost } from '@/lib/pipelines/track-cost';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId, voiceScore, resonanceScore, topAttributes, bestWindow } = body;
+    const { userId, voiceScore, resonanceScore, topAttributes, bestWindow } =
+      body;
 
     if (!userId) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
@@ -38,16 +39,22 @@ Example format: ["Step one here.", "Step two here.", "Step three here."]`;
     });
 
     // Track cost
+    const inputTokens = message.usage.input_tokens;
+    const outputTokens = message.usage.output_tokens;
+    const costUsd = inputTokens * 0.0000008 + outputTokens * 0.000004;
+
     await trackPipelineCost({
-      pipelineName: 'brand-iq-next-steps',
-      clientId: userId,
-      runId,
+      pipeline_name: 'brand-iq-next-steps',
+      client_id: userId,
+      run_id: runId,
       model: 'claude-haiku-4-5',
-      inputTokens: message.usage.input_tokens,
-      outputTokens: message.usage.output_tokens,
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+      cost_usd: costUsd,
     });
 
-    const rawText = message.content[0].type === 'text' ? message.content[0].text : '[]';
+    const rawText =
+      message.content[0].type === 'text' ? message.content[0].text : '[]';
     let nextSteps: string[] = [];
 
     try {
@@ -59,13 +66,16 @@ Example format: ["Step one here.", "Step two here.", "Step three here."]`;
       nextSteps = [
         'Schedule posts during your best window to maximise reach.',
         'Maintain your top content attributes in every caption.',
-        'Review last week\'s top post and replicate its format.',
+        "Review last week's top post and replicate its format.",
       ];
     }
 
     return NextResponse.json({ nextSteps });
   } catch (err) {
     console.error('brand-iq next-steps error:', err);
-    return NextResponse.json({ error: 'Failed to generate next steps' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to generate next steps' },
+      { status: 500 }
+    );
   }
 }

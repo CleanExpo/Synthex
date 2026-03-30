@@ -10,7 +10,7 @@ import { AlertTriangle, MessageSquare, RefreshCw } from '@/components/icons';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
-import FirstWinBanner from '@/components/notifications/FirstWinBanner';
+import { FirstWinBanner } from '@/components/notifications/FirstWinBanner';
 
 import {
   DashboardStats,
@@ -82,6 +82,47 @@ const AuthorityScoreCard = dynamic(
     })),
   { ssr: false }
 );
+
+// SYN-526: Win-anchored trial-end conversion modal
+const TrialEndModal = dynamic(
+  () => import('@/components/trial/TrialEndModal'),
+  { ssr: false }
+);
+
+// ─── Notification + trial helpers ──────────────────────────────────────────
+
+interface ClientNotification {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  payload: {
+    improvement_pct?: number;
+    metric?: string;
+    actual_value?: number;
+    detected_at?: string;
+  } | null;
+  created_at: string;
+}
+
+interface NotificationsResponse {
+  notifications: ClientNotification[];
+}
+
+async function fetchNotifications(url: string): Promise<NotificationsResponse> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) return { notifications: [] };
+  return res.json() as Promise<NotificationsResponse>;
+}
+
+const TRIAL_DAYS = 14;
+
+function getTrialDaysRemaining(createdAt: string): number {
+  const trialEnd = new Date(createdAt);
+  trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS);
+  const msRemaining = trialEnd.getTime() - Date.now();
+  return Math.max(0, Math.ceil(msRemaining / (1000 * 60 * 60 * 24)));
+}
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -372,21 +413,12 @@ export default function DashboardPage() {
       homeUrl="/"
     >
       <div className="space-y-6">
-        {/* SYN-525: First Win Banner — shown above header on first win notification */}
-        {firstWinNotif && (
-          <FirstWinBanner
-            notificationId={firstWinNotif.id}
-            title={firstWinNotif.title}
-            body={firstWinNotif.body}
-            improvementPct={firstWinNotif.payload?.improvement_pct ?? 0}
-          />
-        )}
+        {/* SYN-525: First Win Banner — self-contained, fetches its own notification data */}
+        <FirstWinBanner />
 
         <DashboardHeader
           showNotifications={showNotifications}
-          onToggleNotifications={() =>
-            setShowNotifications(!showNotifications)
-          }
+          onToggleNotifications={() => setShowNotifications(!showNotifications)}
           isNewUser={isNewUser}
         />
 
@@ -455,15 +487,11 @@ export default function DashboardPage() {
               <ContentOpportunitiesWidget />
               <RevenueProjectionWidget />
               <AuthorityScoreCard />
+              {/* SYN-527: Brand IQ Score Card — self-contained, fetches own data */}
               <div className="lg:col-span-2">
                 <BrandIQCard />
               </div>
             </div>
-
-            {/* SYN-527: Brand IQ Score Card — unlocks on first win */}
-            <BrandIQCard
-              firstWinDetected={user?.first_win_detected ?? false}
-            />
 
             <AICommandCentre />
           </>
