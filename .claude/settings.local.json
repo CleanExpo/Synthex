@@ -1,4 +1,4 @@
-﻿{
+{
   "permissions": {
     "allow": [
       "Bash(git *)",
@@ -147,7 +147,12 @@
       "Bash(find /d/Synthex/lib -type d -name *social* -o -name *integrat* -o -name *platform*)",
       "Bash(grep -r \"startAllWorkers\\\\|import.*queue.*worker\" /d/Synthex --include=*.ts --include=*.tsx --exclude-dir=node_modules --exclude-dir=.next)",
       "Bash(grep -r \"rate-limit\\\\|rate_limit\" /d/Synthex/app/api --include=*.ts)",
-      "Bash(done)"
+      "Bash(done)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3006/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3006/ --max-time 30)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3006/api/health --max-time 60)",
+      "Bash(netstat -ano)"
     ],
     "deny": [
       "Bash(git push --force*)",
