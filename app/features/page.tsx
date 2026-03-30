@@ -33,10 +33,48 @@ import {
   ContainerStagger,
   ContainerAnimated,
 } from '@/components/landing/hero-video';
+import { VideoSchemaScript } from '@/components/schema/VideoSchemaScript';
+
+// Feature video metadata — used for both the embed section and JSON-LD schema
+const FEATURE_VIDEOS = [
+  {
+    videoId: 'HbBBX0zYug4',
+    title: 'Content Generator',
+    description: 'AI-powered post creation in your voice',
+    uploadDate: '2026-02-17',
+    duration: 'PT3M',
+  },
+  {
+    videoId: 'zS2cnmYxpf8',
+    title: 'Analytics Dashboard',
+    description: 'Real-time metrics across all platforms',
+    uploadDate: '2026-02-17',
+    duration: 'PT2M',
+  },
+  {
+    videoId: 'r6ybAyj50qs',
+    title: 'Smart Scheduler',
+    description: 'Optimal posting times per platform',
+    uploadDate: '2026-02-17',
+    duration: 'PT2M',
+  },
+  {
+    videoId: 'vCf79xJPbdI',
+    title: 'Viral Pattern Analytics',
+    description: 'Discover what drives engagement',
+    uploadDate: '2026-02-17',
+    duration: 'PT2M',
+  },
+];
 
 export default function FeaturesPage() {
   return (
     <MarketingLayout currentPage="features">
+      {/* VideoObject JSON-LD — server-side schema for all 4 feature demos */}
+      {FEATURE_VIDEOS.map(v => (
+        <VideoSchemaScript key={v.videoId} {...v} />
+      ))}
+
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -70,28 +108,7 @@ export default function FeaturesPage() {
             social media workflow in minutes, not months.
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                title: 'Content Generator',
-                description: 'AI-powered post creation in your voice',
-                videoId: 'HbBBX0zYug4',
-              },
-              {
-                title: 'Analytics Dashboard',
-                description: 'Real-time metrics across all platforms',
-                videoId: 'zS2cnmYxpf8',
-              },
-              {
-                title: 'Smart Scheduler',
-                description: 'Optimal posting times per platform',
-                videoId: 'r6ybAyj50qs',
-              },
-              {
-                title: 'Viral Pattern Analytics',
-                description: 'Discover what drives engagement',
-                videoId: 'vCf79xJPbdI',
-              },
-            ].map((video, i) => (
+            {FEATURE_VIDEOS.map((video, i) => (
               <div
                 key={i}
                 className="rounded-xl overflow-hidden border border-white/10 bg-white/5 hover:border-orange-500/30 transition-colors"

@@ -235,8 +235,11 @@ function buildStructuredDataScripts(): Array<{ id: string; json: object }> {
         name: 'SYNTHEX -- AI-Powered Marketing Agency',
         description:
           'Discover how SYNTHEX uses AI to automate your entire social media marketing -- from content creation to scheduling and analytics.',
-        thumbnailUrl:
+        thumbnailUrl: [
+          'https://img.youtube.com/vi/7rRHU8xS-kU/default.jpg',
+          'https://img.youtube.com/vi/7rRHU8xS-kU/hqdefault.jpg',
           'https://img.youtube.com/vi/7rRHU8xS-kU/maxresdefault.jpg',
+        ],
         uploadDate: '2026-02-17',
         contentUrl: 'https://youtu.be/7rRHU8xS-kU',
         embedUrl: 'https://www.youtube.com/embed/7rRHU8xS-kU',
@@ -260,8 +263,11 @@ function buildStructuredDataScripts(): Array<{ id: string; json: object }> {
         name: 'SYNTHEX Product Demo',
         description:
           'Full product walkthrough of the SYNTHEX AI marketing platform. See the dashboard, content generator, scheduler, and analytics in action.',
-        thumbnailUrl:
+        thumbnailUrl: [
+          'https://img.youtube.com/vi/vnn6SJUlsWU/default.jpg',
+          'https://img.youtube.com/vi/vnn6SJUlsWU/hqdefault.jpg',
           'https://img.youtube.com/vi/vnn6SJUlsWU/maxresdefault.jpg',
+        ],
         uploadDate: '2026-02-17',
         contentUrl: 'https://youtu.be/vnn6SJUlsWU',
         embedUrl: 'https://www.youtube.com/embed/vnn6SJUlsWU',
