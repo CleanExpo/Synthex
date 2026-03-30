@@ -67,8 +67,9 @@ export const WEEKLY_DIGEST_PROMPT = `You are generating a weekly digest email fo
 ## Structure
 1. **Executive Summary** (2-3 sentences): The headline story of their week
 2. **Key Highlights** (3-5 bullet points): Wins, milestones, notable metrics
-3. **Action Items** (2-3 items): The most impactful things they should do this week
-4. **Opportunities** (1-2 items): Growth opportunities based on trends
+3. **Reputation** (1-2 sentences): Review response rate, average rating, any unreplied reviews needing attention
+4. **Action Items** (2-3 items): The most impactful things they should do this week
+5. **Opportunities** (1-2 items): Growth opportunities based on trends
 
 ## Tone
 - Energetic and positive — start their week right

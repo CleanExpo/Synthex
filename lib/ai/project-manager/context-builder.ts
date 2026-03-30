@@ -18,6 +18,12 @@ export interface PMContext {
     memberSince: string;
     lastLogin: string | null;
   };
+  reputation: {
+    totalReviews: number;
+    averageRating: number | null;
+    unrepliedCount: number;
+    responseRate90d: number; // 0.0–1.0
+  } | null;
   subscription: {
     plan: string;
     status: string;
@@ -93,7 +99,7 @@ export async function buildPMContext(userId: string): Promise<PMContext> {
     recentPostCount,
     activeCampaigns,
   ] = await Promise.all([
-    // 1. Basic user info
+    // 1. Basic user info (include organizationId for reputation query)
     prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -101,6 +107,7 @@ export async function buildPMContext(userId: string): Promise<PMContext> {
         email: true,
         createdAt: true,
         lastLogin: true,
+        organizationId: true,
       },
     }),
 
@@ -224,16 +231,58 @@ export async function buildPMContext(userId: string): Promise<PMContext> {
     }),
   ]);
 
+  // Fetch reputation stats if org is linked (SYN-532)
+  let reputation: PMContext['reputation'] = null;
+  const orgId = user?.organizationId;
+  if (orgId) {
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const [reviewAgg, unrepliedCount, responseAgg] = await Promise.all([
+      prisma.gBPReview.aggregate({
+        where: { organizationId: orgId, status: 'approved' },
+        _count: { id: true },
+        _avg: { rating: true },
+      }),
+      prisma.gBPReview.count({
+        where: {
+          organizationId: orgId,
+          status: 'approved',
+          responseStatus: 'pending',
+          replyText: null,
+        },
+      }),
+      prisma.gBPReview.groupBy({
+        by: ['responseStatus'],
+        where: {
+          organizationId: orgId,
+          status: 'approved',
+          reviewTime: { gte: ninetyDaysAgo },
+        },
+        _count: { id: true },
+      }),
+    ]);
+    const total90 = responseAgg.reduce((sum, r) => sum + r._count.id, 0);
+    const posted90 =
+      responseAgg.find(r => r.responseStatus === 'posted')?._count.id ?? 0;
+    reputation = {
+      totalReviews: reviewAgg._count.id,
+      averageRating: reviewAgg._avg.rating,
+      unrepliedCount,
+      responseRate90d: total90 > 0 ? posted90 / total90 : 0,
+    };
+  }
+
   // Process analytics events into feature usage
-  const uniqueFeatures = analyticsCount.map((e) => e.type);
+  const uniqueFeatures = analyticsCount.map(e => e.type);
   const totalEvents = analyticsCount.reduce((sum, e) => sum + e._count, 0);
 
   // Process recent posts with metrics
-  const recentPosts = recentPostsRaw.map((post) => {
+  const recentPosts = recentPostsRaw.map(post => {
     const latestMetrics = post.metrics[0];
     return {
       platform: post.connection.platform,
-      content: post.content.substring(0, 100) + (post.content.length > 100 ? '...' : ''),
+      content:
+        post.content.substring(0, 100) +
+        (post.content.length > 100 ? '...' : ''),
       publishedAt: post.publishedAt?.toISOString() || null,
       likes: latestMetrics?.likes || 0,
       comments: latestMetrics?.comments || 0,
@@ -249,12 +298,13 @@ export async function buildPMContext(userId: string): Promise<PMContext> {
       memberSince: user?.createdAt?.toISOString().split('T')[0] || '',
       lastLogin: user?.lastLogin?.toISOString() || null,
     },
+    reputation,
     subscription: {
       plan: subscription?.plan || 'free',
       status: subscription?.status || 'inactive',
       aiPostsUsed: subscription?.currentAiPosts || 0,
       aiPostsLimit: subscription?.maxAiPosts || 10,
-      socialAccountsConnected: platforms.filter((p) => p.isActive).length,
+      socialAccountsConnected: platforms.filter(p => p.isActive).length,
       socialAccountsLimit: subscription?.maxSocialAccounts || 2,
     },
     platforms,
@@ -279,7 +329,7 @@ export async function buildPMContext(userId: string): Promise<PMContext> {
           points: streak.points,
         }
       : null,
-    competitors: competitors.map((c) => ({
+    competitors: competitors.map(c => ({
       name: c.name,
       lastTrackedAt: c.lastTrackedAt?.toISOString() || null,
     })),
@@ -304,12 +354,22 @@ export function serializeContext(context: PMContext): string {
 **AI Posts:** ${context.subscription.aiPostsUsed}/${context.subscription.aiPostsLimit === -1 ? 'unlimited' : context.subscription.aiPostsLimit} used this month
 **Social Accounts:** ${context.subscription.socialAccountsConnected}/${context.subscription.socialAccountsLimit === -1 ? 'unlimited' : context.subscription.socialAccountsLimit} connected
 
-**Connected Platforms:** ${context.platforms.length > 0 ? context.platforms.map((p) => `${p.platform}${p.profileName ? ` (@${p.profileName})` : ''}${p.isActive ? '' : ' [inactive]'}`).join(', ') : 'None'}
+**Connected Platforms:** ${context.platforms.length > 0 ? context.platforms.map(p => `${p.platform}${p.profileName ? ` (@${p.profileName})` : ''}${p.isActive ? '' : ' [inactive]'}`).join(', ') : 'None'}
 
-**Active Personas:** ${context.personas.length > 0 ? context.personas.map((p) => `${p.name} (${p.tone}, ${p.status})`).join(', ') : 'None configured'}
+**Active Personas:** ${context.personas.length > 0 ? context.personas.map(p => `${p.name} (${p.tone}, ${p.status})`).join(', ') : 'None configured'}
 
 **Recent Performance (last 10 posts):**
-${context.recentPosts.length > 0 ? context.recentPosts.slice(0, 5).map((p) => `- [${p.platform}] "${p.content}" — ${p.likes} likes, ${p.comments} comments, ${p.shares} shares${p.engagementRate ? `, ${p.engagementRate.toFixed(2)}% engagement` : ''}`).join('\n') : 'No published posts yet'}
+${
+  context.recentPosts.length > 0
+    ? context.recentPosts
+        .slice(0, 5)
+        .map(
+          p =>
+            `- [${p.platform}] "${p.content}" — ${p.likes} likes, ${p.comments} comments, ${p.shares} shares${p.engagementRate ? `, ${p.engagementRate.toFixed(2)}% engagement` : ''}`
+        )
+        .join('\n')
+    : 'No published posts yet'
+}
 
 **7-Day Activity:** ${context.recentActivity.postsCreated7d} posts created, ${context.recentActivity.campaignsActive} active campaigns
 **30-Day Feature Usage:** ${context.featureUsage.totalEvents30d} events across ${context.featureUsage.uniqueFeatures.length} features
@@ -318,5 +378,11 @@ ${context.featureUsage.uniqueFeatures.length > 0 ? `Features used: ${context.fea
 ${context.healthScore ? `**Health Score:** ${context.healthScore.score}/100 (${context.healthScore.trend}, ${context.healthScore.riskLevel} risk)` : '**Health Score:** Not calculated yet'}
 ${context.streak ? `**Streak:** ${context.streak.currentStreak} days current (longest: ${context.streak.longestStreak}), Level ${context.streak.level}, ${context.streak.points} points` : '**Streak:** Not started'}
 
-**Tracked Competitors:** ${context.competitors.length > 0 ? context.competitors.map((c) => c.name).join(', ') : 'None tracked'}`;
+**Tracked Competitors:** ${context.competitors.length > 0 ? context.competitors.map(c => c.name).join(', ') : 'None tracked'}
+
+${
+  context.reputation
+    ? `**Reputation (Google Reviews):** ${context.reputation.totalReviews} total reviews${context.reputation.averageRating !== null ? `, avg ${context.reputation.averageRating.toFixed(1)} ★` : ''} · Response rate (90d): ${Math.round(context.reputation.responseRate90d * 100)}%${context.reputation.unrepliedCount > 0 ? ` · ⚠️ ${context.reputation.unrepliedCount} unreplied` : ''}`
+    : '**Reputation:** No Google Business Profile connected'
+}`;
 }

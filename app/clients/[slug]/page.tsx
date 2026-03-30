@@ -93,7 +93,11 @@ interface PublicEEATBreakdown {
   contentFreshness: number;
   backlinkSignals: number;
   schemaCoverage: number;
-  socialProof: number;
+  // v1.1 fields (SYN-532)
+  reviewResponseRate?: number;
+  averageReviewScore?: number;
+  /** @deprecated v1.0 only — replaced by reviewResponseRate + averageReviewScore */
+  socialProof?: number;
 }
 
 interface PublicAuthorityScore {
@@ -169,6 +173,50 @@ function AddressBlock({ client }: { client: ClientProfile }) {
   );
 }
 
+// ── GEO schema helpers (SYN-532) ─────────────────────────────────────────────
+
+function buildFAQItems(client: ClientProfile): Array<{ q: string; a: string }> {
+  const items: Array<{ q: string; a: string }> = [];
+  const name = client.businessName;
+
+  if (client.description) {
+    items.push({ q: `What does ${name} do?`, a: client.description });
+  }
+
+  if (client.address) {
+    const parts = [
+      ...(client.address.addressLines ?? []),
+      client.address.locality,
+      client.address.region,
+      client.address.postalCode,
+    ].filter(Boolean);
+    if (parts.length > 0) {
+      items.push({
+        q: `Where is ${name} located?`,
+        a: `${name} is located at ${parts.join(', ')}.`,
+      });
+    }
+  }
+
+  if (client.phone) {
+    items.push({
+      q: `How can I contact ${name}?`,
+      a: client.website
+        ? `You can reach ${name} by phone at ${client.phone} or visit their website at ${client.website}.`
+        : `You can reach ${name} by phone at ${client.phone}.`,
+    });
+  }
+
+  if (client.industry) {
+    items.push({
+      q: `What industry is ${name} in?`,
+      a: `${name} operates in the ${client.industry} industry.`,
+    });
+  }
+
+  return items;
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 interface AuthorityHubPageProps {
@@ -204,10 +252,48 @@ export default async function AuthorityHubPage({
   const hasAddress = client.address !== null;
   const hasReviews = client.reviews.length > 0;
 
+  const faqItems = buildFAQItems(client);
+  const faqSchema =
+    faqItems.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: faqItems.map(({ q, a }) => ({
+            '@type': 'Question',
+            name: q,
+            acceptedAnswer: { '@type': 'Answer', text: a },
+          })),
+        }
+      : null;
+
+  // Safe — content is JSON.stringify of server-built plain objects.
+  // Same pattern as LocalBusinessSchema (see SYN-512 security note).
+  const speakableSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: `${client.businessName} | Synthex Authority Hub`,
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['h1', '.speakable-description', '.speakable-score'],
+    },
+  };
+
   return (
     <>
       {/* JSON-LD schema injection */}
       <LocalBusinessSchema client={client} />
+      {}
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
+      {}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }}
+      />
 
       <main className="min-h-screen bg-[#06060a] text-white">
         {/* ── Hero ──────────────────────────────────────────────────────── */}
@@ -278,7 +364,7 @@ export default async function AuthorityHubPage({
             </div>
 
             {client.description && (
-              <p className="mt-5 text-sm text-white/50 leading-relaxed max-w-2xl">
+              <p className="speakable-description mt-5 text-sm text-white/50 leading-relaxed max-w-2xl">
                 {client.description}
               </p>
             )}
@@ -287,7 +373,10 @@ export default async function AuthorityHubPage({
 
         <div className="max-w-3xl mx-auto px-4 py-8 sm:px-6 space-y-8">
           {/* ── Authority score ───────────────────────────────────────────── */}
-          <section aria-labelledby="authority-score-heading">
+          <section
+            aria-labelledby="authority-score-heading"
+            className="speakable-score"
+          >
             <div className="flex items-center gap-2 mb-4">
               <h2
                 id="authority-score-heading"
@@ -351,43 +440,65 @@ export default async function AuthorityHubPage({
                       {getPublicScoreLabel(authorityScore.score)}
                     </p>
                     <p className="text-xs text-white/30 mt-0.5">
-                      E.E.A.T. composite · v1.0
+                      E.E.A.T. composite · v1.1
                     </p>
                   </div>
                 </div>
 
-                {/* Pillar breakdown */}
+                {/* Pillar breakdown — v1.1 rubric (SYN-532) */}
                 <div className="space-y-2 pt-1 border-t border-white/[0.05]">
                   <PublicPillarBar
                     label="GBP completeness"
                     value={authorityScore.breakdown.gbpCompleteness}
-                    maxValue={25}
+                    maxValue={20}
                   />
                   <PublicPillarBar
                     label="Review velocity"
                     value={authorityScore.breakdown.reviewVelocity}
-                    maxValue={20}
+                    maxValue={15}
                   />
                   <PublicPillarBar
                     label="Content freshness"
                     value={authorityScore.breakdown.contentFreshness}
-                    maxValue={20}
+                    maxValue={15}
                   />
                   <PublicPillarBar
                     label="Backlink signals"
                     value={authorityScore.breakdown.backlinkSignals}
-                    maxValue={15}
+                    maxValue={10}
                   />
                   <PublicPillarBar
                     label="Schema coverage"
                     value={authorityScore.breakdown.schemaCoverage}
                     maxValue={10}
                   />
-                  <PublicPillarBar
-                    label="Social proof"
-                    value={authorityScore.breakdown.socialProof}
-                    maxValue={10}
-                  />
+                  {/* v1.1 new pillars */}
+                  {authorityScore.breakdown.reviewResponseRate !==
+                    undefined && (
+                    <PublicPillarBar
+                      label="Response rate"
+                      value={authorityScore.breakdown.reviewResponseRate}
+                      maxValue={15}
+                    />
+                  )}
+                  {authorityScore.breakdown.averageReviewScore !==
+                    undefined && (
+                    <PublicPillarBar
+                      label="Review quality"
+                      value={authorityScore.breakdown.averageReviewScore}
+                      maxValue={15}
+                    />
+                  )}
+                  {/* v1.0 fallback — shown only if v1.1 fields are absent */}
+                  {authorityScore.breakdown.socialProof !== undefined &&
+                    authorityScore.breakdown.reviewResponseRate ===
+                      undefined && (
+                      <PublicPillarBar
+                        label="Social proof"
+                        value={authorityScore.breakdown.socialProof}
+                        maxValue={10}
+                      />
+                    )}
                 </div>
               </div>
             ) : (

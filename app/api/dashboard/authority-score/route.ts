@@ -111,62 +111,91 @@ export async function GET(request: NextRequest) {
     // ── Fetch signals ───────────────────────────────────────────────────────
     const thirtyDaysAgo = THIRTY_DAYS_AGO();
 
-    const [org, recentReviews, totalReviewAgg, recentPosts, brandDna] =
-      await Promise.all([
-        // GBP location signals
-        prisma.organization.findUnique({
-          where: { id: organizationId },
-          select: {
-            gbpLocations: {
-              where: { isPrimary: true },
-              take: 1,
-              select: {
-                phone: true,
-                address: true,
-                hours: true,
-                categories: true,
-                verified: true,
-              },
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 86400000);
+
+    const [
+      org,
+      recentReviews,
+      totalReviewAgg,
+      recentPosts,
+      brandDna,
+      reviewResponseAgg,
+    ] = await Promise.all([
+      // GBP location signals
+      prisma.organization.findUnique({
+        where: { id: organizationId },
+        select: {
+          gbpLocations: {
+            where: { isPrimary: true },
+            take: 1,
+            select: {
+              phone: true,
+              address: true,
+              hours: true,
+              categories: true,
+              verified: true,
             },
           },
-        }),
-        // Review velocity (last 30 days)
-        prisma.gBPReview.count({
-          where: {
-            organizationId,
-            status: 'approved',
-            reviewTime: { gte: thirtyDaysAgo },
-          },
-        }),
-        // Social proof aggregate
-        prisma.gBPReview.aggregate({
-          where: { organizationId, status: 'approved' },
-          _count: { id: true },
-          _avg: { rating: true },
-        }),
-        // Content freshness
-        prisma.post.count({
-          where: {
-            campaign: { organizationId },
-            status: 'published',
-            publishedAt: { gte: thirtyDaysAgo },
-          },
-        }),
-        // Brand DNA / schema coverage
-        prisma.brandDNA.findUnique({
-          where: { organizationId },
-          select: {
-            brandVoice: true,
-            industry: true,
-          },
-        }),
-      ]);
+        },
+      }),
+      // Review velocity (last 30 days)
+      prisma.gBPReview.count({
+        where: {
+          organizationId,
+          status: 'approved',
+          reviewTime: { gte: thirtyDaysAgo },
+        },
+      }),
+      // Average review score aggregate
+      prisma.gBPReview.aggregate({
+        where: { organizationId, status: 'approved' },
+        _count: { id: true },
+        _avg: { rating: true },
+      }),
+      // Content freshness
+      prisma.post.count({
+        where: {
+          campaign: { organizationId },
+          status: 'published',
+          publishedAt: { gte: thirtyDaysAgo },
+        },
+      }),
+      // Brand DNA / schema coverage
+      prisma.brandDNA.findUnique({
+        where: { organizationId },
+        select: {
+          brandVoice: true,
+          industry: true,
+        },
+      }),
+      // Review response rate — SYN-532 (last 90 days)
+      prisma.gBPReview.groupBy({
+        by: ['responseStatus'],
+        where: {
+          organizationId,
+          status: 'approved',
+          reviewTime: { gte: ninetyDaysAgo },
+        },
+        _count: { id: true },
+      }),
+    ]);
 
     const location = org?.gbpLocations[0] ?? null;
     const brandVoice = brandDna?.brandVoice as
       | { tone?: string }
       | null
       | undefined;
+
+    // Compute response rate from grouped counts (SYN-532)
+    const totalRecent90 = reviewResponseAgg.reduce(
+      (sum, r) => sum + r._count.id,
+      0
+    );
+    const postedRecent90 =
+      reviewResponseAgg.find(r => r.responseStatus === 'posted')?._count.id ??
+      0;
+    const reviewResponseRate =
+      totalRecent90 > 0 ? postedRecent90 / totalRecent90 : 0;
 
     // ── Compute ─────────────────────────────────────────────────────────────
     const result = computeAuthorityScore({
@@ -181,6 +210,7 @@ export async function GET(request: NextRequest) {
       hasBrandDna: brandDna !== null,
       brandDnaHasTone: Boolean(brandVoice?.tone),
       brandDnaHasIndustry: Boolean(brandDna?.industry),
+      reviewResponseRate,
       totalReviewCount: totalReviewAgg._count.id,
       averageRating: totalReviewAgg._avg.rating ?? 0,
     });
