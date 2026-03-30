@@ -1253,6 +1253,14 @@ Reverse lookup: which routes touch each model. Top 30 most-used models.
 | 2026-03-23 | /api/ws                 | COMP-5: WebSocket CORS restricted to synthex.social            | COMP-5 |
 | 2026-03-23 | /api/contact            | Created — public POST, Resend SDK, rate-limited (writeDefault) | —      |
 
+### 2026-03-30 — SYN-532: Review Intelligence → Authority Score + Weekly Digest + GEO schema
+
+- `lib/scoring/computeAuthorityScore.ts`: v1.1 rubric — adds `reviewResponseRate` (15pts) + `averageReviewScore` (15pts), reduces GBP/velocity/freshness/backlinks
+- `app/api/dashboard/authority-score/route.ts`: adds 90-day `groupBy` query for `reviewResponseRate` signal
+- `app/clients/[slug]/page.tsx`: v1.1 pillar bars, FAQPage + SpeakableSpecification JSON-LD, graceful v1.0 fallback
+- `lib/ai/project-manager/system-prompts.ts`: Reputation section added to WEEKLY_DIGEST_PROMPT
+- `lib/ai/project-manager/context-builder.ts`: reputation stats query (total reviews, avg rating, response rate 90d, unreplied count)
+
 ### 2026-03-30 — SYN-531: AI Review Response Engine
 
 - Prisma schema: `GBPReview` + `responseStatus` (pending/posted/dismissed), `dismissReason` — migration applied
