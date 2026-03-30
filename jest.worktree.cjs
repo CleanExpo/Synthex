@@ -39,8 +39,8 @@ module.exports = {
     '/coverage/',
     '/tests/e2e/',
     '/tests/playwright/',
-    // Ignore .claude config dirs but NOT .claude/worktrees (this config runs from inside a worktree)
-    '[\\\\/]\\.claude[\\\\/](?!worktrees)',
+    '/templates/',
+    '[\\\\/]\\.claude[\\\\/]',
   ],
 
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],

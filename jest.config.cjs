@@ -78,6 +78,7 @@ module.exports = {
     '/coverage/',
     '/tests/e2e/',
     '/tests/playwright/',
+    '/templates/',
     '\\.claude',
   ],
 
