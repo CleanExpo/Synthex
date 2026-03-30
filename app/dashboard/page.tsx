@@ -2,12 +2,15 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
+import useSWR from 'swr';
 import { toast } from 'sonner';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
+import { useUser } from '@/hooks/use-user';
 import { AlertTriangle, MessageSquare, RefreshCw } from '@/components/icons';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
+import FirstWinBanner from '@/components/notifications/FirstWinBanner';
 
 import {
   DashboardStats,
@@ -86,6 +89,10 @@ export default function DashboardPage() {
   const [error, setError] = useState<FetchError | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showTrialModal, setShowTrialModal] = useState(false);
+
+  // SYN-525/526/527: Current user for first_win_detected + conversion_copy_variant
+  const { user } = useUser();
 
   const {
     isOwner,
@@ -94,6 +101,44 @@ export default function DashboardPage() {
   } = useActiveBusiness();
   const isAllBusinessesMode =
     isOwner && activeOrganizationId === null && !businessLoading;
+
+  // SYN-525: Fetch unread notifications for first-win banner
+  const { data: notifData } = useSWR<NotificationsResponse>(
+    '/api/notifications',
+    fetchNotifications,
+    { revalidateOnFocus: false }
+  );
+
+  const firstWinNotif =
+    notifData?.notifications.find(n => n.type === 'first_win') ?? null;
+
+  // Derive trial state from account creation date
+  const trialDaysRemaining = user
+    ? getTrialDaysRemaining(user.createdAt)
+    : TRIAL_DAYS;
+
+  // SYN-526: Show trial modal when ≤3 days remain (delayed so it doesn't block first paint)
+  useEffect(() => {
+    if (trialDaysRemaining <= 3 && trialDaysRemaining >= 0) {
+      const t = setTimeout(() => setShowTrialModal(true), 2500);
+      return () => clearTimeout(t);
+    }
+  }, [trialDaysRemaining]);
+
+  // Build TrialWinData from first-win notification payload
+  const trialWinData = firstWinNotif?.payload
+    ? {
+        metricLabel: firstWinNotif.payload.metric ?? 'impressions',
+        actualValue: firstWinNotif.payload.actual_value ?? 0,
+        improvementPct: firstWinNotif.payload.improvement_pct ?? 0,
+        postDay: firstWinNotif.payload.detected_at
+          ? new Date(firstWinNotif.payload.detected_at).toLocaleDateString(
+              'en-AU',
+              { weekday: 'long' }
+            )
+          : 'recent',
+      }
+    : null;
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -215,7 +260,7 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  // ── Loading state ──────────────────────────────────────────────────────────
+  // ── Loading state ────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="space-y-5 animate-pulse">
@@ -244,7 +289,7 @@ export default function DashboardPage() {
     );
   }
 
-  // ── Error state ────────────────────────────────────────────────────────────
+  // ── Error state ──────────────────────────────────────────────────────────
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] p-4">
@@ -327,9 +372,21 @@ export default function DashboardPage() {
       homeUrl="/"
     >
       <div className="space-y-6">
+        {/* SYN-525: First Win Banner — shown above header on first win notification */}
+        {firstWinNotif && (
+          <FirstWinBanner
+            notificationId={firstWinNotif.id}
+            title={firstWinNotif.title}
+            body={firstWinNotif.body}
+            improvementPct={firstWinNotif.payload?.improvement_pct ?? 0}
+          />
+        )}
+
         <DashboardHeader
           showNotifications={showNotifications}
-          onToggleNotifications={() => setShowNotifications(!showNotifications)}
+          onToggleNotifications={() =>
+            setShowNotifications(!showNotifications)
+          }
           isNewUser={isNewUser}
         />
 
@@ -345,13 +402,13 @@ export default function DashboardPage() {
         {isAllBusinessesMode ? (
           <AllBusinessesDashboard />
         ) : isNewUser ? (
-          /* ── New user flow ──────────────────────────────────────────────── */
+          /* ── New user flow ───────────────────────────────────────────── */
           <div className="space-y-4">
             {/* Single-focus first-run card — shown only when user has no content and no platform connections */}
             {stats.totalPosts === 0 && stats.connectedPlatforms === 0 && (
               <div className="rounded-sm border-[0.5px] border-white/[0.08] bg-[#0a0a12] p-8 text-center max-w-lg mx-auto mt-2">
                 <div className="h-10 w-10 flex items-center justify-center border-[0.5px] border-amber-500/20 bg-amber-500/[0.06] rounded-sm mx-auto mb-4">
-                  <span className="text-amber-400 text-lg">✦</span>
+                  <span className="text-amber-400 text-lg">✨</span>
                 </div>
                 <h2 className="text-lg font-light text-white mb-2">
                   Create your first post in 2 minutes
@@ -390,7 +447,7 @@ export default function DashboardPage() {
             <ContentSuggestionsWidget />
           </div>
         ) : (
-          /* ── Returning user flow — AI Command Centre ─────────────────── */
+          /* ── Returning user flow — AI Command Centre ────────────────────── */
           <>
             <div className="grid gap-4 lg:grid-cols-2">
               <HealthScoreWidget />
@@ -402,10 +459,29 @@ export default function DashboardPage() {
                 <BrandIQCard />
               </div>
             </div>
+
+            {/* SYN-527: Brand IQ Score Card — unlocks on first win */}
+            <BrandIQCard
+              firstWinDetected={user?.first_win_detected ?? false}
+            />
+
             <AICommandCentre />
           </>
         )}
       </div>
+
+      {/* SYN-526: Trial End Modal — shows when ≤3 trial days remain */}
+      {showTrialModal && (
+        <TrialEndModal
+          variant={user?.conversion_copy_variant ?? 'control'}
+          winData={trialWinData}
+          daysRemaining={trialDaysRemaining}
+          onSubscribe={() => {
+            window.location.href = '/dashboard/billing?ref=trial_modal';
+          }}
+          onDismiss={() => setShowTrialModal(false)}
+        />
+      )}
     </ErrorBoundary>
   );
 }

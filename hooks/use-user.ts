@@ -19,6 +19,10 @@ export interface AppUser {
   isMultiBusinessOwner: boolean;
   activeOrganizationId: string | null;
   ownedBusinessCount?: number;
+  // SYN-525/526/527: First Win + conversion copy variant
+  first_win_detected?: boolean;
+  first_win_detected_at?: string | null;
+  conversion_copy_variant?: 'win' | 'control' | null;
 }
 
 interface ApiUserResponse {
