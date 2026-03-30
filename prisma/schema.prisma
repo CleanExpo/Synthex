@@ -605,6 +605,9 @@ model Organization {
   // Authority Score history — SYN-513
   authorityScores AuthorityScore[]
 
+  // Weekly content calendars — SYN-521
+  contentCalendars ContentCalendar[]
+
   // GSC content topic suggestions (SYN-472)
   contentTopicSuggestions ContentTopicSuggestion[]
 
@@ -5478,4 +5481,35 @@ model AuthorityScore {
 
   @@index([organizationId, computedAt(sort: Desc)])
   @@map("authority_scores")
+}
+
+// ── Weekly content calendar — SYN-521 ─────────────────────────────────────────
+
+/// One AI-generated content calendar per organisation per week.
+/// Slots are stored as JSONB (CalendarSlot[]) — see lib/calendar/types.ts.
+/// status: draft → approved → published
+model ContentCalendar {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+
+  weekStart DateTime @map("week_start") @db.Date
+  weekEnd   DateTime @map("week_end") @db.Date
+
+  /// CalendarSlot[] — see lib/calendar/types.ts
+  slots Json
+
+  /// draft | approved | published
+  status String @default("draft")
+
+  /// Algorithm version — bump when generation logic changes
+  signalsVersion String @default("1.0") @map("signals_version")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, weekStart])
+  @@index([organizationId, weekStart(sort: Desc)])
+  @@map("content_calendars")
 }
