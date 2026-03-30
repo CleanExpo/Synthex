@@ -7,7 +7,6 @@
  * Board decision: SYN-538 / SYN-541 | Session 9 | 2026-03-30
  */
 
-import { describe, expect, it } from 'vitest';
 import { GBPClient } from '@/lib/external-apis/gbp-client';
 import type { ExternalAPIClient } from '@/lib/external-apis/interface';
 import type { GBPRequest, GBPResponse } from '@/lib/external-apis/gbp-client';
@@ -70,9 +69,7 @@ describe('GBPClient.normaliseError', () => {
   });
 
   it('maps fetch TypeError to NETWORK_TIMEOUT (retryable: true)', () => {
-    const result = client.normaliseError(
-      new TypeError('Failed to fetch')
-    );
+    const result = client.normaliseError(new TypeError('Failed to fetch'));
     expect(result.code).toBe('NETWORK_TIMEOUT');
     expect(result.retryable).toBe(true);
   });

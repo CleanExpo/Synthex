@@ -30,6 +30,8 @@ module.exports = {
     'tests[\\\\/]integration[\\\\/].+\\.test\\.(ts|tsx|js)$',
     'tests[\\\\/]contract[\\\\/].+\\.test\\.(ts|tsx|js)$',
     'tests[\\\\/]strategic-marketing[\\\\/].+\\.test\\.(ts|tsx|js)$',
+    'tests[\\\\/]auto-publish[\\\\/].+\\.test\\.(ts|tsx|js)$',
+    'tests[\\\\/]external-apis[\\\\/].+\\.test\\.(ts|tsx|js)$',
     '__tests__[\\\\/].+\\.test\\.(ts|tsx|js)$',
   ],
 

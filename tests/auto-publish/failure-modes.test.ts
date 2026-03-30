@@ -8,25 +8,19 @@
  * Board decision: SYN-538 / SYN-540 | Session 9 | 2026-03-30
  */
 
-import { describe, it } from 'vitest';
-
 describe('Auto-publish — Failure State 1: Expired social credentials', () => {
-  it.todo(
-    'pauses auto-publish for affected client when platform returns 401'
-  );
-  it.todo(
-    'fires in-app notification: "Your social connection has expired"'
-  );
+  it.todo('pauses auto-publish for affected client when platform returns 401');
+  it.todo('fires in-app notification: "Your social connection has expired"');
   it.todo(
     'logs zero-cost failed run to pipeline_cost_ledger with error_code UNAUTHORIZED'
   );
-  it.todo('does NOT retry after a 401 — expired tokens require explicit reconnection');
+  it.todo(
+    'does NOT retry after a 401 — expired tokens require explicit reconnection'
+  );
 });
 
 describe('Auto-publish — Failure State 2: Platform rate limit', () => {
-  it.todo(
-    'reads Retry-After header when platform returns 429'
-  );
+  it.todo('reads Retry-After header when platform returns 429');
   it.todo(
     'uses exponential backoff (30s → 60s → 120s) when Retry-After is absent'
   );
@@ -38,9 +32,7 @@ describe('Auto-publish — Failure State 2: Platform rate limit', () => {
 });
 
 describe('Auto-publish — Failure State 3: Partial post failure (media attachment)', () => {
-  it.todo(
-    'deletes the partial text-only post via platform delete endpoint'
-  );
+  it.todo('deletes the partial text-only post via platform delete endpoint');
   it.todo(
     'moves post to manual review queue with requires_media_recheck: true'
   );
@@ -56,7 +48,7 @@ describe('Auto-publish — Failure State 4: Client account deactivated', () => {
   );
   it.todo('skips post silently when client is inactive — no client alert');
   it.todo(
-    'removes all pending posts from deactivated client\'s auto-publish queue'
+    "removes all pending posts from deactivated client's auto-publish queue"
   );
   it.todo(
     'logs skip to run log with client_id, reason: account_deactivated, posts_skipped count'
@@ -67,9 +59,7 @@ describe('Auto-publish — Failure State 5: Content freshness validation failure
   it.todo(
     'flags post as stale when valid_until timestamp has passed at execution time'
   );
-  it.todo(
-    'flags post as stale when freshness_confidence < 0.6'
-  );
+  it.todo('flags post as stale when freshness_confidence < 0.6');
   it.todo(
     'moves stale post to manual review queue with requires_freshness_review: true'
   );
