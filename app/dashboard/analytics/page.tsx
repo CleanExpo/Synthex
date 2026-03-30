@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import type { DateRange } from 'react-day-picker';
 import { AnalyticsSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
-import { usePerformanceAnalytics } from '@/hooks/use-dashboard';
+import {
+  usePerformanceAnalytics,
+  useRealtimeAnalytics,
+} from '@/hooks/use-dashboard';
 import { HelpVideo } from '@/components/ui/HelpVideo';
 
 import {
@@ -19,6 +22,7 @@ import {
   AnalyticsStats,
   PostDetailSheet,
 } from '@/components/analytics';
+import type { ExportFormat } from '@/components/analytics/analytics-header';
 
 // Dynamic imports for heavy chart components (Recharts ~80KB)
 const EngagementChart = dynamic(
@@ -82,6 +86,13 @@ const TrendPredictionsWidget = dynamic(
     })),
   { ssr: false }
 );
+const ReportPresetsPanel = dynamic(
+  () =>
+    import('@/components/analytics/ReportPresetsPanel').then(m => ({
+      default: m.ReportPresetsPanel,
+    })),
+  { ssr: false }
+);
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('30d');
@@ -114,6 +125,9 @@ export default function AnalyticsPage() {
   });
 
   const performanceData = responseData?.data;
+
+  // Realtime stats — polls /api/analytics/realtime every 30s
+  const { data: realtimeData } = useRealtimeAnalytics();
 
   const handleRetry = useCallback(async () => {
     await refetch();
@@ -229,23 +243,59 @@ export default function AnalyticsPage() {
     }));
   }, [performanceData?.platforms]);
 
-  const handleExport = useCallback(() => {
-    const exportData = {
-      overview: performanceData?.overview ?? null,
-      growth: performanceData?.growth ?? null,
-      platforms: performanceData?.platforms ?? [],
-      timeline: performanceData?.timeline ?? [],
-      timeRange,
-      exportedAt: new Date().toISOString(),
-    };
-    const data = JSON.stringify(exportData, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `analytics-${timeRange}.json`;
-    a.click();
-  }, [performanceData, timeRange]);
+  const isExportingRef = useRef(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = useCallback(
+    async (format: ExportFormat = 'csv') => {
+      if (isExportingRef.current) return;
+      isExportingRef.current = true;
+      setIsExporting(true);
+
+      try {
+        const params = new URLSearchParams({ format });
+        if (timeRange !== 'custom') {
+          params.set('period', timeRange);
+        }
+        if (platform !== 'all') {
+          params.set('platforms', platform);
+        }
+        if (startDate) params.set('startDate', startDate);
+        if (endDate) params.set('endDate', endDate);
+
+        const res = await fetch(`/api/analytics/export?${params.toString()}`, {
+          credentials: 'include',
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(
+            (errData as { message?: string }).message ??
+              `Export failed (${res.status})`
+          );
+        }
+
+        const blob = await res.blob();
+        const contentDisposition = res.headers.get('Content-Disposition') ?? '';
+        const filenameMatch = contentDisposition.match(/filename="(.+?)"/);
+        const filename =
+          filenameMatch?.[1] ?? `analytics-${timeRange}.${format}`;
+
+        const objectUrl = window.URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = objectUrl;
+        anchor.download = filename;
+        anchor.click();
+        window.URL.revokeObjectURL(objectUrl);
+      } catch (err) {
+        console.error('Analytics export error:', err);
+      } finally {
+        isExportingRef.current = false;
+        setIsExporting(false);
+      }
+    },
+    [timeRange, platform, startDate, endDate]
+  );
 
   const handleViewPostDetails = useCallback(
     (postIndex: number) => {
@@ -294,6 +344,7 @@ export default function AnalyticsPage() {
           timeRange={timeRange}
           onTimeRangeChange={handleTimeRangeChange}
           onExport={handleExport}
+          isExporting={isExporting}
           platform={platform}
           onPlatformChange={setPlatform}
           dateRange={dateRange}
@@ -303,6 +354,45 @@ export default function AnalyticsPage() {
       </div>
 
       <AnalyticsStats data={displayData} growth={performanceData?.growth} />
+
+      {/* Realtime stats bar — polls /api/analytics/realtime every 30s */}
+      {realtimeData && (
+        <div className="flex flex-wrap items-center gap-4 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs">
+          <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            LIVE
+          </div>
+          <div className="flex flex-wrap gap-4 text-slate-400">
+            <span>
+              <span className="text-white font-medium">
+                {realtimeData.impressions.toLocaleString('en-AU')}
+              </span>{' '}
+              impressions
+            </span>
+            <span>
+              <span className="text-white font-medium">
+                {realtimeData.engagement.toLocaleString('en-AU')}
+              </span>{' '}
+              engagements
+            </span>
+            <span>
+              <span className="text-white font-medium">
+                {realtimeData.reach.toLocaleString('en-AU')}
+              </span>{' '}
+              reach
+            </span>
+            <span>
+              <span className="text-white font-medium">
+                {realtimeData.clicks.toLocaleString('en-AU')}
+              </span>{' '}
+              clicks
+            </span>
+          </div>
+        </div>
+      )}
 
       <AnomalyAlerts />
       <SentimentAnalysis />
@@ -339,6 +429,8 @@ export default function AnalyticsPage() {
         engagementData={engagementTableData}
         contentData={contentTableData}
       />
+
+      <ReportPresetsPanel />
 
       <PostDetailSheet
         open={isDetailOpen}

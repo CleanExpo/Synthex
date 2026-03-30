@@ -13,21 +13,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
-import { Download } from '@/components/icons';
+import { Download, ChevronDown } from '@/components/icons';
 import { timeRangeOptions, platformFilterOptions } from './analytics-config';
 import type { DateRange } from 'react-day-picker';
+
+export type ExportFormat = 'csv' | 'json' | 'pdf';
 
 interface AnalyticsHeaderProps {
   timeRange: string;
   onTimeRangeChange: (value: string) => void;
-  onExport: () => void;
+  onExport: (format: ExportFormat) => void;
   /** @deprecated Use platform/onPlatformChange instead */
   onFilter?: () => void;
   platform?: string;
   onPlatformChange?: (value: string) => void;
   dateRange?: DateRange;
   onDateRangeChange?: (range: DateRange | undefined) => void;
+  isExporting?: boolean;
 }
 
 export function AnalyticsHeader({
@@ -38,6 +47,7 @@ export function AnalyticsHeader({
   onPlatformChange,
   dateRange,
   onDateRangeChange,
+  isExporting = false,
 }: AnalyticsHeaderProps) {
   const isCustomRange = timeRange === 'custom';
 
@@ -79,10 +89,29 @@ export function AnalyticsHeader({
             </SelectContent>
           </Select>
 
-          <Button onClick={onExport} className="gradient-primary text-white">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                className="gradient-primary text-white"
+                disabled={isExporting}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {isExporting ? 'Exporting…' : 'Export'}
+                <ChevronDown className="ml-1 h-3 w-3 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onExport('csv')}>
+                CSV — spreadsheet
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onExport('json')}>
+                JSON — raw data
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onExport('pdf')}>
+                PDF — formatted report
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
