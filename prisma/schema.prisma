@@ -5566,3 +5566,47 @@ model PublishQueueItem {
   @@index([calendarId])
   @@map("publish_queue")
 }
+
+// ---------------------------------------------------------------------------
+// Predictive Seasonal Signal Engine — SYN-547
+// ---------------------------------------------------------------------------
+
+/// Industry-specific, geographically-calibrated market opportunity windows.
+/// Populated weekly by the update-seasonal-signals Edge Function.
+/// Signals are shared across all organisations — they are industry+state level,
+/// not per-client. Clients query via the get_seasonal_signals SQL function.
+model SeasonalSignal {
+  id               String   @id @default(cuid())
+  industrySlug     String   @map("industry_slug")    // e.g. "plumbing-hvac"
+  subIndustry      String?  @map("sub_industry")      // nullable, future use
+  locationState    String   @map("location_state")   // AU state: VIC|NSW|QLD|WA|SA|TAS|ACT|NT|AU(national)
+  signalType       String   @map("signal_type")       // trend_spike|seasonal_peak|local_event|holiday|school_term
+  opportunityLabel String   @map("opportunity_label") // human-readable, e.g. "Winter Pipe Season"
+  windowStart      DateTime @map("window_start") @db.Date
+  windowEnd        DateTime @map("window_end") @db.Date
+  confidenceScore  Int      @map("confidence_score") // 0-100
+  source           String   // google_trends|abs_data|school_calendar|public_holiday
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([industrySlug, locationState, windowStart, source], name: "seasonal_signal_dedup")
+  @@index([industrySlug, locationState])
+  @@index([windowStart])
+  @@index([confidenceScore])
+  @@map("seasonal_signals")
+}
+
+/// Audit log for update-seasonal-signals cron runs.
+model SeasonalSignalRun {
+  id              String   @id @default(cuid())
+  runAt           DateTime @default(now()) @map("run_at")
+  recordsUpserted Int      @default(0) @map("records_upserted")
+  errors          Json?    // JSONB — array of error strings
+  durationMs      Int?     @map("duration_ms")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([runAt])
+  @@map("seasonal_signals_runs")
+}
