@@ -1,110 +1,78 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// SYN-513: Authority Score display component
+// Shows the 0-100 E.E.A.T. composite score with breakdown bars
+
+import type { AuthorityScoreRecord } from '@/lib/clients/getClientBySlug';
 
 interface AuthorityScoreCardProps {
-  score: number;
-  claimsFound: number;
-  claimsVerified: number;
-  claimsFailed: number;
-  sourceBreakdown: Record<string, number>;
+  score: AuthorityScoreRecord | null;
+  previousScore?: number | null;
 }
 
-function getTier(score: number) {
-  if (score >= 80)
-    return {
-      label: 'Excellent',
-      color: 'text-emerald-400',
-      bg: 'bg-emerald-500/10 border-emerald-500/20',
-    };
-  if (score >= 60)
-    return {
-      label: 'Good',
-      color: 'text-orange-400',
-      bg: 'bg-orange-500/10 border-orange-500/20',
-    };
-  if (score >= 40)
-    return {
-      label: 'Fair',
-      color: 'text-orange-400',
-      bg: 'bg-orange-500/10 border-orange-500/20',
-    };
-  return {
-    label: 'Needs Work',
-    color: 'text-red-400',
-    bg: 'bg-red-500/10 border-red-500/20',
-  };
-}
-
-const SOURCE_COLORS: Record<string, string> = {
-  government: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-  academic: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-  industry: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
-  web: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
+const BREAKDOWN_LABELS: Record<string, { label: string; maxPts: number }> = {
+  gbp_completeness:  { label: 'Google Business Profile', maxPts: 25 },
+  review_velocity:   { label: 'Review Velocity',          maxPts: 20 },
+  content_freshness: { label: 'Content Freshness',        maxPts: 20 },
+  backlink_signals:  { label: 'Backlink Signals',         maxPts: 15 },
+  schema_coverage:   { label: 'Schema Coverage',          maxPts: 10 },
+  social_proof:      { label: 'Social Proof',             maxPts: 10 },
 };
 
-export function AuthorityScoreCard({
-  score,
-  claimsFound,
-  claimsVerified,
-  claimsFailed,
-  sourceBreakdown,
-}: AuthorityScoreCardProps) {
-  const tier = getTier(score);
+export default function AuthorityScoreCard({ score, previousScore }: AuthorityScoreCardProps) {
+  const delta = score && previousScore != null ? score.score - previousScore : null;
 
   return (
-    <Card className="bg-white/5 border-orange-500/10 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="text-white text-sm font-medium">
-          Authority Score
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-baseline gap-3 mb-4">
-          <span className={`text-5xl font-bold ${tier.color}`}>
-            {Math.round(score)}
-          </span>
-          <span className="text-slate-300 text-lg">/100</span>
-          <span
-            className={`ml-auto px-2 py-1 rounded border text-xs font-medium ${tier.bg} ${tier.color}`}
-          >
-            {tier.label}
-          </span>
+    <section aria-label="Authority Score" className="rounded-2xl border border-slate-700/60 bg-slate-800/40 p-6">
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h2 className="text-base font-semibold text-white">Authority Score</h2>
+          <p className="text-xs text-slate-400 mt-0.5">E.E.A.T. composite — updated daily</p>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="text-center">
-            <p className="text-lg font-semibold text-white">{claimsFound}</p>
-            <p className="text-xs text-slate-300">Found</p>
+        {score ? (
+          <div className="flex flex-col items-end">
+            <span className="text-5xl font-black text-white tabular-nums">{score.score}</span>
+            {delta !== null && (
+              <span className={`text-xs font-medium mt-1 ${delta >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {delta >= 0 ? '+' : ''}{delta} vs last week
+              </span>
+            )}
           </div>
-          <div className="text-center">
-            <p className="text-lg font-semibold text-emerald-400">
-              {claimsVerified}
-            </p>
-            <p className="text-xs text-slate-300">Verified</p>
-          </div>
-          <div className="text-center">
-            <p className="text-lg font-semibold text-red-400">{claimsFailed}</p>
-            <p className="text-xs text-slate-300">Failed</p>
-          </div>
-        </div>
-
-        {Object.entries(sourceBreakdown).filter(([, count]) => count > 0)
-          .length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(sourceBreakdown)
-              .filter(([, count]) => count > 0)
-              .map(([type, count]) => (
-                <span
-                  key={type}
-                  className={`px-2 py-0.5 rounded border text-xs font-medium ${SOURCE_COLORS[type] ?? SOURCE_COLORS.web}`}
-                >
-                  {type}: {count}
-                </span>
-              ))}
+        ) : (
+          <div className="flex flex-col items-end">
+            <span className="text-5xl font-black text-slate-600">—</span>
+            <span className="text-xs text-slate-500 mt-1">Calculating...</span>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* E.E.A.T. breakdown bars */}
+      <div className="space-y-3">
+        {Object.entries(BREAKDOWN_LABELS).map(([key, { label, maxPts }]) => {
+          const pts = score?.eeat_breakdown?.[key as keyof typeof score.eeat_breakdown] ?? 0;
+          const pct = Math.min(100, (pts / maxPts) * 100);
+          return (
+            <div key={key}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-slate-400">{label}</span>
+                <span className="text-xs font-mono text-slate-300">{pts}/{maxPts}</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-slate-700/60">
+                <div
+                  className="h-full rounded-full bg-orange-400 transition-all duration-700"
+                  style={{ width: `${pct}%` }}
+                  role="progressbar"
+                  aria-valuenow={pts}
+                  aria-valuemin={0}
+                  aria-valuemax={maxPts}
+                  aria-label={label}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
