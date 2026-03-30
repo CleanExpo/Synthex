@@ -1253,6 +1253,15 @@ Reverse lookup: which routes touch each model. Top 30 most-used models.
 | 2026-03-23 | /api/ws                 | COMP-5: WebSocket CORS restricted to synthex.social            | COMP-5 |
 | 2026-03-23 | /api/contact            | Created — public POST, Resend SDK, rate-limited (writeDefault) | —      |
 
+### 2026-03-30 — SYN-531: AI Review Response Engine
+
+- Prisma schema: `GBPReview` + `responseStatus` (pending/posted/dismissed), `dismissReason` — migration applied
+- `app/api/google-business/reviews/[reviewId]/auto-reply/route.ts`: BrandDNA voice integration + real AI call via `getAIProvider()`
+- `app/api/google-business/reviews/[reviewId]/reply/route.ts`: sets `responseStatus = 'posted'` on successful post
+- `app/api/google-business/reviews/[reviewId]/dismiss/route.ts`: NEW — POST `{ reason }` → sets `responseStatus = 'dismissed'` + `dismissReason`
+- `app/api/cron/gbp-monitor/route.ts`: auto-generates AI suggestions for up to 10 new unreplied reviews per cron run
+- `app/dashboard/google-business/reviews/page.tsx`: one-tap Approve, Edit+Approve, Dismiss with reason picker, response status badges
+
 ### 2026-03-30 — SYN-530: Review Intelligence Engine
 
 - `vercel.json`: gbp-monitor cron schedule `"0 5 * * *"` → `"*/5 * * * *"` (every 5 min)

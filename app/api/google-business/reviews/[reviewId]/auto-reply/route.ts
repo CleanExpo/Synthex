@@ -12,14 +12,29 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
+import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
+
+// ── Types ────────────────────────────────────────────────────────────────────
+
+interface BrandVoice {
+  formality?: number; // 1-5 (1 = casual, 5 = formal)
+  boldness?: number; // 1-5
+  tone?: string;
+  samplePhrases?: string[];
+}
 
 // ── Validation ───────────────────────────────────────────────────────────────
 
-const autoReplyBodySchema = z.object({
-  tone: z.enum(['warm', 'professional', 'empathetic', 'constructive']).optional(),
-  maxWords: z.number().int().min(20).max(500).optional(),
-}).strict().optional();
+const autoReplyBodySchema = z
+  .object({
+    tone: z
+      .enum(['warm', 'professional', 'empathetic', 'constructive'])
+      .optional(),
+    maxWords: z.number().int().min(20).max(500).optional(),
+  })
+  .strict()
+  .optional();
 
 export async function POST(
   request: NextRequest,
@@ -65,11 +80,17 @@ export async function POST(
       return NextResponse.json({ error: 'Review not found' }, { status: 404 });
     }
 
-    // Get org context for tone
-    const org = await prisma.organization.findUnique({
-      where: { id: organizationId },
-      select: { name: true, industry: true },
-    });
+    // Get org context + brand voice for tone-matched response
+    const [org, brandDna] = await Promise.all([
+      prisma.organization.findUnique({
+        where: { id: organizationId },
+        select: { name: true, industry: true },
+      }),
+      prisma.brandDNA.findUnique({
+        where: { organizationId },
+        select: { brandVoice: true, businessName: true, vertical: true },
+      }),
+    ]);
 
     // Generate AI suggestion
     const prompt = buildReplyPrompt(
@@ -78,30 +99,25 @@ export async function POST(
       review.reviewerName,
       review.location.locationName,
       org?.name,
-      org?.industry
-    );
-
-    // Use internal AI — call the content generation endpoint
-    const aiResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/ai/generate`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt,
-          maxTokens: 300,
-          temperature: 0.7,
-        }),
-      }
+      org?.industry,
+      brandDna?.brandVoice as BrandVoice | null
     );
 
     let suggestion = '';
 
-    if (aiResponse.ok) {
-      const aiData = await aiResponse.json();
-      suggestion = aiData.content || aiData.text || '';
-    } else {
-      // Fallback template
+    try {
+      const ai = getAIProvider();
+      const aiResult = await ai.complete({
+        model: ai.models.fast,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: 350,
+      });
+      suggestion = (aiResult.choices[0]?.message.content ?? '').trim();
+    } catch (aiErr) {
+      logger.warn('GBP auto-reply: AI generation failed, using fallback', {
+        error: aiErr instanceof Error ? aiErr.message : String(aiErr),
+      });
       suggestion = buildFallbackReply(review.rating, review.reviewerName);
     }
 
@@ -134,32 +150,59 @@ function buildReplyPrompt(
   reviewerName: string | null,
   locationName: string,
   orgName?: string | null,
-  industry?: string | null
+  industry?: string | null,
+  brandVoice?: BrandVoice | null
 ): string {
-  const tone =
-    rating >= 4
-      ? 'warm and grateful'
-      : rating >= 3
-        ? 'appreciative and constructive'
-        : 'empathetic and professional';
-  const name = reviewerName || 'the customer';
+  const name = reviewerName ? reviewerName.split(' ')[0] : null;
 
-  return `Write a ${tone} business reply to this Google Business Profile review.
+  // Sentiment-appropriate instruction
+  let sentimentInstruction: string;
+  if (rating >= 5) {
+    sentimentInstruction =
+      'Warm appreciation + reference something specific from the review if possible. Invite them to return.';
+  } else if (rating === 4) {
+    sentimentInstruction =
+      'Express genuine gratitude. Invite them to connect further or return.';
+  } else if (rating === 3) {
+    sentimentInstruction =
+      "Acknowledge their experience. Say you'd love to learn more. Provide a direct contact CTA.";
+  } else {
+    sentimentInstruction =
+      'Show empathy. Frame the response around resolution, not defence. Invite them to contact you offline to resolve the issue.';
+  }
 
-Business: ${orgName || locationName}${industry ? ` (${industry})` : ''}
-Reviewer: ${name}
+  // Brand voice context (only if available)
+  let voiceContext = '';
+  if (brandVoice) {
+    const formalityLevel =
+      (brandVoice.formality ?? 3) >= 4
+        ? 'formal and professional'
+        : (brandVoice.formality ?? 3) <= 2
+          ? 'conversational and relaxed'
+          : 'warm and professional';
+    voiceContext = `\nBrand voice: ${formalityLevel}${brandVoice.tone ? `, ${brandVoice.tone}` : ''}.`;
+    if (brandVoice.samplePhrases?.length) {
+      voiceContext += ` Match this register (sample phrases: "${brandVoice.samplePhrases.slice(0, 2).join('", "')}").`;
+    }
+  }
+
+  return `You are writing a Google Business Profile reply on behalf of a business owner.
+
+Business: ${orgName || locationName}${industry ? ` (${industry})` : ''}${voiceContext}
+Reviewer: ${name ?? 'a customer'}
 Rating: ${rating}/5 stars
-Review: ${comment || '(no text — just a star rating)'}
+Review: ${comment || '(no text provided — just a star rating)'}
 
-Guidelines:
-- Keep it under 200 words
-- Be genuine, not generic
-- ${rating <= 3 ? 'Acknowledge the issue, apologise where appropriate, and invite them to reach out privately' : 'Thank them specifically for what they mentioned'}
-- Use Australian English spelling (recognise, colour, etc.)
-- Do NOT use emojis
-- Do NOT include any signature line
+Instructions:
+- ${sentimentInstruction}
+- Keep it under 180 words
+- Sound like a real person, not a corporate template
+- Do NOT start with "Thank you for your feedback", "We appreciate your review", or "We take all feedback seriously"
+- Do NOT use emojis or include a signature
+- Use Australian English spelling (recognise, colour, organise, etc.)
+- Address the reviewer by first name if provided
 
-Reply:`;
+Reply (write only the reply text, nothing else):`;
 }
 
 function buildFallbackReply(

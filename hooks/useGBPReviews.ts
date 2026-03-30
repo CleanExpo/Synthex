@@ -16,6 +16,8 @@ interface GBPReview {
   replyTime: string | null;
   aiSuggestion: string | null;
   aiSuggestionAt: string | null;
+  responseStatus: string; // pending | posted | dismissed
+  dismissReason: string | null;
   location?: { locationName: string };
 }
 

@@ -4684,6 +4684,10 @@ model GBPReview {
   aiSuggestion    String?   @map("ai_suggestion") @db.Text // AI-generated reply suggestion
   aiSuggestionAt  DateTime? @map("ai_suggestion_at")
 
+  // Review response workflow (SYN-531)
+  responseStatus  String    @default("pending") @map("response_status") // pending | posted | dismissed
+  dismissReason   String?   @map("dismiss_reason") // too_formal | wrong_tone | inaccurate | other
+
   // Moderation + widget (UNI-1642)
   status              String    @default("approved") @map("status") // approved | pending | rejected | hidden
   isFeatured          Boolean   @default(false) @map("is_featured")

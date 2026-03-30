@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,9 +16,20 @@ import {
   Loader2,
   Zap,
   Filter,
+  CheckCircle,
+  X,
+  Edit,
 } from '@/components/icons';
 
 type RatingFilter = 'all' | '1' | '2' | '3' | '4' | '5' | 'unreplied';
+type DismissReason = 'too_formal' | 'wrong_tone' | 'inaccurate' | 'other';
+
+const DISMISS_REASONS: { value: DismissReason; label: string }[] = [
+  { value: 'too_formal', label: 'Too formal' },
+  { value: 'wrong_tone', label: 'Wrong tone' },
+  { value: 'inaccurate', label: 'Inaccurate' },
+  { value: 'other', label: 'Other' },
+];
 
 export default function GBPReviewsPage() {
   const { locations, primaryLocation } = useGBPLocations();
@@ -37,58 +48,118 @@ export default function GBPReviewsPage() {
 
   const { reviews, pagination, isLoading, refresh } =
     useGBPReviews(reviewOptions);
+
+  // Edit-and-send flow
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
+
+  // One-tap approve flow
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+
+  // AI generation
   const [generatingAI, setGeneratingAI] = useState<string | null>(null);
+
+  // Dismiss flow
+  const [dismissingId, setDismissingId] = useState<string | null>(null);
+  const [dismissingReasonId, setDismissingReasonId] = useState<string | null>(
+    null
+  );
 
   const hasLocations = locations.length > 0;
 
-  const handleSendReply = async (reviewId: string) => {
-    if (!replyText.trim()) return;
-    setSending(true);
-    try {
-      const response = await fetch(
-        `/api/google-business/reviews/${reviewId}/reply`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ text: replyText }),
+  const handleSendReply = useCallback(
+    async (reviewId: string) => {
+      if (!replyText.trim()) return;
+      setSending(true);
+      try {
+        const res = await fetch(
+          `/api/google-business/reviews/${reviewId}/reply`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ text: replyText }),
+          }
+        );
+        if (res.ok) {
+          setReplyingTo(null);
+          setReplyText('');
+          refresh();
         }
-      );
-
-      if (response.ok) {
-        setReplyingTo(null);
-        setReplyText('');
-        refresh();
+      } finally {
+        setSending(false);
       }
-    } finally {
-      setSending(false);
-    }
-  };
+    },
+    [replyText, refresh]
+  );
 
-  const handleGenerateAI = async (reviewId: string) => {
-    setGeneratingAI(reviewId);
-    try {
-      const response = await fetch(
-        `/api/google-business/reviews/${reviewId}/auto-reply`,
-        {
-          method: 'POST',
-          credentials: 'include',
+  // One-tap approve: post the existing AI suggestion directly
+  const handleApprove = useCallback(
+    async (reviewId: string, suggestion: string) => {
+      setApprovingId(reviewId);
+      try {
+        const res = await fetch(
+          `/api/google-business/reviews/${reviewId}/reply`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ text: suggestion }),
+          }
+        );
+        if (res.ok) refresh();
+      } finally {
+        setApprovingId(null);
+      }
+    },
+    [refresh]
+  );
+
+  const handleGenerateAI = useCallback(
+    async (reviewId: string) => {
+      setGeneratingAI(reviewId);
+      try {
+        const res = await fetch(
+          `/api/google-business/reviews/${reviewId}/auto-reply`,
+          { method: 'POST', credentials: 'include' }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setReplyingTo(reviewId);
+          setReplyText(data.suggestion || '');
+          refresh();
         }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setReplyingTo(reviewId);
-        setReplyText(data.suggestion || '');
-        refresh();
+      } finally {
+        setGeneratingAI(null);
       }
-    } finally {
-      setGeneratingAI(null);
-    }
-  };
+    },
+    [refresh]
+  );
+
+  const handleDismiss = useCallback(
+    async (reviewId: string, reason: DismissReason) => {
+      setDismissingId(reviewId);
+      try {
+        const res = await fetch(
+          `/api/google-business/reviews/${reviewId}/dismiss`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ reason }),
+          }
+        );
+        if (res.ok) {
+          setDismissingReasonId(null);
+          refresh();
+        }
+      } finally {
+        setDismissingId(null);
+      }
+    },
+    [refresh]
+  );
 
   return (
     <div className="space-y-6">
@@ -168,21 +239,41 @@ export default function GBPReviewsPage() {
                             {review.reviewerName || 'Anonymous'}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {new Date(review.reviewTime).toLocaleDateString()}
+                            {new Date(review.reviewTime).toLocaleDateString(
+                              'en-AU'
+                            )}
                           </p>
                         </div>
                       </div>
-                      <div className="flex">
-                        {[1, 2, 3, 4, 5].map(star => (
-                          <Star
-                            key={star}
-                            className={`w-4 h-4 ${
-                              star <= review.rating
-                                ? 'text-orange-400'
-                                : 'text-gray-600'
-                            }`}
-                          />
-                        ))}
+                      <div className="flex items-center gap-3">
+                        {/* Response status badge */}
+                        {review.responseStatus === 'posted' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">
+                            <CheckCircle className="w-3 h-3" />
+                            Replied
+                          </span>
+                        ) : review.responseStatus === 'dismissed' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-gray-500/15 text-gray-400">
+                            <X className="w-3 h-3" />
+                            Dismissed
+                          </span>
+                        ) : !review.replyText ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-orange-500/15 text-orange-400">
+                            Needs reply
+                          </span>
+                        ) : null}
+                        <div className="flex">
+                          {[1, 2, 3, 4, 5].map(star => (
+                            <Star
+                              key={star}
+                              className={`w-4 h-4 ${
+                                star <= review.rating
+                                  ? 'text-orange-400'
+                                  : 'text-gray-600'
+                              }`}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
 
@@ -193,7 +284,7 @@ export default function GBPReviewsPage() {
                       </p>
                     )}
 
-                    {/* Existing Reply */}
+                    {/* Posted Reply */}
                     {review.replyText && (
                       <div className="p-3 bg-white/5 rounded-lg mb-3 border-l-2 border-orange-500/30">
                         <p className="text-xs text-orange-400 font-medium mb-1">
@@ -205,32 +296,99 @@ export default function GBPReviewsPage() {
                       </div>
                     )}
 
-                    {/* AI Suggestion */}
+                    {/* AI Draft — shown when unreplied + not dismissed + not editing */}
                     {review.aiSuggestion &&
                       !review.replyText &&
+                      review.responseStatus !== 'dismissed' &&
                       replyingTo !== review.id && (
                         <div className="p-3 bg-orange-500/5 rounded-lg mb-3 border-l-2 border-orange-500/20">
-                          <p className="text-xs text-orange-400 font-medium mb-1 flex items-center gap-1">
-                            <Zap className="w-3 h-3" /> AI Suggestion
+                          <p className="text-xs text-orange-400 font-medium mb-2 flex items-center gap-1">
+                            <Zap className="w-3 h-3" /> AI Draft
                           </p>
-                          <p className="text-sm text-gray-300">
+                          <p className="text-sm text-gray-300 mb-3">
                             {review.aiSuggestion}
                           </p>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="mt-2 text-orange-400 hover:text-orange-300"
-                            onClick={() => {
-                              setReplyingTo(review.id);
-                              setReplyText(review.aiSuggestion!);
-                            }}
-                          >
-                            Use this reply
-                          </Button>
+
+                          {/* Dismiss reason picker (inline) */}
+                          {dismissingReasonId === review.id ? (
+                            <div className="space-y-2">
+                              <p className="text-xs text-gray-400">
+                                Why are you dismissing this draft?
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {DISMISS_REASONS.map(r => (
+                                  <Button
+                                    key={r.value}
+                                    size="sm"
+                                    variant="outline"
+                                    disabled={dismissingId === review.id}
+                                    onClick={() =>
+                                      handleDismiss(review.id, r.value)
+                                    }
+                                    className="text-xs border-white/10 text-gray-300 hover:bg-white/5"
+                                  >
+                                    {dismissingId === review.id ? (
+                                      <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                                    ) : null}
+                                    {r.label}
+                                  </Button>
+                                ))}
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setDismissingReasonId(null)}
+                                  className="text-xs text-gray-500"
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-wrap gap-2">
+                              {/* One-tap Approve */}
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  handleApprove(review.id, review.aiSuggestion!)
+                                }
+                                disabled={approvingId === review.id}
+                                className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs"
+                              >
+                                {approvingId === review.id ? (
+                                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                                ) : (
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                )}
+                                Approve &amp; Post
+                              </Button>
+                              {/* Edit then Approve */}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setReplyingTo(review.id);
+                                  setReplyText(review.aiSuggestion!);
+                                }}
+                                className="border-white/10 text-gray-300 hover:bg-white/5 text-xs"
+                              >
+                                <Edit className="w-3 h-3 mr-1" />
+                                Edit
+                              </Button>
+                              {/* Dismiss */}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setDismissingReasonId(review.id)}
+                                className="text-gray-500 hover:text-gray-300 text-xs"
+                              >
+                                Dismiss
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       )}
 
-                    {/* Reply Form */}
+                    {/* Edit form (pre-filled with AI draft or blank) */}
                     {replyingTo === review.id ? (
                       <div className="space-y-2">
                         <Textarea
@@ -251,7 +409,7 @@ export default function GBPReviewsPage() {
                             ) : (
                               <Send className="w-3 h-3 mr-1" />
                             )}
-                            Send Reply
+                            Post Reply
                           </Button>
                           <Button
                             variant="ghost"
@@ -266,30 +424,35 @@ export default function GBPReviewsPage() {
                           </Button>
                         </div>
                       </div>
-                    ) : !review.replyText ? (
+                    ) : !review.replyText &&
+                      review.responseStatus !== 'dismissed' ? (
                       <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setReplyingTo(review.id)}
-                          className="border-white/10 text-gray-300 hover:bg-white/5"
-                        >
-                          Reply
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleGenerateAI(review.id)}
-                          disabled={generatingAI === review.id}
-                          className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
-                        >
-                          {generatingAI === review.id ? (
-                            <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                          ) : (
-                            <Zap className="w-3 h-3 mr-1" />
-                          )}
-                          AI Suggest
-                        </Button>
+                        {!review.aiSuggestion && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setReplyingTo(review.id)}
+                              className="border-white/10 text-gray-300 hover:bg-white/5"
+                            >
+                              Reply
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleGenerateAI(review.id)}
+                              disabled={generatingAI === review.id}
+                              className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                            >
+                              {generatingAI === review.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                              ) : (
+                                <Zap className="w-3 h-3 mr-1" />
+                              )}
+                              Generate AI Draft
+                            </Button>
+                          </>
+                        )}
                       </div>
                     ) : null}
                   </CardContent>
@@ -332,7 +495,7 @@ export default function GBPReviewsPage() {
               <p className="text-gray-300">
                 {ratingFilter !== 'all'
                   ? 'No reviews match the current filter.'
-                  : 'Reviews will appear after the daily sync runs.'}
+                  : 'Reviews sync every 5 minutes via Google Business Profile.'}
               </p>
             </div>
           )}

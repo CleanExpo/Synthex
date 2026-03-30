@@ -22,7 +22,119 @@ import { findOAuthConnection } from '@/lib/google/google-auth';
 import { markReviewReceived } from '@/lib/reviews/review-request-service';
 import { calculateVisibilityScore } from '@/lib/scoring/visibility-score';
 import { seedAllOrgsWithoutKeywords } from '@/lib/seo/keyword-seeder';
+import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
+
+// ── SYN-531: Auto-suggest helper ──────────────────────────────────────────────
+
+async function generatePendingSuggestions(): Promise<void> {
+  // Find unreplied reviews with no AI suggestion (newest first, max 10 per run)
+  const pending = await prisma.gBPReview.findMany({
+    where: { replyText: null, aiSuggestion: null },
+    orderBy: { reviewTime: 'desc' },
+    take: 10,
+    include: {
+      location: { select: { locationName: true } },
+      organization: { select: { name: true, industry: true } },
+    },
+  });
+
+  if (pending.length === 0) return;
+
+  const ai = getAIProvider();
+
+  // Fetch brand DNA for the unique orgs in this batch
+  const orgIds = [...new Set(pending.map(r => r.organizationId))];
+  const brandDnaRecords = await prisma.brandDNA.findMany({
+    where: { organizationId: { in: orgIds } },
+    select: { organizationId: true, brandVoice: true },
+  });
+  const brandDnaMap = new Map(
+    brandDnaRecords.map(b => [
+      b.organizationId,
+      b.brandVoice as BrandVoice | null,
+    ])
+  );
+
+  for (const review of pending) {
+    try {
+      const brandVoice = brandDnaMap.get(review.organizationId) ?? null;
+      const prompt = buildAutoReplyPrompt(
+        review.rating,
+        review.comment,
+        review.reviewerName,
+        review.location.locationName,
+        review.organization.name,
+        review.organization.industry,
+        brandVoice
+      );
+      const result = await ai.complete({
+        model: ai.models.fast,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: 350,
+      });
+      await prisma.gBPReview.update({
+        where: { id: review.id },
+        data: {
+          aiSuggestion: (result.choices[0]?.message.content ?? '').trim(),
+          aiSuggestionAt: new Date(),
+        },
+      });
+    } catch (err) {
+      logger.warn('cron:gbp-monitor:suggestion-single-error', {
+        reviewId: review.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+}
+
+interface BrandVoice {
+  formality?: number;
+  tone?: string;
+  samplePhrases?: string[];
+}
+
+function buildAutoReplyPrompt(
+  rating: number,
+  comment: string | null,
+  reviewerName: string | null,
+  locationName: string,
+  orgName?: string | null,
+  industry?: string | null,
+  brandVoice?: BrandVoice | null
+): string {
+  const name = reviewerName ? reviewerName.split(' ')[0] : null;
+  let sentimentInstruction: string;
+  if (rating >= 5) {
+    sentimentInstruction =
+      'Warm appreciation + reference something specific from the review. Invite them to return.';
+  } else if (rating === 4) {
+    sentimentInstruction =
+      'Express genuine gratitude. Invite them to return or connect further.';
+  } else if (rating === 3) {
+    sentimentInstruction =
+      "Acknowledge their experience. Say you'd love to learn more. Provide a direct contact CTA.";
+  } else {
+    sentimentInstruction =
+      'Show empathy. Frame around resolution, not defence. Invite them to contact you offline.';
+  }
+  let voiceContext = '';
+  if (brandVoice) {
+    const level =
+      (brandVoice.formality ?? 3) >= 4
+        ? 'formal and professional'
+        : (brandVoice.formality ?? 3) <= 2
+          ? 'conversational and relaxed'
+          : 'warm and professional';
+    voiceContext = `\nBrand voice: ${level}${brandVoice.tone ? `, ${brandVoice.tone}` : ''}.`;
+    if (brandVoice.samplePhrases?.length) {
+      voiceContext += ` Match this register (sample: "${brandVoice.samplePhrases.slice(0, 2).join('", "')}").`;
+    }
+  }
+  return `You are writing a Google Business Profile reply on behalf of a business owner.\n\nBusiness: ${orgName || locationName}${industry ? ` (${industry})` : ''}${voiceContext}\nReviewer: ${name ?? 'a customer'}\nRating: ${rating}/5 stars\nReview: ${comment || '(no text provided)'}\n\nInstructions:\n- ${sentimentInstruction}\n- Keep it under 180 words\n- Sound like a real person, not a corporate template\n- Do NOT start with "Thank you for your feedback", "We appreciate your review", or "We take all feedback seriously"\n- Do NOT use emojis or include a signature\n- Use Australian English spelling\n- Address the reviewer by first name if provided\n\nReply (write only the reply text):`;
+}
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -203,6 +315,14 @@ export async function GET(request: NextRequest) {
   // location but no keyword targets. Fire-and-forget — never blocks the cron.
   seedAllOrgsWithoutKeywords().catch(err => {
     logger.warn('cron:gbp-monitor:keyword-seed-error', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  });
+
+  // SYN-531: Auto-generate AI reply suggestions for new unreplied reviews.
+  // Process up to 10 reviews per cron run to stay within function time limits.
+  generatePendingSuggestions().catch(err => {
+    logger.warn('cron:gbp-monitor:suggestion-gen-error', {
       error: err instanceof Error ? err.message : String(err),
     });
   });

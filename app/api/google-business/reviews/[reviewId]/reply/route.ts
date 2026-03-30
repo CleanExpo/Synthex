@@ -85,6 +85,7 @@ export async function POST(
       data: {
         replyText: parsed.data.text,
         replyTime: new Date(),
+        responseStatus: 'posted',
       },
     });
 
