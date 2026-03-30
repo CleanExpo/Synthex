@@ -66,6 +66,7 @@ import {
   Megaphone,
 } from '@/components/icons';
 import { AIPMFloatingButton } from '@/components/ai-pm';
+import { PauseButton } from '@/components/autonomous/PauseButton';
 import { KeyboardHints } from '@/components/dashboard/keyboard-hints';
 import { ProductTour } from '@/components/ProductTour';
 import {
@@ -182,6 +183,12 @@ const sidebarGroups: SidebarNavGroup[] = [
       { icon: Calendar, label: 'Calendar', href: '/dashboard/calendar' },
       { icon: List, label: 'Queue', href: '/dashboard/schedule/queue' },
       { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
+      {
+        icon: Bell,
+        label: 'Activity Log',
+        href: '/dashboard/activity',
+        isNew: true,
+      },
     ],
   },
   {
@@ -812,6 +819,7 @@ export default function DashboardLayout({
             </div>
 
             <div className="flex items-center gap-3">
+              <PauseButton />
               <NotificationBell />
 
               {/* User Menu */}

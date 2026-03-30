@@ -616,6 +616,15 @@ model Organization {
   // 'live' = auto-publish posts at scheduled time
   calendarMode String @default("shadow") @map("calendar_mode")
 
+  // Auto-publish pause — SYN-551
+  // Immediately halts all pending auto-publish actions when true
+  autoPublishPaused Boolean @default(false) @map("auto_publish_paused")
+
+  // Cancellation feedback — SYN-551
+  // too_expensive | not_enough_value | lost_control_of_content | switching_tools | business_closed | other
+  cancellationReason String?   @map("cancellation_reason")
+  cancelledAt        DateTime? @map("cancelled_at")
+
   // GSC content topic suggestions (SYN-472)
   contentTopicSuggestions ContentTopicSuggestion[]
 
