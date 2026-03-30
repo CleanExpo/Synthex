@@ -32,7 +32,8 @@ export type OnboardingEventName =
   | 'brand_mirror_shown'
   | 'brand_mirror_fallback_shown'
   | 'social_account_connected'
-  | 'onboarding_skipped';
+  | 'onboarding_skipped'
+  | 'onboarding_season_brief_shown';
 
 /** Event-specific properties (no PII). */
 type EventProps = {
@@ -54,6 +55,12 @@ type EventProps = {
   brand_scan_initiated: Record<string, never>;
   brand_mirror_shown: Record<string, never>;
   onboarding_skipped: Record<string, never>;
+  onboarding_season_brief_shown: {
+    /** industry slug shown e.g. "plumbing-hvac" or "general" (fallback) */
+    industry_slug: string;
+    /** number of signals returned (0 = fallback public holidays shown) */
+    signal_count: number;
+  };
 };
 
 // ============================================================================

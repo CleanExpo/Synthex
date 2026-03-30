@@ -41,7 +41,10 @@ import {
 import { cn } from '@/lib/utils';
 import { StepProgressV2, BrandMirror } from '@/components/onboarding';
 import { HelpVideo } from '@/components/ui/HelpVideo';
-import { BRAND_MIRROR_COOKIE } from '@/lib/constants/onboarding';
+import {
+  BRAND_MIRROR_COOKIE,
+  SEASONAL_BRIEF_ENABLED,
+} from '@/lib/constants/onboarding';
 import type { PipelineResult } from '@/lib/ai/onboarding-pipeline';
 import { fireEvent } from '@/lib/analytics/onboarding-events';
 
@@ -126,7 +129,9 @@ export default function OnboardingPage() {
   const [currentStage, setCurrentStage] = useState(0);
   const [completedStages, setCompletedStages] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [pipelineResult, setPipelineResult] = useState<PipelineResult | null>(null);
+  const [pipelineResult, setPipelineResult] = useState<PipelineResult | null>(
+    null
+  );
 
   // Chrome Extension detection
   const [extensionDetected, setExtensionDetected] = useState(false);
@@ -283,7 +288,9 @@ export default function OnboardingPage() {
         setPhase('mirror');
 
         if (result.confidence < 60) {
-          fireEvent('brand_mirror_fallback_shown', { confidence_score: result.confidence });
+          fireEvent('brand_mirror_fallback_shown', {
+            confidence_score: result.confidence,
+          });
         } else {
           fireEvent('brand_mirror_shown');
         }
@@ -311,7 +318,12 @@ export default function OnboardingPage() {
   const handleMirrorContinue = () => {
     // Set the brand mirror viewed cookie (1 hour) — read by SYN-504 routing gate
     document.cookie = `${BRAND_MIRROR_COOKIE}=1; path=/; max-age=3600; SameSite=Lax`;
-    router.push('/onboarding/connect');
+    // SYN-548: insert Season Brief screen between Brand Mirror and Connect Accounts
+    router.push(
+      SEASONAL_BRIEF_ENABLED
+        ? '/onboarding/season-brief'
+        : '/onboarding/connect'
+    );
   };
 
   // Brand Mirror — "edit first" fallback → existing review page

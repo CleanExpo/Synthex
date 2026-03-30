@@ -17,3 +17,34 @@ export const BRAND_CONFIDENCE_THRESHOLD = 60;
  * Short-lived (1 hour) — re-prompts on next login if skipped.
  */
 export const BRAND_MIRROR_COOKIE = 'synthex_brand_mirror_viewed';
+
+/**
+ * Feature flag — SYN-548 Season Brief onboarding screen.
+ * Set NEXT_PUBLIC_SEASONAL_BRIEF_ONBOARDING=false in Vercel to disable.
+ * Default: true (screen is shown between Brand Mirror and Connect Accounts).
+ */
+export const SEASONAL_BRIEF_ENABLED =
+  process.env.NEXT_PUBLIC_SEASONAL_BRIEF_ONBOARDING !== 'false';
+
+/**
+ * Maps onboarding industry values to seasonal_signals industrySlug values.
+ * Falls back to 'general' for unmapped industries (returns public holiday signals).
+ */
+export const ONBOARDING_INDUSTRY_TO_SLUG: Record<string, string> = {
+  retail: 'retail-general',
+  'e-commerce': 'retail-general',
+  hospitality: 'cafe-coffee',
+  food: 'cafe-coffee',
+  'health-wellness': 'allied-health',
+  health: 'allied-health',
+  trades: 'plumbing-hvac',
+  construction: 'plumbing-hvac',
+  fitness: 'personal-fitness',
+  'personal-fitness': 'personal-fitness',
+  beauty: 'general',
+  'professional-services': 'general',
+  'real-estate': 'general',
+  education: 'general',
+  technology: 'general',
+  other: 'general',
+};
