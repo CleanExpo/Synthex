@@ -87,6 +87,7 @@ import type { NavItem } from '@/components/landing/bottom-menu';
 import { useRouter } from 'next/navigation';
 import { ModeProvider } from '@/components/providers/mode-provider';
 import { FirstWinBanner } from '@/components/notifications/FirstWinBanner';
+import { MonthlyStoryCard } from '@/components/monthly-story/MonthlyStoryCard';
 import {
   Sidebar,
   SidebarContent,
@@ -917,6 +918,9 @@ export default function DashboardLayout({
             <FirstWinBanner className="mb-5" />
             {children}
           </main>
+
+          {/* Monthly Story overlay — SYN-553: full-screen card on first login after story generated */}
+          <MonthlyStoryCard />
         </div>
 
         {/* Mobile overlay */}

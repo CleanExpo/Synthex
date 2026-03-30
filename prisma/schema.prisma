@@ -634,6 +634,12 @@ model Organization {
   consecutiveThresholdPasses Int       @default(0) @map("consecutive_threshold_passes")
   nudgeDismissedAt           Json?     @map("nudge_dismissed_at") // { "30": ISO, "45": ISO, "60": ISO }
 
+  // Monthly Story — SYN-553
+  // Day of month (1–28) when the story is delivered relative to billing renewal
+  billingAnchorDate Int?            @map("billing_anchor_date") // null → defaults to 28
+  monthlyStories    MonthlyStory[]
+  storyConfig       StoryConfig?
+
   // GSC content topic suggestions (SYN-472)
   contentTopicSuggestions ContentTopicSuggestion[]
 
@@ -5618,4 +5624,84 @@ model SeasonalSignalRun {
 
   @@index([runAt])
   @@map("seasonal_signals_runs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Monthly Story — SYN-553
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Generated monthly marketing narrative delivered 48h before billing renewal.
+model MonthlyStory {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  /// e.g. "2026-03"
+  monthYear      String    @map("month_year")
+  storyText      String    @map("story_text") @db.Text
+  generatedAt    DateTime  @default(now()) @map("generated_at")
+  deliveredAt    DateTime? @map("delivered_at")
+
+  // Performance metrics snapshotted at generation time
+  totalReach      Int  @default(0) @map("total_reach")
+  postsPublished  Int  @default(0) @map("posts_published")
+  autonomousPosts Int  @default(0) @map("autonomous_posts")
+  minutesSaved    Int  @default(0) @map("minutes_saved")
+  topPostId       String? @map("top_post_id")
+
+  // Referral tracking
+  referralClicked Boolean @default(false) @map("referral_clicked")
+
+  // Dashboard card state
+  dismissedAt DateTime? @map("dismissed_at")
+
+  // Email delivery state
+  emailStatus     String  @default("pending") @map("email_status") // pending|sent|failed|skipped
+  emailRetryAt    DateTime? @map("email_retry_at")
+  emailError      String?   @map("email_error")
+
+  qualityReviews StoryQualityReview[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, monthYear], name: "monthly_story_org_month")
+  @@index([organizationId])
+  @@index([deliveredAt])
+  @@map("monthly_stories")
+}
+
+/// Manual quality review record — first 3 stories per org require Phill review.
+model StoryQualityReview {
+  id        String  @id @default(cuid())
+  storyId   String  @map("story_id")
+  story     MonthlyStory @relation(fields: [storyId], references: [id])
+
+  qualityScore Int     @map("quality_score") // 1–5
+  approved     Boolean @default(false)
+  notes        String? @db.Text
+
+  reviewedAt DateTime? @map("reviewed_at")
+  reviewerId String?   @map("reviewer_id") // User.id
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([storyId])
+  @@map("story_quality_reviews")
+}
+
+/// Per-org configuration for monthly story quality gate.
+model StoryConfig {
+  id             String  @id @default(cuid())
+  organizationId String  @unique @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  /// Once 3 stories pass manual review (score >= 4), set to true to skip further review.
+  autoApproveFuture Boolean @default(false) @map("auto_approve_future")
+  storiesReviewed   Int     @default(0) @map("stories_reviewed")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("story_config")
 }
