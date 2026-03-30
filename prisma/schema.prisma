@@ -625,6 +625,15 @@ model Organization {
   cancellationReason String?   @map("cancellation_reason")
   cancelledAt        DateTime? @map("cancelled_at")
 
+  // Progressive Live Mode — SYN-552
+  // liveModeT: 0=shadow, 1=tier1 (single best category + time slot), 2=full
+  liveModeT                  Int       @default(0) @map("live_mode_tier")
+  liveModeActivatedAt        DateTime? @map("live_mode_activated_at")
+  perpetualReviewer          Boolean   @default(false) @map("perpetual_reviewer")
+  shadowModeApprovalRate     Float     @default(0) @map("shadow_mode_approval_rate")
+  consecutiveThresholdPasses Int       @default(0) @map("consecutive_threshold_passes")
+  nudgeDismissedAt           Json?     @map("nudge_dismissed_at") // { "30": ISO, "45": ISO, "60": ISO }
+
   // GSC content topic suggestions (SYN-472)
   contentTopicSuggestions ContentTopicSuggestion[]
 

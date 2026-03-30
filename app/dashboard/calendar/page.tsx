@@ -9,10 +9,14 @@
 
 import { useState, useCallback, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import useSWR from 'swr';
 import { useSearchParams } from 'next/navigation';
 import { useCalendar, SchedulePostOptions } from '@/hooks/useCalendar';
 import { useUser } from '@/hooks/use-user';
 import { TimeSlotPicker } from '@/components/scheduling';
+import { LiveModeReadinessCard } from '@/components/autonomous/LiveModeReadinessCard';
+import { LiveModeActivationModal } from '@/components/autonomous/LiveModeActivationModal';
+import { PerpeualReviewerNudge } from '@/components/autonomous/PerpeualReviewerNudge';
 
 // Dynamic imports for heavy calendar components
 const WeekView = dynamic(
@@ -119,6 +123,16 @@ function CalendarPageContent() {
     platforms: [] as string[],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Live-mode readiness data (shared for nudge + card)
+  const [activationModalOpen, setActivationModalOpen] = useState(false);
+  const fetchJson = (url: string) =>
+    fetch(url, { credentials: 'include' }).then(r => r.json());
+  const { data: readinessData, mutate: mutateReadiness } = useSWR(
+    '/api/calendar/live-mode-readiness',
+    fetchJson,
+    { refreshInterval: 60_000 }
+  );
 
   // Initialize calendar hook
   const {
@@ -369,6 +383,18 @@ function CalendarPageContent() {
         }
       />
 
+      {/* Perpetual-reviewer nudge banner (shown at 30/45/60 shadow posts, suppressed in live mode) */}
+      {readinessData && (
+        <PerpeualReviewerNudge
+          shadowPostsReviewed={readinessData.shadowPostsReviewed}
+          approvalRate={readinessData.approvalRate}
+          nudgeDismissedAt={readinessData.nudgeDismissedAt}
+          liveModeT={readinessData.liveModeT}
+          onDismissed={() => mutateReadiness()}
+          onActivate={() => setActivationModalOpen(true)}
+        />
+      )}
+
       {/* Stats Bar */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
@@ -444,6 +470,21 @@ function CalendarPageContent() {
 
       {/* AI Weekly Calendar — shadow/live mode + slot review */}
       <AICalendarSection />
+
+      {/* Live-mode readiness card (shadow mode only, disappears once tier 1 activated) */}
+      <LiveModeReadinessCard onActivate={() => setActivationModalOpen(true)} />
+
+      {/* Live-mode activation ceremony modal */}
+      <LiveModeActivationModal
+        open={activationModalOpen}
+        onClose={() => setActivationModalOpen(false)}
+        onActivated={() => {
+          setActivationModalOpen(false);
+          mutateReadiness();
+        }}
+        approvalRate={readinessData?.approvalRate}
+        topCategory={readinessData?.topCategory}
+      />
 
       {/* Calendar View */}
       {posts.length === 0 && !isLoading ? (
