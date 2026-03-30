@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next';
+import prisma from '@/lib/prisma';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
 
@@ -11,14 +12,39 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
  *   0.9 — Primary pillar pages (high conversion, high keyword value)
  *   0.8 — Secondary pillar/compare/feature pages
  *   0.7 — Standard marketing + signup
+ *   0.6 — Blog index + individual posts
  *   0.5–0.6 — Support, contact, utility
  *   0.3 — Legal
  */
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date().toISOString();
 
+  // Fetch published blog posts for dynamic entries
+  let blogEntries: MetadataRoute.Sitemap = [];
+  try {
+    const posts = await prisma.blogPost.findMany({
+      where: { status: 'published' },
+      select: { slug: true, publishedAt: true, updatedAt: true },
+      orderBy: { publishedAt: 'desc' },
+    });
+
+    blogEntries = posts.map(post => ({
+      url: `${BASE_URL}/blog/${post.slug}`,
+      lastModified: (
+        post.updatedAt ??
+        post.publishedAt ??
+        new Date()
+      ).toISOString(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+    }));
+  } catch {
+    // Non-fatal — sitemap degrades gracefully if DB is unavailable
+    blogEntries = [];
+  }
+
   return [
-    // ── Core ───────────────────────────────────────────────────────
+    // ── Core ───────────────────────────────────────────────────
     {
       url: BASE_URL,
       lastModified: now,
@@ -26,7 +52,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0,
     },
 
-    // ── Primary Pillar Pages ───────────────────────────────────────
+    // ── Primary Pillar Pages ───────────────────────────────────
     {
       url: `${BASE_URL}/agencies`,
       lastModified: now,
@@ -46,7 +72,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
 
-    // ── Compare / Competitor Pages ─────────────────────────────────
+    // ── Compare / Competitor Pages ─────────────────────────────
     {
       url: `${BASE_URL}/compare/hootsuite`,
       lastModified: now,
@@ -54,7 +80,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
 
-    // ── Standard Marketing Pages ───────────────────────────────────
+    // ── Standard Marketing Pages ───────────────────────────────
     {
       url: `${BASE_URL}/features`,
       lastModified: now,
@@ -63,12 +89,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${BASE_URL}/pricing`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/blog`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
@@ -92,7 +112,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
 
-    // ── Utility ────────────────────────────────────────────────────
+    // ── Blog ───────────────────────────────────────────────────
+    {
+      url: `${BASE_URL}/blog`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    // Per-post entries (dynamic from DB)
+    ...blogEntries,
+
+    // ── Utility ────────────────────────────────────────────────
     {
       url: `${BASE_URL}/contact`,
       lastModified: now,
@@ -100,7 +130,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.6,
     },
 
-    // ── Legal ──────────────────────────────────────────────────────
+    // ── Legal ──────────────────────────────────────────────────
     {
       url: `${BASE_URL}/privacy`,
       lastModified: now,
