@@ -1253,6 +1253,11 @@ Reverse lookup: which routes touch each model. Top 30 most-used models.
 | 2026-03-23 | /api/ws                 | COMP-5: WebSocket CORS restricted to synthex.social            | COMP-5 |
 | 2026-03-23 | /api/contact            | Created — public POST, Resend SDK, rate-limited (writeDefault) | —      |
 
+### 2026-03-30 — SYN-530: Review Intelligence Engine
+
+- `vercel.json`: gbp-monitor cron schedule `"0 5 * * *"` → `"*/5 * * * *"` (every 5 min)
+- `app/dashboard/google-business/page.tsx`: "Recent Reviews" card → "Review Intelligence" panel with response status badges, unreplied count, 100-char snippets, date, and 5-item list
+
 ### 2026-03-30 — UNI-1655: Intentional server-side route documentation
 
 - Added `## Intentional Server-Side / Infrastructure Routes` section with 8 categories

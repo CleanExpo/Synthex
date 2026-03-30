@@ -397,7 +397,13 @@ export default function GoogleBusinessPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                     <MessageSquare className="w-5 h-5 text-orange-400" />
-                    Recent Reviews
+                    Review Intelligence
+                    {!reviewsLoading &&
+                      reviews.filter(r => !r.replyText).length > 0 && (
+                        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500/20 text-red-400 text-[10px] font-bold">
+                          {reviews.filter(r => !r.replyText).length}
+                        </span>
+                      )}
                   </h2>
                   <Link
                     href="/dashboard/google-business/reviews"
@@ -412,44 +418,63 @@ export default function GoogleBusinessPage() {
                   </div>
                 ) : reviews.length > 0 ? (
                   <div className="space-y-3">
-                    {reviews.slice(0, 3).map(review => (
+                    {reviews.slice(0, 5).map(review => (
                       <div
                         key={review.id}
                         className="p-3 bg-white/5 rounded-lg"
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm text-white font-medium">
-                            {review.reviewerName || 'Anonymous'}
-                          </span>
-                          <div className="flex">
-                            {[1, 2, 3, 4, 5].map(star => (
-                              <Star
-                                key={star}
-                                className={`w-3 h-3 ${
-                                  star <= review.rating
-                                    ? 'text-orange-400'
-                                    : 'text-gray-600'
-                                }`}
-                              />
-                            ))}
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-sm text-white font-medium truncate">
+                              {review.reviewerName || 'Anonymous'}
+                            </span>
+                            <div className="flex flex-shrink-0">
+                              {[1, 2, 3, 4, 5].map(star => (
+                                <Star
+                                  key={star}
+                                  className={`w-3 h-3 ${
+                                    star <= review.rating
+                                      ? 'text-orange-400'
+                                      : 'text-gray-600'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-[10px] text-gray-500">
+                              {new Date(review.reviewTime).toLocaleDateString(
+                                'en-AU',
+                                { day: 'numeric', month: 'short' }
+                              )}
+                            </span>
+                            {review.replyText ? (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-500/15 text-green-400">
+                                <CheckCircle className="w-2.5 h-2.5" />
+                                Replied
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-500/15 text-orange-400">
+                                <AlertTriangle className="w-2.5 h-2.5" />
+                                Needs reply
+                              </span>
+                            )}
                           </div>
                         </div>
                         {review.comment && (
-                          <p className="text-xs text-gray-300 line-clamp-2">
-                            {review.comment}
+                          <p className="text-xs text-gray-300 mt-1 line-clamp-2">
+                            {review.comment.length > 100
+                              ? `${review.comment.slice(0, 100)}\u2026`
+                              : review.comment}
                           </p>
-                        )}
-                        {!review.replyText && (
-                          <span className="text-[10px] text-red-400 mt-1 inline-block">
-                            Needs reply
-                          </span>
                         )}
                       </div>
                     ))}
                   </div>
                 ) : (
                   <p className="text-sm text-gray-500 py-4 text-center">
-                    No reviews yet. Reviews will appear after the daily sync.
+                    No reviews yet. Reviews sync every 5 minutes via Google
+                    Business Profile.
                   </p>
                 )}
               </CardContent>
