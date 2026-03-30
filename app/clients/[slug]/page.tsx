@@ -28,6 +28,7 @@ import {
   getAllClientSlugs,
 } from '@/lib/clients/getClientBySlug';
 import type { ClientProfile } from '@/lib/clients/getClientBySlug';
+import prisma from '@/lib/prisma';
 
 // ── Static generation ─────────────────────────────────────────────────────────
 
@@ -84,28 +85,61 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-function EEATCard({
-  pillar,
-  description,
-  icon,
+// ── Authority score types ─────────────────────────────────────────────────────
+
+interface PublicEEATBreakdown {
+  gbpCompleteness: number;
+  reviewVelocity: number;
+  contentFreshness: number;
+  backlinkSignals: number;
+  schemaCoverage: number;
+  socialProof: number;
+}
+
+interface PublicAuthorityScore {
+  score: number;
+  breakdown: PublicEEATBreakdown;
+}
+
+function getPublicScoreColour(score: number): string {
+  if (score >= 75) return '#22c55e';
+  if (score >= 50) return '#f59e0b';
+  if (score >= 25) return '#f97316';
+  return '#ef4444';
+}
+
+function getPublicScoreLabel(score: number): string {
+  if (score >= 75) return 'Strong';
+  if (score >= 50) return 'Developing';
+  if (score >= 25) return 'Building';
+  return 'Getting started';
+}
+
+function PublicPillarBar({
+  label,
+  value,
+  maxValue,
 }: {
-  pillar: string;
-  description: string;
-  icon: string;
+  label: string;
+  value: number;
+  maxValue: number;
 }) {
+  const pct = Math.round((value / maxValue) * 100);
+  const colour = getPublicScoreColour(pct);
   return (
-    <div className="p-4 border border-white/[0.08] rounded-sm bg-white/[0.02] space-y-2">
-      <div className="flex items-center gap-2">
-        <span className="text-lg" role="img" aria-hidden="true">
-          {icon}
-        </span>
-        <span className="text-sm font-medium text-white/80">{pillar}</span>
+    <div className="flex items-center gap-3">
+      <span className="w-36 text-xs text-white/40 truncate shrink-0">
+        {label}
+      </span>
+      <div className="flex-1 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+        <div
+          className="h-full rounded-full"
+          style={{ width: `${pct}%`, backgroundColor: colour }}
+        />
       </div>
-      <p className="text-xs text-white/40 leading-relaxed">{description}</p>
-      <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
-        <div className="h-full w-0 bg-orange-500/50 rounded-full" />
-      </div>
-      <p className="text-[10px] text-white/25">Score available soon</p>
+      <span className="text-[10px] text-white/25 w-10 text-right shrink-0">
+        {value}/{maxValue}
+      </span>
     </div>
   );
 }
@@ -148,6 +182,24 @@ export default async function AuthorityHubPage({
 
   const client = await getClientBySlug(slug);
   if (!client) notFound();
+
+  // Fetch latest authority score — non-fatal (table may not exist pre-migration)
+  let authorityScore: PublicAuthorityScore | null = null;
+  try {
+    const row = await prisma.authorityScore.findFirst({
+      where: { organization: { slug } },
+      orderBy: { computedAt: 'desc' },
+      select: { score: true, eeAtBreakdown: true },
+    });
+    if (row) {
+      authorityScore = {
+        score: row.score,
+        breakdown: row.eeAtBreakdown as unknown as PublicEEATBreakdown,
+      };
+    }
+  } catch {
+    // table does not exist pre-migration — render placeholder instead
+  }
 
   const hasAddress = client.address !== null;
   const hasReviews = client.reviews.length > 0;
@@ -234,7 +286,7 @@ export default async function AuthorityHubPage({
         </header>
 
         <div className="max-w-3xl mx-auto px-4 py-8 sm:px-6 space-y-8">
-          {/* ── Authority score (placeholder — real in SYN-513) ─────────── */}
+          {/* ── Authority score ───────────────────────────────────────────── */}
           <section aria-labelledby="authority-score-heading">
             <div className="flex items-center gap-2 mb-4">
               <h2
@@ -244,81 +296,142 @@ export default async function AuthorityHubPage({
                 Authority Score
               </h2>
             </div>
-            <div className="border border-white/[0.06] rounded-sm bg-white/[0.02] p-5 flex items-center gap-5">
-              {/* Partial ring */}
-              <div className="relative w-16 h-16 flex-shrink-0">
-                <svg
-                  className="w-full h-full -rotate-90"
-                  viewBox="0 0 60 60"
-                  aria-hidden="true"
-                >
-                  <circle
-                    cx="30"
-                    cy="30"
-                    r="26"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.05)"
-                    strokeWidth="4"
+
+            {authorityScore ? (
+              /* Live score */
+              <div className="border border-white/[0.06] rounded-sm bg-white/[0.02] p-5 space-y-5">
+                {/* Score ring + label row */}
+                <div className="flex items-center gap-5">
+                  <div className="relative w-16 h-16 flex-shrink-0">
+                    {(() => {
+                      const r = 26;
+                      const circ = 2 * Math.PI * r;
+                      const filled = (authorityScore.score / 100) * circ;
+                      const colour = getPublicScoreColour(authorityScore.score);
+                      return (
+                        <svg
+                          className="w-full h-full -rotate-90"
+                          viewBox="0 0 60 60"
+                          aria-label={`Authority score: ${authorityScore.score} out of 100`}
+                        >
+                          <circle
+                            cx="30"
+                            cy="30"
+                            r={r}
+                            fill="none"
+                            stroke="rgba(255,255,255,0.05)"
+                            strokeWidth="4"
+                          />
+                          <circle
+                            cx="30"
+                            cy="30"
+                            r={r}
+                            fill="none"
+                            stroke={colour}
+                            strokeWidth="4"
+                            strokeLinecap="round"
+                            strokeDasharray={`${filled} ${circ - filled}`}
+                          />
+                        </svg>
+                      );
+                    })()}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-sm font-bold text-white">
+                        {authorityScore.score}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <p
+                      className="text-lg font-semibold"
+                      style={{
+                        color: getPublicScoreColour(authorityScore.score),
+                      }}
+                    >
+                      {getPublicScoreLabel(authorityScore.score)}
+                    </p>
+                    <p className="text-xs text-white/30 mt-0.5">
+                      E.E.A.T. composite · v1.0
+                    </p>
+                  </div>
+                </div>
+
+                {/* Pillar breakdown */}
+                <div className="space-y-2 pt-1 border-t border-white/[0.05]">
+                  <PublicPillarBar
+                    label="GBP completeness"
+                    value={authorityScore.breakdown.gbpCompleteness}
+                    maxValue={25}
                   />
-                  <circle
-                    cx="30"
-                    cy="30"
-                    r="26"
-                    fill="none"
-                    stroke="rgba(249,115,22,0.25)"
-                    strokeWidth="4"
-                    strokeDasharray="163"
-                    strokeDashoffset="122"
-                    strokeLinecap="round"
+                  <PublicPillarBar
+                    label="Review velocity"
+                    value={authorityScore.breakdown.reviewVelocity}
+                    maxValue={20}
                   />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xs text-white/30">—</span>
+                  <PublicPillarBar
+                    label="Content freshness"
+                    value={authorityScore.breakdown.contentFreshness}
+                    maxValue={20}
+                  />
+                  <PublicPillarBar
+                    label="Backlink signals"
+                    value={authorityScore.breakdown.backlinkSignals}
+                    maxValue={15}
+                  />
+                  <PublicPillarBar
+                    label="Schema coverage"
+                    value={authorityScore.breakdown.schemaCoverage}
+                    maxValue={10}
+                  />
+                  <PublicPillarBar
+                    label="Social proof"
+                    value={authorityScore.breakdown.socialProof}
+                    maxValue={10}
+                  />
                 </div>
               </div>
-              <div>
-                <p className="text-sm text-white/60">
-                  Brand authority measurement is being calibrated
-                </p>
-                <p className="text-xs text-white/30 mt-1">
-                  Full E.E.A.T. score launches soon
-                </p>
+            ) : (
+              /* Placeholder — score not yet computed */
+              <div className="border border-white/[0.06] rounded-sm bg-white/[0.02] p-5 flex items-center gap-5">
+                <div
+                  className="relative w-16 h-16 flex-shrink-0"
+                  aria-hidden="true"
+                >
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 60 60">
+                    <circle
+                      cx="30"
+                      cy="30"
+                      r="26"
+                      fill="none"
+                      stroke="rgba(255,255,255,0.05)"
+                      strokeWidth="4"
+                    />
+                    <circle
+                      cx="30"
+                      cy="30"
+                      r="26"
+                      fill="none"
+                      stroke="rgba(249,115,22,0.25)"
+                      strokeWidth="4"
+                      strokeDasharray="163"
+                      strokeDashoffset="122"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs text-white/30">—</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-white/60">
+                    Brand authority measurement is being calibrated
+                  </p>
+                  <p className="text-xs text-white/30 mt-1">
+                    Full E.E.A.T. score launches soon
+                  </p>
+                </div>
               </div>
-            </div>
-          </section>
-
-          {/* ── E.E.A.T. pillars ──────────────────────────────────────────── */}
-          <section aria-labelledby="eeat-heading">
-            <div className="flex items-center gap-2 mb-4">
-              <h2
-                id="eeat-heading"
-                className="text-xs uppercase tracking-[0.3em] text-white/40"
-              >
-                E.E.A.T. Index
-              </h2>
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <EEATCard
-                pillar="Experience"
-                description="Documented real-world results and case studies"
-                icon="🏅"
-              />
-              <EEATCard
-                pillar="Expertise"
-                description="Depth of knowledge signals in published content"
-                icon="🎓"
-              />
-              <EEATCard
-                pillar="Authoritativeness"
-                description="Citations, backlinks, and third-party mentions"
-                icon="📣"
-              />
-              <EEATCard
-                pillar="Trustworthiness"
-                description="Reviews, transparency, and verified credentials"
-                icon="🛡️"
-              />
-            </div>
+            )}
           </section>
 
           {/* ── Google reviews ─────────────────────────────────────────────── */}

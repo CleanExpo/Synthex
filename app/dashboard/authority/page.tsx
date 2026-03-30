@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, BarChart3, RefreshCw } from '@/components/icons';
 import { AuthorityFeatureGate } from '@/components/authority/AuthorityFeatureGate';
-import { AuthorityScoreCard } from '@/components/authority/AuthorityScoreCard';
+import { AuthorityClaimsCard } from '@/components/authority/AuthorityClaimsCard';
 import { ClaimValidationBadge } from '@/components/authority/ClaimValidationBadge';
 import { CitationList } from '@/components/authority/CitationList';
 import { AuthoritySourcePanel } from '@/components/authority/AuthoritySourcePanel';
@@ -203,7 +203,7 @@ export default function AuthorityPage() {
           {/* Results inline when available */}
           {result && (
             <div className="space-y-4">
-              <AuthorityScoreCard
+              <AuthorityClaimsCard
                 score={result.overallScore}
                 claimsFound={result.claimsFound}
                 claimsVerified={result.claimsVerified}

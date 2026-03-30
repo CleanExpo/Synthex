@@ -602,6 +602,9 @@ model Organization {
   // Review requests (SYN-474)
   reviewRequests ReviewRequest[]
 
+  // Authority Score history — SYN-513
+  authorityScores AuthorityScore[]
+
   // GSC content topic suggestions (SYN-472)
   contentTopicSuggestions ContentTopicSuggestion[]
 
@@ -5444,4 +5447,35 @@ model PipelineCostLedger {
   @@index([pipelineName, createdAt(sort: Desc)])
   @@index([clientId, createdAt(sort: Desc)])
   @@map("pipeline_cost_ledger")
+}
+
+// ============================================================================
+// Synthex Authority Score — SYN-513
+// ============================================================================
+
+/// Computed E.E.A.T. composite score for a Synthex client organisation.
+/// One record per compute run (daily via nightly cron).
+/// Latest record per org = current score.
+model AuthorityScore {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+
+  /// 0–100 composite score
+  score          Int
+
+  /// Breakdown per pillar (stored as JSON for flexibility)
+  /// Shape: { gbpCompleteness: 0-25, reviewVelocity: 0-20, contentFreshness: 0-20,
+  ///          backlinkSignals: 0-15, schemaCoverage: 0-10, socialProof: 0-10 }
+  eeAtBreakdown  Json     @map("eeat_breakdown")
+
+  /// Scoring algorithm version — bump when weights change
+  signalsVersion String   @default("1.0") @map("signals_version")
+
+  computedAt     DateTime @default(now()) @map("computed_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, computedAt(sort: Desc)])
+  @@map("authority_scores")
 }

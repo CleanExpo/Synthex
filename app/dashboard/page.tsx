@@ -72,6 +72,14 @@ const BrandIQCard = dynamic(
   { ssr: false }
 );
 
+const AuthorityScoreCard = dynamic(
+  () =>
+    import('@/components/authority/AuthorityScoreCard').then(m => ({
+      default: m.AuthorityScoreCard,
+    })),
+  { ssr: false }
+);
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -389,6 +397,7 @@ export default function DashboardPage() {
               <VisibilityScoreWidget />
               <ContentOpportunitiesWidget />
               <RevenueProjectionWidget />
+              <AuthorityScoreCard />
               <div className="lg:col-span-2">
                 <BrandIQCard />
               </div>
