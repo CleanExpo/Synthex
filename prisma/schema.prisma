@@ -608,6 +608,9 @@ model Organization {
   // Weekly content calendars — SYN-521
   contentCalendars ContentCalendar[]
 
+  // Auto-publish queue — SYN-523
+  publishQueueItems PublishQueueItem[]
+
   // Calendar autonomy mode — SYN-522
   // 'shadow' = review all posts before publishing (default, safe)
   // 'live' = auto-publish posts at scheduled time
@@ -5512,9 +5515,41 @@ model ContentCalendar {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  publishQueueItems PublishQueueItem[]
 
   @@unique([organizationId, weekStart])
   @@index([organizationId, weekStart(sort: Desc)])
   @@map("content_calendars")
+}
+
+// ── Auto-publish queue — SYN-523 ──────────────────────────────────────────────
+
+/// One row per calendar slot awaiting (or having completed) auto-publish.
+/// Retry window: 12 attempts × 4-hour intervals = 48 hours before → held.
+model PublishQueueItem {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  calendarId     String    @map("calendar_id")
+  /// Slot ID from ContentCalendar.slots JSON
+  slotId         String    @map("slot_id")
+  platform       String
+  scheduledAt    DateTime  @map("scheduled_at")
+  /// pending | publishing | published | failed | held
+  status         String    @default("pending")
+  attempts       Int       @default(0)
+  nextRetryAt    DateTime? @map("next_retry_at")
+  lastError      String?   @map("last_error") @db.Text
+  publishedAt    DateTime? @map("published_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  calendar     ContentCalendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+
+  @@index([status, scheduledAt])
+  @@index([organizationId, status])
+  @@index([calendarId])
+  @@map("publish_queue")
 }

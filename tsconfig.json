@@ -84,6 +84,7 @@
     "packages/**/*",
     "Synthex/**/*",
     "with-turbopack-app/**/*",
-    "templates/**/*"
+    "templates/**/*",
+    "supabase/**/*"
   ]
 }
