@@ -1062,6 +1062,176 @@ Reverse lookup: which routes touch each model. Top 30 most-used models.
 
 ---
 
+## Intentional Server-Side / Infrastructure Routes
+
+> **Audit note:** The routes in this section have **no frontend caller by design**. Do not flag them as orphaned routes. Each category explains who calls them and why there is no UI equivalent.
+
+---
+
+### 1. Cron Endpoints — `POST /api/cron/*`
+
+**Caller:** Vercel Cron scheduler (via `vercel.json`), not any frontend component.
+**Auth:** `Authorization: Bearer ${CRON_SECRET}` header — all 32 routes enforce this.
+**Why no UI caller:** These are background jobs triggered on a schedule. Users never invoke them directly.
+
+| Route                                | Schedule / Purpose                                    |
+| ------------------------------------ | ----------------------------------------------------- |
+| `POST /api/cron/ab-rollout`          | Promote winning A/B variants automatically            |
+| `POST /api/cron/analytics-sync`      | Sync platform metrics into PlatformMetrics table      |
+| `POST /api/cron/analyze-patterns`    | AI pattern analysis on recent posts                   |
+| `POST /api/cron/autopilot`           | Execute autopilot campaign actions                    |
+| `POST /api/cron/autopilot-learn`     | Feed autopilot outcome data back into ML model        |
+| `POST /api/cron/daily-post`          | Generate and queue daily content                      |
+| `POST /api/cron/drip-day3`           | Send Day 3 onboarding drip email                      |
+| `POST /api/cron/drip-day7`           | Send Day 7 onboarding drip email                      |
+| `POST /api/cron/drip-day14`          | Send Day 14 onboarding drip email                     |
+| `POST /api/cron/fetch-mentions`      | Pull social mentions from connected platforms         |
+| `POST /api/cron/forecast-training`   | Retrain engagement forecasting model                  |
+| `POST /api/cron/gbp-monitor`         | Poll Google Business Profile for new reviews          |
+| `POST /api/cron/generate-calendars`  | Auto-generate weekly content calendars                |
+| `POST /api/cron/gsc-auto-index`      | Submit new URLs to Google Search Console              |
+| `POST /api/cron/gsc-monitor`         | Check GSC index status and crawl errors               |
+| `POST /api/cron/gsc-topic-sync`      | Sync GSC query data into TopicCluster table           |
+| `POST /api/cron/health-check`        | Internal health probe — writes to monitoring          |
+| `POST /api/cron/health-score`        | Recalculate UserHealthScore for all active users      |
+| `POST /api/cron/insights`            | Generate proactive AI insights                        |
+| `POST /api/cron/model-scout`         | Scan for new AI model releases and update registry    |
+| `POST /api/cron/proactive-insights`  | Push notifications for detected anomalies             |
+| `POST /api/cron/publish-scheduled`   | Publish posts that have passed their scheduledAt time |
+| `POST /api/cron/rank-snapshot`       | Capture daily keyword rank snapshot                   |
+| `POST /api/cron/refresh-tokens`      | Refresh expiring OAuth platform tokens                |
+| `POST /api/cron/revalidate-api-keys` | Validate stored BYOK API keys are still active        |
+| `POST /api/cron/review-follow-up`    | Send review request follow-up emails                  |
+| `POST /api/cron/sentinel`            | Run algorithm sentinel — detect ranking changes       |
+| `POST /api/cron/seo-audits`          | Run scheduled SEO site audits                         |
+| `POST /api/cron/unite-hub-revenue`   | Sync revenue data to Unite-Hub                        |
+| `POST /api/cron/visibility-push`     | Send Monday Visibility Push weekly email              |
+| `POST /api/cron/weekly-digest`       | Generate and email weekly performance digest          |
+| `POST /api/cron/welcome-sequence`    | Trigger Day 0 welcome email for new signups           |
+
+---
+
+### 2. Webhook Receivers — `POST /api/webhooks/*`
+
+**Caller:** External third-party services (Stripe, Zapier, Linear, etc.), not frontend components.
+**Auth:** Signature verification per provider (Stripe: `stripe-signature` header, Zapier: `ZAPIER_WEBHOOK_SECRET`, etc.).
+**Why no UI caller:** Inbound events pushed by external systems in response to actions outside Synthex.
+
+| Route                           | Provider / Purpose                               |
+| ------------------------------- | ------------------------------------------------ |
+| `POST /api/webhooks/stripe`     | Stripe payment events — subscription lifecycle   |
+| `POST /api/webhooks/zapier`     | Zapier trigger receiver for workflow automations |
+| `POST /api/webhooks/linear`     | Linear issue events for Unite-Hub sync           |
+| `POST /api/webhooks/social`     | Social platform activity callbacks               |
+| `POST /api/webhooks/email`      | Email delivery status (SendGrid/Resend events)   |
+| `POST /api/webhooks/stats`      | Anonymous usage statistics ingestion             |
+| `POST /api/webhooks/user`       | User lifecycle events from external auth         |
+| `POST /api/webhooks/internal`   | Internal cross-service event bus                 |
+| `POST /api/webhooks/[platform]` | Dynamic platform-specific webhook handler        |
+
+---
+
+### 3. Health Check Probes — `GET /api/health/*`
+
+**Caller:** Uptime monitors (BetterStack, Vercel), load balancers, and CI pipelines.
+**Auth:** Public (no auth required — monitoring agents cannot authenticate).
+**Why no UI caller:** Infrastructure readiness probes. A 200 means the service layer is up; non-200 triggers an alert.
+
+| Route                          | Checks                                                          |
+| ------------------------------ | --------------------------------------------------------------- |
+| `GET /api/health`              | Top-level health — returns overall status                       |
+| `GET /api/health/db`           | Prisma + PostgreSQL connectivity                                |
+| `GET /api/health/redis`        | Upstash Redis connectivity                                      |
+| `GET /api/health/redis-simple` | Redis ping (lightweight, no query)                              |
+| `GET /api/health/stripe`       | Stripe API reachability                                         |
+| `GET /api/health/email`        | Resend API reachability                                         |
+| `GET /api/health/auth`         | Supabase Auth reachability                                      |
+| `GET /api/health/ai`           | OpenRouter / AI provider reachability                           |
+| `GET /api/health/live`         | Kubernetes-style liveness probe (always 200 if process running) |
+| `GET /api/health/ready`        | Readiness probe — 200 only when all deps healthy                |
+| `GET /api/health/composite`    | Full composite check with per-service breakdown                 |
+| `GET /api/health/scaling`      | Auto-scaling metrics endpoint for Vercel                        |
+
+---
+
+### 4. Admin-Only Routes — `GET|POST /api/admin/*`
+
+**Caller:** The `/dashboard/admin` super-admin panel, accessible only to `isOwnerEmail()` users.
+**Auth:** `verifyAdmin()` from `lib/admin/verify-admin.ts` — checks API key header, then JWT Bearer, then cookie. Rejects all non-owner requests.
+**Why no regular UI caller:** These routes expose raw operational data (all users, all orgs, platform credentials, audit logs) that must never be accessible to ordinary authenticated users.
+
+| Route                                  | Purpose                                     |
+| -------------------------------------- | ------------------------------------------- | ---------------------------------------------- | ------------------------ | -------------------------------------------- |
+| `GET /api/admin/audit-log`             | Full audit log across all organisations     |
+| `GET /api/admin/bayesian-health`       | Bayesian optimisation system diagnostics    |
+| `GET                                   | POST /api/admin/blog`                       | Admin blog post management (generate, publish) |
+| `GET                                   | POST /api/admin/invites`                    | Manage platform beta invites                   |
+| `GET /api/admin/jobs`                  | Background job queue status                 |
+| `GET /api/admin/model-metrics`         | AI model usage and cost metrics             |
+| `GET                                   | PUT /api/admin/org-brand-profile`           | Override org brand profiles                    |
+| `GET                                   | PUT /api/admin/platform-credentials`        | Manage shared platform API credentials         |
+| `GET /api/admin/platform-stats`        | Cross-org platform performance aggregates   |
+| `POST /api/admin/remotion`             | Trigger Remotion video render jobs          |
+| `POST /api/admin/upgrade-subscription` | Manually upgrade a user's subscription tier |
+| `GET                                   | POST                                        | PATCH                                          | DELETE /api/admin/users` | Full user management (read, suspend, delete) |
+| `GET                                   | POST /api/admin/vault`                      | Manage encrypted credential vault              |
+
+---
+
+### 5. Social Platform Direct-Post Routes — `POST /api/social/*/post`
+
+**Caller:** `POST /api/content/cross-post` only — this is the single orchestration endpoint that fans out to per-platform post routes.
+**Why no direct UI caller:** The dashboard posts via `/api/content/cross-post` which handles multi-platform batching, retry logic, and status tracking. Per-platform routes are internal implementation details, not public API surface.
+
+| Route                             | Platform                      |
+| --------------------------------- | ----------------------------- |
+| `POST /api/social/facebook/post`  | Facebook Graph API            |
+| `POST /api/social/instagram/post` | Instagram Graph API           |
+| `POST /api/social/linkedin/post`  | LinkedIn API                  |
+| `POST /api/social/pinterest/post` | Pinterest API                 |
+| `POST /api/social/reddit/post`    | Reddit API                    |
+| `POST /api/social/threads/post`   | Threads API                   |
+| `POST /api/social/tiktok/post`    | TikTok API                    |
+| `POST /api/social/twitter/post`   | Twitter/X API                 |
+| `POST /api/social/youtube/post`   | YouTube Data API              |
+| `POST /api/social/post`           | Generic fallback post handler |
+
+---
+
+### 6. Report Generation — `POST /api/reporting/*`
+
+**Caller:** `hooks/use-report-export.ts` — the hook POSTs to `/api/reporting/generate`, polls `/api/reporting/reports/[reportId]` every 2 seconds, then triggers a client-side download when the report status reaches `completed`.
+**Why no direct page caller:** The hook abstracts the generate-then-poll pattern. The analytics page never calls these routes directly; it calls the hook.
+
+| Route                                   | Purpose                                                        |
+| --------------------------------------- | -------------------------------------------------------------- |
+| `POST /api/reporting/generate`          | Start async report generation, returns `reportId`              |
+| `GET /api/reporting/reports/[reportId]` | Poll for report status; returns `downloadUrl` when `completed` |
+
+---
+
+### 7. ML Training Routes — `POST /api/predict/train`
+
+**Caller:** `POST /api/cron/forecast-training` — the training cron calls this endpoint on a weekly schedule.
+**Why no UI caller:** Model retraining is a background operation. Users trigger predictions (via `GET /api/analytics/predict-engagement`), not model training.
+
+| Route                     | Purpose                                            |
+| ------------------------- | -------------------------------------------------- |
+| `POST /api/predict/train` | Retrain engagement prediction model on recent data |
+
+---
+
+### 8. Reports Scheduled Execution — `POST /api/reports/scheduled/execute`
+
+**Caller:** Vercel Cron — executes pending scheduled report jobs and delivers them to recipients.
+**Why no UI caller:** Execution is automatic. Users configure schedules via `POST /api/reports/scheduled`; delivery happens server-side.
+
+| Route | Purpose                              |
+| ----- | ------------------------------------ | ------------------------------------------------------- |
+| `GET  | POST /api/reports/scheduled/execute` | Run due scheduled reports and deliver via email/webhook |
+
+---
+
 ## Known Issues Log
 
 | Route/Page                                  | Issue | Added | Fixed |
@@ -1082,6 +1252,12 @@ Reverse lookup: which routes touch each model. Top 30 most-used models.
 | 2026-03-23 | middleware.ts           | SEC-5: JWT HMAC verification via jose                          | SEC-5  |
 | 2026-03-23 | /api/ws                 | COMP-5: WebSocket CORS restricted to synthex.social            | COMP-5 |
 | 2026-03-23 | /api/contact            | Created — public POST, Resend SDK, rate-limited (writeDefault) | —      |
+
+### 2026-03-30 — UNI-1655: Intentional server-side route documentation
+
+- Added `## Intentional Server-Side / Infrastructure Routes` section with 8 categories
+- Covers 32 cron routes, 9 webhook receivers, 12 health probes, 13 admin routes, 10 social direct-post routes, 2 reporting routes, 1 ML training route, 1 scheduled report execution route
+- Future audits should suppress these from "orphaned route" findings
 
 ### 2026-03-23 — UNI-1633: Obsidian content import
 
