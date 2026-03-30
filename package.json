@@ -16,7 +16,7 @@
     "validate:claude": "node scripts/validate-claude-settings.js",
     "validate:all": "npm run validate:env && npm run validate:claude",
     "validate:google": "npx tsx scripts/validate-google-config.ts",
-    "build:vercel": "npx prisma@7.5.0 generate && npx prisma@7.5.0 db push --accept-data-loss && rm -rf .next/cache && next build --webpack",
+    "build:vercel": "npx prisma@7.5.0 generate && rm -rf .next/cache && next build --webpack",
     "vercel-build": "prisma generate && next build",
     "start": "next start",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",

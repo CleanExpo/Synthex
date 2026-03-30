@@ -127,15 +127,15 @@
     },
     {
       "path": "/api/cron/drip-day3",
-      "schedule": "0 9 * * *"
+      "schedule": "2 9 * * *"
     },
     {
       "path": "/api/cron/drip-day7",
-      "schedule": "0 9 * * *"
+      "schedule": "4 9 * * *"
     },
     {
       "path": "/api/cron/drip-day14",
-      "schedule": "0 9 * * *"
+      "schedule": "6 9 * * *"
     },
     {
       "path": "/api/cron/unite-hub-revenue",
@@ -179,7 +179,7 @@
     },
     {
       "path": "/api/cron/review-follow-up",
-      "schedule": "0 9 * * *"
+      "schedule": "8 9 * * *"
     },
     {
       "path": "/api/cron/gsc-topic-sync",
