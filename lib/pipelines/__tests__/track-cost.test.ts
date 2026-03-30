@@ -17,6 +17,7 @@ beforeEach(() => {
   jest.spyOn(console, 'warn').mockImplementation(() => {});
   jest.spyOn(console, 'error').mockImplementation(() => {});
   (createClient as jest.Mock).mockReturnValue(mockClient);
+  mockFrom.mockReturnValue({ insert: mockInsert });
   process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://fake.supabase.co';
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'fake-service-key';
 });

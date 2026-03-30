@@ -1,4 +1,10 @@
-import { detectFirstWin, formatWinCopy, WIN_THRESHOLD, PostPerformance, ClientBaseline } from '../detect-first-win';
+import {
+  detectFirstWin,
+  formatWinCopy,
+  WIN_THRESHOLD,
+  PostPerformance,
+  ClientBaseline,
+} from '../detect-first-win';
 
 const basePost: PostPerformance = {
   postId: 'post-001',
@@ -23,10 +29,10 @@ describe('detectFirstWin', () => {
     expect(result!.postId).toBe('post-001');
   });
 
-  it('returns null when post is exactly at threshold (must be >= 1.3x)', () => {
-    const post = { ...basePost, value: Math.floor(212 * WIN_THRESHOLD) }; // 275
+  it('returns WinEvent when post is exactly at threshold (>= 1.3x triggers win)', () => {
+    const post = { ...basePost, value: 212 * WIN_THRESHOLD }; // 275.6 — ratio exactly 1.3
     const result = detectFirstWin(post, baseBaseline);
-    expect(result).not.toBeNull(); // 275/212 = 1.297 — actually just under; let's use exactly
+    expect(result).not.toBeNull();
   });
 
   it('returns null when post is below threshold', () => {
@@ -56,8 +62,18 @@ describe('detectFirstWin', () => {
   });
 
   it('works for engagement_rate metric', () => {
-    const post: PostPerformance = { postId: 'p2', postedAt: new Date(), metric: 'engagement_rate', value: 6.5 };
-    const baseline: ClientBaseline = { userId: 'u1', metric: 'engagement_rate', rollingAverage: 4.0, firstWinDetected: false };
+    const post: PostPerformance = {
+      postId: 'p2',
+      postedAt: new Date(),
+      metric: 'engagement_rate',
+      value: 6.5,
+    };
+    const baseline: ClientBaseline = {
+      userId: 'u1',
+      metric: 'engagement_rate',
+      rollingAverage: 4.0,
+      firstWinDetected: false,
+    };
     const result = detectFirstWin(post, baseline);
     expect(result).not.toBeNull(); // 6.5/4.0 = 1.625 > 1.3
     expect(result!.metric).toBe('engagement_rate');
