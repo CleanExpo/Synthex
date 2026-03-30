@@ -608,6 +608,11 @@ model Organization {
   // Weekly content calendars — SYN-521
   contentCalendars ContentCalendar[]
 
+  // Calendar autonomy mode — SYN-522
+  // 'shadow' = review all posts before publishing (default, safe)
+  // 'live' = auto-publish posts at scheduled time
+  calendarMode String @default("shadow") @map("calendar_mode")
+
   // GSC content topic suggestions (SYN-472)
   contentTopicSuggestions ContentTopicSuggestion[]
 

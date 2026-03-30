@@ -36,6 +36,13 @@ const PostDetailModal = dynamic(
     })),
   { ssr: false }
 );
+const AICalendarSection = dynamic(
+  () =>
+    import('@/components/calendar/AICalendarSection').then(m => ({
+      default: m.AICalendarSection,
+    })),
+  { ssr: false }
+);
 import { PageHeader } from '@/components/dashboard/page-header';
 import { DashboardEmptyState } from '@/components/dashboard/empty-state';
 import { Button } from '@/components/ui/button';
@@ -434,6 +441,9 @@ function CalendarPageContent() {
           </div>
         </div>
       </div>
+
+      {/* AI Weekly Calendar — shadow/live mode + slot review */}
+      <AICalendarSection />
 
       {/* Calendar View */}
       {posts.length === 0 && !isLoading ? (
