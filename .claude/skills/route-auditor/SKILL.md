@@ -322,3 +322,18 @@ changes, or allow any auth system other than Supabase.
 Flag any deviation from these 5 gates as a blocker. Everything else is a warning.
 
 **REFERENCE** `.claude/skills/synthex-standards/references/code-standards.md`
+
+
+---
+
+## Review Board Output
+
+When invoked as part of the Synthex Review Board pipeline, produce output matching the schema in `.claude/skills/review-board/_shared/output-schema.md`.
+
+Map this skill's findings to the shared format:
+- `specialist`: Use this skill's `name` from frontmatter
+- `severity`: Map findings to CRITICAL/HIGH/MEDIUM/LOW per `.claude/skills/review-board/_shared/severity-levels.md`
+- `confidence`: Assign 0-100 based on certainty. Only findings >= 80 are shown to the developer.
+- `verdict`: BLOCK if any CRITICAL finding exists, otherwise PASS
+- Include `file`, `line`, `issue`, `fix`, and optional `reference` for each finding
+- If no findings, return empty findings array with verdict PASS
