@@ -652,6 +652,9 @@ model Organization {
   // Competitor displacement (SYN-484)
   competitorKeywordGaps CompetitorKeywordGap[]
 
+  // Video production series (SYN-572)
+  videoSeries VideoSeries[] @relation("OrganisationVideoSeries")
+
   // Indices for multi-tenant queries
   @@index([slug])
   @@index([status])
@@ -4956,6 +4959,147 @@ model VideoAsset {
   @@index([founderId, status])
   @@map("video_assets")
 }
+
+// ── Video Production System (SYN-572) ──────────────────────────────────────────
+
+/// Top-level series entity for autonomous video production.
+/// Tracks BTS ("Behind the Scenes") and CLIENT ("Benefits to SMB") series.
+/// onDelete: Cascade — removing the series removes all episodes and topics.
+model VideoSeries {
+  id               String  @id @default(cuid())
+  organisationId   String? @map("organisation_id")
+
+  // Series identity
+  slug             String  @unique
+  name             String
+  description      String  @db.Text
+  seriesType       String  @map("series_type") // "bts" | "client"
+
+  // YouTube integration
+  youtubePlaylistId  String? @map("youtube_playlist_id")
+  youtubeChannelId   String? @map("youtube_channel_id")
+
+  // Production config
+  productionConfig   Json? @map("production_config")
+  // { schedule, dayOfWeek, preferredTime, targetDuration, style, maxEpisodesPerRun }
+
+  // State
+  status           String @default("active") // "active" | "paused" | "completed"
+  nextEpisodeNum   Int    @default(1) @map("next_episode_num")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organisation Organization? @relation("OrganisationVideoSeries", fields: [organisationId], references: [id], onDelete: SetNull)
+  episodes     VideoEpisode[]
+  topicQueue   VideoTopicQueue[]
+
+  @@index([seriesType, status])
+  @@index([organisationId])
+  @@map("video_series")
+}
+
+/// Tracks the full production lifecycle of a single video episode.
+/// State machine: queued → scripting → capturing → rendering → quality_check → publishing → published | held | failed
+/// onDelete: Cascade from VideoSeries.
+model VideoEpisode {
+  id       String @id @default(cuid())
+  seriesId String @map("series_id")
+
+  // Episode identity
+  episodeNumber Int    @map("episode_number")
+  title         String
+  slug          String @unique
+
+  // Source material reference
+  sourceType    String  @map("source_type")
+  // "board_memo" | "phase_doc" | "git_history" | "linear_issue" | "feature_walkthrough" | "dashboard_capture"
+  sourceRef     String? @map("source_ref")
+  sourceContent String? @map("source_content") @db.Text
+
+  // Production state machine
+  status        String @default("queued")
+  // queued | scripting | script_review | capturing | rendering | quality_check | publishing | published | failed | held
+  errorMessage  String? @map("error_message") @db.Text
+
+  // Generated artefacts
+  scriptContent      Json?   @map("script_content")
+  captureAssets      Json?   @map("capture_assets")
+  rawVideoPath       String? @map("raw_video_path")
+  processedVideoPath String? @map("processed_video_path")
+  thumbnailPath      String? @map("thumbnail_path")
+
+  // Quality gate results
+  humannessScore  Float?   @map("humanness_score")
+  geoTacticScore  Float?   @map("geo_tactic_score")
+  slopScanPassed  Boolean? @map("slop_scan_passed")
+  qualityMetadata Json?    @map("quality_metadata")
+
+  // YouTube publish data
+  youtubeVideoId  String? @map("youtube_video_id")
+  youtubeUrl      String? @map("youtube_url")
+  youtubeEmbedUrl String? @map("youtube_embed_url")
+
+  // Companion content
+  blogPostUrl String? @map("blog_post_url")
+  blogPostId  String? @map("blog_post_id")
+
+  // Social derivation tracking
+  socialPosts Json? @map("social_posts")
+
+  // VideoObject schema (generated on publish)
+  videoObjectSchema Json? @map("video_object_schema")
+
+  // Timing
+  scriptedAt  DateTime? @map("scripted_at")
+  capturedAt  DateTime? @map("captured_at")
+  renderedAt  DateTime? @map("rendered_at")
+  publishedAt DateTime? @map("published_at")
+  scheduledAt DateTime? @map("scheduled_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  series VideoSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@unique([seriesId, episodeNumber])
+  @@index([seriesId, status])
+  @@index([status, scheduledAt])
+  @@index([youtubeVideoId])
+  @@map("video_episodes")
+}
+
+/// Priority-ordered backlog of episode topics.
+/// The autonomous pipeline pulls the next unproduced topic each production run.
+/// onDelete: Cascade from VideoSeries.
+model VideoTopicQueue {
+  id       String @id @default(cuid())
+  seriesId String @map("series_id")
+
+  // Topic definition
+  title       String
+  description String  @db.Text
+  sourceType  String  @map("source_type")
+  sourceRef   String? @map("source_ref")
+  priority    Int     @default(50) // 1=highest, 100=lowest
+
+  // State
+  status    String  @default("pending") // "pending" | "assigned" | "completed" | "skipped"
+  episodeId String? @map("episode_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  series VideoSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@index([seriesId, status, priority])
+  @@map("video_topic_queue")
+}
+
+// ── End Video Production System ─────────────────────────────────────────────────
 
 /// Social media engagement records for a user's (founder's) content.
 /// onDelete: Cascade — deleting the user removes all their engagement records.

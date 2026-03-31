@@ -7,13 +7,37 @@
  * NO MOCK DATA - All videos use real application UI and data.
  */
 
-import { CaptureService, SYNTHEX_WORKFLOWS, CaptureWorkflow } from './capture-service';
+import {
+  CaptureService,
+  SYNTHEX_WORKFLOWS,
+  CaptureWorkflow,
+} from './capture-service';
+import {
+  PlaywrightCaptureService,
+  ALL_WORKFLOWS,
+} from './playwright-capture-service';
 import { VideoProcessor, TextOverlay } from './video-processor';
-import { YouTubeUploader, SYNTHEX_VIDEO_METADATA, UploadResult, VideoMetadata } from './youtube-uploader';
+import {
+  YouTubeUploader,
+  SYNTHEX_VIDEO_METADATA,
+  UploadResult,
+  VideoMetadata,
+} from './youtube-uploader';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import { logger } from '@/lib/logger';
+
+/**
+ * Common interface for both capture services.
+ * Both CaptureService and PlaywrightCaptureService implement these methods.
+ */
+export interface ICaptureService {
+  init(): Promise<void>;
+  login(email: string, password: string): Promise<void>;
+  captureWorkflow(workflow: CaptureWorkflow): Promise<string | null>;
+  close(): Promise<void>;
+}
 
 export interface VideoScript {
   workflow: CaptureWorkflow;
@@ -33,24 +57,32 @@ export interface ProductionResult {
 }
 
 export class VideoOrchestrator {
-  private captureService: CaptureService;
+  private captureService: ICaptureService;
   private videoProcessor: VideoProcessor;
   private youtubeUploader: YouTubeUploader;
   private outputDir: string;
+  private workflowRegistry: Record<string, CaptureWorkflow>;
 
-  constructor() {
+  /**
+   * @param captureService — inject CaptureService (legacy) or PlaywrightCaptureService.
+   *                         Defaults to PlaywrightCaptureService if not provided.
+   */
+  constructor(captureService?: ICaptureService) {
     this.outputDir = './output';
-    this.captureService = new CaptureService({
-      outputDir: path.join(this.outputDir, 'raw'),
-    });
+    this.captureService =
+      captureService ??
+      new PlaywrightCaptureService({
+        outputDir: path.join(this.outputDir, 'raw'),
+      });
     this.videoProcessor = new VideoProcessor({
       inputDir: path.join(this.outputDir, 'raw'),
       outputDir: path.join(this.outputDir, 'processed'),
     });
     this.youtubeUploader = new YouTubeUploader();
+    this.workflowRegistry = ALL_WORKFLOWS;
 
     // Ensure directories exist
-    ['raw', 'processed', 'final', 'thumbnails'].forEach((dir) => {
+    ['raw', 'processed', 'final', 'thumbnails'].forEach(dir => {
       const dirPath = path.join(this.outputDir, dir);
       if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
@@ -66,7 +98,9 @@ export class VideoOrchestrator {
 
     // Check YouTube credentials
     if (!this.youtubeUploader.isConfigured()) {
-      issues.push('YouTube API credentials not configured (YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, YOUTUBE_REFRESH_TOKEN)');
+      issues.push(
+        'YouTube API credentials not configured (YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, YOUTUBE_REFRESH_TOKEN)'
+      );
     }
 
     // Check ElevenLabs
@@ -93,19 +127,23 @@ export class VideoOrchestrator {
    * Produce a single video
    */
   async produceVideo(
-    workflowName: keyof typeof SYNTHEX_WORKFLOWS,
+    workflowName: string,
     options: {
       login?: { email: string; password: string };
       voiceoverPath?: string;
       skipUpload?: boolean;
     } = {}
   ): Promise<ProductionResult> {
-    const workflow = SYNTHEX_WORKFLOWS[workflowName];
+    const workflow = this.workflowRegistry[workflowName];
     if (!workflow) {
-      throw new Error(`Unknown workflow: ${workflowName}`);
+      throw new Error(
+        `Unknown workflow: ${workflowName}. Available: ${Object.keys(this.workflowRegistry).join(', ')}`
+      );
     }
 
-    logger.info('Orchestrator starting production', { workflowName: workflow.name });
+    logger.info('Orchestrator starting production', {
+      workflowName: workflow.name,
+    });
 
     const result: ProductionResult = {
       workflowName: workflow.name,
@@ -120,17 +158,23 @@ export class VideoOrchestrator {
       await this.captureService.init();
 
       if (options.login) {
-        await this.captureService.login(options.login.email, options.login.password);
+        await this.captureService.login(
+          options.login.email,
+          options.login.password
+        );
       }
 
-      result.rawVideoPath = (await this.captureService.captureWorkflow(workflow)) || '';
+      result.rawVideoPath =
+        (await this.captureService.captureWorkflow(workflow)) || '';
       await this.captureService.close();
 
       if (!result.rawVideoPath || !fs.existsSync(result.rawVideoPath)) {
         throw new Error('Capture failed - no output file');
       }
 
-      logger.info('Orchestrator raw capture saved', { path: result.rawVideoPath });
+      logger.info('Orchestrator raw capture saved', {
+        path: result.rawVideoPath,
+      });
 
       // Phase 2: Process
       logger.info('Orchestrator Phase 2: Process');
@@ -154,7 +198,9 @@ export class VideoOrchestrator {
         5 // 5 seconds into video
       );
 
-      logger.info('Orchestrator processed video', { path: result.processedVideoPath });
+      logger.info('Orchestrator processed video', {
+        path: result.processedVideoPath,
+      });
 
       // Phase 3: Upload to YouTube
       if (!options.skipUpload && this.youtubeUploader.isConfigured()) {
@@ -167,17 +213,24 @@ export class VideoOrchestrator {
             result.processedVideoPath,
             metadata
           );
-          logger.info('Orchestrator YouTube upload complete', { url: result.youtubeResult.videoUrl });
+          logger.info('Orchestrator YouTube upload complete', {
+            url: result.youtubeResult.videoUrl,
+          });
         }
       } else if (options.skipUpload) {
-        logger.info('Orchestrator Phase 3: Upload skipped', { reason: 'skipUpload=true' });
+        logger.info('Orchestrator Phase 3: Upload skipped', {
+          reason: 'skipUpload=true',
+        });
       } else {
-        logger.info('Orchestrator Phase 3: Upload skipped', { reason: 'YouTube not configured' });
+        logger.info('Orchestrator Phase 3: Upload skipped', {
+          reason: 'YouTube not configured',
+        });
       }
 
       result.success = true;
-      logger.info('Orchestrator production complete', { workflowName: workflow.name });
-
+      logger.info('Orchestrator production complete', {
+        workflowName: workflow.name,
+      });
     } catch (error) {
       result.error = error instanceof Error ? error.message : String(error);
       console.error(`[Orchestrator] Production failed: ${result.error}`);
@@ -186,7 +239,10 @@ export class VideoOrchestrator {
       try {
         await this.captureService.close();
       } catch (cleanupError) {
-        console.warn('[VideoOrchestrator] Failed to close capture service:', cleanupError);
+        console.warn(
+          '[VideoOrchestrator] Failed to close capture service:',
+          cleanupError
+        );
       }
     }
 
@@ -204,19 +260,19 @@ export class VideoOrchestrator {
   ): Promise<ProductionResult[]> {
     const results: ProductionResult[] = [];
 
-    const workflows = Object.keys(SYNTHEX_WORKFLOWS) as Array<keyof typeof SYNTHEX_WORKFLOWS>;
+    const workflows = Object.keys(this.workflowRegistry);
 
     for (const workflowName of workflows) {
       const result = await this.produceVideo(workflowName, options);
       results.push(result);
 
       // Pause between videos
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, 5000));
     }
 
     // Summary
-    const successful = results.filter((r) => r.success);
-    const failed = results.filter((r) => !r.success);
+    const successful = results.filter(r => r.success);
+    const failed = results.filter(r => !r.success);
 
     logger.info('Production summary', {
       total: results.length,
@@ -226,7 +282,7 @@ export class VideoOrchestrator {
 
     if (successful.length > 0) {
       logger.info('Successful videos', {
-        videos: successful.map((r) => ({
+        videos: successful.map(r => ({
           name: r.workflowName,
           url: r.youtubeResult?.videoUrl || r.processedVideoPath,
         })),
@@ -235,7 +291,7 @@ export class VideoOrchestrator {
 
     if (failed.length > 0) {
       logger.warn('Failed videos', {
-        videos: failed.map((r) => ({
+        videos: failed.map(r => ({
           name: r.workflowName,
           error: r.error,
         })),
@@ -248,7 +304,11 @@ export class VideoOrchestrator {
   /**
    * Generate website embed code
    */
-  generateEmbedCode(result: UploadResult, width: number = 560, height: number = 315): string {
+  generateEmbedCode(
+    result: UploadResult,
+    width: number = 560,
+    height: number = 315
+  ): string {
     return `<iframe
   width="${width}"
   height="${height}"
@@ -266,7 +326,7 @@ export class VideoOrchestrator {
   exportResults(results: ProductionResult[]): void {
     const exportPath = path.join(this.outputDir, 'production_results.json');
 
-    const exportData = results.map((r) => ({
+    const exportData = results.map(r => ({
       name: r.workflowName,
       success: r.success,
       localPath: r.processedVideoPath,
