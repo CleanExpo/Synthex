@@ -208,6 +208,14 @@
     {
       "path": "/api/cron/health-check",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/video-production",
+      "schedule": "0 20 * * 1,3"
+    },
+    {
+      "path": "/api/cron/video-social-derivation",
+      "schedule": "0 */2 * * *"
     }
   ]
 }
