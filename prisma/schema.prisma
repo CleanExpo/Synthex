@@ -640,6 +640,7 @@ model Organization {
   monthlyStories             MonthlyStory[]
   storyConfig                StoryConfig?
   seasonalSignalDismissals   SeasonalSignalDismissal[]
+  recommendedActions         RecommendedAction[]
 
   // GSC content topic suggestions (SYN-472)
   contentTopicSuggestions ContentTopicSuggestion[]
@@ -5867,4 +5868,51 @@ model StoryConfig {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("story_config")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI Marketing Advisor — SYN-593
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Weekly personalised AI marketing brief — 3 ranked recommended actions per client.
+/// Generated every Monday 07:00 AEDT. Held as status=generated for 7-day quality gate
+/// before delivery automation fires.
+model RecommendedAction {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+
+  /// Monday of the week this brief covers (date only, UTC)
+  weekStart DateTime @map("week_start") @db.Date
+
+  /// Exactly 3 ranked action objects — see ActionItem type in lib/advisor/types.ts
+  actions Json
+
+  /// Human-readable attribution: "Synthex contributed to N enquiries and ~$X in potential revenue"
+  dollarAttribution String @map("dollar_attribution") @db.Text
+
+  /// Number used in dollar attribution sentence
+  jobCountAttribution Int @default(0) @map("job_count_attribution")
+
+  /// One-sentence competitor gap signal. Null if data unavailable.
+  competitorMicroInsight String? @map("competitor_micro_insight") @db.Text
+
+  /// GEO baseline teaser row. Null if no GEO data present.
+  geoTeaserText String? @map("geo_teaser_text") @db.Text
+
+  /// Results summary: { postsPublished, bestPostId, authorityScoreDelta, revenueAttributed }
+  resultsSummary Json @map("results_summary")
+
+  /// generated → held for quality review; delivered → sent to client; read → opened; archived
+  status String @default("generated")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  deliveredAt DateTime? @map("delivered_at")
+  readAt      DateTime? @map("read_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, weekStart], name: "recommended_action_org_week")
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([status])
+  @@map("recommended_actions")
 }
