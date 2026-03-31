@@ -107,6 +107,9 @@ describe('buildVideoObjectSchema()', () => {
 
     expect(schema.author?.['@type']).toBe('Person');
     expect(schema.author?.name).toBe('Phill McGurk');
+    expect(schema.author?.jobTitle).toBe('Founder & CEO');
+    expect(schema.author?.worksFor?.['@type']).toBe('Organization');
+    expect(schema.author?.worksFor?.name).toBe('Synthex');
     expect(schema.author?.sameAs).toBeInstanceOf(Array);
     expect(schema.author?.sameAs.length).toBeGreaterThan(0);
     // Must include LinkedIn or YouTube for E.E.A.T.

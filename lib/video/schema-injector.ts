@@ -54,6 +54,12 @@ export interface VideoObjectSchema {
     '@type': 'Person';
     name: string;
     url: string;
+    jobTitle: string;
+    worksFor: {
+      '@type': 'Organization';
+      name: string;
+      url: string;
+    };
     sameAs: string[];
   };
   keywords?: string;
@@ -92,6 +98,11 @@ const SYNTHEX_ORG = {
 const SYNTHEX_AUTHOR = {
   name: 'Phill McGurk',
   url: 'https://synthex.social/about',
+  jobTitle: 'Founder & CEO',
+  worksFor: {
+    name: SYNTHEX_ORG.name,
+    url: SYNTHEX_ORG.url,
+  },
   sameAs: [
     'https://www.linkedin.com/company/synthex-ai',
     'https://www.youtube.com/@SynthexSystem',
@@ -126,6 +137,12 @@ export function buildVideoObjectSchema(
       '@type': 'Person',
       name: input.authorName ?? SYNTHEX_AUTHOR.name,
       url: SYNTHEX_AUTHOR.url,
+      jobTitle: SYNTHEX_AUTHOR.jobTitle,
+      worksFor: {
+        '@type': 'Organization',
+        name: SYNTHEX_AUTHOR.worksFor.name,
+        url: SYNTHEX_AUTHOR.worksFor.url,
+      },
       sameAs: SYNTHEX_AUTHOR.sameAs,
     },
     inLanguage: 'en-AU',
