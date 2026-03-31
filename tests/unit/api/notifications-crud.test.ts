@@ -1,6 +1,6 @@
 /**
  * Unit Tests for Notifications CRUD API Routes
- * Tests GET/POST /api/notifications and PATCH /api/notifications/[id]/read
+ * Tests GET/POST /api/notifications and PATCH /api/notifications/[notificationId]/read
  *
  * Tests actual route handlers with mocked Prisma and security dependencies.
  * Uses createMockNextRequest to avoid the jest.setup.js polyfill conflict with NextRequest.
