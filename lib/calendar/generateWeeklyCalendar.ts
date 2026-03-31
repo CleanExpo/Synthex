@@ -32,10 +32,12 @@ import type {
   ContentCalendarData,
 } from './types';
 import { InsufficientDigestsError } from './types';
+import { getMarketOpportunitySlots } from './seasonalSignalsMatcher';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const SIGNALS_VERSION = '1.0';
+const SIGNALS_VERSION_BASE = '1.0';
+const SIGNALS_VERSION_WITH_MARKET = '1.1';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -128,12 +130,38 @@ export async function generateWeeklyCalendar(
       slots.push({ ...stub, captions });
     }
 
+    // ── 5b. Inject market opportunity slots (SYN-549) ────────────────────────
+    const marketStubs = await getMarketOpportunitySlots(
+      organizationId,
+      weekStart
+    );
+    for (const stub of marketStubs) {
+      const captions = await generateCaptions(
+        {
+          platform: stub.platform,
+          contentType: stub.contentType,
+          businessName: brandCtx.businessName,
+          industry: brandCtx.industry,
+          tone: brandCtx.tone,
+          hashtags: stub.hashtags,
+          opportunityHint: stub.opportunityLabel,
+        },
+        organizationId
+      );
+      slots.push({ ...stub, captions });
+    }
+
+    const signalsVersion =
+      marketStubs.length > 0
+        ? SIGNALS_VERSION_WITH_MARKET
+        : SIGNALS_VERSION_BASE;
+
     // ── 6. Build calendar data ───────────────────────────────────────────────
     const calendarData: ContentCalendarData = {
       weekStart: toDateString(weekStart),
       weekEnd: toDateString(weekEnd),
       slots,
-      signalsVersion: SIGNALS_VERSION,
+      signalsVersion,
       digestCount: signals.digestCount,
     };
 
@@ -153,7 +181,7 @@ export async function generateWeeklyCalendar(
           typeof prisma.contentCalendar.create
         >[0]['data']['slots'],
         status: 'draft',
-        signalsVersion: SIGNALS_VERSION,
+        signalsVersion,
       },
       update: {
         slots: calendarData as unknown as Parameters<
@@ -161,7 +189,7 @@ export async function generateWeeklyCalendar(
         >[0]['data']['slots'],
         weekEnd,
         status: 'draft',
-        signalsVersion: SIGNALS_VERSION,
+        signalsVersion,
         updatedAt: new Date(),
       },
     });

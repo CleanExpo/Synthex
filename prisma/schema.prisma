@@ -637,8 +637,9 @@ model Organization {
   // Monthly Story — SYN-553
   // Day of month (1–28) when the story is delivered relative to billing renewal
   billingAnchorDate Int?            @map("billing_anchor_date") // null → defaults to 28
-  monthlyStories    MonthlyStory[]
-  storyConfig       StoryConfig?
+  monthlyStories             MonthlyStory[]
+  storyConfig                StoryConfig?
+  seasonalSignalDismissals   SeasonalSignalDismissal[]
 
   // GSC content topic suggestions (SYN-472)
   contentTopicSuggestions ContentTopicSuggestion[]
@@ -5605,11 +5606,29 @@ model SeasonalSignal {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  dismissals SeasonalSignalDismissal[]
+
   @@unique([industrySlug, locationState, windowStart, source], name: "seasonal_signal_dedup")
   @@index([industrySlug, locationState])
   @@index([windowStart])
   @@index([confidenceScore])
   @@map("seasonal_signals")
+}
+
+/// Per-org dismissal of a seasonal market opportunity signal — SYN-549
+/// Once dismissed, the signal is not re-inserted into that org's calendar.
+model SeasonalSignalDismissal {
+  id             String         @id @default(cuid())
+  organizationId String         @map("organization_id")
+  signalId       String         @map("signal_id")
+  dismissedAt    DateTime       @default(now()) @map("dismissed_at")
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  signal       SeasonalSignal @relation(fields: [signalId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, signalId])
+  @@index([organizationId])
+  @@map("seasonal_signal_dismissals")
 }
 
 /// Audit log for update-seasonal-signals cron runs.

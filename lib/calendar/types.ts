@@ -29,6 +29,9 @@ export type ContentType =
   | 'testimonial'
   | 'trending';
 
+/** Distinguishes regular AI slots from seasonal market opportunity slots */
+export type SlotType = 'ai_generated' | 'market_opportunity';
+
 /** A single scheduled content slot within a weekly calendar */
 export interface CalendarSlot {
   /** Unique slot ID (cuid) */
@@ -45,6 +48,17 @@ export interface CalendarSlot {
   hashtags: string[];
   /** Content category used to prompt the AI */
   contentType: ContentType;
+  /**
+   * Slot origin — omitted / undefined means 'ai_generated' (backward-compatible
+   * with existing JSONB calendar records that pre-date SYN-549).
+   */
+  slotType?: SlotType;
+  /** FK to seasonal_signals.id — only present for market_opportunity slots */
+  signalId?: string;
+  /** Human-readable opportunity name — e.g. "Winter Pipe Season" */
+  opportunityLabel?: string;
+  /** Suggested post format for this opportunity */
+  suggestedFormat?: 'image' | 'text';
 }
 
 // ── Calendar-level types ──────────────────────────────────────────────────────
@@ -68,8 +82,11 @@ export interface ContentCalendarData {
   weekStart: string; // ISO date yyyy-MM-dd
   weekEnd: string; // ISO date yyyy-MM-dd
   slots: CalendarSlot[];
-  /** Algorithm version — bump when generation logic changes */
-  signalsVersion: '1.0';
+  /**
+   * Algorithm version — '1.0' for digest-only calendars,
+   * '1.1' when market opportunity slots are included (SYN-549).
+   */
+  signalsVersion: string;
   /** How many digests informed this calendar */
   digestCount: number;
 }

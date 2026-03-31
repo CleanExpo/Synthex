@@ -20,6 +20,7 @@
 import useSWR from 'swr';
 import { ShadowLiveToggle } from './ShadowLiveToggle';
 import { AICalendarSlotCard, SlotWithMeta } from './AICalendarSlotCard';
+import { MarketOpportunitySlotCard } from './MarketOpportunitySlotCard';
 import { Loader2, CalendarDays, Info } from '@/components/icons';
 import type { ContentCalendarData } from '@/lib/calendar/types';
 
@@ -92,6 +93,16 @@ export function AICalendarSection() {
 
   async function handleCaptionSelect(slotId: string, captionIndex: number) {
     await patchSlot(slotId, { selectedCaption: captionIndex });
+  }
+
+  async function handleDismissSignal(signalId: string) {
+    await fetch('/api/calendar/seasonal-dismiss', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ signalId }),
+    });
+    // No mutate needed — MarketOpportunitySlotCard hides itself on dismiss
   }
 
   // ── Render states ────────────────────────────────────────────────────────────
@@ -217,17 +228,30 @@ export function AICalendarSection() {
 
       {/* Slot grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-        {slots.map((slot: SlotWithMeta) => (
-          <AICalendarSlotCard
-            key={slot.id}
-            slot={slot}
-            calendarId={calendar.id}
-            shadowMode={calendarMode === 'shadow'}
-            onApprove={handleApprove}
-            onReject={handleReject}
-            onCaptionSelect={handleCaptionSelect}
-          />
-        ))}
+        {slots.map((slot: SlotWithMeta) =>
+          slot.slotType === 'market_opportunity' ? (
+            <MarketOpportunitySlotCard
+              key={slot.id}
+              slot={slot}
+              calendarId={calendar.id}
+              shadowMode={calendarMode === 'shadow'}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              onCaptionSelect={handleCaptionSelect}
+              onDismiss={handleDismissSignal}
+            />
+          ) : (
+            <AICalendarSlotCard
+              key={slot.id}
+              slot={slot}
+              calendarId={calendar.id}
+              shadowMode={calendarMode === 'shadow'}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              onCaptionSelect={handleCaptionSelect}
+            />
+          )
+        )}
       </div>
 
       {/* Footer note */}
