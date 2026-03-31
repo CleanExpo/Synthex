@@ -190,7 +190,8 @@
       "Bash(grep -rn recommendedAction C:/Synthex/node_modules/@prisma/client/ --include=*.d.ts)",
       "Bash(grep -rn recommendedAction C:/Synthex/.claude/worktrees/infallible-pasteur/node_modules/ --include=*.d.ts)",
       "Bash(find /c/Synthex -name index.d.ts -path */prisma/client/*)",
-      "Bash(find C:/Synthex/.claude/worktrees/infallible-pasteur/__tests__ -name *.test.ts)"
+      "Bash(find C:/Synthex/.claude/worktrees/infallible-pasteur/__tests__ -name *.test.ts)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\(''''scripts'''',{}\\).get\\(''''build'''',''''NOT FOUND''''\\)\\)\")"
     ],
     "deny": [
       "Bash(git push --force*)",
