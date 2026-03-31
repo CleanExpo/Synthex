@@ -177,7 +177,15 @@
       "Bash(mv \"C:\\\\Synthex\\\\.claude\\\\worktrees\\\\infallible-pasteur\\\\app\\\\api\\\\notifications\\\\[id]\" \"C:\\\\Synthex\\\\.claude\\\\worktrees\\\\infallible-pasteur\\\\.claude\\\\archived\\\\2026-03-31\\\\notifications-id-stub\")",
       "Bash(mkdir -p \"/c/Synthex/.claude/archived/2026-03-31\")",
       "Bash(mv \"/c/Synthex/app/api/notifications/[id]\" \"/c/Synthex/.claude/archived/2026-03-31/notifications-id-stub\")",
-      "mcp__chrome-devtools__take_screenshot"
+      "mcp__chrome-devtools__take_screenshot",
+      "Bash(grep -E \"^[A-Z_]+=\\\\s*$\" /c/Synthex/.env.example)",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__click",
+      "mcp__chrome-devtools__type_text",
+      "mcp__chrome-devtools__evaluate_script",
+      "mcp__chrome-devtools__fill"
     ],
     "deny": [
       "Bash(git push --force*)",
