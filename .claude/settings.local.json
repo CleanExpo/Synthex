@@ -158,7 +158,15 @@
       "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__get_issue",
       "Bash(dir \"C:\\\\Synthex\\\\app\\\\api\\\\video\" /b)",
       "Bash(find C:/Synthex -name *.test.ts -not -path */node_modules/*)",
-      "Bash(find /c/Synthex -name *.tsx -path */remotion/*)"
+      "Bash(find /c/Synthex -name *.tsx -path */remotion/*)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Synthex/.claude/worktrees/infallible-pasteur/**)",
+      "Bash(for dir:*)",
+      "Bash(do)",
+      "Read(//c/Synthex/.claude/worktrees/infallible-pasteur/.claude/skills/review-board/**)",
+      "mcp__55f7d627-7e1d-4ce7-9032-daeb09778b81__slack_create_canvas",
+      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__create_document"
     ],
     "deny": [
       "Bash(git push --force*)",
@@ -173,7 +181,10 @@
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["linear", "obsidian"],
+  "enabledMcpjsonServers": [
+    "linear",
+    "obsidian"
+  ],
   "hooks": {
     "PreCompact": [
       {
