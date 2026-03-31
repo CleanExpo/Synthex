@@ -153,7 +153,9 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3006/ --max-time 30)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3006/api/health --max-time 60)",
       "Bash(netstat -ano)",
-      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__list_issues"
+      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__list_issues",
+      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__save_comment",
+      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__get_issue"
     ],
     "deny": [
       "Bash(git push --force*)",
