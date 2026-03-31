@@ -22,10 +22,12 @@ export const SECRET_TYPES = [
 export type SecretType = (typeof SECRET_TYPES)[number];
 
 export const PROVIDERS = [
+  // ── AI Providers ──
   'openrouter',
   'anthropic',
   'openai',
   'google',
+  // ── Social Platforms ──
   'twitter',
   'linkedin',
   'instagram',
@@ -35,9 +37,22 @@ export const PROVIDERS = [
   'pinterest',
   'reddit',
   'threads',
+  // ── Google Services ──
   'searchconsole',
   'googleanalytics',
   'googledrive',
+  'googlebusiness',
+  'google_cloud', // Google Cloud service account JSON (PageSpeed, CrUX, NLP APIs)
+  'google_ads', // Google Ads customer ID + developer token (Keyword Planner, Tier 3)
+  // ── SEO Data Providers ──
+  'dataforseo', // DataForSEO API login:password (SERP, keywords, backlinks)
+  'firecrawl', // Firecrawl API key (full-site crawling)
+  // ── Client Website Access ──
+  'hosting_cms_api', // WordPress REST API, Shopify Admin API, Wix API key
+  'hosting_ftp', // FTP/SFTP credentials (reserved — not implemented Sprint 1–8)
+  'hosting_ssh', // SSH credentials (reserved — not implemented Sprint 1–8)
+  'cloudflare', // Cloudflare API key (DNS/cache management)
+  // ── Other ──
   'stripe',
   'custom',
 ] as const;
@@ -82,7 +97,10 @@ const SlugSchema = z
   .string()
   .min(2, 'Slug must be at least 2 characters')
   .max(100, 'Slug must be at most 100 characters')
-  .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/, 'Slug must be lowercase alphanumeric with hyphens');
+  .regex(
+    /^[a-z0-9][a-z0-9-]*[a-z0-9]$/,
+    'Slug must be lowercase alphanumeric with hyphens'
+  );
 
 /** Create a new vault secret */
 export const CreateSecretSchema = z.object({
