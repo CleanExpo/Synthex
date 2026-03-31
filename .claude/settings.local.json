@@ -176,7 +176,8 @@
       "Bash(mkdir -p \"C:\\\\Synthex\\\\.claude\\\\worktrees\\\\infallible-pasteur\\\\.claude\\\\archived\\\\2026-03-31\")",
       "Bash(mv \"C:\\\\Synthex\\\\.claude\\\\worktrees\\\\infallible-pasteur\\\\app\\\\api\\\\notifications\\\\[id]\" \"C:\\\\Synthex\\\\.claude\\\\worktrees\\\\infallible-pasteur\\\\.claude\\\\archived\\\\2026-03-31\\\\notifications-id-stub\")",
       "Bash(mkdir -p \"/c/Synthex/.claude/archived/2026-03-31\")",
-      "Bash(mv \"/c/Synthex/app/api/notifications/[id]\" \"/c/Synthex/.claude/archived/2026-03-31/notifications-id-stub\")"
+      "Bash(mv \"/c/Synthex/app/api/notifications/[id]\" \"/c/Synthex/.claude/archived/2026-03-31/notifications-id-stub\")",
+      "mcp__chrome-devtools__take_screenshot"
     ],
     "deny": [
       "Bash(git push --force*)",
