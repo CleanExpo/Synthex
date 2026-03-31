@@ -17,6 +17,8 @@ import type {
   BrandReelProps,
   BrandSquareProps,
   HowToVideoProps,
+  GitCommitTimelineProps,
+  BoardDecisionCardProps,
 } from './types';
 
 // ── Default Props ─────────────────────────────────────────────────────────────
@@ -113,6 +115,57 @@ const DEFAULT_HOW_TO_PROPS: HowToVideoProps = {
   brandColour: '#f59e0b',
 };
 
+// ── BTS Series Default Props (SYN-572) ───────────────────────────────────────
+
+const DEFAULT_GIT_COMMIT_TIMELINE_PROPS: GitCommitTimelineProps = {
+  title: 'Sprint Delivery — Synthex Platform',
+  episodeContext: 'Phase 6 · Autonomous Video Pipeline',
+  scenes: [],
+  brandColour: '#f59e0b',
+  commits: [
+    {
+      hash: 'abc1234',
+      type: 'feat',
+      scope: 'video',
+      message: 'Add PlaywrightCaptureService replacing broken Puppeteer',
+      date: '2026-03-10',
+    },
+    {
+      hash: 'def5678',
+      type: 'feat',
+      scope: 'video',
+      message: 'Build social-derivation waterfall cascade',
+      date: '2026-03-11',
+    },
+    {
+      hash: 'ghi9012',
+      type: 'test',
+      scope: 'video',
+      message: 'Add unit tests for schema-injector and episodes API',
+      date: '2026-03-11',
+    },
+  ],
+};
+
+const DEFAULT_BOARD_DECISION_CARD_PROPS: BoardDecisionCardProps = {
+  title: 'Switch from Puppeteer to Playwright for Screen Capture',
+  decisionContext: 'Phase 6 Architecture Review',
+  decision:
+    'Replace the broken puppeteer-screen-recorder dependency with Playwright native recordVideo. This keeps the WorkflowStep interface identical while eliminating the removed package.',
+  rationale:
+    'puppeteer-screen-recorder was removed from the dependency tree, causing unconditional throws in the capture service. Playwright provides an equivalent WebM recording API natively.',
+  outcome: 'Capture service restored. 10 workflows now operational.',
+  actionItems: [
+    'Deploy PlaywrightCaptureService to staging',
+    'Validate all 10 workflow recordings at 1920×1080',
+    'Update video-orchestrator DI to use new service',
+  ],
+  phase: 'Phase 6',
+  decisionDate: '10 March 2026',
+  scenes: [],
+  brandColour: '#f59e0b',
+};
+
 // ── Registry ──────────────────────────────────────────────────────────────────
 
 export const COMPOSITION_REGISTRY: CompositionMeta[] = [
@@ -176,5 +229,29 @@ export const COMPOSITION_REGISTRY: CompositionMeta[] = [
     height: 1080,
     fps: 30,
     durationInFrames: 1200, // 40 seconds
+  },
+
+  // ── BTS Series Compositions (SYN-572) ───────────────────────────────────────
+  {
+    id: 'GitCommitTimeline',
+    name: 'Git Commit Timeline',
+    description:
+      'BTS: animated timeline of git commits — product evolution (16:9, 30s)',
+    defaultProps: DEFAULT_GIT_COMMIT_TIMELINE_PROPS,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 900, // 30 seconds
+  },
+  {
+    id: 'BoardDecisionCard',
+    name: 'Board Decision Card',
+    description:
+      'BTS: styled board/phase decision memo with rationale + outcome (16:9, 25s)',
+    defaultProps: DEFAULT_BOARD_DECISION_CARD_PROPS,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 750, // 25 seconds
   },
 ];

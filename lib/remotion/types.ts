@@ -176,6 +176,60 @@ export interface DefinitionCardProps extends BaseCompositionProps {
   example?: string;
 }
 
+// ── BTS Series Composition Props (SYN-572) ────────────────────────────────────
+
+/** A single git commit entry for the GitCommitTimeline composition. */
+export interface GitCommit {
+  /** Short hash (7 chars), e.g. "abc1234". */
+  hash: string;
+  /** Conventional commit type: feat, fix, refactor, docs, test, chore. */
+  type?: string;
+  /** Conventional commit scope, e.g. "api", "video", "auth". */
+  scope?: string;
+  /** Commit message subject line. */
+  message: string;
+  /** Display date string, e.g. "2026-03-11". */
+  date?: string;
+}
+
+/** Props for the GitCommitTimeline composition (16:9, 900 frames / 30s). */
+export interface GitCommitTimelineProps extends BaseCompositionProps {
+  /**
+   * Up to 7 commits shown. Each animates in at 2-second intervals.
+   * Additional commits beyond 7 are silently ignored.
+   */
+  commits: GitCommit[];
+  /**
+   * Optional one-line context shown below the title, e.g.
+   * "Sprint 3 — Video Pipeline Delivery" or "Phase 6 completion".
+   */
+  episodeContext?: string;
+}
+
+/** Props for the BoardDecisionCard composition (16:9, 750 frames / 25s). */
+export interface BoardDecisionCardProps extends BaseCompositionProps {
+  /**
+   * Short descriptor for what category of decision this was, e.g.
+   * "Phase 4 Architecture" or "Sprint Planning".
+   */
+  decisionContext?: string;
+  /** The decision statement — main body copy. */
+  decision: string;
+  /** Why this decision was made. */
+  rationale?: string;
+  /** What happened as a result. */
+  outcome?: string;
+  /** Up to 3 follow-on action items from the decision. */
+  actionItems?: string[];
+  /**
+   * Phase label shown in the badge, e.g. "Phase 6" or "Board Session".
+   * Defaults to "Board Decision".
+   */
+  phase?: string;
+  /** Display date for the decision, e.g. "11 March 2026". */
+  decisionDate?: string;
+}
+
 /** Registry entry describing a composition. */
 export interface CompositionMeta {
   id: string;
