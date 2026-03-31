@@ -83,7 +83,7 @@
   "crons": [
     {
       "path": "/api/reports/scheduled/execute",
-      "schedule": "0 * * * *"
+      "schedule": "5 * * * *"
     },
     {
       "path": "/api/competitors/track/execute",
@@ -91,7 +91,7 @@
     },
     {
       "path": "/api/cron/health-score",
-      "schedule": "0 2 * * *"
+      "schedule": "10 2 * * *"
     },
     {
       "path": "/api/cron/weekly-digest",
@@ -107,7 +107,7 @@
     },
     {
       "path": "/api/cron/fetch-mentions",
-      "schedule": "*/30 * * * *"
+      "schedule": "15 * * * *"
     },
     {
       "path": "/api/cron/publish-scheduled",
@@ -115,7 +115,7 @@
     },
     {
       "path": "/api/cron/revalidate-api-keys",
-      "schedule": "0 4 * * *"
+      "schedule": "10 4 * * *"
     },
     {
       "path": "/api/cron/insights",
@@ -139,7 +139,7 @@
     },
     {
       "path": "/api/cron/unite-hub-revenue",
-      "schedule": "0 6 * * *"
+      "schedule": "10 6 * * *"
     },
     {
       "path": "/api/cron/forecast-training",
@@ -171,7 +171,7 @@
     },
     {
       "path": "/api/cron/analytics-sync",
-      "schedule": "0 * * * *"
+      "schedule": "20 * * * *"
     },
     {
       "path": "/api/cron/autopilot-learn",
