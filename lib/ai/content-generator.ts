@@ -6,6 +6,7 @@
 
 import { getAIProvider } from '@/lib/ai/providers';
 import type { AIProvider } from '@/lib/ai/providers';
+import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import { buildContextForGeneration } from '@/lib/obsidian/client-knowledge-base';
@@ -570,9 +571,10 @@ Generate content that will maximize engagement and shares.
     thinking?: 'low' | 'medium' | 'high' | 'max',
     orgContext?: OrgContext | null
   ): Promise<string> {
-    const systemPrompt = orgContext
+    const rawSystemPrompt = orgContext
       ? `You are a content expert for ${orgContext.businessName}${orgContext.industry ? `, a ${orgContext.industry} business` : ''}${orgContext.location ? ` in ${orgContext.location}` : ''}. ${orgContext.brandVoice ?? 'Generate unique, creative content optimized for maximum engagement.'}`
       : 'You are a viral content expert specializing in creating highly engaging social media content. Generate unique, creative content optimized for maximum engagement.';
+    const systemPrompt = withAntiSlop(rawSystemPrompt);
 
     try {
       const response = await client.complete({

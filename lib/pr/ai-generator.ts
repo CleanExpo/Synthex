@@ -11,6 +11,7 @@
  */
 
 import { buildPressRelease, generateSlug } from './press-release-builder';
+import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import type { PressReleaseInput } from './types';
 
 // ---------------------------------------------------------------------------
@@ -56,7 +57,7 @@ export interface PRGenerationResult {
 // AI system prompt
 // ---------------------------------------------------------------------------
 
-const SYSTEM_PROMPT = `You are an expert PR copywriter. You write press releases optimised for AI search engine citation by ChatGPT, Perplexity, Google AI Overviews, and Bing Copilot.
+const RAW_SYSTEM_PROMPT = `You are an expert PR copywriter. You write press releases optimised for AI search engine citation by ChatGPT, Perplexity, Google AI Overviews, and Bing Copilot.
 
 Rules:
 - Write in Australian English (colour, organise, licence, recognise)
@@ -75,6 +76,8 @@ JSON schema:
   "summary": "string — 1-2 sentence summary",
   "body": "string — full press release body text (no headline, no FOR IMMEDIATE RELEASE header)"
 }`;
+
+const SYSTEM_PROMPT = withAntiSlop(RAW_SYSTEM_PROMPT);
 
 // ---------------------------------------------------------------------------
 // Main generator

@@ -23,12 +23,16 @@ const CATEGORY_LABELS: Record<SlopCategory, string> = {
   'overused-word': 'Overused Words',
   'structural-pattern': 'Structural Patterns',
   hedge: 'Hedging Language',
+  'voice-pattern': 'Corporate Voice Patterns',
+  'formatting-pattern': 'Formatting Patterns',
 };
 
 const CATEGORY_ORDER: SlopCategory[] = [
   'overused-word',
+  'voice-pattern',
   'transition',
   'structural-pattern',
+  'formatting-pattern',
   'filler',
   'hedge',
 ];

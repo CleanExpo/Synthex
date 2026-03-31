@@ -7,6 +7,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { ANTI_SLOP_DIRECTIVE } from '@/lib/ai/prompts/anti-slop-directive';
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic(): Anthropic {
@@ -54,7 +55,9 @@ Guidelines:
 - Do not use dollar amounts
 - Write for an Australian audience (use "organisation" not "organization", "colour" not "color")
 
-Return only the paragraphs, no extra commentary.`;
+Return only the paragraphs, no extra commentary.
+
+${ANTI_SLOP_DIRECTIVE}`;
 
   const response = await getAnthropic().messages.create({
     model: 'claude-sonnet-4-6',

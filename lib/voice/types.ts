@@ -66,7 +66,9 @@ export type SlopCategory =
   | 'filler'
   | 'overused-word'
   | 'structural-pattern'
-  | 'hedge';
+  | 'hedge'
+  | 'voice-pattern'
+  | 'formatting-pattern';
 
 export type SlopSeverity = 'error' | 'warning';
 

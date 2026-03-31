@@ -8,6 +8,7 @@
  */
 
 import type { GEOTactic } from './types';
+import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 
 export interface RewritePromptContext {
   content: string;
@@ -19,14 +20,14 @@ export interface RewritePromptContext {
 
 export const TACTIC_LABELS: Record<GEOTactic, string> = {
   'authoritative-citations': 'Authoritative Citations',
-  'statistics':              'Statistics',
-  'quotations':              'Quotations',
-  'fluency':                 'Fluency',
-  'readability':             'Readability',
-  'technical-vocabulary':    'Technical Vocabulary',
-  'uniqueness':              'Uniqueness',
-  'information-flow':        'Information Flow',
-  'persuasion':              'Persuasion (Reduce Over-Optimisation)',
+  statistics: 'Statistics',
+  quotations: 'Quotations',
+  fluency: 'Fluency',
+  readability: 'Readability',
+  'technical-vocabulary': 'Technical Vocabulary',
+  uniqueness: 'Uniqueness',
+  'information-flow': 'Information Flow',
+  persuasion: 'Persuasion (Reduce Over-Optimisation)',
 };
 
 // ─── Tactic system prompts ─────────────────────────────────────────────────────
@@ -41,7 +42,7 @@ RULES:
 - Preserve the author's exact voice, sentence structure, and paragraph breaks
 - Return ONLY the rewritten content — no commentary, no preamble`,
 
-  'statistics': `You are a GEO content specialist improving the Statistics score.
+  statistics: `You are a GEO content specialist improving the Statistics score.
 
 RULES:
 - Replace vague claims ("many companies", "most users") with quantified versions using placeholder format: "X% of [audience]" where X is a plausible estimate
@@ -50,7 +51,7 @@ RULES:
 - Preserve the author's voice and all existing content
 - Return ONLY the rewritten content`,
 
-  'quotations': `You are a GEO content specialist improving Quotation Inclusion.
+  quotations: `You are a GEO content specialist improving Quotation Inclusion.
 
 RULES:
 - Add 1–2 attributed direct quotes per major section
@@ -59,7 +60,7 @@ RULES:
 - Keep quotes >20 characters, relevant to the surrounding paragraph
 - Return ONLY the rewritten content`,
 
-  'fluency': `You are a GEO content specialist improving Fluency by removing hedge language.
+  fluency: `You are a GEO content specialist improving Fluency by removing hedge language.
 
 RULES:
 - Replace hedge words: "might" → "will", "perhaps" → (remove), "could possibly" → "does", "seems to" → "is", "appears to" → "is", "maybe" → (restructure to declarative), "arguably" → (state the position directly), "somewhat" → (use precise adjective)
@@ -67,7 +68,7 @@ RULES:
 - Do NOT change facts, claims, or the author's position — only the confidence level
 - Return ONLY the rewritten content`,
 
-  'readability': `You are a GEO content specialist improving Readability (target: 15–18 words per sentence).
+  readability: `You are a GEO content specialist improving Readability (target: 15–18 words per sentence).
 
 RULES:
 - Split sentences longer than 25 words into 2 shorter sentences
@@ -86,7 +87,7 @@ RULES:
 - Do NOT add jargon without defining it — definitions improve citability
 - Return ONLY the rewritten content`,
 
-  'uniqueness': `You are a GEO content specialist improving content Uniqueness.
+  uniqueness: `You are a GEO content specialist improving content Uniqueness.
 
 RULES:
 - Identify repeated phrases used 3+ times and replace with synonyms
@@ -104,7 +105,7 @@ RULES:
 - Target: at least 1 transition phrase per paragraph
 - Return ONLY the rewritten content`,
 
-  'persuasion': `You are a GEO content specialist reducing over-persuasion and keyword stuffing.
+  persuasion: `You are a GEO content specialist reducing over-persuasion and keyword stuffing.
 
 RULES:
 - Find 3-grams (3-word phrases) that appear 3+ times and rephrase duplicates
@@ -113,6 +114,10 @@ RULES:
 - Do NOT reduce the total amount of information — only reduce repetition
 - Return ONLY the rewritten content`,
 };
+
+const WRAPPED_TACTIC_PROMPTS = Object.fromEntries(
+  Object.entries(TACTIC_SYSTEM_PROMPTS).map(([k, v]) => [k, withAntiSlop(v)])
+) as Record<GEOTactic, string>;
 
 // ─── Main export ───────────────────────────────────────────────────────────────
 
@@ -127,7 +132,7 @@ export function buildTacticRewritePrompt(
   tactic: GEOTactic,
   ctx: RewritePromptContext
 ): { system: string; user: string } {
-  const system = TACTIC_SYSTEM_PROMPTS[tactic];
+  const system = WRAPPED_TACTIC_PROMPTS[tactic];
 
   let user: string;
 

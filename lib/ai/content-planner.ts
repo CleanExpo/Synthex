@@ -10,6 +10,7 @@
  */
 
 import type { ContentRequest } from './content-generator';
+import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
@@ -50,7 +51,7 @@ export interface PlannerInput {
 // Planner system prompt — instructs Sonnet to think like a strategist
 // ---------------------------------------------------------------------------
 
-const SYSTEM_PROMPT = `You are a senior content strategist. Your job is to turn a high-level campaign goal into a structured content brief that a content generator can execute immediately.
+const RAW_SYSTEM_PROMPT = `You are a senior content strategist. Your job is to turn a high-level campaign goal into a structured content brief that a content generator can execute immediately.
 
 Return ONLY valid JSON — no markdown fences, no explanation, no preamble.
 
@@ -84,6 +85,8 @@ Rules:
 - Be specific about topics — "5 reasons your marketing team needs AI" not "marketing content"
 - Choose platform types that match the goal and audience
 - Tone should be consistent with the brand voice if provided`;
+
+const SYSTEM_PROMPT = withAntiSlop(RAW_SYSTEM_PROMPT);
 
 // ---------------------------------------------------------------------------
 // Main planner function

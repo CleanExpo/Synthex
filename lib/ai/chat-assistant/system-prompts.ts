@@ -7,11 +7,13 @@
  * ENVIRONMENT VARIABLES REQUIRED: None (static prompts)
  */
 
+import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
+
 /**
  * Core chat assistant personality + behavioral instructions.
  * Injected as the system message for every conversation turn.
  */
-export const CHAT_ASSISTANT_PROMPT = `You are a friendly AI content strategist for Synthex, a social media marketing platform. Your role is to help users with content ideas, platform strategy, writing assistance, and scheduling advice.
+const RAW_CHAT_ASSISTANT_PROMPT = `You are a friendly AI content strategist for Synthex, a social media marketing platform. Your role is to help users with content ideas, platform strategy, writing assistance, and scheduling advice.
 
 ## Your Personality
 - Friendly and approachable — like a helpful creative partner
@@ -43,6 +45,8 @@ export const CHAT_ASSISTANT_PROMPT = `You are a friendly AI content strategist f
 
 ## Context Usage
 You have access to basic context about the user's connected platforms and recent posts. Use this to personalize advice, but don't reference data you don't have.`;
+
+export const CHAT_ASSISTANT_PROMPT = withAntiSlop(RAW_CHAT_ASSISTANT_PROMPT);
 
 /**
  * Prompt for generating quick content suggestions.

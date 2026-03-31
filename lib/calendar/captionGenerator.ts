@@ -13,6 +13,7 @@ import {
   calculatePipelineCost,
   trackPipelineCost,
 } from '@/lib/pipelines/track-cost';
+import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { logger } from '@/lib/logger';
 import { v4 as uuid } from 'uuid';
 import type { CalendarPlatform, ContentType } from './types';
@@ -27,6 +28,8 @@ export interface CaptionContext {
   /** Brand voice tone e.g. "warm and approachable" */
   tone: string;
   hashtags: string[];
+  /** Optional market opportunity name to focus the caption — SYN-549 */
+  opportunityHint?: string;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -46,11 +49,12 @@ const FALLBACK_CAPTIONS = [
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function buildSystemPrompt(): string {
-  return `You are a professional social media copywriter for an Australian business.
+  const base = `You are a professional social media copywriter for an Australian business.
 Write engaging, authentic captions that match the brand voice.
 Always produce exactly 3 distinct caption variations — short, punchy, and platform-appropriate.
 Respond ONLY with a JSON array of 3 strings: ["caption1", "caption2", "caption3"]
 No preamble, no explanation, no markdown fences — just the JSON array.`;
+  return withAntiSlop(base);
 }
 
 function buildUserPrompt(ctx: CaptionContext): string {
@@ -59,14 +63,18 @@ function buildUserPrompt(ctx: CaptionContext): string {
       ? `Include 2–4 of these hashtags naturally: ${ctx.hashtags.slice(0, 8).join(' ')}`
       : 'Include 2–3 relevant hashtags.';
 
+  const opportunityLine = ctx.opportunityHint
+    ? `Market opportunity: ${ctx.opportunityHint}\n`
+    : '';
+
   return `Business: ${ctx.businessName}
 Industry: ${ctx.industry}
 Platform: ${ctx.platform}
 Content type: ${ctx.contentType}
 Brand voice: ${ctx.tone}
-${hashtagLine}
+${opportunityLine}${hashtagLine}
 
-Write 3 caption variations for this ${ctx.contentType} post on ${ctx.platform}.
+Write 3 caption variations for this ${ctx.contentType} post on ${ctx.platform}.${ctx.opportunityHint ? ` Tie each caption to the "${ctx.opportunityHint}" opportunity.` : ''}
 Keep each under 280 characters for maximum engagement.
 Return ONLY the JSON array.`;
 }

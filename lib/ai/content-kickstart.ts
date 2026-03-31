@@ -15,6 +15,7 @@
  */
 
 import { getAIProvider } from '@/lib/ai/providers';
+import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 
@@ -54,15 +55,51 @@ interface PlatformSpec {
 }
 
 const PLATFORM_SPECS: Record<string, PlatformSpec> = {
-  instagram:  { maxChars: 2200, style: 'visual, emoji-rich, storytelling',               hashtagCount: 10 },
-  twitter:    { maxChars: 280,  style: 'concise, punchy, conversational',                hashtagCount: 2  },
-  linkedin:   { maxChars: 1300, style: 'professional, insightful, industry-focused',     hashtagCount: 3  },
-  facebook:   { maxChars: 500,  style: 'engaging, community-focused, conversational',    hashtagCount: 3  },
-  tiktok:     { maxChars: 300,  style: 'trendy, energetic, hook-driven',                 hashtagCount: 5  },
-  youtube:    { maxChars: 400,  style: 'descriptive, keyword-rich, CTA-driven',          hashtagCount: 5  },
-  pinterest:  { maxChars: 500,  style: 'inspirational, keyword-rich, descriptive',       hashtagCount: 5  },
-  threads:    { maxChars: 500,  style: 'casual, conversational, text-based',             hashtagCount: 2  },
-  reddit:     { maxChars: 1000, style: 'informative, community-driven, no hard sell',    hashtagCount: 0  },
+  instagram: {
+    maxChars: 2200,
+    style: 'visual, emoji-rich, storytelling',
+    hashtagCount: 10,
+  },
+  twitter: {
+    maxChars: 280,
+    style: 'concise, punchy, conversational',
+    hashtagCount: 2,
+  },
+  linkedin: {
+    maxChars: 1300,
+    style: 'professional, insightful, industry-focused',
+    hashtagCount: 3,
+  },
+  facebook: {
+    maxChars: 500,
+    style: 'engaging, community-focused, conversational',
+    hashtagCount: 3,
+  },
+  tiktok: {
+    maxChars: 300,
+    style: 'trendy, energetic, hook-driven',
+    hashtagCount: 5,
+  },
+  youtube: {
+    maxChars: 400,
+    style: 'descriptive, keyword-rich, CTA-driven',
+    hashtagCount: 5,
+  },
+  pinterest: {
+    maxChars: 500,
+    style: 'inspirational, keyword-rich, descriptive',
+    hashtagCount: 5,
+  },
+  threads: {
+    maxChars: 500,
+    style: 'casual, conversational, text-based',
+    hashtagCount: 2,
+  },
+  reddit: {
+    maxChars: 1000,
+    style: 'informative, community-driven, no hard sell',
+    hashtagCount: 0,
+  },
 };
 
 /** Max number of platforms to generate drafts for */
@@ -88,7 +125,7 @@ const FIRST_WEEK_THEMES = [
  * Creates one Campaign per platform, with one AI-generated draft Post.
  */
 export async function generateKickstartContent(
-  input: KickstartInput,
+  input: KickstartInput
 ): Promise<KickstartResult> {
   const result: KickstartResult = {
     draftsCreated: 0,
@@ -98,11 +135,13 @@ export async function generateKickstartContent(
   };
 
   const platforms = input.connectedPlatforms
-    .filter((p) => p in PLATFORM_SPECS)
+    .filter(p => p in PLATFORM_SPECS)
     .slice(0, MAX_PLATFORMS);
 
   if (platforms.length === 0) {
-    logger.info('[kickstart] No recognised platforms — skipping', { userId: input.userId });
+    logger.info('[kickstart] No recognised platforms — skipping', {
+      userId: input.userId,
+    });
     return result;
   }
 
@@ -133,7 +172,7 @@ export async function generateKickstartContent(
       let hashtags: string[] = [];
 
       try {
-        const systemPrompt = `You are a social media expert writing for ${input.businessName}.
+        const rawSystemPrompt = `You are a social media expert writing for ${input.businessName}.
 Business: ${input.description ?? `${input.businessName} — ${input.industry ?? 'professional services'}`}
 Target audience: ${audience}
 Tone: ${tone}
@@ -150,6 +189,8 @@ Rules:
 Response format:
 CONTENT: [post content]
 HASHTAGS: [tag1, tag2, ...] or NONE`;
+
+        const systemPrompt = withAntiSlop(rawSystemPrompt);
 
         const response = await ai.complete({
           model: ai.models.fast,
@@ -172,7 +213,7 @@ HASHTAGS: [tag1, tag2, ...] or NONE`;
             ? []
             : hashtagRaw
                 .split(/[,\s]+/)
-                .map((h) => h.replace(/^#/, '').trim())
+                .map(h => h.replace(/^#/, '').trim())
                 .filter(Boolean)
                 .slice(0, spec.hashtagCount);
       } catch (err) {
@@ -243,7 +284,7 @@ HASHTAGS: [tag1, tag2, ...] or NONE`;
           error: String(err),
         });
       }
-    }),
+    })
   );
 
   logger.info('[kickstart] Content generation complete', {

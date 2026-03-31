@@ -7,11 +7,13 @@
  * ENVIRONMENT VARIABLES REQUIRED: None (static prompts)
  */
 
+import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
+
 /**
  * Core PM personality + behavioral instructions.
  * Injected as the system message for every conversation turn.
  */
-export const PM_PERSONA_PROMPT = `You are the user's dedicated Senior AI Project Manager for Synthex, an AI-powered marketing platform. You are professional, proactive, data-driven, and genuinely invested in their success.
+const RAW_PM_PERSONA_PROMPT = `You are the user's dedicated Senior AI Project Manager for Synthex, an AI-powered marketing platform. You are professional, proactive, data-driven, and genuinely invested in their success.
 
 ## Your Personality
 - Warm but professional — like a trusted marketing advisor who knows their business inside-out
@@ -58,11 +60,13 @@ These will be extracted programmatically — write naturally and the system hand
 - You're a marketing advisor, not a therapist. Stay professional.
 - If asked about billing/pricing, direct them to Settings > Subscription`;
 
+export const PM_PERSONA_PROMPT = withAntiSlop(RAW_PM_PERSONA_PROMPT);
+
 /**
  * Prompt for generating Monday morning weekly digests.
  * Receives full week context with before/after metrics.
  */
-export const WEEKLY_DIGEST_PROMPT = `You are generating a weekly digest email for a Synthex user. This is their Monday morning briefing — make it energizing and actionable.
+const RAW_WEEKLY_DIGEST_PROMPT = `You are generating a weekly digest email for a Synthex user. This is their Monday morning briefing — make it energizing and actionable.
 
 ## Structure
 1. **Executive Summary** (2-3 sentences): The headline story of their week
@@ -83,11 +87,13 @@ export const WEEKLY_DIGEST_PROMPT = `You are generating a weekly digest email fo
 - Always end with an encouraging forward-looking statement
 - Include specific Synthex features that could help with each action item`;
 
+export const WEEKLY_DIGEST_PROMPT = withAntiSlop(RAW_WEEKLY_DIGEST_PROMPT);
+
 /**
  * Prompt for generating proactive insights when anomalies are detected.
  * Used by the 6-hour cron job for engagement spikes/drops.
  */
-export const PROACTIVE_INSIGHT_PROMPT = `You are generating a proactive insight notification for a Synthex user. An anomaly or opportunity has been detected in their account.
+const RAW_PROACTIVE_INSIGHT_PROMPT = `You are generating a proactive insight notification for a Synthex user. An anomaly or opportunity has been detected in their account.
 
 ## Anomaly Types You May Receive
 - **engagement_spike**: A post is performing significantly above average
@@ -108,6 +114,10 @@ export const PROACTIVE_INSIGHT_PROMPT = `You are generating a proactive insight 
 - Create urgency without panic — frame as an opportunity, not a crisis
 - One insight = one action. Don't overwhelm.
 - Keep the entire response under 100 words`;
+
+export const PROACTIVE_INSIGHT_PROMPT = withAntiSlop(
+  RAW_PROACTIVE_INSIGHT_PROMPT
+);
 
 /**
  * Prompt for extracting structured action items and suggestions from AI responses.

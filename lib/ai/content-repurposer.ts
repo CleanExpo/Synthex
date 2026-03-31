@@ -17,13 +17,19 @@
 
 import { getAIProvider } from '@/lib/ai/providers';
 import type { AIProvider } from '@/lib/ai/providers';
+import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { contentScorer } from '@/lib/ai/content-scorer';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export type SourceType = 'blog' | 'article' | 'video_transcript' | 'podcast' | 'newsletter';
+export type SourceType =
+  | 'blog'
+  | 'article'
+  | 'video_transcript'
+  | 'podcast'
+  | 'newsletter';
 
 export type OutputFormat =
   | 'thread'
@@ -86,7 +92,10 @@ const FORMAT_LABELS: Record<OutputFormat, string> = {
 // SYSTEM PROMPTS
 // ============================================================================
 
-function buildSystemPrompt(format: OutputFormat, sourceType: SourceType): string {
+function buildSystemPrompt(
+  format: OutputFormat,
+  sourceType: SourceType
+): string {
   const sourceLabel = sourceType.replace('_', ' ');
 
   const prompts: Record<OutputFormat, string> = {
@@ -184,7 +193,7 @@ Rules:
 Output ONLY the numbered quotes, no explanations.`,
   };
 
-  return prompts[format];
+  return withAntiSlop(prompts[format]);
 }
 
 // ============================================================================
@@ -193,7 +202,7 @@ Output ONLY the numbered quotes, no explanations.`,
 
 /** Count words in content */
 function countWords(content: string): number {
-  return content.split(/\s+/).filter((w) => w.trim().length > 0).length;
+  return content.split(/\s+/).filter(w => w.trim().length > 0).length;
 }
 
 /** Count items in formatted output */
@@ -202,7 +211,10 @@ function countItems(content: string, format: OutputFormat): number | undefined {
     case 'thread': {
       // Count numbered tweets (1/, 2/, etc.)
       const tweetMatches = content.match(/^\d+\//gm);
-      return tweetMatches?.length ?? content.split(/\n\n+/).filter((s) => s.trim()).length;
+      return (
+        tweetMatches?.length ??
+        content.split(/\n\n+/).filter(s => s.trim()).length
+      );
     }
     case 'carousel_outline': {
       // Count SLIDE markers
@@ -228,9 +240,16 @@ function countItems(content: string, format: OutputFormat): number | undefined {
  * Create fallback content when AI generation fails.
  * Returns a simplified version based on source content.
  */
-function createFallbackContent(sourceContent: string, format: OutputFormat): string {
+function createFallbackContent(
+  sourceContent: string,
+  format: OutputFormat
+): string {
   const words = sourceContent.split(/\s+/);
-  const firstSentences = sourceContent.split(/[.!?]/).slice(0, 3).join('. ').trim();
+  const firstSentences = sourceContent
+    .split(/[.!?]/)
+    .slice(0, 3)
+    .join('. ')
+    .trim();
 
   switch (format) {
     case 'thread':
@@ -283,35 +302,37 @@ export class ContentRepurposer {
 
     // Generate all formats in parallel
     const results = await Promise.allSettled(
-      outputFormats.map((format) =>
+      outputFormats.map(format =>
         this.generateFormat(sourceContent, sourceType, format)
       )
     );
 
     // Map results, using fallback for rejected promises
-    const repurposedResults: RepurposedContent[] = results.map((result, index) => {
-      const format = outputFormats[index];
+    const repurposedResults: RepurposedContent[] = results.map(
+      (result, index) => {
+        const format = outputFormats[index];
 
-      if (result.status === 'fulfilled') {
-        return result.value;
+        if (result.status === 'fulfilled') {
+          return result.value;
+        }
+
+        // Fallback: create simplified content
+        const fallbackContent = createFallbackContent(sourceContent, format);
+        const scoreResult = contentScorer.score(fallbackContent, 'twitter');
+
+        return {
+          format,
+          content: fallbackContent,
+          metadata: {
+            wordCount: countWords(fallbackContent),
+            characterCount: fallbackContent.length,
+            itemCount: countItems(fallbackContent, format),
+            formatDetails: { fallback: true, error: result.reason?.message },
+          },
+          score: scoreResult.overall,
+        };
       }
-
-      // Fallback: create simplified content
-      const fallbackContent = createFallbackContent(sourceContent, format);
-      const scoreResult = contentScorer.score(fallbackContent, 'twitter');
-
-      return {
-        format,
-        content: fallbackContent,
-        metadata: {
-          wordCount: countWords(fallbackContent),
-          characterCount: fallbackContent.length,
-          itemCount: countItems(fallbackContent, format),
-          formatDetails: { fallback: true, error: result.reason?.message },
-        },
-        score: scoreResult.overall,
-      };
-    });
+    );
 
     return {
       source: {

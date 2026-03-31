@@ -10,6 +10,7 @@
  * @module lib/awards/nomination-writer
  */
 
+import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import type { NominationDraft } from './types';
 
 // ---------------------------------------------------------------------------
@@ -35,7 +36,7 @@ export interface NominationInput {
 // System prompt
 // ---------------------------------------------------------------------------
 
-const SYSTEM_PROMPT = `You are an expert award nomination copywriter. You write compelling, evidence-backed award nominations optimised for industry judging panels.
+const RAW_SYSTEM_PROMPT = `You are an expert award nomination copywriter. You write compelling, evidence-backed award nominations optimised for industry judging panels.
 
 Rules:
 - Write in Australian English (colour, organise, licence, recognise, realise)
@@ -52,6 +53,8 @@ JSON schema:
   "body": "string — full nomination text",
   "keyPoints": ["string", "string", "string", "string"]
 }`;
+
+const SYSTEM_PROMPT = withAntiSlop(RAW_SYSTEM_PROMPT);
 
 // ---------------------------------------------------------------------------
 // Main export

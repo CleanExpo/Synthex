@@ -16,6 +16,7 @@
  */
 
 import { randomUUID } from 'crypto';
+import { ANTI_SLOP_DIRECTIVE } from '@/lib/ai/prompts/anti-slop-directive';
 import { logger } from '@/lib/logger';
 import { getCache } from '@/lib/cache/cache-manager';
 
@@ -398,7 +399,10 @@ Variation:`;
       },
       body: JSON.stringify({
         model: 'anthropic/claude-3-haiku',
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+          { role: 'system', content: ANTI_SLOP_DIRECTIVE },
+          { role: 'user', content: prompt },
+        ],
         max_tokens: 500,
         temperature: 0.8,
       }),

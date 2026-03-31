@@ -13,6 +13,7 @@
  */
 
 import type { ContentBrief } from './content-planner';
+import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
@@ -60,7 +61,7 @@ const WEIGHTS = {
 // Few-shot examples anchor the scoring scale so the model doesn't grade on a curve.
 // ---------------------------------------------------------------------------
 
-const SYSTEM_PROMPT = `You are a rigorous content quality evaluator. Your job is to score AI-generated content against the brief that produced it.
+const RAW_SYSTEM_PROMPT = `You are a rigorous content quality evaluator. Your job is to score AI-generated content against the brief that produced it.
 
 Be SKEPTICAL. A score of 85+ means the content is genuinely excellent and ready to publish. Most content will score 50–75 and need revision. Do not give high scores to content that is merely adequate.
 
@@ -88,6 +89,8 @@ Return ONLY valid JSON — no markdown fences, no explanation:
 }
 
 feedback: 1–4 items, each specific and actionable (e.g. "Add a hook question in the first line" not "Improve the opening").`;
+
+const SYSTEM_PROMPT = withAntiSlop(RAW_SYSTEM_PROMPT);
 
 // ---------------------------------------------------------------------------
 // Main evaluator function
