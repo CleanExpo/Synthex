@@ -166,7 +166,9 @@
       "Bash(do)",
       "Read(//c/Synthex/.claude/worktrees/infallible-pasteur/.claude/skills/review-board/**)",
       "mcp__55f7d627-7e1d-4ce7-9032-daeb09778b81__slack_create_canvas",
-      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__create_document"
+      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__create_document",
+      "Bash(grep -r \"SLACK_WEBHOOK\\\\|process\\\\.env\\\\.SLACK\" C:/Synthex/lib --include=*.ts -l)",
+      "Bash(grep -r \"AlertNotificationService\\\\|sendAlert\\\\|createAlert\" C:/Synthex/lib --include=*.ts -l)"
     ],
     "deny": [
       "Bash(git push --force*)",
