@@ -185,7 +185,12 @@
       "mcp__chrome-devtools__click",
       "mcp__chrome-devtools__type_text",
       "mcp__chrome-devtools__evaluate_script",
-      "mcp__chrome-devtools__fill"
+      "mcp__chrome-devtools__fill",
+      "Bash(grep -rn \"anthropic\\\\|claude-sonnet\\\\|getAIClient\\\\|model-registry\" C:/Synthex/.claude/worktrees/infallible-pasteur/lib/ai/ --include=*.ts -l)",
+      "Bash(grep -rn recommendedAction C:/Synthex/node_modules/@prisma/client/ --include=*.d.ts)",
+      "Bash(grep -rn recommendedAction C:/Synthex/.claude/worktrees/infallible-pasteur/node_modules/ --include=*.d.ts)",
+      "Bash(find /c/Synthex -name index.d.ts -path */prisma/client/*)",
+      "Bash(find C:/Synthex/.claude/worktrees/infallible-pasteur/__tests__ -name *.test.ts)"
     ],
     "deny": [
       "Bash(git push --force*)",
