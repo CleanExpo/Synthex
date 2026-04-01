@@ -13,8 +13,9 @@
  */
 
 import useSWR from 'swr';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ADVISOR_ENABLED } from '@/lib/constants/onboarding';
+import { fireAdvisorEvent } from '@/lib/analytics/advisor-events';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -123,19 +124,81 @@ function ColdStartCard() {
   );
 }
 
+// ── Feedback prompt ───────────────────────────────────────────────────────────
+
+type FeedbackResponse = 'useful' | 'not_useful' | 'skipped';
+
+function FeedbackPrompt({
+  weekStart,
+  onSubmit,
+}: {
+  weekStart: string;
+  onSubmit: (response: FeedbackResponse) => void;
+}) {
+  const [submitted, setSubmitted] = useState<FeedbackResponse | null>(null);
+
+  async function handle(response: FeedbackResponse) {
+    setSubmitted(response);
+    onSubmit(response);
+    await fetch('/api/advisor/feedback', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weekStart, response }),
+    }).catch(() => {});
+    fireAdvisorEvent('advisor_feedback_submitted', { week_start: weekStart, response });
+  }
+
+  if (submitted) {
+    return (
+      <p className="text-sm text-center text-gray-500 py-2">
+        {submitted === 'useful' ? 'Glad it helped! 👍' : 'Thanks for the feedback.'}
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-3 pt-4 border-t border-gray-100">
+      <p className="text-sm text-gray-500">Was this week's brief useful?</p>
+      <div className="flex gap-2">
+        {(['useful', 'not_useful', 'skipped'] as FeedbackResponse[]).map(r => (
+          <button
+            key={r}
+            onClick={() => handle(r)}
+            className="text-xs px-3 py-1.5 rounded-md border border-gray-200 hover:border-gray-400 hover:bg-gray-50 transition-colors font-medium text-gray-600"
+          >
+            {r === 'useful' ? 'Yes' : r === 'not_useful' ? 'No' : 'Skip'}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function AdvisorPage() {
   const [isMarkingDone, setIsMarkingDone] = useState(false);
+  const [feedbackDismissed, setFeedbackDismissed] = useState(false);
+  const openTracked = useRef(false);
 
   const { data, error, isLoading, mutate } = useSWR<{ brief: AdvisorBrief | null }>(
     ADVISOR_ENABLED ? '/api/advisor/brief' : null,
     fetchJson
   );
 
-  if (!ADVISOR_ENABLED) return null;
-
+  // Fire advisor_opened_dashboard once when brief loads
   const brief = data?.brief ?? null;
+  useEffect(() => {
+    if (brief && !openTracked.current) {
+      openTracked.current = true;
+      fireAdvisorEvent('advisor_opened_dashboard', {
+        week_start: brief.weekStart.split('T')[0],
+      });
+    }
+  }, [brief]);
+
+  if (!ADVISOR_ENABLED) return null;
 
   const weekLabel = brief
     ? new Date(brief.weekStart).toLocaleDateString('en-AU', {
@@ -146,6 +209,7 @@ export default function AdvisorPage() {
     : null;
 
   async function handleMarkDone(actionIndex: number) {
+    if (!brief) return;
     setIsMarkingDone(true);
     try {
       const res = await fetch('/api/advisor/brief', {
@@ -155,6 +219,14 @@ export default function AdvisorPage() {
         body: JSON.stringify({ actionIndex }),
       });
       if (res.ok) {
+        const action = brief.actions[actionIndex];
+        if (action) {
+          fireAdvisorEvent('advisor_action_completed', {
+            week_start: brief.weekStart.split('T')[0],
+            action_rank: action.rank,
+            action_title: action.title,
+          });
+        }
         await mutate();
       }
     } finally {
@@ -222,6 +294,12 @@ export default function AdvisorPage() {
                   />
                 ))}
             </div>
+            {!feedbackDismissed && (
+              <FeedbackPrompt
+                weekStart={brief.weekStart.split('T')[0]}
+                onSubmit={() => setTimeout(() => setFeedbackDismissed(true), 2000)}
+              />
+            )}
           </div>
 
           {/* Section 3: Competitor Pulse (conditional) */}

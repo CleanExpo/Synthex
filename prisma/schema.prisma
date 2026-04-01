@@ -641,6 +641,7 @@ model Organization {
   storyConfig                StoryConfig?
   seasonalSignalDismissals   SeasonalSignalDismissal[]
   recommendedActions         RecommendedAction[]
+  advisorFeedback            AdvisorFeedback[]
 
   // GSC content topic suggestions (SYN-472)
   contentTopicSuggestions ContentTopicSuggestion[]
@@ -5915,4 +5916,23 @@ model RecommendedAction {
   @@index([organizationId, createdAt(sort: Desc)])
   @@index([status])
   @@map("recommended_actions")
+}
+
+/// Weekly advisor feedback — SYN-594
+model AdvisorFeedback {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  weekStart      DateTime @map("week_start") @db.Date
+
+  /// 'useful' | 'not_useful' | 'skipped'
+  response       String
+
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, weekStart], name: "advisor_feedback_org_week")
+  @@index([organizationId])
+  @@index([weekStart])
+  @@map("advisor_feedback")
 }
