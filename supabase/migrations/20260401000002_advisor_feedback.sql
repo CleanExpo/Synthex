@@ -87,10 +87,12 @@ WITH brief_opens AS (
 ),
 renewals AS (
   SELECT
-    s.organization_id,
+    u.organization_id,
     s.current_period_end::date AS renewal_date
   FROM subscriptions s
+  JOIN users u ON u.id = s.user_id
   WHERE s.status = 'active'
+    AND u.organization_id IS NOT NULL
 ),
 cohort AS (
   SELECT
