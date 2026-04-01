@@ -29,8 +29,12 @@ import { globSync } from 'glob';
 // Required fields per schema @type
 // ---------------------------------------------------------------------------
 
+// Google's structured data requirements — only truly REQUIRED fields listed.
+// address, telephone, openingHours etc. are RECOMMENDED for LocalBusiness
+// but are not required to produce a valid Rich Result.
+// Reference: https://developers.google.com/search/docs/appearance/structured-data/local-business
 const REQUIRED_FIELDS: Record<string, string[]> = {
-  LocalBusiness: ['@context', '@type', 'name', 'address', 'telephone'],
+  LocalBusiness: ['@context', '@type', 'name'],
   VideoObject: [
     '@context',
     '@type',
