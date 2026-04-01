@@ -667,6 +667,10 @@ model Organization {
   // Client Health Score history — SYN-611
   clientHealthScores ClientHealthScore[]
 
+  // Retention Engine — SYN-614
+  healthInterventions  HealthIntervention[]
+  founderOutreachQueue FounderOutreachQueue[]
+
   // Indices for multi-tenant queries
   @@index([slug])
   @@index([status])
@@ -6082,4 +6086,92 @@ model ClientEngagementEvent {
   @@index([clientId, eventType, createdAt])
   @@index([clientId, createdAt])
   @@map("client_engagement_events")
+}
+
+// ============================================================================
+// Client Retention Engine — SYN-614 (SYN-615/616/617/620)
+// ============================================================================
+
+/// Per-dimension intervention configuration + staged activation dates — SYN-615/620
+/// One row per dimension (6 rows total). `enabled` false = observation mode.
+model InterventionConfig {
+  id         String  @id @default(cuid())
+  dimension  String  @unique // content_consistency | engagement_trajectory | etc.
+  tier1Threshold Int  @default(15) @map("tier_1_threshold") // points decline → Advisor Priority
+  tier2Threshold Int  @default(25) @map("tier_2_threshold") // points decline → Value Proof Email
+  tier3Threshold Int  @default(35) @map("tier_3_threshold") // points decline → Founder Outreach
+  enabled    Boolean @default(false) // false = observation mode for this dimension
+
+  /// Staged activation dates (SYN-620) — null = not yet active / still in observation
+  tier3ActiveFrom DateTime? @map("tier_3_active_from") // Tier 3 activates immediately at deploy
+  tier2ActiveFrom DateTime? @map("tier_2_active_from") // Tier 2 activates at 14 days
+  tier1ActiveFrom DateTime? @map("tier_1_active_from") // Tier 1 activates at 30 days
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("intervention_config")
+}
+
+/// Intervention event log — all interventions logged, dispatched or not — SYN-615
+/// observation_mode = true → logged but NOT sent (calibration period)
+model HealthIntervention {
+  id              String   @id @default(cuid())
+  organizationId  String   @map("organization_id")
+  dimension       String   // which dimension triggered this
+  currentScore    Int      @map("current_score")
+  baselineScore   Int      @map("baseline_score") // 30-day rolling average
+  declineMagnitude Int     @map("decline_magnitude") // currentScore - baselineScore (negative)
+  interventionTier Int     @map("intervention_tier") // 1 | 2 | 3
+  interventionType String  @map("intervention_type") // advisor_priority | value_proof_email | founder_outreach
+  channel         String   @default("in_app") // in_app | email | founder_queue
+  templateId      String?  @map("template_id") // FK to intervention_templates.id
+  observationMode Boolean  @default(true) @map("observation_mode")
+  wouldHaveSentAt DateTime @map("would_have_sent_at")
+  actuallySentAt  DateTime? @map("actually_sent_at") // null = still in observation or not yet sent
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([dimension, createdAt])
+  @@index([observationMode])
+  @@map("health_interventions")
+}
+
+/// Template library for all three intervention tiers — SYN-616
+/// Templates are rendered with merge fields at dispatch time.
+model InterventionTemplate {
+  id              String  @id @default(cuid())
+  tier            Int     // 1 | 2 | 3
+  dimension       String? // null = applies to all dimensions
+  channel         String  // email | in_app | founder_queue
+  subjectTemplate String? @map("subject_template") @db.Text
+  bodyTemplate    String  @map("body_template") @db.Text
+  heroMetricSource String? @map("hero_metric_source") // dollar_attribution | reach | reviews_handled
+  active          Boolean @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@unique([tier, dimension, channel], name: "intervention_template_tier_dim_ch")
+  @@map("intervention_templates")
+}
+
+/// Tier 3 founder outreach queue — SYN-616
+/// Phill reviews daily and sends personalised emails manually.
+model FounderOutreachQueue {
+  id              String   @id @default(cuid())
+  organizationId  String   @map("organization_id")
+  flaggedAt       DateTime @default(now()) @map("flagged_at")
+  healthScoreTrend Json    @map("health_score_trend") // last 4 weekly scores
+  talkingPoints   String   @map("talking_points") @db.Text // AI-generated talking points
+  resolvedAt      DateTime? @map("resolved_at")
+  resolvedNote    String?   @map("resolved_note") @db.Text
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([flaggedAt])
+  @@index([resolvedAt])
+  @@map("founder_outreach_queue")
 }
