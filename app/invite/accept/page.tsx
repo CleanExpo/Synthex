@@ -10,7 +10,7 @@
  * @task SYN-598
  */
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { fireTeamEvent } from '@/lib/analytics/team-events';
 
@@ -22,7 +22,22 @@ interface AcceptResponse {
   error?: string;
 }
 
+/** Suspense wrapper required by Next.js 15 for useSearchParams() */
 export default function InviteAcceptPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-950">
+          <div className="w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <InviteAcceptContent />
+    </Suspense>
+  );
+}
+
+function InviteAcceptContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
