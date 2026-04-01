@@ -12,7 +12,7 @@
 ### Project-level (`.claude/`) — Synthex-specific only
 
 - **4 agents**: build-engineer, code-architect, qa-sentinel, senior-reviewer
-- **21 skills**: api-testing, architecture-enforcer, auth-patterns, build-orchestrator, client-manager, client-retention, code-review, content-pipeline, database-prisma, design, imagen-designer, platform-showcase, project-scanner, route-auditor, scout, security-hardener, social-integrations, spec-generator, sql-hardener, ui-ux, video-engine
+- **25 skills**: api-testing, architecture-enforcer, auth-patterns, browser-auth, browser-debug, browser-verify, build-orchestrator, client-manager, client-retention, code-review, content-pipeline, database-prisma, design, imagen-designer, platform-showcase, project-scanner, route-auditor, scout, security-hardener, site-smoke-test, social-integrations, spec-generator, sql-hardener, ui-ux, video-engine
 - **19 hooks**: PowerShell scripts for build validation, pre-commit checks
 - **6 rules**: backend, database, development, frontend, operations, skills
 - **5 memory files**: MEMORY.md, ARCHITECTURE.md, STANDARDS.md, TESTING.md, WORKFLOWS.md, compass.md

@@ -34,6 +34,30 @@
 
 ---
 
+# SKILL AUTO-SELECTION (ALWAYS-ON)
+
+**Before responding to any non-trivial task:** identify and invoke applicable skills using the Skill tool.
+- If a matching skill exists → invoke it before starting work
+- If no matching skill exists for a specialised task → generate one using `/skill-auto` then invoke it
+- Use `/skill-auto [task description]` to auto-match skills when unsure
+
+**Quick reference — Synthex domain skills:**
+
+| Task type              | Skill(s) to invoke                              |
+| ---------------------- | ----------------------------------------------- |
+| API route / endpoint   | `route-auditor`, `api-testing`                  |
+| Auth / RBAC            | `auth-patterns`                                 |
+| Database / Prisma      | `database-prisma`, `sql-hardener`               |
+| UI component / page    | `ui-ux`, `ui-review`                            |
+| Deploy / build         | `build-orchestrator`                            |
+| Browser verification   | `browser-verify`, `browser-debug`               |
+| Post-deploy health     | `site-smoke-test`, `browser-auth`               |
+| Code review            | `code-review`, `security-hardener`              |
+| Content / social       | `content-pipeline`                              |
+| Security audit         | `security-hardener`, `route-auditor`            |
+
+---
+
 # HARD LIMITS (NON-NEGOTIABLE)
 
 - **Never `git push`** without explicit human confirmation in chat
