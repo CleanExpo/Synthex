@@ -664,6 +664,9 @@ model Organization {
   invitePromptDismissedAt  DateTime? @map("invite_prompt_dismissed_at")
   invitePromptDismissCount Int       @default(0) @map("invite_prompt_dismiss_count")
 
+  // Client Health Score history — SYN-611
+  clientHealthScores ClientHealthScore[]
+
   // Indices for multi-tenant queries
   @@index([slug])
   @@index([status])
@@ -5999,4 +6002,84 @@ model TeamMemberPageView {
   @@index([viewedAt])
   @@index([organizationId, pagePath])
   @@map("team_member_page_views")
+}
+
+/// Weekly marketing health score for each client org — SYN-611
+/// Separate from UserHealthScore (gamification) — this tracks marketing health over time.
+/// Computed every Monday 05:00 AEDT by the compute-health-scores Edge Function.
+model ClientHealthScore {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+
+  /// Monday of the week this score covers (date only, UTC)
+  weekStart      DateTime @map("week_start") @db.Date
+
+  /// Composite 0-100 score (weighted average of all dimensions)
+  overallScore   Int      @map("overall_score")
+
+  /// Per-dimension breakdown — JSONB shape:
+  /// { content_consistency: { score, raw_value, description },
+  ///   engagement_trajectory: { score, raw_value, description },
+  ///   review_responsiveness: { score, raw_value, description },
+  ///   authority_momentum: { score, raw_value, description },
+  ///   advisor_engagement: { score, raw_value, description },
+  ///   platform_usage: { score, raw_value, description } }
+  dimensions     Json
+
+  /// Change from previous week's overallScore (positive = improved)
+  scoreDelta     Int      @default(0) @map("score_delta")
+
+  /// healthy(75-100) | watch(50-74) | at_risk(25-49) | critical(0-24)
+  /// null = insufficient_data (< 2 non-null dimensions)
+  riskLevel      String?  @map("risk_level")
+
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, weekStart], name: "client_health_score_org_week")
+  @@index([organizationId])
+  @@index([weekStart])
+  @@index([riskLevel])
+  @@map("client_health_scores")
+}
+
+/// Config for Health Score dimension weights + feature flags — single row — SYN-611/613
+model HealthScoreConfig {
+  id      String   @id @default(cuid())
+  /// JSONB: { content_consistency: 0.25, engagement_trajectory: 0.20,
+  ///          review_responsiveness: 0.15, authority_momentum: 0.15,
+  ///          advisor_engagement: 0.15, platform_usage: 0.10 }
+  weights Json
+  /// When true, Health Score widget appears on client-facing dashboard.
+  /// Phill flips this after 4-week internal validation period. Default: false.
+  clientVisible Boolean  @default(false) @map("client_visible")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  @@map("health_score_config")
+}
+
+/// Client interaction events — dual-written to GA4 + Supabase for Health Score computation — SYN-612
+/// Privacy: no PII in event_data; clientId is internal UUID, not email.
+model ClientEngagementEvent {
+  id        String   @id @default(cuid())
+  clientId  String   @map("client_id") // Organization.id
+
+  /// Event types: dashboard_visit | calendar_post_viewed | calendar_post_approved |
+  /// calendar_post_dismissed | digest_email_opened | advisor_brief_viewed |
+  /// review_response_started | review_response_published | authority_hub_viewed | settings_changed
+  eventType String   @map("event_type")
+
+  /// Structured metadata — no PII
+  eventData Json?    @map("event_data")
+
+  pagePath  String?  @map("page_path")
+
+  /// Random UUID per browser session — not a tracking cookie
+  sessionId String   @map("session_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([clientId, eventType, createdAt])
+  @@index([clientId, createdAt])
+  @@map("client_engagement_events")
 }
