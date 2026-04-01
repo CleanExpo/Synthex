@@ -5651,7 +5651,8 @@ model PipelineCostLedger {
 /// Latest record per org = current score.
 model AuthorityScore {
   id             String   @id @default(cuid())
-  organizationId String   @map("organization_id")
+  /// Maps to client_id in the DB (legacy column name — organisation = client in old schema)
+  organizationId String   @map("client_id")
 
   /// 0–100 composite score
   score          Int
@@ -5665,9 +5666,14 @@ model AuthorityScore {
   signalsVersion String   @default("1.0") @map("signals_version")
 
   computedAt     DateTime @default(now()) @map("computed_at")
-  createdAt      DateTime @default(now()) @map("created_at")
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // Extra analytic columns present in DB (optional, populated by ML pipeline)
+  predictedEngagement         Float?   @map("predicted_engagement")
+  confidenceScore             Float?   @map("confidence_score")
+  crossClientPercentileIndustry Int?   @map("cross_client_percentile_industry")
+  featureTags                 String[] @map("feature_tags")
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId, computedAt(sort: Desc)])
   @@map("authority_scores")
