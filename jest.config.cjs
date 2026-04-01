@@ -83,7 +83,7 @@ module.exports = {
     '/tests/e2e/',
     '/tests/playwright/',
     '/templates/',
-    '\\.claude',
+    '\\.claude/(?!worktrees)',  // Exclude .claude/ config files but allow worktrees
   ],
 
   // Reporter configuration
