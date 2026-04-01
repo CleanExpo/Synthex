@@ -217,7 +217,8 @@
       "Bash(grep -rn from.*@/lib/oauth /c/Synthex/.claude/worktrees/infallible-pasteur/app/ --include=*.ts)",
       "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__list_projects",
       "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__apply_migration",
-      "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__execute_sql"
+      "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__execute_sql",
+      "Bash(gh pr:*)"
     ],
     "deny": [
       "Bash(git push --force*)",
