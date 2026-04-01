@@ -214,7 +214,10 @@
       "Bash(grep -rn \"youtube\\\\|YOUTUBE_CLIENT\" /c/Synthex/.claude/worktrees/infallible-pasteur/app/ --include=*.ts -l)",
       "Bash(grep -n youtube /c/Synthex/.claude/worktrees/infallible-pasteur/app/api/auth/oauth/[platform]/route.ts)",
       "Bash(grep -rn \"from.*oauth/providers/youtube\\\\|YouTubeOAuthProvider\\\\|youtubeProvider\" /c/Synthex/.claude/worktrees/infallible-pasteur/app/ /c/Synthex/.claude/worktrees/infallible-pasteur/lib/ --include=*.ts)",
-      "Bash(grep -rn from.*@/lib/oauth /c/Synthex/.claude/worktrees/infallible-pasteur/app/ --include=*.ts)"
+      "Bash(grep -rn from.*@/lib/oauth /c/Synthex/.claude/worktrees/infallible-pasteur/app/ --include=*.ts)",
+      "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__list_projects",
+      "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__apply_migration",
+      "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__execute_sql"
     ],
     "deny": [
       "Bash(git push --force*)",
