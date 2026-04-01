@@ -15,7 +15,9 @@ type GTagWindow = Window & {
 export type TeamEventName =
   | 'team_invite_prompt_shown'
   | 'team_invite_prompt_clicked'
-  | 'team_invite_sent';
+  | 'team_invite_sent'
+  | 'team_invite_accepted'
+  | 'team_viewer_first_login';
 
 type TeamEventProps = {
   team_invite_prompt_shown: Record<string, never>;
@@ -24,6 +26,8 @@ type TeamEventProps = {
     /** SHA-256 hash of invitee email — no raw PII */
     invitee_email_hash: string;
   };
+  team_invite_accepted: Record<string, never>;
+  team_viewer_first_login: Record<string, never>;
 };
 
 /**

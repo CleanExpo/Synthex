@@ -68,6 +68,8 @@ model User {
   organizationId        String?                   @map("organization_id")
   organization          Organization?             @relation(fields: [organizationId], references: [id])
   teamInvitations       TeamInvitation[]
+  teamMemberships       TeamMember[]    @relation("TeamMemberUser")
+  teamMembersInvited    TeamMember[]    @relation("TeamMemberInviter")
   brandGenerations      BrandGeneration[]
   psychologyPreferences UserPsychologyPreference?
   reports               Report[]
@@ -528,6 +530,7 @@ model Organization {
   // Relations
   users           User[]
   teamInvitations TeamInvitation[]
+  teamMembers     TeamMember[]
   roles           Role[]
   campaigns       Campaign[]          @relation("OrganizationCampaigns")
   projects        Project[]           @relation("OrganizationProjects")
@@ -5939,4 +5942,33 @@ model AdvisorFeedback {
   @@index([organizationId])
   @@index([weekStart])
   @@map("advisor_feedback")
+}
+
+/// RBAC team membership — SYN-598
+/// Two active roles: 'owner' | 'collaborator'. 'viewer' reserved for Sprint 5.
+model TeamMember {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  organizationId String    @map("organization_id")
+
+  /// 'owner' | 'collaborator' | 'viewer'
+  role           String
+
+  invitedBy      String?   @map("invited_by")
+  invitationId   String?   @map("invitation_id")
+
+  invitedAt      DateTime  @default(now()) @map("invited_at")
+  acceptedAt     DateTime? @map("accepted_at")
+
+  /// Null until first dashboard visit — used to trigger the context screen
+  lastActiveAt   DateTime? @map("last_active_at")
+
+  user           User         @relation("TeamMemberUser", fields: [userId], references: [id], onDelete: Cascade)
+  inviter        User?        @relation("TeamMemberInviter", fields: [invitedBy], references: [id], onDelete: SetNull)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId], name: "team_member_user_org")
+  @@index([organizationId])
+  @@index([role])
+  @@map("team_members")
 }
