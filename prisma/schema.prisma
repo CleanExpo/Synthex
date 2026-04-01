@@ -657,6 +657,10 @@ model Organization {
   // Video production series (SYN-572)
   videoSeries VideoSeries[] @relation("OrganisationVideoSeries")
 
+  // Team invite prompt tracking — SYN-597
+  invitePromptDismissedAt  DateTime? @map("invite_prompt_dismissed_at")
+  invitePromptDismissCount Int       @default(0) @map("invite_prompt_dismiss_count")
+
   // Indices for multi-tenant queries
   @@index([slug])
   @@index([status])
