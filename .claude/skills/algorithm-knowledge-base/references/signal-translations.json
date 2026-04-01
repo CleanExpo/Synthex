@@ -1,0 +1,65 @@
+{
+  "_meta": {
+    "description": "Plain-English translations for all algorithm signal names. MANDATORY: every client-facing recommendation must use these translations — never expose raw signal names.",
+    "last_updated": "2026-04-02",
+    "maintained_by": "SYN-604"
+  },
+
+  "google_search": {
+    "NavBoost": "Google tracks how long people stay on your page and whether they come back to search again",
+    "siteAuthority": "How much Google trusts your website overall, built up over years of quality content and links from other sites",
+    "OriginalContentScore": "Whether your content adds something new that readers can't find anywhere else",
+    "CrUX": "How fast your website loads and responds for real visitors using Chrome",
+    "LCP": "How quickly the main content of your page appears on screen",
+    "INP": "How quickly your website responds when someone clicks or taps something",
+    "CLS": "Whether your page jumps around while loading (which annoys visitors)",
+    "E-E-A-T": "Whether Google's reviewers see your content as written by someone with real experience and expertise in the topic",
+    "SegIndexer": "How fresh and up-to-date Google considers your content to be",
+    "hostAge": "How long your domain has been trusted by Google — newer sites take 6–12 months to gain full trust",
+    "Twiddlers": "Fine-tuning adjustments Google applies to rankings based on spam detection and language matching",
+    "goodClicks": "Visitors clicking on your page and spending time reading it",
+    "badClicks": "Visitors clicking on your page and immediately going back to Google",
+    "review_signals": "How many Google reviews you have, how recent they are, and how well you respond to them",
+    "gbp_completeness": "How complete and accurate your Google Business Profile is",
+    "citation_eligibility": "How likely Google's AI is to quote your content in an AI Overview answer at the top of search results"
+  },
+
+  "instagram": {
+    "watch_time": "How long people watch your video before stopping",
+    "completion_rate": "The percentage of viewers who watch your video all the way through",
+    "sends_per_reach": "How often people share your content in direct messages — Instagram's strongest signal for showing Reels to new audiences",
+    "saves": "When people save your post to come back to later — signals your content is genuinely useful",
+    "comments": "Replies and conversations your post generates",
+    "story_completion_rate": "How many people watch all the way through your Story without skipping",
+    "tap_forward_rate": "How often people skip past your Story — a high skip rate signals disengagement",
+    "account_engagement_velocity": "How consistently your account generates engagement over time",
+    "original_content_indicator": "Whether Instagram detects your video was created originally, not copied from TikTok or another platform",
+    "hashtags": "Topic tags that help Instagram categorise your content — not amplifiers, just labels",
+    "explore_velocity": "How quickly your post gets engagement in the first hour, which determines if Instagram shows it to new audiences on Explore"
+  },
+
+  "linkedin": {
+    "consumption_rate": "The percentage of people who click 'see more' to read your full post — LinkedIn's strongest quality signal",
+    "early_engagement_velocity": "How much engagement your post receives in the first 60–90 minutes — determines how widely LinkedIn distributes it",
+    "topic_authority": "How consistently you post about the same professional topics — LinkedIn rewards specialists who stay in their lane",
+    "connection_strength": "How often you and your followers interact — LinkedIn shows your content to people who have engaged with you before",
+    "dwell_time": "How long someone pauses on your post while scrolling — even without liking, time spent signals quality",
+    "external_link_penalty": "LinkedIn reduces reach for posts that send people to other websites — use 'link in comments' instead",
+    "creator_mode": "A LinkedIn account setting that prioritises content distribution over networking",
+    "document_carousel": "A multi-slide PDF post format that generates high reading time and strong distribution",
+    "native_video": "Video uploaded directly to LinkedIn, which gets more reach than a YouTube link",
+    "poll_completion": "When someone votes in your poll — generates quick engagement spikes that boost early distribution",
+    "profile_completeness": "How fully filled-out your LinkedIn profile is — complete profiles rank higher in LinkedIn search"
+  },
+
+  "cross_platform": {
+    "engagement_velocity_window": "The critical first window after posting when early engagement determines how many more people see your content",
+    "native_content_preference": "Every platform gives more reach to content created natively on that platform rather than shared from elsewhere",
+    "content_consistency_model": "How well the platform's algorithm understands what topics you cover — consistent creators get better distribution",
+    "interaction_quality_hierarchy": "Not all engagement is equal — DMs and saves are worth more than likes, which are worth more than views",
+    "thumbnail_and_first_frame": "The preview image or opening frame people see before clicking — determines whether they click at all",
+    "account_health_floor": "The minimum distribution ceiling for accounts in good standing — violations permanently lower this ceiling",
+    "posting_cadence_consistency": "Posting regularly over time beats posting a lot then going quiet — algorithms reward reliable creators",
+    "llm_citability": "Whether AI tools like ChatGPT or Gemini are likely to cite your content when answering questions"
+  }
+}

@@ -24,6 +24,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { getAlgorithmContextBlock } from '@/lib/algorithm/algorithm-context';
 
 /** Average job value used for dollar attribution when no org-specific data exists. */
 const DEFAULT_AVG_JOB_VALUE_AUD = 350;
@@ -234,12 +235,18 @@ async function generateActions(ctx: OrgContext): Promise<AdvisorAction[]> {
     .filter(Boolean)
     .join('\n\n');
 
+  const algorithmContext = getAlgorithmContextBlock();
+
   const prompt = `You are a senior marketing strategist advising a small Australian business called "${ctx.orgName}".
 
 Generate exactly 3 prioritised marketing actions for them to take this week. Each action MUST:
 1. Reference at least one real number from their data (a score, count, rating, date, percentage)
 2. Be specific to their situation — no generic advice like "post more content" or "engage with your audience"
 3. Be achievable by a non-marketing owner in under 2 hours
+
+ALGORITHM SIGNAL RULE: When your recommendations involve platform content or website improvements,
+ground them in the verified algorithm signals provided below. Use the plain-English descriptions
+provided — NEVER expose raw signal names (NavBoost, sends_per_reach, CrUX, etc.) in the output.
 
 Return a JSON array of exactly 3 objects with this structure:
 {
@@ -253,6 +260,8 @@ Return a JSON array of exactly 3 objects with this structure:
 --- BUSINESS DATA ---
 ${dataSection}
 --- END DATA ---
+
+${algorithmContext}
 
 Return ONLY the JSON array. No preamble, no explanation.`;
 
