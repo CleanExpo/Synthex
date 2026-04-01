@@ -2,6 +2,24 @@
 
 First off, thank you for considering contributing to SYNTHEX! It's people like you that make SYNTHEX such a great tool.
 
+## API Routes
+
+**All API routes must use `withAuth()` from `lib/auth/with-auth`.**
+
+```typescript
+import { withAuth } from '@/lib/auth/with-auth';
+
+export const GET = withAuth(async (request, { userId, clientId, role }) => {
+  // clientId = organizationId — always use this, never read from request body
+  const data = await prisma.thing.findMany({ where: { organizationId: clientId } });
+  return NextResponse.json({ data });
+});
+```
+
+The CI auth coverage test (`tests/auth/route-coverage.test.ts`) will block your PR if any new unprotected route is added. If your route is intentionally public (webhooks, health checks, demo endpoints), add its path prefix to the `EXEMPT_PREFIXES` list in both:
+- `tests/auth/route-coverage.test.ts`
+- `scripts/check-auth-coverage.ts`
+
 ## Code of Conduct
 
 This project and everyone participating in it is governed by our Code of Conduct. By participating, you are expected to uphold this code.
