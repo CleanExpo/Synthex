@@ -156,6 +156,8 @@
       "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__list_issues",
       "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__save_comment",
       "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__get_issue",
+      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__save_issue",
+      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__list_issue_statuses",
       "Bash(dir \"C:\\\\Synthex\\\\app\\\\api\\\\video\" /b)",
       "Bash(find C:/Synthex -name *.test.ts -not -path */node_modules/*)",
       "Bash(find /c/Synthex -name *.tsx -path */remotion/*)",
