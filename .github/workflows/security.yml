@@ -26,6 +26,10 @@ jobs:
   dependency-review:
     name: Dependency Review
     runs-on: ubuntu-latest
+    # continue-on-error: Dependency Graph is not yet enabled on this repo.
+    # Enable at: https://github.com/CleanExpo/Synthex/settings/security_analysis
+    # Remove continue-on-error once the feature is enabled.
+    continue-on-error: true
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4

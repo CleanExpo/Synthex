@@ -23,6 +23,7 @@ import {
   RefreshCw,
 } from '@/components/icons';
 import { ApiKeyGate } from '@/components/api-key-gate/ApiKeyGate';
+import { VideoEpisodeMonitor } from '@/components/dashboard/VideoEpisodeMonitor';
 
 interface WorkflowInfo {
   id: string;
@@ -351,6 +352,12 @@ export default function VideoProductionPage() {
           </p>
         </div>
       )}
+
+      {/* Divider */}
+      <div className="h-px bg-white/[0.06] my-2" />
+
+      {/* Autonomous Episode Monitor */}
+      <VideoEpisodeMonitor />
     </div>
   );
 }

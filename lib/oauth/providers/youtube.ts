@@ -20,8 +20,17 @@ import { logger } from '@/lib/logger';
 // ============================================================================
 
 const getConfig = (): OAuthConfig => {
-  const clientId = process.env.GOOGLE_CLIENT_ID || '';
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
+  // YOUTUBE_CLIENT_ID/SECRET take priority; fall back to shared GOOGLE credentials
+  // Set YOUTUBE_CLIENT_ID + YOUTUBE_CLIENT_SECRET in Vercel for YouTube-specific OAuth
+  // (enables separate Google Cloud project with YouTube Data API v3 scope only)
+  const clientId =
+    process.env.YOUTUBE_CLIENT_ID ||
+    process.env.GOOGLE_CLIENT_ID ||
+    '';
+  const clientSecret =
+    process.env.YOUTUBE_CLIENT_SECRET ||
+    process.env.GOOGLE_CLIENT_SECRET ||
+    '';
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
   return {

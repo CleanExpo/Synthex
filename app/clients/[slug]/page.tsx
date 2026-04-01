@@ -33,8 +33,14 @@ import prisma from '@/lib/prisma';
 // ── Static generation ─────────────────────────────────────────────────────────
 
 export async function generateStaticParams() {
-  const slugs = await getAllClientSlugs();
-  return slugs.map(slug => ({ slug }));
+  try {
+    const slugs = await getAllClientSlugs();
+    return slugs.map(slug => ({ slug }));
+  } catch {
+    // DB unreachable at build time (CI placeholder DB / cold build).
+    // Fall back to zero pre-generated paths — ISR renders pages on first request.
+    return [];
+  }
 }
 
 // ── Metadata ──────────────────────────────────────────────────────────────────

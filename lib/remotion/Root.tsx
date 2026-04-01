@@ -17,6 +17,8 @@ import { BrandShowcase } from './compositions/BrandShowcase';
 import { BrandReel } from './compositions/BrandReel';
 import { BrandSquare } from './compositions/BrandSquare';
 import { HowToVideo } from './compositions/HowToVideo';
+import { GitCommitTimeline } from './compositions/GitCommitTimeline';
+import { BoardDecisionCard } from './compositions/BoardDecisionCard';
 import { COMPOSITION_REGISTRY } from './registry';
 
 export { COMPOSITION_REGISTRY };
@@ -28,6 +30,9 @@ const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
   BrandReel,
   BrandSquare,
   HowToVideo,
+  // BTS series compositions (SYN-572)
+  GitCommitTimeline,
+  BoardDecisionCard,
 };
 
 // ── Root Component ───────────────────────────────────────────────────────────

@@ -94,6 +94,7 @@ const nextConfig = {
   serverExternalPackages: [
     '@ffprobe-installer/ffprobe',
     '@ffmpeg-installer/ffmpeg',
+    'fluent-ffmpeg',
     'bullmq',
     'ioredis',
     'puppeteer',

@@ -1,32 +1,29 @@
 # Synthex Compass
 
-**Project**: Synthex — AI marketing automation (synthex.social, not yet public)
+**Project**: Synthex — AI marketing automation (synthex.social, invite-only)
 **Stack**: Next.js 15, Supabase Auth ONLY, TypeScript 5, Prisma 6, Vercel
-**Milestone**: v9.0 Autonomous Operation (Phases 118+) — PLANNING
-**Current phase**: None — All 117 phases shipped, next milestone needed
+**Milestone**: v12.0 Autonomous Ranking Engine — Sprint code-complete, PR #18 pending merge
+**Current state**: Branch `claude/infallible-pasteur` | All 7 sprint issues code-complete
 
 ## 3 Architectural Rules
 1. No mock data — every endpoint returns real database data
 2. All mutations: Zod validation + org-scoped queries (never cross-org)
 3. Auth: Supabase ONLY — never Clerk, NextAuth, or any other system
 
-## Active Issues
-- UNI-1180: Linear MCP hook configuration (Todo)
-- UNI-1181: Build autonomous headless task-runner (Todo)
-- UNI-1182: E2E verification on live Vercel (Todo, human)
-- SYN-378: Vault System — Centralised Secrets Management (Done 2026-03-15)
+## Active Issues (PR #18 sprint)
+- SYN-593–599: Done ✅ (code-complete, pending merge)
+- SYN-573: In Progress (human-gated: Google Cloud Console + HeyGen + demo account)
 
-## Autonomy Foundation (shipped 2026-03-15)
-- Vault: 30 AI keys seeded across 10 businesses (AES-256-GCM, org-scoped)
-- Workflow Engine: lib/workflow/ (orchestrator, step-executor, context-builder)
-- Credential-inject step type: vault → workflow context (no leakage to AI prompts)
-- Parallel Agents (Phase 63), Quality Gates (Phase 64), Campaign Intelligence (Phase 65), Autonomous Agent (Phase 66) — all shipped
+## Pending Human Actions
+1. Merge PR #18 (all CI checks green)
+2. Enable GitHub Dependency Graph (security_analysis settings)
+3. Fix Supabase Preview integration (wrong project ID)
+4. SYN-573: YouTube OAuth, HeyGen key, demo account
 
 ## Key Paths
-- Planning: .planning/STATE.md · ROADMAP.md · MILESTONES.md
-- Hooks: .claude/hooks/*.ps1 (7 active: guard, pre-build, pre-write, post-write, post-research, pre-compact, session-start, pre-agent-dispatch)
-- Memory: .claude/memory/MEMORY.md · compass.md
-- Scratchpad: .claude/scratchpad/current-session.md
-- Constitution: CONSTITUTION.md (re-read every session)
-- Agent registry: .planning/AGENT-REGISTRY.md
-- Orchestrator: .claude/agents/hive-mind.md
+- Planning: `.planning/STATE.md` · `ROADMAP.md`
+- Memory: `.claude/memory/MEMORY.md` · `ARCHITECTURE.md` · `STANDARDS.md` · `TESTING.md` · `WORKFLOWS.md`
+- Scratchpad: `.claude/scratchpad/current-session.md`
+- Constitution: `CONSTITUTION.md` (re-read every session)
+- Routes: `.planning/ROUTE_REFERENCE.md` (read before any implementation)
+- Hooks: `.claude/hooks/*.ps1` (7 active)

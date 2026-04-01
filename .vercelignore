@@ -10,7 +10,8 @@ node_modules
 .env*.bak
 .env.vercel-*.bak
 tests
-scripts
+scripts/*
+!scripts/validate-schema.ts
 docs
 *.md
 .claude

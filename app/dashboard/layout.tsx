@@ -88,6 +88,8 @@ import { useRouter } from 'next/navigation';
 import { ModeProvider } from '@/components/providers/mode-provider';
 import { FirstWinBanner } from '@/components/notifications/FirstWinBanner';
 import { MonthlyStoryCard } from '@/components/monthly-story/MonthlyStoryCard';
+// SYN-597: Contextual team invite banner — self-hides when ineligible
+import { TeamInviteBanner } from '@/components/team/TeamInviteBanner';
 import {
   Sidebar,
   SidebarContent,
@@ -336,6 +338,7 @@ const sidebarGroups: SidebarNavGroup[] = [
       },
       { icon: Lock, label: 'Brand Voice', href: '/dashboard/brand-voice' },
       { icon: Star, label: 'AI Insights', href: '/dashboard/insights' },
+      { icon: Brain, label: 'Advisor', href: '/dashboard/advisor', isNew: true },
     ],
   },
   {
@@ -916,6 +919,8 @@ export default function DashboardLayout({
           <main className="p-4 md:p-6">
             {/* First Win Banner — SYN-525: shown once until dismissed */}
             <FirstWinBanner className="mb-5" />
+            {/* SYN-597: Team invite banner — self-hides when org < 45 days or dismissed */}
+            <TeamInviteBanner />
             {children}
           </main>
 

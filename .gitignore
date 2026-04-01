@@ -253,3 +253,4 @@ vercel-deploy2.txt
 .claude/agents/codex/*.md
 !.claude/agents/codex/CATALOGUE.md
 !.claude/agents/codex/security-auditor.md
+jest-worktree.json

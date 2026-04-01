@@ -20,3 +20,7 @@ export { CaseStudyVideo } from './CaseStudyVideo';
 export { QuoteCard } from './QuoteCard';
 export { CountdownCTA } from './CountdownCTA';
 export { DefinitionCard } from './DefinitionCard';
+
+// ── BTS Series Compositions (SYN-572) ────────────────────────────────────────
+export { GitCommitTimeline } from './GitCommitTimeline';
+export { BoardDecisionCard } from './BoardDecisionCard';

@@ -68,6 +68,8 @@ model User {
   organizationId        String?                   @map("organization_id")
   organization          Organization?             @relation(fields: [organizationId], references: [id])
   teamInvitations       TeamInvitation[]
+  teamMemberships       TeamMember[]    @relation("TeamMemberUser")
+  teamMembersInvited    TeamMember[]    @relation("TeamMemberInviter")
   brandGenerations      BrandGeneration[]
   psychologyPreferences UserPsychologyPreference?
   reports               Report[]
@@ -528,6 +530,7 @@ model Organization {
   // Relations
   users           User[]
   teamInvitations TeamInvitation[]
+  teamMembers     TeamMember[]
   roles           Role[]
   campaigns       Campaign[]          @relation("OrganizationCampaigns")
   projects        Project[]           @relation("OrganizationProjects")
@@ -640,6 +643,8 @@ model Organization {
   monthlyStories             MonthlyStory[]
   storyConfig                StoryConfig?
   seasonalSignalDismissals   SeasonalSignalDismissal[]
+  recommendedActions         RecommendedAction[]
+  advisorFeedback            AdvisorFeedback[]
 
   // GSC content topic suggestions (SYN-472)
   contentTopicSuggestions ContentTopicSuggestion[]
@@ -654,6 +659,10 @@ model Organization {
 
   // Video production series (SYN-572)
   videoSeries VideoSeries[] @relation("OrganisationVideoSeries")
+
+  // Team invite prompt tracking — SYN-597
+  invitePromptDismissedAt  DateTime? @map("invite_prompt_dismissed_at")
+  invitePromptDismissCount Int       @default(0) @map("invite_prompt_dismiss_count")
 
   // Indices for multi-tenant queries
   @@index([slug])
@@ -5642,7 +5651,8 @@ model PipelineCostLedger {
 /// Latest record per org = current score.
 model AuthorityScore {
   id             String   @id @default(cuid())
-  organizationId String   @map("organization_id")
+  /// Maps to client_id in the DB (legacy column name — organisation = client in old schema)
+  organizationId String   @map("client_id")
 
   /// 0–100 composite score
   score          Int
@@ -5656,9 +5666,14 @@ model AuthorityScore {
   signalsVersion String   @default("1.0") @map("signals_version")
 
   computedAt     DateTime @default(now()) @map("computed_at")
-  createdAt      DateTime @default(now()) @map("created_at")
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // Extra analytic columns present in DB (optional, populated by ML pipeline)
+  predictedEngagement         Float?   @map("predicted_engagement")
+  confidenceScore             Float?   @map("confidence_score")
+  crossClientPercentileIndustry Int?   @map("cross_client_percentile_industry")
+  featureTags                 String[] @map("feature_tags")
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId, computedAt(sort: Desc)])
   @@map("authority_scores")
@@ -5867,4 +5882,121 @@ model StoryConfig {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("story_config")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI Marketing Advisor — SYN-593
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Weekly personalised AI marketing brief — 3 ranked recommended actions per client.
+/// Generated every Monday 07:00 AEDT. Held as status=generated for 7-day quality gate
+/// before delivery automation fires.
+model RecommendedAction {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+
+  /// Monday of the week this brief covers (date only, UTC)
+  weekStart DateTime @map("week_start") @db.Date
+
+  /// Exactly 3 ranked action objects — see ActionItem type in lib/advisor/types.ts
+  actions Json
+
+  /// Human-readable attribution: "Synthex contributed to N enquiries and ~$X in potential revenue"
+  dollarAttribution String @map("dollar_attribution") @db.Text
+
+  /// Number used in dollar attribution sentence
+  jobCountAttribution Int @default(0) @map("job_count_attribution")
+
+  /// One-sentence competitor gap signal. Null if data unavailable.
+  competitorMicroInsight String? @map("competitor_micro_insight") @db.Text
+
+  /// GEO baseline teaser row. Null if no GEO data present.
+  geoTeaserText String? @map("geo_teaser_text") @db.Text
+
+  /// Results summary: { postsPublished, bestPostId, authorityScoreDelta, revenueAttributed }
+  resultsSummary Json @map("results_summary")
+
+  /// generated → held for quality review; delivered → sent to client; read → opened; archived
+  status String @default("generated")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  deliveredAt DateTime? @map("delivered_at")
+  readAt      DateTime? @map("read_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, weekStart], name: "recommended_action_org_week")
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([status])
+  @@map("recommended_actions")
+}
+
+/// Weekly advisor feedback — SYN-594
+model AdvisorFeedback {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  weekStart      DateTime @map("week_start") @db.Date
+
+  /// 'useful' | 'not_useful' | 'skipped'
+  response       String
+
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, weekStart], name: "advisor_feedback_org_week")
+  @@index([organizationId])
+  @@index([weekStart])
+  @@map("advisor_feedback")
+}
+
+/// RBAC team membership — SYN-598
+/// Two active roles: 'owner' | 'collaborator'. 'viewer' reserved for Sprint 5.
+model TeamMember {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  organizationId String    @map("organization_id")
+
+  /// 'owner' | 'collaborator' | 'viewer'
+  role           String
+
+  invitedBy      String?   @map("invited_by")
+  invitationId   String?   @map("invitation_id")
+
+  invitedAt      DateTime  @default(now()) @map("invited_at")
+  acceptedAt     DateTime? @map("accepted_at")
+
+  /// Null until first dashboard visit — used to trigger the context screen
+  lastActiveAt              DateTime? @map("last_active_at")
+
+  /// Null until first weekly-active event fires. Used for 7-day deduplication.
+  lastWeeklyActiveFiredAt   DateTime? @map("last_weekly_active_fired_at")
+
+  user           User                  @relation("TeamMemberUser", fields: [userId], references: [id], onDelete: Cascade)
+  inviter        User?                 @relation("TeamMemberInviter", fields: [invitedBy], references: [id], onDelete: SetNull)
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  pageViews      TeamMemberPageView[]
+
+  @@unique([userId, organizationId], name: "team_member_user_org")
+  @@index([organizationId])
+  @@index([role])
+  @@map("team_members")
+}
+
+/// Lightweight page-view tracker for collaborators — SYN-599
+/// Feeds `collaborator_weekly_sessions` and `collaborator_most_viewed_page` in team_analytics view.
+model TeamMemberPageView {
+  id             String     @id @default(uuid())
+  teamMemberId   String     @map("team_member_id")
+  organizationId String     @map("organization_id")
+  pagePath       String     @map("page_path")
+  viewedAt       DateTime   @default(now()) @map("viewed_at")
+
+  teamMember     TeamMember @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
+
+  @@index([teamMemberId])
+  @@index([organizationId])
+  @@index([viewedAt])
+  @@index([organizationId, pagePath])
+  @@map("team_member_page_views")
 }

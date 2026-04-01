@@ -23,14 +23,18 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import * as glob from 'glob';
+import { globSync } from 'glob';
 
 // ---------------------------------------------------------------------------
 // Required fields per schema @type
 // ---------------------------------------------------------------------------
 
+// Google's structured data requirements — only truly REQUIRED fields listed.
+// address, telephone, openingHours etc. are RECOMMENDED for LocalBusiness
+// but are not required to produce a valid Rich Result.
+// Reference: https://developers.google.com/search/docs/appearance/structured-data/local-business
 const REQUIRED_FIELDS: Record<string, string[]> = {
-  LocalBusiness: ['@context', '@type', 'name', 'address', 'telephone'],
+  LocalBusiness: ['@context', '@type', 'name'],
   VideoObject: [
     '@context',
     '@type',
@@ -116,7 +120,7 @@ function main(): void {
 
   // Find all rendered HTML files under .next/server/app/clients/
   const pattern = path.join(buildDir, 'server', 'app', 'clients', '**', '*.html');
-  const files = glob.sync(pattern);
+  const files = globSync(pattern);
 
   if (files.length === 0) {
     console.log(
