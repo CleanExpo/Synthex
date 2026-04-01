@@ -87,51 +87,62 @@ interface SearchResult {
   url: string;
 }
 
-// ── Search ─────────────────────────────────────────────────────────────────────
+// ── Search (FireCrawl) ────────────────────────────────────────────────────────
 
 async function searchRecentUpdates(
   queries: string[],
   keywords: string[]
 ): Promise<SearchResult[]> {
-  const braveApiKey = process.env.BRAVE_SEARCH_API_KEY;
-  if (!braveApiKey) {
-    logger.warn('algorithm-freshness-monitor: BRAVE_SEARCH_API_KEY not set — skipping web search');
+  const apiKey = process.env.FIRECRAWL_API_KEY;
+  if (!apiKey) {
+    logger.warn('algorithm-freshness-monitor: FIRECRAWL_API_KEY not set — skipping web search');
     return [];
   }
 
   const results: SearchResult[] = [];
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split('T')[0];
 
   for (const query of queries.slice(0, 2)) { // Limit to 2 queries per platform for cost control
     try {
-      const url = new URL('https://api.search.brave.com/res/v1/web/search');
-      url.searchParams.set('q', query);
-      url.searchParams.set('freshness', thirtyDaysAgo);
-      url.searchParams.set('count', '5');
-
-      const res = await fetch(url.toString(), {
+      const res = await fetch('https://api.firecrawl.dev/v1/search', {
+        method: 'POST',
         headers: {
-          'Accept': 'application/json',
-          'X-Subscription-Token': braveApiKey,
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
         },
+        body: JSON.stringify({
+          query,
+          limit: 5,
+          lang: 'en',
+          scrapeOptions: { formats: ['markdown'] },
+        }),
       });
 
-      if (!res.ok) continue;
+      if (!res.ok) {
+        logger.warn('algorithm-freshness-monitor: FireCrawl search failed', {
+          query,
+          status: res.status,
+        });
+        continue;
+      }
 
       const data = await res.json() as {
-        web?: { results?: Array<{ title: string; description: string; url: string }> };
+        success?: boolean;
+        data?: Array<{
+          title?: string;
+          description?: string;
+          url?: string;
+          markdown?: string;
+        }>;
       };
 
-      for (const item of data.web?.results ?? []) {
-        const text = `${item.title} ${item.description}`.toLowerCase();
+      for (const item of data.data ?? []) {
+        const text = `${item.title ?? ''} ${item.description ?? ''} ${(item.markdown ?? '').slice(0, 500)}`.toLowerCase();
         const hasKeyword = keywords.some(k => text.includes(k.toLowerCase()));
         if (hasKeyword) {
           results.push({
-            title: item.title,
-            snippet: item.description,
-            url: item.url,
+            title: item.title ?? 'Untitled',
+            snippet: item.description ?? (item.markdown ?? '').slice(0, 200),
+            url: item.url ?? '',
           });
         }
       }
@@ -417,6 +428,6 @@ export async function POST(request: NextRequest) {
       impactLevel: r.impactLevel,
       summary: r.summary,
     })),
-    budgetNote: `Monthly cost budget: $${MONTHLY_BUDGET_USD} — monitor haiku model + 2 searches per platform`,
+    budgetNote: `Monthly cost budget: $${MONTHLY_BUDGET_USD} — monitor haiku model + 2 FireCrawl searches per platform`,
   });
 }
