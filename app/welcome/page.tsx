@@ -32,6 +32,7 @@ interface UpcomingPost {
 
 interface CollaboratorContext {
   isFirstVisit: boolean;
+  shouldFireWeeklyActive: boolean;
   organizationName: string;
   ownerName: string;
   brandIq: number | null;
@@ -92,13 +93,20 @@ export default function WelcomePage() {
     }
   }, [data, router]);
 
-  // Fire team_viewer_first_login once
+  // Fire team_viewer_first_login once (on first visit only)
   useEffect(() => {
     if (data?.isFirstVisit && !eventFired.current) {
       eventFired.current = true;
       fireTeamEvent('team_viewer_first_login' as never);
     }
   }, [data]);
+
+  // Fire team_viewer_weekly_active when server signals deduplication window has elapsed
+  useEffect(() => {
+    if (data?.shouldFireWeeklyActive) {
+      fireTeamEvent('team_viewer_weekly_active' as never);
+    }
+  }, [data?.shouldFireWeeklyActive]);
 
   if (isLoading) {
     return (

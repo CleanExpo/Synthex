@@ -25,6 +25,8 @@ import {
 import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
 import { AutopilotBanner } from '@/components/dashboard/AutopilotBanner';
 import { AllBusinessesDashboard } from '@/components/business/AllBusinessesDashboard';
+// SYN-599: Team engagement card — self-hides when no team members (solo-user safe)
+import { TeamCard } from '@/components/team/TeamCard';
 
 // AI Command Centre — replaces returning-user widget soup (Phase 132)
 const AICommandCentre = dynamic(
@@ -490,6 +492,10 @@ export default function DashboardPage() {
               {/* SYN-527: Brand IQ Score Card — self-contained, fetches own data */}
               <div className="lg:col-span-2">
                 <BrandIQCard />
+              </div>
+              {/* SYN-599: Team card — renders null when no members, zero solo impact */}
+              <div className="lg:col-span-2">
+                <TeamCard />
               </div>
             </div>
 

@@ -17,7 +17,8 @@ export type TeamEventName =
   | 'team_invite_prompt_clicked'
   | 'team_invite_sent'
   | 'team_invite_accepted'
-  | 'team_viewer_first_login';
+  | 'team_viewer_first_login'
+  | 'team_viewer_weekly_active';
 
 type TeamEventProps = {
   team_invite_prompt_shown: Record<string, never>;
@@ -28,6 +29,8 @@ type TeamEventProps = {
   };
   team_invite_accepted: Record<string, never>;
   team_viewer_first_login: Record<string, never>;
+  /** Fired once per 7-day window per collaborator — deduplication managed server-side */
+  team_viewer_weekly_active: Record<string, never>;
 };
 
 /**

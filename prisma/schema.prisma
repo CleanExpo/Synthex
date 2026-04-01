@@ -5961,14 +5961,36 @@ model TeamMember {
   acceptedAt     DateTime? @map("accepted_at")
 
   /// Null until first dashboard visit — used to trigger the context screen
-  lastActiveAt   DateTime? @map("last_active_at")
+  lastActiveAt              DateTime? @map("last_active_at")
 
-  user           User         @relation("TeamMemberUser", fields: [userId], references: [id], onDelete: Cascade)
-  inviter        User?        @relation("TeamMemberInviter", fields: [invitedBy], references: [id], onDelete: SetNull)
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// Null until first weekly-active event fires. Used for 7-day deduplication.
+  lastWeeklyActiveFiredAt   DateTime? @map("last_weekly_active_fired_at")
+
+  user           User                  @relation("TeamMemberUser", fields: [userId], references: [id], onDelete: Cascade)
+  inviter        User?                 @relation("TeamMemberInviter", fields: [invitedBy], references: [id], onDelete: SetNull)
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  pageViews      TeamMemberPageView[]
 
   @@unique([userId, organizationId], name: "team_member_user_org")
   @@index([organizationId])
   @@index([role])
   @@map("team_members")
+}
+
+/// Lightweight page-view tracker for collaborators — SYN-599
+/// Feeds `collaborator_weekly_sessions` and `collaborator_most_viewed_page` in team_analytics view.
+model TeamMemberPageView {
+  id             String     @id @default(uuid())
+  teamMemberId   String     @map("team_member_id")
+  organizationId String     @map("organization_id")
+  pagePath       String     @map("page_path")
+  viewedAt       DateTime   @default(now()) @map("viewed_at")
+
+  teamMember     TeamMember @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
+
+  @@index([teamMemberId])
+  @@index([organizationId])
+  @@index([viewedAt])
+  @@index([organizationId, pagePath])
+  @@map("team_member_page_views")
 }

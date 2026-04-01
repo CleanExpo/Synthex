@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
       id: true,
       organizationId: true,
       lastActiveAt: true,
+      lastWeeklyActiveFiredAt: true,
       organization: {
         select: {
           id: true,
@@ -48,14 +49,22 @@ export async function GET(request: NextRequest) {
 
   const orgId = membership.organizationId;
   const isFirstVisit = membership.lastActiveAt === null;
+  const now = new Date();
 
-  // Mark last_active_at on first visit
-  if (isFirstVisit) {
-    await prisma.teamMember.update({
-      where: { id: membership.id },
-      data: { lastActiveAt: new Date() },
-    });
-  }
+  // Determine if weekly-active GA4 event should fire (once per 7-day window, client-side)
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const shouldFireWeeklyActive =
+    membership.lastWeeklyActiveFiredAt === null ||
+    membership.lastWeeklyActiveFiredAt < sevenDaysAgo;
+
+  // Update last_active_at on every visit, and last_weekly_active_fired_at when due
+  await prisma.teamMember.update({
+    where: { id: membership.id },
+    data: {
+      lastActiveAt: now,
+      ...(shouldFireWeeklyActive ? { lastWeeklyActiveFiredAt: now } : {}),
+    },
+  });
 
   const org = (membership as any).organization as {
     id: string;
@@ -79,8 +88,7 @@ export async function GET(request: NextRequest) {
     select: { monthYear: true, storyText: true, totalReach: true, postsPublished: true },
   });
 
-  // Next 7 days scheduled posts
-  const now = new Date();
+  // Next 7 days scheduled posts (reuses `now` from above)
   const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   const upcomingPosts = await prisma.publishQueueItem.findMany({
     where: {
@@ -100,6 +108,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     isFirstVisit,
+    shouldFireWeeklyActive,
     organizationName: org.name,
     ownerName,
     brandIq: authorityScore?.score ?? null,
