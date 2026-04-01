@@ -219,7 +219,9 @@
       "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__apply_migration",
       "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__execute_sql",
       "Bash(gh pr:*)",
-      "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__deploy_edge_function"
+      "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__deploy_edge_function",
+      "Bash(grep -r \"admin\\\\|isAdmin\\\\|role.*admin\\\\|owner\" C:Synthex.claudeworktreesinfallible-pasteurlibauth --include=*.ts -l)",
+      "Bash(\"C:\\\\Synthex\\\\.claude\\\\worktrees\\\\infallible-pasteur\\\\prisma\\\\schema.prisma\":*)"
     ],
     "deny": [
       "Bash(git push --force*)",
