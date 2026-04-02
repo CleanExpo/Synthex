@@ -122,11 +122,11 @@ case "$TIER" in
     TIMEOUT=120
     ;;
   standard)
-    SPECIALISTS='["security","architecture","route-compliance","typescript-strictness","performance","breaking-changes","react-patterns","dependency-audit","accessibility","test-quality","code-quality","dx-review","commit-hygiene","api-testing"]'
+    SPECIALISTS='["security","architecture","code-quality","test-quality","commit-hygiene","dx-review"]'
     TIMEOUT=300
     ;;
   high-risk)
-    SPECIALISTS='["security","architecture","route-compliance","typescript-strictness","performance","database-review","breaking-changes","react-patterns","dependency-audit","accessibility","test-quality","code-quality","dx-review","commit-hygiene","supabase-patterns","api-testing"]'
+    SPECIALISTS='["security","architecture","route-compliance","typescript-strictness","performance","breaking-changes","code-quality","test-quality","commit-hygiene","dx-review"]'
     TIMEOUT=480
     ;;
   critical)

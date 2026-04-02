@@ -62,16 +62,18 @@ Read the triage manifest from `.claude/review-board/manifest.json`. This tells y
 
 ### Step 3: Dispatch Specialists
 
-Run the specialists listed in the manifest. Execute them in 4 batches to respect rate limits:
+Run **only the specialists listed in the manifest** — the triage system has already right-sized the list for the PR's risk tier. Execute them in batches of 4 to respect rate limits:
 
-| Batch | Specialists |
-|-------|------------|
-| 1 | security, architecture, route-compliance, typescript-strictness |
-| 2 | performance, database-review, breaking-changes, react-patterns |
-| 3 | test-quality, accessibility, dependency-audit, supabase-patterns |
-| 4 | code-quality, dx-review, commit-hygiene, api-testing |
+| Tier | Specialists | Typical Batches |
+|------|------------|----------------|
+| trivial | 2 (commit-hygiene, dx-review) | 1 batch |
+| standard | 6 (security, architecture, code-quality, test-quality, commit-hygiene, dx-review) | 2 batches |
+| high-risk | 10 (+ route-compliance, typescript-strictness, performance, breaking-changes) | 3 batches |
+| critical | 16 (all specialists) | 4 batches |
 
 Each specialist produces structured findings per `.claude/skills/review-board/_shared/output-schema.md`.
+
+**Time budget:** Check the manifest's `timeout_seconds`. If you have used >70% of the budget after any batch, skip remaining batches and synthesise with what you have. Always produce a review — a partial review is better than a timeout.
 
 ### Step 4: Filter
 

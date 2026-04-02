@@ -38,7 +38,8 @@ jobs:
         id: review
         run: |
           claude -p "You are the Chief Reviewer. Review this PR using the manifest at .claude/review-board/manifest.json. Follow the agent instructions in .claude/agents/chief-reviewer.md. Write the review to .claude/review-board/latest-review.md and the verdict (approve/request-changes/comment) to .claude/review-board/latest-verdict.txt." \
-            --timeout ${{ steps.triage.outputs.timeout }}
+            --timeout ${{ steps.triage.outputs.timeout }} \
+            --max-turns 30
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         continue-on-error: true
