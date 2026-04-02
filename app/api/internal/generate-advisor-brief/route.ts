@@ -16,7 +16,7 @@
  *
  * Body (optional): { organizationId?: string }  — scope to single org for testing
  *
- * @task SYN-593
+ * @task SYN-593 | Observability: SYN-627
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -25,6 +25,8 @@ import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { getAlgorithmContextBlock } from '@/lib/algorithm/algorithm-context';
+import { createEdgeFunctionRunner, ClientInput } from '@/lib/pipelines/runner';
+import type { AiAdvisorMetadata } from '@/lib/pipelines/metadata-schemas';
 
 /** Average job value used for dollar attribution when no org-specific data exists. */
 const DEFAULT_AVG_JOB_VALUE_AUD = 350;
@@ -368,79 +370,106 @@ async function notifySlack(orgName: string, organizationId: string, weekStart: s
 }
 
 // ---------------------------------------------------------------------------
-// Per-org processor
+// Per-org processor (throws on failure — runner handles retry + error collection)
 // ---------------------------------------------------------------------------
+
+interface AdvisorBriefResult {
+  generated: boolean;
+  /** Data confidence score (0.0–1.0): fraction of data sources that had content */
+  dataConfidence: number;
+  actionsCount: number;
+}
 
 async function processOrg(
   organizationId: string,
   weekStart: Date
-): Promise<{ generated: boolean; error?: string }> {
+): Promise<AdvisorBriefResult> {
   const weekStartStr = weekStart.toISOString().split('T')[0];
 
-  try {
-    // Skip if already generated this week
-    const existing = await prisma.recommendedAction.findUnique({
-      where: { recommended_action_org_week: { organizationId, weekStart } },
-      select: { id: true },
-    });
-    if (existing) return { generated: false };
+  // Skip if already generated this week — not an error, report as skipped
+  const existing = await prisma.recommendedAction.findUnique({
+    where: { recommended_action_org_week: { organizationId, weekStart } },
+    select: { id: true },
+  });
+  if (existing) return { generated: false, dataConfidence: 1, actionsCount: 0 };
 
-    const ctx = await gatherOrgContext(organizationId);
+  const ctx = await gatherOrgContext(organizationId);
 
-    // Estimated new enquiries: rough heuristic — 1 enquiry per 8 posts published this week
-    const jobCount = Math.max(1, Math.round(ctx.postsThisWeek / 8));
+  // Data confidence: fraction of 5 data sources that had content (0.0–1.0)
+  const dataConfidence =
+    (ctx.digestHistory.length > 0 ? 0.25 : 0) +
+    (ctx.seasonalSignals.length > 0 ? 0.2 : 0) +
+    (ctx.authorityScore !== null ? 0.2 : 0) +
+    (ctx.recentReviewCount > 0 ? 0.2 : 0) +
+    (ctx.postsThisWeek > 0 ? 0.15 : 0);
 
-    const actions = await generateActions(ctx);
-    validateActions(actions);
+  const jobCount = Math.max(1, Math.round(ctx.postsThisWeek / 8));
 
-    const dollarAttribution = buildDollarAttribution(ctx, jobCount);
-    const geoTeaserText = buildGeoTeaser(ctx);
-    const competitorMicroInsight = ctx.competitorGap
-      ? `Competitor gap detected: "${ctx.competitorGap}" — consider targeting this keyword in upcoming posts.`
-      : null;
+  const actions = await generateActions(ctx);
+  validateActions(actions); // throws if generic
 
-    const resultsSummary = {
-      digestWeeksAvailable: ctx.digestHistory.length,
-      seasonalSignalsActive: ctx.seasonalSignals.length,
-      authorityScore: ctx.authorityScore,
-      recentReviews: ctx.recentReviewCount,
-      postsThisWeek: ctx.postsThisWeek,
-      generatedAt: new Date().toISOString(),
-    };
+  const dollarAttribution = buildDollarAttribution(ctx, jobCount);
+  const geoTeaserText = buildGeoTeaser(ctx);
+  const competitorMicroInsight = ctx.competitorGap
+    ? `Competitor gap detected: "${ctx.competitorGap}" — consider targeting this keyword in upcoming posts.`
+    : null;
 
-    await prisma.recommendedAction.create({
-      data: {
-        organizationId,
-        weekStart,
-        actions: actions as unknown as Prisma.InputJsonValue,
-        dollarAttribution,
-        jobCountAttribution: jobCount,
-        competitorMicroInsight,
-        geoTeaserText,
-        resultsSummary: resultsSummary as unknown as Prisma.InputJsonValue,
-        status: 'generated',
-      },
-    });
+  const resultsSummary = {
+    digestWeeksAvailable: ctx.digestHistory.length,
+    seasonalSignalsActive: ctx.seasonalSignals.length,
+    authorityScore: ctx.authorityScore,
+    recentReviews: ctx.recentReviewCount,
+    postsThisWeek: ctx.postsThisWeek,
+    generatedAt: new Date().toISOString(),
+  };
 
-    await notifySlack(ctx.orgName, organizationId, weekStartStr);
-
-    logger.info('generate-advisor-brief: generated brief', {
+  await prisma.recommendedAction.create({
+    data: {
       organizationId,
-      weekStart: weekStartStr,
-      actionsCount: actions.length,
-    });
+      weekStart,
+      actions: actions as unknown as Prisma.InputJsonValue,
+      dollarAttribution,
+      jobCountAttribution: jobCount,
+      competitorMicroInsight,
+      geoTeaserText,
+      resultsSummary: resultsSummary as unknown as Prisma.InputJsonValue,
+      status: 'generated',
+    },
+  });
 
-    return { generated: true };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    logger.error('generate-advisor-brief: org failed', {
-      organizationId,
-      weekStart: weekStartStr,
-      error: message,
-    });
-    return { generated: false, error: message };
-  }
+  await notifySlack(ctx.orgName, organizationId, weekStartStr);
+
+  logger.info('generate-advisor-brief: generated brief', {
+    organizationId,
+    weekStart: weekStartStr,
+    actionsCount: actions.length,
+    dataConfidence,
+  });
+
+  return { generated: true, dataConfidence, actionsCount: actions.length };
 }
+
+// ---------------------------------------------------------------------------
+// Runner
+// ---------------------------------------------------------------------------
+
+const advisorRunner = createEdgeFunctionRunner<{ weekStart: Date }, AdvisorBriefResult>(
+  'ai-advisor',
+  async (input: { weekStart: Date }, clientId: string): Promise<AdvisorBriefResult> => {
+    return processOrg(clientId, input.weekStart);
+  },
+  (output: AdvisorBriefResult): { valid: boolean; metadata: Record<string, unknown> } => {
+    // Valid if brief was generated with at least 3 actions and reasonable data confidence
+    // Skipped orgs (generated: false, no error) are still valid — they ran correctly
+    const valid = !output.generated || (output.actionsCount >= 3 && output.dataConfidence >= 0.5);
+    const metadata: AiAdvisorMetadata = {
+      recommendation_count: output.actionsCount,
+      avg_confidence: output.dataConfidence,
+      algorithm_freshness_days: 0, // Populated when algorithm-freshness-monitor wires in
+    };
+    return { valid, metadata };
+  }
+);
 
 // ---------------------------------------------------------------------------
 // Route handler
@@ -473,33 +502,36 @@ export async function POST(request: NextRequest) {
     select: { id: true },
   });
 
-  const results = {
-    generated: 0,
-    skipped: 0,
-    errors: 0,
-    errorDetails: [] as string[],
-  };
+  const inputs: ClientInput<{ weekStart: Date }> [] = orgs.map((o) => ({
+    clientId: o.id,
+    input: { weekStart },
+  }));
 
-  for (const org of orgs) {
-    const outcome = await processOrg(org.id, weekStart);
-    if (outcome.error) {
-      results.errors++;
-      results.errorDetails.push(`${org.id}: ${outcome.error}`);
-    } else if (outcome.generated) {
-      results.generated++;
-    } else {
-      results.skipped++;
-    }
-  }
+  const runResult = await advisorRunner.run(inputs);
+
+  const generated = runResult.outputs.filter((o) => o.output?.generated).length;
+  const skipped = runResult.outputs.filter(
+    (o) => o.output && !o.output.generated
+  ).length;
 
   logger.info('generate-advisor-brief: run complete', {
+    runId: runResult.runId,
+    status: runResult.status,
     weekStart: weekStart.toISOString().split('T')[0],
-    ...results,
+    generated,
+    skipped,
+    errors: runResult.clientsFailed,
+    durationMs: runResult.durationMs,
   });
 
   return NextResponse.json({
     success: true,
+    runId: runResult.runId,
+    status: runResult.status,
     weekStart: weekStart.toISOString().split('T')[0],
-    ...results,
+    generated,
+    skipped,
+    errors: runResult.clientsFailed,
+    durationMs: runResult.durationMs,
   });
 }
