@@ -30,14 +30,19 @@ import type {
   CalendarGenerationResult,
   CalendarSlot,
   ContentCalendarData,
+  SlotGenerationContext,
 } from './types';
 import { InsufficientDigestsError } from './types';
 import { getMarketOpportunitySlots } from './seasonalSignalsMatcher';
+import { getContentIntelligence } from '@/lib/content-intelligence';
+import type { BlendedContentIntelligence } from '@/lib/content-intelligence/types';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const SIGNALS_VERSION_BASE = '1.0';
 const SIGNALS_VERSION_WITH_MARKET = '1.1';
+/** Calendar generated with content intelligence integration — SYN-632 */
+const SIGNALS_VERSION_WITH_INTELLIGENCE = '1.2';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -68,6 +73,37 @@ async function getBrandContext(organizationId: string) {
     businessName: brandDna?.businessName ?? org?.name ?? 'Our Business',
     industry: org?.industry ?? 'General',
     tone: brandVoice?.tone ?? 'professional and approachable',
+  };
+}
+
+// ── Intelligence helpers ──────────────────────────────────────────────────────
+
+/**
+ * Builds the SlotGenerationContext for a slot given the intelligence profile.
+ * Used to record which signals informed caption generation — SYN-632.
+ */
+function buildGenerationContext(
+  intel: BlendedContentIntelligence,
+  profileHashtags: string[]
+): SlotGenerationContext {
+  const topicsUsed = intel.topTopics.slice(0, 3).map((t) => t.topic);
+
+  let dataSource: SlotGenerationContext['dataSource'];
+  if (intel.confidenceLevel <= 0.1) {
+    dataSource = 'industry_baseline';
+  } else if (intel.confidenceLevel >= 0.9) {
+    dataSource = 'client_data';
+  } else {
+    dataSource = 'blended';
+  }
+
+  return {
+    intelligenceApplied: true,
+    topicsUsed,
+    timeOptimised: Object.keys(intel.optimalTimes).length > 0,
+    hashtagsFromProfile: profileHashtags,
+    confidenceLevel: intel.confidenceLevel,
+    dataSource,
   };
 }
 
@@ -113,9 +149,39 @@ export async function generateWeeklyCalendar(
     // ── 4. Fetch brand context for captions ─────────────────────────────────
     const brandCtx = await getBrandContext(organizationId);
 
+    // ── 4b. Fetch content intelligence (SYN-632) — non-fatal ────────────────
+    let contentIntelligence: BlendedContentIntelligence | null = null;
+    try {
+      const intel = await getContentIntelligence(organizationId);
+      // Only apply intelligence if it has any useful signal (has topics or hashtags)
+      if (intel.topTopics.length > 0 || intel.winningHashtags.length > 0) {
+        contentIntelligence = intel;
+        logger.info('generateWeeklyCalendar: content intelligence applied', {
+          organizationId,
+          confidenceLevel: intel.confidenceLevel,
+          postCount: intel.postCount,
+          topTopics: intel.topTopics.slice(0, 3).map((t) => t.topic),
+        });
+      }
+    } catch (err) {
+      // Non-fatal — calendar generation continues with existing behaviour
+      logger.warn('generateWeeklyCalendar: content intelligence unavailable', {
+        organizationId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+
+    // Intelligence hashtags for profile-sourced slots (top 5 winning hashtags)
+    const profileHashtags = contentIntelligence?.winningHashtags.slice(0, 5) ?? [];
+
     // ── 5. Generate captions for each slot (sequential to respect rate limits)
     const slots: CalendarSlot[] = [];
     for (const stub of slotStubs) {
+      // Merge profile hashtags into stub hashtags (profile-sourced first)
+      const mergedHashtags = contentIntelligence
+        ? [...new Set([...profileHashtags, ...stub.hashtags])].slice(0, 8)
+        : stub.hashtags;
+
       const captions = await generateCaptions(
         {
           platform: stub.platform,
@@ -123,11 +189,17 @@ export async function generateWeeklyCalendar(
           businessName: brandCtx.businessName,
           industry: brandCtx.industry,
           tone: brandCtx.tone,
-          hashtags: stub.hashtags,
+          hashtags: mergedHashtags,
+          intelligenceContext: contentIntelligence ?? undefined,
         },
         organizationId
       );
-      slots.push({ ...stub, captions });
+
+      const generationContext = contentIntelligence
+        ? buildGenerationContext(contentIntelligence, profileHashtags)
+        : undefined;
+
+      slots.push({ ...stub, captions, hashtags: mergedHashtags, generationContext });
     }
 
     // ── 5b. Inject market opportunity slots (SYN-549) ────────────────────────
@@ -145,16 +217,26 @@ export async function generateWeeklyCalendar(
           tone: brandCtx.tone,
           hashtags: stub.hashtags,
           opportunityHint: stub.opportunityLabel,
+          intelligenceContext: contentIntelligence ?? undefined,
         },
         organizationId
       );
-      slots.push({ ...stub, captions });
+
+      const generationContext = contentIntelligence
+        ? buildGenerationContext(contentIntelligence, profileHashtags)
+        : undefined;
+
+      slots.push({ ...stub, captions, generationContext });
     }
 
-    const signalsVersion =
-      marketStubs.length > 0
+    const hasIntelligence = contentIntelligence !== null;
+    const hasMarket = marketStubs.length > 0;
+    const signalsVersion = hasIntelligence
+      ? SIGNALS_VERSION_WITH_INTELLIGENCE
+      : hasMarket
         ? SIGNALS_VERSION_WITH_MARKET
         : SIGNALS_VERSION_BASE;
+
 
     // ── 6. Build calendar data ───────────────────────────────────────────────
     const calendarData: ContentCalendarData = {

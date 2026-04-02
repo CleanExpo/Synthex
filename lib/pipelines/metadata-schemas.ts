@@ -119,4 +119,10 @@ export interface ContentProfileMetadata extends Record<string, unknown> {
   orgs_skipped: number;
   /** Average confidence level across all computed profiles (0.0–1.0) */
   avg_confidence: number;
+  /**
+   * Average improvement rate across orgs with enough comparison data.
+   * (informed_avg_engagement - baseline_avg_engagement) / baseline_avg_engagement.
+   * null when no orgs have comparison data yet — SYN-632
+   */
+  avg_improvement_rate: number | null;
 }
