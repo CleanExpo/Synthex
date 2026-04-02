@@ -674,6 +674,9 @@ model Organization {
   // Content Learning Loop — SYN-631
   contentPerformanceProfile ContentPerformanceProfile?
 
+  // Content improvement tracking — SYN-632
+  contentImprovementTracking ContentImprovementTracking[]
+
   // Indices for multi-tenant queries
   @@index([slug])
   @@index([status])
@@ -6283,4 +6286,36 @@ model IndustryBaseline {
 
   @@index([industry])
   @@map("industry_baselines")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Content improvement tracking — SYN-632
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Weekly comparison of intelligence-informed vs baseline calendar posts — SYN-632
+/// Populated by compute-content-profiles cron after each weekly run.
+/// Enables tracking of whether content intelligence improves engagement over time.
+model ContentImprovementTracking {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  weekStart      DateTime @map("week_start") @db.Date
+
+  /// Avg engagement rate for posts generated with content intelligence applied
+  informedAvgEngagement  Float? @map("informed_avg_engagement")
+  /// Avg engagement rate for posts generated without content intelligence
+  baselineAvgEngagement  Float? @map("baseline_avg_engagement")
+  /// (informedAvgEngagement - baselineAvgEngagement) / baselineAvgEngagement
+  /// null when baseline is 0 or comparison is not yet possible
+  improvementRate        Float? @map("improvement_rate")
+
+  /// Intelligence signals that were active this week (JSON array of signal descriptions)
+  intelligenceSignalsUsed Json @default("[]") @map("intelligence_signals_used")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, weekStart], name: "content_improvement_dedup")
+  @@index([organizationId, weekStart(sort: Desc)])
+  @@map("content_improvement_tracking")
 }

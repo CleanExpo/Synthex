@@ -17,6 +17,7 @@ import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { logger } from '@/lib/logger';
 import { v4 as uuid } from 'uuid';
 import type { CalendarPlatform, ContentType } from './types';
+import type { BlendedContentIntelligence } from '@/lib/content-intelligence/types';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -30,6 +31,13 @@ export interface CaptionContext {
   hashtags: string[];
   /** Optional market opportunity name to focus the caption — SYN-549 */
   opportunityHint?: string;
+  /**
+   * Content intelligence profile for this client — SYN-632.
+   * When provided, enriches the prompt with audience-specific guidance.
+   * Below 0.6 confidence: framed as industry patterns.
+   * At/above 0.6 confidence: framed as client-specific audience data.
+   */
+  intelligenceContext?: BlendedContentIntelligence;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -57,6 +65,35 @@ No preamble, no explanation, no markdown fences — just the JSON array.`;
   return withAntiSlop(base);
 }
 
+/**
+ * Builds a content intelligence line for the prompt — SYN-632.
+ * Framing is confidence-aware: below 0.6 uses industry patterns language;
+ * at/above 0.6 uses client-specific audience data language.
+ */
+function buildIntelligenceLine(ctx: CaptionContext): string {
+  const intel = ctx.intelligenceContext;
+  if (!intel) return '';
+
+  const topTopics = intel.topTopics
+    .slice(0, 3)
+    .map((t) => t.topic)
+    .join(', ');
+  if (!topTopics) return '';
+
+  const bestFormats = Object.entries(intel.contentFormatScores)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 2)
+    .map(([fmt]) => fmt)
+    .join(' and ');
+
+  const confidenceSource =
+    intel.confidenceLevel >= 0.6
+      ? `Based on this client's audience data (${Math.round(intel.confidenceLevel * 100)}% confidence)`
+      : `Based on industry patterns for ${ctx.industry}`;
+
+  return `${confidenceSource}, this audience responds best to: topics [${topTopics}]${bestFormats ? `, with ${bestFormats} performing best` : ''}.`;
+}
+
 function buildUserPrompt(ctx: CaptionContext): string {
   const hashtagLine =
     ctx.hashtags.length > 0
@@ -67,12 +104,14 @@ function buildUserPrompt(ctx: CaptionContext): string {
     ? `Market opportunity: ${ctx.opportunityHint}\n`
     : '';
 
+  const intelligenceLine = buildIntelligenceLine(ctx);
+
   return `Business: ${ctx.businessName}
 Industry: ${ctx.industry}
 Platform: ${ctx.platform}
 Content type: ${ctx.contentType}
 Brand voice: ${ctx.tone}
-${opportunityLine}${hashtagLine}
+${intelligenceLine ? `Audience intelligence: ${intelligenceLine}\n` : ''}${opportunityLine}${hashtagLine}
 
 Write 3 caption variations for this ${ctx.contentType} post on ${ctx.platform}.${ctx.opportunityHint ? ` Tie each caption to the "${ctx.opportunityHint}" opportunity.` : ''}
 Keep each under 280 characters for maximum engagement.
