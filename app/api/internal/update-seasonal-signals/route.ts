@@ -3,14 +3,18 @@
  *
  * Internal endpoint called by the Supabase Edge Function weekly (Sunday 2 AM AEST).
  * Fetches public holidays from nager.date API, merges static school term windows,
- * and upserts all records into seasonal_signals. Logs the run to seasonal_signal_runs.
+ * and upserts all records into seasonal_signals.
+ *
+ * Wrapped in createEdgeFunctionRunner for structured logging to edge_function_logs
+ * and validateOutput metadata (SeasonalEngineMetadata).
  *
  * Auth: Bearer CRON_SECRET
- *
- * @task SYN-547
+ * SYN-547 | Observability: SYN-628
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createEdgeFunctionRunner } from '@/lib/pipelines/runner';
+import type { SeasonalEngineMetadata } from '@/lib/pipelines/metadata-schemas';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 
@@ -33,6 +37,13 @@ interface SignalRow {
   windowEnd: Date;
   confidenceScore: number;
   source: string;
+}
+
+interface SeasonalRunResult {
+  upserted: number;
+  errors: number;
+  avgRelevance: number;
+  nextWindow: string; // ISO date YYYY-MM-DD
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -72,7 +83,6 @@ function addDays(date: Date, days: number): Date {
   return result;
 }
 
-// Map AU state abbreviation to nager.date county code
 function nagerCode(state: string): string {
   const map: Record<string, string> = {
     ACT: 'AU-ACT',
@@ -107,15 +117,14 @@ function buildHolidaySignals(
   for (const holiday of holidays) {
     const dateObj = new Date(holiday.date + 'T00:00:00Z');
     const windowStart = dateObj;
-    const windowEnd = addDays(dateObj, 3); // 4-day window around each holiday
+    const windowEnd = addDays(dateObj, 3);
 
-    // National holidays go to all states + AU; state-specific go to their state
     const targetStates =
       holiday.counties === null || holiday.counties.length === 0
         ? [...AU_STATES, 'AU']
         : holiday.counties
-            .map(c => c.replace('AU-', ''))
-            .filter(s => AU_STATES.includes(s));
+            .map((c) => c.replace('AU-', ''))
+            .filter((s) => AU_STATES.includes(s));
 
     for (const state of targetStates) {
       signals.push({
@@ -130,6 +139,9 @@ function buildHolidaySignals(
       });
     }
   }
+
+  // Suppress lint — nagerCode used for future per-holiday county filtering
+  void nagerCode;
 
   return signals;
 }
@@ -158,46 +170,35 @@ function buildSchoolTermSignals(year: number): SignalRow[] {
   return signals;
 }
 
-// ── Route handler ─────────────────────────────────────────────────────────────
+// ── Runner ────────────────────────────────────────────────────────────────────
 
-export async function POST(request: NextRequest) {
-  // Auth: CRON_SECRET
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
+const seasonalEngineRunner = createEdgeFunctionRunner<
+  { year: number },
+  SeasonalRunResult
+>(
+  'seasonal-engine',
+  async (input: { year: number }): Promise<SeasonalRunResult> => {
+    const errors: string[] = [];
+    let upserted = 0;
 
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+    logger.info('update-seasonal-signals: starting', { year: input.year });
 
-  const startMs = Date.now();
-  const errors: string[] = [];
-  let upserted = 0;
-
-  try {
-    logger.info('update-seasonal-signals: starting', { year: YEAR });
-
-    // Fetch live public holidays
     let holidaySignals: SignalRow[] = [];
     try {
-      const holidays = await fetchPublicHolidays(YEAR);
-      holidaySignals = buildHolidaySignals(holidays, YEAR);
-      logger.info(
-        `update-seasonal-signals: fetched ${holidays.length} holidays`
-      );
+      const holidays = await fetchPublicHolidays(input.year);
+      holidaySignals = buildHolidaySignals(holidays, input.year);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       logger.warn(
-        'update-seasonal-signals: holiday fetch failed, using static fallback',
+        'update-seasonal-signals: holiday fetch failed, using school terms only',
         { error: msg }
       );
       errors.push(`holiday_fetch: ${msg}`);
-      // Fall through — school term signals still run
     }
 
-    const schoolTermSignals = buildSchoolTermSignals(YEAR);
+    const schoolTermSignals = buildSchoolTermSignals(input.year);
     const allSignals = [...holidaySignals, ...schoolTermSignals];
 
-    // Upsert all signals
     for (const signal of allSignals) {
       try {
         await prisma.seasonalSignal.upsert({
@@ -223,32 +224,73 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const durationMs = Date.now() - startMs;
+    // Compute avg relevance from the in-memory signals array
+    const avgRelevance =
+      allSignals.length > 0
+        ? allSignals.reduce((sum, s) => sum + s.confidenceScore, 0) /
+          allSignals.length
+        : 0;
 
-    // Log the run
-    await prisma.seasonalSignalRun.create({
-      data: {
-        recordsUpserted: upserted,
-        errors: errors.length > 0 ? errors : undefined,
-        durationMs,
-      },
+    // Query DB for the next upcoming window (earliest windowStart after now)
+    const nextSignal = await prisma.seasonalSignal.findFirst({
+      where: { windowStart: { gt: new Date() } },
+      orderBy: { windowStart: 'asc' },
+      select: { windowStart: true },
     });
+    const nextWindow =
+      nextSignal?.windowStart.toISOString().split('T')[0] ?? '';
 
     logger.info('update-seasonal-signals: done', {
       upserted,
       errors: errors.length,
-      durationMs,
+      avgRelevance,
+      nextWindow,
     });
 
-    return NextResponse.json({
-      success: true,
-      upserted,
-      errors: errors.length,
-      durationMs,
-    });
-  } catch (err) {
-    const reason = err instanceof Error ? err.message : String(err);
-    logger.error('update-seasonal-signals: fatal error', { error: err });
-    return NextResponse.json({ success: false, reason }, { status: 500 });
+    return { upserted, errors: errors.length, avgRelevance, nextWindow };
+  },
+  (output: SeasonalRunResult): { valid: boolean; metadata: Record<string, unknown> } => {
+    const valid = output.upserted > 0;
+
+    const metadata: SeasonalEngineMetadata = {
+      signals_generated: output.upserted,
+      avg_relevance: Math.round(output.avgRelevance * 10) / 10,
+      next_season_window: output.nextWindow,
+    };
+
+    return { valid, metadata };
   }
+);
+
+// ── Route handler ─────────────────────────────────────────────────────────────
+
+export async function POST(request: NextRequest) {
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+  }
+
+  const runResult = await seasonalEngineRunner.run([
+    { clientId: 'all-orgs', input: { year: YEAR } },
+  ]);
+
+  const output = runResult.outputs[0]?.output;
+
+  logger.info('[update-seasonal-signals] Run complete', {
+    runId: runResult.runId,
+    status: runResult.status,
+    upserted: output?.upserted ?? 0,
+    durationMs: runResult.durationMs,
+  });
+
+  return NextResponse.json({
+    ok: true,
+    runId: runResult.runId,
+    status: runResult.status,
+    upserted: output?.upserted ?? 0,
+    errors: output?.errors ?? 0,
+    durationMs: runResult.durationMs,
+  });
 }
