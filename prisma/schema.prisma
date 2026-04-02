@@ -5650,6 +5650,38 @@ model PipelineCostLedger {
 }
 
 // ============================================================================
+// Edge Function Observability — SYN-626
+// ============================================================================
+
+/// Aggregate execution log for autonomous pipeline Edge Functions.
+/// Written by createEdgeFunctionRunner() in lib/pipelines/runner.ts.
+/// One row per pipeline run (not per client — clientsProcessed/clientsFailed are aggregates).
+/// Query /api/health/pipelines for latest status per pipeline.
+model EdgeFunctionLog {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Pipeline identifier — matches the functionName passed to createEdgeFunctionRunner()
+  functionName     String   @map("function_name")
+  /// Unique run ID — UUID generated per run in the factory
+  runId            String   @map("run_id") @db.Uuid
+  /// Null for aggregate rows (current pattern). May be set for per-client logs in future.
+  clientId         String?  @map("client_id") @db.Uuid
+  /// Execution outcome: 'success' | 'partial' | 'failed'
+  status           String
+  durationMs       Int?     @map("duration_ms")
+  clientsProcessed Int      @default(0) @map("clients_processed")
+  clientsFailed    Int      @default(0) @map("clients_failed")
+  /// Per-client error detail when clients fail [{clientId, error, attempt}]
+  errorJson        Json?    @map("error_json")
+  /// Semantic validation results from validateOutput() — pipeline-specific shape
+  /// (see lib/pipelines/metadata-schemas.ts for typed interfaces)
+  outputMetadata   Json?    @map("output_metadata")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([functionName, createdAt(sort: Desc)])
+  @@map("edge_function_logs")
+}
+
+// ============================================================================
 // Synthex Authority Score — SYN-513
 // ============================================================================
 
