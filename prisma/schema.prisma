@@ -671,6 +671,9 @@ model Organization {
   healthInterventions  HealthIntervention[]
   founderOutreachQueue FounderOutreachQueue[]
 
+  // Content Learning Loop — SYN-631
+  contentPerformanceProfile ContentPerformanceProfile?
+
   // Indices for multi-tenant queries
   @@index([slug])
   @@index([status])
@@ -6212,4 +6215,72 @@ model FounderOutreachQueue {
   @@index([flaggedAt])
   @@index([resolvedAt])
   @@map("founder_outreach_queue")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Content Learning Loop — SYN-631
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Per-org content intelligence profile — SYN-631
+/// Computed weekly by compute-content-profiles cron.
+/// Blended with IndustryBaseline weighted by confidenceLevel.
+/// confidenceLevel = min(1.0, postCount / 60) — 60 published posts = full trust.
+model ContentPerformanceProfile {
+  id             String  @id @default(cuid())
+  organizationId String  @unique @map("organization_id")
+
+  /// Total published posts analysed to build this profile
+  postCount       Int   @default(0) @map("post_count")
+  /// 0.0–1.0. Weight applied to org-specific signals vs industry baseline
+  confidenceLevel Float @default(0.0) @map("confidence_level")
+
+  /// Top content topics ranked by avg engagement rate (JSON array of TopicScore)
+  topTopics           Json @default("[]") @map("top_topics")
+  /// Best posting times per day-of-week (JSON map: "MON" → ["09:00","17:00"])
+  optimalTimes        Json @default("{}") @map("optimal_times")
+  /// Hashtags sorted by avg reach contribution (JSON array of strings)
+  winningHashtags     Json @default("[]") @map("winning_hashtags")
+  /// Per-format avg engagement rate (JSON map: "video"|"image"|"carousel"|"text" → Float)
+  contentFormatScores Json @default("{}") @map("content_format_scores")
+
+  industryBaselineId String? @map("industry_baseline_id")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  industryBaseline IndustryBaseline? @relation(fields: [industryBaselineId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([updatedAt])
+  @@map("content_performance_profiles")
+}
+
+/// Industry-level content baseline — SYN-631
+/// Seeded and updated by compute-content-profiles cron across all orgs per industry.
+/// Acts as a prior for orgs with < 60 published posts.
+model IndustryBaseline {
+  id         String @id @default(cuid())
+  /// Matches Organization.industry (e.g. "plumbing-hvac", "real-estate", "general")
+  industry   String @unique
+
+  /// Number of org profiles contributing to this baseline
+  sampleSize Int @default(0) @map("sample_size")
+
+  /// Aggregated top topics across all orgs in this industry
+  topTopics           Json @default("[]") @map("top_topics")
+  /// Aggregated optimal posting times across all orgs in this industry
+  optimalTimes        Json @default("{}") @map("optimal_times")
+  /// Aggregated winning hashtags across all orgs in this industry
+  winningHashtags     Json @default("[]") @map("winning_hashtags")
+  /// Aggregated content format scores across all orgs in this industry
+  contentFormatScores Json @default("{}") @map("content_format_scores")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  profiles ContentPerformanceProfile[]
+
+  @@index([industry])
+  @@map("industry_baselines")
 }

@@ -103,3 +103,20 @@ export interface SeasonalEngineMetadata extends Record<string, unknown> {
   avg_relevance: number;
   next_season_window: string;
 }
+
+// ============================================================================
+// Content Learning Loop (SYN-631)
+// ============================================================================
+
+/**
+ * Metadata written by the Content Profile computation pipeline validateOutput().
+ * Status 'partial' if orgs_processed == 0.
+ */
+export interface ContentProfileMetadata extends Record<string, unknown> {
+  /** Total orgs processed in this run */
+  orgs_processed: number;
+  /** Orgs skipped (no posts or not found) */
+  orgs_skipped: number;
+  /** Average confidence level across all computed profiles (0.0–1.0) */
+  avg_confidence: number;
+}
