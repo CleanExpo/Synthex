@@ -5926,6 +5926,12 @@ model RecommendedAction {
   /// generated → held for quality review; delivered → sent to client; read → opened; archived
   status String @default("generated")
 
+  /// ROI attribution context — SYN-623
+  /// Shape: { content_id?, content_type?, predicted_conversion_probability?, utm_params?, attribution_window_days? }
+  /// Populated by AI Advisor for actions involving content publishing or review responses.
+  /// Consumed by Sprint 6 ROI Attribution Dashboard (SYN-624).
+  attributionContext Json? @default("{}") @map("attribution_context")
+
   createdAt   DateTime  @default(now()) @map("created_at")
   deliveredAt DateTime? @map("delivered_at")
   readAt      DateTime? @map("read_at")
