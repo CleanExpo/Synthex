@@ -22,7 +22,7 @@
  * Metadata written by the AI Advisor inference pipeline validateOutput().
  * Status 'partial' if any client receives < 3 recommendations or avg_confidence < 0.5.
  */
-export interface AiAdvisorMetadata {
+export interface AiAdvisorMetadata extends Record<string, unknown> {
   /** Total recommended actions generated across all clients */
   recommendation_count: number;
   /** Average confidence score across all recommendations (0.0–1.0) */
@@ -39,7 +39,7 @@ export interface AiAdvisorMetadata {
  * Metadata written by the Health Score computation pipeline validateOutput().
  * Status 'partial' if any dimension score falls outside 0-100 bounds.
  */
-export interface HealthScoreMetadata {
+export interface HealthScoreMetadata extends Record<string, unknown> {
   /** Per-dimension scores keyed by dimension name */
   dimension_scores: Record<string, number>;
   /** Composite weighted score (0-100) */
@@ -59,7 +59,7 @@ export interface HealthScoreMetadata {
  * CI check blocks ROI Dashboard deployment if:
  *   AVG(output_metadata->>'accuracy_score') < 0.80 over last 7 days across 3 clients.
  */
-export interface AttributionMetadata {
+export interface AttributionMetadata extends Record<string, unknown> {
   /** Fraction of events matched (0.0–1.0). Gate: >= 0.80 to unblock Sprint 6. */
   accuracy_score: number;
   /** Number of conversion events that matched tracked content */
