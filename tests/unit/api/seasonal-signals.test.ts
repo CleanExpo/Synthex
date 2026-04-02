@@ -46,18 +46,27 @@ const mockGetUserId = getUserIdFromRequestOrCookies as jest.Mock;
 // ── Prisma mock ───────────────────────────────────────────────────────────────
 
 const mockUpsert = jest.fn().mockResolvedValue({});
-const mockCreateRun = jest.fn().mockResolvedValue({ id: 'run-1' });
+const mockFindFirst = jest.fn().mockResolvedValue(null);
 const mockQueryRaw = jest.fn();
 
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: {
-    seasonalSignal: { upsert: (...args: unknown[]) => mockUpsert(...args) },
-    seasonalSignalRun: {
-      create: (...args: unknown[]) => mockCreateRun(...args),
+    seasonalSignal: {
+      upsert: (...args: unknown[]) => mockUpsert(...args),
+      findFirst: (...args: unknown[]) => mockFindFirst(...args),
     },
     $queryRaw: (...args: unknown[]) => mockQueryRaw(...args),
   },
+}));
+
+// Mock Supabase createClient for runner factory log writes (non-fatal in tests)
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: jest.fn(() => ({
+    from: jest.fn(() => ({
+      insert: jest.fn().mockResolvedValue({ error: null }),
+    })),
+  })),
 }));
 
 // ── Logger mock ───────────────────────────────────────────────────────────────
@@ -208,7 +217,7 @@ describe('POST /api/internal/update-seasonal-signals', () => {
     } as any);
 
     mockUpsert.mockResolvedValue({});
-    mockCreateRun.mockResolvedValue({ id: 'run-1' });
+    mockFindFirst.mockResolvedValue(null);
 
     const { POST } =
       await import('@/app/api/internal/update-seasonal-signals/route');
@@ -220,18 +229,14 @@ describe('POST /api/internal/update-seasonal-signals', () => {
     expect(res.status).toBe(200);
 
     const body = await res.json();
-    expect(body.success).toBe(true);
+    expect(body.ok).toBe(true);
     expect(body.upserted).toBeGreaterThan(0);
-    expect(mockCreateRun).toHaveBeenCalledTimes(1);
-    expect(mockCreateRun.mock.calls[0][0].data.recordsUpserted).toBe(
-      body.upserted
-    );
   });
 
   it('gracefully continues when holiday API fetch fails (school terms still run)', async () => {
     global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
     mockUpsert.mockResolvedValue({});
-    mockCreateRun.mockResolvedValue({ id: 'run-2' });
+    mockFindFirst.mockResolvedValue(null);
 
     const { POST } =
       await import('@/app/api/internal/update-seasonal-signals/route');
@@ -243,7 +248,7 @@ describe('POST /api/internal/update-seasonal-signals', () => {
     expect(res.status).toBe(200);
 
     const body = await res.json();
-    expect(body.success).toBe(true);
+    expect(body.ok).toBe(true);
     // School terms still produce signals even when holidays fail
     expect(body.upserted).toBeGreaterThan(0);
     expect(body.errors).toBeGreaterThanOrEqual(1);
@@ -259,7 +264,7 @@ describe('POST /api/internal/update-seasonal-signals', () => {
       json: () => Promise.resolve(vicOnly),
     } as any);
     mockUpsert.mockResolvedValue({});
-    mockCreateRun.mockResolvedValue({ id: 'run-3' });
+    mockFindFirst.mockResolvedValue(null);
 
     const { POST } =
       await import('@/app/api/internal/update-seasonal-signals/route');
@@ -286,7 +291,7 @@ describe('POST /api/internal/update-seasonal-signals', () => {
       json: () => Promise.resolve(national),
     } as any);
     mockUpsert.mockResolvedValue({});
-    mockCreateRun.mockResolvedValue({ id: 'run-4' });
+    mockFindFirst.mockResolvedValue(null);
 
     const { POST } =
       await import('@/app/api/internal/update-seasonal-signals/route');

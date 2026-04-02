@@ -78,7 +78,7 @@ export interface AttributionMetadata extends Record<string, unknown> {
  * Metadata written by the Auto-Calendar pipeline validateOutput().
  * Placeholder — populated when Auto-Calendar is migrated to runner factory.
  */
-export interface AutoCalendarMetadata {
+export interface AutoCalendarMetadata extends Record<string, unknown> {
   posts_scheduled: number;
   posts_failed: number;
   avg_content_length: number;
@@ -86,9 +86,9 @@ export interface AutoCalendarMetadata {
 
 /**
  * Metadata written by the Review Intelligence pipeline validateOutput().
- * Placeholder — populated when Review Intelligence is migrated to runner factory.
+ * Migrated to runner factory in SYN-628.
  */
-export interface ReviewIntelligenceMetadata {
+export interface ReviewIntelligenceMetadata extends Record<string, unknown> {
   reviews_processed: number;
   responses_drafted: number;
   avg_confidence: number;
@@ -96,9 +96,9 @@ export interface ReviewIntelligenceMetadata {
 
 /**
  * Metadata written by the Seasonal Engine pipeline validateOutput().
- * Placeholder — populated when Seasonal Engine is migrated to runner factory.
+ * Migrated to runner factory in SYN-628.
  */
-export interface SeasonalEngineMetadata {
+export interface SeasonalEngineMetadata extends Record<string, unknown> {
   signals_generated: number;
   avg_relevance: number;
   next_season_window: string;
