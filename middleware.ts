@@ -52,6 +52,24 @@ export async function middleware(request: NextRequest) {
   });
   const pathname = request.nextUrl.pathname;
 
+  // RBAC: Collaborators are blocked from owner-only settings routes (SYN-598).
+  // The synthex_role cookie is set by /api/invite/accept when a collaborator accepts.
+  // This is a fast Edge check — no DB round-trip required.
+  const COLLABORATOR_BLOCKED = [
+    '/settings/brand-voice',
+    '/settings/auto-publish',
+    '/settings/billing',
+  ];
+  const synthexRole = request.cookies.get('synthex_role')?.value;
+  if (
+    synthexRole === 'collaborator' &&
+    COLLABORATOR_BLOCKED.some(p => pathname.startsWith(p))
+  ) {
+    return new NextResponse('Forbidden — collaborators cannot access this page', {
+      status: 403,
+    });
+  }
+
   // Fast-path: public API routes must NEVER block on auth or Supabase I/O.
   // - /api/health: called by Vercel/load-balancers with no session cookies
   // - /api/demo/*: unauthenticated public demo — getSession() adds a Supabase

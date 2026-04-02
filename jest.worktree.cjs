@@ -42,7 +42,11 @@ module.exports = {
     '/tests/e2e/',
     '/tests/playwright/',
     '/templates/',
-    '[\\\\/]\\.claude[\\\\/]',
+    // NOTE: the \.claude\/ pattern is intentionally omitted here.
+    // This config runs from C:\Synthex\.claude\worktrees\infallible-pasteur\ so all
+    // paths contain \.claude\ — that pattern would exclude every test in the worktree.
+    // Claude's own files (skills, hooks, rules) don't match testRegex so they're safe.
+    '[\\\\/]\\.claude[\\\\/](?!worktrees[\\\\/])',
   ],
 
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],

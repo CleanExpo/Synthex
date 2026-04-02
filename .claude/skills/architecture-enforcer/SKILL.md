@@ -295,3 +295,18 @@ grep -rn "from '@prisma/client'" app/ --include="*.ts" | grep -v "import.*type\|
 echo "=== P7: Client Directive ===" && \
 grep -rln "useState\|useEffect" components/ app/ --include="*.tsx" | xargs grep -L "'use client'" 2>/dev/null | wc -l
 ```
+
+
+---
+
+## Review Board Output
+
+When invoked as part of the Synthex Review Board pipeline, produce output matching the schema in `.claude/skills/review-board/_shared/output-schema.md`.
+
+Map this skill's findings to the shared format:
+- `specialist`: Use this skill's `name` from frontmatter
+- `severity`: Map findings to CRITICAL/HIGH/MEDIUM/LOW per `.claude/skills/review-board/_shared/severity-levels.md`
+- `confidence`: Assign 0-100 based on certainty. Only findings >= 80 are shown to the developer.
+- `verdict`: BLOCK if any CRITICAL finding exists, otherwise PASS
+- Include `file`, `line`, `issue`, `fix`, and optional `reference` for each finding
+- If no findings, return empty findings array with verdict PASS

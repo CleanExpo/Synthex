@@ -27,6 +27,14 @@ export const SEASONAL_BRIEF_ENABLED =
   process.env.NEXT_PUBLIC_SEASONAL_BRIEF_ONBOARDING !== 'false';
 
 /**
+ * Feature flag — SYN-595 AI Advisor dashboard card + weekly email.
+ * Set NEXT_PUBLIC_ADVISOR_ENABLED=false in Vercel to disable.
+ * Default: true.
+ */
+export const ADVISOR_ENABLED =
+  process.env.NEXT_PUBLIC_ADVISOR_ENABLED !== 'false';
+
+/**
  * Maps onboarding industry values to seasonal_signals industrySlug values.
  * Falls back to 'general' for unmapped industries (returns public holiday signals).
  */

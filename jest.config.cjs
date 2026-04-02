@@ -18,6 +18,8 @@ module.exports = {
     '<rootDir>/tests/auto-publish/**/*.spec.{ts,tsx,js}',
     '<rootDir>/tests/external-apis/**/*.test.{ts,tsx,js}',
     '<rootDir>/tests/external-apis/**/*.spec.{ts,tsx,js}',
+    '<rootDir>/tests/auth/**/*.test.{ts,tsx,js}',
+    '<rootDir>/tests/auth/**/*.spec.{ts,tsx,js}',
     '<rootDir>/__tests__/**/*.test.{ts,tsx,js}',
     '<rootDir>/__tests__/**/*.spec.{ts,tsx,js}',
   ],
@@ -83,7 +85,7 @@ module.exports = {
     '/tests/e2e/',
     '/tests/playwright/',
     '/templates/',
-    '\\.claude',
+    '\\.claude/(?!worktrees)',  // Exclude .claude/ config files but allow worktrees
   ],
 
   // Reporter configuration
