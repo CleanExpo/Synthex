@@ -290,11 +290,29 @@
     }
   ],
 
+    {
+      "id": "social-pr-director",
+      "title": "Lead Social Media & PR Director",
+      "voice_seat": "NEW",
+      "voice_name": "TBD — needs ElevenLabs casting (Australian Female)",
+      "voice_id": null,
+      "filename": "social-pr-director.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "hot pink/magenta translucent",
+        "style": "gold/bronze bomber jacket with X badge, white quilted shirt, voluminous bob",
+        "props": ["floating pink heart/like notification bubble (glowing)", "vintage camera"],
+        "expression": "large circular ring eyes — lives in the feed, thinks in virality"
+      },
+      "description": "Lead Social Media & PR Director — content strategy, brand voice, community, press"
+    }
+  ],
+
   "cast_summary": {
-    "total_personas": 17,
+    "total_personas": 18,
     "linked_to_voice_seat": 3,
-    "new_seats_needing_voices": 14,
-    "avatars_received": 17,
+    "new_seats_needing_voices": 15,
+    "avatars_received": 18,
     "avatars_pending": 0
   }
 }
