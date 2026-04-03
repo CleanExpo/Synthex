@@ -236,11 +236,29 @@
     }
   ],
 
+    {
+      "id": "infosec-compliance",
+      "title": "Lead Information Security & Compliance Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD — needs ElevenLabs casting (Australian Female)",
+      "voice_id": null,
+      "filename": "infosec-compliance.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "violet/purple translucent",
+        "style": "beige double-breasted trench coat, black turtleneck, side-swept bob",
+        "props": ["circuit-board engraved padlock", "glowing purple security shield (floating)"],
+        "expression": "large white glowing eyes — audit-ready, compliance is non-negotiable"
+      },
+      "description": "Lead Information Security & Compliance Engineer — policy, audits, GDPR/SOC2, risk frameworks"
+    }
+  ],
+
   "cast_summary": {
-    "total_personas": 14,
+    "total_personas": 15,
     "linked_to_voice_seat": 3,
-    "new_seats_needing_voices": 11,
-    "avatars_received": 14,
+    "new_seats_needing_voices": 12,
+    "avatars_received": 15,
     "avatars_pending": 0
   }
 }
