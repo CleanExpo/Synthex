@@ -254,11 +254,47 @@
     }
   ],
 
+    {
+      "id": "mobile-engineer",
+      "title": "Lead Mobile & App Ecosystem Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD — needs ElevenLabs casting (Australian Male)",
+      "voice_id": null,
+      "filename": "mobile-engineer.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "electric/neon green translucent",
+        "style": "white puffy vest over black long-sleeve ('THYES' text), radar-dome helmet with grid",
+        "props": ["holographic smartphone (purple app swirl)", "stack of app icon cubes (teal/yellow/red, 'PROJECT MANAGEMENT' base)"],
+        "expression": "white oval eyes — ships apps the way others ship features"
+      },
+      "description": "Lead Mobile & App Ecosystem Engineer — iOS/Android, PWA, app store ecosystems, cross-platform"
+    }
+  ],
+
+    {
+      "id": "cmo",
+      "title": "Chief Marketing Officer (CMO) & VP of Branding",
+      "voice_seat": "NEW",
+      "voice_name": "TBD — needs ElevenLabs casting (Australian Male, confident/energetic)",
+      "voice_id": null,
+      "filename": "cmo.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "deep orange-red/amber translucent",
+        "style": "navy blue business suit, white shirt, colourful pocket square (red/yellow/blue)",
+        "props": ["red megaphone/bullhorn", "glowing neon growth chart with upward arrow"],
+        "expression": "star-shaped white eyes (★★), wry confident smile — every campaign goes up and to the right"
+      },
+      "description": "CMO & VP of Branding — brand strategy, campaigns, growth marketing, Synthex public voice"
+    }
+  ],
+
   "cast_summary": {
-    "total_personas": 15,
+    "total_personas": 17,
     "linked_to_voice_seat": 3,
-    "new_seats_needing_voices": 12,
-    "avatars_received": 15,
+    "new_seats_needing_voices": 14,
+    "avatars_received": 17,
     "avatars_pending": 0
   }
 }
