@@ -315,6 +315,7 @@
       "voice_name": "Kylie",
       "voice_id": "TcrlBgVmqvmPFJi2o2AO",
       "filename": "market-kylie.png",
+      "_voice_note": "Visual is male-presenting — consider recasting to Australian Male voice or renaming seat",
       "status": "AVATAR_RECEIVED",
       "visual": {
         "colour": "amber/golden orange translucent",
@@ -360,11 +361,30 @@
     }
   ],
 
+    {
+      "id": "contrarian",
+      "title": "The Contrarian — Chief Risk Officer & Head of Devil's Advocacy",
+      "voice_seat": "contrarian",
+      "voice_name": "Gary",
+      "voice_id": "QLOrGSLtlFUlfQRSaOtQ",
+      "filename": "contrarian-gary.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "smoke/dark charcoal transparent KAWS bear",
+        "style": "dark maroon/burgundy double-breasted suit, all-black interior",
+        "props": ["black sheep figurine", "holographic balance scales (blue/green glowing)"],
+        "expression": "glowing blue question marks (??) — the one who asks what everyone else won't"
+      },
+      "description": "The Contrarian — Chief Risk Officer & Head of Devil's Advocacy. Challenges every assumption. The black sheep in the room."
+    }
+  ],
+
   "cast_summary": {
-    "total_personas": 21,
-    "linked_to_voice_seat": 6,
+    "total_personas": 22,
+    "linked_to_voice_seat": 7,
     "new_seats_needing_voices": 15,
-    "avatars_received": 21,
-    "avatars_pending": 0
+    "avatars_received": 22,
+    "avatars_pending": 0,
+    "_original_9_coverage": "7 of 9 original voice seats now have visuals. Missing: revenue (Paul), product (Clara)"
   }
 }
