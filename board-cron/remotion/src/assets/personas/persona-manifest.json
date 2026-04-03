@@ -308,11 +308,29 @@
     }
   ],
 
+    {
+      "id": "market",
+      "title": "Lead Market Strategist",
+      "voice_seat": "market",
+      "voice_name": "Kylie",
+      "voice_id": "TcrlBgVmqvmPFJi2o2AO",
+      "filename": "market-kylie.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "amber/golden orange translucent",
+        "style": "grey business suit, orange gloved hands, radar-grid dome",
+        "props": ["black chess knight piece", "holographic targeting radar (blue concentric circles + crosshairs)"],
+        "expression": "arrow/chevron white eyes — reads the competitive landscape like a chess board"
+      },
+      "description": "Lead Market Strategist — cohort data, retention curves, competitive positioning"
+    }
+  ],
+
   "cast_summary": {
-    "total_personas": 18,
-    "linked_to_voice_seat": 3,
+    "total_personas": 19,
+    "linked_to_voice_seat": 4,
     "new_seats_needing_voices": 15,
-    "avatars_received": 18,
+    "avatars_received": 19,
     "avatars_pending": 0
   }
 }
