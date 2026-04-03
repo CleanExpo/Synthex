@@ -1,5 +1,13 @@
 import React from 'react';
-import { AbsoluteFill, Audio, Sequence, staticFile } from 'remotion';
+import {
+  AbsoluteFill,
+  Audio,
+  interpolate,
+  Sequence,
+  staticFile,
+  useCurrentFrame,
+  useVideoConfig,
+} from 'remotion';
 import type { ResolvedScene } from '../lib/types';
 import { BoardScene } from './BoardScene';
 import { DecisionCard } from './DecisionCard';
@@ -11,19 +19,25 @@ interface BoardSessionProps {
   sessionNumber: number;
   title: string;
   topic: string;
-  /** Base path for session audio files (e.g. 'session-23/audio') */
   audioBasePath?: string;
 }
 
-/**
- * Master composition — orchestrates all scenes into a single video.
- *
- * Scene routing:
- * - title_card    → TitleSlate
- * - decision      → DecisionCard (dramatic reveal)
- * - closing       → EndScreen
- * - everything else → BoardScene (narration with persona card)
- */
+/** Smooth volume fade — 0.6s in, 0.6s out to avoid jarring speaker cuts */
+const FadedAudio: React.FC<{ src: string; sceneDurationFrames: number }> = ({
+  src,
+  sceneDurationFrames,
+}) => {
+  const frame = useCurrentFrame();
+  const FADE = 18; // 18 frames = 0.6s @ 30fps
+  const volume = interpolate(
+    frame,
+    [0, FADE, sceneDurationFrames - FADE, sceneDurationFrames],
+    [0, 1, 1, 0],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+  );
+  return <Audio src={src} volume={volume} />;
+};
+
 export const BoardSession: React.FC<BoardSessionProps> = ({
   scenes,
   sessionNumber,
@@ -31,7 +45,6 @@ export const BoardSession: React.FC<BoardSessionProps> = ({
   topic,
   audioBasePath,
 }) => {
-  // Pre-compute narrated scene indices (audio files are numbered 00, 01, ... for narrated scenes only)
   const narratedIndices = new Map<string, number>();
   let narratedCount = 0;
   for (const s of scenes) {
@@ -54,12 +67,14 @@ export const BoardSession: React.FC<BoardSessionProps> = ({
             durationInFrames={scene.durationFrames}
             name={`${scene.id} (${scene.type})`}
           >
-            {/* Audio layer — plays for any narrated scene regardless of visual */}
+            {/* Faded audio — smooth crossfade between speakers */}
             {audioPath && (
-              <Audio src={staticFile(audioPath)} volume={1} />
+              <FadedAudio
+                src={staticFile(audioPath)}
+                sceneDurationFrames={scene.durationFrames}
+              />
             )}
 
-            {/* Visual layer — routed by scene type */}
             {scene.type === 'title_card' ? (
               <TitleSlate
                 sessionNumber={sessionNumber}
@@ -80,11 +95,6 @@ export const BoardSession: React.FC<BoardSessionProps> = ({
   );
 };
 
-/**
- * Resolve audio file path for a scene.
- * Audio files follow naming: {narratedIndex:02d}-{persona}-{scene_id}.mp3
- * Only narrated scenes have audio — index is among narrated scenes only.
- */
 function resolveAudioPath(
   scene: ResolvedScene,
   narratedIndex: number | undefined,
