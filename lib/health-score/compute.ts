@@ -111,6 +111,7 @@ async function getWeights(): Promise<DimensionWeights> {
 
 /**
  * content_consistency: ratio of published posts to scheduled posts in last 28 days.
+ * Applies an improvement-rate bonus (up to +10 pts) from ContentImprovementTracking (SYN-633).
  * Null if no posts were scheduled.
  */
 async function computeContentConsistency(
@@ -118,7 +119,7 @@ async function computeContentConsistency(
 ): Promise<DimensionScore | null> {
   const since = daysAgo(28);
 
-  const [scheduled, published] = await Promise.all([
+  const [scheduled, published, latestTracking] = await Promise.all([
     prisma.calendarPost.count({
       where: {
         organizationId,
@@ -133,12 +134,25 @@ async function computeContentConsistency(
         status: 'published',
       },
     }),
+    // SYN-633: fetch latest improvement rate for bonus scoring
+    prisma.contentImprovementTracking.findFirst({
+      where: { organizationId },
+      orderBy: { weekStart: 'desc' },
+      select: { improvementRate: true },
+    }),
   ]);
 
   if (scheduled === 0) return null;
 
   const rate = published / scheduled;
-  const score = Math.round(Math.min(100, rate * 100));
+  const baseScore = rate * 100;
+
+  // SYN-633: improvement-rate bonus — positive trend adds up to 10 pts
+  // Capped to keep the dimension score within [0, 100]
+  const improvementRate = latestTracking?.improvementRate ?? 0;
+  const bonus = improvementRate > 0 ? Math.min(10, improvementRate * 100) : 0;
+
+  const score = Math.round(Math.min(100, baseScore + bonus));
 
   return {
     score,
