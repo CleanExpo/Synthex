@@ -18,6 +18,7 @@ import { createEdgeFunctionRunner } from '@/lib/pipelines/runner';
 import type { ContentProfileMetadata } from '@/lib/pipelines/metadata-schemas';
 import { computeOrgProfile } from '@/lib/content-intelligence/profile-computer';
 import { trackImprovementForOrg } from '@/lib/content-intelligence/improvement-tracker';
+import { firePersonalisationNotification } from '@/lib/content-intelligence/personalisation-notifier';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 
@@ -62,6 +63,19 @@ const contentProfileRunner = createEdgeFunctionRunner<
         } else {
           orgsProcessed++;
           totalConfidence += result.confidenceLevel;
+
+          // Fire personalisation-activated notification (non-fatal, idempotent) — SYN-637
+          try {
+            await firePersonalisationNotification(
+              org.id,
+              result.postCount,
+              result.confidenceLevel,
+              result.topTopics ?? [],
+              result.optimalTimes ?? {}
+            );
+          } catch {
+            // Notification failure never blocks profile computation
+          }
         }
       } catch (err) {
         logger.warn('compute-content-profiles: org failed', {

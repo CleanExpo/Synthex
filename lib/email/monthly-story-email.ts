@@ -20,6 +20,27 @@ function getResend(): Resend {
 const FROM = process.env.EMAIL_FROM ?? 'Synthex <noreply@synthex.social>';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 
+// ── Enhanced metrics type — SYN-638 ──────────────────────────────────────────
+
+export interface EnhancedMetrics {
+  /** Approximate months since the org joined Synthex */
+  monthsSinceJoined: number;
+  /** Total posts published since joining */
+  totalPostsSinceJoined: number;
+  /** Total reach accumulated since joining */
+  totalReachSinceJoined: number;
+  /** Total GBP reviews that received a reply */
+  totalReviewsHandled: number;
+  /** Positive delta between latest two authority scores; null if not positive or insufficient data */
+  authorityScoreDelta: number | null;
+  /** First 60 characters of the top-performing post content; null if no posts */
+  topPostContent: string | null;
+  /** Reach figure for the top-performing post; null if no posts */
+  topPostReach: number | null;
+  /** Total reach for posts published in this month's period */
+  monthlyReach: number;
+}
+
 export interface MonthlyStoryEmailParams {
   to: string;
   businessName: string;
@@ -34,6 +55,8 @@ export interface MonthlyStoryEmailParams {
   referralUrl?: string;
   // Dashboard link
   storyId: string;
+  // Progress arc sections — SYN-638
+  enhancedMetrics?: EnhancedMetrics;
 }
 
 function formatNumber(n: number): string {
@@ -59,6 +82,71 @@ function buildReferralBlock(totalReach: number, referralUrl: string): string {
   </tr>`;
 }
 
+// ── Progress arc HTML builders — SYN-638 ─────────────────────────────────────
+
+function buildCumulativeCounterBlock(m: EnhancedMetrics): string {
+  const monthsLabel = `${m.monthsSinceJoined} month${m.monthsSinceJoined !== 1 ? 's' : ''}`;
+  const reviewsClause =
+    m.totalReviewsHandled > 0
+      ? `, and responded to <strong>${m.totalReviewsHandled} review${m.totalReviewsHandled !== 1 ? 's' : ''}</strong>`
+      : '';
+
+  return `
+  <tr>
+    <td style="padding:0 32px 24px;">
+      <p style="margin:0;font-size:16px;color:#374151;line-height:1.7;font-style:italic;border-left:3px solid #111;padding-left:16px;">
+        You've been with Synthex for <strong>${monthsLabel}</strong>. Together we've published <strong>${formatNumber(m.totalPostsSinceJoined)} posts</strong>, reached <strong>${formatNumber(m.totalReachSinceJoined)} locals</strong>${reviewsClause}.
+      </p>
+    </td>
+  </tr>`;
+}
+
+function buildAuthorityScoreDeltaBlock(_delta: number): string {
+  return `
+  <tr>
+    <td style="padding:0 32px 16px;">
+      <p style="margin:0;font-size:14px;color:#059669;font-weight:500;">
+        &#8593; Google is showing your business in more local searches than 30 days ago.
+      </p>
+    </td>
+  </tr>`;
+}
+
+function buildTopPostBlock(content: string, reach: number | null): string {
+  const reachClause = reach !== null && reach > 0
+    ? ` — reached <strong>${formatNumber(reach)} people</strong>`
+    : '';
+  return `
+  <tr>
+    <td style="padding:0 32px 16px;background:#f9fafb;border-radius:6px;margin:0 32px;">
+      <p style="margin:0;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;padding:12px 0 4px;">Top post this month</p>
+      <p style="margin:0 0 8px;font-size:15px;color:#111827;font-style:italic;">"${content}${content.length >= 60 ? '…' : ''}"${reachClause}</p>
+    </td>
+  </tr>`;
+}
+
+/**
+ * Builds all progress arc blocks (cumulative counter, authority delta, top post).
+ * Returns empty string if enhancedMetrics is undefined.
+ */
+function buildProgressArcBlocks(metrics: EnhancedMetrics | undefined): string {
+  if (!metrics) return '';
+
+  const blocks: string[] = [];
+
+  blocks.push(buildCumulativeCounterBlock(metrics));
+
+  if (metrics.authorityScoreDelta !== null && metrics.authorityScoreDelta > 0) {
+    blocks.push(buildAuthorityScoreDeltaBlock(metrics.authorityScoreDelta));
+  }
+
+  if (metrics.topPostContent) {
+    blocks.push(buildTopPostBlock(metrics.topPostContent, metrics.topPostReach));
+  }
+
+  return blocks.join('');
+}
+
 /**
  * Sends the monthly story email. Returns true on success, false on failure.
  * Does NOT throw — callers handle retry logic.
@@ -78,6 +166,7 @@ export async function sendMonthlyStoryEmail(
     includeReferral = false,
     referralUrl = '',
     storyId,
+    enhancedMetrics,
   } = params;
 
   const hoursaved = Math.round(minutesSaved / 60);
@@ -97,6 +186,8 @@ export async function sendMonthlyStoryEmail(
     includeReferral && referralUrl
       ? buildReferralBlock(totalReach, referralUrl)
       : '';
+
+  const progressArcBlocks = buildProgressArcBlocks(enhancedMetrics);
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -157,6 +248,8 @@ export async function sendMonthlyStoryEmail(
               }
             </td>
           </tr>
+
+          ${progressArcBlocks}
 
           <!-- Story text -->
           <tr>

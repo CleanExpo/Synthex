@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { sendMonthlyStoryEmail } from '@/lib/email/monthly-story-email';
+import type { EnhancedMetrics } from '@/lib/email/monthly-story-email';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 
@@ -65,6 +66,130 @@ function getMonthLabel(monthYear: string): string {
   return d.toLocaleString('en-AU', { month: 'long', year: 'numeric' });
 }
 
+// ── Enhanced metrics computation — SYN-638 ───────────────────────────────────
+
+async function computeEnhancedMetrics(
+  orgId: string,
+  periodStart: Date,
+  periodEnd: Date,
+  orgCreatedAt: Date
+): Promise<EnhancedMetrics> {
+  const now = periodEnd;
+
+  // Months since joined (approximate — 30-day months)
+  const monthsSinceJoined = Math.max(
+    0,
+    Math.floor((now.getTime() - orgCreatedAt.getTime()) / (1000 * 60 * 60 * 24 * 30))
+  );
+
+  // Total posts published since joining
+  let totalPostsSinceJoined = 0;
+  try {
+    totalPostsSinceJoined = await prisma.publishQueueItem.count({
+      where: { organizationId: orgId, status: 'published' },
+    });
+  } catch {
+    // non-fatal
+  }
+
+  // Total reach since joining — sum of reach across all org platform metrics
+  let totalReachSinceJoined = 0;
+  try {
+    const reachResult = await prisma.$queryRaw<{ total: bigint }[]>`
+      SELECT COALESCE(SUM(pm.reach), 0) AS total
+      FROM platform_metrics pm
+      INNER JOIN platform_posts pp ON pp.id = pm.post_id
+      INNER JOIN platform_connections pc ON pc.id = pp.connection_id
+      WHERE pc.organization_id = ${orgId}
+        AND pp.deleted_at IS NULL
+    `;
+    totalReachSinceJoined = Number(reachResult[0]?.total ?? 0);
+  } catch {
+    // non-fatal
+  }
+
+  // Total reviews handled (where a reply was posted)
+  let totalReviewsHandled = 0;
+  try {
+    totalReviewsHandled = await prisma.gBPReview.count({
+      where: { organizationId: orgId, replyTime: { not: null } },
+    });
+  } catch {
+    // non-fatal — gbp_reviews may not be available
+  }
+
+  // Authority score delta — most recent two scores for org
+  let authorityScoreDelta: number | null = null;
+  try {
+    const scores = await prisma.authorityScore.findMany({
+      where: { organizationId: orgId },
+      orderBy: { computedAt: 'desc' },
+      take: 2,
+      select: { score: true },
+    });
+    if (scores.length === 2) {
+      const delta = scores[0].score - scores[1].score;
+      authorityScoreDelta = delta > 0 ? delta : null;
+    }
+  } catch {
+    // non-fatal
+  }
+
+  // Top-performing post in the period — highest reach
+  let topPostContent: string | null = null;
+  let topPostReach: number | null = null;
+  try {
+    const topPostRows = await prisma.$queryRaw<{ content: string; reach: number }[]>`
+      SELECT pp.content, pm.reach
+      FROM platform_metrics pm
+      INNER JOIN platform_posts pp ON pp.id = pm.post_id
+      INNER JOIN platform_connections pc ON pc.id = pp.connection_id
+      WHERE pc.organization_id = ${orgId}
+        AND pp.deleted_at IS NULL
+        AND pp.published_at >= ${periodStart}
+        AND pp.published_at < ${periodEnd}
+      ORDER BY pm.reach DESC
+      LIMIT 1
+    `;
+    if (topPostRows.length > 0) {
+      const raw = topPostRows[0];
+      topPostContent = raw.content.slice(0, 60);
+      topPostReach = Number(raw.reach);
+    }
+  } catch {
+    // non-fatal
+  }
+
+  // Monthly reach — sum of reach for posts published in this period
+  let monthlyReach = 0;
+  try {
+    const monthlyResult = await prisma.$queryRaw<{ total: bigint }[]>`
+      SELECT COALESCE(SUM(pm.reach), 0) AS total
+      FROM platform_metrics pm
+      INNER JOIN platform_posts pp ON pp.id = pm.post_id
+      INNER JOIN platform_connections pc ON pc.id = pp.connection_id
+      WHERE pc.organization_id = ${orgId}
+        AND pp.deleted_at IS NULL
+        AND pp.published_at >= ${periodStart}
+        AND pp.published_at < ${periodEnd}
+    `;
+    monthlyReach = Number(monthlyResult[0]?.total ?? 0);
+  } catch {
+    // non-fatal — fall back to 0
+  }
+
+  return {
+    monthsSinceJoined,
+    totalPostsSinceJoined,
+    totalReachSinceJoined,
+    totalReviewsHandled,
+    authorityScoreDelta,
+    topPostContent,
+    topPostReach,
+    monthlyReach,
+  };
+}
+
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
@@ -95,8 +220,9 @@ export async function POST(request: NextRequest) {
           billingEmail: true,
           billingAnchorDate: true,
           liveModeT: true,
+          createdAt: true,
           users: {
-            where: { role: 'owner' },
+            where: { role: 'owner' } as { role: string },
             select: { email: true },
             take: 1,
           },
@@ -155,6 +281,25 @@ export async function POST(request: NextRequest) {
       ? buildReferralUrl(story.id, org.id)
       : undefined;
 
+    // Compute enhanced metrics for progress arc — SYN-638
+    let enhancedMetrics: EnhancedMetrics | undefined;
+    try {
+      const [storyYear, storyMonth] = story.monthYear.split('-').map(Number);
+      const periodStart = new Date(Date.UTC(storyYear, storyMonth - 1, 1));
+      const periodEnd = new Date(Date.UTC(storyYear, storyMonth, 1));
+      enhancedMetrics = await computeEnhancedMetrics(
+        org.id,
+        periodStart,
+        periodEnd,
+        org.createdAt
+      );
+    } catch (err) {
+      logger.warn('deliver-monthly-story: enhanced metrics failed', {
+        orgId: org.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+
     // Send email
     const emailResult = await sendMonthlyStoryEmail({
       to: toEmail,
@@ -168,6 +313,7 @@ export async function POST(request: NextRequest) {
       includeReferral,
       referralUrl,
       storyId: story.id,
+      enhancedMetrics,
     });
 
     if (emailResult.success) {
