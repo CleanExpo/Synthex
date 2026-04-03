@@ -18,10 +18,9 @@
       }
     },
     "revenue": {
-      "voice_id": "NEEDS_CASTING",
-      "name": null,
-      "description": "Revenue — American Male, 35-45, sharp and commercial",
-      "casting_brief": "Search ElevenLabs: 'American male professional'. Test with: 'The numbers tell a clear story — this is a $2M opportunity and we're leaving it on the table.'",
+      "voice_id": "WLKp2jV6nrS8aMkPPDRO",
+      "name": "Paul",
+      "description": "Revenue — Australian Male, 40-50, sharp and commercial",
       "settings": {
         "stability": 0.70,
         "similarity_boost": 0.80,
@@ -30,10 +29,9 @@
       }
     },
     "product": {
-      "voice_id": "NEEDS_CASTING",
-      "name": null,
-      "description": "Product Strategist — British Female, 30-40, thoughtful and empathetic",
-      "casting_brief": "Search ElevenLabs: 'British female professional'. Test with: 'Our users don't care about features. They care about whether this makes their day easier.'",
+      "voice_id": "tyepWYJJwJM9TTFIg5U7",
+      "name": "Clara",
+      "description": "Product Strategist — Australian Female, 30-40, thoughtful and empathetic",
       "settings": {
         "stability": 0.75,
         "similarity_boost": 0.80,
@@ -42,10 +40,9 @@
       }
     },
     "technical": {
-      "voice_id": "NEEDS_CASTING",
-      "name": null,
-      "description": "Technical Architect — Indian-Australian Male, 30-40, precise and dry",
-      "casting_brief": "Search ElevenLabs: 'Indian English male technical'. Test with: 'The architecture works. The question is whether we can maintain it at 10x the current load.'",
+      "voice_id": "jSuBIjxMKhqIfb0wCK1F",
+      "name": "Baxter",
+      "description": "Technical Architect — Australian Male, 30-40, precise and dry",
       "settings": {
         "stability": 0.80,
         "similarity_boost": 0.75,
@@ -54,10 +51,9 @@
       }
     },
     "market": {
-      "voice_id": "NEEDS_CASTING",
-      "name": null,
+      "voice_id": "TcrlBgVmqvmPFJi2o2AO",
+      "name": "Kylie",
       "description": "Market Strategist — Australian Female, 28-35, energetic and data-savvy",
-      "casting_brief": "Search ElevenLabs: 'Australian female energetic'. Test with: 'The trend is accelerating. We have a six-week window before three competitors catch up.'",
       "settings": {
         "stability": 0.60,
         "similarity_boost": 0.85,
@@ -66,10 +62,9 @@
       }
     },
     "compounder": {
-      "voice_id": "NEEDS_CASTING",
-      "name": null,
-      "description": "Compounder — British Male, 55-65, patient and Buffett-like",
-      "casting_brief": "Search ElevenLabs: 'British male mature wise'. Test with: 'Short-term thinking is the enemy of compounding. What does this look like in five years?'",
+      "voice_id": "8HOgpuH7Mid4fwQK1Jln",
+      "name": "Bruce",
+      "description": "Compounder — Australian Male, 55-65, patient and warm",
       "settings": {
         "stability": 0.85,
         "similarity_boost": 0.75,
@@ -78,10 +73,9 @@
       }
     },
     "moonshot": {
-      "voice_id": "NEEDS_CASTING",
-      "name": null,
-      "description": "Moonshot — American Male, 25-35, visionary and fast-talking",
-      "casting_brief": "Search ElevenLabs: 'American male enthusiastic'. Test with: 'What if we didn't just fix the problem — what if we made it impossible for the problem to exist?'",
+      "voice_id": "IKne3meq5aSn9XLyUdCD",
+      "name": "Charlie",
+      "description": "Moonshot — Australian Male, 25-35, visionary and energetic",
       "settings": {
         "stability": 0.55,
         "similarity_boost": 0.85,
@@ -90,10 +84,9 @@
       }
     },
     "oracle": {
-      "voice_id": "NEEDS_CASTING",
-      "name": null,
-      "description": "Custom Oracle — Australian Female (regional), 40-50, grounded and empathetic",
-      "casting_brief": "Search ElevenLabs: 'Australian female warm'. Test with: 'I've spoken to these customers. They don't want more features — they want to feel like someone is on their side.'",
+      "voice_id": "0QT4OrDTvpDlUPmFsUWN",
+      "name": "Lily",
+      "description": "Custom Oracle — Australian Female, 40-50, grounded and empathetic",
       "settings": {
         "stability": 0.70,
         "similarity_boost": 0.80,
@@ -102,10 +95,9 @@
       }
     },
     "contrarian": {
-      "voice_id": "NEEDS_CASTING",
-      "name": null,
-      "description": "Contrarian — Scottish/Irish Male, 45-55, skeptical and probing",
-      "casting_brief": "Search ElevenLabs: 'Scottish male skeptical'. Test with: 'Has anyone actually tested this assumption? Or are we about to spend six months building on a hunch?'",
+      "voice_id": "QLOrGSLtlFUlfQRSaOtQ",
+      "name": "Gary",
+      "description": "Contrarian — Australian Male, 45-55, gritty and skeptical",
       "settings": {
         "stability": 0.65,
         "similarity_boost": 0.80,
