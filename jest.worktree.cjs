@@ -71,6 +71,8 @@ module.exports = {
     '^@/types/(.*)$': '<rootDir>/types/$1',
     '^@/(.*)$': '<rootDir>/$1',
     '^bullmq$': '<rootDir>/tests/__mocks__/bullmq.js',
+    // uuid v9+ is pure ESM — redirect to the CJS test shim.
+    '^uuid$': '<rootDir>/tests/__mocks__/uuid.js',
     // Prisma 7 + jsdom: force the Node.js entrypoint for @prisma/client.
     // jsdom activates the `browser` export condition which resolves to index-browser.js
     // and crashes (objectEnumValues undefined). Pointing directly to default.js bypasses

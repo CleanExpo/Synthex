@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createEdgeFunctionRunner } from '@/lib/pipelines/runner';
 import type { ContentProfileMetadata } from '@/lib/pipelines/metadata-schemas';
 import { computeOrgProfile } from '@/lib/content-intelligence/profile-computer';
+import { trackImprovementForOrg } from '@/lib/content-intelligence/improvement-tracker';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 
@@ -28,6 +29,7 @@ interface ContentProfileRunResult {
   orgsProcessed: number;
   orgsSkipped: number;
   avgConfidence: number;
+  avgImprovementRate: number | null;
 }
 
 // ── Runner ────────────────────────────────────────────────────────────────────
@@ -46,6 +48,8 @@ const contentProfileRunner = createEdgeFunctionRunner<
     let orgsProcessed = 0;
     let orgsSkipped = 0;
     let totalConfidence = 0;
+    let totalImprovementRate = 0;
+    let improvementRateCount = 0;
 
     logger.info('compute-content-profiles: starting', { orgCount: orgs.length });
 
@@ -66,18 +70,32 @@ const contentProfileRunner = createEdgeFunctionRunner<
         });
         orgsSkipped++;
       }
+
+      // Track improvement rate for last week (SYN-632) — non-fatal
+      try {
+        const tracking = await trackImprovementForOrg(org.id);
+        if (!tracking.skipped && tracking.improvementRate !== null) {
+          totalImprovementRate += tracking.improvementRate;
+          improvementRateCount++;
+        }
+      } catch {
+        // Improvement tracking failure never blocks profile computation
+      }
     }
 
     const avgConfidence =
       orgsProcessed > 0 ? totalConfidence / orgsProcessed : 0;
+    const avgImprovementRate =
+      improvementRateCount > 0 ? totalImprovementRate / improvementRateCount : null;
 
     logger.info('compute-content-profiles: done', {
       orgsProcessed,
       orgsSkipped,
       avgConfidence,
+      avgImprovementRate,
     });
 
-    return { orgsProcessed, orgsSkipped, avgConfidence };
+    return { orgsProcessed, orgsSkipped, avgConfidence, avgImprovementRate };
   },
   (output: ContentProfileRunResult): { valid: boolean; metadata: Record<string, unknown> } => {
     const valid = output.orgsProcessed >= 0;
@@ -86,6 +104,9 @@ const contentProfileRunner = createEdgeFunctionRunner<
       orgs_processed: output.orgsProcessed,
       orgs_skipped: output.orgsSkipped,
       avg_confidence: Math.round(output.avgConfidence * 1000) / 1000,
+      avg_improvement_rate: output.avgImprovementRate !== null
+        ? Math.round(output.avgImprovementRate * 1000) / 1000
+        : null,
     };
 
     return { valid, metadata };

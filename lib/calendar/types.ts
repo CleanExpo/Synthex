@@ -2,6 +2,7 @@
  * Calendar Types — lib/calendar/types.ts
  *
  * Shared TypeScript interfaces for the weekly content calendar engine (SYN-521).
+ * Extended with content intelligence tracking fields (SYN-632).
  *
  * @task SYN-521
  */
@@ -32,6 +33,26 @@ export type ContentType =
 /** Distinguishes regular AI slots from seasonal market opportunity slots */
 export type SlotType = 'ai_generated' | 'market_opportunity';
 
+/**
+ * Records which content intelligence signals were applied when generating
+ * a slot's captions — enables "informed vs. baseline" engagement comparison.
+ * SYN-632
+ */
+export interface SlotGenerationContext {
+  /** Whether content intelligence was applied to this slot */
+  intelligenceApplied: boolean;
+  /** Top-3 topics from the profile that were included in the prompt */
+  topicsUsed: string[];
+  /** Whether the slot's scheduled time was influenced by the optimal-times data */
+  timeOptimised: boolean;
+  /** Hashtags sourced from the intelligence profile (vs digest signals) */
+  hashtagsFromProfile: string[];
+  /** Profile confidence level at time of generation (0.0–1.0) */
+  confidenceLevel: number;
+  /** Which data source dominated: industry baseline, client data, or blended */
+  dataSource: 'industry_baseline' | 'client_data' | 'blended';
+}
+
 /** A single scheduled content slot within a weekly calendar */
 export interface CalendarSlot {
   /** Unique slot ID (cuid) */
@@ -59,6 +80,11 @@ export interface CalendarSlot {
   opportunityLabel?: string;
   /** Suggested post format for this opportunity */
   suggestedFormat?: 'image' | 'text';
+  /**
+   * Intelligence signals that informed caption generation — SYN-632.
+   * Undefined for slots generated before intelligence integration.
+   */
+  generationContext?: SlotGenerationContext;
 }
 
 // ── Calendar-level types ──────────────────────────────────────────────────────
