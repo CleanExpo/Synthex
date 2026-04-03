@@ -180,14 +180,31 @@
         "expression": "glowing white slanted alien eyes — reads the future in the data"
       },
       "description": "Lead Big Data & Predictive Analytics Architect — pipelines, forecasting, signal from noise"
+    },
+    {
+      "id": "api-reliability-engineer",
+      "title": "Lead API Integrations & Systems Reliability Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD — needs ElevenLabs casting (Australian Male)",
+      "voice_id": null,
+      "filename": "api-reliability-engineer.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "bright yellow/golden",
+        "style": "blue denim jacket over white shirt, friendly and approachable",
+        "props": ["API integration puzzle pieces (blue/grey)", "life preserver ring (red/white)"],
+        "labels": ["API INTEGRATION", "TECHNICAL SUPPORT/RELIABILITY"],
+        "expression": "gentle smile, white glowing eyes — the one who connects everything and keeps it running"
+      },
+      "description": "Lead API Integrations & Systems Reliability Engineer — third-party integrations, uptime, incident response"
     }
   ],
 
   "cast_summary": {
-    "total_personas": 11,
+    "total_personas": 12,
     "linked_to_voice_seat": 3,
-    "new_seats_needing_voices": 8,
-    "avatars_received": 11,
+    "new_seats_needing_voices": 9,
+    "avatars_received": 12,
     "avatars_pending": 0
   }
 }
