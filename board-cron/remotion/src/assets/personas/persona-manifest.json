@@ -164,14 +164,30 @@
         "expression": "glowing cyan eyes — sees the user in every pixel"
       },
       "description": "Lead Front-End UI/UX Engineer — component systems, accessibility, delight"
+    },
+    {
+      "id": "bigdata-architect",
+      "title": "Lead Big Data & Predictive Analytics Architect",
+      "voice_seat": "NEW",
+      "voice_name": "TBD — needs ElevenLabs casting (Australian Female)",
+      "voice_id": null,
+      "filename": "bigdata-architect.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "teal/cyan translucent",
+        "style": "angular black suit, dramatic raised collar silhouette",
+        "props": ["holographic blockchain/network globe", "teal geometric crystal structure"],
+        "expression": "glowing white slanted alien eyes — reads the future in the data"
+      },
+      "description": "Lead Big Data & Predictive Analytics Architect — pipelines, forecasting, signal from noise"
     }
   ],
 
   "cast_summary": {
-    "total_personas": 10,
-    "linked_to_voice_seat": 4,
-    "new_seats_needing_voices": 6,
-    "avatars_received": 10,
+    "total_personas": 11,
+    "linked_to_voice_seat": 3,
+    "new_seats_needing_voices": 8,
+    "avatars_received": 11,
     "avatars_pending": 0
   }
 }
