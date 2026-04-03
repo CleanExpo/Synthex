@@ -326,11 +326,45 @@
     }
   ],
 
+    {
+      "id": "oracle",
+      "title": "The Oracle — Chief Futurist & Tech Forecaster",
+      "voice_seat": "oracle",
+      "voice_name": "Lily",
+      "voice_id": "0QT4OrDTvpDlUPmFsUWN",
+      "filename": "oracle-lily.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "deep indigo/purple translucent",
+        "style": "grey draped cloak/scarf, KAWS bubble clusters on head, purple gloved hands",
+        "props": ["glowing holographic crystal ball (blue data sphere on white pedestal)", "white tarot-style card with sacred geometry (triangles, rose mandala)"],
+        "expression": "glowing infinity symbol (∞) — sees what others can't, speaks in signals not noise"
+      },
+      "description": "The Oracle — Chief Futurist & Tech Forecaster. Translates emerging signals into board-level decisions."
+    },
+    {
+      "id": "compounder",
+      "title": "The Compounder — CFO & VP of Scalability",
+      "voice_seat": "compounder",
+      "voice_name": "Bruce",
+      "voice_id": "8HOgpuH7Mid4fwQK1Jln",
+      "filename": "compounder-bruce.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "deep forest green translucent",
+        "style": "grey pinstripe waistcoat, white shirt, black tie, white pocket square",
+        "props": ["stacked gold coin towers with upward arrow", "holographic binary/number data globe (glowing)"],
+        "expression": "white cross/plus eyes (+ +) — every decision is an investment, every month compounds"
+      },
+      "description": "The Compounder — CFO & VP of Scalability. Patient capital thinking, compounding returns, long-term value."
+    }
+  ],
+
   "cast_summary": {
-    "total_personas": 19,
-    "linked_to_voice_seat": 4,
+    "total_personas": 21,
+    "linked_to_voice_seat": 6,
     "new_seats_needing_voices": 15,
-    "avatars_received": 19,
+    "avatars_received": 21,
     "avatars_pending": 0
   }
 }
