@@ -200,11 +200,47 @@
     }
   ],
 
+    {
+      "id": "devops-engineer",
+      "title": "Lead DevOps & Deployment Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD — needs ElevenLabs casting (Australian Female)",
+      "voice_id": null,
+      "filename": "devops-engineer.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "mint/emerald green translucent",
+        "style": "black zip-up jacket with white stripe, bob haircut",
+        "props": ["holographic green deployment pipeline (circuit tree + bars)", "hexagonal armoured shield (green/black)"],
+        "expression": "focused, determined white glowing eyes — ships fast, breaks nothing"
+      },
+      "description": "Lead DevOps & Deployment Engineer — CI/CD pipelines, infrastructure, zero-downtime deploys"
+    }
+  ],
+
+    {
+      "id": "systems-architect",
+      "title": "Lead Systems Architecture & Infrastructure Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD — needs ElevenLabs casting (Australian Male)",
+      "voice_id": null,
+      "filename": "systems-architect.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "navy/cobalt blue translucent",
+        "style": "grey business suit, black turtleneck, KAWS-style cloud clusters on head",
+        "props": ["molecular network structure (white nodes, blue lines)", "silver chrome cube with blue glowing squares"],
+        "expression": "rectangular white visor eyes — sees the entire system at once"
+      },
+      "description": "Lead Systems Architecture & Infrastructure Engineer — system design, infra blueprints, scalability"
+    }
+  ],
+
   "cast_summary": {
-    "total_personas": 12,
+    "total_personas": 14,
     "linked_to_voice_seat": 3,
-    "new_seats_needing_voices": 9,
-    "avatars_received": 12,
+    "new_seats_needing_voices": 11,
+    "avatars_received": 14,
     "avatars_pending": 0
   }
 }
