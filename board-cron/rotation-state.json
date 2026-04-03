@@ -1,0 +1,119 @@
+{
+  "_comment": "rotation-state.json — Board session production state. Updated by Showrunner after each episode.",
+
+  "current_session": null,
+  "last_published_session": null,
+  "next_scheduled_session": null,
+
+  "voice_cast": {
+    "ceo": {
+      "voice_id": "aGkVQvWUZi16EH8aZJvT",
+      "name": "Steve",
+      "description": "CEO — Australian Male, 40-50, authoritative",
+      "settings": {
+        "stability": 0.65,
+        "similarity_boost": 0.85,
+        "style": 0.3,
+        "use_speaker_boost": true
+      }
+    },
+    "revenue": {
+      "voice_id": "NEEDS_CASTING",
+      "name": null,
+      "description": "Revenue — American Male, 35-45, sharp and commercial",
+      "casting_brief": "Search ElevenLabs: 'American male professional'. Test with: 'The numbers tell a clear story — this is a $2M opportunity and we're leaving it on the table.'",
+      "settings": {
+        "stability": 0.70,
+        "similarity_boost": 0.80,
+        "style": 0.25,
+        "use_speaker_boost": true
+      }
+    },
+    "product": {
+      "voice_id": "NEEDS_CASTING",
+      "name": null,
+      "description": "Product Strategist — British Female, 30-40, thoughtful and empathetic",
+      "casting_brief": "Search ElevenLabs: 'British female professional'. Test with: 'Our users don't care about features. They care about whether this makes their day easier.'",
+      "settings": {
+        "stability": 0.75,
+        "similarity_boost": 0.80,
+        "style": 0.2,
+        "use_speaker_boost": true
+      }
+    },
+    "technical": {
+      "voice_id": "NEEDS_CASTING",
+      "name": null,
+      "description": "Technical Architect — Indian-Australian Male, 30-40, precise and dry",
+      "casting_brief": "Search ElevenLabs: 'Indian English male technical'. Test with: 'The architecture works. The question is whether we can maintain it at 10x the current load.'",
+      "settings": {
+        "stability": 0.80,
+        "similarity_boost": 0.75,
+        "style": 0.15,
+        "use_speaker_boost": true
+      }
+    },
+    "market": {
+      "voice_id": "NEEDS_CASTING",
+      "name": null,
+      "description": "Market Strategist — Australian Female, 28-35, energetic and data-savvy",
+      "casting_brief": "Search ElevenLabs: 'Australian female energetic'. Test with: 'The trend is accelerating. We have a six-week window before three competitors catch up.'",
+      "settings": {
+        "stability": 0.60,
+        "similarity_boost": 0.85,
+        "style": 0.4,
+        "use_speaker_boost": true
+      }
+    },
+    "compounder": {
+      "voice_id": "NEEDS_CASTING",
+      "name": null,
+      "description": "Compounder — British Male, 55-65, patient and Buffett-like",
+      "casting_brief": "Search ElevenLabs: 'British male mature wise'. Test with: 'Short-term thinking is the enemy of compounding. What does this look like in five years?'",
+      "settings": {
+        "stability": 0.85,
+        "similarity_boost": 0.75,
+        "style": 0.1,
+        "use_speaker_boost": true
+      }
+    },
+    "moonshot": {
+      "voice_id": "NEEDS_CASTING",
+      "name": null,
+      "description": "Moonshot — American Male, 25-35, visionary and fast-talking",
+      "casting_brief": "Search ElevenLabs: 'American male enthusiastic'. Test with: 'What if we didn't just fix the problem — what if we made it impossible for the problem to exist?'",
+      "settings": {
+        "stability": 0.55,
+        "similarity_boost": 0.85,
+        "style": 0.5,
+        "use_speaker_boost": true
+      }
+    },
+    "oracle": {
+      "voice_id": "NEEDS_CASTING",
+      "name": null,
+      "description": "Custom Oracle — Australian Female (regional), 40-50, grounded and empathetic",
+      "casting_brief": "Search ElevenLabs: 'Australian female warm'. Test with: 'I've spoken to these customers. They don't want more features — they want to feel like someone is on their side.'",
+      "settings": {
+        "stability": 0.70,
+        "similarity_boost": 0.80,
+        "style": 0.2,
+        "use_speaker_boost": true
+      }
+    },
+    "contrarian": {
+      "voice_id": "NEEDS_CASTING",
+      "name": null,
+      "description": "Contrarian — Scottish/Irish Male, 45-55, skeptical and probing",
+      "casting_brief": "Search ElevenLabs: 'Scottish male skeptical'. Test with: 'Has anyone actually tested this assumption? Or are we about to spend six months building on a hunch?'",
+      "settings": {
+        "stability": 0.65,
+        "similarity_boost": 0.80,
+        "style": 0.35,
+        "use_speaker_boost": true
+      }
+    }
+  },
+
+  "history": []
+}
