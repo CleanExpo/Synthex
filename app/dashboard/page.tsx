@@ -85,6 +85,15 @@ const AuthorityScoreCard = dynamic(
   { ssr: false }
 );
 
+// SYN-633: Content Intelligence Card — audience learning loop insights
+const ContentIntelligenceCard = dynamic(
+  () =>
+    import('@/components/dashboard/ContentIntelligenceCard').then(m => ({
+      default: m.ContentIntelligenceCard,
+    })),
+  { ssr: false }
+);
+
 // SYN-526: Win-anchored trial-end conversion modal
 const TrialEndModal = dynamic(
   () => import('@/components/trial/TrialEndModal'),
@@ -489,6 +498,8 @@ export default function DashboardPage() {
               <ContentOpportunitiesWidget />
               <RevenueProjectionWidget />
               <AuthorityScoreCard />
+              {/* SYN-633: Content Intelligence Card — audience learning loop insights */}
+              <ContentIntelligenceCard />
               {/* SYN-527: Brand IQ Score Card — self-contained, fetches own data */}
               <div className="lg:col-span-2">
                 <BrandIQCard />

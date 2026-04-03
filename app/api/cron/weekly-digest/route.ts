@@ -20,6 +20,7 @@ import prisma from '@/lib/prisma';
 import { generateWeeklyDigest } from '@/lib/ai/project-manager';
 import emailQueue from '@/lib/email/queue';
 import { logger } from '@/lib/logger';
+import type { TopicScore } from '@/lib/content-intelligence/types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -81,14 +82,23 @@ export async function GET(request: NextRequest) {
         try {
           const userData = await prisma.user.findUnique({
             where: { id: user.userId },
-            select: { email: true, name: true },
+            select: { email: true, name: true, organizationId: true },
           });
 
           if (userData?.email) {
+            // Fetch content intelligence data for the email section (SYN-633) — non-fatal
+            let contentIntelligenceSection: ContentIntelligenceEmailData | undefined;
+            if (userData.organizationId) {
+              contentIntelligenceSection = await fetchContentIntelligenceForEmail(
+                userData.organizationId
+              ).catch(() => undefined);
+            }
+
             const digestEmailHtml = buildDigestEmailHtml(
               userData.name || 'there',
               digest,
-              appUrl
+              appUrl,
+              contentIntelligenceSection
             );
 
             await emailQueue.enqueue({
@@ -134,6 +144,117 @@ export async function GET(request: NextRequest) {
 }
 
 // ============================================================================
+// CONTENT INTELLIGENCE — EMAIL DATA (SYN-633)
+// ============================================================================
+
+interface ContentIntelligenceEmailData {
+  confidenceLevel: number;
+  topTopics: TopicScore[];
+  improvementRate: number | null;
+  weekCount: number;
+}
+
+/**
+ * Fetch content profile + improvement tracking for the org's weekly digest email.
+ * Returns undefined if there is no profile yet (org just onboarded).
+ * Non-fatal — the cron catches and ignores any error from this function.
+ */
+async function fetchContentIntelligenceForEmail(
+  organizationId: string
+): Promise<ContentIntelligenceEmailData | undefined> {
+  const [profile, tracking] = await Promise.all([
+    prisma.contentPerformanceProfile.findUnique({
+      where: { organizationId },
+      select: { confidenceLevel: true, topTopics: true },
+    }),
+    prisma.contentImprovementTracking.findMany({
+      where: { organizationId },
+      orderBy: { weekStart: 'desc' },
+      take: 4,
+      select: { improvementRate: true, weekStart: true },
+    }),
+  ]);
+
+  if (!profile) return undefined;
+
+  const weekCount = tracking.length;
+  // Only surface improvement rate after 4 weeks of data + must be positive
+  const latestRate = tracking[0]?.improvementRate ?? null;
+  const improvementRate =
+    weekCount >= 4 && latestRate !== null && latestRate > 0 ? latestRate : null;
+
+  return {
+    confidenceLevel: profile.confidenceLevel,
+    topTopics: (profile.topTopics as unknown as TopicScore[]).slice(0, 3),
+    improvementRate,
+    weekCount,
+  };
+}
+
+/**
+ * Build the HTML block for the "What Synthex Learned This Week" section.
+ * Returns empty string when there is no intelligence data.
+ */
+function buildContentIntelligenceEmailSection(
+  data: ContentIntelligenceEmailData | undefined
+): string {
+  if (!data) return '';
+
+  // Below 30% confidence → show "learning" placeholder
+  if (data.confidenceLevel < 0.3) {
+    return `
+      <div style="background:#fff;padding:20px;margin-bottom:24px;border-radius:8px;border-left:4px solid #8b5cf6;">
+        <h3 style="margin:0 0 8px;font-size:16px;color:#1e293b;">What Synthex Learned This Week</h3>
+        <p style="margin:0;color:#64748b;font-size:14px;">
+          Building your content intelligence — we need a few more weeks of data.
+          Keep publishing and we'll have personalised insights for you soon.
+        </p>
+      </div>
+    `;
+  }
+
+  const bullets: string[] = [];
+
+  // Topic performance bullets
+  for (const topic of data.topTopics) {
+    const pct = Math.round(topic.avgEngagementRate * 100);
+    bullets.push(
+      `<li style="margin-bottom:8px;font-size:14px;color:#374151;">
+         Topic <strong>&ldquo;${topic.topic}&rdquo;</strong> is driving
+         <strong>${pct}% average engagement</strong> for your audience.
+       </li>`
+    );
+  }
+
+  // Improvement rate bullet (only shown after 4 weeks of positive data)
+  if (data.improvementRate !== null) {
+    const impPct = Math.round(data.improvementRate * 100);
+    bullets.push(
+      `<li style="margin-bottom:8px;font-size:14px;color:#374151;">
+         Your content is performing <strong>${impPct}% better</strong> since Synthex
+         started learning your audience patterns.
+       </li>`
+    );
+  }
+
+  if (bullets.length === 0) return '';
+
+  const confidencePct = Math.round(data.confidenceLevel * 100);
+
+  return `
+    <div style="background:#fff;padding:20px;margin-bottom:24px;border-radius:8px;border-left:4px solid #8b5cf6;">
+      <h3 style="margin:0 0 4px;font-size:16px;color:#1e293b;">What Synthex Learned This Week</h3>
+      <p style="margin:0 0 12px;font-size:12px;color:#8b5cf6;">
+        Content intelligence: ${confidencePct}% confidence
+      </p>
+      <ul style="margin:0;padding-left:20px;">
+        ${bullets.join('')}
+      </ul>
+    </div>
+  `;
+}
+
+// ============================================================================
 // EMAIL TEMPLATE
 // ============================================================================
 
@@ -144,7 +265,12 @@ interface DigestData {
   opportunities: Array<{ title: string; description: string; potentialImpact: string }>;
 }
 
-function buildDigestEmailHtml(name: string, digest: DigestData, appUrl: string): string {
+function buildDigestEmailHtml(
+  name: string,
+  digest: DigestData,
+  appUrl: string,
+  contentIntelligence?: ContentIntelligenceEmailData
+): string {
   const trendIcon = (trend: string) => {
     if (trend === 'up') return '&#9650;'; // triangle up
     if (trend === 'down') return '&#9660;'; // triangle down
@@ -241,6 +367,9 @@ function buildDigestEmailHtml(name: string, digest: DigestData, appUrl: string):
             <div style="margin-bottom: 24px;">
               ${opportunitiesHtml}
             </div>
+
+            <!-- Content Intelligence (SYN-633) -->
+            ${buildContentIntelligenceEmailSection(contentIntelligence)}
 
             <!-- CTA -->
             <div style="text-align: center; margin-top: 24px;">
