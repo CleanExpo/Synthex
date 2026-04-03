@@ -379,12 +379,50 @@
     }
   ],
 
+    {
+      "id": "product",
+      "title": "Chief Product Officer",
+      "voice_seat": "product",
+      "voice_name": "Clara",
+      "voice_id": "tyepWYJJwJM9TTFIg5U7",
+      "filename": "product-clara.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "magenta/fuchsia pink translucent",
+        "style": "black blazer, colourful abstract/graffiti shirt (blue, orange, green, yellow), pink gloved hands",
+        "props": ["colourful Rubik's/puzzle cube (red, green, blue, yellow, purple)", "holographic ROADMAP display (connected nodes on constellation map)"],
+        "expression": "rectangular L-bracket white eyes ([ ]) — sees the product as a system, ships what users feel before they ask for it"
+      },
+      "description": "Chief Product Officer — roadmap, user empathy, feature prioritisation, the voice of the customer in the room"
+    }
+  ],
+
+    {
+      "id": "revenue",
+      "title": "Chief Revenue Officer (CRO) & Head of Partnerships",
+      "voice_seat": "revenue",
+      "voice_name": "Paul",
+      "voice_id": "WLKp2jV6nrS8aMkPPDRO",
+      "filename": "revenue-paul.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "cobalt/royal blue translucent",
+        "style": "dark charcoal business suit, blue tie, blue gloved hands",
+        "props": ["gold handshake icon", "holographic sales dashboard (funnel, charts, world map, KPI metrics)"],
+        "expression": "chevron/caret white eyes (^ ^) — closes every deal, sees every partner opportunity"
+      },
+      "description": "Chief Revenue Officer & Head of Partnerships — pipeline, partnerships, commercial deals, revenue growth"
+    }
+  ],
+
   "cast_summary": {
-    "total_personas": 22,
-    "linked_to_voice_seat": 7,
+    "total_personas": 24,
+    "linked_to_voice_seat": 9,
     "new_seats_needing_voices": 15,
-    "avatars_received": 22,
+    "avatars_received": 24,
     "avatars_pending": 0,
-    "_original_9_coverage": "7 of 9 original voice seats now have visuals. Missing: revenue (Paul), product (Clara)"
+    "_status": "CAST LOCKED — all 24 personas registered",
+    "_original_9_coverage": "9 of 9 original voice seats have visual characters",
+    "_voice_action_required": "Market Strategist visual is male-presenting but assigned female voice (Kylie) — recast recommended"
   }
 }
