@@ -28,6 +28,7 @@ import { logger } from '@/lib/logger';
 import { getAlgorithmContextBlock } from '@/lib/algorithm/algorithm-context';
 import { createEdgeFunctionRunner, ClientInput } from '@/lib/pipelines/runner';
 import type { AiAdvisorMetadata } from '@/lib/pipelines/metadata-schemas';
+import { queryKnowledge, formatKnowledgeContext } from '@/lib/knowledge-query';
 
 let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
 function getSupabaseAdmin() {
@@ -239,7 +240,10 @@ async function fetchContentScore(organizationId: string): Promise<number | null>
 // AI inference
 // ---------------------------------------------------------------------------
 
-async function generateActions(ctx: OrgContext): Promise<AdvisorAction[]> {
+async function generateActions(
+  ctx: OrgContext,
+  knowledgeContext?: string
+): Promise<AdvisorAction[]> {
   const hasDigestData = ctx.digestHistory.length > 0;
   const hasSeasonalData = ctx.seasonalSignals.length > 0;
   const hasAuthorityData = ctx.authorityScore !== null;
@@ -272,6 +276,8 @@ async function generateActions(ctx: OrgContext): Promise<AdvisorAction[]> {
     ctx.contentScore !== null
       ? `Content performance score: ${ctx.contentScore}/100 (weekly composite — higher = stronger content engagement relative to baseline)`
       : 'Content performance score: building data — fewer than 10 posts analysed',
+
+    knowledgeContext ?? '',
   ]
     .filter(Boolean)
     .join('\n\n');
@@ -444,7 +450,40 @@ async function processOrg(
 
   const jobCount = Math.max(1, Math.round(ctx.postsThisWeek / 8));
 
-  const actions = await generateActions(ctx);
+  // ── Knowledge Graph enrichment (A/B path) ─────────────────────────────────
+  // Enabled when KNOWLEDGE_GRAPH_ADVISOR=true. Falls back to standard context
+  // if the KG has fewer than 10 entities (queryKnowledge returns [] in that case).
+  let knowledgeContext: string | undefined;
+  if (process.env.KNOWLEDGE_GRAPH_ADVISOR === 'true') {
+    try {
+      const kgQuery = [
+        ctx.industry ? `${ctx.industry} marketing` : 'small business marketing',
+        ctx.seasonalSignals[0]?.opportunityLabel ?? '',
+        ctx.competitorGap ?? '',
+      ].filter(Boolean).join(', ');
+
+      const kgResults = await queryKnowledge(organizationId, kgQuery, {
+        maxResults: 8,
+        minRelevance: 0.35,
+      });
+
+      if (kgResults.length > 0) {
+        knowledgeContext = formatKnowledgeContext(kgResults);
+        logger.info('generate-advisor-brief: KG enrichment applied', {
+          organizationId,
+          kgResultsCount: kgResults.length,
+        });
+      }
+    } catch (err) {
+      // KG enrichment is non-fatal — degrade gracefully to standard context
+      logger.warn('generate-advisor-brief: KG enrichment failed, using standard context', {
+        organizationId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  const actions = await generateActions(ctx, knowledgeContext);
   validateActions(actions); // throws if generic
 
   const dollarAttribution = buildDollarAttribution(ctx, jobCount);
