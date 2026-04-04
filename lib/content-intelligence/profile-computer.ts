@@ -155,6 +155,10 @@ export interface ComputeProfileResult {
   confidenceLevel: number;
   skipped: boolean;
   reason?: string;
+  /** Top topics from this profile run — available when skipped = false */
+  topTopics?: TopicScore[];
+  /** Optimal posting times from this profile run — available when skipped = false */
+  optimalTimes?: OptimalTimes;
 }
 
 /**
@@ -250,7 +254,14 @@ export async function computeOrgProfile(
     confidenceLevel,
   });
 
-  return { organizationId, postCount, confidenceLevel, skipped: false };
+  return {
+    organizationId,
+    postCount,
+    confidenceLevel,
+    skipped: false,
+    topTopics: profile.topTopics,
+    optimalTimes: profile.optimalTimes,
+  };
 }
 
 // ── DB writes ─────────────────────────────────────────────────────────────────
