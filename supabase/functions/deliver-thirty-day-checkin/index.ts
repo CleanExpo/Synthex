@@ -1,62 +1,54 @@
 /**
- * deliver-thirty-day-checkin — Supabase Edge Function
+ * Supabase Edge Function: deliver-thirty-day-checkin
  *
- * Cron: "0 11 * * *"  (daily at 11:00 UTC = 21:00 AEDT)
+ * Cron: 0 11 * * *  (daily 11:00 UTC = 21:00 AEDT)
+ * Checks daily for clients in the 28-45 day window and delivers the 30-Day Check-In email.
  *
- * Calls POST /api/internal/deliver-thirty-day-checkin with CRON_SECRET auth.
- * The Next.js route finds organisations in the 28–37 day window and sends
- * the 30-Day Check-In email to eligible clients.
- *
- * @task SYN-661
+ * Proxies to Next.js internal route which handles Prisma + business logic.
+ * Feature flag: THIRTY_DAY_CHECKIN_ENABLED controls sends on the Next.js side.
+ * SYN-661
  */
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+const APP_URL     = Deno.env.get('NEXT_PUBLIC_APP_URL') ?? 'https://synthex.social';
+const CRON_SECRET = Deno.env.get('CRON_SECRET') ?? '';
 
-serve(async () => {
-  const appUrl = Deno.env.get('APP_URL') ?? 'https://synthex.social';
-  const cronSecret = Deno.env.get('CRON_SECRET');
-
-  if (!cronSecret) {
-    console.error('deliver-thirty-day-checkin: CRON_SECRET not set');
-    return new Response(
-      JSON.stringify({ error: 'CRON_SECRET not configured' }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  }
-
-  console.info('deliver-thirty-day-checkin: starting run');
-
+async function runCheckin(): Promise<void> {
   const response = await fetch(
-    `${appUrl}/api/internal/deliver-thirty-day-checkin`,
+    `${APP_URL}/api/internal/deliver-thirty-day-checkin`,
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${cronSecret}`,
+        Authorization: `Bearer ${CRON_SECRET}`,
       },
-      body: JSON.stringify({}),
     }
   );
 
-  const result = await response.json();
+  const body = await response.json();
+  console.info('[deliver-thirty-day-checkin] Result:', JSON.stringify(body));
 
   if (!response.ok) {
-    console.error('deliver-thirty-day-checkin: route error', result);
-    return new Response(
-      JSON.stringify({ error: 'Route call failed', details: result }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
+    throw new Error(
+      `[deliver-thirty-day-checkin] HTTP ${response.status}: ${JSON.stringify(body)}`
     );
   }
+}
 
-  console.info('deliver-thirty-day-checkin: complete', result);
-  return new Response(JSON.stringify(result), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
+// Scheduled: daily 11:00 UTC = 21:00 AEDT
+Deno.cron('deliver-thirty-day-checkin-daily', '0 11 * * *', runCheckin);
+
+// HTTP handler for manual triggers and health checks
+Deno.serve(async (_req: Request) => {
+  try {
+    await runCheckin();
+    return new Response(JSON.stringify({ ok: true, triggered: 'manual' }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    console.error('[deliver-thirty-day-checkin] Edge function error:', err);
+    return new Response(
+      JSON.stringify({ ok: false, error: String(err) }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
 });

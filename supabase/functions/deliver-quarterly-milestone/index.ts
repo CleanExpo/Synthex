@@ -1,66 +1,54 @@
 /**
- * deliver-quarterly-milestone — Supabase Edge Function
+ * Supabase Edge Function: deliver-quarterly-milestone
  *
- * Cron: "0 12 * * 1"  (weekly on Monday at 12:00 UTC = 22:00 AEDT)
+ * Cron: 0 12 * * 1  (weekly Monday 12:00 UTC = 22:00 AEDT)
+ * Checks weekly for clients ready for their Quarterly Milestone Review.
  *
- * Calls POST /api/internal/deliver-quarterly-milestone with CRON_SECRET auth.
- * The route checks quarterly review readiness via `quarterly_review_ready()` RPC
- * and sends the Quarterly Milestone Review email to eligible clients.
- *
- * Runs weekly rather than daily because:
- *   - Readiness data changes at weekly cadence (advisor briefs, health scores)
- *   - Quarterly delivery guard (85 days) prevents re-delivery
- *
- * @task SYN-662
+ * Proxies to Next.js internal route which handles Prisma + business logic.
+ * Feature flag: QUARTERLY_REVIEW_ENABLED controls sends on the Next.js side.
+ * SYN-662
  */
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+const APP_URL     = Deno.env.get('NEXT_PUBLIC_APP_URL') ?? 'https://synthex.social';
+const CRON_SECRET = Deno.env.get('CRON_SECRET') ?? '';
 
-serve(async () => {
-  const appUrl = Deno.env.get('APP_URL') ?? 'https://synthex.social';
-  const cronSecret = Deno.env.get('CRON_SECRET');
-
-  if (!cronSecret) {
-    console.error('deliver-quarterly-milestone: CRON_SECRET not set');
-    return new Response(
-      JSON.stringify({ error: 'CRON_SECRET not configured' }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  }
-
-  console.info('deliver-quarterly-milestone: starting run');
-
+async function runMilestone(): Promise<void> {
   const response = await fetch(
-    `${appUrl}/api/internal/deliver-quarterly-milestone`,
+    `${APP_URL}/api/internal/deliver-quarterly-milestone`,
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${cronSecret}`,
+        Authorization: `Bearer ${CRON_SECRET}`,
       },
-      body: JSON.stringify({}),
     }
   );
 
-  const result = await response.json();
+  const body = await response.json();
+  console.info('[deliver-quarterly-milestone] Result:', JSON.stringify(body));
 
   if (!response.ok) {
-    console.error('deliver-quarterly-milestone: route error', result);
-    return new Response(
-      JSON.stringify({ error: 'Route call failed', details: result }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
+    throw new Error(
+      `[deliver-quarterly-milestone] HTTP ${response.status}: ${JSON.stringify(body)}`
     );
   }
+}
 
-  console.info('deliver-quarterly-milestone: complete', result);
-  return new Response(JSON.stringify(result), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
+// Scheduled: weekly Monday 12:00 UTC = 22:00 AEDT
+Deno.cron('deliver-quarterly-milestone-weekly', '0 12 * * 1', runMilestone);
+
+// HTTP handler for manual triggers and health checks
+Deno.serve(async (_req: Request) => {
+  try {
+    await runMilestone();
+    return new Response(JSON.stringify({ ok: true, triggered: 'manual' }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    console.error('[deliver-quarterly-milestone] Edge function error:', err);
+    return new Response(
+      JSON.stringify({ ok: false, error: String(err) }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
 });
