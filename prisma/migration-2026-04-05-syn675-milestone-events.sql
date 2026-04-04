@@ -213,7 +213,7 @@ AS $$
     )
     -- Active org: has at least one active business owner
     AND EXISTS (
-      SELECT 1 FROM business_owners bo
+      SELECT 1 FROM business_ownerships bo
       WHERE bo.organization_id = o.id
         AND bo.is_active = true
         AND bo.billing_status = 'active'
