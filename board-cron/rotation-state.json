@@ -1,0 +1,302 @@
+{
+  "_comment": "rotation-state.json — Board session production state. Updated by Showrunner after each episode.",
+  "_cast_version": "2.0 — expanded to 24 personas (gender-audited 2026-04-03)",
+
+  "current_session": null,
+  "last_published_session": null,
+  "next_scheduled_session": null,
+
+  "voice_cast": {
+    "ceo": {
+      "voice_id": "aGkVQvWUZi16EH8aZJvT",
+      "name": "Steve",
+      "gender": "male",
+      "description": "CEO — Australian Male, 40-50, authoritative",
+      "settings": {
+        "stability": 0.65,
+        "similarity_boost": 0.85,
+        "style": 0.3,
+        "use_speaker_boost": true
+      }
+    },
+    "revenue": {
+      "voice_id": "WLKp2jV6nrS8aMkPPDRO",
+      "name": "Paul",
+      "gender": "male",
+      "description": "Chief Revenue Officer — Australian Male, 40-50, sharp and commercial",
+      "settings": {
+        "stability": 0.70,
+        "similarity_boost": 0.80,
+        "style": 0.25,
+        "use_speaker_boost": true
+      }
+    },
+    "product": {
+      "voice_id": "tyepWYJJwJM9TTFIg5U7",
+      "name": "Clara",
+      "gender": "female",
+      "description": "Chief Product Officer — Australian Female, 30-40, thoughtful and empathetic",
+      "settings": {
+        "stability": 0.75,
+        "similarity_boost": 0.80,
+        "style": 0.2,
+        "use_speaker_boost": true
+      }
+    },
+    "technical": {
+      "voice_id": "jSuBIjxMKhqIfb0wCK1F",
+      "name": "Baxter",
+      "gender": "male",
+      "description": "Senior Cloud & Systems Architect — Australian Male, 30-40, precise and dry",
+      "settings": {
+        "stability": 0.80,
+        "similarity_boost": 0.75,
+        "style": 0.15,
+        "use_speaker_boost": true
+      }
+    },
+    "market": {
+      "voice_id": "nFE6uwToMfV5TTxEjrJI",
+      "name": "Paul Vercoe",
+      "gender": "male",
+      "description": "Lead Market Strategist — Australian Male, competitive, chess-player mindset",
+      "_recast_note": "Visual is male-presenting. Recasted from female voice (Kylie) to male.",
+      "settings": {
+        "stability": 0.68,
+        "similarity_boost": 0.82,
+        "style": 0.3,
+        "use_speaker_boost": true
+      }
+    },
+    "compounder": {
+      "voice_id": "8HOgpuH7Mid4fwQK1Jln",
+      "name": "Bruce",
+      "gender": "male",
+      "description": "The Compounder CFO — Australian Male, 55-65, patient and warm",
+      "settings": {
+        "stability": 0.85,
+        "similarity_boost": 0.75,
+        "style": 0.1,
+        "use_speaker_boost": true
+      }
+    },
+    "moonshot": {
+      "voice_id": "IKne3meq5aSn9XLyUdCD",
+      "name": "Charlie",
+      "gender": "male",
+      "description": "Moonshot Engineer — Australian Male, 25-35, visionary and energetic",
+      "settings": {
+        "stability": 0.55,
+        "similarity_boost": 0.85,
+        "style": 0.5,
+        "use_speaker_boost": true
+      }
+    },
+    "oracle": {
+      "voice_id": "0QT4OrDTvpDlUPmFsUWN",
+      "name": "Lily",
+      "gender": "female",
+      "description": "The Oracle Chief Futurist — Australian Female, 40-50, grounded and empathetic",
+      "settings": {
+        "stability": 0.70,
+        "similarity_boost": 0.80,
+        "style": 0.2,
+        "use_speaker_boost": true
+      }
+    },
+    "contrarian": {
+      "voice_id": "QLOrGSLtlFUlfQRSaOtQ",
+      "name": "Gary",
+      "gender": "male",
+      "description": "The Contrarian Chief Risk Officer — Australian Male, 45-55, gritty and skeptical",
+      "settings": {
+        "stability": 0.65,
+        "similarity_boost": 0.80,
+        "style": 0.35,
+        "use_speaker_boost": true
+      }
+    },
+    "senior-pm": {
+      "voice_id": "l6n6LykkXcsgJMSqKnme",
+      "name": "Damian",
+      "gender": "male",
+      "description": "Senior Project Manager — Australian Male, mid-baritone, measured and deliberate",
+      "settings": {
+        "stability": 0.75,
+        "similarity_boost": 0.80,
+        "style": 0.2,
+        "use_speaker_boost": true
+      }
+    },
+    "algorithm-engineer": {
+      "voice_id": "9KesAUJoZzq3yyT2bJ3G",
+      "name": "Becca",
+      "gender": "female",
+      "description": "Lead Algorithm & Debugging Engineer — Australian Female, warm, approachable, professional",
+      "settings": {
+        "stability": 0.72,
+        "similarity_boost": 0.82,
+        "style": 0.25,
+        "use_speaker_boost": true
+      }
+    },
+    "qa-engineer": {
+      "voice_id": "gx4234VtGf2pDCbrbUA8",
+      "name": "Eleanor",
+      "gender": "female",
+      "description": "Lead QA & Testing Engineer — Australian Female, strategic storyteller, authoritative",
+      "settings": {
+        "stability": 0.78,
+        "similarity_boost": 0.78,
+        "style": 0.15,
+        "use_speaker_boost": true
+      }
+    },
+    "security-engineer": {
+      "voice_id": "CFN1FeTIoSu4xm6mDCkI",
+      "name": "David",
+      "gender": "male",
+      "description": "Senior Cybersecurity Engineer — Australian Male, tech pro, authoritative edge",
+      "settings": {
+        "stability": 0.70,
+        "similarity_boost": 0.80,
+        "style": 0.3,
+        "use_speaker_boost": true
+      }
+    },
+    "ai-ml-engineer": {
+      "voice_id": "0fHJvHo80Z8DDSm3NApj",
+      "name": "Al",
+      "gender": "male",
+      "description": "Lead AI & ML Engineer — Australian Male, subtle accent, medium depth, intellectual",
+      "settings": {
+        "stability": 0.75,
+        "similarity_boost": 0.80,
+        "style": 0.2,
+        "use_speaker_boost": true
+      }
+    },
+    "database-engineer": {
+      "voice_id": "x0Y0LPGWyrjIpXHcMCxT",
+      "name": "Mike",
+      "gender": "male",
+      "description": "Lead Database & Performance Engineer — Australian Male, professional, direct",
+      "settings": {
+        "stability": 0.72,
+        "similarity_boost": 0.78,
+        "style": 0.25,
+        "use_speaker_boost": true
+      }
+    },
+    "frontend-engineer": {
+      "voice_id": "cvpTJfe9LINpHIOmB2Hp",
+      "name": "Charlotte",
+      "gender": "female",
+      "description": "Lead Front-End UI/UX Engineer — Australian Female, warm and conversational",
+      "settings": {
+        "stability": 0.68,
+        "similarity_boost": 0.83,
+        "style": 0.3,
+        "use_speaker_boost": true
+      }
+    },
+    "bigdata-architect": {
+      "voice_id": "ZqZk4opejOmuQh96jYMp",
+      "name": "Annalise",
+      "gender": "female",
+      "description": "Lead Big Data & Analytics Architect — Australian Female, mature, educated, authoritative",
+      "settings": {
+        "stability": 0.80,
+        "similarity_boost": 0.78,
+        "style": 0.15,
+        "use_speaker_boost": true
+      }
+    },
+    "api-reliability-engineer": {
+      "voice_id": "IRuDCTQL6MMy1qvcsue1",
+      "name": "Andrew",
+      "gender": "male",
+      "description": "Lead API & Reliability Engineer — Australian Male, young, natural, friendly",
+      "settings": {
+        "stability": 0.65,
+        "similarity_boost": 0.83,
+        "style": 0.3,
+        "use_speaker_boost": true
+      }
+    },
+    "devops-engineer": {
+      "voice_id": "XuvMi7mpVgif9dcUzS0s",
+      "name": "Keira",
+      "gender": "female",
+      "description": "Lead DevOps & Deployment Engineer — Australian Female, calm, clear, natural",
+      "settings": {
+        "stability": 0.72,
+        "similarity_boost": 0.80,
+        "style": 0.22,
+        "use_speaker_boost": true
+      }
+    },
+    "systems-architect": {
+      "voice_id": "vjBUjFANpoBrNUCiYC6s",
+      "name": "Gordon",
+      "gender": "male",
+      "description": "Lead Systems Architecture Engineer — Australian Male, veteran broadcaster, authoritative",
+      "settings": {
+        "stability": 0.80,
+        "similarity_boost": 0.78,
+        "style": 0.15,
+        "use_speaker_boost": true
+      }
+    },
+    "infosec-compliance": {
+      "voice_id": "xt3wCRKY70KCKXOqNH5h",
+      "name": "Isla",
+      "gender": "female",
+      "description": "Lead InfoSec & Compliance Engineer — Australian Female, soft but firm, organic tone",
+      "settings": {
+        "stability": 0.78,
+        "similarity_boost": 0.80,
+        "style": 0.18,
+        "use_speaker_boost": true
+      }
+    },
+    "mobile-engineer": {
+      "voice_id": "dh3YdvdCYZdqFjtSFNTx",
+      "name": "William",
+      "gender": "male",
+      "description": "Lead Mobile & App Ecosystem Engineer — Australian Male, young, rich, magnetic",
+      "settings": {
+        "stability": 0.60,
+        "similarity_boost": 0.85,
+        "style": 0.38,
+        "use_speaker_boost": true
+      }
+    },
+    "cmo": {
+      "voice_id": "M4FiuEOcSLrYgftiXoq9",
+      "name": "Blake",
+      "gender": "male",
+      "description": "CMO & VP of Branding — Australian Male, confident and energetic, brand/promo voice",
+      "settings": {
+        "stability": 0.60,
+        "similarity_boost": 0.85,
+        "style": 0.42,
+        "use_speaker_boost": true
+      }
+    },
+    "social-pr-director": {
+      "voice_id": "gEdKKVxVhNCulBgRQ9GW",
+      "name": "Charlotte",
+      "gender": "female",
+      "description": "Lead Social Media & PR Director — Australian Female, friendly and professional",
+      "settings": {
+        "stability": 0.65,
+        "similarity_boost": 0.83,
+        "style": 0.35,
+        "use_speaker_boost": true
+      }
+    }
+  },
+
+  "history": []
+}

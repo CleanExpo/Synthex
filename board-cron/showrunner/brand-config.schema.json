@@ -1,0 +1,270 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://synthex.social/schemas/brand-config.json",
+  "title": "Showrunner Brand Configuration",
+  "description": "Configuration schema for a brand's video production pipeline settings. One file per brand, stored at board-cron/[brand]-brand-config.json.",
+  "type": "object",
+  "required": ["brand", "displayName", "voiceCastFile", "visualTheme", "channels", "scriptDir", "outputDir", "logsDir"],
+  "additionalProperties": false,
+  "properties": {
+    "brand": {
+      "type": "string",
+      "description": "Internal brand identifier (slug). Used to construct config file name.",
+      "enum": ["synthex", "restoreassist", "unite-group", "ccw", "nrpg"],
+      "examples": ["synthex"]
+    },
+    "displayName": {
+      "type": "string",
+      "description": "Human-readable brand name, used in video titles and descriptions.",
+      "examples": ["Synthex", "RestoreAssist", "Unite Group"]
+    },
+    "voiceCastFile": {
+      "type": "string",
+      "description": "Relative path to the rotation-state.json file containing the voice cast for this brand.",
+      "examples": ["board-cron/rotation-state.json"]
+    },
+    "visualTheme": {
+      "type": "string",
+      "description": "Remotion visual theme identifier. Maps to a theme configuration in board-cron/remotion/src/themes/.",
+      "enum": ["dark-professional", "light-corporate", "brand-gradient", "minimal-white"],
+      "examples": ["dark-professional"]
+    },
+    "titleTemplate": {
+      "type": "string",
+      "description": "YouTube title template. Supports variables: {topic}, {episode_number}, {brand}. Defaults to '{brand} Board | {topic} | EP{episode_number}'.",
+      "examples": [
+        "{brand} Board | {topic} | EP{episode_number}",
+        "The {brand} Board: {topic} (Episode {episode_number})"
+      ]
+    },
+    "channels": {
+      "type": "object",
+      "description": "Platform channel identifiers for publishing.",
+      "required": ["youtube"],
+      "additionalProperties": false,
+      "properties": {
+        "youtube": {
+          "type": "object",
+          "required": ["channelId", "playlist"],
+          "additionalProperties": false,
+          "properties": {
+            "channelId": {
+              "type": "string",
+              "description": "YouTube channel ID (starts with UC).",
+              "pattern": "^UC[a-zA-Z0-9_-]{22}$",
+              "examples": ["UCds9Km8AJBrO67p2Up8M3dA"]
+            },
+            "playlist": {
+              "type": "string",
+              "description": "YouTube playlist name to add videos to. Playlist must already exist.",
+              "examples": ["The Board"]
+            },
+            "playlistId": {
+              "type": "string",
+              "description": "YouTube playlist ID (starts with PL). Populated after first run if playlist exists.",
+              "pattern": "^PL[a-zA-Z0-9_-]+$",
+              "examples": ["PLds9Km8AJBrO67p2Up8M3dA1234567890AB"]
+            }
+          }
+        },
+        "linkedin": {
+          "type": "object",
+          "description": "LinkedIn company page publishing config. Omit to skip LinkedIn.",
+          "required": ["companyId"],
+          "additionalProperties": false,
+          "properties": {
+            "companyId": {
+              "type": "string",
+              "description": "LinkedIn company page ID (numeric string).",
+              "examples": ["12345678"]
+            },
+            "hashtags": {
+              "type": "array",
+              "description": "Hashtags to append to LinkedIn posts (without # prefix).",
+              "items": { "type": "string" },
+              "examples": [["Synthex", "AIMarketing", "SmallBusiness", "AustralianBusiness"]]
+            }
+          }
+        },
+        "twitter": {
+          "type": "object",
+          "description": "Twitter/X account config. Omit to skip Twitter. Requires TWITTER_API_KEY env var.",
+          "required": ["handle"],
+          "additionalProperties": false,
+          "properties": {
+            "handle": {
+              "type": "string",
+              "description": "Twitter handle including @.",
+              "pattern": "^@[a-zA-Z0-9_]{1,15}$",
+              "examples": ["@synthexsocial"]
+            },
+            "maxThreadLength": {
+              "type": "integer",
+              "description": "Maximum number of tweets in a thread. Default: 5.",
+              "minimum": 1,
+              "maximum": 25,
+              "default": 5
+            }
+          }
+        }
+      }
+    },
+    "scriptDir": {
+      "type": "string",
+      "description": "Relative path to the directory containing script JSON files.",
+      "examples": ["board-cron/video-scripts"]
+    },
+    "outputDir": {
+      "type": "string",
+      "description": "Relative path to the root directory for video asset output.",
+      "examples": ["board-cron/video-assets"]
+    },
+    "logsDir": {
+      "type": "string",
+      "description": "Relative path to the directory for production and QA log files.",
+      "examples": ["board-cron/logs"]
+    },
+    "remotion": {
+      "type": "object",
+      "description": "Remotion render configuration overrides. All fields optional.",
+      "additionalProperties": false,
+      "properties": {
+        "compositionId": {
+          "type": "string",
+          "description": "Long-form Remotion composition ID. Default: BoardSession.",
+          "default": "BoardSession",
+          "examples": ["BoardSession", "RestoreAssistBoard"]
+        },
+        "shortCompositionId": {
+          "type": "string",
+          "description": "Short-form Remotion composition ID. Default: BoardSessionShort.",
+          "default": "BoardSessionShort",
+          "examples": ["BoardSessionShort", "RestoreAssistBoardShort"]
+        },
+        "thumbnailCompositionId": {
+          "type": "string",
+          "description": "Thumbnail Remotion still composition ID. Default: BoardSessionThumbnail.",
+          "default": "BoardSessionThumbnail"
+        },
+        "codec": {
+          "type": "string",
+          "description": "Video codec for rendering. Default: h264.",
+          "enum": ["h264", "h265", "vp8", "vp9", "prores"],
+          "default": "h264"
+        },
+        "crf": {
+          "type": "integer",
+          "description": "Constant Rate Factor for h264/h265. Lower = higher quality. Default: 18.",
+          "minimum": 1,
+          "maximum": 51,
+          "default": 18
+        }
+      }
+    },
+    "qa": {
+      "type": "object",
+      "description": "QA gate thresholds. Override defaults per brand.",
+      "additionalProperties": false,
+      "properties": {
+        "audioLufsMin": {
+          "type": "number",
+          "description": "Minimum acceptable LUFS for voice audio. Default: -14.",
+          "default": -14,
+          "examples": [-14]
+        },
+        "audioLufsMax": {
+          "type": "number",
+          "description": "Maximum acceptable LUFS for voice audio. Default: -10.",
+          "default": -10,
+          "examples": [-10]
+        },
+        "longFormMinSeconds": {
+          "type": "integer",
+          "description": "Minimum duration in seconds for long-form video. Default: 480 (8 min).",
+          "default": 480,
+          "examples": [480]
+        },
+        "longFormMaxSeconds": {
+          "type": "integer",
+          "description": "Maximum duration in seconds for long-form video. Default: 900 (15 min).",
+          "default": 900,
+          "examples": [900]
+        },
+        "shortFormMinSeconds": {
+          "type": "integer",
+          "description": "Minimum duration in seconds for short-form video. Default: 45.",
+          "default": 45,
+          "examples": [45]
+        },
+        "shortFormMaxSeconds": {
+          "type": "integer",
+          "description": "Maximum duration in seconds for short-form video. Default: 90.",
+          "default": 90,
+          "examples": [90]
+        },
+        "minTextSizePx": {
+          "type": "integer",
+          "description": "Minimum font size in pixels for readability gate. Default: 24.",
+          "default": 24,
+          "examples": [24]
+        }
+      }
+    },
+    "youtube": {
+      "type": "object",
+      "description": "YouTube-specific metadata overrides.",
+      "additionalProperties": false,
+      "properties": {
+        "defaultTags": {
+          "type": "array",
+          "description": "Default tags to apply to all videos for this brand.",
+          "items": { "type": "string" },
+          "maxItems": 30,
+          "examples": [["Synthex", "AI Marketing", "Small Business", "Board", "Marketing Strategy", "Australian Business"]]
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "YouTube category ID. Default: 22 (People & Blogs).",
+          "default": "22",
+          "examples": ["22", "27", "28"]
+        },
+        "defaultLanguage": {
+          "type": "string",
+          "description": "BCP-47 language code for video language. Default: en-AU.",
+          "default": "en-AU",
+          "examples": ["en-AU", "en-GB", "en-US"]
+        },
+        "descriptionTemplateFile": {
+          "type": "string",
+          "description": "Relative path to the Markdown template for YouTube descriptions.",
+          "default": "board-cron/templates/youtube-description.md",
+          "examples": ["board-cron/templates/youtube-description.md"]
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "brand": "synthex",
+      "displayName": "Synthex",
+      "voiceCastFile": "board-cron/rotation-state.json",
+      "visualTheme": "dark-professional",
+      "channels": {
+        "youtube": {
+          "channelId": "UCds9Km8AJBrO67p2Up8M3dA",
+          "playlist": "The Board"
+        },
+        "linkedin": {
+          "companyId": "12345678",
+          "hashtags": ["Synthex", "AIMarketing", "SmallBusiness", "AustralianBusiness"]
+        },
+        "twitter": {
+          "handle": "@synthexsocial"
+        }
+      },
+      "scriptDir": "board-cron/video-scripts",
+      "outputDir": "board-cron/video-assets",
+      "logsDir": "board-cron/logs"
+    }
+  ]
+}

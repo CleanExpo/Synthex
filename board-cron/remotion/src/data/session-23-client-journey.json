@@ -1,0 +1,158 @@
+{
+  "_meta": {
+    "session": 23,
+    "title": "Client Journey — Making Learning Visible",
+    "date": "2026-04-03",
+    "rotation": "Rotation 6",
+    "topic": "Client Journey Optimization",
+    "ep_title": "Synthex Board | Client Journey | Making Learning Visible | EP23",
+    "youtube_description": "In Session 23, the Synthex Board tackles a critical question: why do clients stop noticing Synthex in month 3? The board diagnoses 'indifferent coexistence' and approves two investments to make Synthex's compounding intelligence visible — the Personalisation Activation Notification and an enhanced Monthly Story with cumulative impact data.\n\n🎯 THE DECISION: Build two client journey touchpoints that expose the Content Learning Loop transition from generic to personalised strategy.\n\n📋 This session: SYN-637 Personalisation Notification · SYN-638 Monthly Story Progress Arc\n\n---\nSynthex is an AI-powered marketing automation platform for Australian businesses.\nhttps://synthex.social"
+  },
+
+  "scenes": [
+    {
+      "id": "title",
+      "type": "title_card",
+      "duration_hint_seconds": 5,
+      "content": "Synthex Board | Session 23 | Client Journey — Making Learning Visible",
+      "narrated": false,
+      "music": "opening",
+      "sfx": ["brand/synthex-sonic-logo.mp3"]
+    },
+    {
+      "id": "ceo-intro",
+      "type": "narration",
+      "persona": "ceo",
+      "narrated": true,
+      "content": "Session 23. We are here to talk about churn — specifically, the kind that happens not because we failed, but because we became invisible. Month three of a Synthex subscription is our highest-risk window. Autopilot is running. But silently. Today we fix that.",
+      "music": "deliberation"
+    },
+    {
+      "id": "market-diagnosis",
+      "type": "deliberation",
+      "persona": "market",
+      "narrated": true,
+      "content": "I've been tracking cohort retention data. Month one — excitement. Month two — engagement. Month three — indifference. The client hasn't had a reason to think about Synthex in four weeks. They're not unhappy. They're just... not watching.",
+      "music": "deliberation"
+    },
+    {
+      "id": "product-insight",
+      "type": "deliberation",
+      "persona": "product",
+      "narrated": true,
+      "content": "We've been building intelligence that clients can't see. The Content Learning Loop has been quietly figuring out what content works for each business. But that transition — from generic strategy to personal strategy — happens invisibly. That's the problem.",
+      "music": "deliberation"
+    },
+    {
+      "id": "technical-event",
+      "type": "deliberation",
+      "persona": "technical",
+      "narrated": true,
+      "content": "There is a computable transition event. When the calendar strategy source switches from industry baseline to personal data — that's a state change we can detect. It fires once per client. It means the system has learned their specific business. The engineering cost to expose this event is half a day.",
+      "music": "deliberation"
+    },
+    {
+      "id": "contrarian-challenge",
+      "type": "deliberation",
+      "persona": "contrarian",
+      "narrated": true,
+      "content": "Half a day to build it — yes. But what if the cold-start threshold is wrong? If we fire the notification too early, the strategy update is based on three posts. That's not personalisation. That's noise with a confidence badge on it.",
+      "music": "deliberation",
+      "sfx": ["alerts/contrarian-sting.mp3"]
+    },
+    {
+      "id": "ceo-threshold",
+      "type": "deliberation",
+      "persona": "ceo",
+      "narrated": true,
+      "content": "Noted. The threshold is configurable. We start at eight posts of performance data. If the data shows we're firing too early or too late, we adjust. The threshold is not the product. The notification is.",
+      "music": "deliberation"
+    },
+    {
+      "id": "oracle-translation",
+      "type": "deliberation",
+      "persona": "oracle",
+      "narrated": true,
+      "content": "I want to talk about the copy. I've spoken to these clients. They don't understand 'content performance profiles' or 'strategy source transitions.' What they understand is — Synthex noticed something about my business. It figured out that my audience loves behind-the-scenes content on Wednesdays. That's what the notification needs to say.",
+      "music": "deliberation"
+    },
+    {
+      "id": "compounder-monthly",
+      "type": "deliberation",
+      "persona": "compounder",
+      "narrated": true,
+      "content": "The Monthly Story is where compounding becomes visible. Right now it's a single email 48 hours before renewal. It should open with a cumulative counter — how many months, how many posts, how many locals reached since day one. A number that only grows. That's a switching cost you can feel.",
+      "music": "deliberation"
+    },
+    {
+      "id": "moonshot-iq",
+      "type": "deliberation",
+      "persona": "moonshot",
+      "narrated": true,
+      "content": "What if we went further? A Synthex IQ score — a monotonically increasing composite of every action the system has taken on behalf of the client. Every post published, every review handled, every strategy update. It never resets. By month twelve it's a number that represents a real investment in their business.",
+      "music": "deliberation"
+    },
+    {
+      "id": "contrarian-iq",
+      "type": "deliberation",
+      "persona": "contrarian",
+      "narrated": true,
+      "content": "The IQ score needs all five intelligence systems live and stable before it means anything. If we ship it now, it's hollow. Sprint five only has three of those systems. Build it in Sprint six when the data is real.",
+      "music": "deliberation",
+      "sfx": ["alerts/contrarian-sting.mp3"]
+    },
+    {
+      "id": "revenue-numbers",
+      "type": "deliberation",
+      "persona": "revenue",
+      "narrated": true,
+      "content": "Let's be commercial about this. Month three churn is where we lose the most revenue per cohort. If these two investments — the notification and the enhanced Monthly Story — move the month-three retention rate by five percent, that's a material number at our current scale. Half a day of engineering for a five percent retention lift is not a difficult decision.",
+      "music": "deliberation"
+    },
+    {
+      "id": "decision-reveal",
+      "type": "decision",
+      "persona": "ceo",
+      "narrated": true,
+      "content": "Here is the decision.",
+      "music": "decision",
+      "sfx": ["decisions/dramatic-tone.mp3"]
+    },
+    {
+      "id": "decision-body",
+      "type": "decision_body",
+      "persona": "ceo",
+      "narrated": true,
+      "content": "We build two client journey investments in Sprint five. First — the Personalisation Activation Notification. A one-time in-app message that fires exactly once per client when the Content Learning Loop crosses the cold-start gate and the calendar transitions from industry baseline to personal data. The notification reads: Synthex has analysed your last posts and updated your strategy. Your audience engages most with this content type on this day. Your next posts reflect this. Second — the Enhanced Monthly Story. Three new data points that make compounding visible: authority score direction in plain English, monthly reach total, and the top-performing post. Plus a cumulative counter that opens every story from this point forward.",
+      "music": "decision",
+      "sfx": ["decisions/bass-drop.mp3"]
+    },
+    {
+      "id": "next-actions",
+      "type": "next_actions",
+      "persona": "ceo",
+      "narrated": true,
+      "content": "Three next actions. One — build the Personalisation Activation Notification. Half a day. Sprint five week one. Two — enhance the Monthly Story with the progress arc and plain-English intelligence. One-and-a-half days. Sprint five week two. Three — design the Synthex Effect Report spec for Sprint six. Three days of spec work. The report is the flagship — but it ships in Sprint six when all five intelligence systems are live.",
+      "music": "action",
+      "sfx": ["transitions/data-stream.mp3"]
+    },
+    {
+      "id": "risk-watch",
+      "type": "risk",
+      "persona": "ceo",
+      "narrated": true,
+      "content": "One risk to watch. The cold-start threshold determines how many clients experience the personalisation moment and when. Too high — clients in low-volume industries never cross it. Too low — the notification fires before the system has learned anything useful. Validate the threshold against actual Content Learning Loop performance in Sprint five week one before wiring the notification. Monitor event frequency in the first fourteen days.",
+      "music": "neutral",
+      "sfx": ["alerts/risk-warning.mp3"]
+    },
+    {
+      "id": "closing",
+      "type": "closing",
+      "persona": "ceo",
+      "narrated": true,
+      "content": "Session twenty-three. Closed. Invisible compounding work is indistinguishable from no work. We make it visible. This is the Synthex board.",
+      "music": "closing",
+      "sfx": ["brand/synthex-sonic-logo.mp3"]
+    }
+  ]
+}

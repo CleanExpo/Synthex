@@ -254,3 +254,8 @@ vercel-deploy2.txt
 !.claude/agents/codex/CATALOGUE.md
 !.claude/agents/codex/security-auditor.md
 jest-worktree.json
+
+# Rendered video output — large binary files, don't commit
+board-cron/video-assets/renders/*.mp4
+board-cron/video-assets/renders/*.mov
+board-cron/video-assets/renders/*.webm
