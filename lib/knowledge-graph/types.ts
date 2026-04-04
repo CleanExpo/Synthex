@@ -92,7 +92,7 @@ export interface KnowledgeEntity {
   entity_type: KnowledgeEntityType;
   entity_name: string;
   entity_metadata: Record<string, unknown>;
-  /** Raw embedding vector — null when not yet populated; undefined when not fetched */
+  /** 1536-dim OpenAI text-embedding-3-small vector. Null when not yet populated; undefined when not fetched */
   embedding?: number[] | null;
   source_system: KnowledgeSourceSystem;
   source_id: string | null;
