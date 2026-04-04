@@ -90,6 +90,8 @@ import { FirstWinBanner } from '@/components/notifications/FirstWinBanner';
 import { MonthlyStoryCard } from '@/components/monthly-story/MonthlyStoryCard';
 // SYN-597: Contextual team invite banner — self-hides when ineligible
 import { TeamInviteBanner } from '@/components/team/TeamInviteBanner';
+// SYN-635: GA4 connection prompt — self-hides when connected or dismissed
+import { GA4ConnectBanner } from '@/components/dashboard/GA4ConnectBanner';
 import {
   Sidebar,
   SidebarContent,
@@ -338,7 +340,12 @@ const sidebarGroups: SidebarNavGroup[] = [
       },
       { icon: Lock, label: 'Brand Voice', href: '/dashboard/brand-voice' },
       { icon: Star, label: 'AI Insights', href: '/dashboard/insights' },
-      { icon: Brain, label: 'Advisor', href: '/dashboard/advisor', isNew: true },
+      {
+        icon: Brain,
+        label: 'Advisor',
+        href: '/dashboard/advisor',
+        isNew: true,
+      },
     ],
   },
   {
@@ -921,6 +928,8 @@ export default function DashboardLayout({
             <FirstWinBanner className="mb-5" />
             {/* SYN-597: Team invite banner — self-hides when org < 45 days or dismissed */}
             <TeamInviteBanner />
+            {/* SYN-635: GA4 connection prompt — self-hides when connected or dismissed */}
+            <GA4ConnectBanner />
             {children}
           </main>
 

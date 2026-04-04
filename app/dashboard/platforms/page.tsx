@@ -133,6 +133,13 @@ const PLATFORMS: PlatformInfo[] = [
     icon: Globe,
     accentColour: '#A1A1AA',
   },
+  {
+    id: 'googleanalytics',
+    name: 'Google Analytics',
+    description: 'Track website traffic, conversions, and ROI attribution',
+    icon: BarChart3,
+    accentColour: '#F59E0B',
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -182,6 +189,7 @@ interface PlatformCardProps {
   connecting: boolean;
   disconnecting: boolean;
   refreshing: boolean;
+  highlighted?: boolean;
 }
 
 function PlatformCard({
@@ -193,6 +201,7 @@ function PlatformCard({
   connecting,
   disconnecting,
   refreshing,
+  highlighted,
 }: PlatformCardProps) {
   const Icon = platform.icon;
   const tokenAlert =
@@ -200,9 +209,14 @@ function PlatformCard({
 
   return (
     <div
+      id={`platform-${platform.id}`}
       className={cn(
         'border-[0.5px] rounded-sm overflow-hidden bg-white/[0.01] hover:bg-white/[0.02] transition-colors',
-        tokenAlert ? 'border-orange-500/20' : 'border-white/[0.06]'
+        tokenAlert
+          ? 'border-orange-500/20'
+          : highlighted
+            ? 'border-amber-400/50 ring-1 ring-amber-400/30'
+            : 'border-white/[0.06]'
       )}
     >
       {/* Card header */}
@@ -493,6 +507,7 @@ function PlatformsPageContent() {
   const [refreshingId, setRefreshingId] = useState<string | null>(null);
 
   const connectionMap = new Map(connections.map(c => [c.platform, c]));
+  const highlightId = searchParams.get('highlight') ?? null;
 
   useEffect(() => {
     const connected = searchParams.get('connected');
@@ -503,6 +518,13 @@ function PlatformsPageContent() {
       window.history.replaceState({}, '', url.toString());
     }
   }, [searchParams]);
+
+  // Scroll highlighted platform card into view after load
+  useEffect(() => {
+    if (!highlightId || isLoading) return;
+    const el = document.getElementById(`platform-${highlightId}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [highlightId, isLoading]);
 
   const handleConnect = useCallback(
     async (platformId: string) => {
@@ -675,6 +697,7 @@ function PlatformsPageContent() {
                 connecting={connectingId === platform.id}
                 disconnecting={disconnectingId === platform.id}
                 refreshing={refreshingId === platform.id}
+                highlighted={highlightId === platform.id}
               />
             ))}
           </div>
@@ -699,6 +722,7 @@ function PlatformsPageContent() {
                 connecting={connectingId === platform.id}
                 disconnecting={disconnectingId === platform.id}
                 refreshing={refreshingId === platform.id}
+                highlighted={highlightId === platform.id}
               />
             ))}
           </div>
