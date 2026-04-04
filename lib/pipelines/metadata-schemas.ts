@@ -126,3 +126,25 @@ export interface ContentProfileMetadata extends Record<string, unknown> {
    */
   avg_improvement_rate: number | null;
 }
+
+// ============================================================================
+// Content Score Pipeline (SYN-664)
+// ============================================================================
+
+/**
+ * Metadata written by the Content Score computation pipeline validateOutput().
+ * Status 'partial' if orgs_processed == 0 or avg_score is outside 0-100.
+ */
+export interface ContentScoreMetadata extends Record<string, unknown> {
+  /** Total orgs processed with a ContentPerformanceProfile in this run */
+  orgs_processed: number;
+  /** Orgs skipped (no ContentPerformanceProfile) */
+  orgs_skipped: number;
+  /** Average content score across all processed orgs (0-100) */
+  avg_score: number;
+  /**
+   * True during the data-build phase when fewer than MIN_ENTITY_THRESHOLD
+   * orgs have profiles — pipeline runs but scores are informational only.
+   */
+  dark_run_mode: boolean;
+}
