@@ -105,6 +105,25 @@ export interface SeasonalEngineMetadata extends Record<string, unknown> {
 }
 
 // ============================================================================
+// Score Accuracy Matcher (SYN-670)
+// ============================================================================
+
+/**
+ * Metadata written by the score-accuracy-matcher pipeline validateOutput().
+ * Status 'partial' if match_failures > 0.10 * events_queued.
+ */
+export interface ScoreAccuracyMatcherMetadata extends Record<string, unknown> {
+  /** Total score_accuracy_events rows eligible for outcome matching this run */
+  events_queued: number;
+  /** Successfully matched and updated */
+  events_matched: number;
+  /** Failed to fetch outcome (platform data unavailable) */
+  match_failures: number;
+  /** Per-domain breakdown: { content: X, geo: Y, health: Z } */
+  domain_breakdown: Record<string, number>;
+}
+
+// ============================================================================
 // Content Learning Loop (SYN-631)
 // ============================================================================
 
