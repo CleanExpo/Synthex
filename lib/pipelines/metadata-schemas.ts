@@ -124,6 +124,31 @@ export interface ScoreAccuracyMatcherMetadata extends Record<string, unknown> {
 }
 
 // ============================================================================
+// Knowledge Graph Builder (SYN-649)
+// ============================================================================
+
+/**
+ * Metadata written by the Knowledge Graph build pipeline validateOutput().
+ * Status 'partial' if orgs_processed == 0.
+ */
+export interface KnowledgeGraphBuildMetadata extends Record<string, unknown> {
+  /** Total orgs processed in this run */
+  orgs_processed: number;
+  /** Orgs skipped (no data or failed) */
+  orgs_skipped: number;
+  /** Total entities created or updated across all orgs */
+  total_entities: number;
+  /** Total edges created or updated across all orgs */
+  total_edges: number;
+  /** Total OpenAI embedding tokens consumed */
+  embedding_tokens: number;
+  /** Total embedding cost in USD (text-embedding-3-small @ $0.02/1M tokens) */
+  embedding_cost_usd: number;
+  /** Number of orgs that exceeded the $0.10/run cost alert threshold */
+  cost_alerts: number;
+}
+
+// ============================================================================
 // Content Learning Loop (SYN-631)
 // ============================================================================
 

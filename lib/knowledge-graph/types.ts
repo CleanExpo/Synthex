@@ -92,8 +92,8 @@ export interface KnowledgeEntity {
   entity_type: KnowledgeEntityType;
   entity_name: string;
   entity_metadata: Record<string, unknown>;
-  /** Raw embedding vector — only present when fetched with SELECT embedding */
-  embedding?: number[];
+  /** Raw embedding vector — null when not yet populated; undefined when not fetched */
+  embedding?: number[] | null;
   source_system: KnowledgeSourceSystem;
   source_id: string | null;
   expires_at: string | null; // ISO timestamptz
