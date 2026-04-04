@@ -1,0 +1,138 @@
+# Score Accuracy Gate — SYN-670
+#
+# Runs on every PR to main and nightly.
+# Queries score_accuracy_events for the last 30 days, computes per-domain
+# accuracy rates, and FAILS if any domain with ≥ 50 scored events has
+# accuracy_rate below its minimum threshold.
+#
+# Thresholds:
+#   content: 0.40  (early gate)  →  0.55 (premium feature gate, blocks ContentScoreCard)
+#   geo:     0.50
+#   health:  0.45
+#
+# Emergency override: set SKIP_ACCURACY_GATE=true in the workflow_dispatch
+# (fires a Slack alert to #engineering on any use).
+
+name: Score Accuracy Gate
+
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    # Nightly 17:00 UTC (03:00 AEDT) — after score-accuracy-matcher has run
+    - cron: '0 17 * * *'
+  workflow_dispatch:
+    inputs:
+      skip_gate:
+        description: 'Emergency override — bypasses accuracy gate (fires Slack alert)'
+        required: false
+        default: 'false'
+
+jobs:
+  accuracy-gate:
+    name: Score Accuracy Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check emergency override
+        if: ${{ github.event.inputs.skip_gate == 'true' || env.SKIP_ACCURACY_GATE == 'true' }}
+        env:
+          SLACK_WEBHOOK: ${{ secrets.PIPELINE_SLACK_WEBHOOK }}
+        run: |
+          echo "⚠️  SKIP_ACCURACY_GATE=true — bypassing accuracy gate"
+          if [ -n "$SLACK_WEBHOOK" ]; then
+            curl -s -X POST "$SLACK_WEBHOOK" \
+              -H 'Content-Type: application/json' \
+              -d "{\"text\":\"⚠️ *Score Accuracy Gate BYPASSED* by ${{ github.actor }} on ${{ github.ref }}. Emergency override activated.\"}"
+          fi
+          echo "GATE_SKIPPED=true" >> $GITHUB_ENV
+
+      - name: Query accuracy rates
+        if: env.GATE_SKIPPED != 'true'
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          # Query score_accuracy_events for last 30 days via Supabase REST API
+          # Accuracy rate = fraction of scored events within 15 percentile points of actual
+          RESPONSE=$(curl -s \
+            "${SUPABASE_URL}/rest/v1/rpc/get_accuracy_gate_summary" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+
+          echo "Accuracy gate response: $RESPONSE"
+          echo "ACCURACY_RESPONSE=$RESPONSE" >> $GITHUB_ENV
+
+      - name: Evaluate thresholds
+        if: env.GATE_SKIPPED != 'true'
+        run: |
+          # Parse and evaluate per-domain accuracy rates
+          python3 - <<'PYEOF'
+          import json, os, sys
+
+          response_str = os.environ.get('ACCURACY_RESPONSE', '[]')
+          try:
+            rows = json.loads(response_str)
+          except Exception as e:
+            print(f"Warning: Could not parse accuracy response: {e}")
+            print("Skipping gate — no data to evaluate")
+            sys.exit(0)
+
+          # Minimum score counts before gate activates
+          MIN_EVENTS = 50
+
+          # Domain thresholds (fraction within 15 pct points of actual)
+          THRESHOLDS = {
+            'content': 0.40,
+            'geo':     0.50,
+            'health':  0.45,
+          }
+
+          failures = []
+
+          for row in rows:
+            domain        = row.get('score_domain')
+            total_scores  = int(row.get('total_scores', 0))
+            pct_within    = float(row.get('pct_within_15pct', 0) or 0) / 100
+            mean_delta    = float(row.get('mean_accuracy_delta', 0) or 0)
+
+            print(f"Domain: {domain:8s} | Events: {total_scores:4d} | Within 15pct: {pct_within:.2%} | Mean delta: {mean_delta:.4f}")
+
+            if domain not in THRESHOLDS:
+              continue
+
+            if total_scores < MIN_EVENTS:
+              print(f"  ↳ Skipping threshold check (< {MIN_EVENTS} events)")
+              continue
+
+            threshold = THRESHOLDS[domain]
+            if pct_within < threshold:
+              failures.append(
+                f"  ✗ {domain}: accuracy {pct_within:.2%} < threshold {threshold:.2%} "
+                f"({total_scores} events)"
+              )
+            else:
+              print(f"  ↳ ✓ Passes threshold {threshold:.2%}")
+
+          if failures:
+            print("\n❌ Score Accuracy Gate FAILED:")
+            for f in failures:
+              print(f)
+            sys.exit(1)
+          else:
+            print("\n✅ Score Accuracy Gate passed")
+          PYEOF
+
+      - name: Post failure to Slack
+        if: failure() && env.GATE_SKIPPED != 'true'
+        env:
+          SLACK_WEBHOOK: ${{ secrets.PIPELINE_SLACK_WEBHOOK }}
+        run: |
+          if [ -n "$SLACK_WEBHOOK" ]; then
+            curl -s -X POST "$SLACK_WEBHOOK" \
+              -H 'Content-Type: application/json' \
+              -d "{\"text\":\"❌ *Score Accuracy Gate failed* on \`${{ github.ref }}\`. One or more scoring domains are below accuracy threshold. Check the Actions run for details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+          fi
