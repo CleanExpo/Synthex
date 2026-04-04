@@ -16,6 +16,7 @@ import useSWR from 'swr';
 import { useState, useEffect, useRef } from 'react';
 import { ADVISOR_ENABLED } from '@/lib/constants/onboarding';
 import { fireAdvisorEvent } from '@/lib/analytics/advisor-events';
+import { GeoScoreMiniWidget } from '@/components/geo/GeoScoreMiniWidget';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -187,6 +188,13 @@ export default function AdvisorPage() {
     fetchJson
   );
 
+  const { data: geoData } = useSWR<{ score: number | null }>(
+    ADVISOR_ENABLED ? '/api/dashboard/geo-score' : null,
+    fetchJson,
+    { revalidateOnFocus: false, refreshInterval: 86_400_000 }
+  );
+  const geoScore = geoData?.score ?? null;
+
   // Fire advisor_opened_dashboard once when brief loads
   const brief = data?.brief ?? null;
   useEffect(() => {
@@ -314,15 +322,16 @@ export default function AdvisorPage() {
             </div>
           )}
 
-          {/* Section 4: AI Search Visibility / GEO teaser (conditional) */}
+          {/* Section 4: AI Search Visibility / GEO teaser (conditional) — SYN-657 */}
           {brief.geoTeaserText && (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6">
-              <p className="text-xs font-semibold text-emerald-600 uppercase tracking-widest mb-2">
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-6">
+              <p className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-2">
                 Your AI Search Visibility
               </p>
-              <p className="text-sm text-emerald-800 leading-relaxed">
+              <p className="text-sm text-white/70 leading-relaxed mb-3">
                 {brief.geoTeaserText}
               </p>
+              <GeoScoreMiniWidget score={geoScore} />
             </div>
           )}
         </>
