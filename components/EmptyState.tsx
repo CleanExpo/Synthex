@@ -12,6 +12,8 @@ import {
   Inbox,
   Link2,
 } from '@/components/icons';
+import { MascotCard } from '@/components/mascots/MascotCard';
+import { useMascot, type MascotContext } from '@/hooks/use-mascot';
 
 // ---------------------------------------------------------------------------
 // Inline SVG illustrations — amber-only palette, no cyan / green / blue
@@ -262,6 +264,17 @@ function PlatformsIllustration() {
 // Config map
 // ---------------------------------------------------------------------------
 
+/** Maps EmptyState type to the appropriate mascot context */
+const EMPTY_MASCOT_CONTEXT: Record<string, MascotContext> = {
+  content: 'empty-content',
+  analytics: 'empty-analytics',
+  campaigns: 'empty-campaigns',
+  schedule: 'empty-schedule',
+  search: 'empty-search',
+  generic: 'empty-generic',
+  platforms: 'empty-platforms',
+};
+
 interface EmptyStateProps {
   type:
     | 'content'
@@ -276,6 +289,8 @@ interface EmptyStateProps {
   actionLabel?: string;
   onAction?: () => void;
   className?: string;
+  /** Show a mascot persona below the icon. Defaults to true. */
+  showMascot?: boolean;
 }
 
 const emptyStateConfigs = {
@@ -345,6 +360,17 @@ const emptyStateConfigs = {
 // EmptyState component
 // ---------------------------------------------------------------------------
 
+function EmptyStateMascot({ type }: { type: string }) {
+  const { persona, imageUrl } = useMascot(
+    (EMPTY_MASCOT_CONTEXT[type] ?? 'empty-generic') as MascotContext
+  );
+  return (
+    <div className="mt-6">
+      <MascotCard persona={persona} imageUrl={imageUrl} variant="compact" />
+    </div>
+  );
+}
+
 export function EmptyState({
   type,
   title,
@@ -352,6 +378,7 @@ export function EmptyState({
   actionLabel,
   onAction,
   className = '',
+  showMascot = true,
 }: EmptyStateProps) {
   const config = emptyStateConfigs[type];
   const Icon = config.icon;
@@ -424,6 +451,9 @@ export function EmptyState({
           </button>
         </div>
       )}
+
+      {/* Mascot tip — contextual persona for this empty state */}
+      {showMascot && <EmptyStateMascot type={type} />}
     </div>
   );
 }
