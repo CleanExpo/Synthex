@@ -1,15 +1,24 @@
 /**
  * 30-Day Check-In Email — SYN-661
  *
- * Sent once to org owners approximately 30 days after their organisation was created.
- * Celebrates the first month and surfaces three key metrics:
- *   - Posts published
- *   - Estimated hours saved
- *   - Health score (optional — omitted when ClientHealthScore not yet available)
+ * Sent once to org owners 28–45 days after account creation.
+ * Bridges the gap before the Quarterly Milestone Review arrives at day 90.
+ *
+ * Three sections:
+ *   1. GEO Score baseline card  (conditional — shown only if client_geo_scores has data)
+ *   2. First Wins summary       (conditional — shown only if win_notifications exist)
+ *   3. Promise statement        (always shown)
+ *
+ * Adaptive subject line — based on actual_send_day:
+ *   28-32 → "30 days in — here's what we've learned about your business"
+ *   33-38 → "Five weeks in — your Synthex starting point"
+ *   39-45 → "Your Synthex baseline — here's where we start from"
+ *
+ * Custom Oracle non-negotiable: every displayed metric carries a plain-English
+ * "which means" sentence. No metric name appears without an immediate outcome.
  *
  * Uses Resend singleton pattern consistent with other Synthex emails.
- * Fire-and-forget variant is NOT used — callers receive { success, error? } to decide
- * on retry or journey event fallback.
+ * Never throws — callers receive { success, error? }.
  */
 
 import { Resend } from 'resend';
@@ -22,146 +31,243 @@ function getResend(): Resend {
   return _resend;
 }
 
-const FROM = process.env.EMAIL_FROM ?? 'Synthex <noreply@synthex.social>';
+const FROM    = process.env.EMAIL_FROM         ?? 'Synthex <noreply@synthex.social>';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+export type SubjectLineVariant = 'day_28_32' | 'day_33_38' | 'day_39_45';
+
 export interface ThirtyDayCheckinEmailParams {
-  to: string;
-  businessName: string;
-  postsPublished: number;
-  minutesSaved: number;
-  healthScore: number | null; // null = no score yet, omit the stat card
-  dashboardUrl?: string; // defaults to APP_URL/dashboard
+  to:               string;
+  businessName:     string;
+  /** Actual calendar day since client creation (28-45). Drives subject + variant. */
+  actualSendDay:    number;
+  /** Latest GEO Score (0-100). null = no data yet. */
+  geoScore:         number | null;
+  /** Count of win_notification events for this client before send date. */
+  winsCount:        number;
+  dashboardUrl?:    string;
+  calendarUrl?:     string;
 }
 
-function formatNumber(n: number): string {
-  return n.toLocaleString('en-AU');
+// ── Subject line ──────────────────────────────────────────────────────────────
+
+export function getSubjectVariant(actualSendDay: number): SubjectLineVariant {
+  if (actualSendDay <= 32) return 'day_28_32';
+  if (actualSendDay <= 38) return 'day_33_38';
+  return 'day_39_45';
 }
 
-function scoreColour(score: number): string {
-  if (score >= 75) return '#22c55e';
-  if (score >= 50) return '#f59e0b';
-  return '#ef4444';
+function getSubjectLine(variant: SubjectLineVariant): string {
+  switch (variant) {
+    case 'day_28_32': return '30 days in — here\'s what we\'ve learned about your business';
+    case 'day_33_38': return 'Five weeks in — your Synthex starting point';
+    case 'day_39_45': return 'Your Synthex baseline — here\'s where we start from';
+  }
 }
 
-function buildHealthScoreCard(score: number): string {
-  const colour = scoreColour(score);
+// ── GEO Score section ─────────────────────────────────────────────────────────
+
+function geoScoreBandMeaning(score: number): string {
+  if (score <= 30) {
+    return 'Google has limited visibility of your business in local search right now — that\'s exactly what we\'re here to fix.';
+  }
+  if (score <= 55) {
+    return 'Google can find your business in local search — there\'s meaningful room to grow your visibility.';
+  }
+  if (score <= 75) {
+    return 'Google is showing your business well in local search — we\'ll push that further.';
+  }
+  return 'Google considers your business highly visible in local search — we\'re working to maintain and extend that.';
+}
+
+function buildGeoScoreSection(geoScore: number | null): string {
+  if (geoScore === null) {
+    return `
+          <!-- GEO Score placeholder -->
+          <tr>
+            <td style="padding:0 32px 24px;">
+              <table width="100%" cellpadding="0" cellspacing="0"
+                     style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:10px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.06em;color:#0369a1;text-transform:uppercase;">Local Search Visibility</p>
+                    <p style="margin:0;font-size:15px;color:#374151;line-height:1.6;">
+                      We're monitoring your local search visibility. Your first GEO Score arrives within the next 14 days.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`;
+  }
+
+  const meaning = geoScoreBandMeaning(geoScore);
   return `
-          <td width="33%" style="text-align:center;padding:16px 8px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
-            <p style="margin:0;font-size:26px;font-weight:700;color:${colour};">${score}</p>
-            <p style="margin:4px 0 0;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Health Score</p>
-          </td>`;
+          <!-- GEO Score baseline card -->
+          <tr>
+            <td style="padding:0 32px 24px;">
+              <table width="100%" cellpadding="0" cellspacing="0"
+                     style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:10px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.06em;color:#0369a1;text-transform:uppercase;">Your GEO Score Baseline</p>
+                    <p style="margin:0 0 12px;font-size:28px;font-weight:800;color:#0f172a;">${geoScore}<span style="font-size:16px;font-weight:500;color:#64748b;">/100</span></p>
+                    <p style="margin:0;font-size:15px;color:#374151;line-height:1.6;">
+                      ${meaning}
+                      This is your starting point. In your first Milestone Review (around day 90), we'll show you how it's grown.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`;
 }
 
-/**
- * Sends the 30-day check-in email. Returns { success, error? }.
- * Does NOT throw — caller handles retry / journey event fallback.
- */
-export async function sendThirtyDayCheckinEmail(
-  params: ThirtyDayCheckinEmailParams
-): Promise<{ success: boolean; error?: string }> {
+// ── First Wins section ────────────────────────────────────────────────────────
+
+function buildWinsSection(winsCount: number): string {
+  if (winsCount === 0) {
+    return `
+          <!-- First Wins — none yet -->
+          <tr>
+            <td style="padding:0 32px 24px;">
+              <table width="100%" cellpadding="0" cellspacing="0"
+                     style="background:#fefce8;border:1.5px solid #fde68a;border-radius:10px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.06em;color:#92400e;text-transform:uppercase;">Your First Win</p>
+                    <p style="margin:0;font-size:15px;color:#374151;line-height:1.6;">
+                      Your first win is coming. Synthex is actively learning what resonates with your audience — the more we post, the faster we learn.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`;
+  }
+
+  const winWord  = winsCount === 1 ? 'win' : 'wins';
+  const postWord = winsCount === 1 ? 'post' : 'posts';
+  const dataWord = winsCount === 1 ? 'data point' : 'data points';
+
+  return `
+          <!-- First Wins summary -->
+          <tr>
+            <td style="padding:0 32px 24px;">
+              <table width="100%" cellpadding="0" cellspacing="0"
+                     style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.06em;color:#15803d;text-transform:uppercase;">🏆 Early Wins</p>
+                    <p style="margin:0;font-size:15px;color:#374151;line-height:1.6;">
+                      You've already had <strong>${winsCount} ${winWord}</strong> with Synthex — ${postWord} that outperformed your industry average.
+                      That's ${winsCount} ${dataWord} Synthex is already learning from.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`;
+}
+
+// ── HTML builder ──────────────────────────────────────────────────────────────
+
+function buildHtml(params: ThirtyDayCheckinEmailParams): string {
   const {
-    to,
     businessName,
-    postsPublished,
-    minutesSaved,
-    healthScore,
+    actualSendDay,
+    geoScore,
+    winsCount,
     dashboardUrl = `${APP_URL}/dashboard`,
   } = params;
 
-  const hoursSaved = Math.round(minutesSaved / 60);
-  const unsubscribeUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(to)}`;
+  const variant     = getSubjectVariant(actualSendDay);
+  const geoSection  = buildGeoScoreSection(geoScore);
+  const winsSection = buildWinsSection(winsCount);
 
-  const thirdStatCell = healthScore !== null
-    ? buildHealthScoreCard(healthScore)
-    : `
-          <td width="33%" style="text-align:center;padding:16px 8px;background:#f9fafb;border-radius:8px;">
-            <p style="margin:0;font-size:26px;font-weight:700;color:#111827;">30</p>
-            <p style="margin:4px 0 0;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Days Active</p>
-          </td>`;
+  // Vary headline copy to match subject variant
+  const headlineText =
+    variant === 'day_28_32' ? `30 days in — here's what we've learned.` :
+    variant === 'day_33_38' ? `Five weeks in — your starting point.` :
+                              `Your Synthex baseline.`;
 
-  const html = `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>30 days in — ${businessName}'s Synthex snapshot</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${businessName} — ${headlineText}</title>
 </head>
-<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:32px 16px;">
+<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 16px;">
     <tr>
       <td align="center">
-        <table width="100%" style="max-width:600px;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);" cellpadding="0" cellspacing="0">
+        <table width="600" cellpadding="0" cellspacing="0"
+               style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08);">
 
           <!-- Header -->
           <tr>
-            <td style="background:#111111;padding:24px 32px;">
-              <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">Synthex</p>
-              <p style="margin:4px 0 0;font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;">30-Day Check-In</p>
+            <td style="background:#0f172a;padding:28px 32px;text-align:center;">
+              <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.08em;color:#94a3b8;text-transform:uppercase;">Synthex · 30-Day Update</p>
             </td>
           </tr>
 
           <!-- Headline -->
           <tr>
-            <td style="padding:32px 32px 0;">
-              <p style="margin:0 0 4px;font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;">30 Days In</p>
-              <h1 style="margin:0;font-size:22px;font-weight:700;color:#111827;line-height:1.3;">
-                Here's what Synthex has done for ${businessName}
+            <td style="padding:36px 32px 8px;">
+              <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#0f172a;line-height:1.3;">
+                ${businessName}, ${headlineText}
               </h1>
+              <p style="margin:0;font-size:15px;color:#64748b;line-height:1.6;">
+                Here's where things stand at the ${variant === 'day_28_32' ? '30-day' : variant === 'day_33_38' ? 'five-week' : '45-day'} mark.
+              </p>
             </td>
           </tr>
 
-          <!-- Stats row -->
+          <!-- Spacer -->
+          <tr><td style="height:24px;"></td></tr>
+
+          ${geoSection}
+
+          ${winsSection}
+
+          <!-- Promise statement (always shown) -->
           <tr>
-            <td style="padding:24px 32px;">
-              <table width="100%" cellpadding="0" cellspacing="0">
+            <td style="padding:0 32px 32px;">
+              <table width="100%" cellpadding="0" cellspacing="0"
+                     style="background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
                 <tr>
-                  <td width="33%" style="text-align:center;padding:16px 8px;background:#f9fafb;border-radius:8px;">
-                    <p style="margin:0;font-size:26px;font-weight:700;color:#111827;">${formatNumber(postsPublished)}</p>
-                    <p style="margin:4px 0 0;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Posts Published</p>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.06em;color:#475569;text-transform:uppercase;">What's Coming</p>
+                    <p style="margin:0;font-size:15px;color:#374151;line-height:1.6;">
+                      Over the next 60 days, Synthex will continue posting, learning from your results,
+                      and building your local search visibility. By day 90, you'll get a full Milestone Review
+                      showing exactly what's changed — and what it means for your business.
+                    </p>
                   </td>
-                  <td width="4%"></td>
-                  <td width="30%" style="text-align:center;padding:16px 8px;background:#fff7ed;border-radius:8px;border:1px solid #fed7aa;">
-                    <p style="margin:0;font-size:26px;font-weight:700;color:#ea580c;">${formatNumber(hoursSaved)}h</p>
-                    <p style="margin:4px 0 0;font-size:11px;color:#c2410c;text-transform:uppercase;letter-spacing:0.5px;">Hours Saved</p>
-                  </td>
-                  <td width="4%"></td>
-                  ${thirdStatCell}
                 </tr>
               </table>
             </td>
           </tr>
 
-          <!-- Body copy -->
-          <tr>
-            <td style="padding:0 32px 24px;">
-              <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.7;">
-                Your AI marketing system has been working in the background — publishing content,
-                tracking engagement, and learning what works for ${businessName}.
-              </p>
-              <p style="margin:0;font-size:15px;color:#374151;line-height:1.7;">
-                The first 30 days are when the data foundations are built. Head to your dashboard to
-                see your content performance, upcoming scheduled posts, and the AI advisor's latest
-                recommendations for next month.
-              </p>
-            </td>
-          </tr>
-
           <!-- CTA -->
           <tr>
-            <td style="padding:0 32px 32px;">
-              <a href="${dashboardUrl}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:6px;font-size:14px;font-weight:600;">
-                View your dashboard →
+            <td style="padding:0 32px 40px;text-align:center;">
+              <a href="${dashboardUrl}"
+                 style="display:inline-block;padding:14px 32px;background:#0f172a;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:600;">
+                See your dashboard →
               </a>
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td style="padding:24px 32px;border-top:1px solid #f3f4f6;">
-              <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">
-                You're receiving this because you're a Synthex subscriber.<br>
-                <a href="${unsubscribeUrl}" style="color:#9ca3af;">Unsubscribe</a>
+            <td style="padding:20px 32px;border-top:1px solid #f1f5f9;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">
+                You're receiving this because Synthex is monitoring ${businessName}'s marketing.<br />
+                <a href="${APP_URL}/dashboard/settings" style="color:#64748b;text-decoration:underline;">Manage notifications</a>
               </p>
             </td>
           </tr>
@@ -172,21 +278,88 @@ export async function sendThirtyDayCheckinEmail(
   </table>
 </body>
 </html>`;
+}
 
+function buildText(params: ThirtyDayCheckinEmailParams): string {
+  const {
+    businessName,
+    actualSendDay,
+    geoScore,
+    winsCount,
+    dashboardUrl = `${APP_URL}/dashboard`,
+  } = params;
+
+  const variant = getSubjectVariant(actualSendDay);
+  const lines: string[] = [
+    getSubjectLine(variant),
+    '',
+    `Hi ${businessName},`,
+    '',
+  ];
+
+  // GEO Score
+  if (geoScore !== null) {
+    lines.push(`Your GEO Score Baseline: ${geoScore}/100`);
+    lines.push(geoScoreBandMeaning(geoScore));
+    lines.push('This is your starting point. In your first Milestone Review (around day 90), we\'ll show you how it\'s grown.');
+  } else {
+    lines.push('We\'re monitoring your local search visibility. Your first GEO Score arrives within the next 14 days.');
+  }
+
+  lines.push('');
+
+  // Wins
+  if (winsCount > 0) {
+    const winWord  = winsCount === 1 ? 'win' : 'wins';
+    const dataWord = winsCount === 1 ? 'data point' : 'data points';
+    lines.push(`You've already had ${winsCount} ${winWord} with Synthex — posts that outperformed your industry average. That's ${winsCount} ${dataWord} Synthex is already learning from.`);
+  } else {
+    lines.push('Your first win is coming. Synthex is actively learning what resonates with your audience — the more we post, the faster we learn.');
+  }
+
+  lines.push('');
+  lines.push('Over the next 60 days, Synthex will continue posting, learning from your results, and building your local search visibility. By day 90, you\'ll get a full Milestone Review showing exactly what\'s changed — and what it means for your business.');
+  lines.push('');
+  lines.push(`See your dashboard: ${dashboardUrl}`);
+  lines.push('');
+  lines.push(`Manage notifications: ${APP_URL}/dashboard/settings`);
+
+  return lines.join('\n');
+}
+
+// ── Send function ─────────────────────────────────────────────────────────────
+
+/**
+ * Send the 30-Day Check-In email via Resend.
+ *
+ * Returns `{ success: true }` on delivery, `{ success: false, error }` on failure.
+ * Never throws — caller checks the `success` flag.
+ */
+export async function sendThirtyDayCheckinEmail(
+  params: ThirtyDayCheckinEmailParams
+): Promise<{ success: boolean; error?: string }> {
   try {
-    const result = await getResend().emails.send({
-      from: FROM,
-      to,
-      subject: `30 days in — here's what Synthex has done for ${businessName}`,
-      html,
+    const variant  = getSubjectVariant(params.actualSendDay);
+    const subject  = getSubjectLine(variant);
+    const resend   = getResend();
+
+    const { error } = await resend.emails.send({
+      from:    FROM,
+      to:      params.to,
+      subject,
+      html:    buildHtml(params),
+      text:    buildText(params),
     });
 
-    if (result.error) {
-      return { success: false, error: result.error.message };
+    if (error) {
+      console.error('[thirty-day-checkin-email] Resend error:', error);
+      return { success: false, error: String(error) };
     }
+
     return { success: true };
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return { success: false, error: message };
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[thirty-day-checkin-email] Unexpected error:', msg);
+    return { success: false, error: msg };
   }
 }
