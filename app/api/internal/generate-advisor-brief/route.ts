@@ -21,12 +21,27 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { createClient } from '@supabase/supabase-js';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { getAlgorithmContextBlock } from '@/lib/algorithm/algorithm-context';
 import { createEdgeFunctionRunner, ClientInput } from '@/lib/pipelines/runner';
 import type { AiAdvisorMetadata } from '@/lib/pipelines/metadata-schemas';
+
+let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
+function getSupabaseAdmin() {
+  if (!_supabaseAdmin) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (url && key) {
+      _supabaseAdmin = createClient(url, key, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+    }
+  }
+  return _supabaseAdmin;
+}
 
 /** Average job value used for dollar attribution when no org-specific data exists. */
 const DEFAULT_AVG_JOB_VALUE_AUD = 350;
@@ -69,6 +84,7 @@ interface OrgContext {
   postsThisWeek: number;
   avgJobValueAud: number;
   competitorGap: string | null; // null if no data (SYN-583 not yet merged)
+  contentScore: number | null; // null if content_score_history has no rows yet — SYN-666
 }
 
 interface DigestSummary {
@@ -197,7 +213,26 @@ async function gatherOrgContext(organizationId: string): Promise<OrgContext> {
     competitorGap: competitorGap
       ? `${competitorGap.keyword} (${competitorGap.competitor?.domain ?? competitorGap.competitor?.name ?? 'unknown competitor'})`
       : null,
+    contentScore: await fetchContentScore(organizationId),
   };
+}
+
+/** Fetch latest Content Score from content_score_history. Returns null on error or no data. — SYN-666 */
+async function fetchContentScore(organizationId: string): Promise<number | null> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return null;
+  try {
+    const { data } = await supabase
+      .from('content_score_history')
+      .select('score')
+      .eq('organization_id', organizationId)
+      .order('week_start', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return data ? (data as { score: number }).score : null;
+  } catch {
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -233,6 +268,10 @@ async function generateActions(ctx: OrgContext): Promise<AdvisorAction[]> {
     ctx.competitorGap
       ? `Competitor keyword gap: ${ctx.competitorGap}`
       : '',
+
+    ctx.contentScore !== null
+      ? `Content performance score: ${ctx.contentScore}/100 (weekly composite — higher = stronger content engagement relative to baseline)`
+      : 'Content performance score: building data — fewer than 10 posts analysed',
   ]
     .filter(Boolean)
     .join('\n\n');
