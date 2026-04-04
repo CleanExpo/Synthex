@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shoot the Breeze - AI Marketing Conversation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            height: 90vh;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 300px;
+            background: #f7f9fc;
+            padding: 30px 20px;
+            border-right: 1px solid #e1e8ed;
+        }
+        
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            padding: 20px 30px;
+            background: white;
+            border-bottom: 1px solid #e1e8ed;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #48bb78;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(72, 187, 120, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); }
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .mode-btn {
+            padding: 8px 16px;
+            border: 2px solid #e1e8ed;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            background: #fafbfc;
+        }
+        
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message.user {
+            flex-direction: row-reverse;
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .user .avatar {
+            background: #667eea;
+        }
+        
+        .ai .avatar {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 15px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .user .message-content {
+            background: #667eea;
+            color: white;
+        }
+        
+        .message-text {
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-top: 5px;
+        }
+        
+        .user .message-time {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .insights-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+        
+        .insights-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .insight-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+        
+        .input-container {
+            padding: 20px 30px;
+            background: white;
+            border-top: 1px solid #e1e8ed;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .input-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: #f7f9fc;
+            border-radius: 12px;
+            padding: 0 20px;
+            border: 2px solid transparent;
+            transition: border-color 0.3s;
+        }
+        
+        .input-wrapper:focus-within {
+            border-color: #667eea;
+        }
+        
+        #messageInput {
+            flex: 1;
+            padding: 15px 0;
+            border: none;
+            background: none;
+            outline: none;
+            font-size: 15px;
+            color: #2d3748;
+        }
+        
+        .voice-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .voice-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .voice-btn.recording {
+            animation: recordPulse 1.5s infinite;
+            background: #e53e3e;
+        }
+        
+        @keyframes recordPulse {
+            0% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(229, 62, 62, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0); }
+        }
+        
+        .send-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.3s;
+        }
+        
+        .send-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .sidebar h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #a0aec0;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 5px;
+        }
+        
+        .ideas-list {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .idea-item {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        
+        .idea-item:last-child {
+            border-bottom: none;
+        }
+        
+        .command-hint {
+            background: #fef5e7;
+            border: 1px solid #f9c74f;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #7b5e00;
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            width: fit-content;
+            margin-bottom: 20px;
+        }
+        
+        .typing-indicator.show {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.7;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+        
+        .cpu-monitor {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .cpu-bar {
+            width: 100px;
+            height: 6px;
+            background: #e1e8ed;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .cpu-fill {
+            height: 100%;
+            background: #48bb78;
+            transition: width 0.3s;
+        }
+        
+        .cpu-fill.warning {
+            background: #f6ad55;
+        }
+        
+        .cpu-fill.danger {
+            background: #e53e3e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h3>Session Metrics</h3>
+            
+            <div class="metric-card">
+                <div class="metric-value" id="ideaCount">0</div>
+                <div class="metric-label">Ideas Generated</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-value" id="insightCount">0</div>
+                <div class="metric-label">Insights Captured</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-value" id="exchangeCount">0</div>
+                <div class="metric-label">Exchanges</div>
+            </div>
+            
+            <h3 style="margin-top: 30px;">Recent Ideas</h3>
+            <div class="ideas-list" id="ideasList">
+                <div class="idea-item">Start brainstorming to generate ideas...</div>
+            </div>
+            
+            <div class="command-hint" style="margin-top: 30px;">
+                <strong>Commands:</strong><br>
+                • "Switch to [mode]"<br>
+                • "Summarize"<br>
+                • "Generate ideas"<br>
+                • "Execute workflow"
+            </div>
+        </div>
+        
+        <div class="main-chat">
+            <div class="header">
+                <h1>
+                    <span class="status-indicator"></span>
+                    Shoot the Breeze
+                </h1>
+                <div class="mode-selector">
+                    <button class="mode-btn active" data-mode="brainstorm">Brainstorm</button>
+                    <button class="mode-btn" data-mode="refine">Refine</button>
+                    <button class="mode-btn" data-mode="analyze">Analyze</button>
+                    <button class="mode-btn" data-mode="execute">Execute</button>
+                </div>
+            </div>
+            
+            <div class="chat-container" id="chatContainer">
+                <div class="message ai">
+                    <div class="avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            Welcome! I'm your AI marketing strategist. Let's brainstorm some ideas for your project. 
+                            Tell me about your product or service - what makes it special?
+                        </div>
+                        <div class="message-time">Just now</div>
+                    </div>
+                </div>
+                
+                <div class="typing-indicator" id="typingIndicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+            
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <input type="text" id="messageInput" placeholder="Type your message or speak your thoughts...">
+                </div>
+                <button class="voice-btn" id="voiceBtn">
+                    🎤
+                </button>
+                <button class="send-btn" id="sendBtn">Send</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="cpu-monitor">
+        <span>CPU:</span>
+        <div class="cpu-bar">
+            <div class="cpu-fill" id="cpuFill" style="width: 30%"></div>
+        </div>
+        <span id="cpuPercent">30%</span>
+    </div>
+    
+    <script>
+        // State management
+        let currentMode = 'brainstorm';
+        let isRecording = false;
+        let ideaCount = 0;
+        let insightCount = 0;
+        let exchangeCount = 0;
+        let ideas = [];
+        
+        // DOM elements
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const ideasList = document.getElementById('ideasList');
+        
+        // Mode switching
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentMode = this.dataset.mode;
+                addMessage(`Switched to ${currentMode} mode. Let's ${currentMode} your ideas!`, 'ai');
+            });
+        });
+        
+        // Send message
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        
+        // Voice recording
+        voiceBtn.addEventListener('click', toggleRecording);
+        
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+            
+            addMessage(text, 'user');
+            messageInput.value = '';
+            
+            // Show typing indicator
+            typingIndicator.classList.add('show');
+            
+            // Simulate AI response
+            setTimeout(() => {
+                typingIndicator.classList.remove('show');
+                processUserInput(text);
+            }, 1500);
+        }
+        
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const time = new Date().toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit' 
+            });
+            
+            messageDiv.innerHTML = `
+                <div class="avatar">${sender === 'user' ? 'U' : 'AI'}</div>
+                <div class="message-content">
+                    <div class="message-text">${text}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            chatContainer.insertBefore(messageDiv, typingIndicator);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            if (sender === 'user') {
+                exchangeCount++;
+                document.getElementById('exchangeCount').textContent = exchangeCount;
+            }
+        }
+        
+        function addInsightMessage(text, insights) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai';
+            
+            const time = new Date().toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit' 
+            });
+            
+            let insightsHTML = '';
+            if (insights && insights.length > 0) {
+                insightsHTML = `
+                    <div class="insights-box">
+                        <div class="insights-title">💡 Key Insights</div>
+                        ${insights.map(insight => `
+                            <div class="insight-item">
+                                <span>→</span> ${insight}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                insightCount += insights.length;
+                document.getElementById('insightCount').textContent = insightCount;
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="avatar">AI</div>
+                <div class="message-content">
+                    <div class="message-text">${text}</div>
+                    ${insightsHTML}
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            chatContainer.insertBefore(messageDiv, typingIndicator);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function processUserInput(text) {
+            const textLower = text.toLowerCase();
+            
+            // Command processing
+            if (textLower.includes('summarize')) {
+                handleSummarize();
+            } else if (textLower.includes('generate ideas')) {
+                handleGenerateIdeas();
+            } else if (textLower.includes('execute workflow')) {
+                handleExecuteWorkflow();
+            } else if (textLower.includes('switch to')) {
+                // Already handled by mode buttons
+                return;
+            } else {
+                // Process based on current mode
+                handleModeSpecificInput(text);
+            }
+        }
+        
+        function handleModeSpecificInput(text) {
+            if (currentMode === 'brainstorm') {
+                const response = "That's an interesting angle! What if we combined that with user-generated content? ";
+                const insights = [
+                    "User engagement increases 3x with interactive elements",
+                    "Consider micro-influencer partnerships for authenticity"
+                ];
+                addInsightMessage(response + "We could create a challenge that encourages sharing.", insights);
+                
+                // Add ideas
+                const newIdeas = [
+                    "Social media challenge campaign",
+                    "User testimonial video series"
+                ];
+                addIdeas(newIdeas);
+                
+            } else if (currentMode === 'refine') {
+                const response = "Let me refine that concept for maximum impact...";
+                const insights = [
+                    "Simplified messaging increases conversion by 25%",
+                    "A/B test different hooks for optimization"
+                ];
+                addInsightMessage(response, insights);
+                
+            } else if (currentMode === 'analyze') {
+                const response = "Analyzing the market potential and competitive landscape...";
+                const insights = [
+                    "Market gap identified in video content",
+                    "Competitor weakness: lack of community engagement",
+                    "Opportunity: First-mover advantage in your niche"
+                ];
+                addInsightMessage(response, insights);
+                
+            } else if (currentMode === 'execute') {
+                const response = "Here's your execution roadmap:";
+                const insights = [
+                    "Week 1: Set up tracking and analytics",
+                    "Week 2: Create initial content batch",
+                    "Week 3: Launch pilot campaign",
+                    "Week 4: Analyze and optimize"
+                ];
+                addInsightMessage(response, insights);
+            }
+        }
+        
+        function handleSummarize() {
+            const summary = `
+                📊 <strong>Conversation Summary</strong><br><br>
+                • Total exchanges: ${exchangeCount}<br>
+                • Ideas generated: ${ideaCount}<br>
+                • Insights captured: ${insightCount}<br><br>
+                <strong>Key themes:</strong> Product differentiation, audience engagement, viral potential<br><br>
+                <strong>Next steps:</strong> Move to execution mode to create your campaign roadmap.
+            `;
+            addMessage(summary, 'ai');
+        }
+        
+        function handleGenerateIdeas() {
+            const newIdeas = [
+                "Launch a beta program with exclusive perks",
+                "Create a documentary-style content series",
+                "Partner with complementary brands",
+                "Develop an interactive product demo",
+                "Host virtual events for community building"
+            ];
+            
+            addIdeas(newIdeas);
+            
+            const response = "I've generated 5 new marketing ideas based on our conversation!";
+            const insights = newIdeas.slice(0, 3);
+            addInsightMessage(response, insights);
+        }
+        
+        function handleExecuteWorkflow() {
+            const response = `
+                🚀 <strong>Ready to Execute!</strong><br><br>
+                I've captured all our ideas and insights. The marketing workflow is ready to launch.<br><br>
+                • Ideas captured: ${ideaCount}<br>
+                • Insights ready: ${insightCount}<br>
+                • Workflow phases: 4<br><br>
+                Click "Execute" to start the automated marketing campaign generation!
+            `;
+            addMessage(response, 'ai');
+        }
+        
+        function addIdeas(newIdeas) {
+            ideas = [...ideas, ...newIdeas];
+            ideaCount += newIdeas.length;
+            document.getElementById('ideaCount').textContent = ideaCount;
+            
+            // Update ideas list
+            ideasList.innerHTML = ideas.slice(-5).map(idea => 
+                `<div class="idea-item">${idea}</div>`
+            ).join('');
+        }
+        
+        function toggleRecording() {
+            isRecording = !isRecording;
+            voiceBtn.classList.toggle('recording', isRecording);
+            voiceBtn.textContent = isRecording ? '⏹️' : '🎤';
+            
+            if (isRecording) {
+                addMessage("🎤 Listening... (Voice simulation - type your message)", 'ai');
+            } else {
+                // Process recorded audio (simulated)
+                setTimeout(() => {
+                    const simulatedTranscript = "I want to create a viral marketing campaign";
+                    messageInput.value = simulatedTranscript;
+                    sendMessage();
+                }, 1000);
+            }
+        }
+        
+        // Simulate CPU monitoring
+        setInterval(() => {
+            const cpu = Math.random() * 60 + 20; // Random between 20-80%
+            const cpuFill = document.getElementById('cpuFill');
+            const cpuPercent = document.getElementById('cpuPercent');
+            
+            cpuFill.style.width = cpu + '%';
+            cpuPercent.textContent = Math.round(cpu) + '%';
+            
+            // Color coding
+            cpuFill.classList.remove('warning', 'danger');
+            if (cpu > 70) cpuFill.classList.add('danger');
+            else if (cpu > 50) cpuFill.classList.add('warning');
+        }, 2000);
+    </script>
+</body>
+</html>

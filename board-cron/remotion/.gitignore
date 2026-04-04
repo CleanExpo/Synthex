@@ -1,0 +1,9 @@
+node_modules/
+dist/
+# Public assets are copies of src/assets — don't double-track
+public/sounds/
+public/session-*/
+# Placeholder PNGs (replace with real avatars)
+public/personas/
+# Remotion cache
+.remotion/

@@ -1,0 +1,373 @@
+{
+  "video_templates": {
+    "youtube_shorts": {
+      "hook_templates": [
+        "Did you know that {STATISTIC}?",
+        "Stop scrolling! This will change how you {ACTION}",
+        "The {ADJECTIVE} trick that {BENEFIT}",
+        "POV: You just discovered {REVELATION}",
+        "Warning: This {TOPIC} hack is {ADJECTIVE}"
+      ],
+      "structure": {
+        "0-3_seconds": "attention_grabbing_hook",
+        "3-10_seconds": "problem_statement",
+        "10-40_seconds": "solution_demonstration",
+        "40-50_seconds": "results_showcase",
+        "50-60_seconds": "call_to_action"
+      },
+      "visual_elements": {
+        "text_overlay": {
+          "font": "bold_sans_serif",
+          "position": "center_aligned",
+          "animation": "pop_in",
+          "duration": "2-3_seconds_per_text"
+        },
+        "transitions": ["quick_cut", "zoom_in", "slide_left"],
+        "effects": ["motion_blur", "speed_ramp", "color_pop"],
+        "music": "upbeat_trending_audio"
+      },
+      "veo3_prompts": [
+        "Create a fast-paced, viral YouTube Short with dynamic transitions and bold text overlays. {CONTENT}",
+        "Generate an engaging vertical video with quick cuts and trending visual effects. {CONTENT}",
+        "Produce a high-energy Short that hooks viewers instantly and maintains attention. {CONTENT}"
+      ]
+    },
+    "instagram_reels": {
+      "hook_templates": [
+        "Save this before it's gone!",
+        "The {TOPIC} secret influencers don't want you to know",
+        "Transform your {AREA} in seconds",
+        "I tried {TREND} for 30 days and...",
+        "This changed my {AREA} forever"
+      ],
+      "structure": {
+        "0-2_seconds": "aesthetic_hook",
+        "2-8_seconds": "story_setup",
+        "8-20_seconds": "transformation_process",
+        "20-25_seconds": "final_reveal",
+        "25-30_seconds": "engagement_prompt"
+      },
+      "visual_elements": {
+        "filters": ["warm_glow", "film_grain", "vintage_aesthetic"],
+        "text_style": {
+          "font": "minimal_modern",
+          "placement": "lower_third",
+          "animation": "typewriter"
+        },
+        "transitions": ["smooth_fade", "match_cut", "whip_pan"],
+        "music": "trending_instagram_audio"
+      },
+      "veo3_prompts": [
+        "Create an aesthetic Instagram Reel with smooth transitions and trendy visual style. {CONTENT}",
+        "Generate a visually stunning vertical video with Instagram-worthy aesthetics. {CONTENT}",
+        "Produce an engaging Reel that combines trending audio with eye-catching visuals. {CONTENT}"
+      ]
+    },
+    "tiktok": {
+      "hook_templates": [
+        "Wait for it...",
+        "Part 1 of things I wish I knew sooner",
+        "Rating {TOPIC} hacks from 1-10",
+        "Day 1 of {CHALLENGE}",
+        "Nobody talks about this but..."
+      ],
+      "structure": {
+        "0-1_seconds": "instant_hook",
+        "1-5_seconds": "setup",
+        "5-15_seconds": "main_content",
+        "15-25_seconds": "plot_twist_or_payoff",
+        "25-30_seconds": "loop_back_or_cliffhanger"
+      },
+      "visual_elements": {
+        "style": "authentic_raw",
+        "text_overlay": {
+          "style": "tiktok_native",
+          "color": "white_with_black_outline",
+          "position": "follows_action"
+        },
+        "effects": ["green_screen", "duet_ready", "reaction_space"],
+        "pacing": "very_fast_with_jump_cuts"
+      },
+      "veo3_prompts": [
+        "Create an authentic TikTok video with fast pacing and native platform style. {CONTENT}",
+        "Generate a viral TikTok with trending format and engaging storytelling. {CONTENT}",
+        "Produce a relatable TikTok that feels genuine and uses platform-native features. {CONTENT}"
+      ]
+    },
+    "linkedin_video": {
+      "hook_templates": [
+        "After 10 years in {INDUSTRY}, here's what I learned",
+        "The mistake 90% of {PROFESSIONALS} make",
+        "How we increased {METRIC} by {PERCENTAGE}",
+        "The future of {INDUSTRY} is here",
+        "3 lessons from building a {ACHIEVEMENT}"
+      ],
+      "structure": {
+        "0-5_seconds": "professional_hook",
+        "5-20_seconds": "context_and_credibility",
+        "20-60_seconds": "main_insights",
+        "60-90_seconds": "case_study_or_example",
+        "90-120_seconds": "actionable_takeaways"
+      },
+      "visual_elements": {
+        "style": "corporate_professional",
+        "graphics": {
+          "charts": "animated_data_viz",
+          "lower_thirds": "name_and_title",
+          "branding": "subtle_logo_placement"
+        },
+        "transitions": ["clean_cut", "slide", "fade"],
+        "captions": "always_on_professional_font"
+      },
+      "veo3_prompts": [
+        "Create a professional LinkedIn video with data visualizations and corporate aesthetics. {CONTENT}",
+        "Generate an authoritative business video with clean graphics and professional tone. {CONTENT}",
+        "Produce a thought leadership video that showcases expertise and industry insights. {CONTENT}"
+      ]
+    },
+    "facebook_video": {
+      "hook_templates": [
+        "This made me cry happy tears",
+        "You won't believe what happened next",
+        "Share if you agree!",
+        "Tag someone who needs to see this",
+        "The moment that changed everything"
+      ],
+      "structure": {
+        "0-5_seconds": "emotional_hook",
+        "5-30_seconds": "story_buildup",
+        "30-90_seconds": "main_content",
+        "90-120_seconds": "emotional_payoff",
+        "120-180_seconds": "community_engagement"
+      },
+      "visual_elements": {
+        "aspect_ratio": "square_1x1",
+        "captions": {
+          "style": "large_readable",
+          "background": "semi_transparent",
+          "position": "bottom_center"
+        },
+        "emotional_cues": ["warm_colors", "soft_focus", "slow_motion"],
+        "engagement": ["share_prompts", "reaction_moments", "comment_questions"]
+      },
+      "veo3_prompts": [
+        "Create an emotional Facebook video that encourages sharing and community engagement. {CONTENT}",
+        "Generate a heartwarming square video optimized for Facebook feed viewing. {CONTENT}",
+        "Produce a shareable Facebook video with captions and emotional storytelling. {CONTENT}"
+      ]
+    },
+    "twitter_video": {
+      "hook_templates": [
+        "BREAKING: {NEWS}",
+        "Thread: {TOPIC} explained",
+        "Hot take: {OPINION}",
+        "This is why {STATEMENT}",
+        "Never thought I'd tweet this but..."
+      ],
+      "structure": {
+        "0-3_seconds": "immediate_context",
+        "3-15_seconds": "main_point",
+        "15-25_seconds": "supporting_evidence",
+        "25-30_seconds": "call_for_engagement"
+      },
+      "visual_elements": {
+        "style": "news_bulletin_or_explainer",
+        "text": {
+          "style": "twitter_thread_aesthetic",
+          "highlighting": "key_quotes_emphasized"
+        },
+        "graphics": "minimal_clean",
+        "subtitles": "always_on"
+      },
+      "veo3_prompts": [
+        "Create a concise Twitter video that delivers information quickly and clearly. {CONTENT}",
+        "Generate a newsworthy video optimized for Twitter's fast-paced environment. {CONTENT}",
+        "Produce a shareable Twitter video that sparks discussion and retweets. {CONTENT}"
+      ]
+    },
+    "pinterest_video": {
+      "hook_templates": [
+        "DIY: {PROJECT} in 5 steps",
+        "Transform your {SPACE} with this trick",
+        "Save for later: {VALUABLE_TIP}",
+        "The easiest way to {ACHIEVE_GOAL}",
+        "Pin-worthy {CATEGORY} ideas"
+      ],
+      "structure": {
+        "0-3_seconds": "visual_hook",
+        "3-10_seconds": "materials_or_overview",
+        "10-40_seconds": "step_by_step_process",
+        "40-50_seconds": "final_result",
+        "50-60_seconds": "save_prompt"
+      },
+      "visual_elements": {
+        "aspect_ratio": "vertical_2x3",
+        "style": "bright_inspirational",
+        "text_overlay": {
+          "style": "pinterest_aesthetic",
+          "lists": "numbered_or_bulleted",
+          "colors": "high_contrast"
+        },
+        "branding": "watermark_with_website"
+      },
+      "veo3_prompts": [
+        "Create an inspirational Pinterest Idea Pin with step-by-step visual instructions. {CONTENT}",
+        "Generate a DIY-style vertical video with bright, pinnable aesthetics. {CONTENT}",
+        "Produce a how-to video optimized for Pinterest saves and clicks. {CONTENT}"
+      ]
+    },
+    "youtube_long": {
+      "intro_templates": [
+        "In this video, you'll learn exactly how to {ACHIEVE}",
+        "What's up everyone! Today we're diving into {TOPIC}",
+        "If you've ever wondered {QUESTION}, this video is for you",
+        "By the end of this video, you'll {BENEFIT}",
+        "Welcome back! Today's topic is going to blow your mind"
+      ],
+      "structure": {
+        "0-15_seconds": "hook_and_preview",
+        "15-30_seconds": "intro_animation_and_subscribe",
+        "30-120_seconds": "problem_explanation",
+        "120-420_seconds": "main_content_sections",
+        "420-480_seconds": "examples_and_case_studies",
+        "480-540_seconds": "summary_and_takeaways",
+        "540-600_seconds": "cta_and_end_screen"
+      },
+      "chapters": [
+        "Introduction",
+        "The Problem",
+        "Solution Overview",
+        "Step-by-Step Guide",
+        "Real Examples",
+        "Pro Tips",
+        "Common Mistakes",
+        "Summary"
+      ],
+      "visual_elements": {
+        "b_roll": "relevant_footage_every_10_seconds",
+        "graphics": {
+          "lower_thirds": "speaker_identification",
+          "charts": "animated_infographics",
+          "lists": "on_screen_bullet_points"
+        },
+        "transitions": ["smooth_cut", "fade", "slide"],
+        "end_screen": {
+          "duration": "20_seconds",
+          "elements": ["subscribe_button", "suggested_videos", "playlist"]
+        }
+      },
+      "veo3_prompts": [
+        "Create a comprehensive YouTube tutorial with professional editing and clear sections. {CONTENT}",
+        "Generate an educational long-form video with engaging visuals and smooth pacing. {CONTENT}",
+        "Produce a high-quality YouTube video with chapters, graphics, and professional narration. {CONTENT}"
+      ]
+    }
+  },
+  "content_adaptation_rules": {
+    "long_to_short": {
+      "youtube_long_to_shorts": [
+        "Extract most engaging 60-second segment",
+        "Add trending music",
+        "Increase pace by 2x",
+        "Add attention-grabbing text overlay"
+      ],
+      "blog_to_video": [
+        "Extract 3-5 key points",
+        "Create visual representations",
+        "Add voiceover or captions",
+        "Include clear CTA"
+      ]
+    },
+    "cross_platform": {
+      "instagram_to_tiktok": [
+        "Remove Instagram-specific elements",
+        "Add TikTok trending sounds",
+        "Adjust pacing for TikTok audience",
+        "Include TikTok-native text style"
+      ],
+      "tiktok_to_instagram": [
+        "Polish visual aesthetics",
+        "Remove TikTok watermarks",
+        "Add Instagram-appropriate music",
+        "Adjust aspect ratio if needed"
+      ],
+      "video_to_pinterest": [
+        "Extract key frames as pins",
+        "Create step-by-step graphics",
+        "Add Pinterest-optimized descriptions",
+        "Include save-worthy overlays"
+      ]
+    }
+  },
+  "veo3_style_presets": {
+    "professional": {
+      "lighting": "studio_quality",
+      "color_grading": "corporate_clean",
+      "camera_movement": "smooth_controlled",
+      "editing_pace": "moderate"
+    },
+    "trendy": {
+      "lighting": "natural_bright",
+      "color_grading": "vibrant_saturated",
+      "camera_movement": "dynamic_handheld",
+      "editing_pace": "fast"
+    },
+    "authentic": {
+      "lighting": "available_light",
+      "color_grading": "natural_minimal",
+      "camera_movement": "handheld_casual",
+      "editing_pace": "natural"
+    },
+    "cinematic": {
+      "lighting": "dramatic_contrast",
+      "color_grading": "film_look",
+      "camera_movement": "cinematic_slow",
+      "editing_pace": "deliberate"
+    },
+    "educational": {
+      "lighting": "even_bright",
+      "color_grading": "clear_neutral",
+      "camera_movement": "stable_tripod",
+      "editing_pace": "clear_structured"
+    }
+  },
+  "performance_optimization": {
+    "thumbnail_generation": {
+      "youtube": {
+        "elements": ["contrasting_colors", "large_text", "facial_expression", "curiosity_gap"],
+        "text_size": "30%_of_thumbnail",
+        "color_contrast": "high"
+      },
+      "facebook": {
+        "elements": ["emotional_moment", "clear_branding", "minimal_text"],
+        "aspect": "16:9_or_1:1"
+      }
+    },
+    "caption_optimization": {
+      "auto_generate": true,
+      "languages": ["en", "es", "fr", "de"],
+      "style": {
+        "youtube": "detailed_timestamps",
+        "instagram": "engaging_storytelling",
+        "tiktok": "minimal_hooky",
+        "linkedin": "professional_informative"
+      }
+    },
+    "engagement_features": {
+      "youtube": ["cards", "end_screens", "chapters", "premieres"],
+      "instagram": ["polls", "questions", "shopping_tags", "music"],
+      "tiktok": ["duet", "stitch", "effects", "sounds"],
+      "facebook": ["polls", "live", "watch_party", "stars"]
+    }
+  },
+  "batch_processing_priorities": {
+    "high_priority": ["youtube_shorts", "instagram_reels", "tiktok"],
+    "medium_priority": ["youtube_long", "linkedin_video", "facebook_video"],
+    "low_priority": ["twitter_video", "pinterest_video"],
+    "cpu_allocation": {
+      "high": "40%",
+      "medium": "35%",
+      "low": "25%"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="feat-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- outer track shadow -->
+  <circle cx="25.5" cy="25.5" r="16" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="4"/>
+  <!-- outer track -->
+  <circle cx="24" cy="24" r="16" fill="none" stroke="rgba(249,115,22,0.2)" stroke-width="4"/>
+  <!-- active arc shadow -->
+  <path d="M24 8 A16 16 0 0 1 40 24" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="4.5" stroke-linecap="round" transform="translate(1.5,1.5)"/>
+  <!-- active arc -->
+  <path d="M24 8 A16 16 0 0 1 40 24" fill="none" stroke="url(#feat-grad)" stroke-width="4.5" stroke-linecap="round"/>
+  <!-- highlight dot at start -->
+  <circle cx="24" cy="8" r="3" fill="url(#feat-grad)"/>
+  <circle cx="23" cy="7" r="1.2" fill="rgba(255,255,255,0.4)"/>
+</svg>

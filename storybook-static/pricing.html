@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing - SYNTHEX Marketing Platform</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: #f8fafc;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #3b82f6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .pricing-header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .pricing-header p {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .pricing-toggle {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #334155;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #3b82f6;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(30px);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .pricing-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .pricing-card.featured {
+            border: 2px solid #3b82f6;
+            transform: scale(1.05);
+        }
+
+        .pricing-card.featured::before {
+            content: 'MOST POPULAR';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-description {
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
+
+        .plan-price {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .currency {
+            font-size: 1.5rem;
+            color: #94a3b8;
+        }
+
+        .price {
+            font-size: 3rem;
+            font-weight: 700;
+        }
+
+        .period {
+            color: #94a3b8;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .plan-features li {
+            padding: 0.75rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+
+        .check-icon {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .check-icon::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .plan-button {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .plan-button.primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .plan-button.secondary {
+            background: transparent;
+            color: #3b82f6;
+            border: 2px solid #3b82f6;
+        }
+
+        .plan-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .comparison-section {
+            margin-top: 6rem;
+        }
+
+        .comparison-table {
+            width: 100%;
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .comparison-table th {
+            background: rgba(15, 23, 42, 0.6);
+            font-weight: 600;
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .faq-section {
+            margin-top: 6rem;
+        }
+
+        .faq-item {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .faq-answer {
+            padding: 0 1.5rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s, padding 0.3s;
+            color: #94a3b8;
+        }
+
+        .faq-item.active .faq-answer {
+            padding: 0 1.5rem 1.5rem;
+            max-height: 500px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 4rem 2rem;
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo">
+                <img src="/logo.png" alt="SYNTHEX" style="width: 32px; height: 32px;">
+                SYNTHEX
+            </a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/pricing.html">Pricing</a></li>
+                <li><a href="/dashboard">Dashboard</a></li>
+                <li><a href="/auth.html">Sign In</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="pricing-header">
+            <h1>Simple, Transparent Pricing</h1>
+            <p>Choose the perfect plan for your marketing needs. All plans include core features with unlimited potential.</p>
+        </div>
+
+        <div class="pricing-toggle">
+            <span>Monthly</span>
+            <div class="toggle-switch" id="billingToggle">
+                <div class="toggle-slider"></div>
+            </div>
+            <span>Annual (Save 20%)</span>
+        </div>
+
+        <div class="pricing-grid">
+            <!-- Starter Plan -->
+            <div class="pricing-card">
+                <h3 class="plan-name">Starter</h3>
+                <p class="plan-description">Perfect for individuals and small businesses getting started with AI marketing</p>
+                <div class="plan-price">
+                    <span class="currency">$</span>
+                    <span class="price" data-monthly="0" data-annual="0">0</span>
+                    <span class="period">/month</span>
+                </div>
+                <ul class="plan-features">
+                    <li><span class="check-icon"></span>Access to 10+ AI Models</li>
+                    <li><span class="check-icon"></span>Generate up to 100 pieces of content/month</li>
+                    <li><span class="check-icon"></span>Basic platform optimization (3 platforms)</li>
+                    <li><span class="check-icon"></span>Standard templates library</li>
+                    <li><span class="check-icon"></span>Basic analytics dashboard</li>
+                    <li><span class="check-icon"></span>Email support</li>
+                    <li><span class="check-icon"></span>1 user account</li>
+                    <li><span class="check-icon"></span>Export to CSV</li>
+                </ul>
+                <button class="plan-button secondary" onclick="selectPlan('starter')">Get Started Free</button>
+            </div>
+
+            <!-- Professional Plan -->
+            <div class="pricing-card featured">
+                <h3 class="plan-name">Professional</h3>
+                <p class="plan-description">Ideal for growing teams and agencies with serious marketing needs</p>
+                <div class="plan-price">
+                    <span class="currency">$</span>
+                    <span class="price" data-monthly="49" data-annual="39">49</span>
+                    <span class="period">/month</span>
+                </div>
+                <ul class="plan-features">
+                    <li><span class="check-icon"></span>Access to 50+ Premium AI Models</li>
+                    <li><span class="check-icon"></span>Unlimited content generation</li>
+                    <li><span class="check-icon"></span>Advanced platform optimization (8+ platforms)</li>
+                    <li><span class="check-icon"></span>Premium templates & custom branding</li>
+                    <li><span class="check-icon"></span>Advanced analytics & A/B testing</li>
+                    <li><span class="check-icon"></span>Priority email & chat support</li>
+                    <li><span class="check-icon"></span>Up to 5 user accounts</li>
+                    <li><span class="check-icon"></span>API access (5,000 calls/month)</li>
+                    <li><span class="check-icon"></span>Bulk operations & scheduling</li>
+                    <li><span class="check-icon"></span>Custom workflows</li>
+                </ul>
+                <button class="plan-button primary" onclick="selectPlan('professional')">Start Pro Trial</button>
+            </div>
+
+            <!-- Enterprise Plan -->
+            <div class="pricing-card">
+                <h3 class="plan-name">Enterprise</h3>
+                <p class="plan-description">Complete solution for large organizations with custom requirements</p>
+                <div class="plan-price">
+                    <span class="currency">$</span>
+                    <span class="price" data-monthly="199" data-annual="159">199</span>
+                    <span class="period">/month</span>
+                </div>
+                <ul class="plan-features">
+                    <li><span class="check-icon"></span>Access to ALL AI Models + Custom Models</li>
+                    <li><span class="check-icon"></span>Unlimited everything</li>
+                    <li><span class="check-icon"></span>White-label solution</li>
+                    <li><span class="check-icon"></span>Custom integrations & webhooks</li>
+                    <li><span class="check-icon"></span>Dedicated account manager</li>
+                    <li><span class="check-icon"></span>24/7 phone & priority support</li>
+                    <li><span class="check-icon"></span>Unlimited user accounts</li>
+                    <li><span class="check-icon"></span>Unlimited API calls</li>
+                    <li><span class="check-icon"></span>SLA guarantee (99.9% uptime)</li>
+                    <li><span class="check-icon"></span>Custom training & onboarding</li>
+                    <li><span class="check-icon"></span>Advanced security & compliance</li>
+                </ul>
+                <button class="plan-button secondary" onclick="selectPlan('enterprise')">Contact Sales</button>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 style="text-align: center; margin-bottom: 2rem;">Detailed Feature Comparison</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Features</th>
+                        <th>Starter</th>
+                        <th>Professional</th>
+                        <th>Enterprise</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>AI Models Access</td>
+                        <td>10+ Basic Models</td>
+                        <td>50+ Premium Models</td>
+                        <td>All Models + Custom</td>
+                    </tr>
+                    <tr>
+                        <td>Monthly Content Generation</td>
+                        <td>100 pieces</td>
+                        <td>Unlimited</td>
+                        <td>Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td>Platform Optimizations</td>
+                        <td>3 platforms</td>
+                        <td>8+ platforms</td>
+                        <td>All platforms + Custom</td>
+                    </tr>
+                    <tr>
+                        <td>Team Members</td>
+                        <td>1 user</td>
+                        <td>5 users</td>
+                        <td>Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td>API Access</td>
+                        <td>❌</td>
+                        <td>5,000 calls/month</td>
+                        <td>Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td>Support</td>
+                        <td>Email</td>
+                        <td>Priority Email & Chat</td>
+                        <td>24/7 Phone & Dedicated Manager</td>
+                    </tr>
+                    <tr>
+                        <td>Analytics</td>
+                        <td>Basic</td>
+                        <td>Advanced + A/B Testing</td>
+                        <td>Custom + Predictive</td>
+                    </tr>
+                    <tr>
+                        <td>Data Export</td>
+                        <td>CSV</td>
+                        <td>CSV, JSON, Excel</td>
+                        <td>All formats + API</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="faq-section">
+            <h2 style="text-align: center; margin-bottom: 2rem;">Frequently Asked Questions</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    Do I need my own API keys?
+                    <span>▼</span>
+                </div>
+                <div class="faq-answer">
+                    For the Starter plan, yes - you'll need to bring your own OpenRouter or Anthropic API keys (typically costs $1-10/month in API usage). Professional and Enterprise plans include API access with no additional keys required.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    Can I change plans anytime?
+                    <span>▼</span>
+                </div>
+                <div class="faq-answer">
+                    Absolutely! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any differences.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    Is there a free trial for paid plans?
+                    <span>▼</span>
+                </div>
+                <div class="faq-answer">
+                    Yes! Professional plan comes with a 14-day free trial. Enterprise plan offers a 30-day trial with full onboarding support. No credit card required to start.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    What happens if I exceed my limits?
+                    <span>▼</span>
+                </div>
+                <div class="faq-answer">
+                    On the Starter plan, you'll be notified when approaching limits and can upgrade anytime. Professional and Enterprise plans have no hard limits - we'll work with you to ensure smooth operations.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 SYNTHEX. All rights reserved.</p>
+        <p>Questions? Contact us at support@synthex.ai</p>
+    </footer>
+
+    <script>
+        // Toggle billing period
+        const billingToggle = document.getElementById('billingToggle');
+        const prices = document.querySelectorAll('.price');
+        let isAnnual = false;
+
+        billingToggle.addEventListener('click', () => {
+            isAnnual = !isAnnual;
+            billingToggle.classList.toggle('active');
+            
+            prices.forEach(price => {
+                const monthly = price.dataset.monthly;
+                const annual = price.dataset.annual;
+                price.textContent = isAnnual ? annual : monthly;
+            });
+        });
+
+        // Toggle FAQ items
+        function toggleFAQ(element) {
+            const faqItem = element.parentElement;
+            faqItem.classList.toggle('active');
+            const arrow = element.querySelector('span');
+            arrow.textContent = faqItem.classList.contains('active') ? '▲' : '▼';
+        }
+
+        // Select plan
+        function selectPlan(plan) {
+            // Store selected plan
+            localStorage.setItem('selectedPlan', plan);
+            
+            // Redirect based on plan
+            if (plan === 'enterprise') {
+                window.location.href = '/contact';
+            } else {
+                window.location.href = '/auth.html?tab=register&plan=' + plan;
+            }
+        }
+    </script>
+</body>
+</html>

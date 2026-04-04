@@ -1,0 +1,69 @@
+# Trusted Sources Registry for Truth Finder
+
+tier_1_primary:  # 95-100% confidence
+  australian_government:
+    - domain: "*.gov.au"
+      trust: 100
+      categories: ["legislation", "regulations", "statistics"]
+    - domain: "legislation.gov.au"
+      trust: 100
+    - domain: "abs.gov.au"
+      trust: 100
+      categories: ["statistics"]
+
+  standards:
+    - domain: "standards.org.au"
+      trust: 100
+      categories: ["standards"]
+    - domain: "iicrc.org"
+      trust: 95
+      categories: ["restoration", "certification"]
+
+  courts:
+    - domain: "federalcourt.gov.au"
+      trust: 100
+    - domain: "austlii.edu.au"
+      trust: 95
+      categories: ["legal"]
+
+tier_2_authoritative:  # 80-94% confidence
+  industry_bodies:
+    - domain: "insurancecouncil.com.au"
+      trust: 85
+    - domain: "restorationindustry.org"
+      trust: 85
+
+  universities:
+    - domain: "*.edu.au"
+      trust: 80
+      categories: ["research"]
+
+tier_3_reputable:  # 60-79% confidence
+  - domain: "ted.com"
+    trust: 70
+    notes: "Verify speaker credentials"
+
+tier_4_supporting:  # 40-59% confidence
+  - domain: "abc.net.au"
+    trust: 60
+    categories: ["news"]
+  - domain: "wikipedia.org"
+    trust: 50
+    notes: "Use for leads only, verify elsewhere"
+
+never_use:  # 0% confidence
+  - domain: "*.blogspot.com"
+  - domain: "medium.com"
+    notes: "Unless verified expert author"
+
+confidence_modifiers:
+  multiple_sources: 10  # Per additional source (max +30)
+  primary_source: 15
+  recent_data: 10  # <1 year
+  peer_reviewed: 15
+  expert_author: 10
+  single_source: -20
+  outdated: -15  # >3 years
+  known_bias: -25
+  contradicting_sources: -15
+  unverifiable: -50

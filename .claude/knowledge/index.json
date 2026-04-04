@@ -1,0 +1,69 @@
+{
+  "version": "1.0.0",
+  "description": "Synthex knowledge base -- structured second brain for agents",
+  "lastUpdated": "2026-02-16",
+  "tokenEfficiency": {
+    "protocol": "Load index first, then summaries, then full entries",
+    "maxEntriesPerQuery": 5,
+    "summaryMaxWords": 200
+  },
+  "domains": {
+    "seo": { "path": "domains/seo/", "entryCount": 0 },
+    "marketing": { "path": "domains/marketing/", "entryCount": 1 },
+    "architecture": { "path": "domains/architecture/", "entryCount": 3 },
+    "deployment": { "path": "domains/deployment/", "entryCount": 1 },
+    "competitive": { "path": "domains/competitive/", "entryCount": 0 }
+  },
+  "entries": [
+    {
+      "id": "arch-001",
+      "domain": "architecture",
+      "title": "Application Stack & Data Models",
+      "file": "domains/architecture/arch-001-stack.md",
+      "tags": ["prisma", "express", "typescript", "postgresql"],
+      "freshness": "current",
+      "confidence": 0.95,
+      "summary": "Express 4 + TypeScript 5 backend with Prisma ORM on PostgreSQL. Models: User (auth + OAuth), Campaign (multi-platform), Post (content lifecycle), Project, ApiUsage (token tracking), Session. Node 20.x, JWT + Google OAuth auth, Stripe payments."
+    },
+    {
+      "id": "arch-002",
+      "domain": "architecture",
+      "title": "MCP Server Configuration",
+      "file": "domains/architecture/arch-002-mcp.md",
+      "tags": ["mcp", "tools", "configuration"],
+      "freshness": "current",
+      "confidence": 0.9,
+      "summary": "MCP config defines server connections for Claude Code tooling. Includes Sequential Thinking server, Playwright browser automation, and custom toolkits. Config at Synthex/mcp.config.json."
+    },
+    {
+      "id": "arch-003",
+      "domain": "architecture",
+      "title": "Claude Code Integration Architecture",
+      "file": "domains/architecture/arch-003-claude-integration.md",
+      "tags": ["claude", "agents", "skills", "hooks"],
+      "freshness": "current",
+      "confidence": 0.9,
+      "summary": "Claude Code integration uses .claude/ directory with skills (SKILL.md), agents (AGENT.md), hooks (.ps1), and knowledge base. Canonical pattern from tools/claude-seo/ (13 skills, 6 agents). Outside Vercel rootDirectory so zero deployment impact."
+    },
+    {
+      "id": "deploy-001",
+      "domain": "deployment",
+      "title": "Vercel Deployment Configuration",
+      "file": "domains/deployment/deploy-001-vercel.md",
+      "tags": ["vercel", "serverless", "deployment"],
+      "freshness": "current",
+      "confidence": 0.95,
+      "summary": "Deployed to Vercel as 'synthex-production'. rootDirectory: Synthex. Single serverless function (api/vercel.js) handles all routes via rewrites. 1024MB memory, 30s timeout, iad1 region. Build: npm ci -> prisma generate -> tsc."
+    },
+    {
+      "id": "mktg-001",
+      "domain": "marketing",
+      "title": "Platform Master Configuration",
+      "file": "domains/marketing/mktg-001-platforms.md",
+      "tags": ["platforms", "social-media", "content-strategy"],
+      "freshness": "current",
+      "confidence": 0.95,
+      "summary": "8 platforms configured: YouTube (video authority), Instagram (visual storytelling), TikTok (entertainment discovery), X/Twitter (real-time conversation), Facebook (community), LinkedIn (professional authority), Pinterest (inspiration), Reddit (community discussion). Each has algorithm weights, content specs, winning formulas, and optimal posting schedules."
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="playGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow triangle -->
+  <polygon points="10,7 42,24 10,41" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Main play triangle -->
+  <polygon points="10,7 42,24 10,41" fill="url(#playGrad)"/>
+  <!-- Highlight on upper-left of triangle -->
+  <polygon points="10,7 30,17 10,24" fill="rgba(255,255,255,0.18)"/>
+</svg>

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - SYNTHEX</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="/js/auth-check.js"></script>
+    
+    <!-- App CSS -->
+    <link rel="stylesheet" href="/css/synthex-app.css">
+    
+    <style>
+        /* Notifications Page Styles */
+        .notifications-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .notifications-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-xl);
+        }
+        
+        .filter-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 2px;
+        }
+        
+        .filter-tab {
+            padding: var(--space-sm) var(--space-lg);
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-base);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .filter-tab:hover {
+            color: var(--text-primary);
+        }
+        
+        .filter-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .notification-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-md);
+            transition: all var(--transition-base);
+            cursor: pointer;
+        }
+        
+        .notification-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-color-hover);
+        }
+        
+        .notification-card.unread {
+            background: rgba(99, 102, 241, 0.05);
+            border-color: rgba(99, 102, 241, 0.2);
+        }
+        
+        .notification-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+        
+        .notification-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .notification-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .notification-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: var(--space-xs);
+        }
+        
+        .notification-message {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: var(--space-sm);
+        }
+        
+        .notification-meta {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .notification-actions {
+            display: flex;
+            gap: var(--space-sm);
+            margin-top: var(--space-md);
+        }
+        
+        .action-btn {
+            padding: var(--space-xs) var(--space-md);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-size: 0.813rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border-color: var(--border-color-hover);
+        }
+        
+        .action-btn.primary {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .action-btn.primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: var(--space-4xl) var(--space-xl);
+            color: var(--text-muted);
+        }
+        
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto var(--space-lg);
+            opacity: 0.5;
+        }
+        
+        .notification-settings {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-lg);
+            margin-top: var(--space-xl);
+        }
+        
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-md) 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-info {
+            flex: 1;
+        }
+        
+        .setting-title {
+            font-weight: 500;
+            margin-bottom: var(--space-xs);
+        }
+        
+        .setting-description {
+            font-size: 0.813rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Toggle Switch */
+        .toggle {
+            position: relative;
+            width: 48px;
+            height: 24px;
+        }
+        
+        .toggle input {
+            display: none;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-base);
+            border-radius: 999px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background: var(--text-secondary);
+            transition: all var(--transition-base);
+            border-radius: 50%;
+        }
+        
+        .toggle input:checked + .toggle-slider {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="logo">SYNTHEX</a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="/app-new.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1"/>
+                            <rect x="14" y="3" width="7" height="7" rx="1"/>
+                            <rect x="3" y="14" width="7" height="7" rx="1"/>
+                            <rect x="14" y="14" width="7" height="7" rx="1"/>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/campaigns-new.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/>
+                        </svg>
+                        <span>Campaigns</span>
+                    </a>
+                    <a href="/content-studio.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <span>Content Studio</span>
+                    </a>
+                    <a href="/schedule.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span>Schedule</span>
+                    </a>
+                    <a href="/analytics.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 20V10M12 20V4M6 20v-6"/>
+                        </svg>
+                        <span>Analytics</span>
+                    </a>
+                    <a href="/notifications.html" class="nav-item active">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+                        </svg>
+                        <span>Notifications</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Account</div>
+                    <a href="/settings.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 1v6m0 6v6m12-7h-6m-6 0H1"/>
+                        </svg>
+                        <span>Settings</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="header-title">Notifications</h1>
+                </div>
+                
+                <div class="header-right">
+                    <button class="header-btn notification-bell">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+                        </svg>
+                    </button>
+                    <button class="btn btn-primary" onclick="markAllAsRead()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Mark All Read</span>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Content -->
+            <div class="content">
+                <div class="notifications-container">
+                    <!-- Filter Tabs -->
+                    <div class="notifications-header">
+                        <div class="filter-tabs">
+                            <button class="filter-tab active" data-filter="all">All</button>
+                            <button class="filter-tab" data-filter="unread">Unread</button>
+                            <button class="filter-tab" data-filter="campaigns">Campaigns</button>
+                            <button class="filter-tab" data-filter="analytics">Analytics</button>
+                            <button class="filter-tab" data-filter="content">Content</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Notifications List -->
+                    <div id="notificationsList">
+                        <!-- Notifications will be loaded here -->
+                    </div>
+                    
+                    <!-- Settings -->
+                    <div class="notification-settings">
+                        <h3 style="margin-bottom: var(--space-lg);">Notification Settings</h3>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-title">Browser Notifications</div>
+                                <div class="setting-description">Receive notifications in your browser</div>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="browserNotifications" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-title">Performance Alerts</div>
+                                <div class="setting-description">Get notified about campaign performance milestones</div>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="performanceAlerts" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-title">Content Reminders</div>
+                                <div class="setting-description">Reminders about scheduled content</div>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="contentReminders" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-title">Weekly Reports</div>
+                                <div class="setting-description">Receive weekly performance summaries</div>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="weeklyReports" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/js/api.js"></script>
+    <script src="/js/notifications.js"></script>
+    <script>
+        let currentFilter = 'all';
+        let allNotifications = [];
+        
+        // Load notifications
+        async function loadNotifications() {
+            try {
+                const response = await synthexAPI.getNotifications();
+                if (response && response.data) {
+                    allNotifications = response.data;
+                    renderNotifications();
+                }
+            } catch (error) {
+                console.error('Failed to load notifications:', error);
+                showEmptyState();
+            }
+        }
+        
+        // Render notifications based on filter
+        function renderNotifications() {
+            const container = document.getElementById('notificationsList');
+            let filteredNotifications = allNotifications;
+            
+            // Apply filter
+            if (currentFilter !== 'all') {
+                if (currentFilter === 'unread') {
+                    filteredNotifications = allNotifications.filter(n => !n.read);
+                } else {
+                    filteredNotifications = allNotifications.filter(n => n.type === currentFilter || 
+                        (currentFilter === 'campaigns' && n.type === 'campaign') ||
+                        (currentFilter === 'analytics' && n.type === 'analytics') ||
+                        (currentFilter === 'content' && n.type === 'content'));
+                }
+            }
+            
+            if (filteredNotifications.length === 0) {
+                showEmptyState();
+                return;
+            }
+            
+            container.innerHTML = filteredNotifications.map(notification => `
+                <div class="notification-card ${notification.read ? '' : 'unread'}" data-id="${notification.id}">
+                    <div class="notification-header">
+                        <div class="notification-icon" style="
+                            background: ${getIconBackground(notification.type)};
+                            color: ${getIconColor(notification.type)};
+                        ">
+                            ${getIcon(notification.type)}
+                        </div>
+                        <div class="notification-content">
+                            <h3 class="notification-title">${notification.title}</h3>
+                            <p class="notification-message">${notification.message}</p>
+                            <div class="notification-meta">
+                                <span>${formatTime(notification.createdAt)}</span>
+                                ${notification.data?.campaignId ? 
+                                    `<span>•</span><a href="/campaigns-new.html?id=${notification.data.campaignId}" style="color: var(--primary); text-decoration: none;">View Campaign</a>` : 
+                                    ''
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    ${!notification.read ? `
+                        <div class="notification-actions">
+                            <button class="action-btn" onclick="markAsRead('${notification.id}')">Mark as read</button>
+                            ${notification.data?.campaignId ? 
+                                `<button class="action-btn primary" onclick="window.location.href='/campaigns-new.html?id=${notification.data.campaignId}'">View Details</button>` :
+                                ''
+                            }
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+        
+        // Show empty state
+        function showEmptyState() {
+            const container = document.getElementById('notificationsList');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+                    </svg>
+                    <h3>No notifications</h3>
+                    <p>You're all caught up! Check back later for updates.</p>
+                </div>
+            `;
+        }
+        
+        // Mark notification as read
+        async function markAsRead(id) {
+            try {
+                await synthexAPI.markNotificationAsRead(id);
+                const notification = allNotifications.find(n => n.id === id);
+                if (notification) {
+                    notification.read = true;
+                    renderNotifications();
+                    window.notificationSystem.unreadCount--;
+                    window.notificationSystem.updateBellIcon();
+                }
+            } catch (error) {
+                console.error('Failed to mark as read:', error);
+            }
+        }
+        
+        // Mark all as read
+        async function markAllAsRead() {
+            try {
+                await synthexAPI.markAllNotificationsAsRead();
+                allNotifications.forEach(n => n.read = true);
+                renderNotifications();
+                window.notificationSystem.unreadCount = 0;
+                window.notificationSystem.updateBellIcon();
+            } catch (error) {
+                console.error('Failed to mark all as read:', error);
+            }
+        }
+        
+        // Helper functions
+        function getIcon(type) {
+            const icons = {
+                success: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+                warning: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>',
+                error: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+                info: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+                campaign: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>',
+                content: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+                analytics: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>'
+            };
+            return icons[type] || icons.info;
+        }
+        
+        function getIconBackground(type) {
+            const backgrounds = {
+                success: 'rgba(16, 185, 129, 0.1)',
+                warning: 'rgba(245, 158, 11, 0.1)',
+                error: 'rgba(239, 68, 68, 0.1)',
+                info: 'rgba(59, 130, 246, 0.1)',
+                campaign: 'rgba(139, 92, 246, 0.1)',
+                content: 'rgba(236, 72, 153, 0.1)',
+                analytics: 'rgba(16, 185, 129, 0.1)'
+            };
+            return backgrounds[type] || backgrounds.info;
+        }
+        
+        function getIconColor(type) {
+            const colors = {
+                success: 'var(--accent-green)',
+                warning: 'var(--accent-orange)',
+                error: 'var(--error)',
+                info: 'var(--accent-blue)',
+                campaign: 'var(--accent-purple)',
+                content: 'var(--accent-pink)',
+                analytics: 'var(--accent-green)'
+            };
+            return colors[type] || colors.info;
+        }
+        
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) {
+                return 'Just now';
+            } else if (diff < 3600000) {
+                const minutes = Math.floor(diff / 60000);
+                return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            } else if (diff < 86400000) {
+                const hours = Math.floor(diff / 3600000);
+                return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            } else {
+                const days = Math.floor(diff / 86400000);
+                if (days === 1) return 'Yesterday';
+                if (days < 7) return `${days} days ago`;
+                return date.toLocaleDateString();
+            }
+        }
+        
+        // Filter tabs
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentFilter = tab.dataset.filter;
+                renderNotifications();
+            });
+        });
+        
+        // Initialize
+        loadNotifications();
+    </script>
+</body>
+</html>

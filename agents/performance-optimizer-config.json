@@ -1,0 +1,138 @@
+{
+  "agent_name": "Performance Optimizer Agent",
+  "version": "1.0.0",
+  "activation": {
+    "mode": "proactive",
+    "triggers": [
+      "Visual Designer completion",
+      "prototypes ready",
+      "analytics setup request",
+      "performance optimization need",
+      "testing framework request"
+    ],
+    "auto_execute": true,
+    "prerequisite": "phase_3_complete"
+  },
+  "workflow_position": 4,
+  "execution_time": "35-45 minutes",
+  "deliverables": {
+    "required": [
+      "analytics-config.json",
+      "ab-test-framework.md",
+      "metrics.json",
+      "dashboard-config.json"
+    ],
+    "optional": [
+      "optimization-playbook.md",
+      "growth-recommendations.md",
+      "performance-audit.md"
+    ]
+  },
+  "final_output": {
+    "summary_report": true,
+    "implementation_guide": true,
+    "monitoring_setup": true,
+    "growth_roadmap": true
+  },
+  "execution_protocol": {
+    "phase_1": {
+      "name": "Analytics Setup",
+      "duration": "10-15 minutes",
+      "tasks": [
+        "Configure tracking systems",
+        "Define conversion events",
+        "Set up attribution models",
+        "Establish KPI benchmarks"
+      ]
+    },
+    "phase_2": {
+      "name": "Testing Strategy",
+      "duration": "15-20 minutes",
+      "tasks": [
+        "Design A/B test framework",
+        "Create test variations",
+        "Define success metrics",
+        "Plan optimization cycles"
+      ]
+    },
+    "phase_3": {
+      "name": "Dashboard Creation",
+      "duration": "10-15 minutes",
+      "tasks": [
+        "Build performance dashboards",
+        "Create automated reports",
+        "Set up alerts and monitoring",
+        "Document optimization opportunities"
+      ]
+    }
+  },
+  "tracking_setup": {
+    "platforms": {
+      "google_analytics": {
+        "events": [],
+        "goals": [],
+        "audiences": []
+      },
+      "facebook_pixel": {
+        "events": [],
+        "conversions": [],
+        "audiences": []
+      },
+      "custom_tracking": {
+        "events": [],
+        "metrics": [],
+        "dashboards": []
+      }
+    }
+  },
+  "testing_framework": {
+    "test_types": ["A/B", "multivariate", "split_url", "personalization"],
+    "test_duration": "14-30 days",
+    "confidence_level": "95%",
+    "minimum_sample_size": 1000,
+    "success_metrics": ["conversion_rate", "engagement_rate", "revenue_per_visitor"]
+  },
+  "dashboard_components": {
+    "widgets": [
+      "conversion_funnel",
+      "real_time_metrics",
+      "cohort_analysis",
+      "revenue_attribution",
+      "user_behavior_flow"
+    ],
+    "reports": [
+      "daily_performance",
+      "weekly_summary",
+      "monthly_analysis",
+      "quarterly_review"
+    ],
+    "alerts": [
+      "conversion_drop",
+      "traffic_spike",
+      "error_rate_increase",
+      "goal_completion"
+    ]
+  },
+  "optimization_priorities": {
+    "immediate": ["critical_errors", "broken_funnels", "high_bounce_pages"],
+    "short_term": ["cro_improvements", "speed_optimization", "mobile_experience"],
+    "long_term": ["personalization", "ai_recommendations", "predictive_analytics"]
+  },
+  "quality_gates": {
+    "analytics_complete": {
+      "tracking_verified": true,
+      "events_configured": true,
+      "goals_defined": true
+    },
+    "testing_ready": {
+      "variations_created": true,
+      "metrics_defined": true,
+      "sample_size_calculated": true
+    },
+    "dashboard_functional": {
+      "data_connected": true,
+      "visualizations_working": true,
+      "alerts_configured": true
+    }
+  }
+}

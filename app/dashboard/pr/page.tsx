@@ -1,0 +1,211 @@
+'use client';
+
+/**
+ * PR Journalist CRM — Main Dashboard Page (Phase 92/93)
+ *
+ * 4 tabs: Journalists | Pitches | Coverage | Press Releases
+ * Tab state synced to URL ?tab= query param for direct linking.
+ *
+ * Phase 93 enhancements to the Press Releases tab:
+ * - PRAnalyticsSummary at the top
+ * - PRGeneratorForm (AI generation) above the list
+ * - DistributionPanel below the editor when a release is selected
+ *
+ * @module app/dashboard/pr/page
+ */
+
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import useSWR from 'swr';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Newspaper, Users, Send, Globe, FileText } from '@/components/icons';
+import { PROverviewStats } from '@/components/pr/PROverviewStats';
+import { JournalistList } from '@/components/pr/JournalistList';
+import { PitchKanban } from '@/components/pr/PitchKanban';
+import { CoverageFeed } from '@/components/pr/CoverageFeed';
+import { PressReleaseEditor } from '@/components/pr/PressReleaseEditor';
+import { PRGeneratorForm } from '@/components/pr/PRGeneratorForm';
+import { DistributionPanel } from '@/components/pr/DistributionPanel';
+import { PRAnalyticsSummary } from '@/components/pr/PRAnalyticsSummary';
+import { fetchJson } from '@/lib/fetcher';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+type PRTab = 'journalists' | 'pitches' | 'coverage' | 'press-releases';
+
+const VALID_TABS: PRTab[] = [
+  'journalists',
+  'pitches',
+  'coverage',
+  'press-releases',
+];
+
+function isValidTab(value: string | null): value is PRTab {
+  return VALID_TABS.includes(value as PRTab);
+}
+
+interface SelectedRelease {
+  id: string;
+  slug: string;
+  headline: string;
+}
+
+// ---------------------------------------------------------------------------
+// Page component
+// ---------------------------------------------------------------------------
+
+function PRManagerPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const tabParam = searchParams.get('tab');
+  const initialTab: PRTab = isValidTab(tabParam) ? tabParam : 'journalists';
+  const [activeTab, setActiveTab] = useState<PRTab>(initialTab);
+  const [selectedRelease, setSelectedRelease] =
+    useState<SelectedRelease | null>(null);
+
+  // Releases list for PRAnalyticsSummary — SWR dedupes with PressReleaseEditor's fetch
+  const {
+    data: releasesData,
+    isLoading: releasesLoading,
+    mutate: mutateReleases,
+  } = useSWR<{
+    releases: Array<{ id: string; status: string }>;
+  }>(
+    activeTab === 'press-releases' ? '/api/pr/press-releases' : null,
+    fetchJson
+  );
+
+  const releases = releasesData?.releases ?? [];
+
+  // Sync tab state to URL
+  const handleTabChange = (value: string) => {
+    const tab = value as PRTab;
+    setActiveTab(tab);
+    setSelectedRelease(null);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tab);
+    router.replace(`/dashboard/pr?${params.toString()}`, { scroll: false });
+  };
+
+  // Sync URL changes (e.g. back/forward navigation) to state
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (isValidTab(tab) && tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams, activeTab]);
+
+  return (
+    <div className="max-w-screen-xl mx-auto">
+      {/* Page header */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+          <Newspaper className="h-6 w-6 text-orange-400" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-white">PR Manager</h1>
+          <p className="text-sm text-gray-300">
+            Journalist CRM · Pitch tracking · Coverage monitoring · Press
+            releases
+          </p>
+        </div>
+      </div>
+
+      {/* Overview stats — always visible */}
+      <PROverviewStats />
+
+      {/* Tabbed content */}
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="space-y-4"
+      >
+        <TabsList variant="glass" className="w-full sm:w-auto">
+          <TabsTrigger
+            value="journalists"
+            className="flex items-center gap-1.5"
+          >
+            <Users className="h-4 w-4" />
+            Journalists
+          </TabsTrigger>
+          <TabsTrigger value="pitches" className="flex items-center gap-1.5">
+            <Send className="h-4 w-4" />
+            Pitches
+          </TabsTrigger>
+          <TabsTrigger value="coverage" className="flex items-center gap-1.5">
+            <Globe className="h-4 w-4" />
+            Coverage
+          </TabsTrigger>
+          <TabsTrigger
+            value="press-releases"
+            className="flex items-center gap-1.5"
+          >
+            <FileText className="h-4 w-4" />
+            Press Releases
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Journalists tab */}
+        <TabsContent value="journalists">
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
+            <JournalistList />
+          </div>
+        </TabsContent>
+
+        {/* Pitches tab */}
+        <TabsContent value="pitches">
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
+            <PitchKanban />
+          </div>
+        </TabsContent>
+
+        {/* Coverage tab */}
+        <TabsContent value="coverage">
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
+            <CoverageFeed />
+          </div>
+        </TabsContent>
+
+        {/* Press Releases tab */}
+        <TabsContent value="press-releases">
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
+            {/* Analytics summary */}
+            <PRAnalyticsSummary
+              releases={releases}
+              isLoading={releasesLoading}
+            />
+
+            {/* AI generator form */}
+            <PRGeneratorForm
+              onSaved={release => {
+                setSelectedRelease(release);
+                void mutateReleases();
+              }}
+            />
+
+            {/* Press release list + editor */}
+            <PressReleaseEditor
+              onSelectRelease={release => setSelectedRelease(release)}
+            />
+
+            {/* Distribution panel — shown when a release is selected */}
+            {selectedRelease && (
+              <DistributionPanel releaseId={selectedRelease.id} />
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+export default function PRManagerPage() {
+  return (
+    <Suspense>
+      <PRManagerPageContent />
+    </Suspense>
+  );
+}

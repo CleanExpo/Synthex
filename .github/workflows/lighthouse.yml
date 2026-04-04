@@ -1,0 +1,65 @@
+name: Lighthouse Audit
+
+# Runs against the live production site after a successful Deploy,
+# and can also be triggered manually. This avoids the need to spin up
+# a local Next.js server in CI (which previously failed due to unreachable
+# URLs on GitHub-hosted runners).
+
+on:
+  workflow_run:
+    workflows: ['Deploy']
+    types: [completed]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  lighthouse:
+    name: Lighthouse Audit (production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Only run when the triggering Deploy succeeded (or manual dispatch)
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install @lhci/cli
+        run: npm install -g @lhci/cli@0.14.x
+
+      # Collect against the live production URL — no local server needed.
+      # We audit 3 key pages: marketing homepage, login, and the dashboard
+      # shell (which redirects to login for unauthenticated requests, so
+      # Lighthouse still measures the public-facing load performance).
+      - name: Collect Lighthouse reports
+        run: |
+          lhci collect \
+            --url="https://synthex.social/" \
+            --url="https://synthex.social/login" \
+            --url="https://synthex.social/dashboard" \
+            --numberOfRuns=1 \
+            --settings.chromeFlags="--no-sandbox --disable-dev-shm-usage --headless=new"
+        continue-on-error: true
+
+      # Assert against the budgets defined in lighthouserc.js.
+      # We use continue-on-error so a budget breach is visible but
+      # never blocks a production deploy.
+      - name: Assert performance budgets
+        run: lhci assert --config=lighthouserc.js
+        continue-on-error: true
+
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-results-${{ github.run_id }}
+          path: .lighthouseci/
+          retention-days: 30

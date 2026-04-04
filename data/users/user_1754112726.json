@@ -1,0 +1,24 @@
+{
+  "user_id": "user_1754112726",
+  "display_name": "Test User",
+  "created_at": "2025-08-02T15:32:06.016995",
+  "projects": [
+    "project_1754112726"
+  ],
+  "settings": {
+    "preferred_platforms": [],
+    "default_voice_mode": "casual",
+    "auto_save": true,
+    "notification_preferences": {
+      "system_updates": true,
+      "project_completion": true,
+      "performance_alerts": false
+    }
+  },
+  "usage_stats": {
+    "sessions_count": 0,
+    "projects_created": 1,
+    "content_pieces_generated": 0,
+    "platforms_used": []
+  }
+}

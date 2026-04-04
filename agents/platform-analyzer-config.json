@@ -1,0 +1,177 @@
+{
+  "agent_config": {
+    "name": "Platform Analysis Agent",
+    "version": "1.0.0",
+    "type": "platform_optimizer",
+    "execution_time": "60-75 minutes",
+    "phase": 5,
+    "dependencies": ["performance-optimizer"],
+    "auto_activation": true
+  },
+  "capabilities": {
+    "platform_analysis": {
+      "supported_platforms": [
+        "instagram",
+        "tiktok", 
+        "youtube",
+        "linkedin",
+        "facebook",
+        "twitter",
+        "pinterest",
+        "snapchat"
+      ],
+      "analysis_types": [
+        "performance_metrics",
+        "engagement_patterns",
+        "content_optimization",
+        "algorithm_adaptation",
+        "audience_behavior"
+      ]
+    },
+    "content_optimization": {
+      "adaptation_strategies": [
+        "format_transformation",
+        "platform_native_optimization",
+        "cross_platform_repurposing",
+        "timing_optimization",
+        "hashtag_strategies"
+      ],
+      "automation_features": [
+        "multi_platform_publishing",
+        "content_scheduling",
+        "performance_tracking",
+        "optimization_suggestions"
+      ]
+    }
+  },
+  "output_structure": {
+    "base_directory": "data/platforms",
+    "subdirectories": {
+      "analysis": "performance-analysis",
+      "formulas": "winning-formulas", 
+      "automation": "automation",
+      "integration": "integration"
+    },
+    "file_types": {
+      "analysis": [".json", ".md"],
+      "formulas": [".md", ".json"],
+      "automation": [".py", ".js"],
+      "integration": [".md", ".json"]
+    }
+  },
+  "platform_specifications": {
+    "instagram": {
+      "content_types": ["posts", "reels", "stories", "igtv"],
+      "optimal_dimensions": {
+        "posts": "1080x1080",
+        "reels": "1080x1920",
+        "stories": "1080x1920"
+      },
+      "key_metrics": ["engagement_rate", "reach", "saves", "shares"],
+      "algorithm_factors": ["time_spent", "interactions", "relationships", "timeliness"]
+    },
+    "tiktok": {
+      "content_types": ["videos", "live"],
+      "optimal_dimensions": {
+        "videos": "1080x1920"
+      },
+      "key_metrics": ["watch_time", "likes", "shares", "comments"],
+      "algorithm_factors": ["completion_rate", "replays", "engagement_velocity"]
+    },
+    "youtube": {
+      "content_types": ["long_form", "shorts", "live", "community"],
+      "optimal_dimensions": {
+        "long_form": "1920x1080",
+        "shorts": "1080x1920"
+      },
+      "key_metrics": ["watch_time", "ctr", "subscriber_growth", "revenue"],
+      "algorithm_factors": ["session_duration", "click_through_rate", "engagement"]
+    },
+    "linkedin": {
+      "content_types": ["posts", "articles", "stories", "events"],
+      "optimal_dimensions": {
+        "posts": "1200x627",
+        "articles": "1200x627"
+      },
+      "key_metrics": ["engagement_rate", "impressions", "clicks", "leads"],
+      "algorithm_factors": ["relevance", "engagement_velocity", "professional_value"]
+    },
+    "facebook": {
+      "content_types": ["posts", "stories", "reels", "live"],
+      "optimal_dimensions": {
+        "posts": "1200x630",
+        "stories": "1080x1920"
+      },
+      "key_metrics": ["engagement_rate", "reach", "link_clicks", "video_views"],
+      "algorithm_factors": ["meaningful_interactions", "time_spent", "content_type"]
+    },
+    "twitter": {
+      "content_types": ["tweets", "threads", "spaces", "fleets"],
+      "optimal_dimensions": {
+        "images": "1200x675",
+        "videos": "1280x720"
+      },
+      "key_metrics": ["engagement_rate", "impressions", "retweets", "replies"],
+      "algorithm_factors": ["recency", "engagement_velocity", "relevance"]
+    },
+    "pinterest": {
+      "content_types": ["pins", "idea_pins", "shopping"],
+      "optimal_dimensions": {
+        "pins": "1000x1500",
+        "idea_pins": "1080x1920"
+      },
+      "key_metrics": ["impressions", "saves", "clicks", "closeups"],
+      "algorithm_factors": ["pin_quality", "domain_authority", "freshness"]
+    },
+    "snapchat": {
+      "content_types": ["snaps", "stories", "spotlight"],
+      "optimal_dimensions": {
+        "content": "1080x1920"
+      },
+      "key_metrics": ["views", "screenshots", "shares", "story_completion"],
+      "algorithm_factors": ["engagement_recency", "friend_interaction", "content_quality"]
+    }
+  },
+  "automation_scripts": {
+    "content_adapter": {
+      "file": "content-adapter.py",
+      "functions": [
+        "resize_for_platform",
+        "optimize_text_length",
+        "adapt_hashtags",
+        "schedule_optimal_time"
+      ]
+    },
+    "performance_tracker": {
+      "file": "performance-tracker.py", 
+      "functions": [
+        "collect_metrics",
+        "analyze_trends",
+        "generate_insights",
+        "recommend_optimizations"
+      ]
+    },
+    "scheduler_integration": {
+      "file": "scheduler-integration.js",
+      "functions": [
+        "optimal_timing_analysis",
+        "multi_platform_queue",
+        "automated_posting",
+        "performance_monitoring"
+      ]
+    }
+  },
+  "integration_points": {
+    "workflow_trigger": "after_phase_4_completion",
+    "input_sources": [
+      "performance_optimizer_outputs",
+      "visual_designer_assets", 
+      "content_creator_strategies"
+    ],
+    "output_destinations": [
+      "marketing_automation_tools",
+      "social_media_schedulers",
+      "analytics_dashboards"
+    ]
+  }
+}

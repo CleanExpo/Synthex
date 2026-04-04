@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="zapGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow -->
+  <polygon points="28,5 12,27 22,27 20,43 36,21 26,21" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Main lightning bolt -->
+  <polygon points="28,5 12,27 22,27 20,43 36,21 26,21" fill="url(#zapGrad)"/>
+  <!-- Highlight on top portion -->
+  <polygon points="28,5 12,27 19,27 26,14" fill="rgba(255,255,255,0.18)"/>
+</svg>

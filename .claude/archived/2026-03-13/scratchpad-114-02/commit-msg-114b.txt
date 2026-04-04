@@ -1,0 +1,13 @@
+fix(114-02): remove static Sentry server imports to fix Lambda cold-start hang
+
+Removes import * as Sentry from '@sentry/nextjs' from all server-side
+routes. Sentry.init() is never called server-side, so all captureException()
+calls were no-ops anyway. The static import caused require-in-the-middle
+OTel hooks to load in shared webpack chunks, hanging ALL Lambda cold starts.
+
+Files changed:
+- lib/observability/error-tracker.ts: removed Sentry import + captureException
+- app/api/cron/weekly-digest/route.ts: removed Sentry import + withMonitor
+- app/api/cron/publish-scheduled/route.ts: removed Sentry import + withMonitor
+- app/api/cron/welcome-sequence/route.ts: removed Sentry import + withMonitor
+- app/api/monitoring/errors/route.ts: removed Sentry import + captureException

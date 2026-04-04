@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTHEX - AI-Powered Marketing Automation Platform</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Meta Tags for SEO -->
+    <meta name="description" content="SYNTHEX is an AI-powered marketing automation platform that helps businesses create, optimize, and schedule content across multiple social media platforms.">
+    <meta name="keywords" content="AI marketing, social media automation, content generation, marketing platform">
+    <meta property="og:title" content="SYNTHEX - AI Marketing Automation">
+    <meta property="og:description" content="Transform your marketing with AI-powered content generation and automation">
+    <meta property="og:image" content="/logo.png">
+    <meta property="og:url" content="https://synthex-a3f0o7y9q-unite-group.vercel.app">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent: #667eea;
+            --accent-hover: #5a67d8;
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --text-light: #718096;
+            --bg-white: #ffffff;
+            --bg-gray-50: #f7fafc;
+            --bg-gray-100: #edf2f7;
+            --border-light: #e2e8f0;
+            --shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 20px 40px rgba(0, 0, 0, 0.1);
+            --radius: 1rem;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-white);
+            scroll-behavior: smooth;
+        }
+        
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+        }
+        
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        
+        .logo img {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            list-style: none;
+        }
+        
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: var(--accent);
+        }
+        
+        .cta-buttons {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: var(--shadow-soft);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+        
+        .btn-secondary {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: white;
+        }
+        
+        .btn-secondary:hover {
+            background: var(--accent);
+            color: white;
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 140px 2rem 100px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='%23667eea'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e") repeat;
+            opacity: 0.05;
+        }
+        
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        
+        .hero-text h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-text p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-light);
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .hero-visual {
+            position: relative;
+        }
+        
+        .demo-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: var(--shadow-medium);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .demo-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+        
+        .demo-content {
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards 0.5s;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 100px 2rem;
+            background: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .section-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: var(--bg-gray-50);
+            padding: 2rem;
+            border-radius: var(--radius);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-medium);
+            border-color: var(--accent);
+            background: white;
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+        
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .feature-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        /* How It Works */
+        .how-it-works {
+            padding: 100px 2rem;
+            background: var(--bg-gray-50);
+        }
+        
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-top: 4rem;
+        }
+        
+        .step {
+            text-align: center;
+            position: relative;
+        }
+        
+        .step-number {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .step-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .step-description {
+            color: var(--text-secondary);
+        }
+        
+        /* Pricing */
+        .pricing {
+            padding: 100px 2rem;
+            background: white;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .pricing-card {
+            background: white;
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius);
+            padding: 2.5rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .pricing-card.popular {
+            border-color: var(--accent);
+            transform: scale(1.05);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        }
+        
+        .pricing-card.popular::before {
+            content: 'Most Popular';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-gradient);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .plan-price {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-period {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+        }
+        
+        .plan-features {
+            list-style: none;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+        
+        .plan-features li {
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+            position: relative;
+            padding-left: 2rem;
+        }
+        
+        .plan-features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            padding: 100px 2rem;
+            background: var(--primary-gradient);
+            color: white;
+            text-align: center;
+        }
+        
+        .cta-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .cta-subtitle {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .btn-white {
+            background: white;
+            color: var(--accent);
+            border: none;
+            font-size: 1.125rem;
+            padding: 1rem 2rem;
+        }
+        
+        .btn-white:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Footer */
+        .footer {
+            background: var(--text-primary);
+            color: white;
+            padding: 3rem 2rem 1rem;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-description {
+            color: #a0aec0;
+            line-height: 1.6;
+        }
+        
+        .footer-section h4 {
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-links a {
+            color: #a0aec0;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid #4a5568;
+            padding-top: 1rem;
+            text-align: center;
+            color: #a0aec0;
+        }
+        
+        /* Mobile Menu */
+        .mobile-menu-button {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 70px;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid var(--border-light);
+            padding: 1rem 2rem;
+            z-index: 99;
+        }
+        
+        .mobile-menu.active {
+            display: block;
+        }
+        
+        .mobile-nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .mobile-cta-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .mobile-menu-button {
+                display: block;
+            }
+            
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                text-align: center;
+            }
+            
+            .hero-text h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero-cta {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .hero-stats {
+                justify-content: center;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .pricing-card.popular {
+                transform: none;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+        
+        /* Animation Classes */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+        }
+        
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <a href="#" class="logo">
+                <img src="/logo.png" alt="SYNTHEX Logo">
+                SYNTHEX
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="#features" class="nav-link">Features</a></li>
+                <li><a href="#how-it-works" class="nav-link">How it Works</a></li>
+                <li><a href="#pricing" class="nav-link">Pricing</a></li>
+                <li><a href="#contact" class="nav-link">Contact</a></li>
+            </ul>
+            
+            <div class="cta-buttons">
+                <a href="#" onclick="showLogin()" class="btn btn-secondary">Sign In</a>
+                <a href="#" onclick="showRegister()" class="btn btn-primary">Get Started Free</a>
+            </div>
+            
+            <button class="mobile-menu-button" onclick="toggleMobileMenu()">
+                <span>☰</span>
+            </button>
+        </nav>
+        
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-nav-links">
+                <a href="#features" class="nav-link" onclick="closeMobileMenu()">Features</a>
+                <a href="#how-it-works" class="nav-link" onclick="closeMobileMenu()">How it Works</a>
+                <a href="#pricing" class="nav-link" onclick="closeMobileMenu()">Pricing</a>
+                <a href="#contact" class="nav-link" onclick="closeMobileMenu()">Contact</a>
+            </div>
+            <div class="mobile-cta-buttons">
+                <a href="#" onclick="showLogin(); closeMobileMenu();" class="btn btn-secondary">Sign In</a>
+                <a href="#" onclick="showRegister(); closeMobileMenu();" class="btn btn-primary">Get Started Free</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-grid">
+                <div class="hero-text">
+                    <h1>AI-Powered Marketing Automation</h1>
+                    <p>Transform your social media presence with intelligent content generation, automated scheduling, and data-driven optimization. All powered by advanced AI.</p>
+                    
+                    <div class="hero-cta">
+                        <a href="#" onclick="showRegister()" class="btn btn-primary">
+                            Start Free Trial
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <a href="#features" class="btn btn-secondary">
+                            Learn More
+                        </a>
+                    </div>
+                    
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <span class="stat-number">10,000+</span>
+                            <span class="stat-label">Active Users</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">50M+</span>
+                            <span class="stat-label">Posts Generated</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">85%</span>
+                            <span class="stat-label">Time Saved</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="hero-visual">
+                    <div class="demo-card">
+                        <div class="demo-content">
+                            <h3 style="margin-bottom: 1rem; color: var(--accent);">✨ AI Content Generator</h3>
+                            <div style="background: var(--bg-gray-50); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                                <p style="font-style: italic; color: var(--text-secondary);">"Launch announcement for our AI-powered project management tool..."</p>
+                            </div>
+                            <div style="background: var(--primary-gradient); color: white; padding: 1rem; border-radius: 0.5rem;">
+                                <p><strong>🚀 Exciting News!</strong> We're thrilled to announce the launch of our revolutionary AI-powered project management tool that transforms how teams collaborate...</p>
+                            </div>
+                            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                                <span style="background: var(--accent); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem;">Twitter</span>
+                                <span style="background: var(--accent); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem;">LinkedIn</span>
+                                <span style="background: var(--accent); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem;">Instagram</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Everything You Need to Dominate Social Media</h2>
+                <p class="section-subtitle">From AI content generation to advanced analytics, SYNTHEX provides all the tools you need to grow your social media presence.</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">🤖</div>
+                    <h3 class="feature-title">AI Content Generation</h3>
+                    <p class="feature-description">Create engaging posts, captions, and copy with our advanced AI that understands your brand voice and audience preferences.</p>
+                </div>
+                
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">📅</div>
+                    <h3 class="feature-title">Smart Scheduling</h3>
+                    <p class="feature-description">Schedule your content across multiple platforms with optimal timing based on your audience's online behavior.</p>
+                </div>
+                
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">Advanced Analytics</h3>
+                    <p class="feature-description">Track performance, measure engagement, and get actionable insights to improve your social media strategy.</p>
+                </div>
+                
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">🎯</div>
+                    <h3 class="feature-title">Content Optimization</h3>
+                    <p class="feature-description">Automatically optimize your content for each platform with AI-powered suggestions and A/B testing capabilities.</p>
+                </div>
+                
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">🔄</div>
+                    <h3 class="feature-title">Workflow Automation</h3>
+                    <p class="feature-description">Create sophisticated workflows that automatically handle repetitive tasks and respond to audience engagement.</p>
+                </div>
+                
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">👥</div>
+                    <h3 class="feature-title">Team Collaboration</h3>
+                    <p class="feature-description">Work seamlessly with your team using role-based permissions, approval workflows, and shared content libraries.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">How SYNTHEX Works</h2>
+                <p class="section-subtitle">Get started in minutes and watch your social media presence transform</p>
+            </div>
+            
+            <div class="steps-grid">
+                <div class="step fade-in">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">Connect Your Accounts</h3>
+                    <p class="step-description">Securely connect your social media accounts and configure your preferences in just a few clicks.</p>
+                </div>
+                
+                <div class="step fade-in">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">Generate Content</h3>
+                    <p class="step-description">Use our AI to create compelling content or choose from professional templates tailored to your industry.</p>
+                </div>
+                
+                <div class="step fade-in">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">Schedule & Optimize</h3>
+                    <p class="step-description">Let our AI optimize posting times and automatically schedule your content for maximum engagement.</p>
+                </div>
+                
+                <div class="step fade-in">
+                    <div class="step-number">4</div>
+                    <h3 class="step-title">Track & Improve</h3>
+                    <p class="step-description">Monitor performance with detailed analytics and continuously improve your strategy with AI insights.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Choose Your Plan</h2>
+                <p class="section-subtitle">Start free and upgrade as you grow. All plans include our core AI features.</p>
+            </div>
+            
+            <div class="pricing-grid">
+                <div class="pricing-card fade-in">
+                    <div class="plan-name">Starter</div>
+                    <div class="plan-price">$0</div>
+                    <div class="plan-period">per month</div>
+                    <ul class="plan-features">
+                        <li>5 AI-generated posts per month</li>
+                        <li>2 social media accounts</li>
+                        <li>Basic scheduling</li>
+                        <li>Community support</li>
+                        <li>Basic analytics</li>
+                    </ul>
+                    <a href="#" onclick="showRegister()" class="btn btn-primary">Get Started Free</a>
+                </div>
+                
+                <div class="pricing-card popular fade-in">
+                    <div class="plan-name">Professional</div>
+                    <div class="plan-price">$29</div>
+                    <div class="plan-period">per month</div>
+                    <ul class="plan-features">
+                        <li>Unlimited AI-generated content</li>
+                        <li>10 social media accounts</li>
+                        <li>Advanced scheduling & automation</li>
+                        <li>Priority support</li>
+                        <li>Advanced analytics & reporting</li>
+                        <li>Team collaboration (up to 5 users)</li>
+                        <li>Content optimization</li>
+                    </ul>
+                    <a href="#" onclick="showRegister()" class="btn btn-primary">Start 14-Day Free Trial</a>
+                </div>
+                
+                <div class="pricing-card fade-in">
+                    <div class="plan-name">Enterprise</div>
+                    <div class="plan-price">$99</div>
+                    <div class="plan-period">per month</div>
+                    <ul class="plan-features">
+                        <li>Everything in Professional</li>
+                        <li>Unlimited social media accounts</li>
+                        <li>Advanced workflow automation</li>
+                        <li>White-label solution</li>
+                        <li>Custom integrations</li>
+                        <li>Dedicated account manager</li>
+                        <li>Custom AI model training</li>
+                        <li>24/7 priority support</li>
+                    </ul>
+                    <a href="#contact" class="btn btn-primary">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2 class="cta-title">Ready to Transform Your Marketing?</h2>
+            <p class="cta-subtitle">Join thousands of businesses already using SYNTHEX to grow their social media presence.</p>
+            <a href="#" onclick="showRegister()" class="btn btn-white">
+                Start Your Free Trial Today
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="footer-logo">
+                    <img src="/logo.png" alt="SYNTHEX Logo" width="40" height="40">
+                    SYNTHEX
+                </div>
+                <p class="footer-description">
+                    AI-powered marketing automation platform that helps businesses create, optimize, and schedule content across multiple social media platforms.
+                </p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Product</h4>
+                <ul class="footer-links">
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#how-it-works">How it Works</a></li>
+                    <li><a href="/app">Dashboard</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#careers">Careers</a></li>
+                    <li><a href="#blog">Blog</a></li>
+                    <li><a href="#press">Press</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="#help">Help Center</a></li>
+                    <li><a href="#contact">Contact Us</a></li>
+                    <li><a href="#privacy">Privacy Policy</a></li>
+                    <li><a href="#terms">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2025 SYNTHEX. All rights reserved. Made with ❤️ for modern marketers.</p>
+        </div>
+    </footer>
+
+    <!-- Authentication Modal -->
+    <div id="authModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: white; border-radius: 1rem; padding: 2rem; max-width: 400px; width: 90%; margin: 1rem; box-shadow: var(--shadow-medium); position: relative;">
+            <!-- Login Form -->
+            <div id="loginForm" class="auth-form">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">Welcome Back</h2>
+                    <p style="color: var(--text-secondary);">Sign in to your SYNTHEX account</p>
+                </div>
+                
+                <form id="loginFormElement" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-primary);">Email</label>
+                        <input 
+                            type="email" 
+                            id="loginEmail"
+                            required
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 2px solid var(--border-light); font-size: 1rem; transition: all 0.3s ease;"
+                            placeholder="your@email.com"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-primary);">Password</label>
+                        <input 
+                            type="password" 
+                            id="loginPassword"
+                            required
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 2px solid var(--border-light); font-size: 1rem; transition: all 0.3s ease;"
+                            placeholder="Your password"
+                        >
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 0.5rem;">
+                        Sign In
+                    </button>
+                </form>
+                
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <p style="font-size: 0.875rem; color: var(--text-secondary);">
+                        Don't have an account? 
+                        <button onclick="showRegisterForm()" style="color: var(--accent); background: none; border: none; font-weight: 500; cursor: pointer; text-decoration: underline;">Sign up</button>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Registration Form -->
+            <div id="registerForm" class="auth-form" style="display: none;">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">Join SYNTHEX</h2>
+                    <p style="color: var(--text-secondary);">Start your AI marketing journey today</p>
+                </div>
+                
+                <form id="registerFormElement" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-primary);">Full Name</label>
+                        <input 
+                            type="text" 
+                            id="registerName"
+                            required
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 2px solid var(--border-light); font-size: 1rem; transition: all 0.3s ease;"
+                            placeholder="Your full name"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-primary);">Email</label>
+                        <input 
+                            type="email" 
+                            id="registerEmail"
+                            required
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 2px solid var(--border-light); font-size: 1rem; transition: all 0.3s ease;"
+                            placeholder="your@email.com"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-primary);">Password</label>
+                        <input 
+                            type="password" 
+                            id="registerPassword"
+                            required
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 2px solid var(--border-light); font-size: 1rem; transition: all 0.3s ease;"
+                            placeholder="Create a strong password"
+                        >
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 0.5rem;">
+                        Create Account
+                    </button>
+                </form>
+                
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <p style="font-size: 0.875rem; color: var(--text-secondary);">
+                        Already have an account? 
+                        <button onclick="showLoginForm()" style="color: var(--accent); background: none; border: none; font-weight: 500; cursor: pointer; text-decoration: underline;">Sign in</button>
+                    </p>
+                </div>
+            </div>
+            
+            <button onclick="closeAuthModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer; width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; border-radius: 0.25rem;">
+                ×
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" style="position: fixed; bottom: 1rem; right: 1rem; transform: translateY(200%); transition: transform 0.3s ease; z-index: 1001; background: white; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: var(--shadow-medium); border-left: 4px solid var(--accent); display: flex; align-items: center; gap: 0.75rem;">
+        <div style="width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #10b981;"></div>
+        <span id="toastMessage">Success!</span>
+    </div>
+
+    <script>
+        // Mobile menu functionality
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('active');
+        }
+        
+        function closeMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.remove('active');
+        }
+        
+        // Authentication modal functionality
+        function showLogin() {
+            document.getElementById('authModal').style.display = 'flex';
+            showLoginForm();
+        }
+        
+        function showRegister() {
+            document.getElementById('authModal').style.display = 'flex';
+            showRegisterForm();
+        }
+        
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+        }
+        
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+        }
+        
+        function closeAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+        }
+        
+        // Toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            
+            toast.style.transform = 'translateY(0)';
+            setTimeout(() => {
+                toast.style.transform = 'translateY(200%)';
+            }, 3000);
+        }
+        
+        // Form submissions
+        document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.token) {
+                    localStorage.setItem('authToken', result.token);
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    showToast('Welcome back to SYNTHEX!');
+                    closeAuthModal();
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/app';
+                    }, 1000);
+                } else {
+                    showToast(result.error || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showToast('Login error: ' + error.message, 'error');
+            }
+        });
+        
+        document.getElementById('registerFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            try {
+                const response = await fetch('/api/v1/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.token) {
+                    localStorage.setItem('authToken', result.token);
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    showToast('Welcome to SYNTHEX! Your account has been created.');
+                    closeAuthModal();
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/app';
+                    }, 1000);
+                } else {
+                    if (result.details && Array.isArray(result.details)) {
+                        const errors = result.details.map(detail => detail.msg).join(', ');
+                        showToast(`Registration failed: ${errors}`, 'error');
+                    } else {
+                        showToast(result.error || 'Registration failed', 'error');
+                    }
+                }
+            } catch (error) {
+                showToast('Registration error: ' + error.message, 'error');
+            }
+        });
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Fade in animations on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+        
+        // Close modal when clicking outside
+        document.getElementById('authModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAuthModal();
+            }
+        });
+        
+        // Check if user is already authenticated
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                // User is already logged in, update CTA buttons
+                document.querySelectorAll('.cta-buttons').forEach(ctaContainer => {
+                    ctaContainer.innerHTML = `
+                        <a href="/app" class="btn btn-primary">Go to Dashboard</a>
+                    `;
+                });
+            }
+        });
+    </script>
+</body>
+</html>

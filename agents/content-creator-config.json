@@ -1,0 +1,138 @@
+{
+  "agent_name": "Content Creator Agent",
+  "version": "1.0.0",
+  "activation": {
+    "mode": "proactive",
+    "triggers": [
+      "UX Research completion",
+      "personas.json exists",
+      "content strategy request",
+      "hook generation need",
+      "storyboard development"
+    ],
+    "auto_execute": true,
+    "prerequisite": "phase_1_complete"
+  },
+  "workflow_position": 2,
+  "execution_time": "45-60 minutes",
+  "deliverables": {
+    "required": [
+      "strategy.md",
+      "hooks.json",
+      "storyboards.json",
+      "messaging-framework.md",
+      "style-guide.md"
+    ],
+    "optional": [
+      "content-calendar.json",
+      "platform-adaptations.md",
+      "video-scripts.md"
+    ]
+  },
+  "handoff": {
+    "next_agent": "visual-designer",
+    "context_transfer": {
+      "storyboards": true,
+      "visual_guidelines": true,
+      "brand_voice": true,
+      "character_specs": true
+    }
+  },
+  "execution_protocol": {
+    "phase_1": {
+      "name": "Research Analysis & Strategy",
+      "duration": "10-15 minutes",
+      "tasks": [
+        "Analyze UX research findings",
+        "Map emotional triggers per persona",
+        "Define content objectives and KPIs",
+        "Establish brand voice and tone"
+      ]
+    },
+    "phase_2": {
+      "name": "Hook Creation",
+      "duration": "15-20 minutes",
+      "tasks": [
+        "Generate 25 hooks per persona",
+        "Create 5 style variations",
+        "Design A/B testing framework",
+        "Map hooks to emotional triggers"
+      ]
+    },
+    "phase_3": {
+      "name": "Storyboard Development",
+      "duration": "20-30 minutes",
+      "tasks": [
+        "Create scene-by-scene narratives",
+        "Develop character profiles",
+        "Design multiple scenario contexts",
+        "Generate production guidelines"
+      ]
+    }
+  },
+  "hook_styles": {
+    "humorous": {
+      "tone": "light, entertaining",
+      "goal": "memorable engagement",
+      "examples": 5
+    },
+    "serious": {
+      "tone": "professional, authoritative",
+      "goal": "build trust",
+      "examples": 5
+    },
+    "business": {
+      "tone": "ROI-focused, efficiency-driven",
+      "goal": "demonstrate value",
+      "examples": 5
+    },
+    "playful": {
+      "tone": "creative, fun",
+      "goal": "emotional connection",
+      "examples": 5
+    },
+    "meaningful": {
+      "tone": "purpose-driven, inspiring",
+      "goal": "deeper resonance",
+      "examples": 5
+    }
+  },
+  "storyboard_scenarios": {
+    "office": {
+      "setting": "professional, corporate",
+      "characters": "business professionals",
+      "mood": "productive, efficient"
+    },
+    "home": {
+      "setting": "casual, personal",
+      "characters": "everyday people",
+      "mood": "comfortable, relatable"
+    },
+    "adventure": {
+      "setting": "dynamic, outdoor",
+      "characters": "active individuals",
+      "mood": "exciting, aspirational"
+    },
+    "event": {
+      "setting": "social, community",
+      "characters": "diverse groups",
+      "mood": "energetic, connected"
+    }
+  },
+  "quality_gates": {
+    "hooks_complete": {
+      "minimum_per_persona": 25,
+      "styles_covered": 5,
+      "a_b_variations": true
+    },
+    "storyboards_complete": {
+      "minimum_scenarios": 4,
+      "scenes_per_board": 6,
+      "character_profiles": true
+    },
+    "strategy_complete": {
+      "required_sections": ["objectives", "channels", "calendar", "voice"],
+      "kpis_defined": true
+    }
+  }
+}

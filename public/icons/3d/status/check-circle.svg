@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="feat-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="feat-hl" x1="0%" y1="0%" x2="50%" y2="50%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.2)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+  </defs>
+  <!-- shadow -->
+  <circle cx="25.5" cy="25.5" r="18" fill="rgba(0,0,0,0.3)"/>
+  <!-- base circle -->
+  <circle cx="24" cy="24" r="18" fill="url(#feat-grad)"/>
+  <!-- check -->
+  <path d="M14 24l7 7 13-13" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- highlight arc -->
+  <path d="M12 18A18 18 0 0 1 30 7" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3" stroke-linecap="round"/>
+</svg>

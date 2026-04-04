@@ -1,0 +1,255 @@
+Title,Description,Priority,Status,Labels
+[CRITICAL] Rotate exposed credentials in .env.local,"Production secrets committed to repository including Stripe live keys, OpenAI API keys, Anthropic keys, and database credentials. CVSS: 9.8
+
+**File:** .env.local
+**Action:**
+1. Rotate ALL credentials at provider dashboards
+2. Purge git history with BFG or git filter-branch
+3. Add .env.local to .gitignore
+
+**Evidence:** specs/05-SECURITY-AUDIT.md",Urgent,Backlog,security;critical
+[CRITICAL] Encrypt OAuth tokens in database,"OAuth tokens (accessToken, refreshToken) stored in plain text in PlatformConnection model. CVSS: 8.5
+
+**File:** prisma/schema.prisma
+**Action:**
+1. Implement AES-256-GCM field-level encryption
+2. Create migration to encrypt existing tokens
+3. Update all token read/write operations
+
+**Evidence:** specs/02-BACKEND-INSPECTION.md",Urgent,Backlog,security;critical
+[CRITICAL] Encrypt user API keys,"User API keys (openrouterApiKey, anthropicApiKey) stored in plain text. CVSS: 8.5
+
+**File:** prisma/schema.prisma, User model
+**Action:**
+1. Implement envelope encryption for API keys
+2. Migrate existing keys
+3. Add key rotation support
+
+**Evidence:** specs/02-BACKEND-INSPECTION.md",Urgent,Backlog,security;critical
+[CRITICAL] Upgrade Next.js to fix HIGH vulnerability,"Next.js 14.2.35 has HIGH severity DoS vulnerability (GHSA-h25m-26qc-wcjf). CVSS: 7.5
+
+**File:** package.json
+**Action:**
+1. Upgrade to next@>=15.0.8
+2. Test all routes after upgrade
+3. Update any deprecated APIs
+
+**Evidence:** specs/01-STRUCTURAL-RECON.md",Urgent,Backlog,security;critical
+[CRITICAL] Add DOMPurify to sanitize blog HTML,"XSS vulnerability via dangerouslySetInnerHTML without sanitization. CVSS: 6.1
+
+**File:** app/blog/[slug]/page.tsx:325
+**Action:**
+1. Install dompurify
+2. Sanitize post.content before rendering
+3. Add CSP headers for additional protection
+
+**Evidence:** specs/02-BACKEND-INSPECTION.md",Urgent,Backlog,security;critical
+[CRITICAL] Fix hardcoded user ID in usage tracking,"Usage tracking never records actual user - hardcoded 'user_id_here' string.
+
+**File:** lib/usage/usage-tracker.ts
+**Action:**
+1. Pass actual userId from auth context
+2. Add validation for userId
+3. Backfill or archive orphaned usage records
+
+**Evidence:** specs/04-INTEGRATION-TRACE.md",Urgent,Backlog,bug;critical
+[HIGH] Add authentication to 113 unprotected API routes,"77% of API routes lack explicit authentication checks.
+
+**Files:** app/api/* (113 routes)
+**Action:**
+1. Audit each route for required auth level
+2. Add APISecurityChecker.check() to protected routes
+3. Document intentionally public routes
+
+**Evidence:** specs/02-BACKEND-INSPECTION.md",High,Backlog,security;high
+[HIGH] Fix IDOR vulnerabilities in resource access,"Resource endpoints don't verify ownership before returning data.
+
+**Files:**
+- app/api/posts/[id]/route.ts
+- app/api/campaigns/[id]/route.ts
+**Action:**
+1. Add ownership verification
+2. Return 404 for unauthorized access (not 403)
+3. Add integration tests
+
+**Evidence:** specs/05-SECURITY-AUDIT.md",High,Backlog,security;high
+[HIGH] Reduce any type usage from 190 to <50,"190 instances of ': any' type defeat TypeScript safety.
+
+**Files:** Throughout app/, lib/, components/
+**Action:**
+1. Run strict type checking
+2. Define proper interfaces
+3. Use unknown + type guards where needed
+
+**Evidence:** specs/06-TEST-QUALITY.md",High,Backlog,quality;high
+[HIGH] Remove 901 console.log statements,"Production code contains excessive debug logging.
+
+**Files:** Throughout codebase
+**Action:**
+1. Remove all console.log
+2. Replace with structured logger where needed
+3. Add lint rule to prevent future additions
+
+**Evidence:** specs/06-TEST-QUALITY.md",High,Backlog,quality;high
+[HIGH] Fix 8 empty catch blocks,"Silent error handling masks failures.
+
+**Files:**
+- lib/cache/redis-client.ts:67
+- app/api/social/post/route.ts:145
+- components/PostScheduler.tsx:234
+- lib/auth/oauth-handler.ts:89
+- lib/metrics/tracker.ts:56
+- app/api/webhooks/stripe/route.ts:102
+- lib/ai/fallback.ts:34
+- components/FileUpload.tsx:178
+**Action:**
+1. Add proper error logging
+2. Implement fallback behavior
+3. Surface errors to users where appropriate
+
+**Evidence:** specs/06-TEST-QUALITY.md",High,Backlog,quality;high
+[HIGH] Fix CI security scan bypass,"Security scan configured to never fail build with '|| true'.
+
+**File:** .github/workflows/ci.yml
+**Action:**
+1. Remove '|| true' from npm audit
+2. Set appropriate audit-level threshold
+3. Add exception process for known vulnerabilities
+
+**Evidence:** specs/07-DEVOPS-INSPECTION.md",High,Backlog,devops;high
+[HIGH] Remove --passWithNoTests from CI,"Tests can pass with zero tests executed.
+
+**File:** .github/workflows/ci.yml
+**Action:**
+1. Remove --passWithNoTests flag
+2. Add minimum test threshold
+3. Block PRs without tests for new features
+
+**Evidence:** specs/07-DEVOPS-INSPECTION.md",High,Backlog,devops;high
+[HIGH] Add CSP headers,"Missing Content-Security-Policy header increases XSS risk.
+
+**File:** vercel.json
+**Action:**
+1. Define strict CSP policy
+2. Allow only necessary domains
+3. Test all features after implementation
+
+**Evidence:** specs/05-SECURITY-AUDIT.md",High,Backlog,security;high
+[HIGH] Fix Docker default credentials,"Docker compose files use default/weak passwords.
+
+**File:** docker-compose.yml
+**Action:**
+1. Use Docker secrets or env files
+2. Generate strong random passwords
+3. Document credential management
+
+**Evidence:** specs/07-DEVOPS-INSPECTION.md",High,Backlog,security;devops
+[MEDIUM] Decompose 10 large components,"10 components exceed 600 lines, violating maintainability standards.
+
+**Files:**
+- CompetitorAnalysis.tsx (859 lines)
+- ROICalculator.tsx (803 lines)
+- CustomReportBuilder.tsx (795 lines)
+- WorkflowAutomation.tsx (779 lines)
+- SentimentAnalysis.tsx (765 lines)
++ 5 more
+**Action:**
+1. Extract reusable sub-components
+2. Move logic to custom hooks
+3. Keep components under 300 lines
+
+**Evidence:** specs/03-FRONTEND-INSPECTION.md",Medium,Backlog,refactor;medium
+[MEDIUM] Decompose 5 large pages,"5 pages exceed 800 lines.
+
+**Files:**
+- dashboard/tasks/page.tsx (1,233 lines)
+- dashboard/settings/page.tsx (931 lines)
+- dashboard/team/page.tsx (920 lines)
+- page.tsx (882 lines)
+- dashboard/personas/page.tsx (870 lines)
+**Action:**
+1. Extract feature components
+2. Use composition patterns
+3. Keep page files under 300 lines
+
+**Evidence:** specs/03-FRONTEND-INSPECTION.md",Medium,Backlog,refactor;medium
+[MEDIUM] Increase test coverage from 5.3% to 30%,"Critical business logic has no test coverage.
+
+**Action:**
+1. Add auth flow tests (100%)
+2. Add payment tests (100%)
+3. Add API route tests (50%)
+4. Add component tests (30%)
+
+**Evidence:** specs/06-TEST-QUALITY.md",Medium,Backlog,testing;medium
+[MEDIUM] Implement webhook handlers,"Platform webhook handlers are stubs returning 200 OK.
+
+**Files:**
+- app/api/webhooks/twitter/route.ts
+- app/api/webhooks/linkedin/route.ts
+- app/api/webhooks/facebook/route.ts
+**Action:**
+1. Implement webhook signature verification
+2. Process webhook payloads
+3. Update relevant records
+
+**Evidence:** specs/04-INTEGRATION-TRACE.md",Medium,Backlog,feature;medium
+[MEDIUM] Add health check endpoint,"No /api/health endpoint for monitoring.
+
+**Action:**
+1. Create /api/health endpoint
+2. Check database connectivity
+3. Check Redis connectivity
+4. Check external service status
+
+**Evidence:** specs/07-DEVOPS-INSPECTION.md",Medium,Backlog,devops;medium
+[MEDIUM] Add transaction boundaries for multi-model operations,"Some operations lack ACID guarantees.
+
+**Files:**
+- app/api/billing/subscribe/route.ts
+- app/api/team/invite/route.ts
+**Action:**
+1. Wrap in prisma.$transaction()
+2. Add rollback handling
+3. Add integration tests
+
+**Evidence:** specs/04-INTEGRATION-TRACE.md",Medium,Backlog,bug;medium
+[MEDIUM] Fix API contract mismatches,"Frontend expects different field names than backend returns.
+
+**Examples:**
+- metrics.growth vs metrics.growthRate
+- user.avatarUrl vs user.avatar_url
+- post.createdAt vs post.created_at
+**Action:**
+1. Standardize on camelCase
+2. Create shared TypeScript types
+3. Add API contract tests
+
+**Evidence:** specs/04-INTEGRATION-TRACE.md",Medium,Backlog,bug;medium
+[MEDIUM] Implement structured logging,"901 console.log statements need replacement with proper logger.
+
+**Action:**
+1. Implement lib/logger.ts
+2. Add log levels (debug, info, warn, error)
+3. Include request ID in all logs
+4. Configure log aggregation
+
+**Evidence:** specs/08-CROSS-CUTTING.md",Medium,Backlog,quality;medium
+[LOW] Replace deprecated packages,"4 packages are deprecated.
+
+**Packages:**
+- @storybook/testing-library → @storybook/test
+- @types/dompurify → built-in
+- @types/ioredis → built-in
+- @types/uuid → built-in
+
+**Evidence:** specs/01-STRUCTURAL-RECON.md",Low,Backlog,deps;low
+[LOW] Add missing alt texts to images,"~20 images missing alt text for accessibility.
+
+**Evidence:** specs/08-CROSS-CUTTING.md",Low,Backlog,a11y;low
+[LOW] Add ARIA labels to interactive elements,"~15 interactive divs lack proper ARIA roles.
+
+**Evidence:** specs/08-CROSS-CUTTING.md",Low,Backlog,a11y;low
+[LOW] Address 19 TODO/FIXME comments,"Technical debt markers need resolution.
+
+**Evidence:** specs/06-TEST-QUALITY.md",Low,Backlog,debt;low

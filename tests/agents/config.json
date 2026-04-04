@@ -1,0 +1,172 @@
+{
+  "testing": {
+    "timeout": 30000,
+    "retries": 3,
+    "parallel": true,
+    "headless": false,
+    "slowMo": 100
+  },
+  "application": {
+    "baseUrl": "http://localhost:3000",
+    "productionUrl": "https://synthex-hi203jfw4-unite-group.vercel.app",
+    "apiBase": "/api"
+  },
+  "endpoints": {
+    "critical": [
+      "/api/health",
+      "/api/auth/login",
+      "/api/auth/signup",
+      "/api/dashboard/stats",
+      "/api/user/profile"
+    ],
+    "features": [
+      "/api/ai/generate-content",
+      "/api/content/generate",
+      "/api/patterns/analyze",
+      "/api/campaigns",
+      "/api/analytics/performance",
+      "/api/integrations",
+      "/api/user/settings",
+      "/api/user/avatar"
+    ],
+    "testing": [
+      "/api/test-database",
+      "/api/test-db",
+      "/api/test-email"
+    ]
+  },
+  "pages": {
+    "public": [
+      "/",
+      "/features",
+      "/pricing",
+      "/about",
+      "/docs",
+      "/demo"
+    ],
+    "auth": [
+      "/login",
+      "/signup",
+      "/forgot-password"
+    ],
+    "dashboard": [
+      "/dashboard",
+      "/dashboard/patterns",
+      "/dashboard/personas",
+      "/dashboard/content",
+      "/dashboard/sandbox",
+      "/dashboard/schedule",
+      "/dashboard/analytics",
+      "/dashboard/settings"
+    ],
+    "secondary": [
+      "/blog",
+      "/careers",
+      "/changelog",
+      "/roadmap",
+      "/support",
+      "/privacy",
+      "/terms",
+      "/onboarding"
+    ]
+  },
+  "database": {
+    "tables": [
+      "users",
+      "campaigns",
+      "content",
+      "patterns",
+      "personas",
+      "analytics",
+      "integrations",
+      "settings",
+      "projects",
+      "teams"
+    ],
+    "connections": [
+      "prisma",
+      "supabase"
+    ]
+  },
+  "integrations": {
+    "oauth": [
+      "google",
+      "facebook",
+      "twitter",
+      "linkedin"
+    ],
+    "platforms": [
+      "facebook",
+      "instagram",
+      "twitter",
+      "linkedin",
+      "youtube",
+      "tiktok",
+      "pinterest",
+      "reddit"
+    ],
+    "ai": [
+      "openrouter",
+      "openai"
+    ]
+  },
+  "ui_elements": {
+    "forms": [
+      "login-form",
+      "signup-form",
+      "profile-form",
+      "content-creation-form",
+      "campaign-form",
+      "settings-form"
+    ],
+    "buttons": [
+      "auth-buttons",
+      "navigation-buttons",
+      "action-buttons",
+      "submit-buttons",
+      "modal-buttons"
+    ],
+    "modals": [
+      "create-campaign-modal",
+      "settings-modal",
+      "confirmation-modal",
+      "content-preview-modal"
+    ],
+    "interactive": [
+      "sidebar-navigation",
+      "dropdown-menus",
+      "tabs",
+      "toggles",
+      "sliders"
+    ]
+  },
+  "priority_levels": {
+    "P0": {
+      "name": "Critical",
+      "description": "System-breaking issues that prevent core functionality",
+      "examples": ["Authentication broken", "Database unreachable", "Main pages 500 errors"]
+    },
+    "P1": {
+      "name": "High Priority",
+      "description": "Major features not working or missing implementations",
+      "examples": ["Forms don't submit", "APIs return placeholder data", "Features in UI but not implemented"]
+    },
+    "P2": {
+      "name": "Medium Priority", 
+      "description": "Partial implementations or missing error handling",
+      "examples": ["Incomplete features", "Missing validations", "Performance issues"]
+    },
+    "P3": {
+      "name": "Low Priority",
+      "description": "Polish issues and non-critical improvements",
+      "examples": ["UI inconsistencies", "Missing loading states", "Documentation gaps"]
+    }
+  },
+  "reporting": {
+    "formats": ["json", "html", "markdown"],
+    "includeScreenshots": true,
+    "includeApiResponses": true,
+    "includeStackTraces": true,
+    "generateTodoList": true
+  }
+}

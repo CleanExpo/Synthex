@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="sendGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow paper plane -->
+  <path d="M6 8l36 16-36 16v-12l24-4-24-4z" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Main paper plane -->
+  <path d="M6 8l36 16-36 16v-12l24-4-24-4z" fill="url(#sendGrad)"/>
+  <!-- Wing fold line -->
+  <line x1="6" y1="24" x2="30" y2="20" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
+  <!-- Highlight on top wing -->
+  <path d="M6 8l36 16-18-3z" fill="rgba(255,255,255,0.18)"/>
+</svg>

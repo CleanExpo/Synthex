@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "active": false,
+  "state": "IDLE",
+  "milestone": "",
+  "currentPhase": null,
+  "currentPlan": null,
+  "phasesRequested": [],
+  "phasesCompleted": [],
+  "baselineTestCount": 0,
+  "pauseReason": null,
+  "startedAt": null,
+  "toolCallCount": 0
+}

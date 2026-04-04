@@ -1,0 +1,388 @@
+/**
+ * Weekly Digest Cron Job
+ *
+ * GET /api/cron/weekly-digest
+ * Runs Monday 8 AM UTC via Vercel Cron.
+ * Generates AI weekly digests for all Business plan users.
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ * - OPENROUTER_API_KEY: AI service key (SECRET)
+ * - CRON_SECRET: Vercel cron secret for authorization (SECRET)
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+// NOTE: Static Sentry import removed (2026-03-12, Phase 114-02) — see next.config.mjs.
+// Sentry.withMonitor() stub replaces the call below; cron monitoring is a no-op until
+// server-side Sentry cold-start hang is resolved upstream.
+import { Prisma } from '@prisma/client';
+import prisma from '@/lib/prisma';
+import { generateWeeklyDigest } from '@/lib/ai/project-manager';
+import emailQueue from '@/lib/email/queue';
+import { logger } from '@/lib/logger';
+import type { TopicScore } from '@/lib/content-intelligence/types';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300; // 5 minutes max
+
+export async function GET(request: NextRequest) {
+  // Auth (keep OUTSIDE monitor)
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // NOTE: Sentry.withMonitor() removed — no-op without server-side Sentry.init().
+  try {
+    const startTime = Date.now();
+    logger.info('cron:weekly-digest:start', { timestamp: new Date().toISOString() });
+
+    // Get all Business/Custom plan users
+    const users = await prisma.subscription.findMany({
+      where: {
+        status: { in: ['active', 'trialing', 'past_due'] }, // QA-AUDIT-2026-03-14 (M7): include past_due for grace period
+        plan: { in: ['business', 'custom'] },
+      },
+      select: { userId: true },
+    });
+
+    const now = new Date();
+    const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    let generated = 0;
+    let emailsSent = 0;
+    let errors = 0;
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
+    const emailFrom = process.env.EMAIL_FROM || 'noreply@synthex.social';
+
+    // Process sequentially to avoid rate limits on AI provider
+    for (const user of users) {
+      try {
+        const digest = await generateWeeklyDigest(user.userId);
+
+        await prisma.aIWeeklyDigest.create({
+          data: {
+            userId: user.userId,
+            weekStart,
+            weekEnd: now,
+            summary: digest.summary,
+            highlights: digest.highlights as Prisma.InputJsonValue,
+            actionItems: digest.actionItems as Prisma.InputJsonValue,
+            opportunities: digest.opportunities as Prisma.InputJsonValue,
+          },
+        });
+
+        generated++;
+
+        // Send digest email via email queue
+        try {
+          const userData = await prisma.user.findUnique({
+            where: { id: user.userId },
+            select: { email: true, name: true, organizationId: true },
+          });
+
+          if (userData?.email) {
+            // Fetch content intelligence data for the email section (SYN-633) — non-fatal
+            let contentIntelligenceSection: ContentIntelligenceEmailData | undefined;
+            if (userData.organizationId) {
+              contentIntelligenceSection = await fetchContentIntelligenceForEmail(
+                userData.organizationId
+              ).catch(() => undefined);
+            }
+
+            const digestEmailHtml = buildDigestEmailHtml(
+              userData.name || 'there',
+              digest,
+              appUrl,
+              contentIntelligenceSection
+            );
+
+            await emailQueue.enqueue({
+              to: userData.email,
+              from: emailFrom,
+              subject: `Your Weekly Marketing Digest — ${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+              html: digestEmailHtml,
+              metadata: {
+                userId: user.userId,
+                type: 'notification' as const,
+              },
+            });
+            emailsSent++;
+          }
+        } catch (emailErr) {
+          logger.error(`[Weekly Digest] Email failed for user ${user.userId}:`, emailErr);
+          // Email failure does not crash the batch — digest was already saved
+        }
+      } catch (err) {
+        logger.error(`[Weekly Digest] Failed for user ${user.userId}:`, err);
+        errors++;
+      }
+    }
+
+    const duration = Date.now() - startTime;
+    logger.info('cron:weekly-digest:end', { timestamp: new Date().toISOString(), durationMs: duration, generated, emailsSent, errors });
+
+    return NextResponse.json({
+      success: true,
+      generated,
+      emailsSent,
+      errors,
+      totalUsers: users.length,
+      durationMs: duration,
+    });
+  } catch (error) {
+    logger.error('[Weekly Digest Cron] Fatal error:', error);
+    return NextResponse.json(
+      { error: 'Weekly digest generation failed' },
+      { status: 500 }
+    );
+  }
+}
+
+// ============================================================================
+// CONTENT INTELLIGENCE — EMAIL DATA (SYN-633)
+// ============================================================================
+
+interface ContentIntelligenceEmailData {
+  confidenceLevel: number;
+  topTopics: TopicScore[];
+  improvementRate: number | null;
+  weekCount: number;
+}
+
+/**
+ * Fetch content profile + improvement tracking for the org's weekly digest email.
+ * Returns undefined if there is no profile yet (org just onboarded).
+ * Non-fatal — the cron catches and ignores any error from this function.
+ */
+async function fetchContentIntelligenceForEmail(
+  organizationId: string
+): Promise<ContentIntelligenceEmailData | undefined> {
+  const [profile, tracking] = await Promise.all([
+    prisma.contentPerformanceProfile.findUnique({
+      where: { organizationId },
+      select: { confidenceLevel: true, topTopics: true },
+    }),
+    prisma.contentImprovementTracking.findMany({
+      where: { organizationId },
+      orderBy: { weekStart: 'desc' },
+      take: 4,
+      select: { improvementRate: true, weekStart: true },
+    }),
+  ]);
+
+  if (!profile) return undefined;
+
+  const weekCount = tracking.length;
+  // Only surface improvement rate after 4 weeks of data + must be positive
+  const latestRate = tracking[0]?.improvementRate ?? null;
+  const improvementRate =
+    weekCount >= 4 && latestRate !== null && latestRate > 0 ? latestRate : null;
+
+  return {
+    confidenceLevel: profile.confidenceLevel,
+    topTopics: (profile.topTopics as unknown as TopicScore[]).slice(0, 3),
+    improvementRate,
+    weekCount,
+  };
+}
+
+/**
+ * Build the HTML block for the "What Synthex Learned This Week" section.
+ * Returns empty string when there is no intelligence data.
+ */
+function buildContentIntelligenceEmailSection(
+  data: ContentIntelligenceEmailData | undefined
+): string {
+  if (!data) return '';
+
+  // Below 30% confidence → show "learning" placeholder
+  if (data.confidenceLevel < 0.3) {
+    return `
+      <div style="background:#fff;padding:20px;margin-bottom:24px;border-radius:8px;border-left:4px solid #8b5cf6;">
+        <h3 style="margin:0 0 8px;font-size:16px;color:#1e293b;">What Synthex Learned This Week</h3>
+        <p style="margin:0;color:#64748b;font-size:14px;">
+          Building your content intelligence — we need a few more weeks of data.
+          Keep publishing and we'll have personalised insights for you soon.
+        </p>
+      </div>
+    `;
+  }
+
+  const bullets: string[] = [];
+
+  // Topic performance bullets
+  for (const topic of data.topTopics) {
+    const pct = Math.round(topic.avgEngagementRate * 100);
+    bullets.push(
+      `<li style="margin-bottom:8px;font-size:14px;color:#374151;">
+         Topic <strong>&ldquo;${topic.topic}&rdquo;</strong> is driving
+         <strong>${pct}% average engagement</strong> for your audience.
+       </li>`
+    );
+  }
+
+  // Improvement rate bullet (only shown after 4 weeks of positive data)
+  if (data.improvementRate !== null) {
+    const impPct = Math.round(data.improvementRate * 100);
+    bullets.push(
+      `<li style="margin-bottom:8px;font-size:14px;color:#374151;">
+         Your content is performing <strong>${impPct}% better</strong> since Synthex
+         started learning your audience patterns.
+       </li>`
+    );
+  }
+
+  if (bullets.length === 0) return '';
+
+  const confidencePct = Math.round(data.confidenceLevel * 100);
+
+  return `
+    <div style="background:#fff;padding:20px;margin-bottom:24px;border-radius:8px;border-left:4px solid #8b5cf6;">
+      <h3 style="margin:0 0 4px;font-size:16px;color:#1e293b;">What Synthex Learned This Week</h3>
+      <p style="margin:0 0 12px;font-size:12px;color:#8b5cf6;">
+        Content intelligence: ${confidencePct}% confidence
+      </p>
+      <ul style="margin:0;padding-left:20px;">
+        ${bullets.join('')}
+      </ul>
+    </div>
+  `;
+}
+
+// ============================================================================
+// EMAIL TEMPLATE
+// ============================================================================
+
+interface DigestData {
+  summary: string;
+  highlights: Array<{ metric: string; value: string; change: string; trend: string }>;
+  actionItems: Array<{ title: string; description: string; priority: string; actionUrl?: string }>;
+  opportunities: Array<{ title: string; description: string; potentialImpact: string }>;
+}
+
+function buildDigestEmailHtml(
+  name: string,
+  digest: DigestData,
+  appUrl: string,
+  contentIntelligence?: ContentIntelligenceEmailData
+): string {
+  const trendIcon = (trend: string) => {
+    if (trend === 'up') return '&#9650;'; // triangle up
+    if (trend === 'down') return '&#9660;'; // triangle down
+    return '&#8212;'; // em dash (flat)
+  };
+
+  const trendColor = (trend: string) => {
+    if (trend === 'up') return '#22c55e';
+    if (trend === 'down') return '#ef4444';
+    return '#94a3b8';
+  };
+
+  const priorityBadge = (priority: string) => {
+    const colors: Record<string, string> = {
+      high: '#ef4444',
+      medium: '#f59e0b',
+      low: '#22c55e',
+    };
+    const color = colors[priority] || '#94a3b8';
+    return `<span style="display:inline-block;background:${color};color:#fff;font-size:11px;padding:2px 8px;border-radius:4px;margin-left:8px;">${priority}</span>`;
+  };
+
+  const highlightsHtml = digest.highlights.length > 0
+    ? digest.highlights.map(h => `
+        <tr>
+          <td style="padding:12px;border-bottom:1px solid #eee;">${h.metric}</td>
+          <td style="padding:12px;border-bottom:1px solid #eee;font-weight:bold;">${h.value}</td>
+          <td style="padding:12px;border-bottom:1px solid #eee;color:${trendColor(h.trend)};">${trendIcon(h.trend)} ${h.change}</td>
+        </tr>
+      `).join('')
+    : '<tr><td style="padding:12px;color:#888;">No highlights this week.</td></tr>';
+
+  const actionItemsHtml = digest.actionItems.length > 0
+    ? digest.actionItems.map(a => `
+        <li style="margin-bottom:12px;">
+          <strong>${a.title}</strong>${priorityBadge(a.priority)}<br/>
+          <span style="color:#555;font-size:14px;">${a.description}</span>
+        </li>
+      `).join('')
+    : '<li style="color:#888;">No action items this week.</li>';
+
+  const opportunitiesHtml = digest.opportunities.length > 0
+    ? digest.opportunities.map(o => `
+        <div style="background:#fff;padding:16px;margin:8px 0;border-radius:8px;border-left:4px solid #667eea;">
+          <strong>${o.title}</strong>
+          <p style="margin:4px 0 0;color:#555;font-size:14px;">${o.description}</p>
+          <p style="margin:4px 0 0;color:#667eea;font-size:13px;">Potential impact: ${o.potentialImpact}</p>
+        </div>
+      `).join('')
+    : '<p style="color:#888;">No new opportunities identified this week.</p>';
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Your Weekly Digest</title>
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f4f4f5;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0 0 8px;">Your Weekly Digest</h1>
+            <p style="margin: 0; opacity: 0.9; font-size: 14px;">Week of ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+          </div>
+
+          <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+            <h2 style="margin: 0 0 12px; font-size: 18px;">Hi ${name},</h2>
+            <p style="margin: 0 0 24px; color: #555;">${digest.summary}</p>
+
+            <!-- Highlights -->
+            <h3 style="margin: 0 0 12px; font-size: 16px;">Performance Highlights</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; background: #fff; border-radius: 8px;">
+              <thead>
+                <tr style="background: #f8fafc;">
+                  <th style="padding: 10px 12px; text-align: left; font-size: 13px; color: #64748b; border-bottom: 2px solid #e2e8f0;">Metric</th>
+                  <th style="padding: 10px 12px; text-align: left; font-size: 13px; color: #64748b; border-bottom: 2px solid #e2e8f0;">Value</th>
+                  <th style="padding: 10px 12px; text-align: left; font-size: 13px; color: #64748b; border-bottom: 2px solid #e2e8f0;">Change</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${highlightsHtml}
+              </tbody>
+            </table>
+
+            <!-- Action Items -->
+            <h3 style="margin: 0 0 12px; font-size: 16px;">Action Items</h3>
+            <ul style="margin: 0 0 24px; padding-left: 20px;">
+              ${actionItemsHtml}
+            </ul>
+
+            <!-- Opportunities -->
+            <h3 style="margin: 0 0 12px; font-size: 16px;">Opportunities</h3>
+            <div style="margin-bottom: 24px;">
+              ${opportunitiesHtml}
+            </div>
+
+            <!-- Content Intelligence (SYN-633) -->
+            ${buildContentIntelligenceEmailSection(contentIntelligence)}
+
+            <!-- CTA -->
+            <div style="text-align: center; margin-top: 24px;">
+              <a href="${appUrl}/dashboard" style="display: inline-block; padding: 14px 28px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Open Dashboard</a>
+            </div>
+          </div>
+
+          <div style="text-align: center; margin-top: 24px; color: #999; font-size: 12px;">
+            <p style="margin: 0;">&copy; ${new Date().getFullYear()} Synthex. All rights reserved.</p>
+            <p style="margin: 4px 0 0;">You receive this because you're on a Business plan.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+}

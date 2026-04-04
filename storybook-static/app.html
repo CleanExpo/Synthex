@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTHEX - AI Marketing Platform</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS - Fallback to CDN if local file not available -->
+    <link rel="stylesheet" href="/css/synthex-app.css" onerror="this.onerror=null;this.href='https://cdn.tailwindcss.com'">
+    <script>
+        // Fallback to Tailwind CDN if CSS file not found
+        if (!document.querySelector('link[href="/css/synthex-app.css"]')) {
+            document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+        }
+    </script>
+    
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --bg-primary: #fcfbf8;
+            --bg-secondary: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --accent: #7c3aed;
+            --accent-hover: #6d28d9;
+            --border: #e5e7eb;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --gradient-start: #7c3aed;
+            --gradient-end: #ec4899;
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent: #a78bfa;
+            --accent-hover: #c4b5fd;
+            --border: #2a2a2a;
+            --shadow: rgba(0, 0, 0, 0.5);
+            --gradient-start: #a78bfa;
+            --gradient-end: #f9a8d4;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-x: hidden;
+        }
+        
+        /* Animated gradient background */
+        .gradient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            opacity: 0.05;
+            z-index: -1;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(-5%, -5%) scale(1.1); }
+            50% { transform: translate(-10%, 5%) scale(1); }
+            75% { transform: translate(5%, -10%) scale(1.1); }
+        }
+        
+        /* Glassmorphism effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        [data-theme="dark"] .glass {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Smooth transitions */
+        .transition-smooth {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-hover);
+        }
+        
+        /* Card hover effects */
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Button animations */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            font-weight: 500;
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-100%);
+            transition: transform 0.3s;
+        }
+        
+        .btn-primary:hover::before {
+            transform: translateX(0);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(124, 58, 237, 0.3);
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Sidebar styles */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .sidebar-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            color: var(--text-secondary);
+        }
+        
+        .sidebar-item:hover {
+            background: rgba(124, 58, 237, 0.1);
+            border-left-color: var(--accent);
+            color: var(--text-primary);
+        }
+        
+        .sidebar-item.active {
+            background: rgba(124, 58, 237, 0.15);
+            border-left-color: var(--accent);
+            color: var(--accent);
+            font-weight: 500;
+        }
+        
+        /* Content area */
+        .content-area {
+            flex: 1;
+            padding: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 50;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .content-area {
+                padding: 20px;
+            }
+        }
+        
+        /* Typing animation */
+        .typing-dots::after {
+            content: '...';
+            animation: typing 1.5s infinite;
+        }
+        
+        @keyframes typing {
+            0%, 60% { opacity: 1; }
+            61%, 100% { opacity: 0; }
+        }
+        
+        /* Glow effect */
+        .glow {
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+        }
+        
+        /* Smooth fade in */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="gradient-bg"></div>
+    
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="p-6 border-b border-[var(--border)]">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center text-white font-bold">
+                        AI
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <img src="/logo.png" alt="SYNTHEX Logo" class="h-8 w-auto">
+                            <h1 class="font-bold text-lg">SYNTHEX</h1>
+                        </div>
+                        <p class="text-xs text-[var(--text-secondary)]">AI-Powered Platform</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="py-4">
+                <div class="sidebar-item active" onclick="showTab('generate')">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        <span>Generate Content</span>
+                    </div>
+                </div>
+                
+                <div class="sidebar-item" onclick="showTab('optimize')">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        <span>Optimize</span>
+                    </div>
+                </div>
+                
+                <div class="sidebar-item" onclick="showTab('variations')">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                        </svg>
+                        <span>Variations</span>
+                    </div>
+                </div>
+                
+                <div class="sidebar-item" onclick="showTab('history')">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>History</span>
+                    </div>
+                </div>
+                
+                <div class="sidebar-item" onclick="showTab('analytics')">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        <span>Analytics</span>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-[var(--border)]">
+                    <p class="text-xs text-[var(--text-secondary)] px-3 mb-2">ADVANCED FEATURES</p>
+                    
+                    <div class="sidebar-item" onclick="window.location.href='/features-dashboard.html'">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            <span>All Features</span>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-item" onclick="showTab('abtesting')">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                            </svg>
+                            <span>A/B Testing</span>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-item" onclick="showTab('teams')">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                            <span>Teams</span>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-item" onclick="showTab('scheduler')">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span>Scheduler</span>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-item" onclick="showTab('library')">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
+                            </svg>
+                            <span>Library</span>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            
+            <div class="absolute bottom-0 left-0 right-0 p-6 border-t border-[var(--border)]">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-sm text-[var(--text-secondary)]">Theme</span>
+                    <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-[var(--border)] transition-smooth">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="theme-icon">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-xs text-[var(--text-secondary)]">API Connected</span>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Mobile menu button -->
+        <button onclick="toggleSidebar()" class="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)]">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+        
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <div class="content-area">
+                <!-- Generate Content Tab -->
+                <div id="generate-tab" class="tab-content fade-in">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                            Generate Marketing Content
+                        </h2>
+                        <p class="text-[var(--text-secondary)]">Create compelling content powered by advanced AI</p>
+                    </div>
+                    
+                    <div class="glass rounded-2xl p-8 card-hover">
+                        <form id="generateForm" class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Describe your product or campaign</label>
+                                <textarea 
+                                    id="prompt"
+                                    class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth resize-none"
+                                    rows="4"
+                                    placeholder="E.g., Launch announcement for our AI-powered project management tool that helps remote teams collaborate better..."
+                                ></textarea>
+                            </div>
+                            
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Content Type</label>
+                                    <select id="contentType" class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth">
+                                        <option value="social_post">Social Media Post</option>
+                                        <option value="email">Email Campaign</option>
+                                        <option value="blog">Blog Post</option>
+                                        <option value="ad_copy">Ad Copy</option>
+                                        <option value="landing_page">Landing Page</option>
+                                        <option value="press_release">Press Release</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Tone</label>
+                                    <select id="tone" class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth">
+                                        <option value="professional">Professional</option>
+                                        <option value="casual">Casual</option>
+                                        <option value="friendly">Friendly</option>
+                                        <option value="urgent">Urgent</option>
+                                        <option value="inspirational">Inspirational</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn-primary w-full md:w-auto">
+                                Generate Content
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Quick Templates -->
+                    <div class="mt-8">
+                        <h3 class="text-lg font-semibold mb-4">Quick Templates</h3>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="glass rounded-xl p-4 cursor-pointer card-hover" onclick="useTemplate('product-launch')">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm">
+                                        🚀
+                                    </div>
+                                    <span class="font-medium">Product Launch</span>
+                                </div>
+                                <p class="text-sm text-[var(--text-secondary)]">Announce your new product with impact</p>
+                            </div>
+                            
+                            <div class="glass rounded-xl p-4 cursor-pointer card-hover" onclick="useTemplate('sale-promo')">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center text-white text-sm">
+                                        💰
+                                    </div>
+                                    <span class="font-medium">Sale Promotion</span>
+                                </div>
+                                <p class="text-sm text-[var(--text-secondary)]">Drive urgency for limited-time offers</p>
+                            </div>
+                            
+                            <div class="glass rounded-xl p-4 cursor-pointer card-hover" onclick="useTemplate('newsletter')">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-sm">
+                                        📧
+                                    </div>
+                                    <span class="font-medium">Newsletter</span>
+                                </div>
+                                <p class="text-sm text-[var(--text-secondary)]">Engage subscribers with valuable content</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Optimize Tab -->
+                <div id="optimize-tab" class="tab-content hidden fade-in">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                            Optimize Content
+                        </h2>
+                        <p class="text-[var(--text-secondary)]">Enhance your existing content for better performance</p>
+                    </div>
+                    
+                    <div class="glass rounded-2xl p-8 card-hover">
+                        <form id="optimizeForm" class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Paste your content</label>
+                                <textarea 
+                                    id="content"
+                                    class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth resize-none"
+                                    rows="6"
+                                    placeholder="Enter your existing marketing content here..."
+                                ></textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Target Platform</label>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <label class="glass rounded-lg p-3 cursor-pointer hover:border-[var(--accent)] border border-transparent transition-smooth">
+                                        <input type="radio" name="platform" value="twitter" class="sr-only">
+                                        <div class="text-center">
+                                            <span class="text-lg mb-1">𝕏</span>
+                                            <p class="text-xs">Twitter</p>
+                                        </div>
+                                    </label>
+                                    <label class="glass rounded-lg p-3 cursor-pointer hover:border-[var(--accent)] border border-transparent transition-smooth">
+                                        <input type="radio" name="platform" value="instagram" class="sr-only">
+                                        <div class="text-center">
+                                            <span class="text-lg mb-1">📷</span>
+                                            <p class="text-xs">Instagram</p>
+                                        </div>
+                                    </label>
+                                    <label class="glass rounded-lg p-3 cursor-pointer hover:border-[var(--accent)] border border-transparent transition-smooth">
+                                        <input type="radio" name="platform" value="linkedin" class="sr-only">
+                                        <div class="text-center">
+                                            <span class="text-lg mb-1">💼</span>
+                                            <p class="text-xs">LinkedIn</p>
+                                        </div>
+                                    </label>
+                                    <label class="glass rounded-lg p-3 cursor-pointer hover:border-[var(--accent)] border border-transparent transition-smooth">
+                                        <input type="radio" name="platform" value="email" class="sr-only">
+                                        <div class="text-center">
+                                            <span class="text-lg mb-1">📧</span>
+                                            <p class="text-xs">Email</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Optimization Goals</label>
+                                <div class="flex flex-wrap gap-3">
+                                    <label class="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-primary)] border border-[var(--border)] cursor-pointer hover:border-[var(--accent)] transition-smooth">
+                                        <input type="checkbox" value="engagement" checked class="text-[var(--accent)]">
+                                        <span class="text-sm">Engagement</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-primary)] border border-[var(--border)] cursor-pointer hover:border-[var(--accent)] transition-smooth">
+                                        <input type="checkbox" value="conversions" checked class="text-[var(--accent)]">
+                                        <span class="text-sm">Conversions</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-primary)] border border-[var(--border)] cursor-pointer hover:border-[var(--accent)] transition-smooth">
+                                        <input type="checkbox" value="viral" class="text-[var(--accent)]">
+                                        <span class="text-sm">Viral Potential</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-primary)] border border-[var(--border)] cursor-pointer hover:border-[var(--accent)] transition-smooth">
+                                        <input type="checkbox" value="brand" class="text-[var(--accent)]">
+                                        <span class="text-sm">Brand Awareness</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn-primary w-full md:w-auto">
+                                Optimize Content
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Variations Tab -->
+                <div id="variations-tab" class="tab-content hidden fade-in">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                            Generate Variations
+                        </h2>
+                        <p class="text-[var(--text-secondary)]">Create multiple versions for A/B testing</p>
+                    </div>
+                    
+                    <div class="glass rounded-2xl p-8 card-hover">
+                        <form id="variationsForm" class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Base content or idea</label>
+                                <textarea 
+                                    id="varPrompt"
+                                    class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth resize-none"
+                                    rows="4"
+                                    placeholder="Enter your base content to generate variations..."
+                                ></textarea>
+                            </div>
+                            
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Number of Variations</label>
+                                    <input 
+                                        type="range" 
+                                        id="varCount" 
+                                        min="2" 
+                                        max="10" 
+                                        value="5"
+                                        class="w-full"
+                                        oninput="updateVariationCount(this.value)"
+                                    >
+                                    <div class="flex justify-between text-sm text-[var(--text-secondary)] mt-1">
+                                        <span>2</span>
+                                        <span id="varCountDisplay" class="font-medium text-[var(--accent)]">5 variations</span>
+                                        <span>10</span>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Variation Type</label>
+                                    <select id="varType" class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth">
+                                        <option value="social_post">Social Posts</option>
+                                        <option value="email">Email Subject Lines</option>
+                                        <option value="ad_copy">Ad Headlines</option>
+                                        <option value="cta">Call-to-Action</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn-primary w-full md:w-auto">
+                                Generate Variations
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- History Tab -->
+                <div id="history-tab" class="tab-content hidden fade-in">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                            Generation History
+                        </h2>
+                        <p class="text-[var(--text-secondary)]">View your recent content generations</p>
+                    </div>
+                    
+                    <div id="historyContent" class="space-y-4">
+                        <!-- History items will be loaded here -->
+                    </div>
+                </div>
+                
+                <!-- Analytics Tab -->
+                <div id="analytics-tab" class="tab-content hidden fade-in">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                            Analytics Dashboard
+                        </h2>
+                        <p class="text-[var(--text-secondary)]">Track your content generation statistics</p>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-3 gap-6 mb-8">
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Total Generations</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="totalGenerations">0</div>
+                            <div class="text-xs text-green-500 mt-1">+12% from last week</div>
+                        </div>
+                        
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Avg Processing Time</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="avgProcessing">2.3s</div>
+                            <div class="text-xs text-green-500 mt-1">-0.5s improvement</div>
+                        </div>
+                        
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Most Used Type</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="mostUsedType">Social Post</div>
+                            <div class="text-xs text-[var(--text-secondary)] mt-1">45% of all generations</div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-lg font-semibold mb-4">Content Type Distribution</h3>
+                        <div id="statsChart" class="space-y-3">
+                            <!-- Chart will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Output Panel -->
+                <div id="outputPanel" class="hidden mt-8 fade-in">
+                    <div class="glass rounded-2xl p-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-semibold">Generated Content</h3>
+                            <div class="flex gap-2">
+                                <button onclick="copyOutput()" class="p-2 rounded-lg hover:bg-[var(--border)] transition-smooth" title="Copy">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="downloadOutput()" class="p-2 rounded-lg hover:bg-[var(--border)] transition-smooth" title="Download">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="outputContent" class="prose prose-lg max-w-none text-[var(--text-primary)]">
+                            <!-- Content will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="loadingState" class="hidden mt-8">
+                    <div class="glass rounded-2xl p-12 text-center">
+                        <div class="spinner mx-auto mb-4"></div>
+                        <p class="text-[var(--text-secondary)]">Generating your content<span class="typing-dots"></span></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 transform translate-y-full transition-transform duration-300 z-50">
+        <div class="glass rounded-lg px-6 py-4 flex items-center gap-3 min-w-[300px]">
+            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+            <span id="toastMessage">Success!</span>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = '/api/v1';
+        let currentTheme = localStorage.getItem('theme') || 'light';
+        
+        // Initialize theme
+        function initTheme() {
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            updateThemeIcon();
+        }
+        
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+            updateThemeIcon();
+        }
+        
+        function updateThemeIcon() {
+            const icon = document.getElementById('theme-icon');
+            if (currentTheme === 'dark') {
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>';
+            } else {
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>';
+            }
+        }
+        
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+        
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+            
+            // Update sidebar active state
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // Close mobile sidebar
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+            
+            // Load tab-specific data
+            if (tabName === 'history') {
+                loadHistory();
+            } else if (tabName === 'analytics') {
+                loadAnalytics();
+            }
+        }
+        
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            
+            toast.style.transform = 'translateY(0)';
+            setTimeout(() => {
+                toast.style.transform = 'translateY(200%)';
+            }, 3000);
+        }
+        
+        function updateVariationCount(value) {
+            document.getElementById('varCountDisplay').textContent = `${value} variations`;
+        }
+        
+        function useTemplate(template) {
+            const templates = {
+                'product-launch': 'We are excited to announce the launch of our revolutionary new product that will transform how businesses handle their daily operations. This innovative solution combines cutting-edge AI technology with user-friendly design.',
+                'sale-promo': 'Limited time offer! Get 50% off on all our premium features this Black Friday. Transform your marketing strategy with our AI-powered tools.',
+                'newsletter': 'Welcome to our monthly newsletter! Discover the latest trends in AI marketing, success stories from our clients, and exclusive tips to boost your campaigns.'
+            };
+            
+            document.getElementById('prompt').value = templates[template];
+            showToast('Template loaded!');
+        }
+        
+        async function showOutput(content) {
+            document.getElementById('outputContent').innerHTML = content.replace(/\n/g, '<br>');
+            document.getElementById('outputPanel').classList.remove('hidden');
+            document.getElementById('loadingState').classList.add('hidden');
+        }
+        
+        function showLoading() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('outputPanel').classList.add('hidden');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingState').classList.add('hidden');
+        }
+        
+        function copyOutput() {
+            const content = document.getElementById('outputContent').innerText;
+            navigator.clipboard.writeText(content);
+            showToast('Copied to clipboard!');
+        }
+        
+        function downloadOutput() {
+            const content = document.getElementById('outputContent').innerText;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `marketing-content-${Date.now()}.txt`;
+            a.click();
+            showToast('Downloaded successfully!');
+        }
+        
+        async function loadHistory() {
+            try {
+                const res = await fetch(`${API}/api/openrouter/logs/recent?limit=10`);
+                const data = await res.json();
+                
+                const historyContent = document.getElementById('historyContent');
+                if (data.logs && data.logs.length > 0) {
+                    historyContent.innerHTML = data.logs.map(log => `
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="text-sm font-medium px-3 py-1 rounded-full bg-[var(--accent)] bg-opacity-20 text-[var(--accent)]">
+                                    ${log.type}
+                                </span>
+                                <span class="text-xs text-[var(--text-secondary)]">
+                                    ${new Date(log.timestamp).toLocaleString()}
+                                </span>
+                            </div>
+                            <p class="text-sm text-[var(--text-secondary)] mb-2">
+                                ${log.input.prompt || log.input.content || 'No input'}
+                            </p>
+                            <div class="text-xs text-[var(--text-secondary)]">
+                                Processing time: ${log.metadata.processingTime || 'N/A'}ms
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    historyContent.innerHTML = '<p class="text-center text-[var(--text-secondary)]">No history available yet.</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load history:', error);
+            }
+        }
+        
+        async function loadAnalytics() {
+            try {
+                const res = await fetch(`${API}/api/openrouter/logs/stats?days=7`);
+                const data = await res.json();
+                
+                if (data.stats) {
+                    document.getElementById('totalGenerations').textContent = data.stats.totalRequests || 0;
+                    
+                    // Create simple bar chart
+                    const chartData = Object.entries(data.stats.byContentType || {});
+                    const maxValue = Math.max(...chartData.map(([_, v]) => v), 1);
+                    
+                    document.getElementById('statsChart').innerHTML = chartData.map(([type, count]) => `
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm text-[var(--text-secondary)] w-24">${type}</span>
+                            <div class="flex-1 bg-[var(--border)] rounded-full h-6 relative overflow-hidden">
+                                <div class="absolute inset-y-0 left-0 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] rounded-full transition-all duration-500"
+                                     style="width: ${(count / maxValue) * 100}%"></div>
+                            </div>
+                            <span class="text-sm font-medium w-12 text-right">${count}</span>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Failed to load analytics:', error);
+            }
+        }
+        
+        // API Helper function
+        async function apiCall(endpoint, options = {}) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+        
+        // Form submissions
+        document.getElementById('generateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const prompt = document.getElementById('prompt').value;
+            const contentType = document.getElementById('contentType').value;
+            const tone = document.getElementById('tone').value;
+            
+            if (!prompt) {
+                showToast('Please enter a prompt', 'error');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const data = await apiCall('/posts/generate-content', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        prompt, 
+                        contentType, 
+                        tone,
+                        platform: 'general' 
+                    })
+                });
+                
+                if (data.content || data.message) {
+                    const output = `
+                        <div class="generated-content">
+                            <h4>Generated Marketing Content:</h4>
+                            <div class="p-4 rounded-lg bg-[var(--bg-primary)] border-l-4 border-[var(--accent)] mt-4">
+                                <p>${data.content || data.message}</p>
+                            </div>
+                            <div class="mt-4 p-3 rounded-lg bg-[var(--bg-primary)]">
+                                <p class="text-sm text-[var(--text-secondary)]">✨ Content generated using AI for ${contentType.replace('_', ' ')} with ${tone} tone</p>
+                                <p class="text-xs text-[var(--text-secondary)] mt-2">Generated by: ${data.provider || 'SYNTHEX AI'}</p>
+                            </div>
+                        </div>
+                    `;
+                    showOutput(output);
+                    showToast('Content generated successfully!');
+                } else {
+                    hideLoading();
+                    showToast('Failed to generate content', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                showToast('Error: ' + error.message, 'error');
+            }
+        });
+        
+        document.getElementById('optimizeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = document.getElementById('content').value;
+            const platform = document.querySelector('input[name="platform"]:checked')?.value || 'general';
+            const goals = Array.from(document.querySelectorAll('#optimize-tab input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
+            
+            if (!content) {
+                showToast('Please enter content to optimize', 'error');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const res = await fetch(`${API}/api/openrouter/marketing/optimize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content, platform, goals })
+                });
+                
+                const data = await res.json();
+                if (data.optimization) {
+                    const output = `
+                        <h4>Analysis:</h4>
+                        <p>${data.optimization.analysis}</p>
+                        <h4>Optimized Content:</h4>
+                        <p>${data.optimization.optimizedContent}</p>
+                        <h4>Suggestions:</h4>
+                        <ul>${data.optimization.suggestions.map(s => `<li>${s}</li>`).join('')}</ul>
+                    `;
+                    showOutput(output);
+                    showToast('Content optimized successfully!');
+                } else {
+                    hideLoading();
+                    showToast('Failed to optimize content', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                showToast('Error: ' + error.message, 'error');
+            }
+        });
+        
+        document.getElementById('variationsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const prompt = document.getElementById('varPrompt').value;
+            const count = document.getElementById('varCount').value;
+            const contentType = document.getElementById('varType').value;
+            
+            if (!prompt) {
+                showToast('Please enter content for variations', 'error');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const res = await fetch(`${API}/api/openrouter/marketing/variations`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, count: parseInt(count), contentType })
+                });
+                
+                const data = await res.json();
+                if (data.variations) {
+                    const output = data.variations.map((v, i) => 
+                        `<div class="mb-4 p-4 rounded-lg bg-[var(--bg-primary)]">
+                            <h4>Variation ${i + 1}:</h4>
+                            <p>${v}</p>
+                        </div>`
+                    ).join('');
+                    showOutput(output);
+                    showToast('Variations generated successfully!');
+                } else {
+                    hideLoading();
+                    showToast('Failed to generate variations', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                showToast('Error: ' + error.message, 'error');
+            }
+        });
+        
+        // Initialize
+        initTheme();
+    </script>
+    <script src="/js/breadcrumb.js"></script>
+    <script src="/js/ui-helpers.js"></script>
+    <script src="/js/footer.js"></script>
+    <script src="/js/auth-visibility-fix.js"></script>
+</body>
+</html>

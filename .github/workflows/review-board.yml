@@ -1,0 +1,72 @@
+name: Synthex Review Board
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: review-board-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      pull-requests: write
+      contents: read
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      GITHUB_EVENT_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Triage PR
+        id: triage
+        run: bash .claude/review-board/triage.sh
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Write manifest to file
+        run: echo '${{ steps.triage.outputs.manifest }}' > .claude/review-board/manifest.json
+
+      - name: Run Review Board
+        id: review
+        run: |
+          claude -p "You are the Chief Reviewer. Review this PR using the manifest at .claude/review-board/manifest.json. Follow the agent instructions in .claude/agents/chief-reviewer.md. Write the review to .claude/review-board/latest-review.md and the verdict (approve/request-changes/comment) to .claude/review-board/latest-verdict.txt." \
+            --timeout ${{ steps.triage.outputs.timeout }} \
+            --max-turns 30
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        continue-on-error: true
+
+      - name: Post Review (on success)
+        if: steps.review.outcome == 'success' && hashFiles('.claude/review-board/latest-review.md') != ''
+        run: |
+          VERDICT=$(cat .claude/review-board/latest-verdict.txt 2>/dev/null || echo "comment")
+          gh pr review ${{ github.event.pull_request.number }} \
+            --body-file .claude/review-board/latest-review.md \
+            --$VERDICT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Circuit Breaker (on failure)
+        if: steps.review.outcome == 'failure'
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "## Synthex Review Board — Infrastructure Error
+
+          The automated review could not complete. This is NOT a code quality issue.
+
+          **Reason:** Review pipeline failure (API timeout, rate limit, or infrastructure error).
+          **Action:** Manual review is required for this PR. The automated check will not block merge due to this infrastructure failure.
+
+          To retry: push a new commit or re-run the workflow.
+
+          ---
+          *Synthex Review Board | Infrastructure failure | $(date -u +%Y-%m-%dT%H:%M:%SZ)*"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

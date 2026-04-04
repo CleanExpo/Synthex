@@ -1,0 +1,143 @@
+{
+  "timestamp": "2025-08-02T15:28:09.353299",
+  "overall_status": "not_ready",
+  "critical_issues": [
+    "Missing required packages: ['PyJWT']",
+    "Missing API configurations and credentials"
+  ],
+  "warnings": [
+    "Low available memory (< 2GB)",
+    "Low error handling coverage",
+    "Missing directories: ['logs']",
+    "Missing configuration files: ['platform_config.json', 'oauth_config.json', 'rate_limits.json', 'pricing_config.json']"
+  ],
+  "recommendations": [
+    "Create requirements.txt and setup installation scripts",
+    "Set up production API credentials and OAuth configurations",
+    "Optimize memory usage and implement monitoring",
+    "Set up production logging and monitoring",
+    "Implement health check endpoints",
+    "Configure automated backups",
+    "Set up CI/CD pipeline",
+    "Create deployment runbooks",
+    "Implement rate limiting and throttling",
+    "Set up error tracking and alerting",
+    "Create production environment variables template"
+  ],
+  "component_status": {
+    "platform_content_adapter.py": {
+      "status": "ok",
+      "message": "Component healthy",
+      "size": 33589,
+      "last_modified": "2025-08-02T15:01:28.986976",
+      "imports_ok": true,
+      "syntax_ok": true
+    },
+    "subscription_pricing_engine.py": {
+      "status": "ok",
+      "message": "Component healthy",
+      "size": 33279,
+      "last_modified": "2025-08-02T15:18:07.708506",
+      "imports_ok": true,
+      "syntax_ok": true
+    },
+    "advanced_speech_interface.py": {
+      "status": "ok",
+      "message": "Component healthy",
+      "size": 34868,
+      "last_modified": "2025-08-02T15:22:00.741156",
+      "imports_ok": true,
+      "syntax_ok": true
+    },
+    "social_media_auth_system.py": {
+      "status": "ok",
+      "message": "Component healthy",
+      "size": 25388,
+      "last_modified": "2025-08-02T15:07:21.114118",
+      "imports_ok": true,
+      "syntax_ok": true
+    },
+    "performance_tracker.py": {
+      "status": "ok",
+      "message": "Component healthy",
+      "size": 29721,
+      "last_modified": "2025-08-02T15:09:05.492511",
+      "imports_ok": true,
+      "syntax_ok": true
+    },
+    "veo3_integration.py": {
+      "status": "ok",
+      "message": "Component healthy",
+      "size": 23740,
+      "last_modified": "2025-08-02T14:01:19.308840",
+      "imports_ok": true,
+      "syntax_ok": true
+    },
+    "shoot_the_breeze.py": {
+      "status": "ok",
+      "message": "Component healthy",
+      "size": 31148,
+      "last_modified": "2025-08-02T14:06:02.501948",
+      "imports_ok": true,
+      "syntax_ok": true
+    },
+    "cpu_manager.py": {
+      "status": "ok",
+      "message": "Component healthy",
+      "size": 8280,
+      "last_modified": "2025-08-02T13:51:04.732856",
+      "imports_ok": true,
+      "syntax_ok": true
+    },
+    "unicode_utils.py": {
+      "status": "ok",
+      "message": "Component healthy",
+      "size": 8846,
+      "last_modified": "2025-08-02T15:14:33.965594",
+      "imports_ok": true,
+      "syntax_ok": true
+    }
+  },
+  "dependency_status": {
+    "missing_packages": [
+      "PyJWT"
+    ],
+    "version_issues": [],
+    "python_version": "3.13.5"
+  },
+  "security_assessment": {
+    "critical_issues": [],
+    "warnings": [],
+    "encryption_configured": true,
+    "env_vars_used": true
+  },
+  "performance_metrics": {
+    "cpu_protection_enabled": true,
+    "memory_efficient": true,
+    "async_support": true,
+    "large_files": []
+  },
+  "production_readiness_score": 40,
+  "api_status": {
+    "missing_configs": [
+      "OAuth configuration file",
+      "Rate limit configuration"
+    ],
+    "missing_env_vars": [
+      "OPENAI_API_KEY",
+      "ANTHROPIC_API_KEY",
+      "GOOGLE_API_KEY"
+    ],
+    "platforms_configured": 6
+  },
+  "deployment_readiness": {
+    "deployment_scripts": [
+      "requirements.txt",
+      "Dockerfile"
+    ],
+    "documentation_files": 12,
+    "environment_examples": [
+      ".env.example"
+    ]
+  }
+}

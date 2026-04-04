@@ -1,0 +1,247 @@
+{
+  "marketing_assets": {
+    "social_media": {
+      "instagram": {
+        "post": {
+          "dimensions": "1080x1080",
+          "format": ["JPG", "PNG"],
+          "safe_zone": "920x920",
+          "text_area": "center 80%",
+          "templates": ["product", "quote", "carousel", "story"]
+        },
+        "story": {
+          "dimensions": "1080x1920",
+          "format": ["JPG", "PNG", "MP4"],
+          "safe_zone": "1000x1420",
+          "duration": "15 seconds max",
+          "templates": ["announcement", "behind_scenes", "tutorial", "poll"]
+        },
+        "reel": {
+          "dimensions": "1080x1920",
+          "format": ["MP4"],
+          "duration": "90 seconds max",
+          "templates": ["product_demo", "testimonial", "how_to"]
+        }
+      },
+      "facebook": {
+        "post": {
+          "dimensions": "1200x630",
+          "format": ["JPG", "PNG"],
+          "text_length": "63,206 characters",
+          "templates": ["link_preview", "photo", "video", "carousel"]
+        },
+        "cover": {
+          "dimensions": "820x312",
+          "format": ["JPG", "PNG"],
+          "safe_zone": "640x312",
+          "templates": ["brand", "seasonal", "campaign"]
+        }
+      },
+      "linkedin": {
+        "post": {
+          "dimensions": "1200x627",
+          "format": ["JPG", "PNG"],
+          "text_length": "3,000 characters",
+          "templates": ["article", "thought_leadership", "company_update"]
+        },
+        "article": {
+          "hero_image": "1280x720",
+          "format": ["JPG", "PNG"],
+          "templates": ["blog", "case_study", "whitepaper"]
+        }
+      },
+      "twitter": {
+        "post": {
+          "dimensions": "1024x512",
+          "format": ["JPG", "PNG", "GIF"],
+          "text_length": "280 characters",
+          "templates": ["announcement", "thread", "quote"]
+        },
+        "header": {
+          "dimensions": "1500x500",
+          "format": ["JPG", "PNG"],
+          "templates": ["brand", "campaign", "seasonal"]
+        }
+      },
+      "tiktok": {
+        "video": {
+          "dimensions": "1080x1920",
+          "format": ["MP4"],
+          "duration": "3 minutes max",
+          "templates": ["trend", "educational", "entertainment", "challenge"]
+        }
+      },
+      "youtube": {
+        "thumbnail": {
+          "dimensions": "1280x720",
+          "format": ["JPG", "PNG"],
+          "text_size": "large",
+          "templates": ["tutorial", "vlog", "product_review"]
+        },
+        "banner": {
+          "dimensions": "2560x1440",
+          "format": ["JPG", "PNG"],
+          "safe_zone": "1546x423",
+          "templates": ["channel_art", "campaign"]
+        }
+      }
+    },
+    "email": {
+      "newsletter": {
+        "width": "600px",
+        "format": "HTML",
+        "sections": ["header", "hero", "content", "cta", "footer"],
+        "templates": ["announcement", "digest", "promotional"]
+      },
+      "promotional": {
+        "width": "600px",
+        "format": "HTML",
+        "sections": ["hero", "offer", "products", "cta"],
+        "templates": ["sale", "new_product", "limited_time"]
+      },
+      "transactional": {
+        "width": "600px",
+        "format": "HTML",
+        "sections": ["header", "message", "details", "footer"],
+        "templates": ["welcome", "confirmation", "receipt", "reset_password"]
+      }
+    },
+    "web": {
+      "landing_page": {
+        "breakpoints": {
+          "desktop": "1920x1080",
+          "tablet": "768x1024",
+          "mobile": "375x667"
+        },
+        "sections": ["hero", "features", "testimonials", "cta", "footer"],
+        "templates": ["product", "service", "event", "download"]
+      },
+      "banner_ads": {
+        "leaderboard": {
+          "dimensions": "728x90",
+          "format": ["JPG", "PNG", "GIF", "HTML5"],
+          "file_size": "150KB max"
+        },
+        "medium_rectangle": {
+          "dimensions": "300x250",
+          "format": ["JPG", "PNG", "GIF", "HTML5"],
+          "file_size": "150KB max"
+        },
+        "skyscraper": {
+          "dimensions": "160x600",
+          "format": ["JPG", "PNG", "GIF", "HTML5"],
+          "file_size": "150KB max"
+        },
+        "mobile_banner": {
+          "dimensions": "320x50",
+          "format": ["JPG", "PNG", "GIF"],
+          "file_size": "100KB max"
+        }
+      },
+      "hero_images": {
+        "dimensions": "1920x1080",
+        "format": ["JPG", "PNG", "WebP"],
+        "variants": ["desktop", "tablet", "mobile"],
+        "templates": ["product", "lifestyle", "abstract", "testimonial"]
+      }
+    },
+    "print": {
+      "business_card": {
+        "dimensions": "3.5x2 inches",
+        "format": "PDF",
+        "bleed": "0.125 inches",
+        "resolution": "300 DPI",
+        "templates": ["standard", "vertical", "square"]
+      },
+      "flyer": {
+        "dimensions": "8.5x11 inches",
+        "format": "PDF",
+        "bleed": "0.125 inches",
+        "resolution": "300 DPI",
+        "templates": ["event", "product", "service"]
+      },
+      "poster": {
+        "dimensions": "24x36 inches",
+        "format": "PDF",
+        "bleed": "0.25 inches",
+        "resolution": "150 DPI",
+        "templates": ["event", "promotional", "informational"]
+      }
+    },
+    "presentation": {
+      "slide_deck": {
+        "dimensions": "1920x1080",
+        "format": ["PPTX", "KEY", "PDF"],
+        "templates": ["pitch", "report", "training", "webinar"]
+      },
+      "infographic": {
+        "dimensions": "800x2000",
+        "format": ["PNG", "PDF"],
+        "templates": ["data", "process", "timeline", "comparison"]
+      }
+    },
+    "brand_elements": {
+      "logo": {
+        "formats": ["SVG", "PNG", "EPS"],
+        "variants": ["full", "icon", "wordmark"],
+        "colorways": ["full_color", "black", "white", "grayscale"]
+      },
+      "favicon": {
+        "dimensions": ["16x16", "32x32", "192x192"],
+        "format": ["ICO", "PNG"],
+        "variants": ["standard", "dark_mode"]
+      },
+      "watermark": {
+        "opacity": "20-30%",
+        "position": ["corner", "center"],
+        "format": ["PNG", "SVG"]
+      }
+    }
+  },
+  "asset_specifications": {
+    "file_naming": {
+      "convention": "kebab-case",
+      "structure": "{platform}-{type}-{variant}-{date}",
+      "example": "instagram-post-product-20240101"
+    },
+    "color_profiles": {
+      "web": "sRGB",
+      "print": "CMYK",
+      "video": "Rec. 709"
+    },
+    "compression": {
+      "jpg_quality": 85,
+      "png_optimization": true,
+      "webp_quality": 80
+    },
+    "accessibility": {
+      "alt_text": "required",
+      "color_contrast": "WCAG AA",
+      "text_size": "minimum 14px"
+    }
+  },
+  "production_workflow": {
+    "stages": [
+      {
+        "name": "concept",
+        "deliverables": ["mood_board", "sketches", "wireframes"]
+      },
+      {
+        "name": "design",
+        "deliverables": ["mockups", "prototypes", "style_guide"]
+      },
+      {
+        "name": "review",
+        "deliverables": ["feedback", "revisions", "approval"]
+      },
+      {
+        "name": "production",
+        "deliverables": ["final_files", "exports", "packages"]
+      },
+      {
+        "name": "delivery",
+        "deliverables": ["organized_files", "documentation", "handoff"]
+      }
+    ]
+  }
+}

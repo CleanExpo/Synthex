@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="infoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow circle -->
+  <circle cx="24" cy="24" r="19" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Main circle -->
+  <circle cx="24" cy="24" r="19" fill="url(#infoGrad)"/>
+  <!-- i dot -->
+  <circle cx="24" cy="16" r="2.5" fill="rgba(255,255,255,0.85)"/>
+  <!-- i bar -->
+  <rect x="21" y="22" width="6" height="13" rx="3" fill="rgba(255,255,255,0.85)"/>
+  <!-- Highlight on top-left of circle -->
+  <ellipse cx="16" cy="13" rx="7" ry="4" fill="rgba(255,255,255,0.22)"/>
+</svg>

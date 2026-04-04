@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTHEX Component Demo | Unified Design System</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Design System -->
+    <link rel="stylesheet" href="css/design-system.css">
+    
+    <style>
+        .demo-container {
+            padding: var(--synthex-space-8);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .demo-section {
+            margin-bottom: var(--synthex-space-12);
+            animation: fadeInUp 0.6s ease backwards;
+        }
+        
+        .demo-section:nth-child(1) { animation-delay: 0.1s; }
+        .demo-section:nth-child(2) { animation-delay: 0.2s; }
+        .demo-section:nth-child(3) { animation-delay: 0.3s; }
+        .demo-section:nth-child(4) { animation-delay: 0.4s; }
+        .demo-section:nth-child(5) { animation-delay: 0.5s; }
+        
+        .section-title {
+            font-size: var(--synthex-text-2xl);
+            font-weight: var(--synthex-font-bold);
+            margin-bottom: var(--synthex-space-6);
+            background: var(--synthex-gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--synthex-space-6);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <!-- Header -->
+        <header class="glass-nav mb-8">
+            <div class="container flex justify-between items-center p-4">
+                <div class="flex items-center gap-4">
+                    <img src="/logo.png" alt="SYNTHEX" class="w-10 h-10 float">
+                    <h1 class="text-2xl font-bold gradient-text">SYNTHEX Design System</h1>
+                </div>
+                <div class="flex gap-3">
+                    <button class="glass-button" onclick="showSidebar()">Show Sidebar</button>
+                    <button class="btn-primary">Get Started</button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Hero Section -->
+        <section class="demo-section">
+            <div class="glass-card text-center p-12 glow">
+                <h1 class="text-5xl font-bold gradient-text mb-4">Unified Glassmorphic Design</h1>
+                <p class="text-xl text-gray-400 mb-8">Consistent, modern, and beautiful UI components</p>
+                <div class="flex justify-center gap-4">
+                    <button class="btn-primary" onclick="synthexUI.showToast('Welcome to SYNTHEX!', 'success')">
+                        Show Success Toast
+                    </button>
+                    <button class="glass-button" onclick="showModal()">
+                        Open Modal
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Component Showcase -->
+        <section class="demo-section">
+            <h2 class="section-title">Component Showcase</h2>
+            <div class="component-grid">
+                <div class="glass-card p-6">
+                    <h3 class="text-xl font-semibold mb-4">Interactive Elements</h3>
+                    <div class="space-y-4">
+                        <input type="text" class="glass-input w-full" placeholder="Glass Input Field">
+                        <button class="glass-button w-full">Glass Button</button>
+                        <button class="btn-primary w-full glow">Primary Button with Glow</button>
+                    </div>
+                </div>
+                
+                <div class="glass-card p-6">
+                    <h3 class="text-xl font-semibold mb-4">Notifications</h3>
+                    <div class="space-y-3">
+                        <button class="glass-button w-full" onclick="synthexUI.showToast('Info message', 'info')">
+                            Info Toast
+                        </button>
+                        <button class="glass-button w-full" onclick="synthexUI.showToast('Warning!', 'warning')">
+                            Warning Toast
+                        </button>
+                        <button class="glass-button w-full" onclick="synthexUI.showToast('Error occurred!', 'error')">
+                            Error Toast
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="glass-card p-6">
+                    <h3 class="text-xl font-semibold mb-4">Statistics</h3>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold gradient-text" data-count-up="9999">0</div>
+                        <div class="text-sm text-gray-400 mt-2">Active Users</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="js/synthex-ui.js"></script>
+    <script src="js/client-sidebar.js"></script>
+    <script>
+        function showModal() {
+            const modal = synthexUI.createModal({
+                title: 'SYNTHEX Modal',
+                content: '<p>This is a glassmorphic modal component with smooth animations.</p>',
+                size: 'medium',
+                closable: true,
+                actions: [
+                    {
+                        id: 'close',
+                        label: 'Close',
+                        handler: () => console.log('Closed')
+                    },
+                    {
+                        id: 'confirm',
+                        label: 'Confirm',
+                        primary: true,
+                        handler: () => synthexUI.showToast('Confirmed!', 'success')
+                    }
+                ]
+            });
+            synthexUI.showModal(modal);
+        }
+        
+        function showSidebar() {
+            if (window.clientSidebar) {
+                window.clientSidebar.open();
+            }
+        }
+        
+        // Initialize sidebar on load
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.clientSidebar) {
+                // Add menu items
+                window.clientSidebar.addMenuItem('main', {
+                    icon: '🏠',
+                    label: 'Dashboard',
+                    active: true
+                });
+                
+                window.clientSidebar.addMenuItem('main', {
+                    icon: '📊',
+                    label: 'Analytics',
+                    badge: 'New'
+                });
+                
+                // Initially close sidebar
+                window.clientSidebar.close();
+            }
+        });
+    </script>
+</body>
+</html>

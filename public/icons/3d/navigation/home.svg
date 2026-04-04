@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="nav-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="nav-highlight" x1="0%" y1="0%" x2="60%" y2="60%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.22)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+  </defs>
+  <!-- shadow -->
+  <path d="M26 10.5l14 13H37v14H27v-9h-6v9H11v-14H8l16-13z" fill="rgba(0,0,0,0.3)"/>
+  <!-- base house -->
+  <path d="M24 9l14 13H35v14H27v-9h-6v9H13v-14H11L24 9z" fill="url(#nav-grad)"/>
+  <!-- roof highlight -->
+  <path d="M24 9l14 13H35L24 11.5 13 22H11L24 9z" fill="url(#nav-highlight)"/>
+</svg>

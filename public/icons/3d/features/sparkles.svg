@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="feat-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+    <linearGradient id="feat-hl" x1="0%" y1="0%" x2="60%" y2="60%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.25)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+  </defs>
+  <!-- shadow -->
+  <path d="M20 8l2.5 7H30l-6 4.5 2.5 7L20 23l-6.5 3.5L16 19.5 10 15h7.5z" fill="rgba(0,0,0,0.3)" transform="translate(1.5,1.5)"/>
+  <circle cx="37" cy="13" r="3" fill="rgba(0,0,0,0.3)" transform="translate(1.5,1.5)"/>
+  <circle cx="36" cy="34" r="2" fill="rgba(0,0,0,0.3)" transform="translate(1.5,1.5)"/>
+  <!-- main star -->
+  <path d="M20 8l2.5 7H30l-6 4.5 2.5 7L20 23l-6.5 3.5L16 19.5 10 15h7.5z" fill="url(#feat-grad)"/>
+  <!-- small stars -->
+  <circle cx="37" cy="13" r="3" fill="url(#feat-grad)"/>
+  <circle cx="36" cy="34" r="2" fill="url(#feat-grad)"/>
+  <!-- highlight -->
+  <path d="M20 8l2.5 7H30l-6 4.5-1-2.8 4.5-3.3H22l-2-5.4z" fill="url(#feat-hl)"/>
+</svg>

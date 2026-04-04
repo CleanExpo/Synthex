@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="feat-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- shadow can -->
+  <path d="M14 17h20l-2 24H16z" fill="rgba(0,0,0,0.3)" transform="translate(1.5,1.5)"/>
+  <!-- lid shadow -->
+  <rect x="9" y="13.5" width="30" height="4" rx="2" fill="rgba(0,0,0,0.3)" transform="translate(1.5,0)"/>
+  <!-- handle shadow -->
+  <path d="M19 9h10v4H19z" fill="rgba(0,0,0,0.25)"/>
+  <!-- handle -->
+  <rect x="19" y="8" width="10" height="4" rx="2" fill="url(#feat-grad)"/>
+  <!-- lid -->
+  <rect x="9" y="13" width="30" height="4" rx="2" fill="url(#feat-grad)"/>
+  <!-- can body -->
+  <path d="M14 17h20l-2 24H16z" fill="url(#feat-grad)"/>
+  <!-- can lines -->
+  <line x1="20" y1="22" x2="19" y2="36" stroke="rgba(0,0,0,0.2)" stroke-width="1.5"/>
+  <line x1="24" y1="22" x2="24" y2="36" stroke="rgba(0,0,0,0.2)" stroke-width="1.5"/>
+  <line x1="28" y1="22" x2="29" y2="36" stroke="rgba(0,0,0,0.2)" stroke-width="1.5"/>
+  <!-- highlight on lid -->
+  <rect x="9" y="13" width="30" height="2" rx="2" fill="rgba(255,255,255,0.22)"/>
+</svg>

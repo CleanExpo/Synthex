@@ -1,0 +1,67 @@
+{
+  "personas": [
+    {
+      "id": "primary_persona",
+      "name": "",
+      "demographics": {
+        "age_range": "",
+        "location": "",
+        "income": "",
+        "education": "",
+        "occupation": ""
+      },
+      "psychographics": {
+        "values": [],
+        "interests": [],
+        "lifestyle": ""
+      },
+      "behavioral": {
+        "online_habits": [],
+        "preferred_channels": [],
+        "purchase_behavior": ""
+      },
+      "pain_points": [],
+      "goals": [],
+      "frustrations": [],
+      "motivations": [],
+      "visual_representation": {
+        "appearance": "",
+        "age": "",
+        "ethnicity": "",
+        "style": "",
+        "context": "",
+        "animation_style": "",
+        "color_preferences": []
+      },
+      "journey_stages": {
+        "awareness": {
+          "touchpoints": [],
+          "emotions": [],
+          "needs": []
+        },
+        "consideration": {
+          "touchpoints": [],
+          "emotions": [],
+          "needs": []
+        },
+        "decision": {
+          "touchpoints": [],
+          "emotions": [],
+          "needs": []
+        },
+        "retention": {
+          "touchpoints": [],
+          "emotions": [],
+          "needs": []
+        }
+      }
+    }
+  ],
+  "market_context": {
+    "industry": "",
+    "target_market": "",
+    "competitive_landscape": [],
+    "market_opportunities": [],
+    "positioning_strategy": ""
+  }
+}

@@ -1,0 +1,221 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build:vercel",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "installCommand": "npm install --legacy-peer-deps --include=dev",
+  "env": {
+    "NODE_ENV": "production",
+    "NEXT_TELEMETRY_DISABLED": "1"
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, must-revalidate"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    },
+    {
+      "source": "/api/stats",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, s-maxage=300, stale-while-revalidate=600"
+        }
+      ]
+    },
+    {
+      "source": "/api/quotes",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, s-maxage=60, stale-while-revalidate=300"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, s-maxage=3600, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-DNS-Prefetch-Control",
+          "value": "on"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.fontshare.com; font-src 'self' https://fonts.gstatic.com https://api.fontshare.com; img-src 'self' data: blob: https: http:; connect-src 'self' https://*.supabase.co https://api.openrouter.ai https://api.stripe.com wss://*.supabase.co https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://github.com https://api.github.com https://api.fontshare.com; frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+        }
+      ]
+    }
+  ],
+  "regions": ["iad1", "sfo1", "cdg1"],
+  "crons": [
+    {
+      "path": "/api/reports/scheduled/execute",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/competitors/track/execute",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/health-score",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-digest",
+      "schedule": "0 8 * * 1"
+    },
+    {
+      "path": "/api/cron/proactive-insights",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/seo-audits",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/fetch-mentions",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/publish-scheduled",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/revalidate-api-keys",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/insights",
+      "schedule": "0 */4 * * *"
+    },
+    {
+      "path": "/api/cron/welcome-sequence",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/drip-day3",
+      "schedule": "2 9 * * *"
+    },
+    {
+      "path": "/api/cron/drip-day7",
+      "schedule": "4 9 * * *"
+    },
+    {
+      "path": "/api/cron/drip-day14",
+      "schedule": "6 9 * * *"
+    },
+    {
+      "path": "/api/cron/unite-hub-revenue",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/forecast-training",
+      "schedule": "0 3 * * 0"
+    },
+    {
+      "path": "/api/cron/refresh-tokens",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/gsc-monitor",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/gbp-monitor",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/gsc-auto-index",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/autopilot",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/daily-post",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/analytics-sync",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/autopilot-learn",
+      "schedule": "0 8 * * 1"
+    },
+    {
+      "path": "/api/cron/review-follow-up",
+      "schedule": "8 9 * * *"
+    },
+    {
+      "path": "/api/cron/gsc-topic-sync",
+      "schedule": "0 20 * * 0"
+    },
+    {
+      "path": "/api/cron/rank-snapshot",
+      "schedule": "0 19 * * 0"
+    },
+    {
+      "path": "/api/cron/visibility-push",
+      "schedule": "0 21 * * 0"
+    },
+    {
+      "path": "/api/cron/ab-rollout",
+      "schedule": "0 22 * * 0"
+    },
+    {
+      "path": "/api/cron/model-scout",
+      "schedule": "0 23 * * 0"
+    },
+    {
+      "path": "/api/cron/generate-calendars",
+      "schedule": "0 8 * * 0"
+    },
+    {
+      "path": "/api/cron/health-check",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/video-production",
+      "schedule": "0 20 * * 1,3"
+    },
+    {
+      "path": "/api/cron/video-social-derivation",
+      "schedule": "0 */2 * * *"
+    }
+  ]
+}

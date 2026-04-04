@@ -1,0 +1,103 @@
+{
+  "platform_rate_limits": {
+    "youtube": {
+      "quota_units_per_day": 10000,
+      "queries_per_100_seconds": 1600,
+      "uploads_per_day": 100,
+      "cost_per_query": 1,
+      "cost_per_upload": 1600,
+      "burst_limit": 100,
+      "cooldown_period": 60
+    },
+    "instagram": {
+      "calls_per_hour": 200,
+      "calls_per_user_per_hour": 200,
+      "posts_per_hour": 25,
+      "stories_per_day": 100,
+      "burst_limit": 50,
+      "cooldown_period": 300
+    },
+    "tiktok": {
+      "calls_per_day": 1000,
+      "calls_per_minute": 10,
+      "uploads_per_day": 50,
+      "burst_limit": 5,
+      "cooldown_period": 60
+    },
+    "facebook": {
+      "calls_per_hour": 200,
+      "calls_per_user_per_hour": 200,
+      "posts_per_day": 100,
+      "pages_limit": 25,
+      "burst_limit": 50,
+      "cooldown_period": 300
+    },
+    "twitter": {
+      "tweets_per_day": 300,
+      "tweets_per_15_minutes": 50,
+      "likes_per_day": 1000,
+      "follows_per_day": 400,
+      "burst_limit": 10,
+      "cooldown_period": 900
+    },
+    "linkedin": {
+      "calls_per_day": 500,
+      "calls_per_hour": 100,
+      "posts_per_day": 25,
+      "shares_per_hour": 20,
+      "burst_limit": 20,
+      "cooldown_period": 600
+    },
+    "pinterest": {
+      "calls_per_hour": 1000,
+      "calls_per_day": 50000,
+      "pins_per_day": 50,
+      "boards_per_day": 10,
+      "burst_limit": 100,
+      "cooldown_period": 300
+    },
+    "reddit": {
+      "calls_per_minute": 60,
+      "calls_per_hour": 3600,
+      "posts_per_day": 100,
+      "comments_per_day": 100,
+      "burst_limit": 10,
+      "cooldown_period": 60
+    }
+  },
+  "ai_service_limits": {
+    "openai": {
+      "requests_per_minute": 3500,
+      "tokens_per_minute": 90000,
+      "requests_per_day": 200000,
+      "cost_per_1k_tokens": 0.002
+    },
+    "anthropic": {
+      "requests_per_minute": 1000,
+      "tokens_per_minute": 40000,
+      "requests_per_day": 50000,
+      "cost_per_1k_tokens": 0.008
+    },
+    "google_veo3": {
+      "generations_per_day": 100,
+      "generations_per_hour": 20,
+      "max_duration_seconds": 60,
+      "cost_per_generation": 0.50
+    }
+  },
+  "system_limits": {
+    "max_concurrent_requests": 10,
+    "max_queue_size": 100,
+    "request_timeout": 30,
+    "retry_attempts": 3,
+    "backoff_multiplier": 2,
+    "circuit_breaker_threshold": 5
+  },
+  "monitoring": {
+    "track_usage": true,
+    "alert_at_80_percent": true,
+    "reset_counters_daily": true,
+    "log_rate_limit_hits": true,
+    "adaptive_throttling": true
+  }
+}

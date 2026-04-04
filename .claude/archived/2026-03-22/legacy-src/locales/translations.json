@@ -1,0 +1,237 @@
+{
+  "en": {
+    "common": {
+      "welcome": "Welcome to Synthex",
+      "login": "Login",
+      "logout": "Logout",
+      "register": "Register",
+      "dashboard": "Dashboard",
+      "settings": "Settings",
+      "profile": "Profile",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "create": "Create",
+      "search": "Search",
+      "loading": "Loading...",
+      "error": "Error",
+      "success": "Success",
+      "warning": "Warning"
+    },
+    "features": {
+      "analytics": "Analytics",
+      "content_generation": "Content Generation",
+      "ab_testing": "A/B Testing",
+      "competitor_analysis": "Competitor Analysis",
+      "team_collaboration": "Team Collaboration",
+      "scheduler": "Scheduler",
+      "content_library": "Content Library",
+      "reporting": "Reporting",
+      "white_label": "White Label",
+      "mobile": "Mobile"
+    },
+    "errors": {
+      "unauthorized": "Unauthorized access",
+      "not_found": "Resource not found",
+      "server_error": "Server error occurred",
+      "validation_failed": "Validation failed",
+      "rate_limited": "Too many requests",
+      "network_error": "Network error"
+    },
+    "success_messages": {
+      "login_successful": "Login successful",
+      "content_created": "Content created successfully",
+      "settings_saved": "Settings saved",
+      "post_scheduled": "Post scheduled successfully"
+    }
+  },
+  "es": {
+    "common": {
+      "welcome": "Bienvenido a Synthex",
+      "login": "Iniciar sesión",
+      "logout": "Cerrar sesión",
+      "register": "Registrarse",
+      "dashboard": "Panel",
+      "settings": "Configuración",
+      "profile": "Perfil",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "delete": "Eliminar",
+      "edit": "Editar",
+      "create": "Crear",
+      "search": "Buscar",
+      "loading": "Cargando...",
+      "error": "Error",
+      "success": "Éxito",
+      "warning": "Advertencia"
+    },
+    "features": {
+      "analytics": "Analítica",
+      "content_generation": "Generación de Contenido",
+      "ab_testing": "Pruebas A/B",
+      "competitor_analysis": "Análisis de Competencia",
+      "team_collaboration": "Colaboración de Equipo",
+      "scheduler": "Programador",
+      "content_library": "Biblioteca de Contenido",
+      "reporting": "Informes",
+      "white_label": "Marca Blanca",
+      "mobile": "Móvil"
+    },
+    "errors": {
+      "unauthorized": "Acceso no autorizado",
+      "not_found": "Recurso no encontrado",
+      "server_error": "Error del servidor",
+      "validation_failed": "Validación fallida",
+      "rate_limited": "Demasiadas solicitudes",
+      "network_error": "Error de red"
+    },
+    "success_messages": {
+      "login_successful": "Inicio de sesión exitoso",
+      "content_created": "Contenido creado exitosamente",
+      "settings_saved": "Configuración guardada",
+      "post_scheduled": "Publicación programada exitosamente"
+    }
+  },
+  "fr": {
+    "common": {
+      "welcome": "Bienvenue à Synthex",
+      "login": "Connexion",
+      "logout": "Déconnexion",
+      "register": "S'inscrire",
+      "dashboard": "Tableau de bord",
+      "settings": "Paramètres",
+      "profile": "Profil",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "edit": "Modifier",
+      "create": "Créer",
+      "search": "Rechercher",
+      "loading": "Chargement...",
+      "error": "Erreur",
+      "success": "Succès",
+      "warning": "Avertissement"
+    },
+    "features": {
+      "analytics": "Analytique",
+      "content_generation": "Génération de Contenu",
+      "ab_testing": "Tests A/B",
+      "competitor_analysis": "Analyse de la Concurrence",
+      "team_collaboration": "Collaboration d'Équipe",
+      "scheduler": "Planificateur",
+      "content_library": "Bibliothèque de Contenu",
+      "reporting": "Rapports",
+      "white_label": "Marque Blanche",
+      "mobile": "Mobile"
+    },
+    "errors": {
+      "unauthorized": "Accès non autorisé",
+      "not_found": "Ressource non trouvée",
+      "server_error": "Erreur du serveur",
+      "validation_failed": "Validation échouée",
+      "rate_limited": "Trop de demandes",
+      "network_error": "Erreur réseau"
+    },
+    "success_messages": {
+      "login_successful": "Connexion réussie",
+      "content_created": "Contenu créé avec succès",
+      "settings_saved": "Paramètres enregistrés",
+      "post_scheduled": "Publication programmée avec succès"
+    }
+  },
+  "de": {
+    "common": {
+      "welcome": "Willkommen bei Synthex",
+      "login": "Anmelden",
+      "logout": "Abmelden",
+      "register": "Registrieren",
+      "dashboard": "Dashboard",
+      "settings": "Einstellungen",
+      "profile": "Profil",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "delete": "Löschen",
+      "edit": "Bearbeiten",
+      "create": "Erstellen",
+      "search": "Suchen",
+      "loading": "Laden...",
+      "error": "Fehler",
+      "success": "Erfolg",
+      "warning": "Warnung"
+    },
+    "features": {
+      "analytics": "Analytik",
+      "content_generation": "Inhaltserstellung",
+      "ab_testing": "A/B-Tests",
+      "competitor_analysis": "Wettbewerbsanalyse",
+      "team_collaboration": "Teamzusammenarbeit",
+      "scheduler": "Planer",
+      "content_library": "Inhaltsbibliothek",
+      "reporting": "Berichte",
+      "white_label": "White Label",
+      "mobile": "Mobil"
+    },
+    "errors": {
+      "unauthorized": "Nicht autorisierter Zugriff",
+      "not_found": "Ressource nicht gefunden",
+      "server_error": "Serverfehler",
+      "validation_failed": "Validierung fehlgeschlagen",
+      "rate_limited": "Zu viele Anfragen",
+      "network_error": "Netzwerkfehler"
+    },
+    "success_messages": {
+      "login_successful": "Anmeldung erfolgreich",
+      "content_created": "Inhalt erfolgreich erstellt",
+      "settings_saved": "Einstellungen gespeichert",
+      "post_scheduled": "Beitrag erfolgreich geplant"
+    }
+  },
+  "zh": {
+    "common": {
+      "welcome": "欢迎来到 Synthex",
+      "login": "登录",
+      "logout": "登出",
+      "register": "注册",
+      "dashboard": "仪表板",
+      "settings": "设置",
+      "profile": "个人资料",
+      "save": "保存",
+      "cancel": "取消",
+      "delete": "删除",
+      "edit": "编辑",
+      "create": "创建",
+      "search": "搜索",
+      "loading": "加载中...",
+      "error": "错误",
+      "success": "成功",
+      "warning": "警告"
+    },
+    "features": {
+      "analytics": "分析",
+      "content_generation": "内容生成",
+      "ab_testing": "A/B 测试",
+      "competitor_analysis": "竞争对手分析",
+      "team_collaboration": "团队协作",
+      "scheduler": "调度器",
+      "content_library": "内容库",
+      "reporting": "报告",
+      "white_label": "白标",
+      "mobile": "移动"
+    },
+    "errors": {
+      "unauthorized": "未授权访问",
+      "not_found": "资源未找到",
+      "server_error": "服务器错误",
+      "validation_failed": "验证失败",
+      "rate_limited": "请求过多",
+      "network_error": "网络错误"
+    },
+    "success_messages": {
+      "login_successful": "登录成功",
+      "content_created": "内容创建成功",
+      "settings_saved": "设置已保存",
+      "post_scheduled": "帖子安排成功"
+    }
+  }
+}

@@ -1,0 +1,162 @@
+{
+  "platforms": {
+    "youtube": {
+      "api_version": "v3",
+      "base_url": "https://www.googleapis.com/youtube/v3",
+      "scopes": [
+        "https://www.googleapis.com/auth/youtube.upload",
+        "https://www.googleapis.com/auth/youtube.readonly"
+      ],
+      "rate_limits": {
+        "queries_per_day": 10000,
+        "queries_per_100_seconds": 1600
+      },
+      "content_specs": {
+        "max_title_length": 100,
+        "max_description_length": 5000,
+        "video_formats": ["mp4", "mov", "avi"],
+        "thumbnail_size": "1280x720"
+      }
+    },
+    "instagram": {
+      "api_version": "v18.0",
+      "base_url": "https://graph.facebook.com/v18.0",
+      "scopes": [
+        "instagram_basic",
+        "instagram_content_publish",
+        "pages_show_list"
+      ],
+      "rate_limits": {
+        "calls_per_hour": 200,
+        "calls_per_user_per_hour": 200
+      },
+      "content_specs": {
+        "max_caption_length": 2200,
+        "hashtag_limit": 30,
+        "image_formats": ["jpg", "png"],
+        "video_formats": ["mp4", "mov"]
+      }
+    },
+    "tiktok": {
+      "api_version": "v1.3",
+      "base_url": "https://open-api.tiktok.com",
+      "scopes": [
+        "user.info.basic",
+        "video.upload",
+        "video.publish"
+      ],
+      "rate_limits": {
+        "calls_per_day": 1000,
+        "calls_per_minute": 10
+      },
+      "content_specs": {
+        "max_caption_length": 300,
+        "video_duration_max": 60,
+        "video_formats": ["mp4"],
+        "aspect_ratio": "9:16"
+      }
+    },
+    "facebook": {
+      "api_version": "v18.0",
+      "base_url": "https://graph.facebook.com/v18.0",
+      "scopes": [
+        "pages_manage_posts",
+        "pages_read_engagement",
+        "pages_show_list"
+      ],
+      "rate_limits": {
+        "calls_per_hour": 200,
+        "calls_per_user_per_hour": 200
+      },
+      "content_specs": {
+        "max_post_length": 63206,
+        "image_formats": ["jpg", "png", "gif"],
+        "video_formats": ["mp4", "mov"]
+      }
+    },
+    "twitter": {
+      "api_version": "v2",
+      "base_url": "https://api.twitter.com/2",
+      "scopes": [
+        "tweet.read",
+        "tweet.write",
+        "users.read"
+      ],
+      "rate_limits": {
+        "tweets_per_day": 300,
+        "tweets_per_15_minutes": 50
+      },
+      "content_specs": {
+        "max_tweet_length": 280,
+        "max_thread_length": 25,
+        "image_formats": ["jpg", "png", "gif", "webp"],
+        "video_formats": ["mp4", "mov"]
+      }
+    },
+    "linkedin": {
+      "api_version": "v2",
+      "base_url": "https://api.linkedin.com/v2",
+      "scopes": [
+        "r_liteprofile",
+        "r_emailaddress",
+        "w_member_social"
+      ],
+      "rate_limits": {
+        "calls_per_day": 500,
+        "calls_per_hour": 100
+      },
+      "content_specs": {
+        "max_post_length": 3000,
+        "max_headline_length": 150,
+        "image_formats": ["jpg", "png"],
+        "video_formats": ["mp4", "mov"]
+      }
+    },
+    "pinterest": {
+      "api_version": "v5",
+      "base_url": "https://api.pinterest.com/v5",
+      "scopes": [
+        "boards:read",
+        "pins:read",
+        "pins:write"
+      ],
+      "rate_limits": {
+        "calls_per_hour": 1000,
+        "calls_per_day": 50000
+      },
+      "content_specs": {
+        "max_description_length": 500,
+        "max_title_length": 100,
+        "image_formats": ["jpg", "png"],
+        "aspect_ratio_preferred": "2:3"
+      }
+    },
+    "reddit": {
+      "api_version": "v1",
+      "base_url": "https://oauth.reddit.com",
+      "scopes": [
+        "identity",
+        "read",
+        "submit"
+      ],
+      "rate_limits": {
+        "calls_per_minute": 60,
+        "calls_per_hour": 3600
+      },
+      "content_specs": {
+        "max_title_length": 300,
+        "max_text_length": 40000,
+        "image_formats": ["jpg", "png", "gif"],
+        "video_formats": ["mp4", "mov"]
+      }
+    }
+  },
+  "general_settings": {
+    "retry_attempts": 3,
+    "timeout_seconds": 30,
+    "concurrent_uploads": 2,
+    "content_approval_required": false,
+    "auto_schedule": true,
+    "analytics_collection": true
+  }
+}

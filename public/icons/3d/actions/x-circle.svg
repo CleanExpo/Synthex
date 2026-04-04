@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="xCircleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow circle -->
+  <circle cx="24" cy="24" r="19" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Main circle -->
+  <circle cx="24" cy="24" r="19" fill="url(#xCircleGrad)"/>
+  <!-- X lines -->
+  <line x1="15" y1="15" x2="33" y2="33" stroke="rgba(255,255,255,0.7)" stroke-width="3" stroke-linecap="round"/>
+  <line x1="33" y1="15" x2="15" y2="33" stroke="rgba(255,255,255,0.7)" stroke-width="3" stroke-linecap="round"/>
+  <!-- Highlight on circle -->
+  <ellipse cx="17" cy="14" rx="7" ry="4" fill="rgba(255,255,255,0.18)"/>
+</svg>

@@ -1,0 +1,20 @@
+{
+  "timestamp": "2025-08-02T15:23:54.888781",
+  "components_tested": [
+    "platform_adapter",
+    "pricing_engine",
+    "speech_interface",
+    "workflow_integration",
+    "performance_monitoring"
+  ],
+  "successful_tests": 5,
+  "failed_tests": 0,
+  "performance_metrics": {
+    "content_adaptation_time": 0.0001773834228515625,
+    "pricing_calculation_time": 0.5026836395263672,
+    "speech_processing_time": 0.5068948268890381,
+    "workflow_completion_time": 0.5021121501922607,
+    "average_response_time": 0.3779670000076294,
+    "cpu_usage": 4.6
+  }
+}

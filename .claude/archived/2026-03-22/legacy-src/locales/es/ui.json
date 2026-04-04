@@ -1,0 +1,91 @@
+{
+  "app": {
+    "title": "Synthex - Automatización de Marketing con IA",
+    "tagline": "Amplifica tu Presencia en Redes Sociales con IA"
+  },
+  "navigation": {
+    "dashboard": "Panel",
+    "content": "Contenido",
+    "campaigns": "Campañas",
+    "analytics": "Analíticas",
+    "settings": "Configuración",
+    "profile": "Perfil",
+    "logout": "Cerrar Sesión"
+  },
+  "dashboard": {
+    "welcome": "¡Bienvenido de nuevo, {{name}}!",
+    "overview": "Resumen",
+    "recentActivity": "Actividad Reciente",
+    "quickActions": "Acciones Rápidas",
+    "stats": {
+      "totalContent": "Contenido Total",
+      "activeCampaigns": "Campañas Activas",
+      "engagementRate": "Tasa de Interacción",
+      "followers": "Seguidores"
+    }
+  },
+  "content": {
+    "create": "Crear Contenido",
+    "optimize": "Optimizar",
+    "schedule": "Programar",
+    "publish": "Publicar",
+    "draft": "Borrador",
+    "published": "Publicado",
+    "pending": "Pendiente",
+    "platform": "Plataforma",
+    "originalContent": "Contenido Original",
+    "optimizedContent": "Contenido Optimizado",
+    "score": "Puntuación",
+    "suggestions": "Sugerencias"
+  },
+  "campaigns": {
+    "create": "Crear Campaña",
+    "edit": "Editar Campaña",
+    "delete": "Eliminar Campaña",
+    "start": "Iniciar",
+    "pause": "Pausar",
+    "stop": "Detener",
+    "status": {
+      "active": "Activa",
+      "paused": "Pausada",
+      "completed": "Completada",
+      "draft": "Borrador"
+    },
+    "type": {
+      "scheduled": "Programada",
+      "immediate": "Inmediata",
+      "recurring": "Recurrente"
+    }
+  },
+  "analytics": {
+    "overview": "Resumen de Analíticas",
+    "performance": "Rendimiento",
+    "insights": "Insights",
+    "reports": "Informes",
+    "engagement": "Interacción",
+    "reach": "Alcance",
+    "impressions": "Impresiones",
+    "clicks": "Clics",
+    "shares": "Compartir",
+    "comments": "Comentarios",
+    "likes": "Me Gusta"
+  },
+  "buttons": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "update": "Actualizar",
+    "submit": "Enviar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "retry": "Reintentar",
+    "refresh": "Actualizar",
+    "load": "Cargar",
+    "loading": "Cargando...",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "finish": "Finalizar"
+  }
+}

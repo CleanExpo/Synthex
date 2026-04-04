@@ -1,0 +1,160 @@
+{
+  "app": {
+    "title": "Synthex - AI Marketing Automation",
+    "tagline": "Amplify Your Social Media Presence with AI"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "content": "Content",
+    "campaigns": "Campaigns",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {{name}}!",
+    "overview": "Overview",
+    "recentActivity": "Recent Activity",
+    "quickActions": "Quick Actions",
+    "stats": {
+      "totalContent": "Total Content",
+      "activeCampaigns": "Active Campaigns",
+      "engagementRate": "Engagement Rate",
+      "followers": "Followers"
+    }
+  },
+  "content": {
+    "create": "Create Content",
+    "optimize": "Optimize",
+    "schedule": "Schedule",
+    "publish": "Publish",
+    "draft": "Draft",
+    "published": "Published",
+    "pending": "Pending",
+    "platform": "Platform",
+    "originalContent": "Original Content",
+    "optimizedContent": "Optimized Content",
+    "score": "Score",
+    "suggestions": "Suggestions"
+  },
+  "campaigns": {
+    "create": "Create Campaign",
+    "edit": "Edit Campaign",
+    "delete": "Delete Campaign",
+    "start": "Start",
+    "pause": "Pause",
+    "stop": "Stop",
+    "status": {
+      "active": "Active",
+      "paused": "Paused",
+      "completed": "Completed",
+      "draft": "Draft"
+    },
+    "type": {
+      "scheduled": "Scheduled",
+      "immediate": "Immediate",
+      "recurring": "Recurring"
+    }
+  },
+  "analytics": {
+    "overview": "Analytics Overview",
+    "performance": "Performance",
+    "insights": "Insights",
+    "reports": "Reports",
+    "engagement": "Engagement",
+    "reach": "Reach",
+    "impressions": "Impressions",
+    "clicks": "Clicks",
+    "shares": "Shares",
+    "comments": "Comments",
+    "likes": "Likes"
+  },
+  "settings": {
+    "account": "Account Settings",
+    "profile": "Profile Settings",
+    "notifications": "Notifications",
+    "privacy": "Privacy",
+    "security": "Security",
+    "billing": "Billing",
+    "integrations": "Integrations",
+    "preferences": "Preferences"
+  },
+  "auth": {
+    "login": "Sign In",
+    "logout": "Sign Out",
+    "register": "Sign Up",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "company": "Company"
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "update": "Update",
+    "submit": "Submit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "retry": "Retry",
+    "refresh": "Refresh",
+    "load": "Load",
+    "loading": "Loading...",
+    "next": "Next",
+    "previous": "Previous",
+    "finish": "Finish"
+  },
+  "common": {
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "export": "Export",
+    "import": "Import",
+    "download": "Download",
+    "upload": "Upload",
+    "share": "Share",
+    "copy": "Copy",
+    "paste": "Paste",
+    "cut": "Cut",
+    "undo": "Undo",
+    "redo": "Redo",
+    "select": "Select",
+    "selectAll": "Select All",
+    "clear": "Clear",
+    "reset": "Reset",
+    "apply": "Apply"
+  },
+  "status": {
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Information",
+    "loading": "Loading",
+    "completed": "Completed",
+    "pending": "Pending",
+    "failed": "Failed",
+    "cancelled": "Cancelled"
+  },
+  "time": {
+    "now": "Now",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "tomorrow": "Tomorrow",
+    "thisWeek": "This Week",
+    "lastWeek": "Last Week",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month",
+    "thisYear": "This Year",
+    "lastYear": "Last Year"
+  }
+}

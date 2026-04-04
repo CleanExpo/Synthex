@@ -1,0 +1,197 @@
+{
+  "instagram": {
+    "prompts": {
+      "story": "Create an engaging Instagram story about {{topic}}",
+      "post": "Write an Instagram post for {{topic}} with relevant hashtags",
+      "reel": "Create a fun Instagram Reel script about {{topic}}",
+      "caption": "Write a compelling Instagram caption for this {{contentType}}"
+    },
+    "hashtags": {
+      "trending": ["#trending", "#viral", "#explore", "#instagood", "#photooftheday"],
+      "business": ["#entrepreneur", "#business", "#success", "#motivation", "#startup"],
+      "lifestyle": ["#lifestyle", "#dailylife", "#inspiration", "#selfcare", "#positivevibes"],
+      "food": ["#foodie", "#delicious", "#yummy", "#foodstagram", "#instafood"],
+      "travel": ["#travel", "#wanderlust", "#adventure", "#explore", "#vacation"],
+      "fitness": ["#fitness", "#workout", "#healthy", "#motivation", "#fitnessmotivation"]
+    },
+    "tips": [
+      "Use high-quality, visually appealing images",
+      "Post consistently at optimal times",
+      "Engage with your audience through comments and DMs",
+      "Use Instagram Stories for behind-the-scenes content",
+      "Collaborate with influencers and other accounts",
+      "Use location tags to increase local visibility"
+    ],
+    "formats": {
+      "question": "What's your favorite {{topic}}? Drop a comment below! 👇 #{{hashtag}}",
+      "tip": "💡 Pro tip: {{tip}} Save this post for later! #Tips #{{category}}",
+      "behind_scenes": "Behind the scenes: {{description}} Love seeing the process! #BTS #{{project}}",
+      "user_generated": "Amazing shot by {{user}}! Thanks for tagging us 📸 #UGC #Community"
+    }
+  },
+  "facebook": {
+    "prompts": {
+      "post": "Create a Facebook post about {{topic}} that encourages discussion",
+      "event": "Write a Facebook event description for {{event}}",
+      "group": "Create a Facebook group post about {{topic}}",
+      "page": "Write a Facebook page post promoting {{product}}"
+    },
+    "engagement": {
+      "question": "What do you think about {{topic}}? We'd love to hear your thoughts in the comments!",
+      "poll": "Help us decide: {{option1}} or {{option2}}? Vote in the comments!",
+      "share": "Share this post if you {{action}}! Let's spread the word.",
+      "tag": "Tag someone who needs to see this! 👇"
+    },
+    "tips": [
+      "Ask questions to encourage comments",
+      "Share behind-the-scenes content",
+      "Post when your audience is most active",
+      "Use Facebook Groups to build community",
+      "Share user-generated content",
+      "Create Facebook Events for promotions"
+    ],
+    "formats": {
+      "announcement": "📢 Exciting news! {{announcement}} What are your thoughts? #{{topic}}",
+      "educational": "📚 Did you know: {{fact}} Share your experience with this! #Education #{{subject}}",
+      "community": "💬 Community question: {{question}} Let's discuss in the comments! #Community",
+      "promotional": "🎉 Special offer: {{offer}} Don't miss out! Link in comments. #Sale #{{product}}"
+    }
+  },
+  "twitter": {
+    "prompts": {
+      "tweet": "Write a Twitter thread about {{topic}}",
+      "reply": "Create a thoughtful reply to this tweet about {{topic}}",
+      "quote": "Quote tweet this with your thoughts on {{topic}}",
+      "thread": "Write a Twitter thread explaining {{concept}}"
+    },
+    "engagement": {
+      "question": "Quick question: {{question}} Drop your thoughts below! 👇",
+      "retweet": "RT if you agree with this: {{statement}}",
+      "thread": "🧵 Thread: {{topic}} (1/{{count}})",
+      "poll": "What's your preference? {{option1}} vs {{option2}} 🤔"
+    },
+    "tips": [
+      "Keep tweets concise and punchy",
+      "Use 1-2 hashtags for optimal engagement",
+      "Tweet during peak hours",
+      "Engage with trending topics when relevant",
+      "Use Twitter threads for longer content",
+      "Retweet and comment on relevant content"
+    ],
+    "formats": {
+      "hot_take": "🔥 Hot take: {{opinion}} What do you think? #{{topic}}",
+      "tip": "💡 Quick tip: {{tip}} Have you tried this? #{{category}}",
+      "question": "🤔 {{question}} Let me know your thoughts! #{{topic}}",
+      "thread_start": "🧵 Let me tell you about {{topic}}... (1/{{count}}) #{{hashtag}}"
+    }
+  },
+  "linkedin": {
+    "prompts": {
+      "post": "Write a professional LinkedIn post about {{topic}}",
+      "article": "Create a LinkedIn article about {{industry}} trends",
+      "insight": "Share a professional insight about {{field}}",
+      "achievement": "Announce a professional achievement: {{accomplishment}}"
+    },
+    "professional": {
+      "insight": "In my experience with {{field}}, I've learned that {{insight}}. What has been your experience?",
+      "achievement": "Excited to share that {{achievement}}! Grateful for the journey and the people who supported me.",
+      "industry": "The {{industry}} industry is evolving rapidly. Here are {{number}} trends I'm watching:",
+      "lesson": "Key lesson from {{experience}}: {{lesson}}. What lessons have shaped your career?"
+    },
+    "tips": [
+      "Share professional insights and industry news",
+      "Use a professional tone",
+      "Include relevant keywords",
+      "Post during business hours",
+      "Engage with your network's content",
+      "Share career achievements and milestones"
+    ],
+    "formats": {
+      "insight": "💼 Professional insight: {{insight}} What's your take on this? #{{industry}}",
+      "achievement": "🎉 Proud to announce: {{achievement}} Thank you to everyone who supported me! #Career",
+      "tip": "💡 Career tip: {{tip}} This has made a difference in my journey. #ProfessionalDevelopment",
+      "industry": "📈 {{industry}} update: {{news}} How is this impacting your work? #{{industry}}"
+    }
+  },
+  "tiktok": {
+    "prompts": {
+      "video": "Create a TikTok video script about {{topic}}",
+      "trend": "Jump on this trending sound with content about {{topic}}",
+      "tutorial": "Create a quick tutorial TikTok about {{skill}}",
+      "entertainment": "Make a funny TikTok about {{situation}}"
+    },
+    "trends": {
+      "dance": "Create a dance video using the trending {{song}}",
+      "comedy": "Make a funny skit about {{scenario}}",
+      "educational": "Teach something new about {{topic}} in under 60 seconds",
+      "transformation": "Show a before/after transformation of {{subject}}"
+    },
+    "tips": [
+      "Create authentic, entertaining content",
+      "Use trending sounds and effects",
+      "Post consistently",
+      "Engage with comments quickly",
+      "Keep videos short and engaging",
+      "Use trending hashtags appropriately"
+    ],
+    "formats": {
+      "hook": "Wait for it... {{surprise}} #{{trend}}",
+      "tutorial": "How to {{skill}} in {{time}} seconds! Save this! #Tutorial #{{topic}}",
+      "storytime": "Story time: {{story}} What would you have done? #Story #{{topic}}",
+      "trend": "POV: {{scenario}} Using {{sound}} #POV #{{trend}}"
+    }
+  },
+  "youtube": {
+    "prompts": {
+      "title": "Create a compelling YouTube title for a video about {{topic}}",
+      "description": "Write a YouTube description for a {{type}} video about {{topic}}",
+      "thumbnail": "Describe an eye-catching thumbnail for {{topic}}",
+      "script": "Write a YouTube video script about {{topic}}"
+    },
+    "formats": {
+      "howto": "How to {{skill}}: A Complete Guide for Beginners",
+      "review": "Honest Review: Is {{product}} Worth It? ({{year}})",
+      "listicle": "{{number}} {{items}} You Need to Know About {{topic}}",
+      "vlog": "{{activity}} Vlog: {{description}}"
+    },
+    "tips": [
+      "Create compelling thumbnails",
+      "Use keywords in titles and descriptions",
+      "Engage viewers in the first 15 seconds",
+      "Include clear calls-to-action",
+      "Maintain consistent upload schedule",
+      "Create playlists to organize content"
+    ],
+    "descriptions": {
+      "template": "In this video, we {{action}} {{topic}}. {{description}} Don't forget to like, subscribe, and hit the bell icon for notifications!\n\n⏰ Timestamps:\n{{timestamps}}\n\n🔗 Links mentioned:\n{{links}}\n\n📱 Follow us:\n{{social}}\n\n#{{hashtag1}} #{{hashtag2}} #{{hashtag3}}"
+    }
+  },
+  "pinterest": {
+    "prompts": {
+      "pin": "Create a Pinterest pin description for {{topic}}",
+      "board": "Create a Pinterest board about {{theme}}",
+      "idea": "Generate Pinterest content ideas for {{niche}}",
+      "seasonal": "Create seasonal Pinterest content for {{season}}"
+    },
+    "formats": {
+      "tutorial": "{{steps}} Steps to {{goal}} | {{description}} | Save for later! #{{keyword}}",
+      "inspiration": "{{adjective}} {{item}} Ideas for {{occasion}} | Get inspired! #{{theme}}",
+      "recipe": "{{dish}} Recipe | {{description}} | Easy & delicious! #Recipe #{{cuisine}}",
+      "diy": "DIY {{project}} | {{description}} | Perfect for {{occasion}}! #DIY #{{category}}"
+    },
+    "tips": [
+      "Use vertical images (2:3 aspect ratio)",
+      "Include text overlay on images",
+      "Use keyword-rich descriptions",
+      "Create seasonal content",
+      "Pin consistently",
+      "Join group boards in your niche"
+    ],
+    "keywords": {
+      "home": ["home decor", "interior design", "organization", "DIY home"],
+      "food": ["recipes", "cooking tips", "meal prep", "healthy eating"],
+      "fashion": ["outfit ideas", "style inspiration", "fashion trends", "wardrobe"],
+      "travel": ["travel tips", "destinations", "travel inspiration", "vacation"]
+    }
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "agent_name": "Visual Designer Agent",
+  "version": "1.0.0",
+  "activation": {
+    "mode": "proactive",
+    "triggers": [
+      "Content Creator completion",
+      "storyboards.json exists",
+      "visual design request",
+      "mockup generation need",
+      "prototype development"
+    ],
+    "auto_execute": true,
+    "prerequisite": "phase_2_complete"
+  },
+  "workflow_position": 3,
+  "execution_time": "45-60 minutes",
+  "deliverables": {
+    "required": [
+      "visual-identity.json",
+      "mockups/",
+      "prototypes/",
+      "design-system.md",
+      "sandbox-workspace/"
+    ],
+    "optional": [
+      "animations/",
+      "video-assets/",
+      "print-materials/",
+      "marketing-assets/"
+    ]
+  },
+  "handoff": {
+    "next_agent": "performance-optimizer",
+    "context_transfer": {
+      "visual_assets": true,
+      "design_specs": true,
+      "prototypes": true,
+      "ab_variants": true
+    }
+  },
+  "execution_protocol": {
+    "phase_1": {
+      "name": "Visual Strategy",
+      "duration": "10-15 minutes",
+      "tasks": [
+        "Analyze storyboards and content",
+        "Define visual system approach",
+        "Create mood boards",
+        "Plan responsive design strategy"
+      ]
+    },
+    "phase_2": {
+      "name": "Design Creation",
+      "duration": "20-25 minutes",
+      "tasks": [
+        "Create UI/UX mockups",
+        "Design character visuals",
+        "Develop environment designs",
+        "Generate platform-specific layouts"
+      ]
+    },
+    "phase_3": {
+      "name": "Prototype Development",
+      "duration": "15-20 minutes",
+      "tasks": [
+        "Build interactive prototypes",
+        "Create animation sequences",
+        "Document design system",
+        "Prepare handoff specifications"
+      ]
+    }
+  },
+  "design_outputs": {
+    "mockups": {
+      "landing_pages": ["desktop", "tablet", "mobile"],
+      "app_screens": ["onboarding", "dashboard", "features"],
+      "email_templates": ["welcome", "promotional", "transactional"],
+      "social_media": ["posts", "stories", "ads"]
+    },
+    "visual_identity": {
+      "colors": {
+        "primary": [],
+        "secondary": [],
+        "accent": [],
+        "neutral": []
+      },
+      "typography": {
+        "headings": "",
+        "body": "",
+        "accent": ""
+      },
+      "imagery": {
+        "style": "",
+        "filters": [],
+        "treatments": []
+      }
+    },
+    "prototypes": {
+      "interactions": ["clicks", "hovers", "transitions"],
+      "animations": ["micro", "loading", "reveal"],
+      "user_flows": ["onboarding", "conversion", "engagement"]
+    }
+  },
+  "quality_gates": {
+    "mockups_complete": {
+      "minimum_screens": 10,
+      "responsive_versions": true,
+      "accessibility_compliant": true
+    },
+    "visual_identity": {
+      "color_contrast": "WCAG AA",
+      "typography_hierarchy": true,
+      "brand_consistency": true
+    },
+    "prototypes": {
+      "interactive_elements": true,
+      "user_testing_ready": true,
+      "documentation_complete": true
+    }
+  }
+}

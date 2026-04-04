@@ -1,0 +1,282 @@
+{
+  "platform_performance_analysis": {
+    "metadata": {
+      "analysis_date": "{{current_date}}",
+      "project_id": "{{project_id}}",
+      "analysis_period": "{{analysis_period}}",
+      "platforms_analyzed": 8
+    },
+    "overall_performance": {
+      "top_performing_platform": {
+        "platform": "{{platform_name}}",
+        "primary_metric": "{{metric_name}}",
+        "performance_score": "{{score}}"
+      },
+      "engagement_leader": {
+        "platform": "{{platform_name}}",
+        "engagement_rate": "{{rate}}%",
+        "trend": "{{upward/downward/stable}}"
+      },
+      "conversion_leader": {
+        "platform": "{{platform_name}}",
+        "conversion_rate": "{{rate}}%",
+        "revenue_attribution": "{{percentage}}%"
+      }
+    },
+    "platform_breakdowns": {
+      "instagram": {
+        "performance_metrics": {
+          "follower_growth": "{{percentage}}%",
+          "engagement_rate": "{{percentage}}%",
+          "reach": "{{number}}",
+          "impressions": "{{number}}",
+          "saves": "{{number}}",
+          "shares": "{{number}}",
+          "story_completion_rate": "{{percentage}}%",
+          "reel_plays": "{{number}}"
+        },
+        "top_content_types": [
+          {
+            "type": "{{content_type}}",
+            "avg_engagement": "{{percentage}}%",
+            "best_performing_example": "{{post_id}}"
+          }
+        ],
+        "optimal_posting_times": [
+          {
+            "day": "{{day_of_week}}",
+            "time": "{{HH:MM}}",
+            "engagement_boost": "{{percentage}}%"
+          }
+        ],
+        "hashtag_performance": {
+          "top_performing_tags": ["{{tag1}}", "{{tag2}}", "{{tag3}}"],
+          "optimal_tag_count": "{{number}}",
+          "reach_improvement": "{{percentage}}%"
+        },
+        "content_insights": {
+          "best_performing_formats": ["carousel", "reels", "single_image"],
+          "optimal_caption_length": "{{character_count}}",
+          "color_palette_performance": {
+            "top_colors": ["{{color1}}", "{{color2}}", "{{color3}}"],
+            "engagement_impact": "{{percentage}}%"
+          }
+        }
+      },
+      "tiktok": {
+        "performance_metrics": {
+          "follower_growth": "{{percentage}}%",
+          "video_views": "{{number}}",
+          "likes": "{{number}}",
+          "shares": "{{number}}",
+          "comments": "{{number}}",
+          "completion_rate": "{{percentage}}%",
+          "for_you_page_reach": "{{number}}"
+        },
+        "trending_analysis": {
+          "participated_trends": "{{number}}",
+          "trend_success_rate": "{{percentage}}%",
+          "viral_content_count": "{{number}}",
+          "average_trend_boost": "{{percentage}}%"
+        },
+        "content_optimization": {
+          "optimal_video_length": "{{seconds}}s",
+          "best_posting_frequency": "{{posts_per_day}}",
+          "hook_effectiveness": {
+            "first_3_seconds_retention": "{{percentage}}%",
+            "avg_watch_time": "{{seconds}}s"
+          }
+        },
+        "audio_performance": {
+          "trending_sounds_used": "{{number}}",
+          "original_audio_performance": "{{engagement_rate}}%",
+          "music_vs_voiceover_preference": "{{music/voiceover}}"
+        }
+      },
+      "youtube": {
+        "performance_metrics": {
+          "subscriber_growth": "{{percentage}}%",
+          "total_watch_time": "{{hours}}",
+          "average_view_duration": "{{minutes:seconds}}",
+          "click_through_rate": "{{percentage}}%",
+          "subscriber_conversion": "{{percentage}}%",
+          "revenue": "{{currency_amount}}"
+        },
+        "content_analysis": {
+          "long_form_performance": {
+            "avg_watch_time": "{{minutes:seconds}}",
+            "retention_rate": "{{percentage}}%",
+            "subscriber_gain": "{{number}}"
+          },
+          "shorts_performance": {
+            "avg_views": "{{number}}",
+            "shorts_shelf_impressions": "{{number}}",
+            "engagement_rate": "{{percentage}}%"
+          }
+        },
+        "seo_performance": {
+          "search_traffic_percentage": "{{percentage}}%",
+          "top_keywords": ["{{keyword1}}", "{{keyword2}}", "{{keyword3}}"],
+          "thumbnail_ctr": "{{percentage}}%",
+          "title_optimization_impact": "{{percentage}}%"
+        }
+      },
+      "linkedin": {
+        "performance_metrics": {
+          "connection_growth": "{{percentage}}%",
+          "post_impressions": "{{number}}",
+          "engagement_rate": "{{percentage}}%",
+          "click_through_rate": "{{percentage}}%",
+          "lead_generation": "{{number}}",
+          "profile_views": "{{number}}"
+        },
+        "content_effectiveness": {
+          "article_performance": {
+            "avg_reads": "{{number}}",
+            "completion_rate": "{{percentage}}%",
+            "shares": "{{number}}"
+          },
+          "post_types": {
+            "text_posts": "{{engagement_rate}}%",
+            "image_posts": "{{engagement_rate}}%",
+            "video_posts": "{{engagement_rate}}%",
+            "document_posts": "{{engagement_rate}}%"
+          }
+        },
+        "professional_impact": {
+          "industry_ranking": "{{rank}}/{{total}}",
+          "thought_leadership_score": "{{score}}/10",
+          "network_influence": "{{percentage}}%"
+        }
+      },
+      "facebook": {
+        "performance_metrics": {
+          "page_likes": "{{number}}",
+          "post_reach": "{{number}}",
+          "engagement_rate": "{{percentage}}%",
+          "video_views": "{{number}}",
+          "link_clicks": "{{number}}",
+          "page_views": "{{number}}"
+        },
+        "algorithm_adaptation": {
+          "organic_reach_percentage": "{{percentage}}%",
+          "meaningful_interactions": "{{number}}",
+          "news_feed_visibility": "{{score}}/10"
+        },
+        "community_building": {
+          "group_engagement": "{{number}}",
+          "event_participation": "{{number}}",
+          "user_generated_content": "{{percentage}}%"
+        }
+      },
+      "twitter": {
+        "performance_metrics": {
+          "follower_growth": "{{percentage}}%",
+          "tweet_impressions": "{{number}}",
+          "engagement_rate": "{{percentage}}%",
+          "retweets": "{{number}}",
+          "replies": "{{number}}",
+          "profile_clicks": "{{number}}"
+        },
+        "real_time_performance": {
+          "trending_participation": "{{number}}",
+          "live_event_engagement": "{{number}}",
+          "news_cycle_responsiveness": "{{score}}/10"
+        },
+        "thread_performance": {
+          "thread_completion_rate": "{{percentage}}%",
+          "thread_engagement_vs_single": "+{{percentage}}%",
+          "optimal_thread_length": "{{number}} tweets"
+        }
+      },
+      "pinterest": {
+        "performance_metrics": {
+          "monthly_views": "{{number}}",
+          "saves": "{{number}}",
+          "clicks": "{{number}}",
+          "closeups": "{{number}}",
+          "pin_clicks": "{{number}}",
+          "profile_visits": "{{number}}"
+        },
+        "discovery_optimization": {
+          "search_visibility": "{{percentage}}%",
+          "seasonal_performance": {
+            "peak_season": "{{season}}",
+            "performance_boost": "{{percentage}}%"
+          },
+          "board_performance": {
+            "top_board": "{{board_name}}",
+            "avg_saves_per_pin": "{{number}}"
+          }
+        },
+        "shopping_integration": {
+          "product_pin_performance": "{{engagement_rate}}%",
+          "shopping_conversion_rate": "{{percentage}}%",
+          "catalog_visibility": "{{score}}/10"
+        }
+      },
+      "snapchat": {
+        "performance_metrics": {
+          "story_views": "{{number}}",
+          "snap_score_growth": "{{number}}",
+          "friend_additions": "{{number}}",
+          "story_completion_rate": "{{percentage}}%",
+          "screenshot_rate": "{{percentage}}%"
+        },
+        "ar_performance": {
+          "lens_usage": "{{number}}",
+          "filter_applications": "{{number}}",
+          "ar_engagement_boost": "{{percentage}}%"
+        },
+        "discover_content": {
+          "discover_views": "{{number}}",
+          "story_opens": "{{number}}",
+          "content_sharing": "{{number}}"
+        }
+      }
+    },
+    "cross_platform_insights": {
+      "audience_overlap": {
+        "instagram_tiktok": "{{percentage}}%",
+        "youtube_linkedin": "{{percentage}}%",
+        "facebook_twitter": "{{percentage}}%"
+      },
+      "content_repurposing_success": {
+        "cross_platform_adaptations": "{{number}}",
+        "adaptation_success_rate": "{{percentage}}%",
+        "best_adaptation_pair": "{{platform1}} → {{platform2}}"
+      },
+      "unified_campaign_performance": {
+        "multi_platform_campaigns": "{{number}}",
+        "synergy_effect": "{{percentage}}%",
+        "optimal_platform_sequence": ["{{platform1}}", "{{platform2}}", "{{platform3}}"]
+      }
+    },
+    "recommendations": {
+      "immediate_optimizations": [
+        {
+          "platform": "{{platform}}",
+          "action": "{{optimization_action}}",
+          "expected_impact": "{{percentage}}%",
+          "implementation_effort": "{{low/medium/high}}"
+        }
+      ],
+      "strategic_shifts": [
+        {
+          "recommendation": "{{strategic_recommendation}}",
+          "platforms_affected": ["{{platform1}}", "{{platform2}}"],
+          "timeline": "{{timeframe}}",
+          "resource_requirements": "{{requirements}}"
+        }
+      ],
+      "emerging_opportunities": [
+        {
+          "opportunity": "{{opportunity_description}}",
+          "platform": "{{platform}}",
+          "potential_impact": "{{impact_level}}",
+          "action_required": "{{action_description}}"
+        }
+      ]
+    }
+  }
+}

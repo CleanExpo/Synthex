@@ -1,0 +1,433 @@
+{
+  "dashboard": {
+    "name": "Auto Marketing Performance Dashboard",
+    "version": "1.0.0",
+    "updated": "2024-03-01T00:00:00Z",
+    "refresh_rate": 300,
+    "timezone": "UTC"
+  },
+  
+  "metrics": {
+    "awareness": {
+      "impressions": {
+        "value": 0,
+        "change": 0,
+        "change_period": "week",
+        "target": 1000000,
+        "status": "neutral",
+        "sparkline": [],
+        "breakdown": {
+          "organic": 0,
+          "paid": 0,
+          "social": 0,
+          "referral": 0
+        }
+      },
+      "reach": {
+        "value": 0,
+        "unique_users": 0,
+        "frequency": 0,
+        "target": 500000,
+        "demographics": {
+          "age_groups": {},
+          "genders": {},
+          "locations": {}
+        }
+      },
+      "brand_searches": {
+        "value": 0,
+        "change": 0,
+        "trending_queries": [],
+        "sentiment": "neutral"
+      },
+      "share_of_voice": {
+        "value": 0,
+        "competitors": {},
+        "channels": {}
+      }
+    },
+    
+    "engagement": {
+      "sessions": {
+        "value": 0,
+        "change": 0,
+        "new_vs_returning": {
+          "new": 0,
+          "returning": 0
+        },
+        "average_duration": 0,
+        "pages_per_session": 0
+      },
+      "click_through_rate": {
+        "value": 0,
+        "by_channel": {
+          "search": 0,
+          "social": 0,
+          "email": 0,
+          "display": 0
+        },
+        "by_campaign": {},
+        "by_creative": {}
+      },
+      "bounce_rate": {
+        "value": 0,
+        "change": 0,
+        "by_landing_page": {},
+        "by_traffic_source": {},
+        "target": 40
+      },
+      "scroll_depth": {
+        "25_percent": 0,
+        "50_percent": 0,
+        "75_percent": 0,
+        "100_percent": 0,
+        "average": 0
+      },
+      "video_metrics": {
+        "plays": 0,
+        "completion_rate": 0,
+        "average_view_duration": 0,
+        "engagement_points": []
+      },
+      "social_engagement": {
+        "likes": 0,
+        "shares": 0,
+        "comments": 0,
+        "saves": 0,
+        "engagement_rate": 0
+      }
+    },
+    
+    "conversion": {
+      "total_conversions": {
+        "value": 0,
+        "change": 0,
+        "by_type": {
+          "lead": 0,
+          "signup": 0,
+          "purchase": 0,
+          "download": 0
+        },
+        "by_source": {},
+        "by_device": {}
+      },
+      "conversion_rate": {
+        "value": 0,
+        "change": 0,
+        "funnel": {
+          "landing": 100,
+          "engagement": 0,
+          "consideration": 0,
+          "conversion": 0
+        },
+        "by_persona": {},
+        "by_campaign": {}
+      },
+      "cost_per_acquisition": {
+        "value": 0,
+        "change": 0,
+        "target": 50,
+        "by_channel": {},
+        "efficiency_score": 0
+      },
+      "revenue": {
+        "value": 0,
+        "change": 0,
+        "target": 100000,
+        "by_product": {},
+        "by_customer_segment": {},
+        "average_order_value": 0
+      },
+      "return_on_ad_spend": {
+        "value": 0,
+        "change": 0,
+        "target": 4.0,
+        "by_campaign": {},
+        "by_platform": {}
+      },
+      "lead_quality": {
+        "score": 0,
+        "qualified_leads": 0,
+        "sales_accepted": 0,
+        "sql_to_customer": 0
+      }
+    },
+    
+    "retention": {
+      "customer_retention_rate": {
+        "value": 0,
+        "change": 0,
+        "target": 80,
+        "cohort_analysis": {},
+        "by_segment": {}
+      },
+      "repeat_purchase_rate": {
+        "value": 0,
+        "frequency": 0,
+        "time_between_purchases": 0,
+        "by_product_category": {}
+      },
+      "lifetime_value": {
+        "value": 0,
+        "change": 0,
+        "target": 1000,
+        "by_acquisition_channel": {},
+        "by_customer_segment": {},
+        "ltv_to_cac_ratio": 0
+      },
+      "churn_rate": {
+        "value": 0,
+        "change": 0,
+        "target": 5,
+        "reasons": {},
+        "at_risk_customers": 0
+      },
+      "net_promoter_score": {
+        "value": 0,
+        "change": 0,
+        "target": 50,
+        "promoters": 0,
+        "passives": 0,
+        "detractors": 0,
+        "responses": 0
+      },
+      "customer_satisfaction": {
+        "value": 0,
+        "survey_responses": 0,
+        "by_touchpoint": {},
+        "improvement_areas": []
+      }
+    },
+    
+    "performance": {
+      "page_load_time": {
+        "value": 0,
+        "target": 3,
+        "by_page": {},
+        "by_device": {},
+        "core_web_vitals": {
+          "lcp": 0,
+          "fid": 0,
+          "cls": 0
+        }
+      },
+      "error_rate": {
+        "value": 0,
+        "types": {
+          "404": 0,
+          "500": 0,
+          "javascript": 0,
+          "api": 0
+        },
+        "affected_users": 0
+      },
+      "uptime": {
+        "value": 99.9,
+        "incidents": 0,
+        "mttr": 0,
+        "sla_compliance": true
+      },
+      "api_performance": {
+        "response_time": 0,
+        "throughput": 0,
+        "error_rate": 0,
+        "rate_limiting": {}
+      }
+    }
+  },
+  
+  "segments": {
+    "personas": {
+      "marketing_manager": {
+        "traffic": 0,
+        "conversion_rate": 0,
+        "avg_order_value": 0,
+        "lifetime_value": 0
+      },
+      "small_business_owner": {
+        "traffic": 0,
+        "conversion_rate": 0,
+        "avg_order_value": 0,
+        "lifetime_value": 0
+      },
+      "enterprise_buyer": {
+        "traffic": 0,
+        "conversion_rate": 0,
+        "avg_order_value": 0,
+        "lifetime_value": 0
+      }
+    },
+    
+    "devices": {
+      "desktop": {
+        "traffic_share": 0,
+        "conversion_rate": 0,
+        "bounce_rate": 0,
+        "avg_session_duration": 0
+      },
+      "mobile": {
+        "traffic_share": 0,
+        "conversion_rate": 0,
+        "bounce_rate": 0,
+        "avg_session_duration": 0
+      },
+      "tablet": {
+        "traffic_share": 0,
+        "conversion_rate": 0,
+        "bounce_rate": 0,
+        "avg_session_duration": 0
+      }
+    },
+    
+    "channels": {
+      "organic_search": {
+        "traffic": 0,
+        "conversions": 0,
+        "revenue": 0,
+        "roi": 0
+      },
+      "paid_search": {
+        "traffic": 0,
+        "conversions": 0,
+        "revenue": 0,
+        "roi": 0,
+        "cost": 0
+      },
+      "social_media": {
+        "traffic": 0,
+        "conversions": 0,
+        "revenue": 0,
+        "roi": 0,
+        "cost": 0
+      },
+      "email": {
+        "traffic": 0,
+        "conversions": 0,
+        "revenue": 0,
+        "roi": 0,
+        "open_rate": 0,
+        "click_rate": 0
+      },
+      "direct": {
+        "traffic": 0,
+        "conversions": 0,
+        "revenue": 0
+      },
+      "referral": {
+        "traffic": 0,
+        "conversions": 0,
+        "revenue": 0,
+        "top_referrers": []
+      }
+    },
+    
+    "campaigns": {
+      "active_campaigns": [],
+      "campaign_performance": {},
+      "ab_tests": {
+        "active": 0,
+        "completed": 0,
+        "win_rate": 0,
+        "average_lift": 0
+      }
+    }
+  },
+  
+  "alerts": {
+    "active": [],
+    "thresholds": {
+      "conversion_rate_drop": {
+        "threshold": -20,
+        "window": "1_hour",
+        "severity": "high"
+      },
+      "traffic_spike": {
+        "threshold": 200,
+        "window": "15_minutes",
+        "severity": "medium"
+      },
+      "error_rate_increase": {
+        "threshold": 5,
+        "window": "5_minutes",
+        "severity": "critical"
+      },
+      "page_load_slow": {
+        "threshold": 5,
+        "window": "1_hour",
+        "severity": "medium"
+      },
+      "budget_exceeded": {
+        "threshold": 110,
+        "window": "daily",
+        "severity": "high"
+      }
+    }
+  },
+  
+  "goals": {
+    "monthly": {
+      "traffic": {
+        "target": 100000,
+        "actual": 0,
+        "progress": 0
+      },
+      "conversions": {
+        "target": 1000,
+        "actual": 0,
+        "progress": 0
+      },
+      "revenue": {
+        "target": 50000,
+        "actual": 0,
+        "progress": 0
+      }
+    },
+    "quarterly": {
+      "growth_rate": {
+        "target": 25,
+        "actual": 0
+      },
+      "market_share": {
+        "target": 15,
+        "actual": 0
+      },
+      "customer_acquisition": {
+        "target": 5000,
+        "actual": 0
+      }
+    }
+  },
+  
+  "attribution": {
+    "model": "data_driven",
+    "touchpoints": {
+      "first_touch": {},
+      "last_touch": {},
+      "linear": {},
+      "time_decay": {},
+      "position_based": {}
+    },
+    "path_analysis": {
+      "common_paths": [],
+      "conversion_paths": [],
+      "drop_off_points": []
+    }
+  },
+  
+  "forecasting": {
+    "next_30_days": {
+      "traffic": 0,
+      "conversions": 0,
+      "revenue": 0,
+      "confidence": 0
+    },
+    "next_quarter": {
+      "traffic": 0,
+      "conversions": 0,
+      "revenue": 0,
+      "confidence": 0
+    },
+    "seasonality_factors": {},
+    "trend_analysis": {}
+  }
+}

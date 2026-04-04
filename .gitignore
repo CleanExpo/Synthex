@@ -1,0 +1,261 @@
+# Git worktrees
+.worktrees/
+.claude/worktrees/
+
+# Local debug/build artifacts
+err.html
+out.html
+proxy.ts
+traceDir/
+tsc-errors.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+# Don't ignore src/lib - it contains important application files
+# lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Kubernetes secrets (never commit real values)
+k8s/manifests/secrets.yaml
+
+# Environment Variables
+.env
+.env.local
+.env.production
+.env.staging
+.env.development
+.env.vercel
+.env*.local
+.env.*
+!.env.example
+!.env.docker.example
+# .env.production.secure is a template — do not track
+!.env.template
+!.env.test
+.env.txt
+*.env
+
+# Credential files (SECURITY CRITICAL)
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+*.jks
+*.keystore
+*-credentials.json
+service-account*.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*tmp_errors*
+
+# External repositories
+synth-magic-studio/
+synth-magic-studio-new/
+external/
+
+# Cache
+.cache/
+.pytest_cache/
+
+# Node
+node_modules/
+
+# Next.js
+.next/
+.next-dev/
+.next-alt/
+.next_alt/
+.next-analyze/
+.next-turbo/
+
+# Turbopack / Turborepo cache
+.turbo/
+
+# Experimental app directories
+with-turbopack-app/
+
+# Claude Code temp project files
+*.tmp-projects.json
+*tmp-projects.json
+
+# Vercel
+.vercel
+
+# Test Results & Coverage
+test-results/
+playwright-report/
+playwright/.cache/
+
+# UI Review story results and screenshots (generated, not source-controlled)
+.claude/skills/ui-review/results/
+coverage/
+*.coverage
+.nyc_output/
+
+# Cleanup and backup
+backup-before-cleanup/
+test-*.js
+*-sandbox.html
+*-demo.html
+*-test.html
+
+# Google Cloud Credentials (SECURITY: Never commit credentials!)
+credentials/
+*.json.bak
+_framework
+
+# Build artifacts
+tsconfig.tsbuildinfo
+
+# Browser automation screenshots
+.playwright-mcp/
+
+# Windows artifacts
+nul
+output/
+
+# Deployment docs with potential secrets
+deploy-to-vercel.md
+deploy-fix.ps1
+VERCEL_ENV_CHECKLIST.md
+VERCEL_ENV_SETTINGS.md
+VERCEL_ENV_SETUP.md
+VERCEL-ENV-SETUP.md
+VERCEL-ENV-VARIABLES.md
+FIX-DEPLOYMENT-ISSUES.md
+PRODUCTION_READY_STATUS.md
+*-deploy.md
+*-deployment.md
+setup-*-env.sh
+*-credentials-*.md
+*_READY_STATUS.md
+
+# BFG/git-filter-repo secrets files
+bfg-secrets.txt
+*-secrets.txt
+tools/claude-seo/
+
+# External packages (separate repos)
+paperbanana/
+templates/
+
+# Local Supabase state
+supabase/.branches/
+
+# Test screenshots
+# Debug/QA screenshots (root-level)
+*.png
+!public/**/*.png
+!components/**/*.png
+!app/**/*.png
+*-test.png
+*-current.png
+*-updated.png
+
+# Legacy (archived)
+Synthex/
+*.py
+!scripts/**/*.py
+!.claude/**/*.py
+!synthex-bayesian-service/**/*.py
+!brand-intelligence/**/*.py
+
+# Script-generated data files
+scripts/video-ids.json
+
+# Root-level script debris
+*.bat
+!scripts/**/*.bat
+*.ps1
+!scripts/**/*.ps1
+!.claude/**/*.ps1
+
+# Legacy configs
+mcp.*.json
+mcp_config.json
+vercel.*.json
+!vercel.json
+
+# Legacy manifests
+synthex.*.json
+
+# One-off reports
+*-report.json
+*-status.json
+
+# Legacy session/audit artifacts
+.claude-session/
+.hive-mind/
+ship-audit/
+/reports/
+
+# Claude scratchpad — session files only, keep .gitkeep
+.claude/scratchpad/*.md
+.claude/scheduled_tasks.lock
+.superpowers/
+
+# Generated audio assets (ElevenLabs TTS + FFmpeg synthesis)
+public/audio/
+
+# MCP config — contains API keys, never commit
+.mcp.json
+
+# Session scratch files (temp outputs from Claude Code sessions)
+commit-msg.txt
+do-commit.sh
+git-status.txt
+git-status-err.txt
+tsc-out.txt
+vercel-deploy.txt
+vercel-deploy2.txt
+
+# Codex agent cache — fetched on demand, not committed
+.claude/agents/codex/*.md
+!.claude/agents/codex/CATALOGUE.md
+!.claude/agents/codex/security-auditor.md
+jest-worktree.json
+
+# Rendered video output — large binary files, don't commit
+board-cron/video-assets/renders/*.mp4
+board-cron/video-assets/renders/*.mov
+board-cron/video-assets/renders/*.webm

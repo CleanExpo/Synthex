@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTHEX 2.0 - Advanced Features Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --border: #e5e7eb;
+            --text: #374151;
+            --text-light: #6b7280;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem 3rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .feature-description {
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .feature-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-beta {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .status-coming {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--secondary);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .stats-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            margin-top: 0.5rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: var(--danger);
+        }
+
+        .feature-details {
+            line-height: 1.8;
+        }
+
+        .feature-metrics {
+            background: var(--light);
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .integration-status {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .integration-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .check-icon {
+            color: var(--success);
+        }
+
+        .warning-icon {
+            color: var(--warning);
+        }
+
+        @media (max-width: 768px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SYNTHEX 2.0 Features</h1>
+            <p>Enterprise-grade marketing automation with AI-powered insights</p>
+        </div>
+
+        <div class="stats-section">
+            <h2>System Overview</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">20+</div>
+                    <div class="stat-label">New Features</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">AI Providers</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">99.9%</div>
+                    <div class="stat-label">Uptime SLA</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">500ms</div>
+                    <div class="stat-label">Avg Response</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="features-grid">
+            <!-- Analytics Dashboard -->
+            <div class="feature-card" onclick="showFeatureDetails('analytics')">
+                <div class="feature-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--primary);">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="feature-title">Analytics Dashboard</h3>
+                <p class="feature-description">Real-time metrics, predictive analytics, and comprehensive reporting across all platforms.</p>
+                <span class="feature-status status-active">Active</span>
+                <div class="action-buttons">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-rocket"></i> Launch
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-cog"></i> Configure
+                    </button>
+                </div>
+            </div>
+
+            <!-- A/B Testing -->
+            <div class="feature-card" onclick="showFeatureDetails('abtesting')">
+                <div class="feature-icon" style="background: rgba(139, 92, 246, 0.1); color: var(--secondary);">
+                    <i class="fas fa-flask"></i>
+                </div>
+                <h3 class="feature-title">A/B Testing Suite</h3>
+                <p class="feature-description">Advanced experimentation with Bayesian and Frequentist statistical methods.</p>
+                <span class="feature-status status-active">Active</span>
+                <div class="action-buttons">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-play"></i> Start Test
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-chart-bar"></i> Results
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI Content Generation -->
+            <div class="feature-card" onclick="showFeatureDetails('aicontent')">
+                <div class="feature-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3 class="feature-title">AI Content Generator</h3>
+                <p class="feature-description">Multi-provider AI system with GPT-4, Claude, and custom models for content creation.</p>
+                <span class="feature-status status-active">Active</span>
+                <div class="action-buttons">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-magic"></i> Generate
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-history"></i> History
+                    </button>
+                </div>
+            </div>
+
+            <!-- Team Collaboration -->
+            <div class="feature-card" onclick="showFeatureDetails('teams')">
+                <div class="feature-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="feature-title">Team Collaboration</h3>
+                <p class="feature-description">Role-based access control, real-time sync, and collaborative workspaces.</p>
+                <span class="feature-status status-active">Active</span>
+                <div class="action-buttons">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Invite
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-shield-alt"></i> Permissions
+                    </button>
+                </div>
+            </div>
+
+            <!-- Advanced Scheduler -->
+            <div class="feature-card" onclick="showFeatureDetails('scheduler')">
+                <div class="feature-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h3 class="feature-title">Smart Scheduler</h3>
+                <p class="feature-description">Optimal timing algorithms with timezone-aware scheduling and conflict resolution.</p>
+                <span class="feature-status status-active">Active</span>
+                <div class="action-buttons">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-clock"></i> Schedule
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-calendar"></i> Calendar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Library -->
+            <div class="feature-card" onclick="showFeatureDetails('library')">
+                <div class="feature-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--primary);">
+                    <i class="fas fa-book"></i>
+                </div>
+                <h3 class="feature-title">Content Library</h3>
+                <p class="feature-description">Centralized asset management with version control and smart collections.</p>
+                <span class="feature-status status-active">Active</span>
+                <div class="action-buttons">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Upload
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-search"></i> Browse
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile API -->
+            <div class="feature-card" onclick="showFeatureDetails('mobile')">
+                <div class="feature-icon" style="background: rgba(139, 92, 246, 0.1); color: var(--secondary);">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3 class="feature-title">Mobile API</h3>
+                <p class="feature-description">Native mobile support with push notifications and offline sync capabilities.</p>
+                <span class="feature-status status-beta">Beta</span>
+                <div class="action-buttons">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-download"></i> SDK
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-book-open"></i> Docs
+                    </button>
+                </div>
+            </div>
+
+            <!-- White-label Solution -->
+            <div class="feature-card" onclick="showFeatureDetails('whitelabel')">
+                <div class="feature-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+                    <i class="fas fa-palette"></i>
+                </div>
+                <h3 class="feature-title">White-label Platform</h3>
+                <p class="feature-description">Multi-tenant architecture with custom domains, SSO, and complete branding control.</p>
+                <span class="feature-status status-active">Active</span>
+                <div class="action-buttons">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-paint-brush"></i> Customize
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-key"></i> SSO
+                    </button>
+                </div>
+            </div>
+
+            <!-- Competitor Analysis -->
+            <div class="feature-card" onclick="showFeatureDetails('competitors')">
+                <div class="feature-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">
+                    <i class="fas fa-chess"></i>
+                </div>
+                <h3 class="feature-title">Competitor Analysis</h3>
+                <p class="feature-description">Track competitor strategies, content gaps, and market positioning in real-time.</p>
+                <span class="feature-status status-active">Active</span>
+                <div class="action-buttons">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-chart-pie"></i> Analyze
+                    </button>
+                </div>
+            </div>
+
+            <!-- Automated Reporting -->
+            <div class="feature-card" onclick="showFeatureDetails('reporting')">
+                <div class="feature-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <h3 class="feature-title">Automated Reports</h3>
+                <p class="feature-description">Scheduled reports with insights, custom templates, and multi-format exports.</p>
+                <span class="feature-status status-active">Active</span>
+                <div class="action-buttons">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-file-export"></i> Create
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-envelope"></i> Schedule
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Details Modal -->
+    <div id="featureModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Feature Details</h2>
+                <button class="close-btn" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modalBody" class="feature-details">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const featureDetails = {
+            analytics: {
+                title: 'Analytics Dashboard',
+                description: 'Comprehensive analytics platform providing real-time insights and predictive models.',
+                features: [
+                    'Real-time metrics tracking',
+                    'Predictive analytics (engagement, growth, churn)',
+                    'Custom dashboard creation',
+                    'Platform-specific analytics',
+                    'Funnel analysis',
+                    'Export to CSV, Excel, PDF'
+                ],
+                metrics: {
+                    'Data Points': '10M+/day',
+                    'Response Time': '<500ms',
+                    'Accuracy': '95%+',
+                    'Platforms': '8'
+                },
+                integrations: ['Google Analytics', 'Mixpanel', 'Segment', 'Amplitude']
+            },
+            abtesting: {
+                title: 'A/B Testing Suite',
+                description: 'Enterprise-grade experimentation platform with advanced statistical analysis.',
+                features: [
+                    'Multivariate testing',
+                    'Bayesian statistics',
+                    'Sequential testing',
+                    'Traffic allocation',
+                    'Automated winner selection',
+                    'Sample size calculator'
+                ],
+                metrics: {
+                    'Active Tests': 'Unlimited',
+                    'Confidence Level': '95%',
+                    'Min Sample': '100',
+                    'Methods': '5+'
+                },
+                integrations: ['Optimizely', 'Google Optimize', 'Split.io', 'Custom']
+            },
+            aicontent: {
+                title: 'AI Content Generator',
+                description: 'Multi-provider AI system for intelligent content creation and optimization.',
+                features: [
+                    'GPT-4 integration',
+                    'Claude integration',
+                    'Custom model support',
+                    'Content variations',
+                    'Hashtag generation',
+                    'Multi-language support'
+                ],
+                metrics: {
+                    'Models': '5+',
+                    'Languages': '50+',
+                    'Generation Speed': '<3s',
+                    'Quality Score': '90%+'
+                },
+                integrations: ['OpenAI', 'Anthropic', 'Google AI', 'Custom Models']
+            },
+            teams: {
+                title: 'Team Collaboration',
+                description: 'Complete team management system with granular permissions and real-time sync.',
+                features: [
+                    '6-level role hierarchy',
+                    'Real-time collaboration',
+                    'Activity tracking',
+                    'Workspace management',
+                    'Audit logging',
+                    'Custom permissions'
+                ],
+                metrics: {
+                    'Team Size': 'Unlimited',
+                    'Roles': '6 levels',
+                    'Sync Speed': '<100ms',
+                    'Workspaces': 'Unlimited'
+                },
+                integrations: ['Slack', 'Teams', 'Discord', 'Email']
+            },
+            scheduler: {
+                title: 'Smart Scheduler',
+                description: 'Intelligent scheduling system with optimal timing algorithms.',
+                features: [
+                    'Optimal time detection',
+                    'Timezone management',
+                    'Recurring schedules',
+                    'Conflict resolution',
+                    'Bulk scheduling',
+                    'Calendar sync'
+                ],
+                metrics: {
+                    'Timezones': '400+',
+                    'Accuracy': '92%',
+                    'Queue Size': '10K+',
+                    'Platforms': '8'
+                },
+                integrations: ['Google Calendar', 'Outlook', 'iCal', 'Native']
+            },
+            library: {
+                title: 'Content Library',
+                description: 'Centralized content management with version control and smart organization.',
+                features: [
+                    'Version control',
+                    'Smart collections',
+                    'Asset management',
+                    'Template system',
+                    'Bulk operations',
+                    'Advanced search'
+                ],
+                metrics: {
+                    'Storage': 'Unlimited',
+                    'File Size': '100MB',
+                    'Versions': 'Unlimited',
+                    'Collections': 'Unlimited'
+                },
+                integrations: ['AWS S3', 'Google Cloud', 'Cloudinary', 'CDN']
+            },
+            mobile: {
+                title: 'Mobile API',
+                description: 'Native mobile support with comprehensive device management.',
+                features: [
+                    'Push notifications',
+                    'Offline sync',
+                    'Device management',
+                    'Biometric auth',
+                    'Remote wipe',
+                    'Session management'
+                ],
+                metrics: {
+                    'Platforms': 'iOS/Android',
+                    'Push Delivery': '99.5%',
+                    'Sync Speed': '<2s',
+                    'Offline Days': '30'
+                },
+                integrations: ['FCM', 'APNS', 'OneSignal', 'Pusher']
+            },
+            whitelabel: {
+                title: 'White-label Platform',
+                description: 'Complete multi-tenant solution for enterprise deployments.',
+                features: [
+                    'Custom domains',
+                    'Complete branding',
+                    'SSO (SAML/OAuth/LDAP)',
+                    'API key management',
+                    'Usage analytics',
+                    'Custom modules'
+                ],
+                metrics: {
+                    'Tenants': 'Unlimited',
+                    'Domains': 'Unlimited',
+                    'SSO Methods': '3+',
+                    'Uptime': '99.9%'
+                },
+                integrations: ['Okta', 'Auth0', 'Azure AD', 'Custom SSO']
+            },
+            competitors: {
+                title: 'Competitor Analysis',
+                description: 'Comprehensive competitor tracking and market intelligence.',
+                features: [
+                    'Content tracking',
+                    'Performance metrics',
+                    'SWOT analysis',
+                    'Content gap analysis',
+                    'Trending detection',
+                    'Market share analysis'
+                ],
+                metrics: {
+                    'Competitors': 'Unlimited',
+                    'Update Freq': 'Hourly',
+                    'Metrics': '50+',
+                    'Platforms': '8'
+                },
+                integrations: ['Social APIs', 'Web Scraping', 'Third-party Data', 'Custom']
+            },
+            reporting: {
+                title: 'Automated Reports',
+                description: 'Intelligent reporting system with actionable insights.',
+                features: [
+                    'Scheduled reports',
+                    'Custom templates',
+                    'Multi-format export',
+                    'Insight generation',
+                    'Recipient management',
+                    'Delivery tracking'
+                ],
+                metrics: {
+                    'Templates': '20+',
+                    'Formats': '5',
+                    'Schedule Types': '6',
+                    'Recipients': 'Unlimited'
+                },
+                integrations: ['Email', 'Slack', 'Teams', 'Webhook']
+            }
+        };
+
+        function showFeatureDetails(featureKey) {
+            const feature = featureDetails[featureKey];
+            if (!feature) return;
+
+            document.getElementById('modalTitle').textContent = feature.title;
+            
+            let content = `
+                <p style="margin-bottom: 1.5rem; color: var(--text-light);">${feature.description}</p>
+                
+                <h3 style="margin-bottom: 1rem;">Key Features</h3>
+                <ul style="margin-bottom: 1.5rem; padding-left: 1.5rem;">
+                    ${feature.features.map(f => `<li style="margin-bottom: 0.5rem;">${f}</li>`).join('')}
+                </ul>
+                
+                <div class="feature-metrics">
+                    <h4 style="margin-bottom: 0.75rem;">Performance Metrics</h4>
+                    ${Object.entries(feature.metrics).map(([key, value]) => `
+                        <div class="metric-row">
+                            <span>${key}</span>
+                            <strong>${value}</strong>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <h3 style="margin-top: 1.5rem; margin-bottom: 1rem;">Integrations</h3>
+                <div class="integration-status">
+                    ${feature.integrations.map(integration => `
+                        <div class="integration-item">
+                            <i class="fas fa-check-circle check-icon"></i>
+                            <span>${integration}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="action-buttons" style="margin-top: 2rem;">
+                    <button class="btn btn-primary" onclick="launchFeature('${featureKey}')">
+                        <i class="fas fa-rocket"></i> Launch Feature
+                    </button>
+                    <button class="btn btn-secondary" onclick="viewDocs('${featureKey}')">
+                        <i class="fas fa-book"></i> View Documentation
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('modalBody').innerHTML = content;
+            document.getElementById('featureModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('featureModal').classList.remove('active');
+        }
+
+        function launchFeature(featureKey) {
+            // Map features to their respective endpoints
+            const endpoints = {
+                analytics: '/api/v2/analytics',
+                abtesting: '/api/v2/ab-testing',
+                aicontent: '/api/v2/ai-content',
+                teams: '/api/v2/teams',
+                scheduler: '/api/v2/scheduler',
+                library: '/api/v2/library',
+                mobile: '/api/v2/mobile',
+                whitelabel: '/api/v2/white-label',
+                competitors: '/api/v2/competitors',
+                reporting: '/api/v2/reporting'
+            };
+            
+            console.log(`Launching ${featureKey} at ${endpoints[featureKey]}`);
+            alert(`Feature API available at: ${endpoints[featureKey]}`);
+        }
+
+        function viewDocs(featureKey) {
+            alert(`Documentation for ${featureKey} coming soon!`);
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('featureModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Animate stats on load
+        window.addEventListener('load', function() {
+            const statValues = document.querySelectorAll('.stat-value');
+            statValues.forEach(stat => {
+                const finalValue = stat.textContent;
+                stat.textContent = '0';
+                
+                setTimeout(() => {
+                    stat.textContent = finalValue;
+                }, 500);
+            });
+        });
+    </script>
+</body>
+</html>

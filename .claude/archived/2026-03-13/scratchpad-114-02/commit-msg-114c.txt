@@ -1,0 +1,9 @@
+fix(114-02): remove Sentry require from lib/auth/monitoring.ts to fix Lambda hang
+
+lib/auth/monitoring.ts had `require('@sentry/nextjs')` at module evaluation
+time plus `Sentry.init()` in the AuthMonitor constructor (singleton exported
+at module level). This caused OTel hooks to register synchronously on every
+Lambda cold start, hanging ALL endpoints for 10+ seconds.
+
+Replaced with a permanent no-op stub — Sentry.init() is never called
+server-side, so captureException/captureMessage were already no-ops anyway.

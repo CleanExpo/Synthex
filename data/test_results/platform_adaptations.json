@@ -1,0 +1,240 @@
+{
+  "youtube": {
+    "platform": "youtube",
+    "format_type": "long_form_educational",
+    "title": "AI Marketing Revolution 2024 (PROVEN STRATEGIES)",
+    "estimated_engagement": 0.12,
+    "optimal_timing": {
+      "best_days": [
+        "Tuesday",
+        "Wednesday",
+        "Thursday"
+      ],
+      "best_times": [
+        "12:00 PM",
+        "3:00 PM",
+        "8:00 PM"
+      ],
+      "frequency": "weekly"
+    },
+    "media_specs": {
+      "duration": "8-15 minutes",
+      "resolution": "1920x1080",
+      "thumbnail": "custom_required",
+      "chapters": true,
+      "end_screen": true
+    },
+    "hashtags": [
+      "ai",
+      "marketing",
+      "automation",
+      "digital",
+      "growth"
+    ]
+  },
+  "instagram": {
+    "platform": "instagram",
+    "format_type": "reel_and_carousel",
+    "title": "Transform your marketing with AI-powered automation \ud83d\udcab\n\nSwipe for more! \u2728",
+    "estimated_engagement": 0.22499999999999998,
+    "optimal_timing": {
+      "best_times": [
+        "11:00 AM",
+        "2:00 PM",
+        "7:00 PM"
+      ],
+      "frequency": "daily_reel_3x_carousel"
+    },
+    "media_specs": {
+      "reel": {
+        "aspect_ratio": "9:16",
+        "duration": "30 seconds",
+        "resolution": "1080x1920"
+      },
+      "carousel": {
+        "slides": "6-10",
+        "aspect_ratio": "1:1",
+        "resolution": "1080x1080"
+      }
+    },
+    "hashtags": [
+      "marketing",
+      "business",
+      "entrepreneur",
+      "ai",
+      "marketing",
+      "automation",
+      "digital",
+      "growth",
+      "yourbrand",
+      "brandname2024"
+    ]
+  },
+  "tiktok": {
+    "platform": "tiktok",
+    "format_type": "trend_adaptation",
+    "title": "",
+    "estimated_engagement": 0.3,
+    "optimal_timing": {
+      "best_times": [
+        "6:00 AM",
+        "10:00 AM",
+        "7:00 PM",
+        "9:00 PM"
+      ],
+      "frequency": "1-3_daily"
+    },
+    "media_specs": {
+      "aspect_ratio": "9:16",
+      "duration": "15-30 seconds",
+      "resolution": "1080x1920",
+      "effects": "trending_required",
+      "audio": "trending_within_24h"
+    },
+    "hashtags": [
+      "fyp",
+      "viral",
+      "trending",
+      "foryou"
+    ]
+  },
+  "facebook": {
+    "platform": "facebook",
+    "format_type": "native_video_with_story",
+    "title": "",
+    "estimated_engagement": 0.09,
+    "optimal_timing": {
+      "best_days": [
+        "Tuesday",
+        "Wednesday",
+        "Thursday"
+      ],
+      "best_times": [
+        "1:00 PM",
+        "3:00 PM",
+        "8:00 PM"
+      ],
+      "frequency": "1-2_daily"
+    },
+    "media_specs": {
+      "video": {
+        "aspect_ratio": "1:1",
+        "duration": "60-90 seconds",
+        "captions": "required"
+      }
+    },
+    "hashtags": [
+      "ai",
+      "marketing",
+      "automation",
+      "digital",
+      "growth"
+    ]
+  },
+  "twitter": {
+    "platform": "twitter",
+    "format_type": "thread",
+    "title": "",
+    "estimated_engagement": 0.18,
+    "optimal_timing": {
+      "best_times": [
+        "9:00 AM",
+        "12:00 PM",
+        "5:00 PM",
+        "8:00 PM"
+      ],
+      "frequency": "3-5_daily"
+    },
+    "media_specs": {
+      "thread_length": "7 tweets",
+      "media": "image_or_gif_recommended"
+    },
+    "hashtags": [
+      "ai",
+      "marketing"
+    ]
+  },
+  "linkedin": {
+    "platform": "linkedin",
+    "format_type": "long_form_insight",
+    "title": "",
+    "estimated_engagement": 0.12,
+    "optimal_timing": {
+      "best_days": [
+        "Tuesday",
+        "Wednesday",
+        "Thursday"
+      ],
+      "best_times": [
+        "8:00 AM",
+        "12:00 PM",
+        "5:00 PM"
+      ],
+      "frequency": "3-5_weekly"
+    },
+    "media_specs": {
+      "format": "text_or_native_video",
+      "video_duration": "60-120 seconds"
+    },
+    "hashtags": [
+      "ai",
+      "marketing",
+      "automation",
+      "digital",
+      "growth"
+    ]
+  },
+  "pinterest": {
+    "platform": "pinterest",
+    "format_type": "vertical_infographic",
+    "title": "Transform your marketing with AI-powered automation | Ultimate Guide for 2024",
+    "estimated_engagement": 0.07500000000000001,
+    "optimal_timing": {
+      "seasonal": "45_days_ahead",
+      "best_times": [
+        "2:00 PM",
+        "9:00 PM"
+      ],
+      "frequency": "5-10_daily"
+    },
+    "media_specs": {
+      "aspect_ratio": "2:3",
+      "dimensions": "1000x1500",
+      "text_overlay": "required",
+      "branding": "watermark"
+    },
+    "hashtags": [
+      "ai",
+      "ai2024",
+      "aiideas",
+      "marketing",
+      "marketing2024",
+      "marketingideas",
+      "automation",
+      "automation2024",
+      "automationideas",
+      "digital",
+      "digital2024",
+      "digitalideas",
+      "growth",
+      "growth2024",
+      "growthideas"
+    ]
+  },
+  "reddit": {
+    "platform": "reddit",
+    "format_type": "detailed_guide",
+    "title": "[Guide] Transform your marketing with AI-powered automation - Based on Real Experience",
+    "estimated_engagement": 0.15000000000000002,
+    "optimal_timing": {
+      "best_times": "subreddit_specific",
+      "frequency": "quality_over_quantity"
+    },
+    "media_specs": {
+      "format": "text_post",
+      "formatting": "markdown",
+      "length": "800-2000_words"
+    },
+    "hashtags": []
+  }
+}

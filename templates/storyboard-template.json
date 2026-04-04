@@ -1,0 +1,93 @@
+{
+  "storyboard": {
+    "id": "",
+    "title": "",
+    "scenario_type": "",
+    "target_persona": "",
+    "duration": "",
+    "format": "",
+    "scenes": [
+      {
+        "scene_number": 1,
+        "duration": "0-3 seconds",
+        "type": "hook",
+        "visual": {
+          "setting": "",
+          "characters": [],
+          "action": "",
+          "camera": "",
+          "lighting": "",
+          "colors": []
+        },
+        "audio": {
+          "dialogue": "",
+          "voiceover": "",
+          "music": "",
+          "sound_effects": []
+        },
+        "text_overlay": {
+          "primary": "",
+          "secondary": "",
+          "cta": ""
+        },
+        "emotion": "",
+        "objective": ""
+      }
+    ],
+    "characters": [
+      {
+        "id": "char_1",
+        "name": "",
+        "role": "protagonist",
+        "demographics": {
+          "age": "",
+          "gender": "",
+          "ethnicity": "",
+          "appearance": ""
+        },
+        "personality": "",
+        "wardrobe": "",
+        "relationship_to_product": ""
+      }
+    ],
+    "story_arc": {
+      "hook": {
+        "timing": "0-3 seconds",
+        "technique": "",
+        "emotion": ""
+      },
+      "problem": {
+        "timing": "3-10 seconds",
+        "pain_point": "",
+        "agitation": ""
+      },
+      "solution": {
+        "timing": "10-20 seconds",
+        "reveal": "",
+        "benefits": []
+      },
+      "proof": {
+        "timing": "20-25 seconds",
+        "type": "",
+        "credibility": ""
+      },
+      "cta": {
+        "timing": "25-30 seconds",
+        "action": "",
+        "urgency": ""
+      }
+    },
+    "production_notes": {
+      "location": [],
+      "props": [],
+      "equipment": [],
+      "budget_estimate": "",
+      "timeline": ""
+    },
+    "variations": {
+      "short_form": "15 seconds",
+      "long_form": "60 seconds",
+      "platform_specific": {}
+    }
+  }
+}

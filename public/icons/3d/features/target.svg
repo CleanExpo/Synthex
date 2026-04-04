@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="feat-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- shadow ring -->
+  <circle cx="25.5" cy="25.5" r="18" fill="rgba(0,0,0,0.25)"/>
+  <!-- outer ring -->
+  <circle cx="24" cy="24" r="18" fill="none" stroke="url(#feat-grad)" stroke-width="3.5"/>
+  <!-- middle ring shadow -->
+  <circle cx="25.5" cy="25.5" r="11" fill="rgba(0,0,0,0.2)"/>
+  <!-- middle ring -->
+  <circle cx="24" cy="24" r="11" fill="none" stroke="url(#feat-grad)" stroke-width="3.5"/>
+  <!-- center dot shadow -->
+  <circle cx="25.5" cy="25.5" r="5" fill="rgba(0,0,0,0.3)"/>
+  <!-- center dot -->
+  <circle cx="24" cy="24" r="5" fill="url(#feat-grad)"/>
+  <!-- highlight on center -->
+  <circle cx="22.5" cy="22.5" r="2" fill="rgba(255,255,255,0.3)"/>
+</svg>

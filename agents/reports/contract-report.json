@@ -1,0 +1,291 @@
+{
+  "generatedAt": "2025-08-13T04:35:21.970Z",
+  "clientSource": "public\\js\\api-client.js",
+  "counts": {
+    "clientEndpoints": 47,
+    "serverRoutes": 76,
+    "missingOnServer": 0,
+    "methodMismatch": 0,
+    "serverUnused": 37
+  },
+  "missingOnServer": [],
+  "methodMismatch": [],
+  "serverUnused": [
+    {
+      "path": "/admin.js/admin",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "source": "api\\admin.js"
+    },
+    {
+      "path": "/ai.js/ai",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "source": "api\\ai.js"
+    },
+    {
+      "path": "/api/auth/dev-login",
+      "methods": [
+        "POST"
+      ],
+      "source": "app\\api\\auth\\dev-login\\route.ts"
+    },
+    {
+      "path": "/api/auth/login",
+      "methods": [
+        "DELETE",
+        "POST"
+      ],
+      "source": "app\\api\\auth\\login\\route.ts"
+    },
+    {
+      "path": "/api/auth/login-prisma",
+      "methods": [
+        "POST"
+      ],
+      "source": "app\\api\\auth\\login-prisma\\route.ts"
+    },
+    {
+      "path": "/api/auth/oauth/:platform",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "source": "app\\api\\auth\\oauth\\[platform]\\route.ts"
+    },
+    {
+      "path": "/api/auth/signup",
+      "methods": [
+        "POST"
+      ],
+      "source": "app\\api\\auth\\signup\\route.ts"
+    },
+    {
+      "path": "/api/auth/signup-prisma",
+      "methods": [
+        "POST"
+      ],
+      "source": "app\\api\\auth\\signup-prisma\\route.ts"
+    },
+    {
+      "path": "/api/auth/unified-login",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "source": "app\\api\\auth\\unified-login\\route.ts"
+    },
+    {
+      "path": "/api/campaigns",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST",
+        "PUT"
+      ],
+      "source": "app\\api\\campaigns\\route.ts"
+    },
+    {
+      "path": "/api/content/generate",
+      "methods": [
+        "POST",
+        "PUT"
+      ],
+      "source": "app\\api\\content\\generate\\route.ts"
+    },
+    {
+      "path": "/api/cron/analyze-patterns",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "source": "app\\api\\cron\\analyze-patterns\\route.ts"
+    },
+    {
+      "path": "/api/dashboard/stats",
+      "methods": [
+        "GET"
+      ],
+      "source": "app\\api\\dashboard\\stats\\route.ts"
+    },
+    {
+      "path": "/api/health/auth",
+      "methods": [
+        "GET"
+      ],
+      "source": "app\\api\\health\\auth\\route.ts"
+    },
+    {
+      "path": "/api/integrations",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST"
+      ],
+      "source": "app\\api\\integrations\\route.ts"
+    },
+    {
+      "path": "/api/monitoring/events",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "source": "app\\api\\monitoring\\events\\route.ts"
+    },
+    {
+      "path": "/api/onboarding",
+      "methods": [
+        "POST"
+      ],
+      "source": "app\\api\\onboarding\\route.ts"
+    },
+    {
+      "path": "/api/patterns/analyze",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "source": "app\\api\\patterns\\analyze\\route.ts"
+    },
+    {
+      "path": "/api/teams/invitations",
+      "methods": [
+        "GET"
+      ],
+      "source": "app\\api\\teams\\invitations\\route.ts"
+    },
+    {
+      "path": "/api/teams/invitations/:id",
+      "methods": [
+        "DELETE"
+      ],
+      "source": "app\\api\\teams\\invitations\\[id]\\route.ts"
+    },
+    {
+      "path": "/api/test-database",
+      "methods": [
+        "GET"
+      ],
+      "source": "app\\api\\test-database\\route.ts"
+    },
+    {
+      "path": "/api/test-db",
+      "methods": [
+        "GET"
+      ],
+      "source": "app\\api\\test-db\\route.ts"
+    },
+    {
+      "path": "/api/test-email",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "source": "app\\api\\test-email\\route.ts"
+    },
+    {
+      "path": "/api/user/avatar",
+      "methods": [
+        "DELETE",
+        "POST"
+      ],
+      "source": "app\\api\\user\\avatar\\route.ts"
+    },
+    {
+      "path": "/api/user/settings",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "source": "app\\api\\user\\settings\\route.ts"
+    },
+    {
+      "path": "/api/ws",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "source": "app\\api\\ws\\route.ts"
+    },
+    {
+      "path": "/auth.js/auth",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "source": "api\\auth.js"
+    },
+    {
+      "path": "/docs.js/docs",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "source": "api\\docs.js"
+    },
+    {
+      "path": "/email.js/email",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "source": "api\\email.js"
+    },
+    {
+      "path": "/health.js/health",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "source": "api\\health.js"
+    },
+    {
+      "path": "/index.js",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "source": "api\\index.js"
+    },
+    {
+      "path": "/main.js/main",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "source": "api\\main.js"
+    },
+    {
+      "path": "/metrics.js/metrics",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "source": "api\\metrics.js"
+    },
+    {
+      "path": "/optimize.js/optimize",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "source": "api\\optimize.js"
+    },
+    {
+      "path": "/real-endpoints.js/real-endpoints",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "source": "api\\real-endpoints.js"
+    },
+    {
+      "path": "/synthex.js/synthex",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "source": "api\\synthex.js"
+    },
+    {
+      "path": "/vercel.js/vercel",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "source": "api\\vercel.js"
+    }
+  ]
+}

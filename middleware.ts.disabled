@@ -1,0 +1,51 @@
+// Temporarily disabled middleware - rename back to middleware.ts to enable
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(request: NextRequest) {
+  // For now, allow all routes while Supabase is not configured
+  // This prevents the 500 error from Edge Runtime issues
+  
+  const res = NextResponse.next();
+  const pathname = request.nextUrl.pathname;
+  
+  // Log the request in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[Middleware] ${request.method} ${pathname}`);
+  }
+  
+  // Protected routes that will require authentication once configured
+  const protectedRoutes = ['/dashboard'];
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+  
+  // Check if Supabase is configured via environment variables
+  const supabaseConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && 
+                             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (isProtectedRoute && !supabaseConfigured) {
+    // When Supabase is not configured, show a message instead of blocking
+    console.warn(`[Middleware] Protected route ${pathname} accessed without Supabase configuration`);
+    // Still allow access for now to prevent 500 errors
+  }
+  
+  // Add security headers
+  res.headers.set('X-Frame-Options', 'SAMEORIGIN');
+  res.headers.set('X-Content-Type-Options', 'nosniff');
+  res.headers.set('Referrer-Policy', 'origin-when-cross-origin');
+  
+  return res;
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public files (public directory)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+};

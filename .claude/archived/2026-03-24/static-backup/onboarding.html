@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to SYNTHEX</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="/js/auth-check.js"></script>
+    
+    <!-- App CSS -->
+    <link rel="stylesheet" href="/css/synthex-app.css">
+    
+    <style>
+        /* Onboarding Specific Styles */
+        .onboarding-container {
+            min-height: 100vh;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-lg);
+        }
+        
+        .onboarding-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-2xl);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .onboarding-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent-purple), var(--accent-pink));
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-xl);
+        }
+        
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all var(--transition-base);
+        }
+        
+        .step-dot.active {
+            background: var(--primary);
+            transform: scale(1.2);
+        }
+        
+        .step-dot.completed {
+            background: var(--accent-green);
+        }
+        
+        .onboarding-logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .step-content {
+            display: none;
+        }
+        
+        .step-content.active {
+            display: block;
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .step-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: var(--space-md);
+            color: var(--text-primary);
+        }
+        
+        .step-description {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: var(--space-xl);
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-lg);
+            margin: var(--space-xl) 0;
+        }
+        
+        .feature-item {
+            padding: var(--space-lg);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            text-align: left;
+        }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--space-md);
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+        }
+        
+        .feature-description {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        .form-section {
+            text-align: left;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .form-section h4 {
+            margin-bottom: var(--space-md);
+            color: var(--text-primary);
+        }
+        
+        .preference-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-md);
+        }
+        
+        .preference-option {
+            padding: var(--space-md);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            text-align: center;
+        }
+        
+        .preference-option:hover {
+            border-color: var(--border-color-hover);
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .preference-option.selected {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .preference-option-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--space-sm);
+        }
+        
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-md);
+            margin-top: var(--space-md);
+        }
+        
+        .platform-option {
+            padding: var(--space-md);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            text-align: center;
+        }
+        
+        .platform-option:hover {
+            border-color: var(--border-color-hover);
+        }
+        
+        .platform-option.selected {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        .onboarding-actions {
+            display: flex;
+            gap: var(--space-md);
+            justify-content: space-between;
+            margin-top: var(--space-xl);
+        }
+        
+        .btn-skip {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-skip:hover {
+            color: var(--text-primary);
+            border-color: var(--border-color-hover);
+        }
+        
+        .completion-animation {
+            margin: var(--space-xl) 0;
+        }
+        
+        .checkmark {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            margin: 0 auto var(--space-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: bounceIn 0.6s ease-out;
+        }
+        
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .progress-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-md);
+            margin: var(--space-xl) 0;
+        }
+        
+        .progress-stat {
+            text-align: center;
+            padding: var(--space-md);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--radius-md);
+        }
+        
+        .progress-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .progress-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        @media (max-width: 768px) {
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .preference-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .platform-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Tier Selection Styles */
+        .tier-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-lg);
+            margin-top: var(--space-xl);
+        }
+        
+        .tier-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            position: relative;
+        }
+        
+        .tier-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tier-card.selected {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        .tier-card.recommended {
+            border-color: var(--primary);
+        }
+        
+        .tier-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+        
+        .tier-recommended-badge {
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+        
+        .tier-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        
+        .tier-features {
+            margin-bottom: 1.5rem;
+        }
+        
+        .tier-feature {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .tier-ideal {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="onboarding-container">
+        <div class="onboarding-card">
+            <!-- Step Indicators -->
+            <div class="step-indicator">
+                <div class="step-dot active" data-step="0"></div>
+                <div class="step-dot" data-step="1"></div>
+                <div class="step-dot" data-step="2"></div>
+                <div class="step-dot" data-step="3"></div>
+                <div class="step-dot" data-step="4"></div>
+                <div class="step-dot" data-step="5"></div>
+            </div>
+            
+            <!-- Step 1: Welcome -->
+            <div class="step-content active" id="step-0">
+                <div class="onboarding-logo">SYNTHEX</div>
+                <h2 class="step-title">Welcome to the Future of Marketing</h2>
+                <p class="step-description">
+                    Transform your social media presence with AI-powered content creation, 
+                    intelligent scheduling, and comprehensive analytics. Let's get you started!
+                </p>
+                
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--primary);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        </div>
+                        <div class="feature-title">AI Content Generation</div>
+                        <div class="feature-description">Create engaging posts with advanced AI that understands your brand voice</div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                        </div>
+                        <div class="feature-title">Smart Scheduling</div>
+                        <div class="feature-description">Post at optimal times across all your social media platforms</div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon" style="background: rgba(139, 92, 246, 0.1); color: var(--accent-purple);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 20V10M12 20V4M6 20v-6"/>
+                            </svg>
+                        </div>
+                        <div class="feature-title">Advanced Analytics</div>
+                        <div class="feature-description">Track performance and optimize your marketing strategy</div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon" style="background: rgba(236, 72, 153, 0.1); color: var(--accent-pink);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                            </svg>
+                        </div>
+                        <div class="feature-title">Team Collaboration</div>
+                        <div class="feature-description">Work together with role-based permissions and shared campaigns</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 2: User Type -->
+            <div class="step-content" id="step-1">
+                <h2 class="step-title">Tell us about yourself</h2>
+                <p class="step-description">
+                    Help us customize your experience by selecting what best describes you
+                </p>
+                
+                <div class="preference-options">
+                    <div class="preference-option" onclick="selectUserType('entrepreneur')" data-type="entrepreneur">
+                        <div class="preference-option-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--primary);">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        </div>
+                        <div style="font-weight: 600;">Entrepreneur</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Building my own business</div>
+                    </div>
+                    
+                    <div class="preference-option" onclick="selectUserType('marketer')" data-type="marketer">
+                        <div class="preference-option-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green);">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 20V10M12 20V4M6 20v-6"/>
+                            </svg>
+                        </div>
+                        <div style="font-weight: 600;">Marketing Professional</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Working for a company or agency</div>
+                    </div>
+                    
+                    <div class="preference-option" onclick="selectUserType('creator')" data-type="creator">
+                        <div class="preference-option-icon" style="background: rgba(236, 72, 153, 0.1); color: var(--accent-pink);">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <circle cx="9" cy="9" r="2"/>
+                                <path d="M21 15l-3.086-3.086a2 2 0 00-2.828 0L6 21"/>
+                            </svg>
+                        </div>
+                        <div style="font-weight: 600;">Content Creator</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Creating content and building audience</div>
+                    </div>
+                    
+                    <div class="preference-option" onclick="selectUserType('agency')" data-type="agency">
+                        <div class="preference-option-icon" style="background: rgba(139, 92, 246, 0.1); color: var(--accent-purple);">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                            </svg>
+                        </div>
+                        <div style="font-weight: 600;">Agency Owner</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Managing multiple client accounts</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 3: Platform Selection -->
+            <div class="step-content" id="step-2">
+                <h2 class="step-title">Which platforms do you use?</h2>
+                <p class="step-description">
+                    Select the social media platforms you want to manage with SYNTHEX
+                </p>
+                
+                <div class="platform-grid">
+                    <div class="platform-option selected" onclick="togglePlatform('instagram')" data-platform="instagram">
+                        <div style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1112.324 0 6.162 6.162 0 01-12.324 0zM12 16a4 4 0 110-8 4 4 0 010 8zm4.965-10.405a1.44 1.44 0 112.881.001 1.44 1.44 0 01-2.881-.001z"/>
+                            </svg>
+                        </div>
+                        <div style="font-size: 0.875rem; font-weight: 600;">Instagram</div>
+                    </div>
+                    
+                    <div class="platform-option" onclick="togglePlatform('facebook')" data-platform="facebook">
+                        <div style="background: #1877f2; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                        </div>
+                        <div style="font-size: 0.875rem; font-weight: 600;">Facebook</div>
+                    </div>
+                    
+                    <div class="platform-option" onclick="togglePlatform('twitter')" data-platform="twitter">
+                        <div style="background: #1da1f2; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                            </svg>
+                        </div>
+                        <div style="font-size: 0.875rem; font-weight: 600;">Twitter/X</div>
+                    </div>
+                    
+                    <div class="platform-option" onclick="togglePlatform('linkedin')" data-platform="linkedin">
+                        <div style="background: #0077b5; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                            </svg>
+                        </div>
+                        <div style="font-size: 0.875rem; font-weight: 600;">LinkedIn</div>
+                    </div>
+                    
+                    <div class="platform-option" onclick="togglePlatform('tiktok')" data-platform="tiktok">
+                        <div style="background: #000000; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                <path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+                            </svg>
+                        </div>
+                        <div style="font-size: 0.875rem; font-weight: 600;">TikTok</div>
+                    </div>
+                    
+                    <div class="platform-option" onclick="togglePlatform('youtube')" data-platform="youtube">
+                        <div style="background: #ff0000; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            </svg>
+                        </div>
+                        <div style="font-size: 0.875rem; font-weight: 600;">YouTube</div>
+                    </div>
+                </div>
+                
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: var(--space-lg);">
+                    You can always add or remove platforms later in your settings
+                </p>
+            </div>
+            
+            <!-- Step 3: Choose Your Plan -->
+            <div class="step-content" id="step-3">
+                <h2 class="step-title">Choose Your Plan</h2>
+                <p class="step-description">
+                    All plans are currently FREE during our beta period! Choose the one that best fits your needs.
+                </p>
+                
+                <div class="tier-selection">
+                    <div class="tier-card" onclick="selectTier('starter')" data-tier="starter">
+                        <div class="tier-badge">STARTER</div>
+                        <div class="tier-price">
+                            <span style="text-decoration: line-through; opacity: 0.5;">$29/mo</span>
+                            <span style="color: var(--accent-green); font-weight: 700; margin-left: 8px;">FREE</span>
+                        </div>
+                        <div class="tier-features">
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>3 Social Platforms</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>100 Posts/Month</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>50 AI Generations</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>Basic Analytics</span>
+                            </div>
+                        </div>
+                        <div class="tier-ideal">Perfect for individuals and small businesses</div>
+                    </div>
+                    
+                    <div class="tier-card recommended" onclick="selectTier('professional')" data-tier="professional">
+                        <div class="tier-badge" style="background: var(--primary);">PROFESSIONAL</div>
+                        <div class="tier-recommended-badge">MOST POPULAR</div>
+                        <div class="tier-price">
+                            <span style="text-decoration: line-through; opacity: 0.5;">$79/mo</span>
+                            <span style="color: var(--accent-green); font-weight: 700; margin-left: 8px;">FREE</span>
+                        </div>
+                        <div class="tier-features">
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>8 Social Platforms</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>500 Posts/Month</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>250 AI Generations</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>Advanced Analytics</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>3 Team Members</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>Video Generation</span>
+                            </div>
+                        </div>
+                        <div class="tier-ideal">Ideal for growing businesses and agencies</div>
+                    </div>
+                    
+                    <div class="tier-card" onclick="selectTier('business')" data-tier="business">
+                        <div class="tier-badge" style="background: var(--accent-purple);">BUSINESS</div>
+                        <div class="tier-price">
+                            <span style="text-decoration: line-through; opacity: 0.5;">$149/mo</span>
+                            <span style="color: var(--accent-green); font-weight: 700; margin-left: 8px;">FREE</span>
+                        </div>
+                        <div class="tier-features">
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>Unlimited Platforms</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>2000 Posts/Month</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>1000 AI Generations</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>Premium Analytics</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>10 Team Members</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>Priority Support</span>
+                            </div>
+                        </div>
+                        <div class="tier-ideal">Best for established businesses with high volume</div>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-lg); padding: var(--space-md); margin-top: var(--space-lg); text-align: center;">
+                    <p style="color: var(--accent-green); font-weight: 600; margin: 0;">🎉 Beta Access Special</p>
+                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 8px 0 0 0;">
+                        All features are unlocked and free during our beta period. No credit card required!
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Step 4: API Configuration -->
+            <div class="step-content" id="step-4">
+                <h2 class="step-title">Supercharge with AI</h2>
+                <p class="step-description">
+                    Connect your AI service to unlock advanced content generation features
+                </p>
+                
+                <div class="form-section">
+                    <h4>OpenRouter API Key (Optional)</h4>
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: var(--space-md);">
+                        Get access to multiple AI models including GPT-4, Claude, and more for content generation
+                    </p>
+                    <input type="password" class="form-input" id="openrouterApiKey" placeholder="sk-or-...">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: var(--space-xs);">
+                        <a href="https://openrouter.ai/keys" target="_blank" style="color: var(--primary);">Get your API key from OpenRouter</a>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h4>Anthropic API Key (Optional)</h4>
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: var(--space-md);">
+                        Direct access to Claude AI for enhanced content generation
+                    </p>
+                    <input type="password" class="form-input" id="anthropicApiKey" placeholder="sk-ant-...">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: var(--space-xs);">
+                        <a href="https://console.anthropic.com/" target="_blank" style="color: var(--primary);">Get your API key from Anthropic</a>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: var(--radius-lg); padding: var(--space-md); margin-top: var(--space-lg);">
+                    <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-xs);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <span style="font-weight: 600; color: var(--primary);">Pro Tip</span>
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0;">
+                        You can skip this step and add API keys later in your settings. SYNTHEX includes basic AI features to get you started!
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Step 5: Completion -->
+            <div class="step-content" id="step-5">
+                <div class="completion-animation">
+                    <div class="checkmark">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <h2 class="step-title">Welcome to SYNTHEX!</h2>
+                <p class="step-description">
+                    Your account is ready to go. Here's what you can do next:
+                </p>
+                
+                <div class="progress-stats">
+                    <div class="progress-stat">
+                        <div class="progress-stat-value" id="platformCount">1</div>
+                        <div class="progress-stat-label">Platforms Connected</div>
+                    </div>
+                    <div class="progress-stat">
+                        <div class="progress-stat-value" id="userType">Setup</div>
+                        <div class="progress-stat-label">Profile Complete</div>
+                    </div>
+                    <div class="progress-stat">
+                        <div class="progress-stat-value" id="apiStatus">Ready</div>
+                        <div class="progress-stat-label">System Status</div>
+                    </div>
+                </div>
+                
+                <div class="feature-grid" style="margin-top: var(--space-xl);">
+                    <div class="feature-item" style="cursor: pointer;" onclick="goToDashboard()">
+                        <div class="feature-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--primary);">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                                <rect x="3" y="14" width="7" height="7" rx="1"/>
+                                <rect x="14" y="14" width="7" height="7" rx="1"/>
+                            </svg>
+                        </div>
+                        <div class="feature-title">View Dashboard</div>
+                        <div class="feature-description">See your performance metrics and get insights</div>
+                    </div>
+                    
+                    <div class="feature-item" style="cursor: pointer;" onclick="goToContentStudio()">
+                        <div class="feature-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green);">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        </div>
+                        <div class="feature-title">Create Content</div>
+                        <div class="feature-description">Start generating AI-powered content for your campaigns</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navigation Actions -->
+            <div class="onboarding-actions">
+                <button class="btn btn-skip" onclick="skipOnboarding()" id="skipBtn">Skip</button>
+                <div style="display: flex; gap: var(--space-md);">
+                    <button class="btn btn-secondary" onclick="previousStep()" id="prevBtn" style="display: none;">Previous</button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="nextBtn">Get Started</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/js/api.js"></script>
+    <script src="/js/onboarding.js"></script>
+</body>
+</html>

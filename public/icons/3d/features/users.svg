@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="usersGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow back person -->
+  <circle cx="31" cy="15" r="7" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <path d="M20 44c0-8 4-14 11-14s11 6 11 14" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Shadow front person -->
+  <circle cx="19" cy="16" r="8" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <path d="M6 44c0-9 5-15 13-15s13 6 13 15" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Back person -->
+  <circle cx="31" cy="15" r="7" fill="url(#usersGrad)" opacity="0.7"/>
+  <path d="M20 44c0-8 4-14 11-14s11 6 11 14" fill="url(#usersGrad)" opacity="0.7"/>
+  <!-- Front person -->
+  <circle cx="19" cy="16" r="8" fill="url(#usersGrad)"/>
+  <path d="M6 44c0-9 5-15 13-15s13 6 13 15" fill="url(#usersGrad)"/>
+  <!-- Highlight -->
+  <ellipse cx="16" cy="12" rx="5" ry="3" fill="rgba(255,255,255,0.18)"/>
+</svg>

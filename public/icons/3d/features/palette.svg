@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="paletteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow -->
+  <path d="M24 6a18 18 0 1 0 18 18 6 6 0 0 1-6-6 6 6 0 0 0-6-6 6 6 0 0 1 0-6z" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Main palette oval -->
+  <path d="M24 6a18 18 0 1 0 18 18 6 6 0 0 1-6-6 6 6 0 0 0-6-6 6 6 0 0 1 0-6z" fill="url(#paletteGrad)"/>
+  <!-- Thumb hole -->
+  <circle cx="30" cy="36" r="4" fill="rgba(0,0,0,0.2)"/>
+  <!-- Color dots -->
+  <circle cx="14" cy="20" r="3" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="18" cy="13" r="3" fill="rgba(255,255,255,0.35)"/>
+  <circle cx="26" cy="11" r="3" fill="rgba(255,255,255,0.35)"/>
+  <circle cx="11" cy="28" r="3" fill="rgba(255,255,255,0.35)"/>
+  <!-- Highlight -->
+  <ellipse cx="18" cy="14" rx="8" ry="5" fill="rgba(255,255,255,0.18)"/>
+</svg>

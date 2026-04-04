@@ -1,0 +1,105 @@
+// SQLite Schema for Local Development
+// Use this for quick local development without PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // OAuth fields
+  googleId        String?  @unique
+  avatar          String?
+  authProvider    String   @default("local")
+  emailVerified   Boolean  @default(false)
+  lastLogin       DateTime?
+  
+  // API Keys (encrypted)
+  openrouterApiKey String?
+  anthropicApiKey  String?
+  
+  // User settings
+  preferences      String?  // Changed from Json to String for SQLite
+  
+  // Password reset fields
+  resetCode        String?
+  resetCodeExpires DateTime?
+  resetToken       String?
+  resetTokenExpires DateTime?
+  
+  // Email verification
+  verificationCode String?
+  verificationExpires DateTime?
+  
+  // Relations
+  campaigns        Campaign[]
+  posts            Post[]
+  sessions         Session[]
+  
+  @@map("users")
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  platform    String
+  status      String   @default("draft")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Campaign data (stored as JSON strings in SQLite)
+  content     String?
+  analytics   String?
+  settings    String?
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts       Post[]
+  
+  @@map("campaigns")
+}
+
+model Post {
+  id         String   @id @default(cuid())
+  content    String
+  platform   String
+  status     String   @default("draft")
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  // Post data (stored as JSON strings)
+  metadata   String?
+  analytics  String?
+  
+  // Relations
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  @@map("posts")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@map("sessions")
+}

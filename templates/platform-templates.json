@@ -1,0 +1,243 @@
+{
+  "platform_templates": {
+    "youtube": {
+      "long_form": {
+        "title_template": "How to {BENEFIT} in {TIMEFRAME} | {BRAND} 2024 Guide",
+        "description_template": "In this video, you'll learn:\n\n00:00 - Introduction\n{TIMESTAMPS}\n\n{FULL_DESCRIPTION}\n\n🔔 Subscribe for more {TOPIC} content\n📧 Newsletter: {LINK}\n💬 Join our community: {LINK}\n\n#tutorial #howto #{NICHE}",
+        "thumbnail_specs": {
+          "dimensions": "1280x720",
+          "text_overlay": "large, high contrast",
+          "faces": "include if relevant",
+          "colors": "bright, contrasting"
+        },
+        "optimal_length": "8-15 minutes",
+        "cta": "Subscribe and hit the notification bell"
+      },
+      "shorts": {
+        "title_template": "{HOOK} #shorts #{TREND}",
+        "description_template": "{QUICK_VALUE}\n\n#shorts #{HASHTAG1} #{HASHTAG2}",
+        "format": "vertical 9:16",
+        "length": "15-60 seconds",
+        "hook_timing": "first 3 seconds"
+      }
+    },
+    "instagram": {
+      "reels": {
+        "caption_template": "{HOOK_EMOJI} {OPENING_LINE}\n\n{VALUE_POINTS}\n\nSave this for later! 💾\n\n#{HASHTAG1} #{HASHTAG2} #{HASHTAG3}",
+        "format": "1080x1920 (9:16)",
+        "length": "15-30 seconds",
+        "music": "trending audio required",
+        "text_overlay": "essential for silent viewing"
+      },
+      "carousel": {
+        "slide_count": "5-10",
+        "first_slide": "hook with promise",
+        "middle_slides": "value delivery",
+        "last_slide": "CTA or summary",
+        "format": "1080x1080 or 1080x1350"
+      },
+      "stories": {
+        "elements": ["polls", "questions", "sliders", "quizzes"],
+        "length": "15 seconds per story",
+        "sequence": "3-5 stories per topic"
+      }
+    },
+    "tiktok": {
+      "trend_adaptation": {
+        "structure": "trending_sound + brand_message",
+        "hook": "first 3 seconds critical",
+        "style": "authentic, unpolished",
+        "text_overlay": "essential",
+        "hashtag_strategy": "#fyp #foryoupage + 3-5 niche tags"
+      },
+      "educational": {
+        "format": "quick tips in 30 seconds",
+        "structure": "problem → solution → result",
+        "visual": "fast cuts, dynamic",
+        "caption": "short, intriguing"
+      }
+    },
+    "twitter": {
+      "thread": {
+        "structure": [
+          "1/ Hook tweet with bold claim or question",
+          "2-8/ Supporting points with evidence",
+          "9/ Summary or key takeaway",
+          "10/ CTA (follow for more, RT, etc.)"
+        ],
+        "tweet_length": "200-240 characters optimal",
+        "media": "include in tweets 1, 5, 10",
+        "timing": "post all at once"
+      },
+      "single_post": {
+        "structure": "hook + insight + question",
+        "length": "71-100 characters",
+        "media": "image or GIF increases engagement 150%"
+      }
+    },
+    "linkedin": {
+      "article": {
+        "structure": {
+          "opening": "personal story or industry insight",
+          "body": "3-5 key points with examples",
+          "conclusion": "actionable takeaways"
+        },
+        "length": "1300-2000 words",
+        "formatting": "short paragraphs, bullet points",
+        "hashtags": "3-5 industry-specific"
+      },
+      "post": {
+        "hook": "controversial or thought-provoking",
+        "structure": "story → lesson → question",
+        "length": "150-300 words",
+        "emoji": "sparingly for emphasis"
+      },
+      "video": {
+        "style": "professional but personable",
+        "length": "1-3 minutes",
+        "caption": "full transcript included"
+      }
+    },
+    "facebook": {
+      "video": {
+        "format": "square (1:1) or vertical (4:5)",
+        "caption_length": "under 80 characters",
+        "captions": "burned in for 85% silent viewing",
+        "thumbnail": "custom, eye-catching"
+      },
+      "discussion_post": {
+        "structure": "question + context + invitation",
+        "length": "40-80 characters",
+        "engagement": "respond to early comments"
+      },
+      "live": {
+        "duration": "15-45 minutes",
+        "structure": "welcome → content → Q&A",
+        "promotion": "announce 24 hours prior"
+      }
+    },
+    "pinterest": {
+      "standard_pin": {
+        "dimensions": "1000x1500 (2:3 ratio)",
+        "text_overlay": "40% of image max",
+        "title": "keyword-rich, under 100 chars",
+        "description": "200-300 chars with keywords",
+        "branding": "subtle logo/watermark"
+      },
+      "idea_pin": {
+        "pages": "5-20",
+        "format": "1080x1920",
+        "structure": "tutorial or story format",
+        "text": "brief, scannable"
+      }
+    },
+    "reddit": {
+      "discussion_post": {
+        "title": "clear, specific question or statement",
+        "body": "context + question + own perspective",
+        "formatting": "proper markdown",
+        "tone": "authentic, non-promotional"
+      },
+      "guide": {
+        "structure": "problem → research → solution → results",
+        "length": "500-2000 words",
+        "formatting": "headers, bullet points, links",
+        "images": "screenshots, diagrams"
+      }
+    }
+  },
+  "cross_platform_mapping": {
+    "video_content": {
+      "source": "youtube_long_form",
+      "adaptations": {
+        "youtube_shorts": "extract key moments",
+        "instagram_reels": "highlight reel with trending audio",
+        "tiktok": "behind-the-scenes or key tips",
+        "linkedin_video": "professional insights segment",
+        "facebook_video": "community-focused edit",
+        "twitter_video": "teaser or key quote"
+      }
+    },
+    "written_content": {
+      "source": "blog_post",
+      "adaptations": {
+        "linkedin_article": "professional angle",
+        "twitter_thread": "key points as thread",
+        "facebook_post": "discussion starter",
+        "reddit_guide": "detailed tutorial",
+        "instagram_carousel": "visual summary",
+        "pinterest_infographic": "data visualization"
+      }
+    }
+  },
+  "automation_rules": {
+    "content_multiplication": {
+      "one_video": "8 platform variations",
+      "one_article": "6 platform variations",
+      "one_image": "5 platform variations"
+    },
+    "scheduling": {
+      "youtube": ["Tuesday 2pm", "Thursday 2pm", "Saturday 10am"],
+      "instagram": ["Daily 6am, 12pm, 7pm"],
+      "tiktok": ["6am, 7pm, 10pm daily"],
+      "twitter": ["9am, 12pm, 5pm, 9pm"],
+      "linkedin": ["Tuesday-Thursday 7:30am, 12pm"],
+      "facebook": ["1-3pm, 7-9pm"],
+      "pinterest": ["2-4pm, 8-11pm"],
+      "reddit": ["Monday-Friday 6-9am, 5-7pm"]
+    },
+    "engagement_windows": {
+      "respond_within": {
+        "youtube": "24 hours",
+        "instagram": "2 hours",
+        "tiktok": "1 hour",
+        "twitter": "30 minutes",
+        "linkedin": "24 hours",
+        "facebook": "4 hours",
+        "reddit": "2 hours"
+      }
+    }
+  },
+  "performance_benchmarks": {
+    "youtube": {
+      "ctr": "4-6%",
+      "retention": "50% at halfway",
+      "engagement": "5% of views"
+    },
+    "instagram": {
+      "reels_reach": "30% of followers",
+      "engagement_rate": "3-6%",
+      "story_completion": "70%"
+    },
+    "tiktok": {
+      "completion_rate": "70%",
+      "share_rate": "1-3%",
+      "fyp_percentage": "60%"
+    },
+    "twitter": {
+      "engagement_rate": "1-3%",
+      "retweet_rate": "1%",
+      "click_through": "2%"
+    },
+    "linkedin": {
+      "engagement_rate": "2-4%",
+      "share_rate": "0.5%",
+      "click_through": "3%"
+    },
+    "facebook": {
+      "engagement_rate": "2-3%",
+      "video_retention": "30% at 1 minute",
+      "share_rate": "0.5%"
+    },
+    "pinterest": {
+      "save_rate": "0.5-1%",
+      "click_through": "0.5%",
+      "monthly_viewers_growth": "20%"
+    },
+    "reddit": {
+      "upvote_ratio": "80%",
+      "comment_engagement": "10%",
+      "award_rate": "0.1%"
+    }
+  }
+}

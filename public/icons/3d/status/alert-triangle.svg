@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="warn-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <!-- shadow triangle -->
+  <path d="M24 7L43 40H5z" fill="rgba(0,0,0,0.3)" transform="translate(1.5,1.5)"/>
+  <!-- base triangle -->
+  <path d="M24 7L43 40H5z" fill="url(#warn-grad)"/>
+  <!-- highlight on top peak -->
+  <path d="M24 7L36 30H12z" fill="rgba(255,255,255,0.12)"/>
+  <path d="M24 7l6 11H18z" fill="rgba(255,255,255,0.18)"/>
+  <!-- exclamation shadow -->
+  <rect x="22" y="18" width="4" height="12" rx="2" fill="rgba(0,0,0,0.2)"/>
+  <circle cx="24" cy="34.5" r="2.5" fill="rgba(0,0,0,0.2)"/>
+  <!-- exclamation mark -->
+  <rect x="22" y="17" width="4" height="12" rx="2" fill="white"/>
+  <circle cx="24" cy="33.5" r="2.5" fill="white"/>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="calendarNavGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow -->
+  <rect x="5" y="10" width="38" height="34" rx="3" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Main body -->
+  <rect x="5" y="10" width="38" height="34" rx="3" fill="url(#calendarNavGrad)"/>
+  <!-- Header bar -->
+  <rect x="5" y="10" width="38" height="12" rx="3" fill="rgba(0,0,0,0.2)"/>
+  <!-- Tabs at top -->
+  <rect x="14" y="5" width="5" height="9" rx="2.5" fill="url(#calendarNavGrad)"/>
+  <rect x="29" y="5" width="5" height="9" rx="2.5" fill="url(#calendarNavGrad)"/>
+  <!-- Calendar grid dots (7 cells × 3 rows) -->
+  <rect x="10" y="27" width="5" height="4" rx="1" fill="rgba(255,255,255,0.25)"/>
+  <rect x="18" y="27" width="5" height="4" rx="1" fill="rgba(255,255,255,0.25)"/>
+  <rect x="26" y="27" width="5" height="4" rx="1" fill="rgba(255,255,255,0.25)"/>
+  <rect x="34" y="27" width="5" height="4" rx="1" fill="rgba(255,255,255,0.25)"/>
+  <rect x="10" y="34" width="5" height="4" rx="1" fill="rgba(255,255,255,0.25)"/>
+  <rect x="18" y="34" width="5" height="4" rx="1" fill="rgba(255,255,255,0.4)"/>
+  <rect x="26" y="34" width="5" height="4" rx="1" fill="rgba(255,255,255,0.25)"/>
+  <!-- Highlight on header -->
+  <rect x="5" y="10" width="22" height="6" rx="3" fill="rgba(255,255,255,0.22)"/>
+</svg>

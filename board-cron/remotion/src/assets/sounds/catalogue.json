@@ -1,0 +1,183 @@
+{
+  "_comment": "SFX Catalogue — lists every available sound with filename, description, and recommended usage.",
+  "_status": "COMPLETE — all audio files generated via ElevenLabs Sound Generation API.",
+  "_generated": "2026-04-03",
+  "_mixing_levels": {
+    "voice": "-14 LUFS (speech intelligibility priority)",
+    "music": "-20 LUFS (background underscore)",
+    "sfx": "-18 LUFS (sits between voice and music)"
+  },
+
+  "music_tracks": {
+    "deliberation": {
+      "filename": "tense-underscore.mp3",
+      "description": "Tense, building, intellectual debate underscore. ~22s (loop for longer scenes).",
+      "bpm": 120,
+      "lufs": -20,
+      "usage": "Board debating, weighing options, disagreement scenes",
+      "status": "READY"
+    },
+    "decision": {
+      "filename": "confident-build.mp3",
+      "description": "Resolving, confident, authority, clarity. ~22s.",
+      "bpm": 130,
+      "lufs": -20,
+      "usage": "Conclusion reached, direction set, consensus moments",
+      "status": "READY"
+    },
+    "action": {
+      "filename": "momentum-drive.mp3",
+      "description": "Forward momentum, productivity, getting things done. ~22s.",
+      "bpm": 140,
+      "lufs": -20,
+      "usage": "Execution update, results revealed, forward movement",
+      "status": "READY"
+    },
+    "opening": {
+      "filename": "synthex-intro.mp3",
+      "description": "Synthex Signature Theme — 8-second opening. Used in every episode.",
+      "bpm": 130,
+      "lufs": -20,
+      "usage": "First 15 seconds of every episode. Non-negotiable placement.",
+      "status": "READY"
+    },
+    "closing": {
+      "filename": "synthex-outro.mp3",
+      "description": "Resolving, warm, brand-aligned closing theme. ~15s.",
+      "bpm": 120,
+      "lufs": -20,
+      "usage": "Final 30 seconds of episode, CTA moment",
+      "status": "READY"
+    },
+    "neutral": {
+      "filename": "ambient-background.mp3",
+      "description": "Low-key ambient background. ~22s (loop for longer scenes).",
+      "bpm": 120,
+      "lufs": -20,
+      "usage": "Narration without strong scene type, transition filler",
+      "status": "READY"
+    }
+  },
+
+  "sfx": {
+    "transitions": {
+      "whoosh": {
+        "filename": "transitions/whoosh.mp3",
+        "description": "Fast air whoosh for scene transitions",
+        "duration_ms": 500,
+        "usage": "Between scenes",
+        "status": "READY"
+      },
+      "wipe": {
+        "filename": "transitions/wipe.mp3",
+        "description": "Smooth wipe transition sound",
+        "duration_ms": 500,
+        "usage": "Slide transitions",
+        "status": "READY"
+      },
+      "data_stream": {
+        "filename": "transitions/data-stream.mp3",
+        "description": "Digital data-stream transition, tech-forward",
+        "duration_ms": 500,
+        "usage": "Data reveal transitions, chart animations",
+        "status": "READY"
+      }
+    },
+    "cards": {
+      "slide_in": {
+        "filename": "cards/slide-in.mp3",
+        "description": "Card sliding into frame",
+        "duration_ms": 500,
+        "usage": "Any card appearing on screen",
+        "status": "READY"
+      },
+      "expand": {
+        "filename": "cards/expand.mp3",
+        "description": "Card expanding or growing",
+        "duration_ms": 500,
+        "usage": "Metric tiles expanding",
+        "status": "READY"
+      },
+      "pulse": {
+        "filename": "cards/pulse.mp3",
+        "description": "Soft pulse/heartbeat effect for active cards",
+        "duration_ms": 500,
+        "usage": "Highlighting active data points",
+        "status": "READY"
+      }
+    },
+    "text": {
+      "typewriter": {
+        "filename": "text/typewriter-click.mp3",
+        "description": "Typewriter click sound for text appearing",
+        "duration_ms": 500,
+        "usage": "Text reveal animations",
+        "status": "READY"
+      },
+      "word_drop": {
+        "filename": "text/word-drop.mp3",
+        "description": "Word dropping into position",
+        "duration_ms": 500,
+        "usage": "Headline text reveals",
+        "status": "READY"
+      }
+    },
+    "decisions": {
+      "dramatic_tone": {
+        "filename": "decisions/dramatic-tone.mp3",
+        "description": "Dramatic tone for decision reveal moments",
+        "duration_ms": 600,
+        "usage": "THE DECISION title card",
+        "status": "READY"
+      },
+      "bass_drop": {
+        "filename": "decisions/bass-drop.mp3",
+        "description": "Bass drop for high-impact moments",
+        "duration_ms": 800,
+        "usage": "Major decision announcements",
+        "status": "READY"
+      }
+    },
+    "alerts": {
+      "contrarian_sting": {
+        "filename": "alerts/contrarian-sting.mp3",
+        "description": "Disruption sting, record-scratch energy",
+        "duration_ms": 500,
+        "usage": "Contrarian persona speaking, challenging assumptions",
+        "status": "READY"
+      },
+      "risk_warning": {
+        "filename": "alerts/risk-warning.mp3",
+        "description": "Amber alert tone for risk mentions",
+        "duration_ms": 500,
+        "usage": "Risk warnings, concerns raised",
+        "status": "READY"
+      }
+    },
+    "ambient": {
+      "boardroom_hum": {
+        "filename": "ambient/boardroom-hum.mp3",
+        "description": "Low boardroom ambient hum, loopable",
+        "duration_ms": 10000,
+        "usage": "Background ambiance during discussion",
+        "status": "READY"
+      },
+      "data_room": {
+        "filename": "ambient/data-room-tone.mp3",
+        "description": "Data centre / server room ambient, loopable",
+        "duration_ms": 10000,
+        "usage": "Technical discussion scenes",
+        "status": "READY"
+      }
+    },
+    "brand": {
+      "sonic_logo": {
+        "filename": "brand/synthex-sonic-logo.mp3",
+        "description": "2-second Synthex sonic logo — audio equivalent of the visual logo",
+        "duration_ms": 2000,
+        "usage": "End card, intro splash, brand moments",
+        "status": "READY"
+      }
+    }
+  }
+}

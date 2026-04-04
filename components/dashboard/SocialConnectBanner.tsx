@@ -1,0 +1,72 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useSocialConnections } from '@/hooks/use-social-connections';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
+import { X, Zap } from '@/components/icons';
+
+/** Per-business dismiss key so each business gets its own banner state */
+function getDismissKey(orgId: string | null): string {
+  return orgId
+    ? `socialBannerDismissed_${orgId}`
+    : 'socialBannerDismissed_default';
+}
+
+export function SocialConnectBanner() {
+  const { activeOrganizationId } = useActiveBusiness();
+  const { summary, isLoading } = useSocialConnections(activeOrganizationId);
+  // Start dismissed=true to avoid hydration flash, then read localStorage on mount
+  const [dismissed, setDismissed] = useState(true);
+
+  useEffect(() => {
+    // Check localStorage only after mount; re-check when business changes
+    const wasDismissed =
+      localStorage.getItem(getDismissKey(activeOrganizationId)) === 'true';
+    setDismissed(wasDismissed);
+  }, [activeOrganizationId]);
+
+  const handleDismiss = () => {
+    localStorage.setItem(getDismissKey(activeOrganizationId), 'true');
+    setDismissed(true);
+  };
+
+  // Show only when: loaded, not dismissed, zero connections
+  if (isLoading || dismissed || (summary && summary.connected > 0)) {
+    return null;
+  }
+
+  return (
+    <div className="mx-4 mt-4 rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 flex items-center justify-between gap-4">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="flex-shrink-0 p-2 rounded-lg bg-orange-500/20">
+          <Zap className="h-4 w-4 text-orange-400" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-white">
+            Connect your first social account
+          </p>
+          <p className="text-xs text-slate-300 mt-0.5">
+            Link a platform to start publishing, scheduling, and tracking
+            performance.
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <Link
+          href="/dashboard/platforms"
+          className="inline-flex items-center px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-400 text-white text-xs font-semibold transition-colors"
+        >
+          Connect a platform
+        </Link>
+        <button
+          onClick={handleDismiss}
+          aria-label="Dismiss banner"
+          className="p-1 rounded-md text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,19 @@
+# =============================================================================
+# Synthex Service — exposes pods within the cluster
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: synthex-app
+  namespace: synthex
+  labels:
+    app: synthex-app
+spec:
+  type: ClusterIP
+  selector:
+    app: synthex-app
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+      protocol: TCP

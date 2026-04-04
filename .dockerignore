@@ -1,0 +1,184 @@
+# =============================================================================
+# Synthex .dockerignore
+# =============================================================================
+# Prevents sensitive files, dev artifacts, and unnecessary files from being
+# copied into Docker images. This is critical for:
+#   1. Security: .env files, secrets, and credentials never enter the image
+#   2. Performance: Smaller build context = faster builds
+#   3. Safety: No dev/test files in production images
+# =============================================================================
+
+# ========================
+# SECURITY-CRITICAL: Environment & Secrets
+# ========================
+# These MUST be excluded to prevent credential leaks in Docker images
+.env
+.env.*
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+*.pem
+*.key
+*.cert
+*.p12
+deployment/ssl/
+
+# ========================
+# Dependencies
+# ========================
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# ========================
+# Build outputs (rebuilt in Docker)
+# ========================
+dist
+build
+.next
+.next-alt
+.next-dev
+.nuxt
+.turbo
+*.tgz
+output/
+test-results/
+playwright-report/
+storybook-static/
+
+# ========================
+# Stray project directories at root (not part of Next.js app)
+# ========================
+Synthex/
+with-turbopack-app/
+packages/
+paperbanana/
+tools/
+
+# ========================
+# Testing & Coverage
+# ========================
+coverage
+*.lcov
+.nyc_output
+test/
+tests/
+__tests__/
+*.test.js
+*.test.ts
+*.test.tsx
+*.spec.js
+*.spec.ts
+*.spec.tsx
+jest.config.*
+playwright.config.*
+playwright-report/
+e2e/
+
+# ========================
+# Development tools & IDE
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.eslintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+.node_repl_history
+.cache
+.parcel-cache
+
+# ========================
+# Storybook
+# ========================
+.storybook/
+.out
+.storybook-out
+storybook-static/
+
+# ========================
+# Documentation & Planning
+# ========================
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+docs/
+*.md
+.planning/
+
+# ========================
+# Claude Code / AI tooling & local dev tools
+# ========================
+.claude/
+.claude-session/
+.hive-mind/
+.playwright-mcp/
+.superdesign/
+.swarm/
+.cursor/
+
+# ========================
+# Git
+# ========================
+.git
+.gitignore
+.gitattributes
+
+# ========================
+# Docker files (prevent recursive inclusion)
+# ========================
+Dockerfile*
+docker-compose*.yml
+docker-compose*.yaml
+.dockerignore
+
+# ========================
+# OS generated files
+# ========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ========================
+# Logs & Runtime data
+# ========================
+logs/
+*.log
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ========================
+# Temporary files
+# ========================
+tmp/
+temp/
+
+# ========================
+# Development scripts (not needed in production)
+# ========================
+scripts/dev-*
+scripts/test-*
+scripts/fix-*
+
+# ========================
+# Monitoring configs (mounted separately in production)
+# ========================
+monitoring/
+nginx/

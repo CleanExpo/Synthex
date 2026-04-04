@@ -1,0 +1,208 @@
+{
+  "workspace": {
+    "name": "Auto Marketing Sandbox",
+    "version": "1.0.0",
+    "description": "Collaborative visual workspace for marketing creation",
+    "canvas": {
+      "type": "infinite",
+      "grid": {
+        "enabled": true,
+        "size": 20,
+        "snap": true,
+        "visible": true
+      },
+      "zoom": {
+        "min": 10,
+        "max": 500,
+        "default": 100,
+        "controls": ["wheel", "buttons", "keyboard"]
+      },
+      "background": {
+        "color": "#F5F5F7",
+        "pattern": "dots"
+      }
+    },
+    "interface": {
+      "layout": "flex",
+      "sections": {
+        "toolbar": {
+          "position": "top",
+          "height": "60px",
+          "tools": [
+            "select",
+            "pan",
+            "text",
+            "shape",
+            "connector",
+            "image",
+            "sticky_note",
+            "agent_launcher"
+          ]
+        },
+        "sidebar": {
+          "position": "left",
+          "width": "280px",
+          "collapsible": true,
+          "panels": [
+            {
+              "id": "assets",
+              "title": "Assets Library",
+              "sections": ["personas", "hooks", "storyboards", "templates"]
+            },
+            {
+              "id": "agents",
+              "title": "AI Agents",
+              "sections": ["ux_research", "content_creator", "visual_designer", "performance"]
+            },
+            {
+              "id": "layers",
+              "title": "Layers",
+              "sections": ["groups", "objects", "visibility"]
+            }
+          ]
+        },
+        "properties": {
+          "position": "right",
+          "width": "320px",
+          "context_sensitive": true,
+          "panels": ["style", "data", "interactions", "animations"]
+        },
+        "collaboration": {
+          "position": "bottom-right",
+          "features": ["active_users", "comments", "chat", "notifications"]
+        }
+      }
+    },
+    "components": {
+      "cards": {
+        "persona": {
+          "width": 320,
+          "height": 400,
+          "fields": ["avatar", "name", "demographics", "pain_points", "goals"],
+          "colors": {
+            "header": "#6B46C1",
+            "body": "#FFFFFF",
+            "border": "#E5E5E7"
+          }
+        },
+        "hook": {
+          "width": 280,
+          "height": 180,
+          "fields": ["style", "text", "persona_link", "metrics"],
+          "colors": {
+            "humorous": "#FFB800",
+            "serious": "#2C3E50",
+            "business": "#0066CC",
+            "playful": "#FF6B6B",
+            "meaningful": "#8B46C1"
+          }
+        },
+        "storyboard": {
+          "width": 480,
+          "height": 320,
+          "fields": ["scenes", "timeline", "characters", "notes"],
+          "layout": "horizontal_scroll"
+        },
+        "metric": {
+          "width": 200,
+          "height": 120,
+          "fields": ["title", "value", "change", "chart"],
+          "real_time": true
+        }
+      },
+      "connectors": {
+        "types": ["straight", "curved", "elbow"],
+        "styles": ["solid", "dashed", "dotted"],
+        "arrows": ["none", "single", "double"],
+        "labels": true
+      },
+      "groups": {
+        "types": ["frame", "section", "container"],
+        "nesting": true,
+        "lock": true,
+        "collapse": true
+      }
+    },
+    "interactions": {
+      "drag_drop": {
+        "enabled": true,
+        "multi_select": true,
+        "ghost_preview": true
+      },
+      "keyboard_shortcuts": {
+        "copy": "Ctrl+C",
+        "paste": "Ctrl+V",
+        "undo": "Ctrl+Z",
+        "redo": "Ctrl+Y",
+        "delete": "Delete",
+        "select_all": "Ctrl+A",
+        "zoom_in": "Ctrl++",
+        "zoom_out": "Ctrl+-",
+        "fit_to_screen": "Ctrl+0"
+      },
+      "gestures": {
+        "pinch_zoom": true,
+        "two_finger_pan": true,
+        "double_tap_zoom": true
+      }
+    },
+    "collaboration": {
+      "real_time": {
+        "cursors": true,
+        "selections": true,
+        "typing": true,
+        "presence": true
+      },
+      "permissions": {
+        "levels": ["viewer", "commenter", "editor", "owner"],
+        "granular": true
+      },
+      "version_control": {
+        "auto_save": true,
+        "history": true,
+        "branching": false,
+        "compare": true
+      },
+      "commenting": {
+        "inline": true,
+        "threads": true,
+        "mentions": true,
+        "reactions": true
+      }
+    },
+    "export": {
+      "formats": ["PNG", "JPG", "SVG", "PDF", "JSON"],
+      "options": {
+        "selection": true,
+        "full_canvas": true,
+        "with_background": true,
+        "scale": [1, 2, 3]
+      }
+    },
+    "integrations": {
+      "import": {
+        "formats": ["CSV", "JSON", "Images", "Figma", "Sketch"],
+        "drag_drop": true,
+        "paste": true
+      },
+      "export_to": {
+        "platforms": ["Slack", "Teams", "Email", "Drive", "Dropbox"],
+        "apis": true
+      }
+    },
+    "themes": {
+      "light": {
+        "canvas": "#F5F5F7",
+        "sidebar": "#FFFFFF",
+        "text": "#1D1D1F",
+        "accent": "#0066CC"
+      },
+      "dark": {
+        "canvas": "#1D1D1F",
+        "sidebar": "#2C2C2E",
+        "text": "#F5F5F7",
+        "accent": "#007AFF"
+      }
+    }
+  }
+}

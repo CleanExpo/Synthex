@@ -1,0 +1,81 @@
+{
+  "hooks": {
+    "persona_id": "",
+    "persona_name": "",
+    "variations": {
+      "humorous": [
+        {
+          "id": "h1",
+          "hook": "",
+          "emotional_trigger": "",
+          "target_platform": [],
+          "estimated_engagement": ""
+        }
+      ],
+      "serious": [
+        {
+          "id": "s1",
+          "hook": "",
+          "emotional_trigger": "",
+          "target_platform": [],
+          "estimated_engagement": ""
+        }
+      ],
+      "business": [
+        {
+          "id": "b1",
+          "hook": "",
+          "emotional_trigger": "",
+          "target_platform": [],
+          "estimated_engagement": ""
+        }
+      ],
+      "playful": [
+        {
+          "id": "p1",
+          "hook": "",
+          "emotional_trigger": "",
+          "target_platform": [],
+          "estimated_engagement": ""
+        }
+      ],
+      "meaningful": [
+        {
+          "id": "m1",
+          "hook": "",
+          "emotional_trigger": "",
+          "target_platform": [],
+          "estimated_engagement": ""
+        }
+      ]
+    },
+    "a_b_testing": {
+      "primary_hook": "",
+      "challenger_hooks": [],
+      "test_duration": "7 days",
+      "success_metrics": ["CTR", "engagement_rate", "conversion_rate"]
+    },
+    "platform_adaptations": {
+      "instagram": {
+        "format": "visual-first",
+        "length": "short",
+        "hashtag_strategy": []
+      },
+      "linkedin": {
+        "format": "professional",
+        "length": "medium",
+        "keyword_strategy": []
+      },
+      "tiktok": {
+        "format": "video-first",
+        "length": "ultra-short",
+        "trend_alignment": []
+      },
+      "facebook": {
+        "format": "mixed-media",
+        "length": "medium",
+        "audience_targeting": []
+      }
+    }
+  }
+}

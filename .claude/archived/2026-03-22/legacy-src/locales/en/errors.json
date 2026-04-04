@@ -1,0 +1,112 @@
+{
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email address",
+    "password": "Password must be at least 8 characters long",
+    "passwordMatch": "Passwords do not match",
+    "minLength": "Must be at least {{min}} characters",
+    "maxLength": "Must be no more than {{max}} characters",
+    "invalidFormat": "Invalid format",
+    "invalidDate": "Please enter a valid date",
+    "invalidUrl": "Please enter a valid URL",
+    "invalidPhone": "Please enter a valid phone number"
+  },
+  "auth": {
+    "invalidCredentials": "Invalid email or password",
+    "accountLocked": "Account temporarily locked due to too many failed attempts",
+    "sessionExpired": "Your session has expired. Please sign in again",
+    "unauthorized": "You are not authorized to access this resource",
+    "forbidden": "Access denied",
+    "accountNotFound": "Account not found",
+    "emailAlreadyExists": "An account with this email already exists",
+    "weakPassword": "Password is too weak. Please choose a stronger password",
+    "invalidToken": "Invalid or expired token",
+    "passwordResetFailed": "Failed to reset password. Please try again"
+  },
+  "content": {
+    "optimizationFailed": "Failed to optimize content. Please try again",
+    "saveFailed": "Failed to save content",
+    "loadFailed": "Failed to load content",
+    "deleteFailed": "Failed to delete content",
+    "publishFailed": "Failed to publish content",
+    "tooLong": "Content exceeds maximum length for {{platform}}",
+    "tooShort": "Content is too short for effective engagement",
+    "noContent": "Please enter some content to optimize",
+    "invalidPlatform": "Please select a valid platform",
+    "scheduleFailed": "Failed to schedule content"
+  },
+  "campaigns": {
+    "createFailed": "Failed to create campaign",
+    "updateFailed": "Failed to update campaign",
+    "deleteFailed": "Failed to delete campaign",
+    "startFailed": "Failed to start campaign",
+    "pauseFailed": "Failed to pause campaign",
+    "stopFailed": "Failed to stop campaign",
+    "notFound": "Campaign not found",
+    "invalidDate": "Please select a valid date and time",
+    "noContent": "Campaign must have at least one piece of content",
+    "invalidStatus": "Invalid campaign status"
+  },
+  "analytics": {
+    "loadFailed": "Failed to load analytics data",
+    "noData": "No data available for the selected period",
+    "invalidDateRange": "Please select a valid date range",
+    "exportFailed": "Failed to export data"
+  },
+  "api": {
+    "networkError": "Network error. Please check your connection",
+    "serverError": "Server error. Please try again later",
+    "rateLimited": "Too many requests. Please wait before trying again",
+    "maintenanceMode": "System is currently under maintenance",
+    "serviceUnavailable": "Service temporarily unavailable",
+    "timeout": "Request timed out. Please try again",
+    "badRequest": "Invalid request. Please check your input",
+    "notFound": "Resource not found",
+    "conflict": "Conflict occurred. Please refresh and try again"
+  },
+  "upload": {
+    "fileTooLarge": "File is too large. Maximum size is {{maxSize}}MB",
+    "invalidFileType": "Invalid file type. Supported formats: {{formats}}",
+    "uploadFailed": "Failed to upload file. Please try again",
+    "noFileSelected": "Please select a file to upload",
+    "corruptedFile": "File appears to be corrupted",
+    "virusDetected": "File failed security scan"
+  },
+  "billing": {
+    "paymentFailed": "Payment failed. Please check your payment method",
+    "cardExpired": "Your card has expired. Please update your payment method",
+    "insufficientFunds": "Insufficient funds",
+    "billingAddressRequired": "Billing address is required",
+    "subscriptionCancelled": "Your subscription has been cancelled",
+    "upgradeRequired": "Please upgrade your plan to access this feature",
+    "invoiceNotFound": "Invoice not found",
+    "refundFailed": "Refund processing failed"
+  },
+  "integration": {
+    "connectionFailed": "Failed to connect to {{platform}}",
+    "authorizationFailed": "Authorization failed for {{platform}}",
+    "tokenExpired": "Your {{platform}} token has expired. Please reconnect",
+    "quotaExceeded": "API quota exceeded for {{platform}}",
+    "platformError": "{{platform}} is experiencing issues. Please try again later",
+    "disconnectionFailed": "Failed to disconnect from {{platform}}",
+    "syncFailed": "Failed to sync data with {{platform}}"
+  },
+  "system": {
+    "maintenanceMode": "System is currently under maintenance. Please try again later",
+    "unexpectedError": "An unexpected error occurred. Please try again",
+    "featureDisabled": "This feature is temporarily disabled",
+    "browserNotSupported": "Your browser is not supported. Please update or use a different browser",
+    "javascriptDisabled": "JavaScript is required for this application to work properly",
+    "cookiesDisabled": "Cookies are required. Please enable cookies in your browser"
+  },
+  "general": {
+    "somethingWentWrong": "Something went wrong. Please try again",
+    "tryAgainLater": "Please try again later",
+    "contactSupport": "If the problem persists, please contact support",
+    "loadingError": "Error loading data",
+    "saveError": "Error saving changes",
+    "deleteError": "Error deleting item",
+    "updateError": "Error updating information",
+    "connectionLost": "Connection lost. Attempting to reconnect..."
+  }
+}

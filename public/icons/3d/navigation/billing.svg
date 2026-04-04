@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="billingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <!-- Card shadow -->
+  <rect x="4" y="12" width="40" height="26" rx="4" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Card body -->
+  <rect x="4" y="12" width="40" height="26" rx="4" fill="url(#billingGrad)"/>
+  <!-- Magnetic stripe -->
+  <rect x="4" y="19" width="40" height="8" fill="rgba(0,0,0,0.3)"/>
+  <!-- Chip -->
+  <rect x="10" y="29" width="10" height="7" rx="2" fill="rgba(255,255,255,0.2)"/>
+  <rect x="11" y="30" width="8" height="5" rx="1" fill="rgba(255,255,255,0.1)"/>
+  <!-- Dots (last 4 digits placeholder) -->
+  <circle cx="27" cy="33" r="1.5" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="31" cy="33" r="1.5" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="35" cy="33" r="1.5" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="39" cy="33" r="1.5" fill="rgba(255,255,255,0.4)"/>
+  <!-- Highlight on card top-left -->
+  <rect x="4" y="12" width="24" height="7" rx="4" fill="rgba(255,255,255,0.18)"/>
+</svg>

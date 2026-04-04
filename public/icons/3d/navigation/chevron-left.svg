@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="chevronLeftGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow -->
+  <path d="M30 8L14 24l16 16" stroke="rgba(0,0,0,0.35)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none" transform="translate(1.5,1.5)"/>
+  <!-- Chevron -->
+  <path d="M30 8L14 24l16 16" stroke="url(#chevronLeftGrad)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Highlight on upper arm -->
+  <path d="M30 8L14 24" stroke="rgba(255,255,255,0.22)" stroke-width="3" stroke-linecap="round" fill="none"/>
+</svg>

@@ -1,0 +1,21 @@
+fix(114-02): remove Sentry webpack plugin to fix Lambda cold-start hang
+
+Root cause confirmed: @sentry/nextjs v8.55.0 ignores both
+disableServerWebpackPlugin:true and autoInstrumentServerFunctions:false.
+The plugin injects wrapRouteHandlerWithSentry + require-in-the-middle /
+import-in-the-middle OTel hooks into EVERY route bundle, confirmed by
+reading .next/server/app/api/health/live/route.js directly.
+
+Even /api/health/live (zero app imports) contained the Sentry wrapper.
+The OTel hooks hang the Lambda for exactly 10s on cold start.
+
+Fix: remove withSentryConfig() wrapping from next.config.mjs entirely.
+Server error capture retained via instrumentation.ts -> Sentry.init().
+Client error capture retained via sentry.client.config.ts.
+Source map upload was already disabled (1424 files / 45-min timeout).
+
+All 4 previous fix attempts eliminated the wrong suspects:
+- sentry.server.config.ts stub (commit ec5c6e2b, 5356c8d3)
+- instrumentation.ts diagnostic skip (commit 96bf4734)
+- middleware bypass for health routes (commit 89dcfd3e)
+- Sentry lazy-load in logger.ts + prisma lazy Proxy (28319f88, 48f0769d)

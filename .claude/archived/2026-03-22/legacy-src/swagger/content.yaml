@@ -1,0 +1,378 @@
+# Content Generation Endpoints
+
+paths:
+  /openrouter/marketing/generate:
+    post:
+      tags:
+        - Content Generation
+      summary: Generate marketing content
+      description: Generate AI-powered marketing content for various platforms
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+                - contentType
+                - platform
+              properties:
+                prompt:
+                  type: string
+                  example: "Create a product launch announcement"
+                contentType:
+                  type: string
+                  enum: [social_media, email, blog, ad_copy, video_script]
+                  example: social_media
+                platform:
+                  type: string
+                  enum: [instagram, twitter, linkedin, facebook, email, general]
+                  example: instagram
+                tone:
+                  type: string
+                  enum: [professional, casual, friendly, bold, inspirational]
+                  example: friendly
+                targetAudience:
+                  type: string
+                  example: "Young professionals aged 25-35"
+                includeHashtags:
+                  type: boolean
+                  example: true
+                includeEmojis:
+                  type: boolean
+                  example: true
+                maxLength:
+                  type: integer
+                  example: 280
+      responses:
+        200:
+          description: Content generated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          content:
+                            type: string
+                            example: "🚀 Exciting news! We're launching..."
+                          metadata:
+                            type: object
+                            properties:
+                              platform:
+                                type: string
+                                example: instagram
+                              characterCount:
+                                type: integer
+                                example: 125
+                              hashtags:
+                                type: array
+                                items:
+                                  type: string
+                                example: ["#launch", "#innovation", "#tech"]
+                              emojis:
+                                type: array
+                                items:
+                                  type: string
+                                example: ["🚀", "✨", "🎯"]
+                          model:
+                            type: string
+                            example: "gpt-4"
+                          usage:
+                            type: object
+                            properties:
+                              promptTokens:
+                                type: integer
+                                example: 150
+                              completionTokens:
+                                type: integer
+                                example: 200
+                              totalTokens:
+                                type: integer
+                                example: 350
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        422:
+          $ref: '#/components/responses/ValidationError'
+        500:
+          $ref: '#/components/responses/ServerError'
+
+  /openrouter/marketing/optimize:
+    post:
+      tags:
+        - Content Optimization
+      summary: Optimize existing content
+      description: Optimize and enhance existing marketing content for better performance
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+                - platform
+                - goal
+              properties:
+                content:
+                  type: string
+                  example: "Check out our new product"
+                platform:
+                  type: string
+                  enum: [instagram, twitter, linkedin, facebook, email]
+                  example: instagram
+                goal:
+                  type: string
+                  enum: [engagement, conversions, brand_awareness, traffic, leads]
+                  example: engagement
+                targetAudience:
+                  type: string
+                  example: "Tech enthusiasts"
+      responses:
+        200:
+          description: Content optimized successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          original:
+                            type: string
+                            example: "Check out our new product"
+                          optimized:
+                            type: string
+                            example: "🎯 Game-changer alert! Our revolutionary new product..."
+                          improvements:
+                            type: array
+                            items:
+                              type: string
+                            example:
+                              - "Added emotional hooks"
+                              - "Included call-to-action"
+                              - "Added relevant emojis"
+                          score:
+                            type: object
+                            properties:
+                              before:
+                                type: number
+                                example: 6.5
+                              after:
+                                type: number
+                                example: 8.9
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        422:
+          $ref: '#/components/responses/ValidationError'
+
+  /openrouter/marketing/variations:
+    post:
+      tags:
+        - Content Generation
+      summary: Generate content variations
+      description: Create multiple variations of marketing content for A/B testing
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+                - count
+              properties:
+                content:
+                  type: string
+                  example: "Discover our innovative solution"
+                count:
+                  type: integer
+                  minimum: 2
+                  maximum: 10
+                  example: 3
+                platform:
+                  type: string
+                  enum: [instagram, twitter, linkedin, facebook, email]
+                  example: twitter
+                maintainTone:
+                  type: boolean
+                  example: true
+      responses:
+        200:
+          description: Variations generated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          original:
+                            type: string
+                            example: "Discover our innovative solution"
+                          variations:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  example: "var_1"
+                                content:
+                                  type: string
+                                  example: "Explore our groundbreaking solution"
+                                differences:
+                                  type: array
+                                  items:
+                                    type: string
+                                  example:
+                                    - "Changed 'Discover' to 'Explore'"
+                                    - "Changed 'innovative' to 'groundbreaking'"
+                          metadata:
+                            type: object
+                            properties:
+                              platform:
+                                type: string
+                                example: twitter
+                              totalVariations:
+                                type: integer
+                                example: 3
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        422:
+          $ref: '#/components/responses/ValidationError'
+
+  /openrouter/models:
+    get:
+      tags:
+        - AI Models
+      summary: List available AI models
+      description: Get a list of all available AI models for content generation
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Models retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "openai/gpt-4"
+                            name:
+                              type: string
+                              example: "GPT-4"
+                            provider:
+                              type: string
+                              example: "OpenAI"
+                            description:
+                              type: string
+                              example: "Most capable GPT-4 model"
+                            contextLength:
+                              type: integer
+                              example: 8192
+                            pricing:
+                              type: object
+                              properties:
+                                prompt:
+                                  type: number
+                                  example: 0.03
+                                completion:
+                                  type: number
+                                  example: 0.06
+                                unit:
+                                  type: string
+                                  example: "per 1K tokens"
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /openrouter/logs/recent:
+    get:
+      tags:
+        - Analytics
+      summary: Get recent generation logs
+      description: Retrieve recent content generation logs and history
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+          description: Number of logs to retrieve
+        - in: query
+          name: platform
+          schema:
+            type: string
+            enum: [instagram, twitter, linkedin, facebook, email]
+          description: Filter by platform
+      responses:
+        200:
+          description: Logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "log_123"
+                            timestamp:
+                              type: string
+                              format: date-time
+                            type:
+                              type: string
+                              example: "generate"
+                            platform:
+                              type: string
+                              example: "instagram"
+                            content:
+                              type: string
+                              example: "Generated content..."
+                            model:
+                              type: string
+                              example: "gpt-4"
+                            tokens:
+                              type: integer
+                              example: 350
+                            cost:
+                              type: number
+                              example: 0.021
+        401:
+          $ref: '#/components/responses/UnauthorizedError'

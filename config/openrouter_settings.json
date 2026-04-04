@@ -1,0 +1,210 @@
+{
+  "api_configuration": {
+    "base_url": "https://openrouter.ai/api/v1",
+    "timeout": 120,
+    "max_retries": 3,
+    "retry_delay": 1,
+    "headers": {
+      "HTTP-Referer": "https://auto-marketing.ai",
+      "X-Title": "Auto Marketing Workflow System"
+    }
+  },
+  "rate_limits": {
+    "requests_per_minute": 60,
+    "requests_per_hour": 1000,
+    "requests_per_day": 10000,
+    "tokens_per_minute": 90000,
+    "tokens_per_hour": 2000000,
+    "concurrent_requests": 10
+  },
+  "model_preferences": {
+    "default_model": "claude-3-sonnet",
+    "fallback_models": [
+      "gpt-3.5-turbo",
+      "gemini-pro",
+      "mistral-medium"
+    ],
+    "task_routing": {
+      "marketing_creative": {
+        "primary": "claude-3-opus",
+        "secondary": "gpt-4-turbo",
+        "fallback": "claude-3-sonnet"
+      },
+      "data_analysis": {
+        "primary": "gpt-4",
+        "secondary": "claude-3-opus",
+        "fallback": "gemini-pro"
+      },
+      "content_generation": {
+        "primary": "claude-3-opus",
+        "secondary": "gpt-4-turbo",
+        "fallback": "llama-3-70b"
+      },
+      "quick_responses": {
+        "primary": "claude-3-haiku",
+        "secondary": "gpt-3.5-turbo",
+        "fallback": "mistral-7b"
+      },
+      "code_generation": {
+        "primary": "claude-3-opus",
+        "secondary": "gpt-4",
+        "fallback": "codellama-70b"
+      },
+      "vision_tasks": {
+        "primary": "gpt-4-vision",
+        "secondary": "claude-3-opus",
+        "fallback": "gemini-pro-vision"
+      },
+      "research": {
+        "primary": "perplexity-online",
+        "secondary": "claude-3-opus",
+        "fallback": "gpt-4"
+      }
+    }
+  },
+  "cost_management": {
+    "daily_budget_limit": 50.00,
+    "monthly_budget_limit": 1000.00,
+    "cost_alerts": {
+      "daily_threshold": 40.00,
+      "monthly_threshold": 800.00
+    },
+    "model_cost_limits": {
+      "expensive_models_max_per_day": 100,
+      "expensive_models": ["gpt-4", "claude-3-opus"],
+      "budget_models_preferred": true
+    }
+  },
+  "caching": {
+    "enabled": true,
+    "ttl_seconds": 3600,
+    "max_cache_size_mb": 100,
+    "cache_similarity_threshold": 0.95,
+    "excluded_models": ["perplexity-online"]
+  },
+  "performance": {
+    "timeout_seconds": {
+      "fast_models": 30,
+      "medium_models": 60,
+      "slow_models": 120
+    },
+    "parallel_requests": {
+      "max_concurrent": 5,
+      "batch_size": 10,
+      "delay_between_batches": 1
+    },
+    "cpu_protection": {
+      "enabled": true,
+      "max_cpu_percent": 80,
+      "throttle_delay": 0.5
+    }
+  },
+  "model_configurations": {
+    "claude-3-opus": {
+      "temperature_default": 0.7,
+      "max_tokens_default": 4096,
+      "top_p": 0.9,
+      "frequency_penalty": 0,
+      "presence_penalty": 0,
+      "system_prompt_style": "xml_tags"
+    },
+    "gpt-4-turbo": {
+      "temperature_default": 0.7,
+      "max_tokens_default": 4096,
+      "top_p": 1,
+      "frequency_penalty": 0,
+      "presence_penalty": 0,
+      "system_prompt_style": "markdown"
+    },
+    "gpt-3.5-turbo": {
+      "temperature_default": 0.7,
+      "max_tokens_default": 4096,
+      "top_p": 1,
+      "frequency_penalty": 0,
+      "presence_penalty": 0,
+      "system_prompt_style": "plain"
+    },
+    "gemini-pro": {
+      "temperature_default": 0.7,
+      "max_tokens_default": 8192,
+      "top_p": 0.95,
+      "top_k": 40,
+      "system_prompt_style": "structured"
+    }
+  },
+  "prompt_templates": {
+    "marketing_analysis": {
+      "template": "Analyze the following marketing scenario:\n\n{context}\n\nProvide insights on:\n1. Target audience\n2. Key messaging\n3. Channel strategy\n4. Success metrics\n\nBe specific and actionable.",
+      "preferred_models": ["claude-3-opus", "gpt-4"]
+    },
+    "content_creation": {
+      "template": "Create {content_type} for {platform}:\n\nContext: {context}\nTone: {tone}\nLength: {length}\n\nRequirements:\n{requirements}\n\nGenerate engaging content that drives {goal}.",
+      "preferred_models": ["claude-3-opus", "gpt-4-turbo"]
+    },
+    "data_analysis": {
+      "template": "Analyze the following data:\n\n{data}\n\nProvide:\n1. Key trends\n2. Insights\n3. Recommendations\n4. Predicted outcomes\n\nUse statistical reasoning where appropriate.",
+      "preferred_models": ["gpt-4", "claude-3-opus"]
+    }
+  },
+  "error_handling": {
+    "retry_on_errors": [
+      "rate_limit",
+      "timeout",
+      "temporary_unavailable"
+    ],
+    "fallback_on_errors": [
+      "model_unavailable",
+      "context_too_long",
+      "invalid_request"
+    ],
+    "log_errors": true,
+    "alert_on_critical": true
+  },
+  "monitoring": {
+    "track_usage": true,
+    "track_costs": true,
+    "track_performance": true,
+    "export_metrics": true,
+    "metrics_export_path": "data/metrics/openrouter/",
+    "export_frequency": "daily"
+  },
+  "security": {
+    "api_key_source": "environment",
+    "api_key_env_var": "OPENROUTER_API_KEY",
+    "encrypt_cache": false,
+    "sanitize_logs": true,
+    "pii_detection": true,
+    "pii_handling": "redact"
+  },
+  "workflow_integration": {
+    "agent_model_mapping": {
+      "ux-researcher": "claude-3-opus",
+      "content-creator": "claude-3-opus",
+      "visual-designer": "gpt-4-turbo",
+      "performance-optimizer": "gpt-4",
+      "platform-specialist": "claude-3-sonnet"
+    },
+    "phase_model_optimization": {
+      "phase_1_research": {
+        "models": ["claude-3-opus", "perplexity-online"],
+        "parallel": true
+      },
+      "phase_2_content": {
+        "models": ["claude-3-opus", "gpt-4-turbo"],
+        "parallel": false
+      },
+      "phase_2_5_platforms": {
+        "models": ["claude-3-sonnet", "gpt-3.5-turbo"],
+        "parallel": true
+      },
+      "phase_3_design": {
+        "models": ["gpt-4-vision", "claude-3-opus"],
+        "parallel": false
+      },
+      "phase_4_performance": {
+        "models": ["gpt-4", "claude-3-opus"],
+        "parallel": false
+      }
+    }
+  }
+}

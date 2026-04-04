@@ -1,0 +1,17 @@
+# =============================================================================
+# Synthex ConfigMap — non-sensitive environment configuration
+# Sensitive values (DATABASE_URL, API keys) go in secrets.yaml
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: synthex-config
+  namespace: synthex
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  NEXT_TELEMETRY_DISABLED: "1"
+  # Local k8s ingress URL
+  NEXTAUTH_URL: "http://localhost:8080"
+  # Override in secrets.yaml with real Supabase URL
+  NEXT_PUBLIC_SUPABASE_URL: "https://your-project.supabase.co"

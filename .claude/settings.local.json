@@ -1,0 +1,384 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(npm run *)",
+      "Bash(npm test*)",
+      "Bash(npm install*)",
+      "Bash(npx prisma generate)",
+      "Bash(npx prisma db push)",
+      "Bash(npx prisma migrate dev*)",
+      "Bash(npx prisma studio)",
+      "Bash(npx tsc*)",
+      "Bash(node *)",
+      "Bash(powershell *)",
+      "Skill(gsd:progress)",
+      "Skill(gsd:complete-milestone)",
+      "Bash(wc -l \"D:\\\\Synthex/tests/e2e\"/*.spec.ts)",
+      "Bash(wc -l /d/Synthex/app/api/*/route.ts)",
+      "Bash(grep -l \"stub\\\\|TODO\\\\|FIXME\\\\|not implemented\" /d/Synthex/app/api/*/route.ts)",
+      "Bash(find /d/Synthex/app -type d -name \"\\(auth\\)\" -o -name \"\\(onboarding\\)\")",
+      "Bash(wc -l \"D:\\\\Synthex/lib/schemas\"/*.ts)",
+      "Bash(ls -1d \"D:\\\\Synthex/app/api\"/*/)",
+      "Bash(grep -l \"EngagementChart\\\\|GrowthChart\\\\|PerformanceChart\\\\|PlatformChart\\\\|TopPosts\\\\|MetricsTable\\\\|EngagementTrendsChart\\\\|PlatformDistributionChart\" D:/Synthex/app/dashboard/*/page.tsx D:/Synthex/app/dashboard/*/*/page.tsx)",
+      "Bash(grep -l \"PatternCharts\\\\|AIInsightsPanel\\\\|PerformanceOverview\\\\|TopPostsGrid\" D:/Synthex/app/dashboard/*/page.tsx D:/Synthex/app/dashboard/*/*/page.tsx)",
+      "Bash(grep -l \"RichTextEditor\\\\|AIWritingAssistant\" D:/Synthex/app/dashboard/*/page.tsx D:/Synthex/app/dashboard/*/*/page.tsx)",
+      "Bash(find D:/Synthex/app/dashboard -name \"*.tsx\" -type f -exec grep -l \"<img \" {} ;)",
+      "Bash(git commit:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" npx eslint . --max-warnings=1000)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" npx eslint . --max-warnings=15000)",
+      "Bash(sed 's/.*error  //')",
+      "mcp__Desktop_Commander__read_file",
+      "Bash(ls -la \"D:\\\\Synthex\\\\app\\\\api\\\\businesses\"\" && ls -la \"D:Synthexappapiorganizations\"\")",
+      "Bash(ls -la /d/Synthex/app/\\\\\\(onboarding\\\\\\)/onboarding/)",
+      "Bash(xargs grep -l \"role\\\\|admin\\\\|owner\")",
+      "Bash(find D:Synthex -name \"page.tsx\" -path \"*/app/*\" -not -path \"*/dashboard/*\" -not -path \"*/onboarding/*\" -not -path \"*/\\(auth\\)/*\")",
+      "mcp__Desktop_Commander__start_search",
+      "mcp__Desktop_Commander__get_more_search_results",
+      "mcp__Desktop_Commander__write_file",
+      "mcp__Desktop_Commander__edit_block",
+      "mcp__Desktop_Commander__start_process",
+      "mcp__Desktop_Commander__read_process_output",
+      "mcp__Desktop_Commander__list_directory",
+      "mcp__Desktop_Commander__create_directory",
+      "Bash(grep -n \"export.*getAuthUser\\\\|export.*getSession\\\\|export.*getCurrentUser\" lib/auth/*.ts)",
+      "mcp__Desktop_Commander__force_terminate",
+      "mcp__Desktop_Commander__get_file_info",
+      "mcp__Desktop_Commander__stop_search",
+      "Bash(xargs grep -l \"profiles\")",
+      "Bash(grep -r \"profiles\" database/migrations supabase* --include=\"*.sql\")",
+      "Bash(ls /d/Synthex/app/\\\\\\(onboarding\\\\\\)/)",
+      "Bash(grep -n \"user.*credential\\\\|api.*key\\\\|openrouter\" /d/Synthex/app/\\\\\\(onboarding\\\\\\)*/route.ts)",
+      "Bash(curl -s http://localhost:3000/api/health)",
+      "Bash(curl -s http://localhost:3001/api/health)",
+      "Bash(findstr \"LISTENING\")",
+      "Bash(findstr \":300\")",
+      "Bash(curl -v http://localhost:3000)",
+      "Bash(ls -la D:/Synthex/.env*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)",
+      "Bash(curl -s http://localhost:3000/api/user/profile)",
+      "Bash(node -e \":*)",
+      "mcp__mcp-registry__suggest_connectors",
+      "Bash(taskkill /f /im node.exe)",
+      "Bash(timeout /t 3 /nobreak)",
+      "Bash(rd /s /q \"D:\\\\Synthex\\\\.next\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(git -C:*)",
+      "Bash(Remove-Item -Recurse -Force D:Synthex.next -ErrorAction SilentlyContinue)",
+      "Bash(ls D:/Synthex/lib/prisma*)",
+      "Bash(python -c \":*)",
+      "Bash(findstr /i \"error\\\\|fail\\\\|success\\\\|completed\\\\|built\")",
+      "Bash(Select-Object -First 30)",
+      "Bash(xargs grep -l \"api-credentials\\\\|apiKey\")",
+      "Bash(xargs grep -l \"BullMQ\\\\|bullmq\\\\|queue\")",
+      "Bash(wc -l D:/Synthex/app/dashboard/*/page.tsx D:/Synthex/app/dashboard/*/*/page.tsx)",
+      "Bash(wc -l D:/Synthex/components/*/CompetitorAnalysis.tsx D:/Synthex/components/*/ROICalculator.tsx D:/Synthex/components/*/CustomReportBuilder.tsx D:/Synthex/components/*/WorkflowAutomation.tsx D:/Synthex/components/*/SentimentAnalysis.tsx)",
+      "Bash(bash .husky/pre-commit)",
+      "Bash(npx ts-node --project tsconfig.json -e \":*)",
+      "Bash(xargs -I{} sh -c 'echo \"\"$\\(grep -c \"\"console\\\\.log\\(\"\" \"\"{}\"\"\\)\\\\t{}\"\"')",
+      "Bash(grep -v \"^\\\\s*//\")",
+      "Bash(python3 -c \":*)",
+      "Bash(powershell.exe -NoProfile -Command ':*)",
+      "Bash(powershell.exe -NoProfile -Command 'Select-String -Path \"\"D:\\\\Synthex\\\\**\\\\*.tsx\"\",\"\"D:\\\\Synthex\\\\**\\\\*.ts\"\" -Pattern \"\"from .react-hot-toast.\"\" -Recurse | Select-Object -Property Path, LineNumber, Line | Format-Table -AutoSize -Wrap')",
+      "Bash(/tmp/inspect.py:*)",
+      "Bash(python3 /tmp/inspect.py)",
+      "Bash(/tmp/inspect2.py:*)",
+      "Bash(python3 /tmp/inspect2.py)",
+      "Bash(/tmp/fix2.py:*)",
+      "Bash(python3 /tmp/fix2.py)",
+      "Bash(/tmp/inspect3.py:*)",
+      "Bash(python3 /tmp/inspect3.py)",
+      "Bash(/tmp/debug.py:*)",
+      "Bash(python3 /tmp/debug.py)",
+      "Bash(/tmp/fix3.py:*)",
+      "Bash(python3 /tmp/fix3.py)",
+      "Bash(xargs grep -l \"stripe\\\\.subscriptions\\\\.create\\\\|stripe\\\\.customers\\\\.create\")",
+      "Bash(xargs grep -l \"stripePriceId\\\\|STRIPE_PRICE\")",
+      "Bash(findstr /i \"schedule\\\\|scheduler\")",
+      "Bash(findstr \"schedule scheduler\")",
+      "Bash(findstr /C:\"schedule\" /C:\"Schedule\" /C:\"calendar\" /C:\"Calendar\")",
+      "Bash(Select-String -Pattern \"schedule|calendar\" -SimpleMatch)",
+      "Bash(xargs grep -l \"api.key\\\\|api-key\\\\|apiKey\")",
+      "Bash(wc -l D:/Synthex/lib/social/*.ts)",
+      "Bash(grep -l \"getEffectiveOrganizationId\" /d/Synthex/lib/*.ts)",
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); issues=[i for i in json.loads\\(data[0][''text'']\\)[''issues''] if i[''identifier''] in \\(''SYN-18'',''SYN-44'',''SYN-45'',''SYN-1'',''SYN-2''\\)]; [print\\(i[''identifier''],i[''id''],i[''status''],i[''title''][:60]\\) for i in issues]\")",
+      "mcp__exa__web_search_exa",
+      "mcp__exa__crawling_exa",
+      "WebSearch",
+      "WebFetch(domain:api.semanticscholar.org)",
+      "WebFetch(domain:www.semanticscholar.org)",
+      "Bash(xargs grep -l \"subscription\")",
+      "WebFetch(domain:api.gov.au)",
+      "Bash(grep -l \"export.*getAIProvider\\\\|export.*AIProvider\" /d/Synthex/lib/ai/providers/*.ts)",
+      "Bash(xargs -I {} sh -c 'echo \"\"=== {} ===\"\" && head -50 {}')",
+      "Bash(grep -l \"upgradeRequired\" hooks/*.ts)",
+      "WebFetch(domain:www.youtube.com)",
+      "Skill(gsd:plan-phase)",
+      "Skill(gsd:plan-phase:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:google.github.io)",
+      "WebFetch(domain:www.nature.com)",
+      "mcp__mcp-registry__search_mcp_registry",
+      "Skill(gsd:execute-plan)",
+      "Skill(gsd:execute-plan:*)",
+      "Read(//d/NodeJS-Starter-V1/**)",
+      "Bash(grep -r '\"\"reactflow\"\"' apps/web/components/workflow/)",
+      "Bash(xargs grep:*)",
+      "Bash(grep '\"\"eslint-config-next\"\"' apps/web/package.json)",
+      "Bash(ls:*)",
+      "Bash(find /d/Synthex -type f -name *.sql)",
+      "Bash(head -20 /d/Synthex/database/migrations/*.sql)",
+      "Bash(grep -l \"RLS\\\\|ROW LEVEL SECURITY\\\\|CREATE POLICY\" /d/Synthex/supabase/*.sql /d/Synthex/database/migrations/*.sql)",
+      "mcp__linear__list_issues",
+      "mcp__linear__list_teams",
+      "mcp__linear__list_projects",
+      "mcp__linear__list_issue_labels",
+      "mcp__linear__list_issue_statuses",
+      "mcp__linear__get_issue",
+      "mcp__linear__get_project",
+      "mcp__linear__create_issue",
+      "mcp__linear__update_issue",
+      "mcp__linear__save_issue",
+      "mcp__linear__save_comment",
+      "mcp__linear__create_comment",
+      "mcp__linear__search_documentation",
+      "Bash(find /d/Synthex -name *.ts -path */worker* -o -name *worker*.ts)",
+      "Bash(grep -r \"startAllWorkers\\\\|createScheduledPostsWorker\\\\|createAnalyticsWorker\" /d/Synthex/app --include=*.ts --include=*.tsx)",
+      "Bash(find /d/Synthex/lib -type d -name *social* -o -name *integrat* -o -name *platform*)",
+      "Bash(grep -r \"startAllWorkers\\\\|import.*queue.*worker\" /d/Synthex --include=*.ts --include=*.tsx --exclude-dir=node_modules --exclude-dir=.next)",
+      "Bash(grep -r \"rate-limit\\\\|rate_limit\" /d/Synthex/app/api --include=*.ts)",
+      "Bash(done)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3006/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3006/ --max-time 30)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3006/api/health --max-time 60)",
+      "Bash(netstat -ano)",
+      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__list_issues",
+      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__save_comment",
+      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__get_issue",
+      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__save_issue",
+      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__list_issue_statuses",
+      "Bash(dir \"C:\\\\Synthex\\\\app\\\\api\\\\video\" /b)",
+      "Bash(find C:/Synthex -name *.test.ts -not -path */node_modules/*)",
+      "Bash(find /c/Synthex -name *.tsx -path */remotion/*)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Synthex/.claude/worktrees/infallible-pasteur/**)",
+      "Bash(for dir:*)",
+      "Bash(do)",
+      "Read(//c/Synthex/.claude/worktrees/infallible-pasteur/.claude/skills/review-board/**)",
+      "mcp__55f7d627-7e1d-4ce7-9032-daeb09778b81__slack_create_canvas",
+      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__create_document",
+      "Bash(grep -r \"SLACK_WEBHOOK\\\\|process\\\\.env\\\\.SLACK\" C:/Synthex/lib --include=*.ts -l)",
+      "Bash(grep -r \"AlertNotificationService\\\\|sendAlert\\\\|createAlert\" C:/Synthex/lib --include=*.ts -l)",
+      "Bash(YOUTUBE_CLIENT_ID=\"386935133995-gl1mt89ch4jsnqdk154ut72tlksiurki.apps.googleusercontent.com\" YOUTUBE_CLIENT_SECRET=\"\" node -e \":*)",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__mcp-Unite-Group__GITHUB_LIST_CHECK_RUNS_FOR_A_REF",
+      "Bash(find app/api/notifications/[id] -type f)",
+      "Bash(mkdir -p \"C:\\\\Synthex\\\\.claude\\\\worktrees\\\\infallible-pasteur\\\\.claude\\\\archived\\\\2026-03-31\")",
+      "Bash(mv \"C:\\\\Synthex\\\\.claude\\\\worktrees\\\\infallible-pasteur\\\\app\\\\api\\\\notifications\\\\[id]\" \"C:\\\\Synthex\\\\.claude\\\\worktrees\\\\infallible-pasteur\\\\.claude\\\\archived\\\\2026-03-31\\\\notifications-id-stub\")",
+      "Bash(mkdir -p \"/c/Synthex/.claude/archived/2026-03-31\")",
+      "Bash(mv \"/c/Synthex/app/api/notifications/[id]\" \"/c/Synthex/.claude/archived/2026-03-31/notifications-id-stub\")",
+      "mcp__chrome-devtools__take_screenshot",
+      "Bash(grep -E \"^[A-Z_]+=\\\\s*$\" /c/Synthex/.env.example)",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__click",
+      "mcp__chrome-devtools__type_text",
+      "mcp__chrome-devtools__evaluate_script",
+      "mcp__chrome-devtools__fill",
+      "Bash(grep -rn \"anthropic\\\\|claude-sonnet\\\\|getAIClient\\\\|model-registry\" C:/Synthex/.claude/worktrees/infallible-pasteur/lib/ai/ --include=*.ts -l)",
+      "Bash(grep -rn recommendedAction C:/Synthex/node_modules/@prisma/client/ --include=*.d.ts)",
+      "Bash(grep -rn recommendedAction C:/Synthex/.claude/worktrees/infallible-pasteur/node_modules/ --include=*.d.ts)",
+      "Bash(find /c/Synthex -name index.d.ts -path */prisma/client/*)",
+      "Bash(find C:/Synthex/.claude/worktrees/infallible-pasteur/__tests__ -name *.test.ts)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\(''''scripts'''',{}\\).get\\(''''build'''',''''NOT FOUND''''\\)\\)\")",
+      "Bash(grep -r \"advisor_enabled\\\\|featureFlags\\\\|FEATURE_FLAG\" /c/Synthex/.claude/worktrees/infallible-pasteur/lib --include=*.ts --include=*.tsx)",
+      "Bash(grep -r \"advisor\\\\|Advisor\" /c/Synthex/.claude/worktrees/infallible-pasteur --include=*.ts --include=*.tsx)",
+      "Bash(find /c/Synthex/.claude/worktrees/infallible-pasteur/app/api -name *advisor* -type f)",
+      "Bash(grep -r \"NEXT_PUBLIC\\\\|process.env\" /c/Synthex/.claude/worktrees/infallible-pasteur/lib --include=*.ts)",
+      "Bash('getAuthenticatedUser C:Synthex.claudeworktreesinfallible-pasteurappapianalyticsdashboardroute.ts')",
+      "Bash(head -5 grep -rln \"FirstWin\\\\|first.win\\\\|first_win\" C:/Synthex/.claude/worktrees/infallible-pasteur/components/)",
+      "Bash(head -10 grep -n \"subscriptionCreatedAt\\\\|subscription_created_at\\\\|createdAt.*Organization\" \"C:/Synthex/.claude/worktrees/infallible-pasteur/prisma/schema.prisma\")",
+      "Bash(head -5 grep -n \"AuthorityScore\\\\|authority_score\" \"C:/Synthex/.claude/worktrees/infallible-pasteur/prisma/schema.prisma\")",
+      "Bash(sed -n '5649,5675p' \"C:/Synthex/.claude/worktrees/infallible-pasteur/prisma/schema.prisma\")",
+      "Bash(sed -n '5709,5740p' \"C:/Synthex/.claude/worktrees/infallible-pasteur/prisma/schema.prisma\")",
+      "Read(//mnt/d/**)",
+      "Read(//d//**)",
+      "Read(//c//**)",
+      "Bash(grep -rn \"youtube\\\\|heygen\\\\|HeyGen\" /c/Synthex/.claude/worktrees/infallible-pasteur/lib/ --include=*.ts -l)",
+      "Bash(grep -rn \"youtube\\\\|YOUTUBE\" /c/Synthex/.claude/worktrees/infallible-pasteur/app/api/ --include=*.ts -l)",
+      "Bash(grep -rn \"heygen\\\\|HEYGEN\" /c/Synthex/.claude/worktrees/infallible-pasteur/app/api/ --include=*.ts -l)",
+      "Bash(grep -rn \"youtube\\\\|YOUTUBE\" /c/Synthex/.claude/worktrees/infallible-pasteur/lib/ --include=*.ts -l)",
+      "Bash(grep -rn \"youtube\\\\|YOUTUBE_CLIENT\" /c/Synthex/.claude/worktrees/infallible-pasteur/app/ --include=*.ts -l)",
+      "Bash(grep -n youtube /c/Synthex/.claude/worktrees/infallible-pasteur/app/api/auth/oauth/[platform]/route.ts)",
+      "Bash(grep -rn \"from.*oauth/providers/youtube\\\\|YouTubeOAuthProvider\\\\|youtubeProvider\" /c/Synthex/.claude/worktrees/infallible-pasteur/app/ /c/Synthex/.claude/worktrees/infallible-pasteur/lib/ --include=*.ts)",
+      "Bash(grep -rn from.*@/lib/oauth /c/Synthex/.claude/worktrees/infallible-pasteur/app/ --include=*.ts)",
+      "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__list_projects",
+      "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__apply_migration",
+      "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__execute_sql",
+      "Bash(gh pr:*)",
+      "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__deploy_edge_function",
+      "Bash(grep -r \"admin\\\\|isAdmin\\\\|role.*admin\\\\|owner\" C:Synthex.claudeworktreesinfallible-pasteurlibauth --include=*.ts -l)",
+      "Bash(\"C:\\\\Synthex\\\\.claude\\\\worktrees\\\\infallible-pasteur\\\\prisma\\\\schema.prisma\":*)",
+      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__get_issue_status",
+      "Bash(grep -r \"heygen\\\\|HeyGen\" --include=*.ts --include=*.tsx -rl)",
+      "Bash('C:\\\\Synthex\\\\.claude\\\\worktrees\\\\infallible-pasteur\\\\prisma\\\\migration-20260402-edge-function-logs.sql':*)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(grep -rn \"from ''''uuid''''\" lib/calendar/captionGenerator.ts)",
+      "Bash(node -e \"require\\(''''/c/Synthex/node_modules/uuid''''\\)\")",
+      "Read(//c/Synthex/**)",
+      "Bash(node -e \"console.log\\(require.resolve\\(''uuid/dist-node/index.js''\\)\\)\")",
+      "Bash(grep -rn \"from ''uuid''\" /c/Synthex/lib/calendar/)",
+      "Bash(find /c/Synthex/.claude/worktrees/infallible-pasteur -name *weekly* -o -name *digest*)",
+      "Bash(find /c/Synthex/.claude/worktrees/infallible-pasteur/components -type f -name *card* -o -name *widget*)",
+      "Bash(python3 -c \"import json,sys; json.load\\(sys.stdin\\); print\\(''''Global settings.json: VALID JSON''''\\)\")",
+      "Bash(python3 -c \"import json,sys; json.load\\(sys.stdin\\); print\\(''''Project settings.local.json: VALID JSON''''\\)\")",
+      "mcp__scheduled-tasks__list_scheduled_tasks",
+      "mcp__8eec34b8-ab6d-4f8e-9437-04ad5f8376fa__list_comments",
+      "Bash(ffprobe -v quiet -print_format json -show_format -show_streams \"C:/Synthex/.claude/worktrees/syn-640-studios/board-cron/video-assets/renders/session-23-pilot.mp4\")",
+      "Bash(ffmpeg -i \"C:/Synthex/.claude/worktrees/syn-640-studios/board-cron/video-assets/renders/session-23-pilot.mp4\")",
+      "Bash(find C:/Synthex/.claude/worktrees/syn-640-studios/board-cron -type f -name *.mp4 -o -name *.ts -o -name *.tsx -o -name *.js -o -name *.json -o -name *.sh)",
+      "Bash(ffmpeg -i \"C:/Synthex/.claude/worktrees/syn-640-studios/board-cron/video-assets/renders/session-23.mp4\")",
+      "mcp__chrome-devtools__get_console_message",
+      "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__get_advisors",
+      "Bash(__NEW_LINE_2249abe70d60a4eb__ python3:*)",
+      "Bash(__NEW_LINE_976e28406b329326__ python3:*)",
+      "Bash(__NEW_LINE_0d522619af9e28a0__ python3:*)",
+      "Bash(__NEW_LINE_3b10b30bc980ef24__ python3:*)",
+      "mcp__9d9ff51d-2b8f-4dc6-b420-01836cda0c98__list_extensions",
+      "Bash(sed -n '5798,5860p' prisma/schema.prisma)",
+      "Bash(sed -n '5939,5990p' prisma/schema.prisma)",
+      "Bash(sed -n '5697,5740p' prisma/schema.prisma)",
+      "Bash(grep -r \"openai\\\\|OPENAI_API_KEY\" lib/ --include=*.ts -l)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f *)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(git branch -D *)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf .*)",
+      "Bash(rmdir /s /q *)",
+      "Bash(prisma migrate reset*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "linear",
+    "obsidian"
+  ],
+  "hooks": {
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\pre-compact-save.ps1\""
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\post-compact-verify.ps1\""
+          }
+        ]
+      }
+    ],
+    "InstructionsLoaded": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\instructions-loaded.ps1\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\session-start-protocol.ps1\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\pre-agent-dispatch.ps1\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\guard-destructive.ps1\" -ToolInput \"$TOOL_INPUT\""
+          },
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\pre-build-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\pre-write-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\post-write-quality.ps1\" -ToolInput \"$TOOL_INPUT\""
+          },
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\post-research-capture.ps1\" -ToolInput \"$TOOL_INPUT\""
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\stop-failure.ps1\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\auto-compact-threshold.ps1\"",
+            "statusMessage": "Checking context window..."
+          }
+        ]
+      }
+    ]
+  }
+}

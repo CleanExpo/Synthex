@@ -1,0 +1,37 @@
+{
+  "project_id": "project_1754112726",
+  "name": "Test Marketing Campaign",
+  "description": "Demo project for testing",
+  "created_at": "2025-08-02T15:32:06.017755",
+  "owner_id": "user_1754112726",
+  "data": {
+    "name": "Test Marketing Campaign",
+    "description": "Demo project for testing",
+    "platforms": [
+      "instagram",
+      "youtube",
+      "tiktok"
+    ],
+    "content_adaptations": {
+      "instagram": {
+        "title": "IG post",
+        "content": "test"
+      },
+      "youtube": {
+        "title": "YT video",
+        "content": "test"
+      },
+      "tiktok": {
+        "title": "TT video",
+        "content": "test"
+      }
+    }
+  },
+  "platforms_used": [
+    "instagram",
+    "youtube",
+    "tiktok"
+  ],
+  "content_pieces": 3,
+  "last_modified": "2025-08-02T15:32:06.017759"
+}

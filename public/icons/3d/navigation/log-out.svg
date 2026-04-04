@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="logOutGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <!-- Door/rectangle shadow -->
+  <rect x="6" y="8" width="22" height="32" rx="3" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Arrow shadow -->
+  <path d="M28 17l10 7-10 7v-5H18v-4h10z" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Door body -->
+  <rect x="6" y="8" width="22" height="32" rx="3" fill="url(#logOutGrad)"/>
+  <!-- Door indent / panel -->
+  <rect x="10" y="13" width="14" height="22" rx="2" fill="rgba(0,0,0,0.18)"/>
+  <!-- Door handle -->
+  <circle cx="23" cy="24" r="2" fill="rgba(255,255,255,0.3)"/>
+  <!-- Arrow pointing right -->
+  <path d="M28 17l10 7-10 7v-5H18v-4h10z" fill="url(#logOutGrad)"/>
+  <!-- Arrow highlight -->
+  <path d="M28 17l10 7-4-1-6-6z" fill="rgba(255,255,255,0.22)"/>
+  <!-- Door top-left highlight -->
+  <rect x="6" y="8" width="12" height="8" rx="3" fill="rgba(255,255,255,0.18)"/>
+</svg>

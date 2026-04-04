@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="badgeCheckGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadow: 8-point star/badge shape -->
+  <path d="M24 4l4.5 5.5L36 7l2 7.5 7.5 2-2.5 7 4 6-6 4L43 41l-7.5-0.5L31 46l-7-4-7 4-4.5-5.5L5 41l0.5-7.5-6-4 4-6L1 16.5l7.5-2L11 7l7.5 2.5z" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Main badge -->
+  <path d="M24 4l4.5 5.5L36 7l2 7.5 7.5 2-2.5 7 4 6-6 4L43 41l-7.5-0.5L31 46l-7-4-7 4-4.5-5.5L5 41l0.5-7.5-6-4 4-6L1 16.5l7.5-2L11 7l7.5 2.5z" fill="url(#badgeCheckGrad)"/>
+  <!-- Checkmark -->
+  <polyline points="16,24 21,30 32,18" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Highlight -->
+  <ellipse cx="18" cy="14" rx="8" ry="4" fill="rgba(255,255,255,0.18)"/>
+</svg>

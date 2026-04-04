@@ -1,0 +1,436 @@
+{
+  "_comment": "Synthex Board Visual Cast — persona-manifest.json",
+  "_status": "CAST LOCKED — 24 personas, gender-audited",
+  "_generated": "2026-04-03",
+  "_note": "Drop PNG/JPG files into this directory matching each 'filename' field. 1080x1080 recommended for boardroom card renders.",
+
+  "personas": [
+    {
+      "id": "ceo",
+      "title": "CEO",
+      "voice_seat": "ceo",
+      "voice_name": "Steve",
+      "voice_id": "aGkVQvWUZi16EH8aZJvT",
+      "gender": "male",
+      "filename": "ceo-steve.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "amber/orange translucent",
+        "style": "black business suit, gold antenna crown",
+        "props": ["rocket model"],
+        "expression": "authoritative, visionary"
+      },
+      "description": "CEO — Australian Male, 40-50, authoritative"
+    },
+    {
+      "id": "senior-pm",
+      "title": "Senior Project Manager",
+      "voice_seat": "NEW",
+      "voice_name": "TBD",
+      "voice_id": null,
+      "gender": "male",
+      "filename": "senior-pm.png",
+      "status": "NEEDS_VOICE",
+      "visual": {
+        "colour": "sapphire blue translucent",
+        "style": "grey business suit, blueprints",
+        "props": ["laptop with UI mockups", "building blocks", "blueprint rolls"],
+        "expression": "methodical, organised"
+      },
+      "description": "Senior Project Manager — Australian Male, orchestrates delivery, tracks sprints"
+    },
+    {
+      "id": "moonshot",
+      "title": "Moonshot — Shoot for the Moon Engineer",
+      "voice_seat": "moonshot",
+      "voice_name": "Charlie",
+      "voice_id": "IKne3meq5aSn9XLyUdCD",
+      "gender": "male",
+      "filename": "moonshot-charlie.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "neon green translucent",
+        "style": "pinstripe waistcoat, glowing visor eyes",
+        "props": ["firing rocket", "SHOOT FOR THE MOON nameplate"],
+        "expression": "visionary, energetic"
+      },
+      "description": "Moonshot — Australian Male, 25-35, visionary and energetic"
+    },
+    {
+      "id": "algorithm-engineer",
+      "title": "Lead Algorithm & Debugging Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD",
+      "voice_id": null,
+      "gender": "female",
+      "filename": "algorithm-engineer.png",
+      "status": "NEEDS_VOICE",
+      "visual": {
+        "colour": "magenta/pink translucent",
+        "style": "black blazer, circuit-board graphic shirt, cat ears, female form",
+        "props": ["holographic code tablet", "stylus pen", "silver debugging bug figure"],
+        "expression": "analytical, precise"
+      },
+      "description": "Lead Algorithm & Debugging Engineer — Australian Female, finds and crushes system complexity"
+    },
+    {
+      "id": "technical",
+      "title": "Senior Cloud & Systems Architect",
+      "voice_seat": "technical",
+      "voice_name": "Baxter",
+      "voice_id": "jSuBIjxMKhqIfb0wCK1F",
+      "gender": "male",
+      "filename": "technical-baxter.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "lime/yellow-green translucent",
+        "style": "black hoodie with Synthex hex logo",
+        "props": ["mechanical keyboard", "VR headset", "floating cloud icon"],
+        "expression": "dry, precise"
+      },
+      "description": "Technical Architect — Australian Male, 30-40, precise and dry"
+    },
+    {
+      "id": "qa-engineer",
+      "title": "Lead QA & Testing Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD",
+      "voice_id": null,
+      "gender": "female",
+      "filename": "qa-engineer.png",
+      "status": "NEEDS_VOICE",
+      "visual": {
+        "colour": "pearl white",
+        "style": "white professional blazer, purple visor scanner, female form",
+        "props": ["magnifying glass", "maze/test diagram", "red apple"],
+        "expression": "meticulous, uncompromising"
+      },
+      "description": "Lead QA & Testing Engineer — Australian Female, nothing ships without her sign-off"
+    },
+    {
+      "id": "security-engineer",
+      "title": "Senior Cybersecurity & Systems Defense Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD",
+      "voice_id": null,
+      "gender": "male",
+      "filename": "security-engineer.png",
+      "status": "NEEDS_VOICE",
+      "visual": {
+        "colour": "deep purple/violet translucent",
+        "style": "black leather jacket, grey turtleneck, male build",
+        "props": ["padlock", "security key", "FIREWALL shield (red glow)"],
+        "expression": "menacing smirk, one orange eye — knows all the attack vectors"
+      },
+      "description": "Senior Cybersecurity & Systems Defense Engineer — Australian Male, threat modelling, hardening"
+    },
+    {
+      "id": "ai-ml-engineer",
+      "title": "Lead AI & Machine Learning Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD",
+      "voice_id": null,
+      "gender": "male",
+      "filename": "ai-ml-engineer.png",
+      "status": "NEEDS_VOICE",
+      "visual": {
+        "colour": "cyan/teal translucent",
+        "style": "white lab coat, navy shirt and tie — male-presenting",
+        "props": ["glowing AI brain hologram", "server rack stack"],
+        "expression": "three-dot alien eyes — sees patterns humans can't"
+      },
+      "description": "Lead AI & Machine Learning Engineer — Australian Male, model training, inference pipelines"
+    },
+    {
+      "id": "database-engineer",
+      "title": "Lead Database & Performance Optimization Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD",
+      "voice_id": null,
+      "gender": "male",
+      "filename": "database-engineer.png",
+      "status": "NEEDS_VOICE",
+      "visual": {
+        "colour": "crimson/deep red translucent",
+        "style": "grey tactical vest with lightning bolt, red arms, male build",
+        "props": ["wrench", "database cylinder stack"],
+        "expression": "intense visor, battle-ready — performance is non-negotiable"
+      },
+      "description": "Lead Database & Performance Optimization Engineer — Australian Male, query speed, indexing, scale"
+    },
+    {
+      "id": "frontend-engineer",
+      "title": "Lead Front-End UI/UX Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD",
+      "voice_id": null,
+      "gender": "female",
+      "filename": "frontend-engineer.png",
+      "status": "NEEDS_VOICE",
+      "visual": {
+        "colour": "coral/salmon-red translucent",
+        "style": "yellow knit cardigan, casual and approachable, female form",
+        "props": ["colour palette fan", "UI Design tablet", "molecular structure model"],
+        "expression": "glowing cyan eyes — sees the user in every pixel"
+      },
+      "description": "Lead Front-End UI/UX Engineer — Australian Female, component systems, accessibility, delight"
+    },
+    {
+      "id": "bigdata-architect",
+      "title": "Lead Big Data & Predictive Analytics Architect",
+      "voice_seat": "NEW",
+      "voice_name": "TBD",
+      "voice_id": null,
+      "gender": "female",
+      "filename": "bigdata-architect.png",
+      "status": "NEEDS_VOICE",
+      "visual": {
+        "colour": "teal/cyan translucent",
+        "style": "angular black suit, dramatic raised collar, female silhouette",
+        "props": ["holographic blockchain/network globe", "teal geometric crystal structure"],
+        "expression": "glowing white slanted alien eyes — reads the future in the data"
+      },
+      "description": "Lead Big Data & Predictive Analytics Architect — Australian Female, pipelines, forecasting, signal from noise"
+    },
+    {
+      "id": "api-reliability-engineer",
+      "title": "Lead API Integrations & Systems Reliability Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD",
+      "voice_id": null,
+      "gender": "male",
+      "filename": "api-reliability-engineer.png",
+      "status": "NEEDS_VOICE",
+      "visual": {
+        "colour": "bright yellow/golden",
+        "style": "blue denim jacket over white shirt, friendly, male build",
+        "props": ["API integration puzzle pieces", "life preserver ring (red/white)"],
+        "expression": "gentle smile, white glowing eyes — connects everything and keeps it running"
+      },
+      "description": "Lead API Integrations & Systems Reliability Engineer — Australian Male, third-party integrations, uptime"
+    },
+    {
+      "id": "devops-engineer",
+      "title": "Lead DevOps & Deployment Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD",
+      "voice_id": null,
+      "gender": "female",
+      "filename": "devops-engineer.png",
+      "status": "NEEDS_VOICE",
+      "visual": {
+        "colour": "mint/emerald green translucent",
+        "style": "black zip-up jacket with white stripe, bob haircut, female form",
+        "props": ["holographic green deployment pipeline", "hexagonal armoured shield (green/black)"],
+        "expression": "focused, determined white glowing eyes — ships fast, breaks nothing"
+      },
+      "description": "Lead DevOps & Deployment Engineer — Australian Female, CI/CD pipelines, infrastructure, zero-downtime deploys"
+    },
+    {
+      "id": "systems-architect",
+      "title": "Lead Systems Architecture & Infrastructure Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD",
+      "voice_id": null,
+      "gender": "male",
+      "filename": "systems-architect.png",
+      "status": "NEEDS_VOICE",
+      "visual": {
+        "colour": "navy/cobalt blue translucent",
+        "style": "grey business suit, black turtleneck, KAWS-style cloud clusters, male build",
+        "props": ["molecular network structure (white nodes, blue lines)", "silver chrome cube with blue squares"],
+        "expression": "rectangular white visor eyes — sees the entire system at once"
+      },
+      "description": "Lead Systems Architecture & Infrastructure Engineer — Australian Male, system design, infra blueprints"
+    },
+    {
+      "id": "infosec-compliance",
+      "title": "Lead Information Security & Compliance Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD",
+      "voice_id": null,
+      "gender": "female",
+      "filename": "infosec-compliance.png",
+      "status": "NEEDS_VOICE",
+      "visual": {
+        "colour": "violet/purple translucent",
+        "style": "beige double-breasted trench coat, black turtleneck, side-swept bob, female form",
+        "props": ["circuit-board engraved padlock", "glowing purple security shield (floating)"],
+        "expression": "large white glowing eyes — audit-ready, compliance is non-negotiable"
+      },
+      "description": "Lead Information Security & Compliance Engineer — Australian Female, policy, audits, GDPR/SOC2"
+    },
+    {
+      "id": "mobile-engineer",
+      "title": "Lead Mobile & App Ecosystem Engineer",
+      "voice_seat": "NEW",
+      "voice_name": "TBD",
+      "voice_id": null,
+      "gender": "male",
+      "filename": "mobile-engineer.png",
+      "status": "NEEDS_VOICE",
+      "visual": {
+        "colour": "electric/neon green translucent",
+        "style": "white puffy vest over black long-sleeve, radar-dome helmet, male build",
+        "props": ["holographic smartphone", "stack of app icon cubes"],
+        "expression": "white oval eyes — ships apps the way others ship features"
+      },
+      "description": "Lead Mobile & App Ecosystem Engineer — Australian Male, iOS/Android, PWA, cross-platform"
+    },
+    {
+      "id": "cmo",
+      "title": "Chief Marketing Officer (CMO) & VP of Branding",
+      "voice_seat": "NEW",
+      "voice_name": "TBD",
+      "voice_id": null,
+      "gender": "male",
+      "filename": "cmo.png",
+      "status": "NEEDS_VOICE",
+      "visual": {
+        "colour": "deep orange-red/amber translucent",
+        "style": "navy blue business suit, white shirt, colourful pocket square, male build",
+        "props": ["red megaphone/bullhorn", "glowing neon growth chart with upward arrow"],
+        "expression": "star-shaped white eyes (★★) — every campaign goes up and to the right"
+      },
+      "description": "CMO & VP of Branding — Australian Male, brand strategy, campaigns, growth marketing"
+    },
+    {
+      "id": "social-pr-director",
+      "title": "Lead Social Media & PR Director",
+      "voice_seat": "NEW",
+      "voice_name": "TBD",
+      "voice_id": null,
+      "gender": "female",
+      "filename": "social-pr-director.png",
+      "status": "NEEDS_VOICE",
+      "visual": {
+        "colour": "hot pink/magenta translucent",
+        "style": "gold/bronze bomber jacket with X badge, white quilted shirt, voluminous bob, female form",
+        "props": ["floating pink heart/like notification bubble", "vintage camera"],
+        "expression": "large circular ring eyes — lives in the feed, thinks in virality"
+      },
+      "description": "Lead Social Media & PR Director — Australian Female, content strategy, brand voice, community, press"
+    },
+    {
+      "id": "market",
+      "title": "Lead Market Strategist",
+      "voice_seat": "market",
+      "voice_name": "Kylie (RECAST NEEDED — visual is male)",
+      "voice_id": "TcrlBgVmqvmPFJi2o2AO",
+      "gender": "male",
+      "filename": "market-kylie.png",
+      "status": "VOICE_MISMATCH",
+      "_action": "Recast to Australian Male voice — current voice (Kylie, female) does not match male visual",
+      "visual": {
+        "colour": "amber/golden orange translucent",
+        "style": "grey business suit, orange gloved hands, radar-grid dome, male build",
+        "props": ["black chess knight piece", "holographic targeting radar (blue concentric circles + crosshairs)"],
+        "expression": "arrow/chevron white eyes — reads the competitive landscape like a chess board"
+      },
+      "description": "Lead Market Strategist — cohort data, retention curves, competitive positioning"
+    },
+    {
+      "id": "oracle",
+      "title": "The Oracle — Chief Futurist & Tech Forecaster",
+      "voice_seat": "oracle",
+      "voice_name": "Lily",
+      "voice_id": "0QT4OrDTvpDlUPmFsUWN",
+      "gender": "female",
+      "filename": "oracle-lily.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "deep indigo/purple translucent",
+        "style": "grey draped cloak/scarf, KAWS bubble clusters, purple gloved hands, androgynous",
+        "props": ["glowing holographic crystal ball", "white tarot-style card with sacred geometry"],
+        "expression": "glowing infinity symbol (∞) — sees what others can't, speaks in signals not noise"
+      },
+      "description": "The Oracle — Chief Futurist & Tech Forecaster, Australian Female, translates emerging signals"
+    },
+    {
+      "id": "compounder",
+      "title": "The Compounder — CFO & VP of Scalability",
+      "voice_seat": "compounder",
+      "voice_name": "Bruce",
+      "voice_id": "8HOgpuH7Mid4fwQK1Jln",
+      "gender": "male",
+      "filename": "compounder-bruce.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "deep forest green translucent",
+        "style": "grey pinstripe waistcoat, white shirt, black tie, white pocket square, male build",
+        "props": ["stacked gold coin towers with upward arrow", "holographic binary data globe"],
+        "expression": "white cross/plus eyes (+ +) — every decision compounds"
+      },
+      "description": "The Compounder — CFO & VP of Scalability, Australian Male, patient capital thinking"
+    },
+    {
+      "id": "contrarian",
+      "title": "The Contrarian — Chief Risk Officer & Head of Devil's Advocacy",
+      "voice_seat": "contrarian",
+      "voice_name": "Gary",
+      "voice_id": "QLOrGSLtlFUlfQRSaOtQ",
+      "gender": "male",
+      "filename": "contrarian-gary.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "smoke/dark charcoal transparent KAWS bear",
+        "style": "dark maroon/burgundy double-breasted suit, male build",
+        "props": ["black sheep figurine", "holographic balance scales (blue/green glowing)"],
+        "expression": "glowing blue question marks (??) — the one who asks what everyone else won't"
+      },
+      "description": "The Contrarian — Chief Risk Officer, Australian Male, 45-55, gritty and skeptical"
+    },
+    {
+      "id": "product",
+      "title": "Chief Product Officer",
+      "voice_seat": "product",
+      "voice_name": "Clara",
+      "voice_id": "tyepWYJJwJM9TTFIg5U7",
+      "gender": "female",
+      "filename": "product-clara.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "magenta/fuchsia pink translucent",
+        "style": "black blazer, colourful abstract/graffiti shirt, pink gloved hands, androgynous/female",
+        "props": ["colourful Rubik's puzzle cube", "holographic ROADMAP display (connected nodes)"],
+        "expression": "rectangular L-bracket white eyes ([ ]) — sees the product as a system"
+      },
+      "description": "Chief Product Officer — Australian Female, roadmap, user empathy, feature prioritisation"
+    },
+    {
+      "id": "revenue",
+      "title": "Chief Revenue Officer (CRO) & Head of Partnerships",
+      "voice_seat": "revenue",
+      "voice_name": "Paul",
+      "voice_id": "WLKp2jV6nrS8aMkPPDRO",
+      "gender": "male",
+      "filename": "revenue-paul.png",
+      "status": "AVATAR_RECEIVED",
+      "visual": {
+        "colour": "cobalt/royal blue translucent",
+        "style": "dark charcoal business suit, blue tie, male build",
+        "props": ["gold handshake icon", "holographic sales dashboard (funnel, charts, world map)"],
+        "expression": "chevron/caret white eyes (^ ^) — closes every deal"
+      },
+      "description": "Chief Revenue Officer & Head of Partnerships — Australian Male, 40-50, sharp and commercial"
+    }
+  ],
+
+  "cast_summary": {
+    "total_personas": 24,
+    "male_personas": 15,
+    "female_personas": 9,
+    "linked_to_existing_voice_seat": 9,
+    "new_seats_needing_voices": 14,
+    "voice_mismatches": 1,
+    "avatars_received": 24,
+    "avatars_pending": 0,
+    "status": "CAST LOCKED",
+    "gender_audit": "COMPLETE — all 24 visuals reviewed",
+    "action_required": [
+      "Recast 'market' seat from female (Kylie) to Australian Male voice",
+      "Cast 14 new Australian voices: 8 male + 6 female (see NEEDS_VOICE entries)",
+      "Drop PNG files into personas/ directory matching filenames"
+    ]
+  }
+}

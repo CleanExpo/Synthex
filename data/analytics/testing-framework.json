@@ -1,0 +1,634 @@
+{
+  "framework": {
+    "name": "Auto Marketing A/B Testing Framework",
+    "version": "1.0.0",
+    "methodology": "frequentist_and_bayesian",
+    "confidence_level": 0.95,
+    "power": 0.80,
+    "minimum_detectable_effect": 0.05
+  },
+  
+  "test_library": {
+    "hook_tests": [
+      {
+        "test_id": "HOOK_STYLE_MILLENNIALS_001",
+        "name": "Humorous vs Serious Hooks - Millennials",
+        "status": "ready",
+        "hypothesis": "Humorous hooks will increase CTR by 15% for millennials compared to serious hooks",
+        "reasoning": "Millennials respond better to authentic, entertaining content based on engagement data",
+        "target_audience": {
+          "age_range": "25-34",
+          "persona": "creative_professional",
+          "device": ["mobile", "desktop"]
+        },
+        "variations": {
+          "control": {
+            "id": "serious_hook",
+            "name": "Serious Professional",
+            "content": "Transform your marketing strategy with data-driven insights",
+            "allocation": 50
+          },
+          "variant_a": {
+            "id": "humorous_hook",
+            "name": "Humorous Casual",
+            "content": "Marketing so easy, even your boss will think you're a genius",
+            "allocation": 50
+          }
+        },
+        "metrics": {
+          "primary": "click_through_rate",
+          "secondary": ["engagement_rate", "share_rate", "conversion_rate"],
+          "guardrail": ["bounce_rate", "unsubscribe_rate"]
+        },
+        "sample_size": {
+          "calculated": 3100,
+          "per_variant": 1550,
+          "calculation_params": {
+            "baseline_rate": 0.10,
+            "minimum_effect": 0.15,
+            "alpha": 0.05,
+            "power": 0.80
+          }
+        },
+        "duration": {
+          "minimum_days": 14,
+          "maximum_days": 30,
+          "estimated_days": 18
+        },
+        "expected_outcome": {
+          "lift": 15,
+          "confidence": 95,
+          "impact": "high"
+        }
+      },
+      {
+        "test_id": "HOOK_ROI_EXECUTIVES_002",
+        "name": "Business ROI vs Emotional Appeal - Executives",
+        "status": "ready",
+        "hypothesis": "ROI-focused messaging will increase conversion by 25% for executives",
+        "reasoning": "Executives prioritize measurable business outcomes in decision-making",
+        "target_audience": {
+          "job_title": ["ceo", "cto", "cmo", "director"],
+          "company_size": "enterprise",
+          "industry": ["technology", "finance", "healthcare"]
+        },
+        "variations": {
+          "control": {
+            "id": "emotional_appeal",
+            "name": "Emotional Story",
+            "content": "Empower your team to achieve their dreams",
+            "allocation": 50
+          },
+          "variant_a": {
+            "id": "roi_focused",
+            "name": "ROI Metrics",
+            "content": "Increase ROI by 40% in 90 days - Guaranteed",
+            "allocation": 50
+          }
+        },
+        "metrics": {
+          "primary": "conversion_rate",
+          "secondary": ["lead_quality_score", "deal_size", "sales_velocity"],
+          "guardrail": ["cost_per_acquisition"]
+        },
+        "sample_size": {
+          "calculated": 2400,
+          "per_variant": 1200
+        }
+      },
+      {
+        "test_id": "HOOK_PERSONALIZED_RETURN_003",
+        "name": "Personalized vs Generic - Return Visitors",
+        "status": "planned",
+        "hypothesis": "Personalized content will increase engagement by 30% for return visitors",
+        "variations": {
+          "control": {
+            "id": "generic_message",
+            "name": "Standard Welcome",
+            "content": "Welcome back to Auto Marketing",
+            "allocation": 50
+          },
+          "variant_a": {
+            "id": "personalized_message",
+            "name": "Personalized Welcome",
+            "content": "Welcome back, {name}! Continue where you left off with {last_feature}",
+            "allocation": 50
+          }
+        }
+      }
+    ],
+    
+    "visual_tests": [
+      {
+        "test_id": "LANDING_MINIMAL_MOBILE_004",
+        "name": "Minimal vs Rich Media Landing Pages - Mobile",
+        "status": "active",
+        "hypothesis": "Minimal design will increase conversion by 10% on mobile devices",
+        "reasoning": "Reduced cognitive load and faster loading improves mobile UX",
+        "device_targeting": ["mobile"],
+        "variations": {
+          "control": {
+            "id": "rich_media",
+            "name": "Rich Media Design",
+            "elements": {
+              "hero_video": true,
+              "animations": "heavy",
+              "images": 12,
+              "interactive_elements": 8
+            },
+            "allocation": 50
+          },
+          "variant_a": {
+            "id": "minimal_design",
+            "name": "Minimal Design",
+            "elements": {
+              "hero_video": false,
+              "animations": "subtle",
+              "images": 3,
+              "interactive_elements": 2
+            },
+            "allocation": 50
+          }
+        },
+        "metrics": {
+          "primary": "conversion_rate",
+          "secondary": ["page_load_time", "bounce_rate", "engagement_time"]
+        },
+        "current_results": {
+          "control": {
+            "visitors": 5234,
+            "conversions": 125,
+            "rate": 0.0239
+          },
+          "variant_a": {
+            "visitors": 5189,
+            "conversions": 142,
+            "rate": 0.0274
+          },
+          "statistical_significance": false,
+          "p_value": 0.082,
+          "days_running": 7
+        }
+      },
+      {
+        "test_id": "HERO_VIDEO_STATIC_005",
+        "name": "Video vs Static Hero Images",
+        "status": "ready",
+        "hypothesis": "Video backgrounds will increase engagement by 20%",
+        "variations": {
+          "control": {
+            "id": "static_hero",
+            "name": "Static Image",
+            "file": "hero-static.jpg",
+            "file_size": "150KB"
+          },
+          "variant_a": {
+            "id": "video_hero",
+            "name": "Autoplay Video",
+            "file": "hero-video.mp4",
+            "file_size": "2.5MB",
+            "duration": "15s",
+            "autoplay": true,
+            "muted": true
+          }
+        }
+      }
+    ],
+    
+    "cta_tests": [
+      {
+        "test_id": "CTA_VALUE_ACTION_006",
+        "name": "Action-Oriented vs Value-Focused CTAs",
+        "status": "completed",
+        "hypothesis": "Value-focused CTAs will increase clicks by 18%",
+        "variations": {
+          "control": {
+            "id": "action_cta",
+            "text": "Start Free Trial",
+            "color": "#0066CC",
+            "allocation": 33.33
+          },
+          "variant_a": {
+            "id": "value_30",
+            "text": "Get Your 30% Boost",
+            "color": "#0066CC",
+            "allocation": 33.33
+          },
+          "variant_b": {
+            "id": "value_time",
+            "text": "Save 5 Hours Weekly",
+            "color": "#0066CC",
+            "allocation": 33.34
+          }
+        },
+        "results": {
+          "winner": "variant_b",
+          "lift": 22.5,
+          "confidence": 98.5,
+          "total_visitors": 15000,
+          "implementation_date": "2024-02-15"
+        }
+      },
+      {
+        "test_id": "CTA_COLOR_PSYCHOLOGY_007",
+        "name": "CTA Color Psychology - Sustainability Audience",
+        "status": "planned",
+        "hypothesis": "Green CTAs will outperform red by 12% for sustainability-conscious users",
+        "target_audience": {
+          "interests": ["sustainability", "environment", "green_tech"],
+          "persona": "conscious_consumer"
+        },
+        "variations": {
+          "control": {
+            "color": "#FF0000",
+            "text_color": "#FFFFFF"
+          },
+          "variant_a": {
+            "color": "#00AA00",
+            "text_color": "#FFFFFF"
+          }
+        }
+      }
+    ],
+    
+    "storyboard_tests": [
+      {
+        "test_id": "STORY_OFFICE_LENGTH_008",
+        "name": "Storyboard Length - Office Scenario",
+        "status": "active",
+        "hypothesis": "Shorter 4-scene storyboards will increase completion rate by 40%",
+        "variations": {
+          "control": {
+            "id": "6_scenes",
+            "scenes": 6,
+            "duration": "60s",
+            "completion_rate": 0.45
+          },
+          "variant_a": {
+            "id": "4_scenes",
+            "scenes": 4,
+            "duration": "40s",
+            "completion_rate": null
+          }
+        }
+      }
+    ],
+    
+    "multivariate_tests": [
+      {
+        "test_id": "MVT_LANDING_009",
+        "name": "Landing Page Element Optimization",
+        "status": "planned",
+        "type": "full_factorial",
+        "factors": {
+          "headline": {
+            "levels": [
+              "Transform Your Marketing",
+              "Grow 10x Faster",
+              "Marketing That Converts"
+            ]
+          },
+          "hero_image": {
+            "levels": [
+              "product_screenshot",
+              "happy_customer",
+              "data_visualization"
+            ]
+          },
+          "cta_color": {
+            "levels": [
+              "blue",
+              "green",
+              "orange"
+            ]
+          }
+        },
+        "total_combinations": 27,
+        "traffic_per_combination": 500,
+        "analysis_method": "regression_with_interactions"
+      }
+    ],
+    
+    "personalization_tests": [
+      {
+        "test_id": "PERSONA_DYNAMIC_010",
+        "name": "Dynamic Persona-Based Content",
+        "status": "planned",
+        "type": "contextual_bandit",
+        "algorithm": "thompson_sampling",
+        "variations": {
+          "marketing_manager": {
+            "headline": "Save 10 Hours on Campaign Creation",
+            "image": "busy_professional.jpg",
+            "cta": "See ROI Calculator"
+          },
+          "small_business": {
+            "headline": "Marketing Made Simple & Affordable",
+            "image": "small_team.jpg",
+            "cta": "Start Free - No Credit Card"
+          },
+          "enterprise": {
+            "headline": "Enterprise-Grade Marketing Platform",
+            "image": "corporate_team.jpg",
+            "cta": "Request Demo"
+          }
+        }
+      }
+    ]
+  },
+  
+  "test_configuration": {
+    "traffic_allocation": {
+      "default": 100,
+      "high_risk": 20,
+      "gradual_rollout": {
+        "day_1": 5,
+        "day_3": 25,
+        "day_7": 50,
+        "day_14": 100
+      }
+    },
+    
+    "segmentation": {
+      "enabled": true,
+      "segments": [
+        {
+          "name": "new_visitors",
+          "criteria": "first_session = true"
+        },
+        {
+          "name": "returning_visitors",
+          "criteria": "session_count > 1"
+        },
+        {
+          "name": "mobile_users",
+          "criteria": "device_category = 'mobile'"
+        },
+        {
+          "name": "high_intent",
+          "criteria": "pages_viewed > 3 OR time_on_site > 180"
+        }
+      ]
+    },
+    
+    "exclusion_rules": [
+      {
+        "rule": "employees",
+        "criteria": "email_domain = 'automarketing.com'"
+      },
+      {
+        "rule": "existing_customers",
+        "criteria": "customer_status = 'active'"
+      },
+      {
+        "rule": "bots",
+        "criteria": "user_agent CONTAINS 'bot' OR 'crawler'"
+      }
+    ]
+  },
+  
+  "statistical_settings": {
+    "test_methodology": {
+      "primary": "frequentist",
+      "secondary": "bayesian",
+      "use_sequential_testing": true,
+      "multiple_comparison_correction": "bonferroni"
+    },
+    
+    "stopping_rules": {
+      "minimum_sample_size": true,
+      "minimum_duration": true,
+      "statistical_significance": true,
+      "practical_significance": true,
+      "harm_detection": true
+    },
+    
+    "sample_size_calculator": {
+      "formula": "n = 2 * (Z_alpha + Z_beta)^2 * p * (1-p) / delta^2",
+      "defaults": {
+        "alpha": 0.05,
+        "power": 0.80,
+        "two_tailed": true
+      }
+    },
+    
+    "bayesian_priors": {
+      "conversion_rate": {
+        "distribution": "beta",
+        "alpha": 1,
+        "beta": 1
+      },
+      "revenue": {
+        "distribution": "gamma",
+        "shape": 2,
+        "scale": 50
+      }
+    }
+  },
+  
+  "test_calendar": {
+    "q1_2024": [
+      {
+        "week": "1-2",
+        "test": "Homepage Hero Message",
+        "type": "A/B",
+        "priority": "high"
+      },
+      {
+        "week": "3-4",
+        "test": "Email Subject Lines",
+        "type": "A/B/n",
+        "priority": "medium"
+      },
+      {
+        "week": "5-6",
+        "test": "Landing Page Layout",
+        "type": "MVT",
+        "priority": "high"
+      },
+      {
+        "week": "7-8",
+        "test": "Pricing Page Structure",
+        "type": "A/B",
+        "priority": "high"
+      },
+      {
+        "week": "9-10",
+        "test": "Checkout Flow",
+        "type": "Sequential",
+        "priority": "critical"
+      },
+      {
+        "week": "11-12",
+        "test": "Retargeting Ads",
+        "type": "A/B",
+        "priority": "medium"
+      }
+    ]
+  },
+  
+  "prioritization_matrix": {
+    "scoring_method": "ICE",
+    "criteria": {
+      "impact": {
+        "high": 3,
+        "medium": 2,
+        "low": 1,
+        "description": "Expected improvement in primary metric"
+      },
+      "confidence": {
+        "high": 3,
+        "medium": 2,
+        "low": 1,
+        "description": "Confidence in hypothesis based on data"
+      },
+      "ease": {
+        "high": 3,
+        "medium": 2,
+        "low": 1,
+        "description": "Ease of implementation"
+      }
+    },
+    
+    "priority_queue": [
+      {
+        "test": "CTA Button Color",
+        "impact": 2,
+        "confidence": 3,
+        "ease": 3,
+        "score": 18,
+        "rank": 1
+      },
+      {
+        "test": "Hook Style Optimization",
+        "impact": 3,
+        "confidence": 3,
+        "ease": 2,
+        "score": 18,
+        "rank": 2
+      },
+      {
+        "test": "Landing Page Redesign",
+        "impact": 3,
+        "confidence": 2,
+        "ease": 1,
+        "score": 6,
+        "rank": 8
+      }
+    ]
+  },
+  
+  "results_tracking": {
+    "completed_tests": 24,
+    "active_tests": 3,
+    "planned_tests": 12,
+    
+    "performance_metrics": {
+      "overall_win_rate": 0.625,
+      "average_lift": 0.185,
+      "tests_per_month": 4,
+      "velocity_trend": "increasing"
+    },
+    
+    "learnings_database": [
+      {
+        "test_id": "CTA_VALUE_ACTION_006",
+        "learning": "Value-focused CTAs outperform action-oriented by 22.5%",
+        "application": "Update all CTAs to emphasize value proposition",
+        "impact": "high",
+        "tags": ["cta", "copywriting", "conversion"]
+      },
+      {
+        "test_id": "HOOK_STYLE_MILLENNIALS_001",
+        "learning": "Humorous hooks increase millennial engagement by 23%",
+        "application": "Increase humorous content ratio for younger demographics",
+        "impact": "medium",
+        "tags": ["hooks", "demographics", "engagement"]
+      }
+    ]
+  },
+  
+  "automation_rules": {
+    "auto_stop_losing_variants": {
+      "enabled": true,
+      "threshold": -0.20,
+      "confidence": 0.95,
+      "minimum_sample": 1000
+    },
+    
+    "auto_promote_winners": {
+      "enabled": false,
+      "confidence": 0.99,
+      "minimum_lift": 0.10,
+      "requires_approval": true
+    },
+    
+    "auto_extend_inconclusive": {
+      "enabled": true,
+      "max_extension_days": 14,
+      "notify_stakeholders": true
+    }
+  },
+  
+  "reporting": {
+    "dashboards": {
+      "executive": {
+        "metrics": ["win_rate", "average_lift", "roi"],
+        "frequency": "weekly"
+      },
+      "operational": {
+        "metrics": ["active_tests", "sample_sizes", "significance"],
+        "frequency": "daily"
+      },
+      "analytical": {
+        "metrics": ["statistical_power", "effect_sizes", "confidence_intervals"],
+        "frequency": "per_test"
+      }
+    },
+    
+    "alerts": {
+      "sample_ratio_mismatch": {
+        "threshold": 0.05,
+        "action": "investigate_immediately"
+      },
+      "conversion_rate_drop": {
+        "threshold": -0.20,
+        "action": "consider_stopping"
+      },
+      "winner_detected": {
+        "threshold": 0.95,
+        "action": "notify_stakeholders"
+      }
+    }
+  },
+  
+  "integration_endpoints": {
+    "analytics": {
+      "google_analytics": {
+        "enabled": true,
+        "custom_dimension": "test_variant",
+        "events_tracked": ["exposure", "conversion"]
+      },
+      "mixpanel": {
+        "enabled": true,
+        "project_token": "PROJECT_TOKEN",
+        "track_revenue": true
+      }
+    },
+    
+    "testing_platforms": {
+      "optimizely": {
+        "enabled": false,
+        "project_id": null
+      },
+      "google_optimize": {
+        "enabled": true,
+        "container_id": "GTM-XXXXX"
+      },
+      "custom_platform": {
+        "enabled": true,
+        "api_endpoint": "https://api.automarketing.com/tests"
+      }
+    }
+  }
+}

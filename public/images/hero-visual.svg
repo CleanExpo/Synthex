@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+  <defs>
+    <radialGradient id="bgGlowOrange" cx="780" cy="400" r="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f97316" stop-opacity="0.12"/>
+      <stop offset="60%" stop-color="#f97316" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bgGlowBlue" cx="120" cy="100" r="280" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#60a5fa" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="coreGradient" cx="750" cy="400" r="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f97316" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#f97316" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="coreHalo" cx="750" cy="400" r="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fb923c" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#fb923c" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="coreGlow">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+    <filter id="cardBlur">
+      <feGaussianBlur stdDeviation="0.5"/>
+    </filter>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="800" fill="#0f172a"/>
+
+  <rect width="1200" height="800" fill="url(#bgGlowOrange)"/>
+  <rect width="1200" height="800" fill="url(#bgGlowBlue)"/>
+
+  <circle cx="750" cy="400" r="80" fill="#f97316" opacity="0.4" filter="url(#coreGlow)"/>
+
+  <g filter="url(#glow)">
+    <polygon points="750,280 840,360 810,480" fill="rgba(251,146,60,0.15)" stroke="rgba(251,146,60,0.4)" stroke-width="0.8"/>
+    <polygon points="750,280 660,360 690,480" fill="rgba(251,146,60,0.08)" stroke="rgba(251,146,60,0.25)" stroke-width="0.8"/>
+    <polygon points="840,360 810,480 900,430" fill="rgba(251,146,60,0.22)" stroke="rgba(251,146,60,0.5)" stroke-width="0.8"/>
+    <polygon points="660,360 690,480 600,430" fill="rgba(251,146,60,0.18)" stroke="rgba(251,146,60,0.45)" stroke-width="0.8"/>
+    <polygon points="750,280 840,360 900,300" fill="rgba(251,146,60,0.10)" stroke="rgba(251,146,60,0.3)" stroke-width="0.8"/>
+    <polygon points="750,280 660,360 600,300" fill="rgba(251,146,60,0.06)" stroke="rgba(251,146,60,0.2)" stroke-width="0.8"/>
+    <polygon points="810,480 690,480 750,530" fill="rgba(251,146,60,0.20)" stroke="rgba(251,146,60,0.5)" stroke-width="0.8"/>
+    <polygon points="900,430 810,480 870,520" fill="rgba(251,146,60,0.12)" stroke="rgba(251,146,60,0.35)" stroke-width="0.8"/>
+    <polygon points="600,430 690,480 630,520" fill="rgba(251,146,60,0.09)" stroke="rgba(251,146,60,0.28)" stroke-width="0.8"/>
+    <polygon points="840,360 900,430 950,380" fill="rgba(251,146,60,0.07)" stroke="rgba(251,146,60,0.22)" stroke-width="0.8"/>
+    <polygon points="660,360 600,430 550,380" fill="rgba(251,146,60,0.05)" stroke="rgba(251,146,60,0.18)" stroke-width="0.8"/>
+  </g>
+
+  <circle cx="750" cy="400" r="60" fill="url(#coreGradient)"/>
+  <circle cx="750" cy="400" r="30" fill="url(#coreHalo)"/>
+
+  <polygon points="750,340 762,370 750,360" fill="rgba(255,255,255,0.6)" opacity="0.8"/>
+  <polygon points="780,370 790,395 775,385" fill="rgba(255,255,255,0.4)" opacity="0.7"/>
+  <polygon points="730,380 740,400 720,395" fill="rgba(255,255,255,0.3)" opacity="0.5"/>
+
+  <path d="M750,400 Q900,300 1100,200" stroke="rgba(249,115,22,0.2)" stroke-width="1" fill="none" stroke-dasharray="4 8"/>
+  <path d="M750,400 Q1000,420 1180,380" stroke="rgba(249,115,22,0.15)" stroke-width="1" fill="none" stroke-dasharray="4 8"/>
+  <path d="M750,400 Q800,550 950,650" stroke="rgba(249,115,22,0.18)" stroke-width="1" fill="none" stroke-dasharray="4 8"/>
+  <path d="M750,400 Q600,500 400,580" stroke="rgba(249,115,22,0.1)" stroke-width="1" fill="none" stroke-dasharray="4 8"/>
+  <path d="M750,400 Q650,250 500,150" stroke="rgba(249,115,22,0.08)" stroke-width="1" fill="none" stroke-dasharray="4 8"/>
+
+  <g filter="url(#cardBlur)">
+    <rect x="880" y="155" width="220" height="110" rx="12" fill="rgba(255,255,255,0.06)"/>
+    <rect x="880" y="155" width="220" height="110" rx="12" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+    <circle cx="900" cy="177" r="4" fill="#f97316" opacity="0.9"/>
+    <text x="911" y="181" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="rgba(255,255,255,0.5)">Content Score</text>
+    <text x="896" y="225" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="rgba(255,255,255,0.9)">94%</text>
+    <rect x="896" y="238" width="8" height="14" rx="1" fill="#f97316" opacity="0.7"/>
+    <rect x="908" y="232" width="8" height="20" rx="1" fill="#f97316" opacity="0.7"/>
+    <rect x="920" y="235" width="8" height="17" rx="1" fill="#f97316" opacity="0.7"/>
+    <rect x="932" y="228" width="8" height="24" rx="1" fill="#f97316" opacity="0.7"/>
+    <rect x="944" y="234" width="8" height="18" rx="1" fill="#f97316" opacity="0.7"/>
+    <rect x="956" y="230" width="8" height="22" rx="1" fill="#f97316" opacity="0.9"/>
+  </g>
+
+  <g filter="url(#cardBlur)">
+    <rect x="920" y="335" width="200" height="90" rx="12" fill="rgba(255,255,255,0.06)"/>
+    <rect x="920" y="335" width="200" height="90" rx="12" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+    <text x="938" y="360" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="rgba(255,255,255,0.5)">Engagement</text>
+    <text x="936" y="395" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="rgba(255,255,255,0.9)">&#8593; 3.2&#215;</text>
+    <rect x="1020" y="368" width="10" height="8" rx="1" fill="#f97316" opacity="0.5"/>
+    <rect x="1034" y="362" width="10" height="14" rx="1" fill="#f97316" opacity="0.6"/>
+    <rect x="1048" y="356" width="10" height="20" rx="1" fill="#f97316" opacity="0.8"/>
+    <rect x="1062" y="352" width="10" height="24" rx="1" fill="#f97316" opacity="0.9"/>
+    <rect x="1076" y="358" width="10" height="18" rx="1" fill="#f97316" opacity="0.7"/>
+  </g>
+
+  <g filter="url(#cardBlur)">
+    <rect x="840" y="500" width="240" height="100" rx="12" fill="rgba(255,255,255,0.06)"/>
+    <rect x="840" y="500" width="240" height="100" rx="12" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+    <text x="858" y="525" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="rgba(255,255,255,0.5)">Posts scheduled</text>
+    <text x="856" y="561" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="700" fill="rgba(255,255,255,0.9)">127 this week</text>
+    <circle cx="858" cy="578" r="4" fill="#22c55e" opacity="0.9"/>
+    <text x="868" y="583" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="rgba(255,255,255,0.5)">Active</text>
+  </g>
+
+  <circle cx="820" cy="150" r="2.5" fill="rgba(249,115,22,0.4)"/>
+  <circle cx="890" cy="310" r="1.5" fill="rgba(249,115,22,0.3)"/>
+  <circle cx="960" cy="260" r="2" fill="rgba(249,115,22,0.35)"/>
+  <circle cx="1050" cy="180" r="1.5" fill="rgba(249,115,22,0.25)"/>
+  <circle cx="1100" cy="310" r="3" fill="rgba(249,115,22,0.2)"/>
+  <circle cx="1150" cy="450" r="2" fill="rgba(249,115,22,0.3)"/>
+  <circle cx="1080" cy="520" r="1.5" fill="rgba(249,115,22,0.15)"/>
+  <circle cx="1020" cy="600" r="2.5" fill="rgba(249,115,22,0.25)"/>
+  <circle cx="870" cy="650" r="2" fill="rgba(249,115,22,0.2)"/>
+  <circle cx="940" cy="700" r="1.5" fill="rgba(249,115,22,0.15)"/>
+  <circle cx="1130" cy="650" r="3" fill="rgba(249,115,22,0.18)"/>
+  <circle cx="800" cy="700" r="2" fill="rgba(249,115,22,0.22)"/>
+  <circle cx="1000" cy="130" r="1.5" fill="rgba(249,115,22,0.28)"/>
+  <circle cx="1170" cy="200" r="2.5" fill="rgba(249,115,22,0.2)"/>
+  <circle cx="1140" cy="380" r="2" fill="rgba(249,115,22,0.25)"/>
+  <circle cx="980" cy="470" r="1.5" fill="rgba(249,115,22,0.15)"/>
+  <circle cx="860" cy="460" r="2" fill="rgba(249,115,22,0.12)"/>
+  <circle cx="1060" cy="700" r="2.5" fill="rgba(249,115,22,0.18)"/>
+</svg>

@@ -1,0 +1,146 @@
+{
+  "pricing_tiers": {
+    "starter": {
+      "monthly_price": 29.00,
+      "annual_price": 290.00,
+      "features": {
+        "platforms": 3,
+        "posts_per_month": 100,
+        "ai_generated_content": 50,
+        "analytics_retention_days": 30,
+        "team_members": 1,
+        "support_level": "email",
+        "video_generations": 0,
+        "voice_commands": 10,
+        "storage_gb": 1
+      },
+      "target_segment": "small_business"
+    },
+    "professional": {
+      "monthly_price": 79.00,
+      "annual_price": 790.00,
+      "features": {
+        "platforms": 8,
+        "posts_per_month": 500,
+        "ai_generated_content": 250,
+        "analytics_retention_days": 90,
+        "team_members": 3,
+        "support_level": "priority_email",
+        "video_generations": 20,
+        "voice_commands": 100,
+        "storage_gb": 10
+      },
+      "target_segment": "growing_business"
+    },
+    "business": {
+      "monthly_price": 149.00,
+      "annual_price": 1490.00,
+      "features": {
+        "platforms": "unlimited",
+        "posts_per_month": 2000,
+        "ai_generated_content": 1000,
+        "analytics_retention_days": 365,
+        "team_members": 10,
+        "support_level": "phone_and_chat",
+        "video_generations": 100,
+        "voice_commands": 500,
+        "storage_gb": 100
+      },
+      "target_segment": "established_business"
+    },
+    "enterprise": {
+      "monthly_price": 299.00,
+      "annual_price": 2990.00,
+      "features": {
+        "platforms": "unlimited",
+        "posts_per_month": "unlimited",
+        "ai_generated_content": "unlimited",
+        "analytics_retention_days": "unlimited",
+        "team_members": "unlimited",
+        "support_level": "dedicated_account_manager",
+        "video_generations": "unlimited",
+        "voice_commands": "unlimited",
+        "storage_gb": "unlimited"
+      },
+      "target_segment": "enterprise"
+    }
+  },
+  "cost_structure": {
+    "base_costs_per_user_monthly": {
+      "infrastructure": 2.50,
+      "api_costs": 1.75,
+      "support": 0.75,
+      "development": 1.00,
+      "total": 6.00
+    },
+    "target_profit_margin": 0.80,
+    "minimum_profit_margin": 0.50
+  },
+  "usage_based_pricing": {
+    "overage_charges": {
+      "additional_platforms": 10.00,
+      "extra_posts_per_100": 5.00,
+      "extra_ai_content_per_50": 8.00,
+      "additional_team_member": 15.00,
+      "extra_video_generation": 2.00,
+      "extra_storage_per_gb": 1.00
+    },
+    "volume_discounts": {
+      "annual_discount_percentage": 17,
+      "enterprise_custom_pricing": true,
+      "bulk_user_discounts": {
+        "10_plus_users": 0.10,
+        "50_plus_users": 0.15,
+        "100_plus_users": 0.20
+      }
+    }
+  },
+  "dynamic_pricing": {
+    "industry_multipliers": {
+      "marketing_agency": 1.5,
+      "ecommerce": 1.3,
+      "saas": 1.4,
+      "consulting": 1.6,
+      "healthcare": 1.2,
+      "education": 0.8,
+      "nonprofit": 0.7
+    },
+    "demand_multipliers": {
+      "high_growth_startup": 1.3,
+      "established_business": 1.1,
+      "enterprise": 1.4,
+      "small_business": 0.9,
+      "individual": 0.8
+    },
+    "seasonal_adjustments": {
+      "q4_holiday_season": 1.2,
+      "back_to_school": 1.1,
+      "summer_slowdown": 0.9
+    }
+  },
+  "retention_strategies": {
+    "churn_prevention": {
+      "high_risk_discount_max": 50,
+      "medium_risk_discount_max": 25,
+      "bonus_credits_multiplier": 0.5,
+      "free_upgrade_months": 3
+    },
+    "lock_in_mechanisms": {
+      "data_export_fee": 100.00,
+      "setup_migration_cost": 500.00,
+      "contract_early_termination_fee": "2_months_subscription"
+    }
+  },
+  "payment_processing": {
+    "accepted_methods": ["credit_card", "paypal", "bank_transfer", "invoice"],
+    "processing_fees": {
+      "credit_card": 0.029,
+      "paypal": 0.034,
+      "bank_transfer": 0.01,
+      "invoice": 0.00
+    },
+    "billing_cycles": ["monthly", "annual", "quarterly"],
+    "trial_period_days": 14,
+    "grace_period_days": 7
+  }
+}

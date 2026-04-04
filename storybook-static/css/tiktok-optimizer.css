@@ -1,0 +1,371 @@
+/* TikTok Optimizer Styles */
+.tiktok-optimizer {
+  background: linear-gradient(135deg, #1e1b4b 0%, #000000 50%, #ff0050 100%);
+  border-radius: 20px;
+  padding: 32px;
+  color: #fff;
+}
+
+.optimizer-header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.optimizer-header h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ff0050 0%, #00f2ea 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+
+.optimizer-grid {
+  display: grid;
+  gap: 24px;
+}
+
+/* Content Input Section */
+.content-input-section {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.content-input-section h3 {
+  font-size: 1.25rem;
+  margin-bottom: 16px;
+  color: #00f2ea;
+}
+
+.content-input-section textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  color: #fff;
+  font-size: 1rem;
+  resize: vertical;
+  margin-bottom: 16px;
+}
+
+.analyze-btn {
+  background: linear-gradient(135deg, #ff0050 0%, #00f2ea 100%);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.analyze-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 0, 80, 0.4);
+}
+
+/* Metrics Dashboard */
+.metrics-dashboard {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.metrics-dashboard h3 {
+  font-size: 1.25rem;
+  margin-bottom: 20px;
+  color: #00f2ea;
+}
+
+.metric-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.metric-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-4px);
+}
+
+.metric-card.viral {
+  background: linear-gradient(135deg, rgba(255, 0, 80, 0.2) 0%, rgba(0, 242, 234, 0.2) 100%);
+  border-color: #ff0050;
+}
+
+.metric-icon {
+  font-size: 24px;
+  margin-bottom: 12px;
+  color: #00f2ea;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ff0050 0%, #00f2ea 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 4px;
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Winning Formulas */
+.winning-formulas {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.winning-formulas h3 {
+  font-size: 1.25rem;
+  margin-bottom: 20px;
+  color: #00f2ea;
+}
+
+.formula-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.formula-card {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 0, 80, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.formula-card:hover {
+  background: rgba(255, 0, 80, 0.1);
+  border-color: #ff0050;
+  transform: translateY(-4px);
+}
+
+.formula-card h4 {
+  font-size: 1.125rem;
+  margin-bottom: 12px;
+  color: #ff0050;
+}
+
+.formula-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.formula-steps {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.8;
+  padding-left: 20px;
+}
+
+.formula-steps li {
+  margin-bottom: 8px;
+}
+
+/* Trending Section */
+.trending-section {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.trending-section h3 {
+  font-size: 1.25rem;
+  margin-bottom: 20px;
+  color: #00f2ea;
+}
+
+.trending-sounds,
+.trending-effects {
+  margin-bottom: 24px;
+}
+
+.trending-section h4 {
+  font-size: 1rem;
+  margin-bottom: 12px;
+  color: #ff0050;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trend-item {
+  background: rgba(0, 0, 0, 0.3);
+  border-left: 3px solid #00f2ea;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.trend-item:hover {
+  background: rgba(255, 0, 80, 0.1);
+  transform: translateX(4px);
+}
+
+.trend-name {
+  font-weight: 500;
+  color: #fff;
+}
+
+.trend-stats {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Recommendations Panel */
+.recommendations-panel {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.recommendations-panel h3 {
+  font-size: 1.25rem;
+  margin-bottom: 20px;
+  color: #00f2ea;
+}
+
+.recommendation {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-left: 4px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.recommendation.high {
+  border-left-color: #ff0050;
+}
+
+.recommendation.medium {
+  border-left-color: #00f2ea;
+}
+
+.recommendation:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(4px);
+}
+
+.rec-priority {
+  background: linear-gradient(135deg, #ff0050 0%, #00f2ea 100%);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.rec-content {
+  flex: 1;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Best Practices */
+.best-practices {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.best-practices h3 {
+  font-size: 1.25rem;
+  margin-bottom: 20px;
+  color: #00f2ea;
+}
+
+.checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+.checklist label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.checklist label:hover {
+  background: rgba(255, 0, 80, 0.1);
+  transform: translateX(4px);
+}
+
+.checklist input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #ff0050;
+}
+
+.checklist input[type="checkbox"]:checked + * {
+  color: #00f2ea;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .formula-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .metric-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .checklist {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,554 @@
+{
+  "platforms": {
+    "youtube": {
+      "name": "YouTube",
+      "category": "video_authority",
+      "algorithm_weights": {
+        "watch_time": 40,
+        "click_through_rate": 25,
+        "engagement": 20,
+        "retention": 15
+      },
+      "content_specs": {
+        "shorts": {
+          "duration": "15-60s",
+          "aspect_ratio": "9:16",
+          "resolution": "1080x1920",
+          "file_format": "MP4",
+          "bitrate": "5-10 Mbps",
+          "fps": "30-60"
+        },
+        "long_form": {
+          "duration": "8-15min",
+          "aspect_ratio": "16:9",
+          "resolution": "1920x1080",
+          "file_format": "MP4",
+          "bitrate": "8-12 Mbps",
+          "fps": "24-60"
+        }
+      },
+      "winning_formulas": [
+        {
+          "template": "educational_authority",
+          "structure": "Hook (0-15s) → Problem (15-60s) → Solution (60-80%) → CTA (final 20s)",
+          "engagement_rate": "4.2%",
+          "best_for": ["tutorials", "how-to", "explainers"],
+          "key_elements": ["clear value prop", "step-by-step", "visual aids"]
+        },
+        {
+          "template": "transformation_story",
+          "structure": "Before → Journey → After → Lessons",
+          "engagement_rate": "3.8%",
+          "best_for": ["case studies", "testimonials", "personal growth"],
+          "key_elements": ["emotional hook", "relatable struggle", "clear results"]
+        }
+      ],
+      "optimization_checklist": [
+        "Custom thumbnail with high contrast",
+        "Title under 60 characters with emotional trigger",
+        "First 15 seconds hook retention",
+        "End screen with next video suggestion",
+        "Detailed description with timestamps",
+        "Relevant tags (10-15)",
+        "Closed captions",
+        "Cards and end screens",
+        "Playlist inclusion",
+        "Community tab engagement"
+      ],
+      "posting_schedule": {
+        "optimal_times": ["Tuesday-Thursday 2-4 PM EST", "Friday 12-3 PM EST"],
+        "frequency": "3-4x per week for consistency",
+        "shorts_frequency": "daily if possible"
+      }
+    },
+    "instagram": {
+      "name": "Instagram",
+      "category": "visual_storytelling",
+      "algorithm_weights": {
+        "engagement_rate": 35,
+        "saves": 25,
+        "shares": 20,
+        "time_spent": 20
+      },
+      "content_specs": {
+        "reels": {
+          "duration": "15-30s",
+          "aspect_ratio": "9:16",
+          "resolution": "1080x1920",
+          "cover_frame": "custom selection",
+          "music": "trending audio essential"
+        },
+        "stories": {
+          "duration": "15s",
+          "aspect_ratio": "9:16",
+          "resolution": "1080x1920",
+          "interactive_elements": ["polls", "questions", "quizzes", "sliders"]
+        },
+        "feed_posts": {
+          "aspect_ratio": "1:1 or 4:5",
+          "resolution": "1080x1080 or 1080x1350",
+          "carousel_limit": "10 slides",
+          "alt_text": "required for accessibility"
+        }
+      },
+      "winning_formulas": [
+        {
+          "template": "transformation_reveal",
+          "structure": "Hook → Build suspense → Reveal → Value/Lesson",
+          "engagement_rate": "2.08%",
+          "best_for": ["before/after", "makeovers", "results"],
+          "key_elements": ["visual impact", "surprise element", "shareability"]
+        },
+        {
+          "template": "educational_carousel",
+          "structure": "Title slide → Problem → Steps → Result → CTA",
+          "engagement_rate": "1.7%",
+          "best_for": ["tips", "guides", "tutorials"],
+          "key_elements": ["swipeable value", "save-worthy", "clear design"]
+        }
+      ],
+      "trending_elements": {
+        "audio_trends": "Use trending audio within 24 hours",
+        "hashtag_strategy": "Mix of trending and niche hashtags (5-10)",
+        "visual_hooks": "Movement or surprise in first 3 seconds",
+        "filters_effects": "Native Instagram effects boost reach"
+      },
+      "posting_schedule": {
+        "optimal_times": ["Monday-Friday 11 AM-1 PM, 7-9 PM EST"],
+        "frequency": "1-2 feed posts, 2-3 stories, 4-7 reels per week"
+      }
+    },
+    "tiktok": {
+      "name": "TikTok",
+      "category": "entertainment_discovery",
+      "algorithm_weights": {
+        "completion_rate": 40,
+        "shares": 25,
+        "comments": 20,
+        "likes": 15
+      },
+      "content_specs": {
+        "standard": {
+          "duration": "15-60s",
+          "aspect_ratio": "9:16",
+          "resolution": "1080x1920",
+          "text_overlay": "essential for silent viewing",
+          "transitions": "quick cuts every 2-3 seconds"
+        },
+        "extended": {
+          "duration": "up to 10 minutes",
+          "best_for": "deep dives, tutorials",
+          "retention_critical": true
+        }
+      },
+      "winning_formulas": [
+        {
+          "template": "trend_adaptation",
+          "structure": "Trending audio + Brand message + Visual hook",
+          "engagement_rate": "5.8%",
+          "best_for": ["brand awareness", "viral reach", "community building"],
+          "key_elements": ["trend timing", "creative twist", "authenticity"]
+        },
+        {
+          "template": "educational_quick",
+          "structure": "Hook → Fast tips → Surprising fact → CTA",
+          "engagement_rate": "4.5%",
+          "best_for": ["how-to", "tips", "hacks"],
+          "key_elements": ["fast pacing", "value density", "replay value"]
+        }
+      ],
+      "viral_elements": {
+        "trending_sounds": "Use within 24-48 hours of trending",
+        "fast_pacing": "Scene changes every 2-3 seconds",
+        "text_overlay": "Key points highlighted on screen",
+        "hashtag_strategy": "#fyp #foryou + 3-5 niche tags",
+        "duet_stitch": "Leverage popular content"
+      },
+      "posting_schedule": {
+        "optimal_times": ["Tuesday-Thursday 6-10 AM, 7-11 PM EST"],
+        "frequency": "1-4 times daily for maximum reach"
+      }
+    },
+    "twitter": {
+      "name": "X (Twitter)",
+      "category": "real_time_conversation",
+      "algorithm_weights": {
+        "early_engagement": 45,
+        "retweets": 25,
+        "replies": 20,
+        "clicks": 10
+      },
+      "content_specs": {
+        "tweets": {
+          "length": "71-100 characters optimal",
+          "media": "images, GIFs, videos preferred",
+          "link_placement": "end of tweet",
+          "hashtags": "1-2 maximum"
+        },
+        "threads": {
+          "length": "5-15 tweets optimal",
+          "structure": "hook → narrative → conclusion",
+          "numbering": "helps retention",
+          "media": "every 2-3 tweets"
+        },
+        "spaces": {
+          "duration": "30-60 minutes",
+          "co_hosts": "2-3 for engagement",
+          "recording": "save for content"
+        }
+      },
+      "winning_formulas": [
+        {
+          "template": "controversial_take",
+          "structure": "Bold statement → Explanation → Evidence → Discussion prompt",
+          "engagement_rate": "6.25%",
+          "best_for": ["thought leadership", "discussions", "virality"],
+          "key_elements": ["strong opinion", "supporting data", "open question"]
+        },
+        {
+          "template": "thread_story",
+          "structure": "Hook tweet → Story development → Lessons → CTA",
+          "engagement_rate": "4.1%",
+          "best_for": ["case studies", "insights", "education"],
+          "key_elements": ["compelling hook", "clear narrative", "actionable takeaway"]
+        }
+      ],
+      "posting_schedule": {
+        "optimal_times": ["Weekdays 8-10 AM, 7-9 PM EST"],
+        "frequency": "3-5 tweets daily, 1-2 threads weekly"
+      }
+    },
+    "facebook": {
+      "name": "Facebook",
+      "category": "community_connection",
+      "algorithm_weights": {
+        "meaningful_interactions": 40,
+        "time_spent": 30,
+        "shares": 20,
+        "reactions": 10
+      },
+      "content_specs": {
+        "video": {
+          "aspect_ratio": "1:1 or 4:5",
+          "duration": "1-3 minutes",
+          "captions": "required for silent viewing",
+          "thumbnail": "custom selection"
+        },
+        "images": {
+          "aspect_ratio": "1:1 or 4:5",
+          "text_overlay": "minimal for reach (<20%)",
+          "album_limit": "10 photos"
+        },
+        "live": {
+          "duration": "10+ minutes optimal",
+          "notification": "schedule in advance",
+          "engagement": "respond in real-time"
+        }
+      },
+      "winning_formulas": [
+        {
+          "template": "discussion_starter",
+          "structure": "Personal story → Question → Community prompt",
+          "engagement_rate": "3.2%",
+          "best_for": ["community building", "engagement", "loyalty"],
+          "key_elements": ["relatability", "open-ended question", "personal touch"]
+        },
+        {
+          "template": "behind_scenes",
+          "structure": "Authentic moment → Context → Value/Lesson",
+          "engagement_rate": "2.8%",
+          "best_for": ["brand building", "trust", "connection"],
+          "key_elements": ["authenticity", "vulnerability", "human element"]
+        }
+      ],
+      "group_strategy": {
+        "participation": "value-first approach",
+        "frequency": "2-3 valuable posts weekly",
+        "engagement": "respond to all comments"
+      },
+      "posting_schedule": {
+        "optimal_times": ["Thursday-Sunday 1-4 PM EST"],
+        "frequency": "1-2 posts daily"
+      }
+    },
+    "linkedin": {
+      "name": "LinkedIn",
+      "category": "professional_authority",
+      "algorithm_weights": {
+        "professional_relevance": 35,
+        "engagement_quality": 30,
+        "connections": 20,
+        "industry_authority": 15
+      },
+      "content_specs": {
+        "posts": {
+          "length": "1300+ characters for long-form",
+          "format": "text, image, video, document",
+          "line_breaks": "every 1-2 sentences",
+          "hashtags": "3-5 at end"
+        },
+        "articles": {
+          "length": "1500+ words",
+          "format": "professional insights",
+          "images": "every 300-400 words",
+          "seo": "keyword optimization"
+        },
+        "video": {
+          "duration": "30 seconds to 10 minutes",
+          "aspect_ratio": "16:9 or 1:1",
+          "captions": "professional tone"
+        }
+      },
+      "winning_formulas": [
+        {
+          "template": "industry_insight",
+          "structure": "Trend observation → Analysis → Prediction → Discussion",
+          "engagement_rate": "2.1%",
+          "best_for": ["thought leadership", "expertise", "authority"],
+          "key_elements": ["data-driven", "actionable insights", "future-focused"]
+        },
+        {
+          "template": "professional_story",
+          "structure": "Challenge → Process → Learning → Application",
+          "engagement_rate": "1.9%",
+          "best_for": ["personal branding", "lessons", "relatability"],
+          "key_elements": ["vulnerability", "specific details", "takeaways"]
+        }
+      ],
+      "content_pillars": {
+        "expertise": "40% - industry insights",
+        "personal": "25% - career stories",
+        "company": "20% - culture and updates",
+        "engagement": "15% - polls and questions"
+      },
+      "posting_schedule": {
+        "optimal_times": ["Tuesday-Thursday 8-10 AM EST"],
+        "frequency": "3-5 posts weekly"
+      }
+    },
+    "pinterest": {
+      "name": "Pinterest",
+      "category": "inspiration_discovery",
+      "algorithm_weights": {
+        "saves": 40,
+        "clicks": 30,
+        "closeups": 20,
+        "searches": 10
+      },
+      "content_specs": {
+        "standard_pins": {
+          "aspect_ratio": "2:3",
+          "resolution": "1000x1500",
+          "text_overlay": "clear and readable",
+          "branding": "subtle but consistent"
+        },
+        "idea_pins": {
+          "pages": "5-20",
+          "aspect_ratio": "9:16",
+          "duration": "60 seconds max per page",
+          "interactive": "stickers and tags"
+        },
+        "video_pins": {
+          "aspect_ratio": "2:3, 1:1, or 9:16",
+          "duration": "4 seconds to 15 minutes",
+          "cover_image": "custom selection"
+        }
+      },
+      "winning_formulas": [
+        {
+          "template": "how_to_guide",
+          "structure": "Clear title → Step visual → Branded watermark",
+          "engagement_rate": "3.5%",
+          "best_for": ["tutorials", "DIY", "recipes"],
+          "key_elements": ["step-by-step", "visual clarity", "save-worthy"]
+        },
+        {
+          "template": "inspiration_board",
+          "structure": "Lifestyle image → Aspirational text → Brand integration",
+          "engagement_rate": "2.9%",
+          "best_for": ["lifestyle", "products", "ideas"],
+          "key_elements": ["high-quality visuals", "aspirational", "seasonal relevance"]
+        }
+      ],
+      "seo_optimization": {
+        "title": "keyword-rich, 100 characters",
+        "description": "detailed, 500 characters",
+        "board_names": "searchable keywords",
+        "alt_text": "descriptive for accessibility"
+      },
+      "posting_schedule": {
+        "optimal_times": ["Saturday 8-11 PM EST"],
+        "frequency": "15-25 pins daily",
+        "fresh_content": "5-10 new pins weekly"
+      }
+    },
+    "reddit": {
+      "name": "Reddit",
+      "category": "community_discussion",
+      "algorithm_weights": {
+        "upvotes": 35,
+        "comments": 30,
+        "community_relevance": 25,
+        "authenticity": 10
+      },
+      "content_specs": {
+        "posts": {
+          "length": "varies by subreddit",
+          "format": "text, image, video, link",
+          "title": "clear and descriptive",
+          "flair": "use appropriately"
+        },
+        "comments": {
+          "value": "add to discussion",
+          "formatting": "use markdown",
+          "editing": "note significant changes"
+        }
+      },
+      "winning_formulas": [
+        {
+          "template": "value_sharing",
+          "structure": "Helpful resource → Context → Community benefit",
+          "engagement_rate": "4.7%",
+          "best_for": ["resources", "tools", "guides"],
+          "key_elements": ["genuine value", "no self-promotion", "community focus"]
+        },
+        {
+          "template": "discussion_deep",
+          "structure": "Thoughtful question → Personal perspective → Community input",
+          "engagement_rate": "3.8%",
+          "best_for": ["discussions", "opinions", "advice"],
+          "key_elements": ["authentic voice", "detailed context", "open-ended"]
+        }
+      ],
+      "subreddit_strategy": {
+        "research": "lurk for 2 weeks minimum",
+        "participation": "90% value, 10% promotion",
+        "karma_building": "comment before posting"
+      },
+      "posting_schedule": {
+        "optimal_times": ["Monday-Wednesday 8-10 AM EST"],
+        "frequency": "1-2 quality posts weekly per subreddit"
+      }
+    }
+  },
+  "automation_settings": {
+    "voice_processing": {
+      "speech_to_text": "whisper-1",
+      "reasoning_model": "claude-3-haiku",
+      "idea_extraction": "llama-70b-instruct",
+      "context_understanding": "gpt-4-turbo",
+      "sentiment_analysis": "claude-3-haiku"
+    },
+    "cost_optimization": {
+      "primary_model": "claude-3-haiku",
+      "complex_tasks": "claude-3-opus",
+      "bulk_processing": "llama-70b-instruct",
+      "quick_responses": "gpt-3.5-turbo",
+      "specialized_tasks": {
+        "coding": "claude-3-opus",
+        "creative": "claude-3-opus",
+        "analysis": "gpt-4-turbo",
+        "simple": "claude-3-haiku"
+      }
+    },
+    "veo3_integration": {
+      "storyboard_generation": true,
+      "character_consistency": true,
+      "brand_integration": true,
+      "platform_optimization": true,
+      "scene_transitions": "smooth",
+      "style_consistency": "brand-aligned",
+      "music_integration": "royalty-free library"
+    },
+    "performance_thresholds": {
+      "cpu_max": 75,
+      "memory_max": 80,
+      "batch_size": 10,
+      "parallel_tasks": 5,
+      "retry_attempts": 3
+    },
+    "publishing_automation": {
+      "scheduling": {
+        "lookahead_days": 30,
+        "buffer_posts": 7,
+        "emergency_content": 3
+      },
+      "cross_posting": {
+        "delay_minutes": 30,
+        "platform_order": ["youtube", "linkedin", "instagram", "facebook", "twitter", "tiktok", "pinterest", "reddit"],
+        "adaptation": "platform-specific"
+      },
+      "performance_triggers": {
+        "boost_threshold": 0.05,
+        "viral_threshold": 0.1,
+        "underperform_threshold": 0.01
+      }
+    }
+  },
+  "content_strategy": {
+    "content_pillars": {
+      "educational": {
+        "percentage": 40,
+        "platforms": ["youtube", "linkedin", "pinterest"],
+        "formats": ["tutorials", "guides", "explainers"]
+      },
+      "entertainment": {
+        "percentage": 25,
+        "platforms": ["tiktok", "instagram", "twitter"],
+        "formats": ["trends", "humor", "stories"]
+      },
+      "inspirational": {
+        "percentage": 20,
+        "platforms": ["instagram", "facebook", "linkedin"],
+        "formats": ["quotes", "transformations", "success stories"]
+      },
+      "promotional": {
+        "percentage": 10,
+        "platforms": ["all"],
+        "formats": ["product features", "announcements", "offers"]
+      },
+      "community": {
+        "percentage": 5,
+        "platforms": ["reddit", "facebook", "twitter"],
+        "formats": ["discussions", "polls", "UGC"]
+      }
+    },
+    "adaptation_rules": {
+      "waterfall": {
+        "primary": "youtube",
+        "cascade_delay": 2,
+        "adaptation_level": "high"
+      },
+      "simultaneous": {
+        "timing": "optimal per platform",
+        "coordination": "unified message"
+      },
+      "test_and_scale": {
+        "test_platform": "tiktok",
+        "success_metric": 0.05,
+        "scale_delay": 24
+      }
+    }
+  },
+  "analytics_config": {
+    "kpis": {
+      "primary": ["engagement_rate", "reach", "conversions"],
+      "secondary": ["saves", "shares", "comments"],
+      "platform_specific": {
+        "youtube": ["watch_time", "subscriber_growth"],
+        "instagram": ["profile_visits", "website_clicks"],
+        "tiktok": ["completion_rate", "fyp_percentage"],
+        "linkedin": ["profile_views", "connection_requests"]
+      }
+    },
+    "reporting": {
+      "frequency": "weekly",
+      "format": "dashboard",
+      "alerts": {
+        "viral_content": "immediate",
+        "underperformance": "daily",
+        "trends": "weekly"
+      }
+    }
+  }
+}

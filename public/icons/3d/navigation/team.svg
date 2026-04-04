@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="teamGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <!-- Shadows — bodies -->
+  <path d="M4 42c0-5.5 4-10 9-10h4c5 0 9 4.5 9 10z" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <path d="M22 42c0-5.5 4-10 9-10h4c5 0 9 4.5 9 10z" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Shadows — heads -->
+  <circle cx="13" cy="18" r="7" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <circle cx="35" cy="18" r="7" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Centre person head shadow -->
+  <circle cx="24" cy="14" r="8" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+  <!-- Centre person body shadow -->
+  <path d="M12 44c0-6.6 5.4-12 12-12s12 5.4 12 44z" fill="rgba(0,0,0,0.35)" transform="translate(1.5,1.5)"/>
+
+  <!-- Left person body -->
+  <path d="M4 42c0-5.5 4-10 9-10h4c5 0 9 4.5 9 10z" fill="url(#teamGrad)"/>
+  <!-- Right person body -->
+  <path d="M22 42c0-5.5 4-10 9-10h4c5 0 9 4.5 9 10z" fill="url(#teamGrad)"/>
+  <!-- Left head -->
+  <circle cx="13" cy="18" r="7" fill="url(#teamGrad)"/>
+  <!-- Right head -->
+  <circle cx="35" cy="18" r="7" fill="url(#teamGrad)"/>
+  <!-- Centre person body -->
+  <path d="M12 44c0-6.6 5.4-12 12-12s12 5.4 12 12z" fill="url(#teamGrad)"/>
+  <!-- Centre head (on top, slightly larger) -->
+  <circle cx="24" cy="14" r="8" fill="url(#teamGrad)"/>
+
+  <!-- Highlights -->
+  <ellipse cx="10" cy="14" rx="4" ry="3" fill="rgba(255,255,255,0.2)"/>
+  <ellipse cx="21" cy="10" rx="4" ry="3" fill="rgba(255,255,255,0.22)"/>
+  <ellipse cx="32" cy="14" rx="4" ry="3" fill="rgba(255,255,255,0.2)"/>
+</svg>

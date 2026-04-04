@@ -1,0 +1,87 @@
+{
+  "oauth_settings": {
+    "encryption_key": "REPLACE_WITH_ACTUAL_ENCRYPTION_KEY",
+    "token_storage_path": "./data/tokens",
+    "session_timeout": 3600,
+    "refresh_threshold": 300
+  },
+  "platforms": {
+    "youtube": {
+      "client_id": "YOUR_YOUTUBE_CLIENT_ID",
+      "client_secret": "YOUR_YOUTUBE_CLIENT_SECRET",
+      "redirect_uri": "http://localhost:8080/callback/youtube",
+      "auth_url": "https://accounts.google.com/o/oauth2/auth",
+      "token_url": "https://oauth2.googleapis.com/token",
+      "scope": "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly"
+    },
+    "instagram": {
+      "client_id": "YOUR_INSTAGRAM_CLIENT_ID",
+      "client_secret": "YOUR_INSTAGRAM_CLIENT_SECRET",
+      "redirect_uri": "http://localhost:8080/callback/instagram",
+      "auth_url": "https://api.instagram.com/oauth/authorize",
+      "token_url": "https://api.instagram.com/oauth/access_token",
+      "scope": "user_profile,user_media"
+    },
+    "tiktok": {
+      "client_key": "YOUR_TIKTOK_CLIENT_KEY",
+      "client_secret": "YOUR_TIKTOK_CLIENT_SECRET",
+      "redirect_uri": "http://localhost:8080/callback/tiktok",
+      "auth_url": "https://www.tiktok.com/auth/authorize/",
+      "token_url": "https://open-api.tiktok.com/oauth/access_token/",
+      "scope": "user.info.basic,video.upload"
+    },
+    "facebook": {
+      "app_id": "YOUR_FACEBOOK_APP_ID",
+      "app_secret": "YOUR_FACEBOOK_APP_SECRET",
+      "redirect_uri": "http://localhost:8080/callback/facebook",
+      "auth_url": "https://www.facebook.com/v18.0/dialog/oauth",
+      "token_url": "https://graph.facebook.com/v18.0/oauth/access_token",
+      "scope": "pages_manage_posts,pages_read_engagement,pages_show_list"
+    },
+    "twitter": {
+      "client_id": "YOUR_TWITTER_CLIENT_ID",
+      "client_secret": "YOUR_TWITTER_CLIENT_SECRET",
+      "redirect_uri": "http://localhost:8080/callback/twitter",
+      "auth_url": "https://twitter.com/i/oauth2/authorize",
+      "token_url": "https://api.twitter.com/2/oauth2/token",
+      "scope": "tweet.read tweet.write users.read"
+    },
+    "linkedin": {
+      "client_id": "YOUR_LINKEDIN_CLIENT_ID",
+      "client_secret": "YOUR_LINKEDIN_CLIENT_SECRET",
+      "redirect_uri": "http://localhost:8080/callback/linkedin",
+      "auth_url": "https://www.linkedin.com/oauth/v2/authorization",
+      "token_url": "https://www.linkedin.com/oauth/v2/accessToken",
+      "scope": "r_liteprofile r_emailaddress w_member_social"
+    },
+    "pinterest": {
+      "client_id": "YOUR_PINTEREST_CLIENT_ID",
+      "client_secret": "YOUR_PINTEREST_CLIENT_SECRET",
+      "redirect_uri": "http://localhost:8080/callback/pinterest",
+      "auth_url": "https://www.pinterest.com/oauth/",
+      "token_url": "https://api.pinterest.com/v5/oauth/token",
+      "scope": "boards:read,pins:read,pins:write"
+    },
+    "reddit": {
+      "client_id": "YOUR_REDDIT_CLIENT_ID",
+      "client_secret": "YOUR_REDDIT_CLIENT_SECRET",
+      "redirect_uri": "http://localhost:8080/callback/reddit",
+      "auth_url": "https://www.reddit.com/api/v1/authorize",
+      "token_url": "https://www.reddit.com/api/v1/access_token",
+      "scope": "identity read submit"
+    }
+  },
+  "security": {
+    "use_pkce": true,
+    "state_validation": true,
+    "token_encryption": true,
+    "secure_storage": true,
+    "auto_refresh": true
+  },
+  "development": {
+    "use_localhost": true,
+    "callback_port": 8080,
+    "debug_mode": false,
+    "mock_responses": false
+  }
+}

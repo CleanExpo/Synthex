@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="feat-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+    <linearGradient id="feat-grad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#9a3412"/>
+    </linearGradient>
+  </defs>
+  <!-- shadows -->
+  <rect x="11" y="27.5" width="7" height="14" rx="2" fill="rgba(0,0,0,0.3)"/>
+  <rect x="21" y="19.5" width="7" height="22" rx="2" fill="rgba(0,0,0,0.3)"/>
+  <rect x="31" y="9.5" width="7" height="32" rx="2" fill="rgba(0,0,0,0.3)"/>
+  <!-- bars -->
+  <rect x="10" y="26" width="7" height="14" rx="2" fill="url(#feat-grad2)"/>
+  <rect x="20" y="18" width="7" height="22" rx="2" fill="url(#feat-grad)"/>
+  <rect x="30" y="8" width="7" height="32" rx="2" fill="url(#feat-grad)"/>
+  <!-- top highlights -->
+  <rect x="10" y="26" width="7" height="3" rx="2" fill="rgba(255,255,255,0.22)"/>
+  <rect x="20" y="18" width="7" height="3" rx="2" fill="rgba(255,255,255,0.22)"/>
+  <rect x="30" y="8" width="7" height="3" rx="2" fill="rgba(255,255,255,0.22)"/>
+  <!-- floor line -->
+  <rect x="8" y="40" width="32" height="2" rx="1" fill="rgba(249,115,22,0.4)"/>
+</svg>

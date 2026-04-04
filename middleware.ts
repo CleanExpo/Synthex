@@ -1,0 +1,337 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { checkApiKeyGate } from '@/lib/middleware/api-key-gate.edge';
+import { jwtVerify } from 'jose/jwt/verify';
+
+// Note: Using console directly instead of logger for Edge Function compatibility
+
+// Security headers configuration
+const securityHeaders = {
+  // Content Security Policy
+  'Content-Security-Policy': [
+    "default-src 'self'",
+    // NOTE: 'unsafe-eval' required by framer-motion v12 (new Function() in spring physics).
+    // cdn.jsdelivr.net / unpkg.com / cdn.tailwindcss.com removed — not used in codebase.
+    "script-src 'self' 'unsafe-eval' https://js.stripe.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data: blob: https:",
+    `connect-src 'self' https://api.openrouter.ai https://*.supabase.co wss://*.supabase.co https://res.cloudinary.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://github.com https://api.github.com https://api.stripe.com https://js.stripe.com https://r.stripe.com https://m.stripe.com https://api.anthropic.com${process.env.NEXT_PUBLIC_WS_URL ? ` ${process.env.NEXT_PUBLIC_WS_URL}` : ''}`,
+    "frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://js.stripe.com https://hooks.stripe.com",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    'upgrade-insecure-requests',
+  ].join('; '),
+
+  // Strict Transport Security
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+
+  // Other security headers
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+
+  // CORS headers for API routes
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Allow-Origin':
+    process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers':
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization, sentry-trace, baggage',
+};
+
+export async function middleware(request: NextRequest) {
+  const response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
+  const pathname = request.nextUrl.pathname;
+
+  // RBAC: Collaborators are blocked from owner-only settings routes (SYN-598).
+  // The synthex_role cookie is set by /api/invite/accept when a collaborator accepts.
+  // This is a fast Edge check — no DB round-trip required.
+  const COLLABORATOR_BLOCKED = [
+    '/settings/brand-voice',
+    '/settings/auto-publish',
+    '/settings/billing',
+  ];
+  const synthexRole = request.cookies.get('synthex_role')?.value;
+  if (
+    synthexRole === 'collaborator' &&
+    COLLABORATOR_BLOCKED.some(p => pathname.startsWith(p))
+  ) {
+    return new NextResponse('Forbidden — collaborators cannot access this page', {
+      status: 403,
+    });
+  }
+
+  // Fast-path: public API routes must NEVER block on auth or Supabase I/O.
+  // - /api/health: called by Vercel/load-balancers with no session cookies
+  // - /api/demo/*: unauthenticated public demo — getSession() adds a Supabase
+  //   round-trip on every request, causing hangs on localhost and extra latency
+  //   in production. These routes have no auth requirement.
+  const PUBLIC_FAST_PATHS = ['/api/health', '/api/demo/'];
+  if (PUBLIC_FAST_PATHS.some(p => pathname.startsWith(p))) {
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    return response;
+  }
+
+  // Create Supabase client for auth checks
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name: string, options: any) {
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          });
+        },
+      },
+    }
+  );
+
+  // Refresh session if expired
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  // Check for custom auth-token cookie (used by unified-login for demo/fallback auth)
+  const authToken = request.cookies.get('auth-token')?.value;
+  const hasCustomAuth = !!authToken;
+
+  // Apply security headers to all responses
+  Object.entries(securityHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+
+  // Note: API rate limiting is handled per-route via withRateLimit() in
+  // lib/middleware/rate-limiter.ts (backed by Upstash Redis in production).
+  // NOTE: /api/ routes ARE included in the middleware matcher — all request paths
+  // are matched except _next/static, _next/image, favicon.ico, and public/.
+  // Public API routes (/api/demo/analyze etc.) are exempted from CSRF via
+  // PUBLIC_API_PATHS below, NOT via the regex matcher.
+
+  // Authentication check for protected routes
+  const protectedPaths = [
+    '/dashboard',
+    '/onboarding',
+    '/api/protected',
+    '/api/user',
+    '/api/integrations',
+  ];
+  // Auth URL structure:
+  // Canonical: /login, /signup, /forgot-password, /auth/reset-password
+  // Legacy redirects (still work): /auth/login → /login, /auth/register → /signup
+  // Both canonical and legacy paths are listed here to redirect authenticated users to dashboard
+  // CRITICAL: Both /login and /auth/login exist — /login is the active PKCE flow page,
+  // /auth/login is the legacy Supabase page. Treat BOTH as auth paths to prevent loops.
+  const authPaths = ['/login', '/auth/login', '/auth/register', '/signup'];
+  const isProtectedPath = protectedPaths.some(path =>
+    pathname.startsWith(path)
+  );
+  const isAuthPath = authPaths.some(
+    path => pathname === path || pathname.startsWith(path + '/')
+  );
+
+  // Skip auth checks for ALL OAuth-related paths — cookies are being SET during these redirects,
+  // so they won't exist yet. Without this, users loop back to login after Google sign-in.
+  if (
+    pathname.startsWith('/auth/callback') ||
+    pathname.startsWith('/api/auth/oauth')
+  ) {
+    return response;
+  }
+
+  // Redirect to login if accessing protected route without session OR custom auth token
+  // Trust auth-token cookie immediately — it's set by our own OAuth callback
+  if (isProtectedPath && !session && !hasCustomAuth) {
+    if (!pathname.startsWith('/api/')) {
+      // Redirect to /login — the active login page with PKCE Google flow
+      // (NOT /auth/login which is the legacy Supabase page)
+      const redirectUrl = new URL('/login', request.url);
+      redirectUrl.searchParams.set('redirectTo', pathname);
+      return NextResponse.redirect(redirectUrl);
+    } else {
+      // Return 401 for API routes
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+  }
+
+  // Redirect to dashboard if accessing auth routes with active session OR custom auth
+  if (isAuthPath && (session || hasCustomAuth)) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Onboarding completion check: redirect to /onboarding if incomplete
+  // ──────────────────────────────────────────────────────────────────────
+  // Uses JWT claims from auth-token cookie (no DB query needed in Edge Runtime).
+  // The onboardingComplete flag is embedded in the JWT at login/signup time.
+  if (hasCustomAuth && authToken && pathname.startsWith('/dashboard')) {
+    try {
+      const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+      const { payload } = await jwtVerify(authToken, secret);
+
+      // Check superadmin bypass — superadmins skip onboarding
+      const isSuperadmin = payload.role === 'superadmin';
+
+      // If onboarding not complete and not superadmin, redirect to /onboarding
+      if (!isSuperadmin && payload.onboardingComplete === false) {
+        return NextResponse.redirect(new URL('/onboarding', request.url));
+      }
+    } catch {
+      // Invalid or forged token — skip the onboarding redirect entirely.
+      // Route handlers perform their own full auth checks; do not block here.
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────────────────
+  // SYN-504: Brand Mirror gate — new users must view Brand Mirror before
+  // reaching /onboarding/connect. (Board Session 3: Client Journey Opt.)
+  //
+  // Gate logic (cookie-based, Edge-safe — no DB query needed):
+  //   - Only applies to new sessions (users without onboardingComplete=true)
+  //   - Existing users with valid JWT (onboardingComplete=true) pass through
+  //   - If brand mirror cookie is missing → redirect to /onboarding
+  //   - Sticky re-prompt: cookie expires after 1 hour, so users who close the
+  //     tab mid-flow are re-prompted on next visit (not hard-blocked)
+  // ──────────────────────────────────────────────────────────────────────
+  if (pathname === '/onboarding/connect' || pathname.startsWith('/onboarding/connect/')) {
+    // Check if this is an existing user who has already completed onboarding
+    let isExistingUser = false;
+    if (hasCustomAuth && authToken) {
+      try {
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+        const { payload } = await jwtVerify(authToken, secret);
+        isExistingUser = payload.onboardingComplete === true || payload.role === 'superadmin';
+      } catch {
+        // Token invalid — treat as new user
+      }
+    }
+
+    // Existing users bypass the brand mirror gate
+    if (!isExistingUser) {
+      const brandMirrorViewed = request.cookies.get('synthex_brand_mirror_viewed')?.value;
+      if (!brandMirrorViewed) {
+        return NextResponse.redirect(new URL('/onboarding', request.url));
+      }
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Hard gate: block /api/ai/* if user has not configured a valid API key.
+  // Uses JWT claim only (Edge-safe). The route handler still performs a
+  // full DB-backed check via requireApiKey().
+  // ──────────────────────────────────────────────────────────────────────
+  if (pathname.startsWith('/api/ai/')) {
+    const blocked = checkApiKeyGate(request);
+    if (blocked) return blocked;
+  }
+
+  // CSRF protection for mutations — block requests with no or foreign Origin.
+  // Webhook paths are excluded: they arrive server-to-server with no Origin
+  // and are authenticated by their own signature/secret mechanisms.
+  // Public API paths are excluded: these are intentionally unauthenticated
+  // routes (demo widget, health check) that must work from any origin including
+  // local dev and Vercel preview deployments. Add routes here — not via CORS_ORIGIN.
+  const WEBHOOK_PATHS = ['/api/webhooks/', '/api/affiliates/webhook'];
+  const isWebhookPath = WEBHOOK_PATHS.some(p => pathname.startsWith(p));
+
+  // Public API routes that are intentionally unauthenticated — CSRF check does not apply.
+  // IMPORTANT: This list is the single source of truth for public API exemptions.
+  // Do NOT remove entries from this list without confirming the route requires auth.
+  const PUBLIC_API_PATHS = [
+    '/api/demo/analyze',
+    '/api/demo/caption',
+    '/api/health',
+    '/api/website-analyze',
+  ] as const;
+
+  // Check if this is a public API route before applying CSRF protection
+  const isPublicApiPath = PUBLIC_API_PATHS.some(
+    path => pathname === path || pathname.startsWith(path + '/')
+  );
+
+  if (
+    !isWebhookPath &&
+    !isPublicApiPath &&
+    ['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)
+  ) {
+    // CSRF origin check — applies to all authenticated mutation routes
+    const origin = request.headers.get('origin');
+    const allowedOrigins: string[] = process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+      : ['https://synthex.social'];
+    if (!origin || !allowedOrigins.includes(origin)) {
+      return new NextResponse('Forbidden', { status: 403 });
+    }
+  }
+
+  // CSRF token generation (double-submit cookie pattern — defense-in-depth)
+  // The primary CSRF defense is origin-based validation in APISecurityChecker.
+  // This cookie provides an additional layer: frontend can read it (non-httpOnly)
+  // and send it as X-CSRF-Token header on mutations.
+  if (!request.cookies.get('csrf-token')?.value) {
+    const csrfToken =
+      crypto.randomUUID().replace(/-/g, '') +
+      crypto.randomUUID().replace(/-/g, '');
+    response.cookies.set({
+      name: 'csrf-token',
+      value: csrfToken,
+      httpOnly: false, // Must be readable by JavaScript
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 86400, // 24 hours
+    });
+  }
+
+  // Add request ID for tracing
+  const requestId = crypto.randomUUID();
+  response.headers.set('X-Request-Id', requestId);
+
+  // Security logging handled by API routes
+
+  return response;
+}
+
+// Configure which paths the middleware should run on
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     *
+     * IMPORTANT: /api/ routes ARE included in this matcher — the middleware runs
+     * on all API routes. Public API routes (/api/demo/analyze, /api/health, etc.)
+     * are exempted from CSRF protection via the PUBLIC_API_PATHS constant above,
+     * NOT via the regex here. Do not add /api/ to the exclusion regex — that would
+     * remove ALL middleware protection from API routes, including auth and rate limiting.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    '/api/ai/:path*',
+  ],
+};

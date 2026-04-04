@@ -1,0 +1,103 @@
+{
+  "welcome": {
+    "subject": "Welcome to Synthex! Let's get started",
+    "greeting": "Welcome to Synthex, {{name}}!",
+    "intro": "We're excited to help you amplify your social media presence with AI-powered content optimization.",
+    "nextSteps": "Here's what you can do next:",
+    "step1": "Complete your profile setup",
+    "step2": "Connect your social media accounts",
+    "step3": "Create your first optimized content",
+    "cta": "Get Started",
+    "support": "Need help? Our support team is here to assist you.",
+    "footer": "Thank you for choosing Synthex!"
+  },
+  "passwordReset": {
+    "subject": "Reset your Synthex password",
+    "greeting": "Hi {{name}},",
+    "intro": "We received a request to reset your password for your Synthex account.",
+    "instruction": "Click the button below to create a new password:",
+    "cta": "Reset Password",
+    "expiry": "This link will expire in 24 hours for security reasons.",
+    "noRequest": "If you didn't request this password reset, please ignore this email.",
+    "security": "For security reasons, this link can only be used once."
+  },
+  "notification": {
+    "subject": "{{subject}}",
+    "greeting": "Hi {{name}},",
+    "content": "{{content}}",
+    "cta": "{{ctaText}}",
+    "footer": "You can manage your notification preferences in your account settings."
+  },
+  "campaignComplete": {
+    "subject": "Your campaign '{{campaignName}}' has completed",
+    "greeting": "Hi {{name}},",
+    "intro": "Your campaign '{{campaignName}}' has successfully completed!",
+    "stats": "Here's a summary of your campaign performance:",
+    "totalPosts": "Total posts published: {{count}}",
+    "engagement": "Average engagement: {{rate}}%",
+    "reach": "Total reach: {{reach}} people",
+    "cta": "View Detailed Analytics",
+    "nextSteps": "Ready to create another campaign?",
+    "createNew": "Create New Campaign"
+  },
+  "weeklyReport": {
+    "subject": "Your weekly Synthex report",
+    "greeting": "Hi {{name}},",
+    "intro": "Here's your weekly performance summary:",
+    "contentCreated": "Content pieces created: {{count}}",
+    "avgScore": "Average optimization score: {{score}}%",
+    "topPlatform": "Top performing platform: {{platform}}",
+    "engagement": "Total engagement: {{engagement}}",
+    "cta": "View Full Report",
+    "tip": "Weekly tip: {{tip}}"
+  },
+  "planUpgrade": {
+    "subject": "Upgrade your Synthex plan for more features",
+    "greeting": "Hi {{name}},",
+    "intro": "You're getting great results with Synthex! Ready to unlock more powerful features?",
+    "currentPlan": "Your current plan: {{plan}}",
+    "benefits": "Upgrade benefits:",
+    "benefit1": "Advanced analytics and insights",
+    "benefit2": "Priority customer support",
+    "benefit3": "Additional platform integrations",
+    "benefit4": "Higher API rate limits",
+    "cta": "Upgrade Now",
+    "discount": "Use code UPGRADE20 for 20% off your first month!"
+  },
+  "accountSecurity": {
+    "subject": "Security alert for your Synthex account",
+    "greeting": "Hi {{name}},",
+    "intro": "We detected some unusual activity on your account and wanted to let you know.",
+    "activity": "Activity details: {{details}}",
+    "time": "Time: {{timestamp}}",
+    "location": "Location: {{location}}",
+    "action": "If this was you, no action is needed. If not, please secure your account immediately.",
+    "cta": "Secure My Account",
+    "tips": "Security tips:",
+    "tip1": "Use a strong, unique password",
+    "tip2": "Enable two-factor authentication",
+    "tip3": "Regularly review account activity"
+  },
+  "trialExpiring": {
+    "subject": "Your Synthex trial expires in {{days}} days",
+    "greeting": "Hi {{name}},",
+    "intro": "Your Synthex trial is ending soon, but don't worry - you can continue enjoying all the benefits!",
+    "daysLeft": "Days remaining: {{days}}",
+    "achievements": "During your trial, you've:",
+    "achievement1": "Created {{contentCount}} optimized posts",
+    "achievement2": "Improved engagement by {{improvementPercent}}%",
+    "achievement3": "Saved {{hoursThree}} hours of content creation time",
+    "cta": "Continue with Synthex",
+    "plans": "Choose from our flexible plans:",
+    "support": "Questions? Our team is here to help you choose the right plan."
+  },
+  "common": {
+    "unsubscribe": "Don't want to receive these emails? You can unsubscribe here.",
+    "footer": "© {{year}} Synthex. All rights reserved.",
+    "address": "1234 AI Avenue, Tech City, TC 12345",
+    "support": "Need help? Contact us at support@synthex.social",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "viewInBrowser": "View this email in your browser"
+  }
+}

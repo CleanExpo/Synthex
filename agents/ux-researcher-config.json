@@ -1,0 +1,88 @@
+{
+  "agent_name": "UX Research Agent",
+  "version": "1.0.0",
+  "activation": {
+    "mode": "proactive",
+    "triggers": [
+      "marketing project requirements",
+      "business analysis requests",
+      "persona development needs",
+      "market research requirements",
+      "new product launch",
+      "target audience definition",
+      "customer journey mapping"
+    ],
+    "auto_execute": true
+  },
+  "workflow_position": 1,
+  "execution_time": "45-60 minutes",
+  "deliverables": {
+    "required": [
+      "personas.json",
+      "market-analysis.md",
+      "journey-maps.md",
+      "visual-guidelines.md"
+    ],
+    "optional": [
+      "competitive-analysis.md",
+      "niche-opportunities.json",
+      "user-interviews.md"
+    ]
+  },
+  "handoff": {
+    "next_agent": "content-creator",
+    "context_transfer": {
+      "personas": true,
+      "pain_points": true,
+      "market_insights": true,
+      "visual_preferences": true
+    }
+  },
+  "execution_protocol": {
+    "phase_1": {
+      "name": "Initial Analysis",
+      "duration": "15-20 minutes",
+      "tasks": [
+        "Analyze business model and objectives",
+        "Identify core value propositions",
+        "Research 5-7 key competitors",
+        "Identify market gaps and opportunities"
+      ]
+    },
+    "phase_2": {
+      "name": "Persona Development",
+      "duration": "20-25 minutes",
+      "tasks": [
+        "Create primary persona with full demographics",
+        "Develop 2-3 secondary personas",
+        "Map behavioral patterns and preferences",
+        "Define visual identity specifications"
+      ]
+    },
+    "phase_3": {
+      "name": "Documentation & Handoff",
+      "duration": "10-15 minutes",
+      "tasks": [
+        "Generate structured JSON personas",
+        "Create market analysis documentation",
+        "Design customer journey maps",
+        "Prepare visual guidelines",
+        "Create context brief for next agent"
+      ]
+    }
+  },
+  "quality_gates": {
+    "personas_complete": {
+      "required_fields": ["demographics", "psychographics", "behavioral", "pain_points", "visual_representation"],
+      "minimum_personas": 3
+    },
+    "market_analysis": {
+      "required_sections": ["competitive_landscape", "market_opportunities", "positioning_strategy"],
+      "minimum_competitors": 5
+    },
+    "journey_maps": {
+      "required_stages": ["awareness", "consideration", "decision", "retention"],
+      "touchpoints_per_stage": 3
+    }
+  }
+}

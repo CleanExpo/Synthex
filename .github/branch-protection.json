@@ -1,0 +1,52 @@
+{
+  "protection_rules": [
+    {
+      "branch": "main",
+      "required_status_checks": {
+        "strict": true,
+        "contexts": [
+          "auth-tests",
+          "file-integrity",
+          "build"
+        ]
+      },
+      "enforce_admins": false,
+      "required_pull_request_reviews": {
+        "required_approving_review_count": 1,
+        "dismiss_stale_reviews": true,
+        "require_code_owner_reviews": true
+      },
+      "restrictions": null,
+      "allow_force_pushes": false,
+      "allow_deletions": false,
+      "required_conversation_resolution": true,
+      "lock_branch": false,
+      "allow_fork_syncing": false
+    },
+    {
+      "branch": "staging",
+      "required_status_checks": {
+        "strict": true,
+        "contexts": [
+          "auth-tests",
+          "build"
+        ]
+      },
+      "enforce_admins": false,
+      "required_pull_request_reviews": null,
+      "restrictions": null,
+      "allow_force_pushes": false,
+      "allow_deletions": false
+    }
+  ],
+  "protected_paths": [
+    "src/lib/auth/**",
+    "app/api/auth/**",
+    ".github/workflows/auth-testing.yml"
+  ],
+  "codeowners": {
+    "src/lib/auth/": ["@security-team", "@lead-dev"],
+    "app/api/auth/": ["@security-team", "@lead-dev"],
+    ".github/workflows/": ["@devops-team"]
+  }
+}
