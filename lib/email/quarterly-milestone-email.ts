@@ -26,6 +26,10 @@
  */
 
 import { Resend } from 'resend';
+import {
+  buildPulseSurveyHtml,
+  buildTrackedUrl,
+} from '@/lib/journey/pulse-survey';
 
 let _resend: Resend | null = null;
 function getResend(): Resend {
@@ -35,57 +39,60 @@ function getResend(): Resend {
   return _resend;
 }
 
-const FROM    = process.env.EMAIL_FROM         ?? 'Synthex <noreply@synthex.social>';
+const FROM = process.env.EMAIL_FROM ?? 'Synthex <noreply@synthex.social>';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface GeoScoreSection {
-  currentScore:       number;
-  delta90Days:        number | null;  // current minus score 90 days ago
-  peerPercentile:     number | null;  // 0-100: % of same-industry clients with lower score
+  currentScore: number;
+  delta90Days: number | null; // current minus score 90 days ago
+  peerPercentile: number | null; // 0-100: % of same-industry clients with lower score
 }
 
 export interface ContentTopPost {
-  excerpt:    string;   // first 60 chars of post content
+  excerpt: string; // first 60 chars of post content
   reachCount: number;
 }
 
 export interface QuarterlyMilestoneEmailParams {
-  to:               string;
-  businessName:     string;
-  industry:         string;          // plain-English e.g. "Carpet & Upholstery Cleaning"
-  stateOrRegion:    string;          // e.g. "Victoria"
-  quarterLabel:     string;          // e.g. "Q1 2026"
-  joinDate:         string;          // e.g. "January 2026"
+  to: string;
+  businessName: string;
+  industry: string; // plain-English e.g. "Carpet & Upholstery Cleaning"
+  stateOrRegion: string; // e.g. "Victoria"
+  quarterLabel: string; // e.g. "Q1 2026"
+  joinDate: string; // e.g. "January 2026"
 
   /** Synthex IQ score. Always shown. */
-  synthexIq:        number;
+  synthexIq: number;
 
   /** GEO Score trajectory — null when fewer than 4 weekly data points. */
-  geoSection:       GeoScoreSection | null;
+  geoSection: GeoScoreSection | null;
 
   /** Top 3 posts. null when content_performance_profiles < cold-start gate. */
-  topPosts:         ContentTopPost[] | null;
+  topPosts: ContentTopPost[] | null;
 
   /** Attribution estimate string e.g. "$4,200". null when confidence < 0.80. */
   attributionAmount: string | null;
-  monthlyPlanCost:   number | null;  // for ROI calculation
+  monthlyPlanCost: number | null; // for ROI calculation
 
   /** Authority score 0-100 and delta. null when fewer than 2 data points. */
-  authorityScore:    number | null;
-  authorityDelta:    number | null;
+  authorityScore: number | null;
+  authorityDelta: number | null;
 
   /** Win count this quarter. 0 = always show encouraging framing. */
-  winsCount:        number;
-  bestWinExcerpt:   string | null;   // first 60 chars of best post
-  bestWinReach:     number | null;
-  bestWinEngagement: number | null;  // engagement rate 0-1
+  winsCount: number;
+  bestWinExcerpt: string | null; // first 60 chars of best post
+  bestWinReach: number | null;
+  bestWinEngagement: number | null; // engagement rate 0-1
 
   /** URL for the testimonial card PNG download */
   testimonialCardUrl: string;
 
-  dashboardUrl?:    string;
+  dashboardUrl?: string;
+  /** Journey event tracking — required to enable pulse survey + click tracking. */
+  clientId?: string;
+  momentId?: string;
 }
 
 // ── Section builders ──────────────────────────────────────────────────────────
@@ -116,18 +123,29 @@ function buildSynthexIqSection(
           </tr>`;
 }
 
-function buildGeoSection(geo: GeoScoreSection, industry: string, region: string): string {
-  const multiplierEstimate = geo.delta90Days !== null && geo.delta90Days > 0
-    ? `${(1 + geo.delta90Days / 100).toFixed(1)}×`
-    : null;
+function buildGeoSection(
+  geo: GeoScoreSection,
+  industry: string,
+  region: string
+): string {
+  const multiplierEstimate =
+    geo.delta90Days !== null && geo.delta90Days > 0
+      ? `${(1 + geo.delta90Days / 100).toFixed(1)}×`
+      : null;
 
-  const directionWord = geo.delta90Days !== null
-    ? (geo.delta90Days > 0 ? 'above' : geo.delta90Days < 0 ? 'below' : 'at')
-    : 'at';
+  const directionWord =
+    geo.delta90Days !== null
+      ? geo.delta90Days > 0
+        ? 'above'
+        : geo.delta90Days < 0
+          ? 'below'
+          : 'at'
+      : 'at';
 
-  const peerStatement = geo.peerPercentile !== null
-    ? `You're performing ${directionWord} average for ${industry} businesses in ${region} at the 90-day mark.`
-    : '';
+  const peerStatement =
+    geo.peerPercentile !== null
+      ? `You're performing ${directionWord} average for ${industry} businesses in ${region} at the 90-day mark.`
+      : '';
 
   const impactStatement = multiplierEstimate
     ? `Google is now showing your business to approximately ${multiplierEstimate} more local searchers than 90 days ago.`
@@ -156,14 +174,18 @@ function buildGeoSection(geo: GeoScoreSection, industry: string, region: string)
 }
 
 function buildContentSection(topPosts: ContentTopPost[]): string {
-  const postRows = topPosts.map(p => `
+  const postRows = topPosts
+    .map(
+      p => `
                     <tr>
                       <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;">
                         <p style="margin:0;font-size:14px;color:#374151;line-height:1.5;">
                           "${p.excerpt}" — reached <strong>${p.reachCount.toLocaleString('en-AU')}</strong> people
                         </p>
                       </td>
-                    </tr>`).join('');
+                    </tr>`
+    )
+    .join('');
 
   return `
           <!-- Content Intelligence -->
@@ -185,9 +207,10 @@ function buildContentSection(topPosts: ContentTopPost[]): string {
 }
 
 function buildAttributionSection(amount: string, cost: number | null): string {
-  const roiText = cost && cost > 0
-    ? ` Your Synthex subscription returned approximately ${(parseFloat(amount.replace(/[^0-9.]/g, '')) / cost).toFixed(1)}× for every dollar you invested this quarter.`
-    : '';
+  const roiText =
+    cost && cost > 0
+      ? ` Your Synthex subscription returned approximately ${(parseFloat(amount.replace(/[^0-9.]/g, '')) / cost).toFixed(1)}× for every dollar you invested this quarter.`
+      : '';
 
   return `
           <!-- Attribution estimate -->
@@ -210,16 +233,24 @@ function buildAttributionSection(amount: string, cost: number | null): string {
 }
 
 function authorityBandMeaning(score: number, industry: string): string {
-  if (score >= 76) return `Google considers your business one of the more trusted local ${industry} businesses in your area.`;
-  if (score >= 56) return `Google considers your business a trusted local ${industry} business in your area.`;
-  if (score >= 31) return `Google is growing its trust in your business — your authority is building.`;
+  if (score >= 76)
+    return `Google considers your business one of the more trusted local ${industry} businesses in your area.`;
+  if (score >= 56)
+    return `Google considers your business a trusted local ${industry} business in your area.`;
+  if (score >= 31)
+    return `Google is growing its trust in your business — your authority is building.`;
   return `Your business authority is in early stages — this is normal at 90 days, and it's growing.`;
 }
 
-function buildAuthoritySection(score: number, delta: number | null, industry: string): string {
-  const deltaHtml = delta !== null
-    ? `<span style="font-size:15px;font-weight:600;color:${delta >= 0 ? '#16a34a' : '#dc2626'};margin-left:10px;">${delta >= 0 ? '▲ +' : '▼ '}${delta} pts from last month</span>`
-    : '';
+function buildAuthoritySection(
+  score: number,
+  delta: number | null,
+  industry: string
+): string {
+  const deltaHtml =
+    delta !== null
+      ? `<span style="font-size:15px;font-weight:600;color:${delta >= 0 ? '#16a34a' : '#dc2626'};margin-left:10px;">${delta >= 0 ? '▲ +' : '▼ '}${delta} pts from last month</span>`
+      : '';
 
   return `
           <!-- Authority Score -->
@@ -247,15 +278,17 @@ function buildWinsSection(
   bestWinReach: number | null,
   bestWinEngagement: number | null
 ): string {
-  const countText = winsCount === 0
-    ? 'Your audience data is building. Wins come when Synthex has learned enough about what resonates — that learning is happening now.'
-    : `${winsCount} win${winsCount === 1 ? '' : 's'} this quarter — post${winsCount === 1 ? '' : 's'} that outperformed your industry average.`;
+  const countText =
+    winsCount === 0
+      ? 'Your audience data is building. Wins come when Synthex has learned enough about what resonates — that learning is happening now.'
+      : `${winsCount} win${winsCount === 1 ? '' : 's'} this quarter — post${winsCount === 1 ? '' : 's'} that outperformed your industry average.`;
 
-  const bestWinHtml = winsCount > 0 && bestWinExcerpt
-    ? `<p style="margin:8px 0 0;font-size:13px;color:#374151;font-style:italic;line-height:1.5;">
+  const bestWinHtml =
+    winsCount > 0 && bestWinExcerpt
+      ? `<p style="margin:8px 0 0;font-size:13px;color:#374151;font-style:italic;line-height:1.5;">
          "${bestWinExcerpt}" — your top post this quarter${bestWinReach ? `, reaching ${bestWinReach.toLocaleString('en-AU')} people` : ''}${bestWinEngagement ? ` with ${(bestWinEngagement * 100).toFixed(1)}% engagement` : ''}.
        </p>`
-    : '';
+      : '';
 
   return `
           <!-- Win Notification summary -->
@@ -297,16 +330,45 @@ function buildHtml(params: QuarterlyMilestoneEmailParams): string {
     bestWinEngagement,
     testimonialCardUrl,
     dashboardUrl = `${APP_URL}/dashboard`,
+    clientId,
+    momentId,
   } = params;
 
-  const iqSection          = buildSynthexIqSection(synthexIq, businessName, joinDate);
-  const geoHtml            = geoSection ? buildGeoSection(geoSection, industry, stateOrRegion) : '';
-  const contentHtml        = topPosts && topPosts.length > 0 ? buildContentSection(topPosts) : '';
-  const attributionHtml    = attributionAmount ? buildAttributionSection(attributionAmount, monthlyPlanCost) : '';
-  const authorityHtml      = (authorityScore !== null && authorityDelta !== null)
-    ? buildAuthoritySection(authorityScore, authorityDelta, industry)
+  const iqSection = buildSynthexIqSection(synthexIq, businessName, joinDate);
+  const geoHtml = geoSection
+    ? buildGeoSection(geoSection, industry, stateOrRegion)
     : '';
-  const winsHtml           = buildWinsSection(winsCount, bestWinExcerpt, bestWinReach, bestWinEngagement);
+  const contentHtml =
+    topPosts && topPosts.length > 0 ? buildContentSection(topPosts) : '';
+  const attributionHtml = attributionAmount
+    ? buildAttributionSection(attributionAmount, monthlyPlanCost)
+    : '';
+  const authorityHtml =
+    authorityScore !== null && authorityDelta !== null
+      ? buildAuthoritySection(authorityScore, authorityDelta, industry)
+      : '';
+  const winsHtml = buildWinsSection(
+    winsCount,
+    bestWinExcerpt,
+    bestWinReach,
+    bestWinEngagement
+  );
+  const pulseHtml =
+    clientId && momentId
+      ? buildPulseSurveyHtml({
+          clientId,
+          momentId,
+          question: 'How useful was your Quarterly Milestone Review?',
+        })
+      : '';
+  const trackedDashboardUrl =
+    clientId && momentId
+      ? buildTrackedUrl(clientId, momentId, dashboardUrl)
+      : dashboardUrl;
+  const trackedTestimonialUrl =
+    clientId && momentId
+      ? buildTrackedUrl(clientId, momentId, testimonialCardUrl)
+      : testimonialCardUrl;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -348,6 +410,7 @@ function buildHtml(params: QuarterlyMilestoneEmailParams): string {
           ${attributionHtml}
           ${authorityHtml}
           ${winsHtml}
+          ${pulseHtml}
 
           <!-- Testimonial card download -->
           <tr>
@@ -360,7 +423,7 @@ function buildHtml(params: QuarterlyMilestoneEmailParams): string {
                     <p style="margin:0 0 12px;font-size:14px;color:#64748b;line-height:1.5;">
                       Download a shareable card showing your best result this quarter.
                     </p>
-                    <a href="${testimonialCardUrl}"
+                    <a href="${trackedTestimonialUrl}"
                        style="display:inline-block;padding:10px 24px;background:#0f172a;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;">
                       Download your result →
                     </a>
@@ -373,7 +436,7 @@ function buildHtml(params: QuarterlyMilestoneEmailParams): string {
           <!-- CTA -->
           <tr>
             <td style="padding:0 32px 40px;text-align:center;">
-              <a href="${dashboardUrl}"
+              <a href="${trackedDashboardUrl}"
                  style="display:inline-block;padding:14px 32px;background:#0f172a;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:600;">
                 Your next 90 days start now →
               </a>
@@ -408,7 +471,9 @@ function buildText(params: QuarterlyMilestoneEmailParams): string {
   ];
 
   if (params.geoSection) {
-    lines.push(`GEO Score: ${params.geoSection.currentScore}/100${params.geoSection.delta90Days !== null ? ` (${params.geoSection.delta90Days >= 0 ? '+' : ''}${params.geoSection.delta90Days} pts from 90 days ago)` : ''}`);
+    lines.push(
+      `GEO Score: ${params.geoSection.currentScore}/100${params.geoSection.delta90Days !== null ? ` (${params.geoSection.delta90Days >= 0 ? '+' : ''}${params.geoSection.delta90Days} pts from 90 days ago)` : ''}`
+    );
     lines.push('');
   }
 
@@ -417,15 +482,18 @@ function buildText(params: QuarterlyMilestoneEmailParams): string {
     lines.push('');
   }
 
-  const winsText = params.winsCount === 0
-    ? 'Your audience data is building. Wins come when Synthex has learned enough about what resonates.'
-    : `${params.winsCount} win${params.winsCount === 1 ? '' : 's'} this quarter — posts that outperformed your industry average.`;
+  const winsText =
+    params.winsCount === 0
+      ? 'Your audience data is building. Wins come when Synthex has learned enough about what resonates.'
+      : `${params.winsCount} win${params.winsCount === 1 ? '' : 's'} this quarter — posts that outperformed your industry average.`;
   lines.push(winsText);
   lines.push('');
 
   lines.push(`Download your result card: ${params.testimonialCardUrl}`);
   lines.push('');
-  lines.push(`Your next 90 days start now: ${params.dashboardUrl ?? `${APP_URL}/dashboard`}`);
+  lines.push(
+    `Your next 90 days start now: ${params.dashboardUrl ?? `${APP_URL}/dashboard`}`
+  );
   lines.push('');
   lines.push(`Manage notifications: ${APP_URL}/dashboard/settings`);
 
@@ -447,11 +515,11 @@ export async function sendQuarterlyMilestoneEmail(
     const resend = getResend();
 
     const { error } = await resend.emails.send({
-      from:    FROM,
-      to:      params.to,
+      from: FROM,
+      to: params.to,
       subject: `${params.businessName} — your ${params.quarterLabel} Synthex Milestone Review`,
-      html:    buildHtml(params),
-      text:    buildText(params),
+      html: buildHtml(params),
+      text: buildText(params),
     });
 
     if (error) {
