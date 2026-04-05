@@ -8,6 +8,44 @@
  */
 
 import { prisma } from '@/lib/prisma';
+import { createClient } from '@supabase/supabase-js';
+
+// ── Journey Shadow Dimension Config ──────────────────────────────────────────
+
+/**
+ * SYN-679: 4-week validation protocol toggle.
+ *
+ * When false (default): journey_engagement is computed and logged to
+ *   shadow_dimensions, but NOT included in the 0-100 composite score.
+ *
+ * When true: journey_engagement is included at 10% weight; existing 6
+ *   dimensions are proportionally reweighted to sum to 90%.
+ *
+ * Promotion criteria (after 4 weekly cycles):
+ *   - If ≤20% of clients cross an intervention threshold solely due to this
+ *     dimension → set to true and reweight existing dimensions to 90%
+ *   - If >20% cross threshold → keep false, investigate signal quality
+ */
+export const JOURNEY_DIMENSION_ACTIVE = false;
+
+/** Weight allocated to journey_engagement when active */
+const JOURNEY_DIMENSION_WEIGHT = 0.10;
+
+// ── Supabase admin client (for journey_analytics view, not in Prisma schema) ─
+
+let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
+function getSupabaseAdmin() {
+  if (!_supabaseAdmin) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (url && key) {
+      _supabaseAdmin = createClient(url, key, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+    }
+  }
+  return _supabaseAdmin;
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,11 +66,16 @@ export interface HealthScoreDimensions {
 
 export type RiskLevel = 'healthy' | 'watch' | 'at_risk' | 'critical';
 
+export interface ShadowDimensions {
+  journey_engagement: DimensionScore | null;
+}
+
 export interface ComputedHealthScore {
   organizationId: string;
   weekStart: Date;
   overallScore: number | null; // null = insufficient_data (< 2 non-null dimensions)
   dimensions: HealthScoreDimensions;
+  shadowDimensions: ShadowDimensions; // logged always, included in composite only when JOURNEY_DIMENSION_ACTIVE
   scoreDelta: number;          // change from previous week (0 if no prior score)
   riskLevel: RiskLevel | null; // null = insufficient_data
 }
@@ -97,6 +140,52 @@ function weightedAverage(
     0
   );
   return Math.round(Math.max(0, Math.min(100, weighted)));
+}
+
+// ── Shadow Dimension: Journey Engagement ──────────────────────────────────────
+
+/**
+ * Fetches journey_engagement_rate from the journey_analytics materialized view.
+ * Returns null when the org has no journey moments (excluded from dimension).
+ * Rate is 0.0-1.0 (total_moments_engaged / total_moments_received).
+ *
+ * SYN-679 — shadow dimension, not included in composite until JOURNEY_DIMENSION_ACTIVE = true
+ */
+async function computeJourneyEngagement(
+  organizationId: string
+): Promise<DimensionScore | null> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return null;
+
+  try {
+    const { data } = await (supabase as any)
+      .from('journey_analytics')
+      .select('engagement_rate, total_moments_received, total_moments_engaged')
+      .eq('client_id', organizationId)
+      .maybeSingle();
+
+    if (!data) return null;
+
+    const row = data as {
+      engagement_rate: number;
+      total_moments_received: number;
+      total_moments_engaged: number;
+    };
+
+    // Clients with 0 moments received → null (excluded from dimension)
+    if (row.total_moments_received === 0) return null;
+
+    const rate = row.engagement_rate; // already 0.0–1.0 from the view
+    const score = Math.round(Math.min(100, rate * 100));
+
+    return {
+      score,
+      raw_value: rate,
+      description: `Engaged with ${row.total_moments_engaged} of ${row.total_moments_received} journey moment${row.total_moments_received !== 1 ? 's' : ''}`,
+    };
+  } catch {
+    return null; // Safe default — shadow dimension must not break Health Score
+  }
 }
 
 // ── Config ───────────────────────────────────────────────────────────────────
@@ -369,7 +458,7 @@ export async function computeHealthScore(
   const weekStart = thisMonday();
   const weights = await getWeights();
 
-  // Run all six dimensions in parallel
+  // Run all six core dimensions + shadow dimension in parallel
   const [
     content_consistency,
     engagement_trajectory,
@@ -377,6 +466,7 @@ export async function computeHealthScore(
     authority_momentum,
     advisor_engagement,
     platform_usage,
+    journey_engagement,
   ] = await Promise.all([
     computeContentConsistency(organizationId),
     computeEngagementTrajectory(organizationId),
@@ -384,6 +474,7 @@ export async function computeHealthScore(
     computeAuthorityMomentum(organizationId),
     computeAdvisorEngagement(organizationId),
     computePlatformUsage(organizationId),
+    computeJourneyEngagement(organizationId), // SYN-679 shadow dimension
   ]);
 
   const dimensions: HealthScoreDimensions = {
@@ -395,7 +486,10 @@ export async function computeHealthScore(
     platform_usage,
   };
 
-  // Weighted average with null redistribution
+  const shadowDimensions: ShadowDimensions = { journey_engagement };
+
+  // Build score map and effective weights
+  // When JOURNEY_DIMENSION_ACTIVE: include journey at 10%, scale existing 6 to 90%
   const scoreMap: Record<string, number | null> = {
     content_consistency: content_consistency?.score ?? null,
     engagement_trajectory: engagement_trajectory?.score ?? null,
@@ -405,7 +499,20 @@ export async function computeHealthScore(
     platform_usage: platform_usage.score, // never null
   };
 
-  const overallScore = weightedAverage(scoreMap, weights);
+  const effectiveWeights: Record<string, number> = JOURNEY_DIMENSION_ACTIVE
+    ? {
+        ...Object.fromEntries(
+          Object.entries(weights).map(([k, v]) => [k, v * (1 - JOURNEY_DIMENSION_WEIGHT)])
+        ),
+        journey_engagement: JOURNEY_DIMENSION_WEIGHT,
+      }
+    : { ...weights };
+
+  if (JOURNEY_DIMENSION_ACTIVE) {
+    scoreMap.journey_engagement = journey_engagement?.score ?? null;
+  }
+
+  const overallScore = weightedAverage(scoreMap, effectiveWeights);
 
   // Fetch previous week score for delta
   const prevScore = await prisma.clientHealthScore.findFirst({
@@ -427,6 +534,7 @@ export async function computeHealthScore(
     weekStart,
     overallScore,
     dimensions,
+    shadowDimensions,
     scoreDelta,
     riskLevel: overallScore !== null ? toRiskLevel(overallScore) : null,
   };
@@ -446,6 +554,7 @@ export async function saveHealthScore(result: ComputedHealthScore): Promise<void
     update: {
       overallScore: result.overallScore ?? 0,
       dimensions: result.dimensions as object,
+      shadowDimensions: result.shadowDimensions as object,
       scoreDelta: result.scoreDelta,
       riskLevel: result.riskLevel,
     },
@@ -454,6 +563,7 @@ export async function saveHealthScore(result: ComputedHealthScore): Promise<void
       weekStart: result.weekStart,
       overallScore: result.overallScore ?? 0,
       dimensions: result.dimensions as object,
+      shadowDimensions: result.shadowDimensions as object,
       scoreDelta: result.scoreDelta,
       riskLevel: result.riskLevel,
     },

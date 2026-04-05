@@ -88,7 +88,6 @@ export async function GET(request: NextRequest) {
     if (supabase) {
       try {
         // Cast required: client_journey_events not in generated Supabase types
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: rawExisting } = await (supabase as any)
           .from('client_journey_events')
           .select('engagement_outcome, metadata')
@@ -102,7 +101,6 @@ export async function GET(request: NextRequest) {
 
         if (existing && !ALREADY_SURVEYED.has(existing.engagement_outcome)) {
           const existingMeta = existing.metadata ?? {};
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           await (supabase as any)
             .from('client_journey_events')
             .update({

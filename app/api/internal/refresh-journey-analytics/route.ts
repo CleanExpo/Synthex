@@ -52,7 +52,6 @@ export async function POST(request: NextRequest) {
   // Helper: fire-and-forget log to edge_function_logs (table not in generated types)
   const logEvent = async (status: string, message: string, durationMs: number) => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any).from('edge_function_logs').insert({
         function_name: 'refresh-journey-analytics',
         status,
@@ -65,7 +64,6 @@ export async function POST(request: NextRequest) {
   try {
     // REFRESH MATERIALIZED VIEW CONCURRENTLY — requires unique index on client_id
     // execute_sql is a custom RPC; cast to any as it's outside generated types
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any).rpc('execute_sql', {
       sql: 'REFRESH MATERIALIZED VIEW CONCURRENTLY journey_analytics',
     });

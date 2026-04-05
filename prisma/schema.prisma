@@ -6081,6 +6081,11 @@ model ClientHealthScore {
   /// null = insufficient_data (< 2 non-null dimensions)
   riskLevel      String?  @map("risk_level")
 
+  /// Shadow dimensions logged but NOT included in composite score while JOURNEY_DIMENSION_ACTIVE = false.
+  /// Shape: { journey_engagement: { score, raw_value, description } | null }
+  /// SYN-679 — 4-week validation protocol before promotion to active dimension
+  shadowDimensions Json?  @map("shadow_dimensions")
+
   createdAt      DateTime @default(now()) @map("created_at")
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)

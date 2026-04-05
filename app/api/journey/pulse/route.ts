@@ -69,7 +69,6 @@ export async function GET(request: NextRequest) {
   try {
     // Fetch existing event to merge metadata rather than overwrite
     // Cast required: client_journey_events not in generated Supabase types
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: rawExisting } = await (supabase as any)
       .from('client_journey_events')
       .select('id, metadata, engagement_outcome')
@@ -95,7 +94,6 @@ export async function GET(request: NextRequest) {
     const HIGHER_OUTCOMES = new Set(['surveyed', 'acted', 'replied', 'clicked']);
     const shouldAdvance = !HIGHER_OUTCOMES.has(existing.engagement_outcome);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any)
       .from('client_journey_events')
       .update({
