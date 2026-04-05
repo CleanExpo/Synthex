@@ -22,6 +22,7 @@
  */
 
 import { Resend } from 'resend';
+import { buildPulseSurveyHtml, buildTrackedUrl } from '@/lib/journey/pulse-survey';
 
 let _resend: Resend | null = null;
 function getResend(): Resend {
@@ -49,6 +50,8 @@ export interface ThirtyDayCheckinEmailParams {
   winsCount:        number;
   dashboardUrl?:    string;
   calendarUrl?:     string;
+  clientId?:        string;   // enables pulse survey + click tracking when provided
+  momentId?:        string;   // client_journey_events.id
 }
 
 // ── Subject line ──────────────────────────────────────────────────────────────
@@ -181,6 +184,8 @@ function buildHtml(params: ThirtyDayCheckinEmailParams): string {
     geoScore,
     winsCount,
     dashboardUrl = `${APP_URL}/dashboard`,
+    clientId,
+    momentId,
   } = params;
 
   const variant     = getSubjectVariant(actualSendDay);
@@ -192,6 +197,14 @@ function buildHtml(params: ThirtyDayCheckinEmailParams): string {
     variant === 'day_28_32' ? `30 days in — here's what we've learned.` :
     variant === 'day_33_38' ? `Five weeks in — your starting point.` :
                               `Your Synthex baseline.`;
+
+  const hasTracking = !!(clientId && momentId);
+  const trackedDashboardUrl = hasTracking
+    ? buildTrackedUrl(clientId!, momentId!, dashboardUrl)
+    : dashboardUrl;
+  const pulseSection = hasTracking
+    ? buildPulseSurveyHtml({ clientId: clientId!, momentId: momentId! })
+    : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -252,10 +265,12 @@ function buildHtml(params: ThirtyDayCheckinEmailParams): string {
             </td>
           </tr>
 
+          ${pulseSection}
+
           <!-- CTA -->
           <tr>
             <td style="padding:0 32px 40px;text-align:center;">
-              <a href="${dashboardUrl}"
+              <a href="${trackedDashboardUrl}"
                  style="display:inline-block;padding:14px 32px;background:#0f172a;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:600;">
                 See your dashboard →
               </a>

@@ -26,6 +26,7 @@
  */
 
 import { Resend } from 'resend';
+import { buildPulseSurveyHtml, buildTrackedUrl } from '@/lib/journey/pulse-survey';
 
 let _resend: Resend | null = null;
 function getResend(): Resend {
@@ -86,6 +87,8 @@ export interface QuarterlyMilestoneEmailParams {
   testimonialCardUrl: string;
 
   dashboardUrl?:    string;
+  clientId?:        string;   // enables pulse survey + click tracking when provided
+  momentId?:        string;   // client_journey_events.id
 }
 
 // ── Section builders ──────────────────────────────────────────────────────────
@@ -297,6 +300,8 @@ function buildHtml(params: QuarterlyMilestoneEmailParams): string {
     bestWinEngagement,
     testimonialCardUrl,
     dashboardUrl = `${APP_URL}/dashboard`,
+    clientId,
+    momentId,
   } = params;
 
   const iqSection          = buildSynthexIqSection(synthexIq, businessName, joinDate);
@@ -306,6 +311,19 @@ function buildHtml(params: QuarterlyMilestoneEmailParams): string {
   const authorityHtml      = (authorityScore !== null && authorityDelta !== null)
     ? buildAuthoritySection(authorityScore, authorityDelta, industry)
     : '';
+
+  const hasTracking = !!(clientId && momentId);
+  const trackedDashboardUrl = hasTracking
+    ? buildTrackedUrl(clientId!, momentId!, dashboardUrl)
+    : dashboardUrl;
+  const pulseSection = hasTracking
+    ? buildPulseSurveyHtml({
+        clientId: clientId!,
+        momentId: momentId!,
+        question: 'How useful was this quarterly review?',
+      })
+    : '';
+
   const winsHtml           = buildWinsSection(winsCount, bestWinExcerpt, bestWinReach, bestWinEngagement);
 
   return `<!DOCTYPE html>
@@ -370,10 +388,12 @@ function buildHtml(params: QuarterlyMilestoneEmailParams): string {
             </td>
           </tr>
 
+          ${pulseSection}
+
           <!-- CTA -->
           <tr>
             <td style="padding:0 32px 40px;text-align:center;">
-              <a href="${dashboardUrl}"
+              <a href="${trackedDashboardUrl}"
                  style="display:inline-block;padding:14px 32px;background:#0f172a;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:600;">
                 Your next 90 days start now →
               </a>
