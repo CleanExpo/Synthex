@@ -1,0 +1,102 @@
+```json
+{
+  "zteLevel": 2,
+  "zteScore": 37,
+  "leveragePoints": [
+    {
+      "id": 1,
+      "name": "Spec Quality",
+      "score": 4,
+      "rationale": "CLAUDE.md has explicit session protocol, PRE/POST-IMPLEMENTATION gates, CONSTITUTION.md reference, and Linear issue mandate. ROUTE_REFERENCE.md as pre-flight check. agents/planner/README.md enforces Builder/Validator pattern with atomic tasks. Gaps: no machine-readable acceptance criteria per task; specs/plan.md is AI-generated but not schema-validated."
+    },
+    {
+      "id": 2,
+      "name": "Context Precision",
+      "score": 4,
+      "rationale": ".claude/memory/ hierarchy (MEMORY.md, ARCHITECTURE.md, STANDARDS.md, TESTING.md, WORKFLOWS.md), scratchpad with 10-tool-call checkpoints, pre-compact hook. 18 domain skills auto-triggered by context. .env.example is 600+ lines of annotated context. Gaps: skills are YAML with triggers but no evidence of embedding/vector retrieval — pure keyword match. brand-intelligence/CLAUDE.md and main CLAUDE.md are separate context islands with no linking protocol."
+    },
+    {
+      "id": 3,
+      "name": "Model Selection",
+      "score": 3,
+      "rationale": "brand-intelligence/CLAUDE.md explicitly maps agents to models (Opus 4.6 for orchestrator/CEO Board, Sonnet 4.6 for research/analysis, Haiku 4.5 for fast/cheap tasks). agents/planner defaults to claude-3-5-sonnet-20241022. Main CLAUDE.md task runner uses Claude Code headlessly — no model pinning visible in task-runner.sh context. No cost-per-task model routing for the main platform. Multi-provider AI (OpenRouter/Claude/Gemini/GPT) in product but not in agent infrastructure."
+    },
+    {
+      "id": 4,
+      "name": "Tool Availability",
+      "score": 4,
+      "rationale": "Linear MCP via HTTP transport (auto-connects), Playwright MCP for web research, 18 domain skills, ci-verify.js, compare-contracts.js, scan-ui-wiring.js, controlled-autonomous-build.ts. Docker + k8s local cluster. Remotion for video. Bayesian microservice (FastAPI). env-management agent system (discovery/validator/security/migrator/transformer). Gaps: no browser-use tool available to main Claude Code sessions per CLAUDE.md (browser-verify skill exists but tooling unclear); no semantic code search MCP."
+    },
+    {
+      "id": 5,
+      "name": "Feedback Loops",
+      "score": 3,
+      "rationale": ".claude/review-board/ implements 4-layer automated PR review with 16 specialists, JSONL metrics log, pattern detection, specialist effectiveness tracking. BullMQ for background jobs. PostToolUse hooks for file change reminders. Stop hook for session end checklist. Gaps: review-board metrics.jsonl capped at 500 entries with 90-day archive but no real-time drift alerting to Claude; task-runner.sh loops until no backlog but no mid-run performance signal back to model."
+    },
+    {
+      "id": 6,
+      "name": "Error Recovery",
+      "score": 3,
+      "rationale": "task-runner.sh waits 1 hour on rate limit then resumes. brand-intelligence cost_tracker.py enforces hard cap ($8/run) with 3-tier alert → stop. env-migrator has rollback + dry-run. k8s HPA (2-6 pods), rolling deployments, auto-rollback in deploy.ps1. Bayesian service has graceful fallback to heuristics. Gaps: CLAUDE.md caps automatic retries at 2 then escalates to human — no self-healing beyond that; no circuit breaker on Linear MCP failure; review-board override is manual (dismiss + OVERRIDE comment)."
+    },
+    {
+      "id": 7,
+      "name": "Session Continuity",
+      "score": 4,
+      "rationale": ".claude/scratchpad/current-session.md survives context compaction (gitignored, kept between sessions), mandatory checkpoint every 10 tool calls. .claude/memory/MEMORY.md for cross-session architectural decisions with [DD/MM/YYYY] format. PreCompact hook saves state + injects context. Linear MCP provides live issue state across sessions. Gaps: scratchpad is human-readable markdown not structured — no diff/merge if two sessions write simultaneously; memory file has no size cap or compression strategy documented."
+    },
+    {
+      "id": 8,
+      "name": "Quality Gating",
+      "score": 4,
+      "rationale": "Pre-PR gate explicitly defined: type-check && lint && test. release:check runs full suite (db:verify + type-check + lint + test + e2e + build). Review board with 16 specialists on every PR to main, 4 risk tiers, 80% confidence filter on Chief Reviewer. Zod validation required on all POST/PUT/PATCH/DELETE. lint-staged on commit. Prisma validate before db push. tsconfig.build.json strict=false is a gap — production build relaxes type checks (noImplicitAny:false, strictNullChecks:false). agents/ and tests/ excluded from tsconfig.json."
+    },
+    {
+      "id": 9,
+      "name": "Cost Efficiency",
+      "score": 3,
+      "rationale": "brand-intelligence has explicit $8 hard cap with tiered alerts ($6.50/$7.50/$8.00) and per-client cost tracking. Haiku for fast tasks, Sonnet for analysis, Opus for orchestration. Bayesian service uses CPU-only JAX (jax[cpu]) with note to switch for GPU. k8s Dockerfile uses standalone Next.js output (~300-400MB vs ~1.5GB). Remotion in separate package to avoid bloating main bundle. Gaps: main task-runner.sh has no cost tracking or token budget; OpenRouter as primary gateway enables multi-model but no routing policy by cost visible; MAX_ISSUES cap exists but no spend limit."
+    },
+    {
+      "id": 10,
+      "name": "Trigger Automation",
+      "score": 3,
+      "rationale": "task-runner.sh runs headlessly through Linear backlog autonomously (fetches → runs → commits → updates Linear → loops). brand-intelligence runs every 6 hours via cron with --cron auto-detect mode. Review board triggers on every PR to main via GitHub Actions. PostToolUse hook on file changes. Linear webhook integration. Gaps: no event-driven trigger from monitoring/alerting to agent (e.g., Sentry error → create Linear issue → trigger fix agent); cron automation is external scheduler dependent, not self-scheduling; routes:refresh is manual bash call."
+    },
+    {
+      "id": 11,
+      "name": "Knowledge Retention",
+      "score": 3,
+      "rationale": ".claude/memory/MEMORY.md with DECISION/REASON/ALTERNATIVES REJECTED format. 18 skills as domain knowledge artifacts. review-board/metrics.jsonl with pattern detection and specialist effectiveness tracking over time. Migration map in archived README preserves history. ROUTE_REFERENCE.md as living route registry. Gaps: skills have no versioning or last-validated timestamp; MEMORY.md has no retrieval mechanism beyond linear read — no indexing; archived code under .claude/archived/ has no searchable index; knowledge doesn't flow back from production incidents to skill updates automatically."
+    },
+    {
+      "id": 12,
+      "name": "Workflow Standardization",
+      "score": 3,
+      "rationale": "CLAUDE.md enforces strict START/PRE/DURING/POST/END session protocol. Builder/Validator pattern in agents/planner/. Commit format typed (type(scope): description). Australian English mandated. Slash commands (/bootstrap, /new-feature, /verify, /audit, /fix-types). env-management has pre-built workflows (full-scan, deployment-prep, security-audit). Gaps: task-runner.sh and brand-intelligence pipeline are separate workflow engines with no shared abstraction; no standardized agent handoff protocol across the three different agent systems (Claude Code task runner, brand-intelligence pipeline, review board); Builder→Validator is documented but enforcement is social not mechanical."
+    }
+  ],
+  "productionGaps": [
+    "tsconfig.build.json disables strict, noImplicitAny, strictNullChecks, strictFunctionTypes — production builds pass with type errors that dev catches. File: tsconfig.build.json lines 4-19.",
+    "Supabase SQL migrations must be applied manually in Supabase SQL Editor — no automation path. File: database/migrations/supabase/README.md. Risk of schema drift on deploy.",
+    "k8s/Dockerfile stage 2 injects placeholder secrets as build ARGs (SUPABASE_SERVICE_ROLE_KEY=placeholder-service-role-key-build-only) because 17 service files create admin clients at module scope — architectural smell that forces secret injection at build time. File: k8s/Dockerfile lines 29-38.",
+    "deployment/Dockerfile uses node:20-alpine but package.json engines.node=22.x — Node version mismatch in production Docker image. File: deployment/Dockerfile line 19 vs package.json engines.",
+    "review-board/metrics.jsonl has no documented integrity check or backup — loss of 90 days of review pattern data on corruption. File: .claude/review-board/README.md.",
+    "No circuit breaker or fallback when Linear MCP disconnects — CLAUDE.md requires Linear issue for all work but MCP failure has no recovery path beyond /mcp reconnect command.",
+    "task-runner.sh has no spend limit or token budget — runaway loop could exhaust API quota silently. MAX_ISSUES cap is the only brake.",
+    "brand-intelligence pipeline writes to filesystem (output/) and platform reads at render time — no consistency guarantee, no locking, race condition possible on 6-hour cron overlap.",
+    "Legacy price IDs in .env.example for STRIPE_GROWTH_PRICE_ID and STRIPE_SCALE_PRICE_ID are placeholder values (price_1xxxxxxxxxxxxxxxxx) — existing subscribers on these plans would break on fresh deploy. File: .env.example lines referencing legacy plans.",
+    "agents/ and tests/ excluded from tsconfig.json — agent code has no type safety guarantees. File: tsconfig.json exclude array."
+  ],
+  "loadRisks": [
+    "BullMQ queue backed by Redis (Upstash serverless) — serverless Redis has cold-start latency; under high post-scheduling load, queue throughput bounded by Upstash tier limits with no overflow strategy documented.",
+    "9 social platform OAuth flows + webhooks all route through single Next.js app on Vercel — platform rate limits (TikTok, Instagram) could cascade; no per-platform queue isolation visible.",
+    "Prisma 6 with 67 models + Supabase pgbouncer (transaction mode) — complex joins or long transactions will exhaust pgbouncer connections; no connection pool sizing documented in env vars.",
+    "synthex-bayesian-service runs uvicorn with 2 workers — Prophet/BayesNF are CPU-heavy; 2 concurrent heavy forecasting requests will saturate a single Railway container; no horizontal scaling config in requirements.txt or Dockerfile.",
+    "brand-intelligence Orchestrator (Opus 4.6) spawns 6 sub-agents per client per 6-hour run — with multiple active clients (active-clients.json), parallel Opus calls could hit Anthropic concurrent request limits and spike above $8 hard cap before cost_tracker.py can intervene.",
+    "k8s HPA scales 2-6 pods on CPU/memory — Next.js with WebSocket (ws:prod on port 3001) requires sticky sessions; k8s ClusterIP + NGINX ingress without session affinity will break WebSocket connections on scale-out.",
+    "Remotion video rendering (board-cron/remotion) is CPU-intensive and runs in a separate package — no resource isolation from main app process if run on same host; no queue depth limit visible.",
+    "review-board runs 16 specialists in 4 parallel batches on every PR — under high PR volume (multiple engineers merging), concurrent GitHub Actions runs could exhaust Claude API rate limits simultaneously."
+  ]
+}
+```
