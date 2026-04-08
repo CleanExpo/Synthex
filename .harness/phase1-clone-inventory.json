@@ -1,0 +1,55 @@
+```json
+{
+  "totalFiles": 58,
+  "languages": {
+    "TypeScript": 8200,
+    "TypeScript/TSX": 3100,
+    "Python": 420,
+    "Markdown": 2800,
+    "JSON": 380,
+    "Dockerfile": 120,
+    "Shell": 40
+  },
+  "topFiles": [
+    ".env.example",
+    "components/icons/index.ts",
+    "package.json",
+    "README.md",
+    "CLAUDE.md",
+    "components/competitor-analysis/index.tsx",
+    "components/approval-workflow/index.tsx",
+    "components/ai-content-studio/index.tsx",
+    "components/command-palette/index.tsx",
+    "synthex-bayesian-service/app/main.py"
+  ],
+  "frameworks": [
+    "Next.js 15 (App Router)",
+    "React 19",
+    "Prisma 6",
+    "Tailwind CSS 4",
+    "Radix UI",
+    "Framer Motion",
+    "BullMQ",
+    "FastAPI",
+    "Remotion 4",
+    "Storybook 10",
+    "Playwright",
+    "Jest",
+    "Supabase",
+    "Stripe",
+    "Vercel AI SDK",
+    "Anthropic SDK",
+    "OpenAI SDK",
+    "Google AI SDK"
+  ],
+  "entryPoints": [
+    "package.json",
+    "synthex-bayesian-service/app/main.py",
+    "brand-intelligence/synthex_orchestrator.py",
+    "board-cron/remotion/src/index.ts",
+    ".claude/archived/2026-03-22/legacy-src/index.ts.disabled",
+    "deployment/Dockerfile",
+    "k8s/Dockerfile"
+  ]
+}
+```
