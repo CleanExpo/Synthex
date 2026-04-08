@@ -1,0 +1,25 @@
+```json
+{
+  "projectPurpose": "SYNTHEX is an AI-powered social media management SaaS platform that automates content creation, scheduling, and analytics across 9 social platforms using multi-provider LLM intelligence (OpenRouter/Claude/Gemini/GPT). It targets businesses, influencers, and agencies who need agency-level social media execution without agency-level cost.",
+  "targetUsers": [
+    "Business owners needing brand social presence without hiring agencies",
+    "Influencers and content creators scaling output",
+    "Marketing agencies managing multiple client accounts",
+    "Entrepreneurs launching social presence from zero"
+  ],
+  "businessLogic": "Subscription SaaS (Stripe) with 4 tiers: Starter ($49 AUD/mo), Introductory ($99 transitioning to Pro), Pro ($249), Enterprise ($249 base + $99/additional business). Invite-only soft-launch gate (NEXT_PUBLIC_INVITE_ONLY_MODE). Owner email bypass for billing/onboarding gates. Multi-tenant: users belong to organisations, each org has social platform OAuth connections. Content pipeline: AI generates → user approves (approval workflow) → BullMQ schedules → platform-specific publishing. Auth is Supabase-only (hard rule — no NextAuth/Clerk). 9 platform integrations: Twitter/X, LinkedIn, Instagram, TikTok, Facebook, YouTube, Pinterest, Reddit, Threads. Persona training pipeline learns brand voice from uploaded content. Bayesian adaptive intelligence microservice (Python/FastAPI) optimises posting parameters. Brand intelligence pipeline runs on 6-hour cron via Claude agent SDK.",
+  "currentState": "production-ready",
+  "keyInsights": [
+    "Polyglot architecture: Next.js 15 monorepo (primary) + Python FastAPI microservice (synthex-bayesian-service/) + Python multi-agent pipeline (brand-intelligence/) + Remotion video renderer (board-cron/remotion/) — significant operational complexity.",
+    "Prisma schema has 67 models — indicates deep domain complexity; schema.prisma is single source of truth but not included in this context dump, making full data model invisible.",
+    "Hard auth constraint: Supabase-only, enforced in CLAUDE.md and CONSTITUTION.md — zero tolerance for NextAuth/Clerk drift. Auth code lives exclusively in lib/auth/.",
+    "tsconfig.build.json disables all strict TypeScript checks (strictNullChecks: false, noImplicitAny: false, etc.) — production build runs with safety nets off, creating hidden runtime risk.",
+    "Claude Code is deeply integrated as the autonomous development agent: task-runner.sh processes Linear backlog headlessly, 18 domain skills auto-trigger, 4-layer review board runs on every PR to main with 16 specialist agents.",
+    "Legacy src/ directory was fully migrated to lib/ on 2026-03-22 (UNI-1619) — active code is in lib/, not src/. Any src/ references are stale.",
+    "The .env.example has 150+ environment variables across 40+ third-party services — operational secret management is a significant risk surface, partially mitigated by the archived env-management agent system.",
+    "Bayesian service is a hard external dependency with graceful fallback to heuristics when BAYESIAN_SERVICE_URL is absent — correctly designed for resilience.",
+    "1000+ active users declared in README with live deployment at synthex.social — this is shipping production software, not a demo.",
+    "Windows 11 is the declared dev environment (PowerShell scripts, Windows paths in OBSIDIAN_VAULT_PATH) while containers target Linux Alpine — cross-platform build discipline required."
+  ]
+}
+```
