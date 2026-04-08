@@ -1,0 +1,59 @@
+```json
+{
+  "techStack": [
+    "Next.js 15 (App Router)",
+    "TypeScript 5",
+    "React 19",
+    "Prisma 6 (PostgreSQL/Supabase)",
+    "Tailwind CSS 4",
+    "Radix UI",
+    "Framer Motion",
+    "BullMQ",
+    "Redis (Upstash/ioredis)",
+    "Supabase (auth + PostgreSQL)",
+    "Stripe",
+    "OpenRouter / Anthropic SDK / OpenAI SDK / Google AI SDK",
+    "Vercel AI SDK",
+    "FastAPI (Python microservice: synthex-bayesian-service)",
+    "Remotion (video rendering)",
+    "Playwright (E2E)",
+    "Jest (unit)",
+    "Storybook",
+    "Docker / Kubernetes (kind)",
+    "Vercel (deployment)"
+  ],
+  "pattern": "MVC",
+  "entryPoints": [
+    "app/",
+    "synthex-bayesian-service/app/main.py",
+    "board-cron/remotion/src/index.ts",
+    "brand-intelligence/synthex_orchestrator.py",
+    "deployment/Dockerfile (dist/index.js)",
+    "k8s/Dockerfile (Next.js standalone server.js)"
+  ],
+  "keyDependencies": [
+    "next@^16.2.0",
+    "@prisma/client@7.5.0",
+    "prisma@7.5.0",
+    "@supabase/supabase-js@^2.55.0",
+    "@supabase/ssr@^0.6.1",
+    "bullmq@^5.67.2",
+    "@upstash/redis@^1.35.3",
+    "stripe@^18.4.0",
+    "ai@^6.0.37",
+    "@ai-sdk/anthropic@^3.0.14",
+    "@anthropic-ai/sdk@^0.80.0",
+    "openai@^6.0.0",
+    "@linear/sdk@^77.0.0",
+    "zod@^4.3.6",
+    "zustand@^4.4.0",
+    "swr@^2.2.0",
+    "remotion@^4.0.435",
+    "fastapi>=0.115.0",
+    "bayesian-optimization>=1.5.1",
+    "prophet>=1.1.6"
+  ],
+  "dataFlow": "Browser → Next.js App Router pages (app/) → React components (components/) → hooks/use-api.ts or SWR → Next.js API routes (app/api/) → lib/ services → Prisma ORM → Supabase/PostgreSQL. Background jobs flow through BullMQ queues backed by Redis. AI calls route through OpenRouter/Anthropic/OpenAI SDKs in lib/ai/. A separate FastAPI Python microservice (synthex-bayesian-service) handles Bayesian optimisation, Prophet forecasting, and BayesNF predictions, called via HTTP from Next.js API routes. A brand-intelligence Python pipeline (Claude multi-agent) writes outputs to filesystem; Next.js reads at render time. Auth is Supabase session → JWT → RBAC in lib/auth/.",
+  "architectureNotes": "The system is a Next.js 15 App Router monolith (MVC: pages=view, API routes=controller, lib/=model/service) deployed on Vercel, backed by Supabase PostgreSQL via Prisma with 67 models and Redis for caching/queues. Two polyglot sidecars extend it: a FastAPI Python microservice for ML engines (Bayesian, Prophet, BayesNF) and a Python multi-agent brand-intelligence pipeline using the Anthropic Claude agent SDK, both communicating via HTTP or shared filesystem. Kubernetes manifests (k8s/) and Docker configs exist for local cluster testing, while production runs on Vercel with a separate WebSocket server for real-time features. The codebase completed a src/→lib/ migration (UNI-1619, 2026-03-22), with legacy code archived under .claude/archived/."
+}
+```
