@@ -1,0 +1,324 @@
+```json
+{
+  "sprints": [
+    {
+      "id": 1,
+      "name": "Security & Stability Hardening",
+      "duration": "10d",
+      "items": [
+        {
+          "title": "Rotate and audit FIELD_ENCRYPTION_KEY + ENCRYPTION_KEY_V1 secret hygiene — enforce vault-based injection, remove zero-padded placeholder defaults in .env.example",
+          "size": "M",
+          "priority": "P1"
+        },
+        {
+          "title": "tsconfig.json excludes agents/, src/agents/, tests/ from type-check — reinstate strict null checks on lib/ and app/ only; split tsconfig.build.json strict:false scope to legacy dirs only",
+          "size": "M",
+          "priority": "P1"
+        },
+        {
+          "title": "deployment/Dockerfile uses node:20-alpine; k8s/Dockerfile uses node:22-alpine — standardise to 22-alpine across all images; align with engines.node=22.x in package.json",
+          "size": "S",
+          "priority": "P1"
+        },
+        {
+          "title": "k8s/Dockerfile Stage 2 uses npm install instead of npm ci due to ajv lock conflict — resolve ajv@6/8 peer-dep conflict in package-lock.json to re-enable deterministic ci builds",
+          "size": "M",
+          "priority": "P1"
+        },
+        {
+          "title": "SUPABASE_SERVICE_ROLE_KEY injected as build-arg in k8s/Dockerfile (placeholder only) — document risk, add CI gate to assert placeholder string never equals a real key prefix",
+          "size": "S",
+          "priority": "P2"
+        },
+        {
+          "title": "Add OWASP dependency-check to CI pipeline; package.json audit script only runs npm audit --omit=dev — add snyk or trivy scan for container layers",
+          "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": "board-cron/remotion is a separate package.json workspace not included in root turbo/npm workspaces — wire into monorepo build to catch version drift on remotion@4.0.242 vs root @remotion/player@^4.0.435",
+          "size": "S",
+          "priority": "P2"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "TypeScript Strict Mode & Build Reliability",
+      "duration": "8d",
+      "items": [
+        {
+          "title": "tsconfig.build.json sets noImplicitAny:false, strictNullChecks:false — enumerate actual files requiring relaxed mode; move to per-file @ts-expect-error annotations rather than blanket compiler override",
+          "size": "L",
+          "priority": "P1"
+        },
+        {
+          "title": "package.json build script uses --webpack flag on next build while dev uses --turbopack — investigate turbopack production readiness; eliminate dual-bundler divergence or document explicitly",
+          "size": "M",
+          "priority": "P1"
+        },
+        {
+          "title": "build:vercel script pins prisma@7.5.0 via npx inline while devDependencies also has prisma:7.5.0 — deduplicate; ensure CI always uses locked version not a floating npx resolution",
+          "size": "S",
+          "priority": "P2"
+        },
+        {
+          "title": "vercel-build script uses prisma generate (no version pin) while build:vercel uses npx prisma@7.5.0 generate — standardise to single prisma invocation pattern across all build scripts",
+          "size": "S",
+          "priority": "P2"
+        },
+        {
+          "title": "postinstall echoes skip message — implement real post-install validation (env shape check) so broken envs fail fast at install time in CI",
+          "size": "S",
+          "priority": "P2"
+        },
+        {
+          "title": "tsconfig.json target ES2018 but board-cron/remotion/tsconfig.json targets ES2022 — align root target to ES2020 minimum to support Node 22 + modern Vercel runtime without polyfill overhead",
+          "size": "S",
+          "priority": "P3"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Observability & Monitoring Pipeline",
+      "duration": "8d",
+      "items": [
+        {
+          "title": "Axiom token + dataset env vars present in .env.example but no evidence of structured error ingestion wired to lib/ error boundary — implement lib/monitoring/axiom-transport.ts and connect to Next.js error boundaries",
+          "size": "M",
+          "priority": "P1"
+        },
+        {
+          "title": "Review board metrics log at .claude/review-board/metrics.jsonl capped at 500 entries with 90-day archive — build /review-metrics slash command and expose pattern dashboard to engineering lead",
+          "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": "synthex-bayesian-service/app/main.py exposes no /metrics endpoint — add Prometheus-compatible /metrics route to FastAPI app for Railway health monitoring",
+          "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": "deployment/monitoring-dashboard.html is a static HTML file — replace with Next.js /admin/monitoring route backed by real Axiom/Sentry API calls; retire static file",
+          "size": "L",
+          "priority": "P2"
+        },
+        {
+          "title": "Alert routing (Discord/Slack/Email/Webhook) configured via env vars in .env.example — implement lib/alerts/router.ts with severity filter and deduplicate repeated firing within window",
+          "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": "BullMQ background jobs have no dead-letter queue or failed-job alerting wired — add onFailed handler that publishes to alert router (F005)",
+          "size": "M",
+          "priority": "P2"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Agent Orchestration & Workflow Quality",
+      "duration": "10d",
+      "items": [
+        {
+          "title": "agents/planner/plan-generator.ts generates specs/plan.md but Builder/Validator agents are defined only in .md files with no TypeScript executor — implement TypeScript runner that parses plan.md checkboxes and dispatches Claude SDK subagent calls",
+          "size": "L",
+          "priority": "P1"
+        },
+        {
+          "title": ".claude/task-runner.sh runs Claude Code headlessly against Linear backlog — add structured JSON output capture per issue so task outcomes are machine-readable and can feed metrics.jsonl",
+          "size": "M",
+          "priority": "P1"
+        },
+        {
+          "title": "brand-intelligence/synthex_orchestrator.py has $8.00 hard cap but cost_tracker.py integration with Synthex platform billing is via filesystem only — add POST callback to /api/brand-intelligence/cost-event on each run completion",
+          "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": "CLAUDE.md mandates max 2 automatic retries per failing step then escalate to human — controlled-autonomous-build.ts is excluded from tsconfig; audit for correctness and add retry counter telemetry",
+          "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": "18 domain skills in .claude/skills/ have YAML frontmatter triggers but no automated skill-selection test coverage — add jest test suite that validates skill trigger regex against representative prompts",
+          "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": "tests/agents/run-comprehensive-test.js outputs to test-results/ directory not wired into jest or CI pipeline — integrate as npm run test:agents and add to release:check gate",
+          "size": "M",
+          "priority": "P3"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "CI/CD & Deployment Hardening",
+      "duration": "8d",
+      "items": [
+        {
+          "title": "k8s/setup.sh is a one-shot bash script with no idempotency checks — add kubectl diff before apply; guard against re-creating namespace if already exists",
+          "size": "M",
+          "priority": "P1"
+        },
+        {
+          "title": "deployment/deploy.sh and deploy.ps1 auto-rollback on failure but rollback logic restores from backups/ directory that may not exist — add pre-deploy backup step and assert backup artefact before marking deploy successful",
+          "size": "M",
+          "priority": "P1"
+        },
+        {
+          "title": "No GitHub Actions workflow files visible in repo context — add .github/workflows/ci.yml executing: type-check, lint, test, e2e (staging), build; block merge on failure",
+          "size": "L",
+          "priority": "P1"
+        },
+        {
+          "title": ".claude/review-board 4-layer review triggers on PR to main via GitHub Actions — wire review-board workflow file to call claude --agent .claude/agents/chief-reviewer.md and post unified review via GitHub API",
+          "size": "L",
+          "priority": "P2"
+        },
+        {
+          "title": "database/migrations/supabase/ requires manual SQL editor application — add npm run db:supabase:migrate script using Supabase Management API to apply idempotent migrations programmatically in CI",
+          "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": "synthex-bayesian-service has its own Dockerfile and requirements.txt but no CI pipeline — add GitHub Actions workflow for the Python service: lint (ruff), test (pytest), docker build, push to registry",
+          "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": "brand-intelligence/pyproject.toml defines claude-agent-sdk>=0.1.0 but package.json uses @anthropic-ai/claude-agent-sdk@^0.2.76 — align SDK versions or document intentional divergence",
+          "size": "S",
+          "priority": "P3"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Platform Feature Completeness",
+      "duration": "10d",
+      "items": [
+        {
+          "title": "components/approval-workflow/index.tsx uses getMockRequests() — replace with real /api/approval-workflow/* endpoints backed by Prisma ApprovalRequest model",
+          "size": "L",
+          "priority": "P1"
+        },
+        {
+          "title": "components/ai-content-studio/index.tsx fetches /api/businesses and /api/auth/connections but ContentHistory state is in-memory only — persist content history to DB via /api/ai/content-history POST/GET",
+          "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": "NEXT_PUBLIC_INVITE_ONLY_MODE=true in .env.example — add admin UI toggle in /admin to flip invite mode without redeployment; wire to feature-flags runtime config",
+          "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": "deployment/feature-flags.js provides FeatureFlags class with rollout percentages but is not imported anywhere in the Next.js app — integrate with lib/feature-flags.ts and expose /api/admin/feature-flags CRUD",
+          "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": "BAYESIAN_SERVICE_URL and BAYESIAN_SERVICE_API_KEY documented as optional with graceful fallback — implement fallback heuristic path in lib/ai/adaptive-intelligence.ts so feature degrades gracefully when service is down",
+          "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": "WEB_SEARCH_ENABLED flag present in .env.example but no lib/ implementation found — implement lib/ai/web-search.ts wrapping Anthropic web search tool; gate on flag",
+          "size": "M",
+          "priority": "P3"
+        },
+        {
+          "title": "VAPID keys configured for web push but no service worker or push subscription UI visible — implement PWA push notification opt-in flow in app/settings/notifications",
+          "size": "L",
+          "priority": "P3"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Developer Experience & Documentation",
+      "duration": "5d",
+      "items": [
+        {
+          "title": "docs/README.md references docs/QUICK_START.md, docs/DEVELOPER_ONBOARDING.md etc. — audit all linked docs for staleness post-src→lib migration (UNI-1619); update migration map references",
+          "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": ".claude/archived/2026-03-22/legacy-src/ contains live-looking TypeScript exports (index.ts, agents/) — add archive README asserting no file in this path is imported by active code; add CI grep guard",
+          "size": "S",
+          "priority": "P2"
+        },
+        {
+          "title": "npm run routes:refresh regenerates .planning/ROUTE_REFERENCE.md via bash script — add output diff check to CI so stale ROUTE_REFERENCE.md fails the build",
+          "size": "S",
+          "priority": "P2"
+        },
+        {
+          "title": ".env.example is 400+ lines — generate structured docs/ENVIRONMENT_VARIABLES.md table from it automatically using scripts/generate-env-docs.js; link from QUICK_START",
+          "size": "S",
+          "priority": "P3"
+        },
+        {
+          "title": "k8s/README.md lists prerequisites as Windows-specific (scoop) — add Linux/Mac equivalent install commands for Docker, kind, kubectl, helm",
+          "size": "S",
+          "priority": "P3"
+        }
+      ]
+    }
+  ],
+  "featureList": [
+    {
+      "id": "F001",
+      "title": "Unified secret injection via vault (eliminate zero-padded placeholder defaults)",
+      "sprint": 1,
+      "status": "planned"
+    },
+    {
+      "id": "F002",
+      "title": "Standardise Docker base image to node:22-alpine across deployment/ and k8s/ Dockerfiles",
+      "sprint": 1,
+      "status": "planned"
+    },
+    {
+      "id": "F003",
+      "title": "Resolve ajv@6/8 peer-dep conflict to re-enable npm ci in k8s builds",
+      "sprint": 1,
+      "status": "planned"
+    },
+    {
+      "id": "F004",
+      "title": "Reinstate strict TypeScript null checks on lib/ and app/ via scoped tsconfig",
+      "sprint": 2,
+      "status": "planned"
+    },
+    {
+      "id": "F005",
+      "title": "Standardise Next.js build bundler — resolve turbopack dev vs webpack prod divergence",
+      "sprint": 2,
+      "status": "planned"
+    },
+    {
+      "id": "F006",
+      "title": "Deduplicate prisma version invocations across all build scripts",
+      "sprint": 2,
+      "status": "planned"
+    },
+    {
+      "id": "F007",
+      "title": "lib/monitoring/axiom-transport.ts — structured error ingestion wired to Next.js error boundaries",
+      "sprint": 3,
+      "status": "planned"
+    },
+    {
+      "id": "F008",
+      "title": "/review-metrics slash command + engineering pattern dashboard from metrics.jsonl",
+      "sprint": 3,
+      "status": "planned"
+    },
+    {
+      "id
