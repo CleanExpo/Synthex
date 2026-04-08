@@ -10,127 +10,114 @@
     {
       "severity": "high",
       "file": "tsconfig.build.json",
-      "description": "All strict TypeScript checks disabled (strictNullChecks, noImplicitAny, strictFunctionTypes, etc.). This is a blanket escape hatch that masks real type errors in production builds. The tsconfig.json has strict:true but tsconfig.build.json nullifies every strict flag — build output cannot be trusted for type safety."
+      "description": "Build tsconfig disables virtually all TypeScript strict checks (strictNullChecks, noImplicitAny, strictFunctionTypes, etc.). This is a CI escape hatch that defeats type safety at build time — runtime errors that tsc would catch in dev will silently ship to production."
+    },
+    {
+      "severity": "high",
+      "file": "tsconfig.json",
+      "description": "agents/**, src/agents/**, scripts/**, tests/**, src/middleware/**, src/routes/**, src/config/security.config.ts all excluded from type-checking. Security-critical paths (auth middleware, routes) are outside the TypeScript boundary entirely."
     },
     {
       "severity": "high",
       "file": ".env.example",
-      "description": "FIELD_ENCRYPTION_KEY default is 64 zero characters ('000...000'). If a developer copies this file without changing it, all encrypted database fields (OAuth tokens, API keys) use a known-zero key. Should be commented out or use a clear CHANGEME sentinel that fails startup validation."
-    },
-    {
-      "severity": "high",
-      "file": ".env.example",
-      "description": "ENCRYPTION_KEY default is also 64 zeros. Same issue as FIELD_ENCRYPTION_KEY — two separate encryption keys share the same trivially-guessable default. lib/security/env-validator.ts (referenced in the file header) should reject zero-filled keys at startup."
+      "description": "FIELD_ENCRYPTION_KEY and ENCRYPTION_KEY default values are 64 zeros ('0000...0000'). If a developer copies .env.example verbatim without replacing these, encrypted data in production uses a known-null key. This is a credential hygiene failure — defaults must be empty strings or generate-on-first-use."
     },
     {
       "severity": "high",
       "file": "k8s/Dockerfile",
-      "description": "Build ARG SUPABASE_SERVICE_ROLE_KEY has default 'placeholder-service-role-key-build-only' baked into the image layer. Comment states '17 service files create Supabase admin clients at module scope' — this is an architectural defect (module-scope side effects) being papered over with a Dockerfile hack. The root cause must be fixed: admin clients must be lazily initialised, not created at import time."
+      "description": "ARG SUPABASE_SERVICE_ROLE_KEY=placeholder-service-role-key-build-only is baked into the Docker image layer at build time. The comment acknowledges this ('17 service files create admin clients at module scope') but this is an architectural defect — module-scope Supabase admin client creation means secrets leak into build artifacts."
     },
     {
       "severity": "high",
       "file": "components/approval-workflow/index.tsx",
-      "description": "getMockRequests() returns hardcoded mock data. The component reads from this function on mount (line: setRequests(getMockRequests())) with no real API call for approval workflows. The system ships with a critical business feature (content approvals) running entirely on mock data."
+      "description": "getMockRequests() returns hardcoded mock data that is used directly in production component state via useEffect. No API call, no feature flag — this is a stub masquerading as a working feature. All approval mutations (approveRequest, rejectRequest, requestRevision) mutate local state only; no persistence."
     },
     {
       "severity": "high",
-      "file": "components/competitor-analysis/index.tsx",
-      "description": "eslint-disable-line comment on line in fetchConnections useEffect suppresses the missing-dependency lint warning rather than fixing the logic. formData.platform is used inside the effect but excluded from deps — this is a stale-closure bug that will cause the platform reset logic to fire with stale values after re-renders."
-    },
-    {
-      "severity": "medium",
-      "file": "package.json",
-      "description": "build script uses '--webpack' flag while dev uses '--turbopack'. Mixed bundlers across dev/prod create environment parity issues. Additionally, build:vercel pins prisma@7.5.0 explicitly via npx while the main build does not — version skew risk if the lockfile drifts."
-    },
-    {
-      "severity": "medium",
-      "file": "package.json",
-      "description": "postinstall is a no-op echo. Prisma generate is deferred to build time, meaning a fresh 'npm install' leaves the Prisma client absent. Developers running 'npm install' then immediately importing from '@prisma/client' will hit runtime errors without a subsequent build step."
-    },
-    {
-      "severity": "medium",
-      "file": "deployment/Dockerfile",
-      "description": "Base image is node:20-alpine but k8s/Dockerfile uses node:22-alpine. engines field in package.json requires 22.x. The deployment/Dockerfile will run on an unsupported Node version, violating the declared engine constraint and diverging from the k8s production target."
-    },
-    {
-      "severity": "medium",
-      "file": "synthex-bayesian-service/Dockerfile",
-      "description": "CMD runs only 2 uvicorn workers hardcoded. No consideration for the --workers flag being inadequate for variable load, and no graceful shutdown signal handling specified. For a forecasting service receiving concurrent BO/Prophet/BayesNF requests this will bottleneck under load."
+      "file": "synthex-bayesian-service/app/main.py",
+      "description": "CORS allow_origins includes 'https://*.vercel.app' (wildcard subdomain). Any Vercel deployment by any user can make credentialed cross-origin requests to this service. Should be locked to specific deployment URLs."
     },
     {
       "severity": "medium",
       "file": "components/ai-content-studio/index.tsx",
-      "description": "fetchBusinesses catch block silently swallows all errors (comment: 'Silently fail — personal account mode'). Network failures, 500 errors, and auth failures are all treated identically — user gets no feedback and the businesses list remains empty with no indication of why."
+      "description": "useEffect dependency array at line ~95 has eslint-disable-line comment suppressing 'react-hooks/exhaustive-deps'. formData.platform is read inside the effect but excluded from deps — stale closure risk when platform changes independently of selectedBusinessId."
     },
     {
       "severity": "medium",
-      "file": "components/command-palette/index.tsx",
-      "description": "buildCommands(router.push) is called inside useMemo with router as dependency but router.push is extracted outside the memo — if router identity changes (Next.js App Router can recreate the router object), the memo won't invalidate correctly. Should use router directly or useCallback-wrap the push function."
+      "file": "components/competitor-analysis/index.tsx",
+      "description": "fetchJson is defined inside the component file scope but not memoised or extracted. SWR receives a new function reference on every render — though SWR deduplication mitigates this, the pattern is inconsistent across the codebase (some files use module-level fetchers, some inline)."
     },
     {
       "severity": "medium",
-      "file": "synthex-bayesian-service/app/main.py",
-      "description": "CORS allow_origins includes 'https://*.synthex.app' and 'https://*.vercel.app' wildcards. FastAPI's CORSMiddleware does not support wildcard subdomains in origin matching — these entries are silently ignored, meaning subdomains are NOT actually allowed. The wildcard syntax only works with allow_origins=['*']."
+      "file": "deployment/Dockerfile",
+      "description": "Uses node:20-alpine but package.json engines field specifies node:22.x. Version mismatch between deployment container and declared engine requirement. k8s/Dockerfile correctly uses node:22-alpine."
     },
     {
       "severity": "medium",
-      "file": "components/approval-workflow/index.tsx",
-      "description": "approveRequest and rejectRequest mutate req object properties directly inside prev.map() (e.g. req.approvers[approverIndex].status = 'approved'). This is direct state mutation — React state must be treated as immutable. The spread/copy is missing, causing potential stale render bugs."
+      "file": "package.json",
+      "description": "Dual build commands: 'build' uses '--webpack' flag while 'vercel-build' omits it and uses bare 'next build'. 'build:vercel' uses a pinned prisma@7.5.0 via npx while the installed prisma devDependency is also 7.5.0 — redundant pinning suggests past version conflicts that were patched inconsistently."
     },
     {
       "severity": "medium",
-      "file": "tsconfig.json",
-      "description": "exclude list is 40+ entries including specific legacy paths (src/server.ts, src/routes/**, src/middleware/**, src/config/security.config.ts, src/services/performance.ts). These excluded paths suggest dead code that was never cleaned up post-migration (confirmed by .claude/archived/2026-03-22/legacy-src/README.md). The migration map and tsconfig exclusions should be reconciled — either delete the dead paths or document why they persist."
+      "file": "package.json",
+      "description": "postinstall script is neutered: 'echo Skipping postinstall - Prisma generated during build'. Prisma client generation is deferred to build time only, meaning a fresh 'npm install' in development leaves @prisma/client ungenerated until the developer explicitly runs prisma generate or a build."
     },
     {
       "severity": "medium",
       "file": ".claude/archived/2026-03-22/legacy-src/agents/env-management/index.ts",
-      "description": "EnvManagement.generateTemplate() calls orchestrator.getAgent('discovery') as any and then calls discovery.generateEnvTemplate(). The as any cast bypasses type safety on a method call that may not exist on the returned agent type. The archived code reflects a broader pattern of as any casts used to work around missing interface definitions."
+      "description": "EnvManagement.generateTemplate calls orchestrator.getAgent('discovery') cast as any and then calls discovery.generateEnvTemplate() — bypasses type safety entirely. If the agent key changes or the method is renamed, this silently fails at runtime. Pattern repeated across migrate() and transform()."
     },
     {
-      "severity": "low",
-      "file": "package.json",
-      "description": "109 npm scripts defined. Many are duplicates with platform variants (ralph, ralph:windows, ralph:windows:init; setup, setup:windows; verify, verify:windows). No discoverability mechanism — developers must grep to find relevant scripts. Consider a script registry or reducing to a core set with a platform-detection wrapper."
+      "severity": "medium",
+      "file": "synthex-bayesian-service/Dockerfile",
+      "description": "RUN python -c 'import cmdstanpy; cmdstanpy.install_cmdstan()' 2>/dev/null || true — silently swallows CmdStan installation failures. If Prophet's CmdStan backend is absent, Prophet jobs will fail at runtime with cryptic errors rather than failing loudly at image build time."
     },
     {
-      "severity": "low",
+      "severity": "medium",
       "file": "components/icons/index.ts",
-      "description": "Multiple icons are mapped to the same Heroicons source (e.g., ChartBarIcon exports as Activity, BarChart, BarChart2, BarChart3; SparklesIcon exports as Sparkles, Wand2, Diamond; CommandLineIcon exports as Command, CommandLine, Keyboard). Semantic meaning is lost — a Keyboard icon and a Command icon should not be the same glyph."
+      "description": "ChartBarIcon is aliased to both 'Activity' AND 'BarChart' AND 'BarChart2' AND 'BarChart3'. These are semantically distinct icons (activity feed vs. bar chart) — this is a naming collision that silently produces the wrong visual in components expecting an activity/pulse icon."
     },
     {
       "severity": "low",
       "file": "board-cron/remotion/package.json",
-      "description": "Separate package.json with its own remotion@4.0.242 dependency while root package.json has remotion@^4.0.435 and @remotion/player@^4.0.435. Version skew between the cron subpackage and root. If the root is updated, board-cron/remotion stays behind unless updated separately."
+      "description": "Pinned to @remotion/cli: 4.0.242 but root package.json uses @remotion/cli: ^4.0.435 and remotion: ^4.0.435. The board-cron subpackage is 193 patch versions behind the root dependency — potential API incompatibilities in composition rendering."
     },
     {
       "severity": "low",
-      "file": "deployment/README.md",
-      "description": "Quick Start section instructs 'npm run build' then 'cd public && python -m http.server 8000'. This serves the static /public directory, not the Next.js build output (.next/). The README gives incorrect local development instructions that would serve assets only, not the application."
+      "file": "components/approval-workflow/index.tsx",
+      "description": "Mutates req object properties directly inside prev.map() callback (e.g. req.approvers[approverIndex].status = 'approved'). This is direct state mutation — the spread/map pattern is used for the outer array but inner objects are mutated in place, violating React immutability contract."
+    },
+    {
+      "severity": "low",
+      "file": "CLAUDE.md",
+      "description": "SESSION PROTOCOL mandates 'Never use Clerk, NextAuth, Auth.js, or any auth system other than Supabase — absolute' but .env.example contains NEXTAUTH_SECRET and NEXTAUTH_URL (also present as ARGs in k8s/Dockerfile). Indicates historical NextAuth usage that may not be fully excised."
+    },
+    {
+      "severity": "low",
+      "file": ".claude/archived/2026-03-22/legacy-src/routes/v1/index.ts.disabled",
+      "description": "Archived file references router paths (/api/v1/mcp-ttd, /api/v1/mle-star) that suggest prior Express server architecture. No evidence these routes exist in the current Next.js App Router structure — dead code that inflates cognitive load for new contributors."
     }
   ],
   "missingTests": [
-    "Approval workflow component — zero test coverage on state mutation logic (approveRequest, rejectRequest, requestRevision). The direct-mutation bug in state would be caught by a simple render test.",
-    "AI Content Studio — no tests for handleGenerate, business fetching, or connection-fetch logic. The silent-fail pattern in catch blocks makes these untestable without explicit error path tests.",
-    "Competitor Analysis — the SWR data transformation pipeline (transformTrackingCompetitor, transformIntelligenceCompetitor) has no unit tests. Type assertions via 'as Record<string, unknown>' throughout with no schema validation.",
-    "Command Palette — no keyboard navigation tests (ArrowDown/ArrowUp/Enter/Escape). Critical UX path with zero coverage.",
-    "Bayesian service routers (app/routers/optimise, forecast, predict) — no router-level tests visible. Only pytest config in pyproject.toml with testpaths=['tests'] but no test files provided.",
-    "Environment variable validation (lib/security/env-validator.ts) — referenced in .env.example as source of truth but no tests confirming zero-filled FIELD_ENCRYPTION_KEY or ENCRYPTION_KEY are rejected at startup.",
-    "Auth middleware — CLAUDE.md states auth lives in lib/auth/ and is always checked first, but no auth unit/integration tests are referenced in the provided context.",
-    "Stripe webhook handler — no tests for webhook signature verification or subscription lifecycle events.",
-    "OAuth state parameter CSRF validation — OAUTH_STATE_SECRET is marked CRITICAL but no tests confirming state validation rejects tampered parameters.",
-    "Database migration rollback — db:rollback script exists but no integration tests confirming rollback restores prior state correctly."
+    "components/approval-workflow — zero test coverage; all business logic (approveRequest, rejectRequest, requestRevision, stage progression) is untested and uses mock-only data",
+    "components/competitor-analysis — SWR data transformation helpers (transformTrackingCompetitor, transformIntelligenceCompetitor) have no unit tests; field mapping errors are invisible",
+    "components/ai-content-studio — handleGenerate error paths and clipboard/download utilities have no tests",
+    "synthex-bayesian-service — no integration tests visible for the three engine routers (optimise, forecast, predict); only requirements.txt references pytest",
+    "brand-intelligence pipeline — pyproject.toml declares pytest but no test files are shown; orchestrator cost enforcement logic ($8 hard cap) is untested",
+    "lib/auth — excluded from tsconfig.json type checking and no test files referenced in visible context; auth is the highest-risk surface",
+    "ENV validation at startup — lib/security/env-validator.ts referenced in .env.example but no test asserting required vars cause startup failure",
+    "k8s/Dockerfile multi-stage build — no CI test that the standalone Next.js output produces a working container image",
+    "Icon aliasing layer (components/icons/index.ts) — no visual regression or snapshot tests; silent wrong-icon regressions possible"
   ],
   "securityConcerns": [
-    "FIELD_ENCRYPTION_KEY and ENCRYPTION_KEY both default to 64 zero characters in .env.example. If deployed without rotation, all AES-GCM encrypted fields (OAuth tokens, stored API keys) use a universally known key. The env validator must hard-reject all-zero keys.",
-    "k8s/Dockerfile bakes SUPABASE_SERVICE_ROLE_KEY=placeholder-service-role-key-build-only as a build ARG with ENV promotion. Even placeholder values embedded in image layers appear in docker history and layer metadata. The correct fix is lazy Supabase admin client initialisation, not build-time placeholders.",
-    "NEXT_PUBLIC_CRON_SECRET exists in .env.example — CRON_SECRET is a server-side secret and should never have a NEXT_PUBLIC_ variant. Exposing cron authentication to the browser bundle defeats the purpose of the secret.",
-    "deployment/Dockerfile copies dist/ directory without verifying its integrity. No checksum or signature verification on the build artifact before it enters the container image.",
-    "CORS wildcard subdomain entries in synthex-bayesian-service/app/main.py ('https://*.synthex.app', 'https://*.vercel.app') are silently ignored by FastAPI's CORSMiddleware. If these subdomains need access, the actual CORS policy is more restrictive than intended — a security-by-misconfiguration false sense.",
-    "JWT_SECRET in .env.example has comment 'min 32 chars' but no programmatic enforcement shown. The example value 'your-base64-encoded-secret-key-at-least-32-chars==' is 47 chars but weak by entropy. No startup check enforcing minimum entropy is referenced.",
-    "ADMIN_API_KEY and INTERNAL_API_KEY both have empty defaults in .env.example with no startup rejection. If deployed with empty strings, any request with an empty Authorization header passes key validation depending on implementation.",
-    "LINEAR_API_KEY is stored in .env and used by .claude/task-runner.sh which runs Claude Code headlessly. If the task runner has file-system write access and the Linear key is compromised, an attacker could inject malicious Linear issues that get executed autonomously.",
-    ".env.example contains actual Stripe price IDs (price_1TCO8GGib5mMf28d0W7pYdtY, etc.) committed to the repository. These are not secrets but their presence in a public repo reveals production Stripe product structure.",
-    "DEMO_USER_EMAIL and DEMO_USER_PASSWORD exist as env vars for a demo account on production (synthex.social). Demo credentials in environment variables shared across deployments is a credential sprawl risk — demo accounts should use ephemeral credentials or a dedicated identity provider."
+    "FIELD_ENCRYPTION_KEY and ENCRYPTION_KEY in .env.example default to 64-character zero strings — if copied verbatim, all encrypted OAuth tokens and API keys in the database use a known-null key",
+    "k8s/Dockerfile bakes SUPABASE_SERVICE_ROLE_KEY as a build ARG — even with placeholder value, the pattern teaches developers to pass real service role keys as build args, which embed in Docker layer history",
+    "synthex-bayesian-service CORS allows https://*.vercel.app wildcard — any Vercel tenant can make credentialed requests to the AI service",
+    ".env.example contains GOOGLE_INDEXING_SERVICE_ACCOUNT_JSON with instruction to paste entire private key JSON inline — this pattern has high risk of accidental secret commit and no masking in logs",
+    "ADMIN_API_KEY and CRON_SECRET have placeholder values 'generate-a-secure-admin-api-key' and 'generate-a-secure-cron-secret' — guessable if developer omits replacement",
+    "deployment/Dockerfile runs npm ci --only=production but then copies dist/ which is built separately — no integrity verification between what was built and what is deployed; supply chain gap",
+    "LINEAR_API_KEY is a personal API key (not OAuth token) stored in .env — if the .claude/task-runner.sh is run in CI, this key appears in CI environment and logs",
+    "NEXT_PUBLIC_CRON_SECRET exposes cron secret to client bundle — the comment says 'prefer server-only CRON_SECRET' but the NEXT_PUBLIC_ variant existing at all means the secret can reach the browser"
   ]
 }
 ```
