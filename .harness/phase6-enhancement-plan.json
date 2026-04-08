@@ -3,194 +3,184 @@
   "sprints": [
     {
       "id": 1,
-      "name": "Security & Stability Hardening",
+      "name": "Foundation Hardening",
       "duration": "10d",
       "items": [
         {
-          "title": "Rotate and audit FIELD_ENCRYPTION_KEY + ENCRYPTION_KEY_V1 secret hygiene — enforce vault-based injection, remove zero-padded placeholder defaults in .env.example",
+          "title": "Strict TypeScript: enable tsconfig.build.json strict mode — remove all 10 disabled strict flags (noImplicitAny, strictNullChecks, etc.)",
+          "size": "L",
+          "priority": "P1"
+        },
+        {
+          "title": "Fix tsconfig.json exclude list — agents/, src/agents/ excluded from type-check; create dedicated tsconfig.agents.json with relaxed rules instead",
           "size": "M",
           "priority": "P1"
         },
         {
-          "title": "tsconfig.json excludes agents/, src/agents/, tests/ from type-check — reinstate strict null checks on lib/ and app/ only; split tsconfig.build.json strict:false scope to legacy dirs only",
-          "size": "M",
-          "priority": "P1"
-        },
-        {
-          "title": "deployment/Dockerfile uses node:20-alpine; k8s/Dockerfile uses node:22-alpine — standardise to 22-alpine across all images; align with engines.node=22.x in package.json",
+          "title": "Supabase service-role key build-time leak — k8s/Dockerfile ARG SUPABASE_SERVICE_ROLE_KEY passes placeholder into image layer; enforce runtime-only injection via k8s/manifests/secrets.yaml",
           "size": "S",
           "priority": "P1"
         },
         {
-          "title": "k8s/Dockerfile Stage 2 uses npm install instead of npm ci due to ajv lock conflict — resolve ajv@6/8 peer-dep conflict in package-lock.json to re-enable deterministic ci builds",
+          "title": "Consolidate duplicate encryption key env vars: ENCRYPTION_KEY, ENCRYPTION_KEY_V1, ENCRYPTION_KEY_V2, FIELD_ENCRYPTION_KEY — 4 keys for same purpose; define single canonical key and migrate lib/security/env-validator.ts",
           "size": "M",
           "priority": "P1"
         },
         {
-          "title": "SUPABASE_SERVICE_ROLE_KEY injected as build-arg in k8s/Dockerfile (placeholder only) — document risk, add CI gate to assert placeholder string never equals a real key prefix",
+          "title": "deployment/Dockerfile uses node:20-alpine; k8s/Dockerfile uses node:22-alpine — standardise on Node 22 LTS per package.json engines field",
           "size": "S",
           "priority": "P2"
         },
         {
-          "title": "Add OWASP dependency-check to CI pipeline; package.json audit script only runs npm audit --omit=dev — add snyk or trivy scan for container layers",
+          "title": "Remove STRIPE_API_KEY (deprecated alias) and STRIPE_LIVE_KEY from .env.example — single canonical STRIPE_SECRET_KEY only; update lib/stripe/config.ts references",
+          "size": "S",
+          "priority": "P2"
+        },
+        {
+          "title": "Add Zod schema validation at startup for all CRITICAL/SECRET env vars listed in .env.example; wire into lib/security/env-validator.ts startup check",
           "size": "M",
-          "priority": "P2"
-        },
-        {
-          "title": "board-cron/remotion is a separate package.json workspace not included in root turbo/npm workspaces — wire into monorepo build to catch version drift on remotion@4.0.242 vs root @remotion/player@^4.0.435",
-          "size": "S",
-          "priority": "P2"
+          "priority": "P1"
         }
       ]
     },
     {
       "id": 2,
-      "name": "TypeScript Strict Mode & Build Reliability",
+      "name": "Observability & Quality Gates",
       "duration": "8d",
       "items": [
         {
-          "title": "tsconfig.build.json sets noImplicitAny:false, strictNullChecks:false — enumerate actual files requiring relaxed mode; move to per-file @ts-expect-error annotations rather than blanket compiler override",
+          "title": "Wire .claude/review-board 4-layer review system into GitHub Actions CI — currently manual-only per review-board/README.md; add .github/workflows/review-board.yml",
           "size": "L",
           "priority": "P1"
         },
         {
-          "title": "package.json build script uses --webpack flag on next build while dev uses --turbopack — investigate turbopack production readiness; eliminate dual-bundler divergence or document explicitly",
-          "size": "M",
-          "priority": "P1"
-        },
-        {
-          "title": "build:vercel script pins prisma@7.5.0 via npx inline while devDependencies also has prisma:7.5.0 — deduplicate; ensure CI always uses locked version not a floating npx resolution",
+          "title": "Enforce Linear issue requirement in CI — CLAUDE.md mandates SYN-XXXX on all commits; add commit-msg hook that rejects commits without issue identifier",
           "size": "S",
           "priority": "P2"
         },
         {
-          "title": "vercel-build script uses prisma generate (no version pin) while build:vercel uses npx prisma@7.5.0 generate — standardise to single prisma invocation pattern across all build scripts",
+          "title": "Bayesian service health integration — synthex-bayesian-service/app/main.py lifespan logs engine status but no structured health endpoint for Synthex platform to poll; add /health router with engine status JSON",
           "size": "S",
           "priority": "P2"
         },
         {
-          "title": "postinstall echoes skip message — implement real post-install validation (env shape check) so broken envs fail fast at install time in CI",
-          "size": "S",
-          "priority": "P2"
-        },
-        {
-          "title": "tsconfig.json target ES2018 but board-cron/remotion/tsconfig.json targets ES2022 — align root target to ES2020 minimum to support Node 22 + modern Vercel runtime without polyfill overhead",
+          "title": "Review board metrics archival is manual — .claude/review-board/README.md says entries >90d auto-archived but no cron exists; implement archive cron via .claude/task-runner.sh pattern",
           "size": "S",
           "priority": "P3"
+        },
+        {
+          "title": "Add structured logging to brand-intelligence pipeline — brand-intelligence/CLAUDE.md references logger.py but no stdout/stderr format standard; align with synthex-bayesian-service logging format",
+          "size": "S",
+          "priority": "P3"
+        },
+        {
+          "title": "E2E test coverage for critical paths — package.json has e2e:prod:critical scripts but only for production URL; add staging e2e gate in CI using test:e2e:staging",
+          "size": "M",
+          "priority": "P2"
         }
       ]
     },
     {
       "id": 3,
-      "name": "Observability & Monitoring Pipeline",
-      "duration": "8d",
+      "name": "Architecture Consolidation",
+      "duration": "10d",
       "items": [
         {
-          "title": "Axiom token + dataset env vars present in .env.example but no evidence of structured error ingestion wired to lib/ error boundary — implement lib/monitoring/axiom-transport.ts and connect to Next.js error boundaries",
+          "title": "Complete legacy src/ → lib/ migration — .claude/archived/2026-03-22/legacy-src/ shows 7 migrated files but archived agents/env-management/ and agents/specialists/ are still exported from index.ts files; purge dead exports",
           "size": "M",
           "priority": "P1"
         },
         {
-          "title": "Review board metrics log at .claude/review-board/metrics.jsonl capped at 500 entries with 90-day archive — build /review-metrics slash command and expose pattern dashboard to engineering lead",
+          "title": "Unify Python service dependency management — synthex-bayesian-service uses requirements.txt; brand-intelligence uses pyproject.toml; standardise on pyproject.toml with hatchling across all Python services",
+          "size": "S",
+          "priority": "P2"
+        },
+        {
+          "title": "board-cron/remotion is an isolated package with own package.json and tsconfig.json — integrate into monorepo workspace or document isolation boundary; currently orphaned with no build pipeline reference",
           "size": "M",
           "priority": "P2"
         },
         {
-          "title": "synthex-bayesian-service/app/main.py exposes no /metrics endpoint — add Prometheus-compatible /metrics route to FastAPI app for Railway health monitoring",
+          "title": "Database migrations split across Prisma (prisma/schema.prisma) and manual Supabase SQL (database/migrations/supabase/) — document canonical migration path in docs/DATABASE_MIGRATION_STRATEGY.md; add CI check that prevents Prisma migrate without corresponding Supabase SQL",
           "size": "M",
-          "priority": "P2"
+          "priority": "P1"
         },
         {
-          "title": "deployment/monitoring-dashboard.html is a static HTML file — replace with Next.js /admin/monitoring route backed by real Axiom/Sentry API calls; retire static file",
-          "size": "L",
-          "priority": "P2"
+          "title": "k8s/manifests/secrets.yaml.example — currently requires manual base64 encoding; add scripts/k8s-secrets-gen.sh that reads .env and generates secrets.yaml safely (gitignored output)",
+          "size": "S",
+          "priority": "P3"
         },
         {
-          "title": "Alert routing (Discord/Slack/Email/Webhook) configured via env vars in .env.example — implement lib/alerts/router.ts with severity filter and deduplicate repeated firing within window",
-          "size": "M",
-          "priority": "P2"
-        },
-        {
-          "title": "BullMQ background jobs have no dead-letter queue or failed-job alerting wired — add onFailed handler that publishes to alert router (F005)",
-          "size": "M",
+          "title": "Prisma 7.5.0 pinned in build:vercel script but devDependencies lists prisma@7.5.0 and @prisma/adapter-pg@7.5.0 — enforce version consistency via npm scripts; add version assertion in build:vercel",
+          "size": "S",
           "priority": "P2"
         }
       ]
     },
     {
       "id": 4,
-      "name": "Agent Orchestration & Workflow Quality",
-      "duration": "10d",
+      "name": "Agent Workflow Maturity",
+      "duration": "8d",
       "items": [
         {
-          "title": "agents/planner/plan-generator.ts generates specs/plan.md but Builder/Validator agents are defined only in .md files with no TypeScript executor — implement TypeScript runner that parses plan.md checkboxes and dispatches Claude SDK subagent calls",
+          "title": "Plan generator (agents/planner/plan-generator.ts) has no integration with .claude/task-runner.sh Linear loop — wire plan output to Linear issue creation so autonomous build creates SYN-XXXX issues per CLAUDE.md mandate",
           "size": "L",
           "priority": "P1"
         },
         {
-          "title": ".claude/task-runner.sh runs Claude Code headlessly against Linear backlog — add structured JSON output capture per issue so task outcomes are machine-readable and can feed metrics.jsonl",
+          "title": "Brand intelligence pipeline cost tracker — brand-intelligence/CLAUDE.md documents $8 hard cap and 3x overrun CEO Board review but cost_tracker.py has no automated escalation to Linear; add Linear issue creation on budget breach",
           "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": "TAO Builder/Validator pattern gap — agents/planner/README.md defines strict Builder→Validator sequence but controlled-autonomous-build.ts is excluded from tsconfig.json; restore type-checking for autonomous build controller",
+          "size": "M",
+          "priority": "P2"
+        },
+        {
+          "title": "tests/agents/ comprehensive test system writes to test-results/ and logs/testing/ but these paths are not in .gitignore — add to .gitignore; add CI step that runs node tests/agents/run-comprehensive-test.js and fails on P0 issues",
+          "size": "S",
           "priority": "P1"
         },
         {
-          "title": "brand-intelligence/synthex_orchestrator.py has $8.00 hard cap but cost_tracker.py integration with Synthex platform billing is via filesystem only — add POST callback to /api/brand-intelligence/cost-event on each run completion",
-          "size": "M",
-          "priority": "P2"
-        },
-        {
-          "title": "CLAUDE.md mandates max 2 automatic retries per failing step then escalate to human — controlled-autonomous-build.ts is excluded from tsconfig; audit for correctness and add retry counter telemetry",
-          "size": "M",
-          "priority": "P2"
-        },
-        {
-          "title": "18 domain skills in .claude/skills/ have YAML frontmatter triggers but no automated skill-selection test coverage — add jest test suite that validates skill trigger regex against representative prompts",
-          "size": "M",
-          "priority": "P2"
-        },
-        {
-          "title": "tests/agents/run-comprehensive-test.js outputs to test-results/ directory not wired into jest or CI pipeline — integrate as npm run test:agents and add to release:check gate",
+          "title": "Skill auto-selection described in CLAUDE.md has no enforcement mechanism — 18 skills in .claude/skills/ are prose docs; add skill-invocation audit step to review board Layer 2 specialist panel",
           "size": "M",
           "priority": "P3"
+        },
+        {
+          "title": "brand-intelligence/CLAUDE.md integration boundary: pipeline writes to filesystem, platform reads at render time — add integration contract test that validates output/ schema matches shared/types/brand-intelligence.ts",
+          "size": "M",
+          "priority": "P2"
         }
       ]
     },
     {
       "id": 5,
-      "name": "CI/CD & Deployment Hardening",
-      "duration": "8d",
+      "name": "Performance & Scalability",
+      "duration": "7d",
       "items": [
         {
-          "title": "k8s/setup.sh is a one-shot bash script with no idempotency checks — add kubectl diff before apply; guard against re-creating namespace if already exists",
+          "title": "BullMQ job queue (package.json bullmq@5.67.2) — no queue monitoring dashboard wired; add /api/admin/queues health endpoint surfacing active, waiting, failed job counts per queue",
           "size": "M",
-          "priority": "P1"
+          "priority": "P2"
         },
         {
-          "title": "deployment/deploy.sh and deploy.ps1 auto-rollback on failure but rollback logic restores from backups/ directory that may not exist — add pre-deploy backup step and assert backup artefact before marking deploy successful",
-          "size": "M",
-          "priority": "P1"
+          "title": "Bayesian service uvicorn workers=2 hardcoded in Dockerfile CMD — externalise via WORKERS env var; add HPA-compatible readiness probe aligned with k8s/manifests/hpa.yaml CPU threshold",
+          "size": "S",
+          "priority": "P2"
         },
         {
-          "title": "No GitHub Actions workflow files visible in repo context — add .github/workflows/ci.yml executing: type-check, lint, test, e2e (staging), build; block merge on failure",
-          "size": "L",
-          "priority": "P1"
-        },
-        {
-          "title": ".claude/review-board 4-layer review triggers on PR to main via GitHub Actions — wire review-board workflow file to call claude --agent .claude/agents/chief-reviewer.md and post unified review via GitHub API",
+          "title": "Next.js 16.2.0 + React 19.2.4 — run npm run analyze (ANALYZE=true next build) and address top 3 bundle size contributors; target <200kB first-load JS per route",
           "size": "L",
           "priority": "P2"
         },
         {
-          "title": "database/migrations/supabase/ requires manual SQL editor application — add npm run db:supabase:migrate script using Supabase Management API to apply idempotent migrations programmatically in CI",
+          "title": "Redis dual-client risk — package.json has both ioredis@5.9.2 and redis@5.11.0 plus @upstash/redis@1.35.3; audit lib/config/redis.config.ts and consolidate to single client",
           "size": "M",
           "priority": "P2"
         },
         {
-          "title": "synthex-bayesian-service has its own Dockerfile and requirements.txt but no CI pipeline — add GitHub Actions workflow for the Python service: lint (ruff), test (pytest), docker build, push to registry",
-          "size": "M",
-          "priority": "P2"
-        },
-        {
-          "title": "brand-intelligence/pyproject.toml defines claude-agent-sdk>=0.1.0 but package.json uses @anthropic-ai/claude-agent-sdk@^0.2.76 — align SDK versions or document intentional divergence",
+          "title": "k8s HPA autoscale 2-6 pods on CPU/memory — add memory limit assertions in k8s/manifests/deployment.yaml to prevent OOM evictions on 300-400MB Next.js standalone image",
           "size": "S",
           "priority": "P3"
         }
@@ -198,73 +188,31 @@
     },
     {
       "id": 6,
-      "name": "Platform Feature Completeness",
-      "duration": "10d",
-      "items": [
-        {
-          "title": "components/approval-workflow/index.tsx uses getMockRequests() — replace with real /api/approval-workflow/* endpoints backed by Prisma ApprovalRequest model",
-          "size": "L",
-          "priority": "P1"
-        },
-        {
-          "title": "components/ai-content-studio/index.tsx fetches /api/businesses and /api/auth/connections but ContentHistory state is in-memory only — persist content history to DB via /api/ai/content-history POST/GET",
-          "size": "M",
-          "priority": "P2"
-        },
-        {
-          "title": "NEXT_PUBLIC_INVITE_ONLY_MODE=true in .env.example — add admin UI toggle in /admin to flip invite mode without redeployment; wire to feature-flags runtime config",
-          "size": "M",
-          "priority": "P2"
-        },
-        {
-          "title": "deployment/feature-flags.js provides FeatureFlags class with rollout percentages but is not imported anywhere in the Next.js app — integrate with lib/feature-flags.ts and expose /api/admin/feature-flags CRUD",
-          "size": "M",
-          "priority": "P2"
-        },
-        {
-          "title": "BAYESIAN_SERVICE_URL and BAYESIAN_SERVICE_API_KEY documented as optional with graceful fallback — implement fallback heuristic path in lib/ai/adaptive-intelligence.ts so feature degrades gracefully when service is down",
-          "size": "M",
-          "priority": "P2"
-        },
-        {
-          "title": "WEB_SEARCH_ENABLED flag present in .env.example but no lib/ implementation found — implement lib/ai/web-search.ts wrapping Anthropic web search tool; gate on flag",
-          "size": "M",
-          "priority": "P3"
-        },
-        {
-          "title": "VAPID keys configured for web push but no service worker or push subscription UI visible — implement PWA push notification opt-in flow in app/settings/notifications",
-          "size": "L",
-          "priority": "P3"
-        }
-      ]
-    },
-    {
-      "id": 7,
       "name": "Developer Experience & Documentation",
       "duration": "5d",
       "items": [
         {
-          "title": "docs/README.md references docs/QUICK_START.md, docs/DEVELOPER_ONBOARDING.md etc. — audit all linked docs for staleness post-src→lib migration (UNI-1619); update migration map references",
+          "title": "ROUTE_REFERENCE.md auto-refresh — npm run routes:refresh exists but runs bash .claude/scripts/refresh-routes.sh; add as post-generate Prisma hook so route reference stays in sync with schema changes",
+          "size": "S",
+          "priority": "P2"
+        },
+        {
+          "title": "docs/README.md last updated 2026-02-02 — audit all linked documents exist; 4 listed docs (API_DOCUMENTATION, FRAMEWORK_OVERVIEW, SCALABILITY_GUIDE, TESTING_GUIDE) need currency check against current lib/ structure",
           "size": "M",
-          "priority": "P2"
+          "priority": "P3"
         },
         {
-          "title": ".claude/archived/2026-03-22/legacy-src/ contains live-looking TypeScript exports (index.ts, agents/) — add archive README asserting no file in this path is imported by active code; add CI grep guard",
-          "size": "S",
-          "priority": "P2"
-        },
-        {
-          "title": "npm run routes:refresh regenerates .planning/ROUTE_REFERENCE.md via bash script — add output diff check to CI so stale ROUTE_REFERENCE.md fails the build",
-          "size": "S",
-          "priority": "P2"
-        },
-        {
-          "title": ".env.example is 400+ lines — generate structured docs/ENVIRONMENT_VARIABLES.md table from it automatically using scripts/generate-env-docs.js; link from QUICK_START",
+          "title": "Storybook 10.2.8 configured in package.json but no .storybook/ directory tracked (excluded from tsconfig.json) — either remove storybook scripts and devDependencies or restore .storybook/ config",
           "size": "S",
           "priority": "P3"
         },
         {
-          "title": "k8s/README.md lists prerequisites as Windows-specific (scoop) — add Linux/Mac equivalent install commands for Docker, kind, kubectl, helm",
+          "title": "Deployment README references monitoring-dashboard.html at staging/production URLs but deployment/monitoring-dashboard.html is a static HTML file not served by Next.js; wire into app/monitoring or document correct access path",
+          "size": "S",
+          "priority": "P3"
+        },
+        {
+          "title": "setup scripts (npm run setup, npm run verify) are bash-only; Windows equivalents exist (setup.ps1, verify.ps1) but not documented in README.md Quick Start — update docs and add OS detection to npm run setup",
           "size": "S",
           "priority": "P3"
         }
@@ -272,53 +220,29 @@
     }
   ],
   "featureList": [
-    {
-      "id": "F001",
-      "title": "Unified secret injection via vault (eliminate zero-padded placeholder defaults)",
-      "sprint": 1,
-      "status": "planned"
-    },
-    {
-      "id": "F002",
-      "title": "Standardise Docker base image to node:22-alpine across deployment/ and k8s/ Dockerfiles",
-      "sprint": 1,
-      "status": "planned"
-    },
-    {
-      "id": "F003",
-      "title": "Resolve ajv@6/8 peer-dep conflict to re-enable npm ci in k8s builds",
-      "sprint": 1,
-      "status": "planned"
-    },
-    {
-      "id": "F004",
-      "title": "Reinstate strict TypeScript null checks on lib/ and app/ via scoped tsconfig",
-      "sprint": 2,
-      "status": "planned"
-    },
-    {
-      "id": "F005",
-      "title": "Standardise Next.js build bundler — resolve turbopack dev vs webpack prod divergence",
-      "sprint": 2,
-      "status": "planned"
-    },
-    {
-      "id": "F006",
-      "title": "Deduplicate prisma version invocations across all build scripts",
-      "sprint": 2,
-      "status": "planned"
-    },
-    {
-      "id": "F007",
-      "title": "lib/monitoring/axiom-transport.ts — structured error ingestion wired to Next.js error boundaries",
-      "sprint": 3,
-      "status": "planned"
-    },
-    {
-      "id": "F008",
-      "title": "/review-metrics slash command + engineering pattern dashboard from metrics.jsonl",
-      "sprint": 3,
-      "status": "planned"
-    },
-    {
-      "id
+    { "id": "F001", "title": "Strict TypeScript enforcement across all tsconfig targets", "sprint": 1, "status": "planned" },
+    { "id": "F002", "title": "Supabase service-role key runtime-only injection (k8s)", "sprint": 1, "status": "planned" },
+    { "id": "F003", "title": "Canonical encryption key consolidation (4 vars → 1)", "sprint": 1, "status": "planned" },
+    { "id": "F004", "title": "Startup Zod validation for all CRITICAL/SECRET env vars", "sprint": 1, "status": "planned" },
+    { "id": "F005", "title": "Node.js version standardisation (20 → 22 in deployment/Dockerfile)", "sprint": 1, "status": "planned" },
+    { "id": "F006", "title": "Deprecated Stripe env var cleanup (STRIPE_API_KEY, STRIPE_LIVE_KEY)", "sprint": 1, "status": "planned" },
+    { "id": "F007", "title": "GitHub Actions CI integration for 4-layer review board", "sprint": 2, "status": "planned" },
+    { "id": "F008", "title": "Commit-msg hook enforcing Linear SYN-XXXX requirement", "sprint": 2, "status": "planned" },
+    { "id": "F009", "title": "Bayesian service /health endpoint with engine status JSON", "sprint": 2, "status": "planned" },
+    { "id": "F010", "title": "Staging E2E gate in CI pipeline", "sprint": 2, "status": "planned" },
+    { "id": "F011", "title": "Review board metrics auto-archival cron", "sprint": 2, "status": "planned" },
+    { "id": "F012", "title": "Legacy src/ dead export purge post-migration", "sprint": 3, "status": "planned" },
+    { "id": "F013", "title": "Python service pyproject.toml standardisation", "sprint": 3, "status": "planned" },
+    { "id": "F014", "title": "board-cron/remotion monorepo workspace integration", "sprint": 3, "status": "planned" },
+    { "id": "F015", "title": "Canonical DB migration path documentation + CI guard", "sprint": 3, "status": "planned" },
+    { "id": "F016", "title": "k8s secrets generator script (scripts/k8s-secrets-gen.sh)", "sprint": 3, "status": "planned" },
+    { "id": "F017", "title": "Plan generator → Linear issue creation integration", "sprint": 4, "status": "planned" },
+    { "id": "F018", "title": "Brand intelligence budget breach → Linear issue escalation", "sprint": 4, "status": "planned" },
+    { "id": "F019", "title": "controlled-autonomous-build.ts restored to type-checking", "sprint": 4, "status": "planned" },
+    { "id": "F020", "title": "tests/agents P0 gate in CI with gitignore for output paths", "sprint": 4, "status": "planned" },
+    { "id": "F021", "title": "Brand intelligence output schema contract test", "sprint": 4, "status": "planned" },
+    { "id": "F022", "title": "BullMQ queue monitoring /api/admin/queues endpoint", "sprint": 5, "status": "planned" },
+    { "id": "F023", "title": "Bayesian service WORKERS env var externalisation", "sprint": 5, "status": "planned" },
+    { "id": "F024", "title": "Bundle analysis + top-3 size reduction (target <200kB first-load)", "sprint": 5, "status": "planned" },
+    { "id": "F025", "title": "Redis client consolidation (ioredis + redis + upstash → single client)", "sprint": 5, "status": "planned" },
+    { "id": "F026", "title": "ROUTE_REFERENCE.md post-Prisma-generate auto-refresh hook", "sprint": 6
