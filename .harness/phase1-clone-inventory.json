@@ -2,45 +2,42 @@
 {
   "totalFiles": 58,
   "languages": {
-    "TypeScript": 8200,
-    "TypeScript/TSX": 3100,
-    "Python": 420,
-    "Markdown": 2800,
-    "JSON": 380,
+    "TypeScript": 4200,
+    "TSX": 1800,
+    "Python": 320,
+    "JSON": 280,
+    "Markdown": 2100,
     "Dockerfile": 120,
-    "Shell": 40
+    "Shell": 40,
+    "YAML": 20
   },
   "topFiles": [
     ".env.example",
     "components/icons/index.ts",
     "package.json",
-    "README.md",
     "CLAUDE.md",
     "components/competitor-analysis/index.tsx",
     "components/approval-workflow/index.tsx",
     "components/ai-content-studio/index.tsx",
     "components/command-palette/index.tsx",
-    "synthex-bayesian-service/app/main.py"
+    "synthex-bayesian-service/app/main.py",
+    ".claude/archived/2026-03-22/legacy-src/agents/env-management/index.ts"
   ],
   "frameworks": [
     "Next.js 15 (App Router)",
     "React 19",
     "Prisma 6",
     "Tailwind CSS 4",
+    "FastAPI",
+    "BullMQ",
+    "Remotion",
     "Radix UI",
     "Framer Motion",
-    "BullMQ",
-    "FastAPI",
-    "Remotion 4",
-    "Storybook 10",
+    "Storybook",
     "Playwright",
     "Jest",
     "Supabase",
-    "Stripe",
-    "Vercel AI SDK",
-    "Anthropic SDK",
-    "OpenAI SDK",
-    "Google AI SDK"
+    "Stripe"
   ],
   "entryPoints": [
     "package.json",
@@ -49,7 +46,8 @@
     "board-cron/remotion/src/index.ts",
     ".claude/archived/2026-03-22/legacy-src/index.ts.disabled",
     "deployment/Dockerfile",
-    "k8s/Dockerfile"
+    "k8s/Dockerfile",
+    "synthex-bayesian-service/Dockerfile"
   ]
 }
 ```
