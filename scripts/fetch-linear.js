@@ -1,5 +1,10 @@
 const https = require('https');
-const apiKey = process.env.LINEAR_API_KEY || 'lin_api_REDACTED';
+const apiKey = process.env.LINEAR_API_KEY;
+if (!apiKey) {
+  console.error('Error: LINEAR_API_KEY environment variable is required.');
+  console.error('Set it with: export LINEAR_API_KEY=lin_api_...');
+  process.exit(1);
+}
 
 const query = JSON.stringify({
   query: `{
