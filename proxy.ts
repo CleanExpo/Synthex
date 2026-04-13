@@ -44,7 +44,7 @@ const securityHeaders = {
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization, sentry-trace, baggage',
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -84,26 +84,18 @@ export async function middleware(request: NextRequest) {
   }
 
   // Create Supabase client for auth checks
+  // Using getAll/setAll per @supabase/ssr 0.10.x recommended API
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          return request.cookies.getAll();
         },
-        set(name: string, value: string, options: any) {
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-        },
-        remove(name: string, options: any) {
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set({ name, value, ...options });
           });
         },
       },
@@ -315,8 +307,8 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
-// Configure which paths the middleware should run on
-export const config = {
+// Configure which paths the proxy should run on
+export const proxyConfig = {
   matcher: [
     /*
      * Match all request paths except:

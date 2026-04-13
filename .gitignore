@@ -5,7 +5,6 @@
 # Local debug/build artifacts
 err.html
 out.html
-proxy.ts
 traceDir/
 tsc-errors.txt
 
