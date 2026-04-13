@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     const msg = error instanceof Error ? error.message : String(error);
     logger.error('cron:video-social-derivation:fatal', { error: msg });
     return NextResponse.json(
-      { error: 'Social derivation cron failed', details: msg },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

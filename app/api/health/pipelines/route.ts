@@ -134,9 +134,9 @@ export const GET = withAuth(async (_request: NextRequest) => {
       { headers: { 'Cache-Control': 'private, max-age=60' } }
     );
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[pipelines] Error:', err);
     return NextResponse.json(
-      { error: 'Failed to fetch pipeline health', message },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

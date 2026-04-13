@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
     const msg = error instanceof Error ? error.message : String(error);
     logger.error('cron:video-production:fatal', { error: msg });
     return NextResponse.json(
-      { error: 'Video production cron failed', details: msg },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

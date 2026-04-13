@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
       durationMs: duration,
     });
     return NextResponse.json(
-      { error: 'Calendar generation cron failed', details: String(err) },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

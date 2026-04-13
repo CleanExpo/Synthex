@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     logger.error('Blog generation AI call failed', { error: err, topic });
     return NextResponse.json(
-      { error: 'AI generation failed', details: String(err) },
+      { error: 'Internal server error' },
       { status: 502 }
     );
   }

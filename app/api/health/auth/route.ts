@@ -65,7 +65,7 @@ export async function GET() {
         const { error } = await supabase.from('sessions').select('count').limit(1);
         checks.checks.database = !error;
         if (error) {
-          checks.errors.push(`Database error: ${error.message}`);
+          checks.errors.push('Database connection error');
         }
       } else {
         checks.checks.database = true; // Skip if not configured
