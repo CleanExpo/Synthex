@@ -30,10 +30,8 @@ import type {
 // untyped client (`any`) for KG operations until `supabase gen types` is re-run.
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _supabase: any = null;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getSupabase(): any {
   if (!_supabase) {
     _supabase = createClient(
