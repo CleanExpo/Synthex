@@ -22,7 +22,7 @@ export const RemotionRoot: React.FC = () => {
       {/* Full episode — the main render target */}
       <Composition
         id="BoardSession"
-        component={BoardSession}
+        component={BoardSession as React.ComponentType<Record<string, unknown>>}
         durationInFrames={total}
         fps={FPS}
         width={1920}
@@ -39,7 +39,7 @@ export const RemotionRoot: React.FC = () => {
       {/* Individual composition previews for Remotion Studio */}
       <Composition
         id="TitleSlate"
-        component={TitleSlate}
+        component={TitleSlate as React.ComponentType<Record<string, unknown>>}
         durationInFrames={5 * FPS}
         fps={FPS}
         width={1920}
@@ -53,7 +53,7 @@ export const RemotionRoot: React.FC = () => {
 
       <Composition
         id="DecisionCard"
-        component={DecisionCard}
+        component={DecisionCard as React.ComponentType<Record<string, unknown>>}
         durationInFrames={4 * FPS}
         fps={FPS}
         width={1920}
@@ -65,7 +65,7 @@ export const RemotionRoot: React.FC = () => {
 
       <Composition
         id="EndScreen"
-        component={EndScreen}
+        component={EndScreen as React.ComponentType<Record<string, unknown>>}
         durationInFrames={8 * FPS}
         fps={FPS}
         width={1920}

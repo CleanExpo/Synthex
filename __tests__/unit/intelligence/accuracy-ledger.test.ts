@@ -7,24 +7,30 @@
  * 3. calibrationSummary is always a non-empty string in both threshold states
  */
 
+import { createClient } from '@supabase/supabase-js';
 import { recordScoreIssued, getScoreCalibration } from '@/lib/intelligence/accuracy-ledger';
 
 // ── Mock Supabase admin ──────────────────────────────────────────────────────
 
-const mockInsert  = jest.fn().mockResolvedValue({ error: null });
-const mockRpc     = jest.fn();
+const mockInsert = jest.fn();
+const mockRpc    = jest.fn();
 
 jest.mock('@supabase/supabase-js', () => ({
-  createClient: jest.fn(() => ({
-    from: (_table: string) => ({ insert: mockInsert }),
-    rpc: mockRpc,
-  })),
+  createClient: jest.fn(),
 }));
 
 beforeEach(() => {
-  jest.clearAllMocks();
-  process.env.NEXT_PUBLIC_SUPABASE_URL    = 'https://test.supabase.co';
-  process.env.SUPABASE_SERVICE_ROLE_KEY   = 'test-key';
+  // jest.config.cjs sets resetMocks: true, which strips mock implementations
+  // before every test (including the first). Re-apply them here so each test
+  // starts with a fully-configured mock client.
+  mockInsert.mockResolvedValue({ error: null });
+  (createClient as jest.Mock).mockReturnValue({
+    from: (_table: string) => ({ insert: mockInsert }),
+    rpc: mockRpc,
+  });
+
+  process.env.NEXT_PUBLIC_SUPABASE_URL  = 'https://test.supabase.co';
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-key';
 });
 
 // ── recordScoreIssued ────────────────────────────────────────────────────────
