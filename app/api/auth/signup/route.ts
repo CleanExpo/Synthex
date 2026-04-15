@@ -29,12 +29,27 @@ const signupSchema = z.object({
 
 const isInviteOnly = process.env.NEXT_PUBLIC_INVITE_ONLY_MODE === 'true';
 
+// SYN-697: 1 MB payload limit
+const MAX_PAYLOAD_BYTES = 1 * 1024 * 1024;
+
 export async function POST(request: NextRequest) {
   // Distributed rate limiting via Upstash Redis (replaces in-memory Map)
   return authStrict(request, async () => {
     try {
+      // SYN-697: reject oversized payloads
+      const contentLength = request.headers.get('content-length');
+      if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
+        return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+      }
+
       // Parse and validate request body
       const body = await request.json();
+
+      // SYN-697: secondary guard when content-length header was absent
+      const bodySize = Buffer.byteLength(JSON.stringify(body));
+      if (bodySize > MAX_PAYLOAD_BYTES) {
+        return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+      }
       const validationResult = signupSchema.safeParse(body);
 
       if (!validationResult.success) {
@@ -136,10 +151,11 @@ export async function POST(request: NextRequest) {
         logger.error('Signup error:', authError);
 
         // Handle specific error cases
+        // SYN-696: do not reveal whether the email is already registered
         if (authError.message.includes('already registered')) {
           return NextResponse.json(
-            { error: 'An account with this email already exists' },
-            { status: 409 }
+            { error: 'Registration failed' },
+            { status: 400 }
           );
         }
 

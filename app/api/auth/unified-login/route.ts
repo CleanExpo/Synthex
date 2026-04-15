@@ -23,9 +23,24 @@ const unifiedLoginSchema = z.object({
     .optional(),
 });
 
+// SYN-697: 1 MB payload limit
+const MAX_PAYLOAD_BYTES = 1 * 1024 * 1024;
+
 export async function POST(request: NextRequest) {
   try {
+    // SYN-697: reject oversized payloads
+    const contentLength = request.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
+      return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+    }
+
     const body = await request.json();
+
+    // SYN-697: secondary guard when content-length header was absent
+    const bodySize = Buffer.byteLength(JSON.stringify(body));
+    if (bodySize > MAX_PAYLOAD_BYTES) {
+      return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+    }
     const validation = unifiedLoginSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
