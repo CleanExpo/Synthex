@@ -53,6 +53,9 @@ const eslintConfig = [
       'tmp/**',
       // Claude superpowers / skill-runner scripts — not part of the production app
       '.superpowers/**',
+      // Board cron — standalone Node.js scripts for Remotion video generation
+      // These are not Next.js app code and use console.log intentionally
+      'board-cron/**',
     ],
   },
   ...coreWebVitals,
