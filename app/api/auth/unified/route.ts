@@ -28,11 +28,26 @@ const signupSchema = z.object({
  * Unified Authentication Handler
  * Handles both login and signup in a single endpoint
  */
+// SYN-697: 1 MB payload limit
+const MAX_PAYLOAD_BYTES = 1 * 1024 * 1024;
+
 export async function POST(request: NextRequest) {
   // Apply rate limiting for auth endpoints
   return rateLimiters.auth(request, async () => {
     try {
+      // SYN-697: reject oversized payloads
+      const contentLength = request.headers.get('content-length');
+      if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
+        return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+      }
+
       const body = await request.json();
+
+      // SYN-697: secondary guard when content-length header was absent
+      const bodySize = Buffer.byteLength(JSON.stringify(body));
+      if (bodySize > MAX_PAYLOAD_BYTES) {
+        return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+      }
       const { action } = body;
 
       // Handle different auth actions
@@ -85,21 +100,12 @@ async function handleLogin(body: z.infer<typeof loginSchema>) {
       },
     });
 
-    if (!user) {
+    if (!user || !user.password) {
+      // SYN-696: always run bcrypt to prevent timing-based user enumeration
+      await bcrypt.compare(password, '$2b$10$placeholderHashForTimingAttackPrevention..');
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
-      );
-    }
-
-    // Check if user has a password (OAuth-only users don't)
-    if (!user.password) {
-      return NextResponse.json(
-        {
-          error:
-            'Please login with your linked account (Google or other provider)',
-        },
-        { status: 400 }
       );
     }
 
@@ -169,8 +175,9 @@ async function handleSignup(body: z.infer<typeof signupSchema>) {
     });
 
     if (existingUser) {
+      // SYN-696: do not reveal whether the email is already registered
       return NextResponse.json(
-        { error: 'Email already registered' },
+        { error: 'Registration failed' },
         { status: 400 }
       );
     }
