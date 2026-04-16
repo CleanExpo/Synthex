@@ -28,7 +28,10 @@ export type TaskType =
   | 'entity_extraction'
   | 'advisor_synthesis'
   | 'knowledge_graph_inference'
-  | 'content_strategy';
+  | 'content_strategy'
+  | 'conversation_query_simple'
+  | 'conversation_query_synthesis'
+  | 'conversation_query_strategy';
 
 export type RoutingTier = 'simple' | 'standard' | 'complex';
 
@@ -61,7 +64,10 @@ export interface RoutingDecision {
  * 'high' threshold → minimum 'standard'.
  * 'low' threshold  → no change (trust the routing table).
  */
-function applyQualityFloor(tier: RoutingTier, qualityThreshold: AITask['qualityThreshold']): RoutingTier {
+function applyQualityFloor(
+  tier: RoutingTier,
+  qualityThreshold: AITask['qualityThreshold']
+): RoutingTier {
   if (qualityThreshold === 'high' && tier === 'simple') return 'standard';
   return tier;
 }
@@ -69,17 +75,21 @@ function applyQualityFloor(tier: RoutingTier, qualityThreshold: AITask['qualityT
 function estimateCost(tier: RoutingTier, inputTokenEstimate: number): number {
   const config = TIER_MODELS[tier];
   const estimatedOutputTokens = 300;
-  return parseFloat((
-    (inputTokenEstimate   / 1_000_000) * config.costPerMTokInput +
-    (estimatedOutputTokens / 1_000_000) * config.costPerMTokOutput
-  ).toFixed(6));
+  return parseFloat(
+    (
+      (inputTokenEstimate / 1_000_000) * config.costPerMTokInput +
+      (estimatedOutputTokens / 1_000_000) * config.costPerMTokOutput
+    ).toFixed(6)
+  );
 }
 
 /** Read optional JSON override from env — allows ops to re-route without deploys. */
 function getRuntimeOverrides(): Partial<Record<TaskType, RoutingTier>> {
   try {
     const raw = process.env.ROUTING_OVERRIDES;
-    return raw ? (JSON.parse(raw) as Partial<Record<TaskType, RoutingTier>>) : {};
+    return raw
+      ? (JSON.parse(raw) as Partial<Record<TaskType, RoutingTier>>)
+      : {};
   } catch {
     return {};
   }
@@ -102,7 +112,8 @@ function getRuntimeOverrides(): Partial<Record<TaskType, RoutingTier>> {
  */
 export function routeTask(task: AITask): RoutingDecision {
   const overrides = getRuntimeOverrides();
-  const baseTier = overrides[task.taskType] ?? DEFAULT_TASK_ROUTING[task.taskType];
+  const baseTier =
+    overrides[task.taskType] ?? DEFAULT_TASK_ROUTING[task.taskType];
   const tier = applyQualityFloor(baseTier, task.qualityThreshold);
   const config = TIER_MODELS[tier];
 
@@ -153,48 +164,59 @@ export async function routedCall<T>(options: RoutedCallOptions<T>): Promise<T> {
       const result = await execute(config.modelId);
 
       // Log cost on success
-      const inputTok  = actualTokens?.input  ?? task.inputTokenEstimate;
+      const inputTok = actualTokens?.input ?? task.inputTokenEstimate;
       const outputTok = actualTokens?.output ?? 300;
-      const costUsd   = parseFloat((
-        (inputTok  / 1_000_000) * config.costPerMTokInput +
-        (outputTok / 1_000_000) * config.costPerMTokOutput
-      ).toFixed(6));
+      const costUsd = parseFloat(
+        (
+          (inputTok / 1_000_000) * config.costPerMTokInput +
+          (outputTok / 1_000_000) * config.costPerMTokOutput
+        ).toFixed(6)
+      );
 
       // Non-fatal: cost logging should never break the AI call.
       // Promise.resolve() guards against mocked/stub implementations that return void.
       Promise.resolve(
         trackPipelineCost({
           pipeline_name: task.taskType,
-          client_id:     task.clientId ?? null,
-          run_id:        task.runId ?? crypto.randomUUID(),
-          model:         config.modelId,
-          input_tokens:  inputTok,
+          client_id: task.clientId ?? null,
+          run_id: task.runId ?? crypto.randomUUID(),
+          model: config.modelId,
+          input_tokens: inputTok,
           output_tokens: outputTok,
-          cost_usd:      costUsd,
+          cost_usd: costUsd,
         })
-      ).catch((err) =>
-        console.error(JSON.stringify({ event: 'model_router_cost_log_failed', error: String(err) }))
+      ).catch(err =>
+        console.error(
+          JSON.stringify({
+            event: 'model_router_cost_log_failed',
+            error: String(err),
+          })
+        )
       );
 
       if (isEscalation) {
-        console.warn(JSON.stringify({
-          event:        'model_router_escalation',
-          task_type:    task.taskType,
-          initial_tier: initial.tier,
-          used_tier:    currentTier,
-        }));
+        console.warn(
+          JSON.stringify({
+            event: 'model_router_escalation',
+            task_type: task.taskType,
+            initial_tier: initial.tier,
+            used_tier: currentTier,
+          })
+        );
       }
 
       return result;
     } catch (err) {
       lastError = err;
-      console.warn(JSON.stringify({
-        event:         'model_router_tier_failed',
-        task_type:     task.taskType,
-        tier:          currentTier,
-        model:         config.modelId,
-        error:         String(err),
-      }));
+      console.warn(
+        JSON.stringify({
+          event: 'model_router_tier_failed',
+          task_type: task.taskType,
+          tier: currentTier,
+          model: config.modelId,
+          error: String(err),
+        })
+      );
       currentTier = TIER_ESCALATION[currentTier];
     }
   }
