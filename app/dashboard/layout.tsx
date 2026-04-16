@@ -87,6 +87,7 @@ import type { NavItem } from '@/components/landing/bottom-menu';
 import { useRouter } from 'next/navigation';
 import { ModeProvider } from '@/components/providers/mode-provider';
 import { FirstWinBanner } from '@/components/notifications/FirstWinBanner';
+import { MascotTip } from '@/components/mascots/MascotTip';
 import { MonthlyStoryCard } from '@/components/monthly-story/MonthlyStoryCard';
 // SYN-597: Contextual team invite banner — self-hides when ineligible
 import { TeamInviteBanner } from '@/components/team/TeamInviteBanner';
@@ -338,7 +339,12 @@ const sidebarGroups: SidebarNavGroup[] = [
       },
       { icon: Lock, label: 'Brand Voice', href: '/dashboard/brand-voice' },
       { icon: Star, label: 'AI Insights', href: '/dashboard/insights' },
-      { icon: Brain, label: 'Advisor', href: '/dashboard/advisor', isNew: true },
+      {
+        icon: Brain,
+        label: 'Advisor',
+        href: '/dashboard/advisor',
+        isNew: true,
+      },
     ],
   },
   {
@@ -722,10 +728,13 @@ function DashboardSidebar() {
         </TooltipProvider>
       </SidebarContent>
 
-      {/* Footer — Advanced Mode toggle */}
+      {/* Footer — Weekly mascot tip + Advanced Mode toggle */}
       <SidebarFooter className="border-t border-[0.5px] border-white/[0.06] p-2 space-y-1">
         {!isCollapsed && (
           <>
+            {/* Weekly rotating board persona tip */}
+            <MascotTip className="mb-2" />
+
             <div className="flex items-center gap-2 px-2 py-1">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span className="text-[10px] text-white/50">Online</span>
