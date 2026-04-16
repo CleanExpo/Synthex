@@ -1,21 +1,26 @@
 'use client';
 
 /**
- * MonthlyStoryCard — SYN-553
+ * MonthlyStoryCard — SYN-553 + SYN-673
  *
  * Full-screen overlay shown on first dashboard login after a story is generated.
  * Dismissable — the story remains accessible from nav after dismissal.
  *
  * Fetches the latest unread story via SWR.
  * Posts to /api/monthly-story/[id]/dismiss on close.
+ *
+ * SYN-673: GA4 instrumentation
+ *   - monthly_story_viewed fires on mount (when story is first shown)
+ *   - monthly_story_read_time fires when user scrolls past 80% of content
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import useSWR, { mutate } from 'swr';
 import { X, TrendingUp, Clock, Users, Share2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { fireStoryEvent } from '@/lib/analytics/story-events';
 
 const fetchJson = (url: string) =>
   fetch(url, { credentials: 'include' }).then(r => r.json());
@@ -59,6 +64,51 @@ export function MonthlyStoryCard({ className }: MonthlyStoryCardProps) {
   );
 
   const story = data?.story ?? null;
+
+  // ── SYN-673: GA4 instrumentation ──────────────────────────────────────────
+
+  /** Timestamp when the story card was first shown (for read-time calc). */
+  const mountTimeRef = useRef<number>(0);
+  /** Sentinel element at 80% scroll depth of the story text. */
+  const readSentinelRef = useRef<HTMLDivElement>(null);
+
+  // Fire monthly_story_viewed on mount (when story becomes available)
+  useEffect(() => {
+    if (!story) return;
+    mountTimeRef.current = Date.now();
+    fireStoryEvent('monthly_story_viewed', {
+      story_month:     story.monthYear,
+      geo_score_shown: false, // MonthlyStoryCard does not show GEO score
+      wins_count:      0,     // win count not surfaced in this component
+    });
+  }, [story?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fire monthly_story_read_time when the 80%-depth sentinel enters viewport
+  useEffect(() => {
+    const sentinel = readSentinelRef.current;
+    if (!sentinel || !story) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          const elapsed = Date.now() - mountTimeRef.current;
+          // Round to nearest 5 seconds
+          const seconds = Math.round(elapsed / 5000) * 5;
+          fireStoryEvent('monthly_story_read_time', {
+            story_month:           story.monthYear,
+            time_to_80pct_seconds: seconds,
+          });
+          observer.disconnect();
+        }
+      },
+      { threshold: 0 }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [story?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── End GA4 ───────────────────────────────────────────────────────────────
 
   const handleDismiss = useCallback(async () => {
     if (!story) return;
@@ -154,9 +204,16 @@ export function MonthlyStoryCard({ className }: MonthlyStoryCardProps) {
         {/* Story text */}
         <div className="px-6 pb-6 space-y-4">
           {paragraphs.map((para, i) => (
-            <p key={i} className="text-sm text-white/70 leading-relaxed">
-              {para}
-            </p>
+            <>
+              <p key={i} className="text-sm text-white/70 leading-relaxed">
+                {para}
+              </p>
+              {/* SYN-673: 80% read-depth sentinel — placed after the paragraph
+                  at 80% of total paragraph count (rounded down) */}
+              {i === Math.floor(paragraphs.length * 0.8) - 1 && (
+                <div ref={readSentinelRef} aria-hidden="true" />
+              )}
+            </>
           ))}
         </div>
 

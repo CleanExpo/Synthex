@@ -71,6 +71,15 @@ interface AdvisorAction {
   actionUrl?: string; // deep-link into the Synthex dashboard
 }
 
+interface JourneyEngagementSummary {
+  engagementRate: number;      // 0.0–1.0
+  pulseSurveyAvg: number | null;
+  totalMomentsReceived: number;
+  totalMomentsEngaged: number;
+  mostEngagedType: string | null;
+  leastEngagedType: string | null;
+}
+
 interface OrgContext {
   organizationId: string;
   orgName: string;
@@ -86,6 +95,7 @@ interface OrgContext {
   avgJobValueAud: number;
   competitorGap: string | null; // null if no data (SYN-583 not yet merged)
   contentScore: number | null; // null if content_score_history has no rows yet — SYN-666
+  journeyEngagement: JourneyEngagementSummary | null; // null if no journey events yet — SYN-678
 }
 
 interface DigestSummary {
@@ -215,7 +225,62 @@ async function gatherOrgContext(organizationId: string): Promise<OrgContext> {
       ? `${competitorGap.keyword} (${competitorGap.competitor?.domain ?? competitorGap.competitor?.name ?? 'unknown competitor'})`
       : null,
     contentScore: await fetchContentScore(organizationId),
+    journeyEngagement: await fetchJourneyEngagement(organizationId),
   };
+}
+
+/** Fetch journey engagement summary from journey_analytics view. Returns null on error or no data. — SYN-678 */
+async function fetchJourneyEngagement(organizationId: string): Promise<JourneyEngagementSummary | null> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return null;
+  try {
+    const { data } = await supabase
+      .from('journey_analytics')
+      .select('engagement_rate, pulse_survey_avg, total_moments_received, total_moments_engaged, moments_detail')
+      .eq('client_id', organizationId)
+      .maybeSingle();
+
+    if (!data) return null;
+
+    const row = data as {
+      engagement_rate: number;
+      pulse_survey_avg: number | null;
+      total_moments_received: number;
+      total_moments_engaged: number;
+      moments_detail: Array<{ event_type: string; engagement_outcome: string }>;
+    };
+
+    // Derive most/least engaged moment type from moments_detail JSONB array
+    const engagedByType: Record<string, number> = {};
+    const totalByType: Record<string, number> = {};
+    for (const m of row.moments_detail ?? []) {
+      const t = m.event_type;
+      totalByType[t] = (totalByType[t] ?? 0) + 1;
+      if (m.engagement_outcome !== 'delivered' && m.engagement_outcome !== 'ignored') {
+        engagedByType[t] = (engagedByType[t] ?? 0) + 1;
+      }
+    }
+
+    const rateByType = Object.keys(totalByType).map(t => ({
+      type: t,
+      rate: (engagedByType[t] ?? 0) / totalByType[t],
+    }));
+
+    const sorted = rateByType.sort((a, b) => b.rate - a.rate);
+    const mostEngagedType = sorted[0]?.type ?? null;
+    const leastEngagedType = sorted[sorted.length - 1]?.type ?? null;
+
+    return {
+      engagementRate: row.engagement_rate,
+      pulseSurveyAvg: row.pulse_survey_avg,
+      totalMomentsReceived: row.total_moments_received,
+      totalMomentsEngaged: row.total_moments_engaged,
+      mostEngagedType,
+      leastEngagedType: leastEngagedType !== mostEngagedType ? leastEngagedType : null,
+    };
+  } catch {
+    return null;
+  }
 }
 
 /** Fetch latest Content Score from content_score_history. Returns null on error or no data. — SYN-666 */
@@ -277,6 +342,22 @@ async function generateActions(
       ? `Content performance score: ${ctx.contentScore}/100 (weekly composite — higher = stronger content engagement relative to baseline)`
       : 'Content performance score: building data — fewer than 10 posts analysed',
 
+    ctx.journeyEngagement
+      ? [
+          `Journey engagement (automated communications):`,
+          `  Engagement rate: ${(ctx.journeyEngagement.engagementRate * 100).toFixed(1)}% (${ctx.journeyEngagement.totalMomentsEngaged} of ${ctx.journeyEngagement.totalMomentsReceived} moments acted on)`,
+          ctx.journeyEngagement.pulseSurveyAvg !== null
+            ? `  Pulse survey average: ${ctx.journeyEngagement.pulseSurveyAvg.toFixed(1)}/5`
+            : null,
+          ctx.journeyEngagement.mostEngagedType
+            ? `  Most engaged moment type: ${ctx.journeyEngagement.mostEngagedType}`
+            : null,
+          ctx.journeyEngagement.leastEngagedType
+            ? `  Least engaged moment type: ${ctx.journeyEngagement.leastEngagedType}`
+            : null,
+        ].filter(Boolean).join('\n')
+      : 'Journey engagement: no automated communications sent yet',
+
     knowledgeContext ?? '',
   ]
     .filter(Boolean)
@@ -294,6 +375,12 @@ Generate exactly 3 prioritised marketing actions for them to take this week. Eac
 ALGORITHM SIGNAL RULE: When your recommendations involve platform content or website improvements,
 ground them in the verified algorithm signals provided below. Use the plain-English descriptions
 provided — NEVER expose raw signal names (NavBoost, sends_per_reach, CrUX, etc.) in the output.
+
+JOURNEY ENGAGEMENT RULE: When journey_engagement data is present (engagement rate, pulse survey avg,
+most/least engaged moment type), add a "What's working for you" note of 1-2 plain-English sentences
+to the rationale of the most relevant action. Reference the specific moment type or engagement figure.
+Example: "Your 30-day check-in emails are your most-engaged touch — clients are reading and responding."
+Do NOT add this note if journey engagement data is absent.
 
 Return a JSON array of exactly 3 objects with this structure:
 {
